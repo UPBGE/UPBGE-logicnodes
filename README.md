@@ -1,4 +1,4 @@
-# Uchronian-Logic-UPBGE-Logic-Nodes
+# Uchronian Logic: UPBGE Logic Nodes
 A Node-based Logic system for UPBGE 2.8+
 
 This is an Add-On for the recent UPBGE-EEVEE build.
@@ -6,12 +6,17 @@ It adds a new Editor in which you can create logic trees and apply them to objec
 
 Install:
 1. Download
-  * Download here: https://drive.google.com/open?id=1NBH27uxRsnleaTKxy4GPYlfswfoFLgev OR
-  * clone this repository in a folder named "bge_netlogic" and then zip it whenever you pull.
+    * Download here: https://drive.google.com/open?id=1NBH27uxRsnleaTKxy4GPYlfswfoFLgev OR
+    * clone this repository in a folder named "bge_netlogic" and then zip it whenever you pull.
 2. Install
-  * In Blender, go to Edit -> Preferences -> Add-Ons and click on "Install Add-On from file...".
+    * In Blender, go to Edit -> Preferences -> Add-Ons and click on "Install Add-On from file...".
 3. Load
-  * Once loaded, activate the Add-On by clicking on the checkbox to the left.
+    * Once loaded, activate the Add-On by clicking on the checkbox to the left.
+  
+Update:
+1. In Preferences, navigate to Add-Ons and deactivate, then remove the Add-On.
+2. Download new version or pull and zip
+3. Install
     
 How to use:
 1. In the Editor Selection, go to "Logic Tree Editor".
