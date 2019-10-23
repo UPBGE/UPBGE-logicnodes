@@ -748,8 +748,8 @@ class NLValueFieldSocket(bpy.types.NodeSocket, NetLogicSocketType):
 		if self.is_linked or self.is_output:
 			layout.label(text=text)
 		else:
-			split = layout.split(0.25)
-			split.label(text)
+			split = layout.split(factor=0.25)
+			split.label(text=text)
 			if self.value_type == "NONE":
 				split.prop(self, "value_type", text="")
 			elif self.value_type == "BOOLEAN":
@@ -1569,7 +1569,7 @@ _nodes.append(NLParameterPythonModuleFunction)
 
 class NLParameterVector3Node(bpy.types.Node, NLParameterNode):
 	bl_idname = "NLParameterVectorNode"
-	bl_label = "Vector 3"
+	bl_label = "Vector 3 (Advanced)"
 	nl_category = "Math"
 
 	def init(self, context):
@@ -1594,7 +1594,7 @@ _nodes.append(NLParameterVector3Node)
 
 class NLParameterVector3SimpleNode(bpy.types.Node, NLParameterNode):
 	bl_idname = "NLParameterVectorSimpleNode"
-	bl_label = "Vector 3 Simple"
+	bl_label = "Vector 3"
 	nl_category = "Math"
 
 	def init(self, context):
@@ -2690,6 +2690,7 @@ class NLActionTimeFilter(bpy.types.Node, NLActionNode):
 		self.outputs.new(NLConditionSocket.bl_idname, "Out")
 	def get_netlogic_class_name(self): return "bgelogic.ActionTimeFilter"
 	def get_input_sockets_field_names(self): return ["condition", "delay"]
+
 _nodes.append(NLActionTimeFilter)
 
 class NLActionMouseLookNode(bpy.types.Node, NLActionNode):
@@ -2697,30 +2698,33 @@ class NLActionMouseLookNode(bpy.types.Node, NLActionNode):
 	bl_label = "Mouse Look"
 	nl_category = "Mouse"
 	
-	inverted = bpy.props.BoolProperty(
-		description="Toggles inverted Camera",
-		update=update_tree_code)
+	#inverted = bpy.props.BoolProperty(
+		#description="Toggles inverted Camera",
+#		update=update_tree_code)
 	
 	def init(self, context):
 		NLActionNode.init(self, context)
 		self.inputs.new(NLConditionSocket.bl_idname, "Condition")
-		self.inputs.new(NLGameObjectSocket.bl_idname, "X-Object (Body)")
-		self.inputs.new(NLGameObjectSocket.bl_idname, "Y-Object (Head)")
+		self.inputs.new(NLGameObjectSocket.bl_idname, "Main Object")
+		self.inputs.new(NLGameObjectSocket.bl_idname, "Head (Optional)")
 		self.inputs.new(NLFloatFieldSocket.bl_idname, "Sensitivity")
 		self.inputs.new(NLFloatFieldSocket.bl_idname, "Max X")
 		self.inputs.new(NLFloatFieldSocket.bl_idname, "Min X")
 		self.inputs.new(NLFloatFieldSocket.bl_idname, "Max Y")
 		self.inputs.new(NLFloatFieldSocket.bl_idname, "Min Y")
+		self.inputs.new(NLBooleanSocket.bl_idname, "Inverted")
 		
-	def draw_buttons(self, context, layout):
-		layout.prop(self, "inverted", text="Inverted" if self.inverted else "Not Inverted", toggle=True)
+	#def draw_buttons(self, context, layout):
+	#	layout.prop(self, "inverted", text="Inverted" if self.inverted else "Not Inverted", toggle=True)
 		
-	def get_netlogic_class_name(self): return "bgelogic.ActionMouseLook"
-	def get_input_sockets_field_names(self): return ["condition", "game_object_x", "game_object_y", "sensitivity", "uppercapX", "lowercapX", "uppercapY", "lowercapY"]
-	def write_cell_fields_initialization(self, cell_varname, uids, line_writer):
-		NetLogicStatementGenerator.write_cell_fields_initialization(self, cell_varname, uids, line_writer)
-		line_writer.write_line("{}.{} = {}", cell_varname, "inverted", self.inverted)
-	pass
+	def get_netlogic_class_name(self):
+		return "bgelogic.ActionMouseLook"
+
+	def get_input_sockets_field_names(self):
+		return ["condition", "game_object_x", "game_object_y", "sensitivity", "uppercapX", "lowercapX", "uppercapY", "lowercapY", "inverted", "soasmdasd"]
+	#def write_cell_fields_initialization(self, cell_varname, uids, line_writer):
+#		NetLogicStatementGenerator.write_cell_fields_initialization(self, cell_varname, uids, line_writer)
+#		line_writer.write_line("{}.{} = {}", cell_varname, "inverted", self.inverted)
 _nodes.append(NLActionMouseLookNode)
 
 class NLActionMousePickNode(bpy.types.Node, NLActionNode):

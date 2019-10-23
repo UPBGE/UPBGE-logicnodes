@@ -2348,9 +2348,10 @@ class ActionRestartGame(ActionCell):
 	def evaluate(self):
 		self._set_ready()
 		condition = self.get_parameter_value(self.condition)
-		if condition: bge.logic.restartGame();
+		if condition: bge.logic.restartGame()
 
 class ActionMouseLook(ActionCell):
+	
 	def __init__(self):
 		ActionCell.__init__(self)
 		self.condition = None
@@ -2362,23 +2363,38 @@ class ActionMouseLook(ActionCell):
 		self.uppercapY = None
 		self.lowercapY = None
 		self.inverted = None
-		
+
+	def get_x_obj(self):
+		game_object_x = self.get_parameter_value(self.game_object_x)
+		if game_object_x is LogicNetworkCell.STATUS_WAITING: return None
+		return game_object_x
+
+	def get_y_obj(self):
+		game_object_y = self.get_parameter_value(self.game_object_y)
+		if none_or_invalid(game_object_y):
+			game_object_y = self.get_x_obj()
+		return game_object_y
+
 	def evaluate(self):
 		condition = self.get_parameter_value(self.condition)
 		if condition is LogicNetworkCell.STATUS_WAITING: return
-		game_object_x = self.get_parameter_value(self.game_object_x)
-		if game_object_x is LogicNetworkCell.STATUS_WAITING: return
-		game_object_y = self.get_parameter_value(self.game_object_y)
-		if game_object_y is LogicNetworkCell.STATUS_WAITING: return
-		sensitivity = self.get_parameter_value(self.sensitivity)
+		game_object_x = self.get_x_obj()
+		game_object_y = self.get_y_obj()
+		print(game_object_x)
+		print(game_object_y)
+		sensitivity = self.get_parameter_value(self.sensitivity * 1000)
 		uppercapX = self.get_parameter_value(self.uppercapX * 0.0087266462599716 *2)
 		lowercapX = self.get_parameter_value(self.lowercapX * 0.0087266462599716 *2)
-		inverted = self.get_parameter_value(self.inverted)
 		uppercapY = -self.get_parameter_value(self.lowercapY * 0.0087266462599716 *2)
 		lowercapY = -self.get_parameter_value(self.uppercapY * 0.0087266462599716 *2)
+		inverted = self.get_parameter_value(self.inverted)
 		self._set_ready()
-		if none_or_invalid(game_object_x): return
-		if none_or_invalid(game_object_y): return
+		if none_or_invalid(game_object_x):
+			raise Exception('Invalid Main Object in MouseLook Node!')
+			return
+		if none_or_invalid(game_object_y):
+			raise Exception('Invalid Head Object in MouseLook Node!')
+			return
 		
 		if condition:
 			x = bge.render.getWindowWidth()//2
@@ -2392,9 +2408,9 @@ class ActionMouseLook(ActionCell):
 			rotationX = game_object_x.worldOrientation.to_euler("XYZ")
 			rotationY = game_object_y.worldOrientation.to_euler("XYZ")
 			
-			if -0.000005 < offset.x and offset.x < 0.000005:
+			if -0.000005 < offset.x < 0.000005:
 				offset.x = 0
-			if -0.000005 < offset.y and offset.y < 0.000005:
+			if -0.000005 < offset.y < 0.000005:
 				offset.y = 0
 			
 			if inverted is False:
@@ -2435,7 +2451,6 @@ class ActionMouseLook(ActionCell):
 					offset.y = 0
 					
 			game_object_y.applyRotation((0, (offset.y) ,0 ), True)
-			
 			bge.render.setMousePosition(x, y)
 			
 		pass
@@ -3281,6 +3296,7 @@ class ActionApplyLocation(ActionCell):
 		self.condition = None
 		self.game_object = None
 		self.movement = None
+		print('init')
 
 	def evaluate(self):
 		condition = self.get_parameter_value(self.condition)
