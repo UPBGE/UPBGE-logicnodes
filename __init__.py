@@ -364,55 +364,18 @@ def _list_menu_nodes():
     return menu_nodes
 
 
-class NoteNode(bpy.types.Node):
-    bl_idname = "NoteNode"
-    bl_label = "Note"
-    value = bpy.props.StringProperty(description="String content of the note")
-    edit = bpy.props.BoolProperty()
-    cwidth = bpy.props.FloatProperty(default=6, description="The size of a character")
-    def init(self, context):
-        self.use_custom_color = True
-        self.color = (1.0, 0.0, 1.0)
-        pass
-    def split_string(self, s, size):
-        r = []
-        lines = int(len(s) / size)
-        cursor = 0
-        while cursor < len(s):
-            line = s[cursor:cursor + size]
-            cursor += size
-            r.append(line)
-        return r
-    def draw_buttons(self, context, layout):
-        if self.edit:
-            row = layout.split(0.85, align=True)
-            row.prop(self, "value", text="")
-            row.prop(self, "cwidth", text="")
-        box = layout.box()
-        charwidth = self.cwidth
-        linesize = int(self.width / charwidth)
-        for line in self.split_string(self.value, linesize):
-            box.scale_y = 0.4
-            box.label(line)
-        row = layout.row()
-        row.scale_y = 0.25
-        row.prop(self, "edit", text="", toggle=True)
-
 #blender add-on registration callback
 def register():
     for cls in _registered_classes:
         print("Registering... {}".format(cls.__name__))
         bpy.utils.register_class(cls)
     menu_nodes = _list_menu_nodes()
-    bpy.utils.register_class(NoteNode)
-    menu_nodes.append(NodeCategory("UTILS", "Utils", items=[nodeitems_utils.NodeItem(NoteNode.bl_idname)]))
     nodeitems_utils.register_node_categories("NETLOGIC_NODES", menu_nodes)
     bpy.types.Object.bgelogic_treelist = bpy.props.CollectionProperty(type=NLNodeTreeReference)
     pass
 
 #blender add-on unregistration callback
 def unregister():
-    bpy.utils.unregister_class(NoteNode)
     print("Unregister node category [{}]".format("NETLOGIC_NODES"))
     nodeitems_utils.unregister_node_categories("NETLOGIC_NODES")
     for cls in reversed(_registered_classes):
