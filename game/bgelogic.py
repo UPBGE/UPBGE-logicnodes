@@ -778,19 +778,48 @@ class ParameterParentGameObject(ParameterCell):
 class ParameterSwitchValue(ParameterCell):
     def __init__(self):
         ParameterCell.__init__(self)
-        self.param_a = None
-        self.param_b = None
-        self.switch_condition = None
+        self.state = None
+        self.condition = None
+        self.outcome = False
+        self.TRUE = LogicNetworkSubCell(self, self.get_true_value)
+        self.FALSE = LogicNetworkSubCell(self, self.get_false_value)
+    
+    def get_true_value(self):
+        state = self.get_parameter_value(self.state)
+        if state:
+            return True
+        else:
+            return False
+
+    def get_false_value(self):
+        state = self.get_parameter_value(self.state)
+        if state:
+            return False
+        else:
+            return True
 
     def evaluate(self):
-        a = self.get_parameter_value(self.param_a)
-        b = self.get_parameter_value(self.param_b)
-        cond = self.get_parameter_value(self.switch_condition)
-        if a is LogicNetworkCell.STATUS_WAITING: return
-        if b is LogicNetworkCell.STATUS_WAITING: return
-        if cond is LogicNetworkCell.STATUS_WAITING: return
+        state = self.get_parameter_value(self.state)
         self._set_ready()
-        self._set_value(a if cond else b)
+        if state: self.outcome = True
+        self._set_value(self.outcome)
+
+
+#class ParameterSwitchValue(ParameterCell):
+#    def __init__(self):
+#        ParameterCell.__init__(self)
+#        self.param_a = None
+#        self.switch_condition = None
+#
+#    def evaluate(self):
+#        a = self.get_parameter_value(self.param_a)
+#        b = self.get_parameter_value(self.param_b)
+#        cond = self.get_parameter_value(self.switch_condition)
+#        if a is LogicNetworkCell.STATUS_WAITING: return
+#        if b is LogicNetworkCell.STATUS_WAITING: return
+#        if cond is LogicNetworkCell.STATUS_WAITING: return
+#        self._set_ready()
+#        self._set_value(a if cond else b)
 
 
 class ParameterObjectProperty(ParameterCell):
@@ -808,7 +837,7 @@ class ParameterObjectProperty(ParameterCell):
         if property_default is LogicNetworkCell.STATUS_WAITING: return
         self._set_ready()
         if none_or_invalid(game_object) or (not property_name):
-            raise Exception('"Get Property" Node: Object or Property Name invalid, defaulting...')
+            raise Exception('Get Property Node: Object or Property Name invalid, defaulting...')
             self._set_value(property_default)
         else:
             self._set_value(game_object[property_name])
@@ -2401,10 +2430,10 @@ class ActionMouseLook(ActionCell):
         inverted = self.get_parameter_value(self.inverted)
         self._set_ready()
         if none_or_invalid(game_object_x):
-            raise Exception('Invalid Main Object in MouseLook Node!')
+            raise Exception('MouseLook Node: Invalid Main Object!')
             return
         if none_or_invalid(game_object_y):
-            raise Exception('Invalid Head Object in MouseLook Node!')
+            raise Exception('MouseLook Node: Invalid Head Object!')
             return
         
         if condition:

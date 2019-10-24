@@ -6,6 +6,7 @@ import math
 
 
 CONDITION_SOCKET_COLOR = tools.Color.RGBA(.8, 0.2, 0.2, 1.0)
+PSEUDO_COND_SOCKET_COLOR = tools.Color.RGBA(.8, 0.2, 0.2, 1.0)
 PARAMETER_SOCKET_COLOR = tools.Color.RGBA(.8, 0.5, 0.2, 1.0)
 PARAM_OBJ_SOCKET_COLOR = tools.Color.RGBA(0.2, 0.5, .7, 1.0)
 PARAM_SCENE_SOCKET_COLOR = tools.Color.RGBA(0.8, 0.4, 0.2, 1.0)
@@ -339,6 +340,20 @@ class NLConditionSocket(bpy.types.NodeSocket, NetLogicSocketType):
 
     pass
 _sockets.append(NLConditionSocket)
+
+
+class NLPseudoConditionSocket(bpy.types.NodeSocket, NetLogicSocketType):
+    bl_idname = "NLPseudoConditionSocket"
+    bl_label = "Condition"
+
+    def draw_color(self, context, node):
+        return PSEUDO_COND_SOCKET_COLOR
+
+    def draw(self, context, layout, node, text):
+        layout.label(text=text)
+
+    def get_unlinked_value(self): return "None"
+_sockets.append(NLPseudoConditionSocket)
 
 
 class NLParameterSocket(bpy.types.NodeSocket, NetLogicSocketType):
@@ -1439,22 +1454,43 @@ class NLParameterActionStatus(bpy.types.Node, NLParameterNode):
 _nodes.append(NLParameterActionStatus)
 
 
+#class NLParameterSwitchValue(bpy.types.Node, NLParameterNode):
+#    bl_idname = "NLParameterSwitchValue"
+#    bl_label = "Value Switch"
+#    nl_category = "Values"
+#
+#    def init(self, context):
+#        NLParameterNode.init(self, context)
+#        self.inputs.new(NLValueFieldSocket.bl_idname, "A")
+#        self.inputs.new(NLConditionSocket.bl_idname, "True A, False B")
+#        self.inputs.new(NLValueFieldSocket.bl_idname, "B")
+#        self.outputs.new(NLParameterSocket.bl_idname, "A or B")
+#
+#    def get_netlogic_class_name(self):
+#        return "bgelogic.ParameterSwitchValue"
+#    def get_input_sockets_field_names(self):
+#        return ["param_a", "switch_condition", "param_b"]
+#_nodes.append(NLParameterSwitchValue)
+
+
 class NLParameterSwitchValue(bpy.types.Node, NLParameterNode):
     bl_idname = "NLParameterSwitchValue"
-    bl_label = "Value Switch"
-    nl_category = "Values"
+    bl_label = "True / False"
+    nl_category = "Logic"
 
     def init(self, context):
         NLParameterNode.init(self, context)
-        self.inputs.new(NLValueFieldSocket.bl_idname, "A")
-        self.inputs.new(NLConditionSocket.bl_idname, "True A, False B")
-        self.inputs.new(NLValueFieldSocket.bl_idname, "B")
-        self.outputs.new(NLParameterSocket.bl_idname, "A or B")
+        self.inputs.new(NLConditionSocket.bl_idname, "Condition")
+        self.inputs.new(NLBooleanSocket.bl_idname, "Bool")
+        self.outputs.new(NLPseudoConditionSocket.bl_idname, "True")
+        self.outputs.new(NLPseudoConditionSocket.bl_idname, "False")
 
     def get_netlogic_class_name(self):
         return "bgelogic.ParameterSwitchValue"
     def get_input_sockets_field_names(self):
-        return ["param_a", "switch_condition", "param_b"]
+        return ["condition", "state"]
+    def get_output_socket_varnames(self):
+        return ["TRUE", "FALSE"]
 _nodes.append(NLParameterSwitchValue)
 
 
@@ -2095,7 +2131,7 @@ class NLConditionValueChanged(bpy.types.Node, NLConditionNode):
         self.outputs.new(NLParameterSocket.bl_idname, "Old Value")
         self.outputs.new(NLParameterSocket.bl_idname, "New Value")
     def draw_buttons(self, context, layout):
-        layout.prop(self, "initialize", text="Initialize: ON" if self.initialize else "Initialize: OFF", toggle=True)
+        layout.prop(self, "initialize", text="Skip Startup" if self.initialize else "On Startup", toggle=True)
     def get_netlogic_class_name(self): return "bgelogic.ConditionValueChanged"
     def get_input_sockets_field_names(self): return ["current_value"]
     def get_nonsocket_fields(self): return [("initialize", lambda: "True" if self.initialize else "False")]
