@@ -1218,7 +1218,7 @@ class NLParameterConstantValue(bpy.types.Node, NLParameterNode):
         return [("value", v)]
     def get_netlogic_class_name(self):
         return "bgelogic.ParameterConstantValue"
-_nodes.append(NLParameterConstantValue)
+#_nodes.append(NLParameterConstantValue)
 
 class NLParameterFindChildByNameNode(bpy.types.Node, NLParameterNode):
     bl_idname = "NLParameterFindChildByNameNode"
@@ -1282,7 +1282,7 @@ _nodes.append(NLParameterValueFilter3)
 class NLParameterScreenPosition(bpy.types.Node, NLParameterNode):
     bl_idname = "NLParameterScreenPosition"
     bl_label = "Screen Position"
-    nl_category = "Values"
+    nl_category = "Scene"
 
     def init(self, context):
         NLParameterNode.init(self, context)
@@ -1566,10 +1566,74 @@ class NLParameterPythonModuleFunction(bpy.types.Node, NLParameterNode):
 _nodes.append(NLParameterPythonModuleFunction)
 
 
+class NLParameterBooleanValue(bpy.types.Node, NLParameterNode):
+    bl_idname = "NLParameterBooleanValue"
+    bl_label = "Boolean"
+    nl_category = "Values"
+
+    def init(self, context):
+        NLParameterNode.init(self, context)
+        self.inputs.new(NLBooleanSocket.bl_idname, "")
+        self.outputs.new(NLParameterSocket.bl_idname, "Bool")
+
+    def get_netlogic_class_name(self): return "bgelogic.ParameterSimpleValue"
+    def get_output_socket_varnames(self): return ["OUT"]
+    def get_input_sockets_field_names(self): return ["value"]
+_nodes.append(NLParameterBooleanValue)
+
+
+class NLParameterFloatValue(bpy.types.Node, NLParameterNode):
+    bl_idname = "NLParameterFloatValue"
+    bl_label = "Float"
+    nl_category = "Values"
+
+    def init(self, context):
+        NLParameterNode.init(self, context)
+        self.inputs.new(NLFloatFieldSocket.bl_idname, "")
+        self.outputs.new(NLParameterSocket.bl_idname, "Float")
+
+    def get_netlogic_class_name(self): return "bgelogic.ParameterSimpleValue"
+    def get_output_socket_varnames(self): return ["OUT"]
+    def get_input_sockets_field_names(self): return ["value"]
+_nodes.append(NLParameterFloatValue)
+
+
+class NLParameterIntValue(bpy.types.Node, NLParameterNode):
+    bl_idname = "NLParameterIntValue"
+    bl_label = "Integer"
+    nl_category = "Values"
+
+    def init(self, context):
+        NLParameterNode.init(self, context)
+        self.inputs.new(NLIntegerFieldSocket.bl_idname, "")
+        self.outputs.new(NLParameterSocket.bl_idname, "Int")
+
+    def get_netlogic_class_name(self): return "bgelogic.ParameterSimpleValue"
+    def get_output_socket_varnames(self): return ["OUT"]
+    def get_input_sockets_field_names(self): return ["value"]
+_nodes.append(NLParameterIntValue)
+
+
+class NLParameterStringValue(bpy.types.Node, NLParameterNode):
+    bl_idname = "NLParameterStringValue"
+    bl_label = "String"
+    nl_category = "Values"
+
+    def init(self, context):
+        NLParameterNode.init(self, context)
+        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "")
+        self.outputs.new(NLParameterSocket.bl_idname, "String")
+
+    def get_netlogic_class_name(self): return "bgelogic.ParameterSimpleValue"
+    def get_output_socket_varnames(self): return ["OUT"]
+    def get_input_sockets_field_names(self): return ["value"]
+_nodes.append(NLParameterStringValue)
+
+
 class NLParameterVector3Node(bpy.types.Node, NLParameterNode):
     bl_idname = "NLParameterVectorNode"
     bl_label = "Vector 3 (Advanced)"
-    nl_category = "Math"
+    nl_category = "Values"
 
     def init(self, context):
         NLParameterNode.init(self, context)
@@ -1589,12 +1653,12 @@ class NLParameterVector3Node(bpy.types.Node, NLParameterNode):
     def get_netlogic_class_name(self): return "bgelogic.ParameterVector"
     def get_output_socket_varnames(self): return ["OUTV", "OUTX", "OUTY", "OUTZ", "NORMVEC"]
     def get_input_sockets_field_names(self): return ["input_vector", "input_x", "input_y", "input_z"]
-_nodes.append(NLParameterVector3Node)
+#_nodes.append(NLParameterVector3Node)
 
 class NLParameterVector3SimpleNode(bpy.types.Node, NLParameterNode):
     bl_idname = "NLParameterVectorSimpleNode"
     bl_label = "Vector 3"
-    nl_category = "Math"
+    nl_category = "Values"
 
     def init(self, context):
         NLParameterNode.init(self, context)
@@ -1615,7 +1679,7 @@ _nodes.append(NLParameterVector3SimpleNode)
 class NLParameterVector4Node(bpy.types.Node, NLParameterNode):
     bl_idname = "NLParameterVector4Node"
     bl_label = "Vector 4"
-    nl_category = "Math"
+    nl_category = "Values"
     
     def init(self, context):
         NLParameterNode.init(self, context)
@@ -1634,7 +1698,7 @@ class NLParameterVector4Node(bpy.types.Node, NLParameterNode):
     def get_netlogic_class_name(self): return "bgelogic.ParameterVector4"
     def get_output_socket_varnames(self): return ["OUTV", "OUTX","OUTY","OUTZ","OUTVEC"]
     def get_input_sockets_field_names(self): return ["in_vec", "in_x", "in_y", "in_z", "in_w"]
-_nodes.append(NLParameterVector4Node)
+#_nodes.append(NLParameterVector4Node)
 
 
 #Conditions
@@ -2265,7 +2329,7 @@ class NLActionRepeater(bpy.types.Node, NLActionNode):
                     output_uid = uids.get_varname_for_node(output_target)
                     line_writer.write_line("{}.output_cells.append({})", cell_varname, output_uid)
                     uids.remove_cell_from_tree(output_uid)
-_nodes.append(NLActionRepeater)
+#_nodes.append(NLActionRepeater)
 
 
 class NLActionSetGameObjectVisibility(bpy.types.Node, NLActionNode):
@@ -3161,7 +3225,7 @@ class NLParameterGetGlobalValue(bpy.types.Node, NLParameterNode):
         return ["data_id", "key", "default_value"]
     def get_netlogic_class_name(self):
         return "bgelogic.ParameterGetGlobalValue"
-_nodes.append(NLParameterGetGlobalValue)
+#_nodes.append(NLParameterGetGlobalValue)
 
 
 class NLActionSetGlobalValue(bpy.types.Node, NLActionNode):
@@ -3180,7 +3244,7 @@ class NLActionSetGlobalValue(bpy.types.Node, NLActionNode):
         return ["condition", "data_id", "persistent", "key", "value"]
     def get_netlogic_class_name(self):
         return "bgelogic.ActionSetGlobalValue"
-_nodes.append(NLActionSetGlobalValue)
+#_nodes.append(NLActionSetGlobalValue)
 
 
 class NLParameterFormattedString(bpy.types.Node, NLParameterNode):

@@ -1133,6 +1133,21 @@ class ParameterOrientation(ParameterCell):
         self._set_value(matrix)
 
 
+class ParameterSimpleValue(ParameterCell):
+    def __init__(self):
+        ParameterCell.__init__(self)
+        self.value = None
+        self.OUT = LogicNetworkSubCell(self, self.get_value)
+
+    def get_value(self):
+        return self.value
+
+    def evaluate(self):
+        self._set_ready()
+        value = self.get_parameter_value(self.value)
+        self._set_value(value)
+
+
 class ParameterVector(ParameterCell):
     def __init__(self):
         ParameterCell.__init__(self)
@@ -1168,7 +1183,6 @@ class ParameterVector(ParameterCell):
 class ParameterVectorSimple(ParameterCell):
     def __init__(self):
         ParameterCell.__init__(self)
-        self.input_vector = None
         self.input_x = None
         self.input_y = None
         self.input_z = None
@@ -1186,8 +1200,6 @@ class ParameterVectorSimple(ParameterCell):
         x = self.get_parameter_value(self.input_x)
         y = self.get_parameter_value(self.input_y)
         z = self.get_parameter_value(self.input_z)
-        v = self.get_parameter_value(self.input_vector)
-        if v is not None: self.output_vector[:] = v#TODO: zero vector if v is None?
         if x is not None: self.output_vector.x = x
         if y is not None: self.output_vector.y = y
         if z is not None: self.output_vector.z = z
@@ -2467,6 +2479,7 @@ class ActionPrint(ActionCell):
 
         if condition:
             print(value)
+
 
 class ActionSetObjectAttribute(ActionCell):
     def __init__(self):
