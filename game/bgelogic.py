@@ -969,12 +969,28 @@ class ParameterTime(ParameterCell):
         ParameterCell.__init__(self)
         self.network = None
         self.TIME_PER_FRAME = LogicNetworkSubCell(self, self.get_time_per_frame)
+        self.FPS = LogicNetworkSubCell(self, self.get_fps)
         self.TIMELINE = LogicNetworkSubCell(self, self.get_timeline)
-    def get_time_per_frame(self): return self.network.time_per_frame
-    def get_timeline(self): return self.network.timeline
+
+    def get_time_per_frame(self):
+        return self.network.time_per_frame
+
+    def get_fps(self): 
+        try:
+            fps = (1 / self.network.time_per_frame)
+        except:
+            fps = 0
+        return fps
+
+    def get_timeline(self):
+        return self.network.timeline
+
     def setup(self, network):
         self.network = network
-    def has_status(self, status): return status is LogicNetworkCell.STATUS_READY
+
+    def has_status(self, status):
+        return status is LogicNetworkCell.STATUS_READY
+
     def evaluate(self): pass
 
 

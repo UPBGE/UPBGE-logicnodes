@@ -1454,25 +1454,6 @@ class NLParameterActionStatus(bpy.types.Node, NLParameterNode):
 _nodes.append(NLParameterActionStatus)
 
 
-#class NLParameterSwitchValue(bpy.types.Node, NLParameterNode):
-#    bl_idname = "NLParameterSwitchValue"
-#    bl_label = "Value Switch"
-#    nl_category = "Values"
-#
-#    def init(self, context):
-#        NLParameterNode.init(self, context)
-#        self.inputs.new(NLValueFieldSocket.bl_idname, "A")
-#        self.inputs.new(NLConditionSocket.bl_idname, "True A, False B")
-#        self.inputs.new(NLValueFieldSocket.bl_idname, "B")
-#        self.outputs.new(NLParameterSocket.bl_idname, "A or B")
-#
-#    def get_netlogic_class_name(self):
-#        return "bgelogic.ParameterSwitchValue"
-#    def get_input_sockets_field_names(self):
-#        return ["param_a", "switch_condition", "param_b"]
-#_nodes.append(NLParameterSwitchValue)
-
-
 class NLParameterSwitchValue(bpy.types.Node, NLParameterNode):
     bl_idname = "NLParameterSwitchValue"
     bl_label = "True / False"
@@ -1496,14 +1477,15 @@ _nodes.append(NLParameterSwitchValue)
 
 class NLParameterTimeNode(bpy.types.Node, NLParameterNode):
     bl_idname = "NLParameterTimeNode"
-    bl_label = "Time"
-    nl_category = "Time"
+    bl_label = "Time Data"
+    nl_category = "Utilities"
 
     def init(self, context):
         NLParameterNode.init(self, context)
-        self.outputs.new(NLParameterSocket.bl_idname, "Time Per Frame (sec)")
-        self.outputs.new(NLParameterSocket.bl_idname, "Timeline (sec)")
-    def get_output_socket_varnames(self): return ["TIME_PER_FRAME", "TIMELINE"]
+        self.outputs.new(NLParameterSocket.bl_idname, "Frames Per Second")
+        self.outputs.new(NLParameterSocket.bl_idname, "Time Per Frame")
+        self.outputs.new(NLParameterSocket.bl_idname, "Total Elapsed Time")
+    def get_output_socket_varnames(self): return ["FPS", "TIME_PER_FRAME", "TIMELINE"]
     def get_netlogic_class_name(self): return "bgelogic.ParameterTime"
 _nodes.append(NLParameterTimeNode)
 
@@ -1741,7 +1723,7 @@ class NLParameterVector4Node(bpy.types.Node, NLParameterNode):
 class NLAlwaysConditionNode(bpy.types.Node, NLConditionNode):
     bl_idname = "NLAlwaysConditionNode"
     bl_label = "Always"
-    nl_category = "Logic"
+    nl_category = "Conditions"
     
     repeat = bpy.props.BoolProperty(update=update_tree_code)
 
@@ -1890,7 +1872,7 @@ _nodes.append(NLMouseReleasedCondition)
 class NLConditionOnceNode(bpy.types.Node, NLConditionNode):
     bl_idname = "NLConditionOnceNode"
     bl_label = "Once"
-    nl_category = "Logic"
+    nl_category = "Conditions"
 
     def init(self, context):
         NLConditionNode.init(self, context)
@@ -1981,7 +1963,7 @@ _nodes.append(NLConditionMouseTargetingNode)
 class NLConditionAndNode(bpy.types.Node, NLConditionNode):
     bl_idname = "NLConditionAndNode"
     bl_label = "And"
-    nl_category = "Logic"
+    nl_category = "Conditions"
 
     def init(self, context):
         NLConditionNode.init(self, context)
@@ -1997,7 +1979,7 @@ _nodes.append(NLConditionAndNode)
 class NLConditionOrNode(bpy.types.Node, NLConditionNode):
     bl_idname = "NLConditionOrNode"
     bl_label = "Or"
-    nl_category = "Logic"
+    nl_category = "Conditions"
 
     def init(self, context):
         NLConditionNode.init(self, context)
@@ -2012,7 +1994,7 @@ _nodes.append(NLConditionOrNode)
 class NLConditionOrList(bpy.types.Node, NLConditionNode):
     bl_idname = "NLConditionOrList"
     bl_label = "Or List"
-    nl_category = "Logic"
+    nl_category = "Conditions"
     
     def init(self, context):
         NLConditionNode.init(self, context)
@@ -2037,7 +2019,7 @@ _nodes.append(NLConditionOrList)
 class NLConditionAndList(bpy.types.Node, NLConditionNode):
     bl_idname = "NLConditionAndList"
     bl_label = "And List"
-    nl_category = "Logic"
+    nl_category = "Conditions"
     
     def init(self, context):
         NLConditionNode.init(self, context)
@@ -2091,7 +2073,7 @@ class NLConditionLogicOperation(bpy.types.Node, NLConditionNode):
         self.inputs.new(NLSocketLogicOperator.bl_idname, "Op")
         self.inputs.new(NLValueFieldSocket.bl_idname, "A")
         self.inputs.new(NLValueFieldSocket.bl_idname, "B")
-        self.outputs.new(NLConditionSocket.bl_idname, "If A op B")
+        self.outputs.new(NLConditionSocket.bl_idname, "If True")
     def get_netlogic_class_name(self): return "bgelogic.ConditionLogicOp"
     def get_input_sockets_field_names(self): return ["operator", "param_a", "param_b"]
 _nodes.append(NLConditionLogicOperation)
@@ -2142,7 +2124,7 @@ _nodes.append(NLConditionValueChanged)
 
 class NLConditionTimeElapsed(bpy.types.Node, NLConditionNode):
     bl_idname = "NLConditionTimeElapsed"
-    bl_label = "Time Elapsed"
+    bl_label = "Timer"
     nl_category = "Time"
 
     def init(self, context):
@@ -2188,7 +2170,7 @@ _nodes.append(NLConditionNoneNode)
 class NLConditionNotNode(bpy.types.Node, NLConditionNode):
     bl_idname = "NLConditionNotNode"
     bl_label = "Not"
-    nl_category = "Logic"
+    nl_category = "Conditions"
 
     def init(self, context):
         NLConditionNode.init(self, context)
@@ -2544,7 +2526,7 @@ class NLActionApplyLocation(bpy.types.Node, NLActionNode):
             self,
             NLConditionSocket, "Condition",
             NLGameObjectSocket, "GameObject",
-            NLValueFieldSocket, "Vector")
+            NLParameterSocket, "Vector")
 
     def draw_buttons(self, context, layout):
         layout.prop(self, "local", toggle=True, text="Apply Local" if self.local else "Apply Global")
@@ -2566,7 +2548,7 @@ class NLActionApplyRotation(bpy.types.Node, NLActionNode):
             self,
             NLConditionSocket, "Condition",
             NLGameObjectSocket, "GameObject",
-            NLValueFieldSocket, "Vector")
+            NLParameterSocket, "Vector")
 
     def draw_buttons(self, context, layout):
         layout.prop(self, "local", toggle=True, text="Apply Local" if self.local else "Apply Global")
@@ -2588,7 +2570,7 @@ class NLActionApplyForce(bpy.types.Node, NLActionNode):
             self,
             NLConditionSocket, "Condition",
             NLGameObjectSocket, "GameObject",
-            NLValueFieldSocket, "Vector")
+            NLParameterSocket, "Vector")
 
     def draw_buttons(self, context, layout):
         layout.prop(self, "local", toggle=True, text="Apply Local" if self.local else "Apply Global")
@@ -2610,7 +2592,7 @@ class NLActionApplyTorque(bpy.types.Node, NLActionNode):
             self,
             NLConditionSocket, "Condition",
             NLGameObjectSocket, "GameObject",
-            NLValueFieldSocket, "Vector")
+            NLParameterSocket, "Vector")
 
     def draw_buttons(self, context, layout):
         layout.prop(self, "local", toggle=True, text="Apply Local" if self.local else "Apply Global")
@@ -3367,9 +3349,9 @@ class NLActionMoveTo(bpy.types.Node, NLActionNode):
     def init(self, context):
         NLActionNode.init(self, context)
         self.inputs.new(NLConditionSocket.bl_idname, "Condition")
-        self.inputs.new(NLGameObjectSocket.bl_idname, "Moving Object")
+        self.inputs.new(NLGameObjectSocket.bl_idname, "Object")
+        self.inputs.new(NLParameterSocket.bl_idname, "Target Location")
         self.inputs.new(NLBooleanSocket.bl_idname, "Move as Dynamic")
-        self.inputs.new(NLSocketVectorField.bl_idname, "Destination XYZ")
         self.inputs.new(NLPositiveFloatSocket.bl_idname, "Speed")
         self.inputs[-1].value = 1.0
         self.inputs.new(NLFloatFieldSocket.bl_idname, "Stop At Distance")
@@ -3389,11 +3371,11 @@ class NLActionTranslate(bpy.types.Node, NLActionNode):
     def init(self, context):
         NLActionNode.init(self, context)
         self.inputs.new(NLConditionSocket.bl_idname, "Condition")
-        self.inputs.new(NLGameObjectSocket.bl_idname, "Moving Object")
-        self.inputs.new(NLFloatFieldSocket.bl_idname, "DX")
-        self.inputs.new(NLFloatFieldSocket.bl_idname, "DY")
-        self.inputs.new(NLFloatFieldSocket.bl_idname, "DZ")
+        self.inputs.new(NLGameObjectSocket.bl_idname, "Object")
         self.inputs.new(NLBooleanSocket.bl_idname, "Local")
+        self.inputs.new(NLFloatFieldSocket.bl_idname, "X")
+        self.inputs.new(NLFloatFieldSocket.bl_idname, "Y")
+        self.inputs.new(NLFloatFieldSocket.bl_idname, "Z")
         self.inputs[-1].value = True
         self.inputs.new(NLFloatFieldSocket.bl_idname, "Speed")
         self.inputs[-1].value = 1.0
@@ -3434,11 +3416,11 @@ class NLActionRotateTo(bpy.types.Node, NLActionNode):
     def init(self, context):
         NLActionNode.init(self, context)
         self.inputs.new(NLConditionSocket.bl_idname, "Condition")
-        self.inputs.new(NLGameObjectSocket.bl_idname, "Moving Object")
-        self.inputs.new(NLSocketVectorField.bl_idname, "Target XYZ")
+        self.inputs.new(NLGameObjectSocket.bl_idname, "Object")
+        self.inputs.new(NLParameterSocket.bl_idname, "Target Vector")
         self.inputs.new(NLSocketLocalAxis.bl_idname, "Rot Axis")
         self.inputs.new(NLSocketOrientedLocalAxis.bl_idname, "Front")
-        self.inputs.new(NLSocketOptionalPositiveFloat.bl_idname, "Speed")
+        self.inputs.new(NLSocketPositiveFloat.bl_idname, "Speed")
         self.outputs.new(NLConditionSocket.bl_idname, "When Done")
 
     def get_input_sockets_field_names(self):
