@@ -1224,8 +1224,31 @@ class ParameterVector(ParameterCell):
         if y is not None: self.output_vector.y = y
         if z is not None: self.output_vector.z = z
         self._set_value(self.output_vector)
-        
-class ParameterVectorSimple(ParameterCell):
+
+
+class ParameterVector2Simple(ParameterCell):
+    def __init__(self):
+        ParameterCell.__init__(self)
+        self.input_x = None
+        self.input_y = None
+        self.output_vector = mathutils.Vector()
+        self.OUTV = LogicNetworkSubCell(self, self.get_out_v)
+
+    def get_out_x(self): return self.output_vector.x
+    def get_out_y(self): return self.output_vector.y
+    def get_out_v(self): return self.output_vector.copy()
+    def get_normalized_vector(self): return self.output_vector.normalized()
+
+    def evaluate(self):
+        self._set_ready()
+        x = self.get_parameter_value(self.input_x)
+        y = self.get_parameter_value(self.input_y)
+        if x is not None: self.output_vector.x = x
+        if y is not None: self.output_vector.y = y
+        self._set_value(self.output_vector)
+
+  
+class ParameterVector3Simple(ParameterCell):
     def __init__(self):
         ParameterCell.__init__(self)
         self.input_x = None

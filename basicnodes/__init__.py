@@ -1434,7 +1434,7 @@ _nodes.append(NLArithmeticOpParameterNode)
 
 class NLParameterActionStatus(bpy.types.Node, NLParameterNode):
     bl_idname = "NLParameterActionStatus"
-    bl_label = "Action Status"
+    bl_label = "Animation Status"
     nl_category = "Animation"
 
     def init(self, context):
@@ -1581,7 +1581,7 @@ class NLParameterPythonModuleFunction(bpy.types.Node, NLParameterNode):
         return "bgelogic.ParameterPythonModuleFunction"
     def get_input_sockets_field_names(self): return ["module_name", "module_func", "IN0", "IN1", "IN2", "IN3"]
     def get_output_socket_varnames(self): return ["OUT0", "OUT1", "OUT2", "OUT3"]
-_nodes.append(NLParameterPythonModuleFunction)
+#_nodes.append(NLParameterPythonModuleFunction)
 
 
 class NLParameterBooleanValue(bpy.types.Node, NLParameterNode):
@@ -1673,8 +1673,29 @@ class NLParameterVector3Node(bpy.types.Node, NLParameterNode):
     def get_input_sockets_field_names(self): return ["input_vector", "input_x", "input_y", "input_z"]
 #_nodes.append(NLParameterVector3Node)
 
+
+class NLParameterVector2SimpleNode(bpy.types.Node, NLParameterNode):
+    bl_idname = "NLParameterVector2SimpleNode"
+    bl_label = "Vector 2"
+    nl_category = "Values"
+
+    def init(self, context):
+        NLParameterNode.init(self, context)
+        tools.register_inputs(
+            self,
+            NLFloatFieldSocket, "X",
+            NLFloatFieldSocket, "Y"
+        )
+        self.outputs.new(NLParameterSocket.bl_idname, "Vector")
+
+    def get_netlogic_class_name(self): return "bgelogic.Parameter2VectorSimple"
+    def get_output_socket_varnames(self): return ["OUTV"]
+    def get_input_sockets_field_names(self): return ["input_x", "input_y"]
+_nodes.append(NLParameterVector2SimpleNode)
+
+
 class NLParameterVector3SimpleNode(bpy.types.Node, NLParameterNode):
-    bl_idname = "NLParameterVectorSimpleNode"
+    bl_idname = "NLParameterVector3SimpleNode"
     bl_label = "Vector 3"
     nl_category = "Values"
 
@@ -1688,7 +1709,7 @@ class NLParameterVector3SimpleNode(bpy.types.Node, NLParameterNode):
         )
         self.outputs.new(NLParameterSocket.bl_idname, "Vector")
 
-    def get_netlogic_class_name(self): return "bgelogic.ParameterVectorSimple"
+    def get_netlogic_class_name(self): return "bgelogic.Parameter3VectorSimple"
     def get_output_socket_varnames(self): return ["OUTV"]
     def get_input_sockets_field_names(self): return ["input_x", "input_y", "input_z"]
 _nodes.append(NLParameterVector3SimpleNode)
@@ -1719,11 +1740,11 @@ class NLParameterVector4Node(bpy.types.Node, NLParameterNode):
 #_nodes.append(NLParameterVector4Node)
 
 
-#Conditions
+#Events
 class NLAlwaysConditionNode(bpy.types.Node, NLConditionNode):
     bl_idname = "NLAlwaysConditionNode"
     bl_label = "Always"
-    nl_category = "Conditions"
+    nl_category = "Events"
     
     repeat = bpy.props.BoolProperty(update=update_tree_code)
 
@@ -1872,7 +1893,7 @@ _nodes.append(NLMouseReleasedCondition)
 class NLConditionOnceNode(bpy.types.Node, NLConditionNode):
     bl_idname = "NLConditionOnceNode"
     bl_label = "Once"
-    nl_category = "Conditions"
+    nl_category = "Events"
 
     def init(self, context):
         NLConditionNode.init(self, context)
@@ -1963,7 +1984,7 @@ _nodes.append(NLConditionMouseTargetingNode)
 class NLConditionAndNode(bpy.types.Node, NLConditionNode):
     bl_idname = "NLConditionAndNode"
     bl_label = "And"
-    nl_category = "Conditions"
+    nl_category = "Events"
 
     def init(self, context):
         NLConditionNode.init(self, context)
@@ -1979,7 +2000,7 @@ _nodes.append(NLConditionAndNode)
 class NLConditionOrNode(bpy.types.Node, NLConditionNode):
     bl_idname = "NLConditionOrNode"
     bl_label = "Or"
-    nl_category = "Conditions"
+    nl_category = "Events"
 
     def init(self, context):
         NLConditionNode.init(self, context)
@@ -1994,7 +2015,7 @@ _nodes.append(NLConditionOrNode)
 class NLConditionOrList(bpy.types.Node, NLConditionNode):
     bl_idname = "NLConditionOrList"
     bl_label = "Or List"
-    nl_category = "Conditions"
+    nl_category = "Events"
     
     def init(self, context):
         NLConditionNode.init(self, context)
@@ -2019,7 +2040,7 @@ _nodes.append(NLConditionOrList)
 class NLConditionAndList(bpy.types.Node, NLConditionNode):
     bl_idname = "NLConditionAndList"
     bl_label = "And List"
-    nl_category = "Conditions"
+    nl_category = "Events"
     
     def init(self, context):
         NLConditionNode.init(self, context)
@@ -2170,7 +2191,7 @@ _nodes.append(NLConditionNoneNode)
 class NLConditionNotNode(bpy.types.Node, NLConditionNode):
     bl_idname = "NLConditionNotNode"
     bl_label = "Not"
-    nl_category = "Conditions"
+    nl_category = "Events"
 
     def init(self, context):
         NLConditionNode.init(self, context)
@@ -2653,7 +2674,7 @@ _nodes.append(NLActionReplaceMesh)
 
 class NLActionPlayActionNode(bpy.types.Node, NLActionNode):
     bl_idname = "NLActionPlayActionNode"
-    bl_label = "Play GameoObject Action"
+    bl_label = "Play Animation"
     nl_category = "Animation"
 
     def init(self, context):
@@ -3098,7 +3119,7 @@ class NLActionDynamicCharacterController(bpy.types.Node, NLActionNode):
             "jump", "run", "head_rot_arc_size", "head_rot_speed", "body_rot_speed", "walk_speed",
             "run_speed", "jump_force"
         ]
-_nodes.append(NLActionDynamicCharacterController)
+#_nodes.append(NLActionDynamicCharacterController)
 
 
 class NLActionStartSound(bpy.types.Node, NLActionNode):
@@ -3268,7 +3289,7 @@ class NLActionSetGlobalValue(bpy.types.Node, NLActionNode):
 class NLParameterFormattedString(bpy.types.Node, NLParameterNode):
     bl_idname = "NLParameterFormattedString"
     bl_label = "Formatted String"
-    nl_category = "Strings"
+    nl_category = "Values"
 
     def init(self, context):
         NLParameterNode.init(self, context)
@@ -3532,7 +3553,7 @@ _nodes.append(NLActionSetCurrentScene)
 class NLActionStringOp(bpy.types.Node, NLActionNode):
     bl_idname = "NLActionStringOp"
     bl_label = "String Op"
-    nl_category = "Strings"
+    nl_category = "Values"
     value = bpy.props.EnumProperty(items=_enum_string_ops, update=update_tree_code)
     def init(self, context):
         NLActionNode.init(self, context)
@@ -3549,7 +3570,7 @@ class NLActionStringOp(bpy.types.Node, NLActionNode):
         return ["condition", "input_string", "input_param_a", "input_param_b"]
     def get_nonsocket_fields(self):
         return [("opcode", self.value)]
-_nodes.append(NLActionStringOp)
+#_nodes.append(NLActionStringOp)
 
 
 _enum_predefined_math_fun = {
@@ -3616,4 +3637,4 @@ class NLParameterMathFun(bpy.types.Node, NLParameterNode):
         return [("formula", '"{0}"'.format(self.value))]
     def get_netlogic_class_name(self):
         return "bgelogic.ParameterMathFun"
-_nodes.append(NLParameterMathFun)
+#_nodes.append(NLParameterMathFun)
