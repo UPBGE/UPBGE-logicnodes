@@ -319,8 +319,6 @@ class NLApplyLogicOperator(bpy.types.Operator):
         controller.module = bge_netlogic.utilities.py_controller_module_string(py_module_name)
         #link the brick
         sensor.link(controller)
-        pass
-    pass
 
 
 class NLGenerateLogicNetworkOperator(bpy.types.Operator):
@@ -427,3 +425,16 @@ class NLPopupTemplatesOperator(bpy.types.Operator):
         else:
             return bpy.data.texts[index]
         pass
+
+
+class NLPropertyOperator(bpy.types.Operator):
+    bl_idname = "bge_netlogic.game_properties"
+    bl_label = "Object Properties"
+    bl_description = "Shows the Game Properties for currently selected game"
+
+    @classmethod
+    def poll(cls, context): return True
+
+    def execute(self, context):
+        print(bpy.context.object['lil'])
+        return {'FINISHED'}

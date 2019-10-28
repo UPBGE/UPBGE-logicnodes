@@ -1372,8 +1372,9 @@ class NLGameObjectPropertyParameterNode(bpy.types.Node, NLParameterNode):
 
     def init(self, context):
         NLParameterNode.init(self, context)
-        self.inputs.new(NLGameObjectSocket.bl_idname, "Object: ")
-        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Name: ")
+        self.inputs.new(NLGameObjectSocket.bl_idname, "Object")
+        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Name")
+        self.inputs[-1].value = 'property'
         self.outputs.new(NLParameterSocket.bl_idname, "Property Value")
 
     def get_netlogic_class_name(self): return "bgelogic.ParameterObjectProperty"
@@ -2250,11 +2251,47 @@ class NLSetGameObjectGamePropertyActionNode(bpy.types.Node, NLActionNode):
         self.inputs.new(NLConditionSocket.bl_idname, "Condition")
         self.inputs.new(NLGameObjectSocket.bl_idname, "Game Object")
         self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Name")
-        self.inputs.new(NLValueFieldSocket.bl_idname, "Value")
+        self.inputs[-1].value = 'property'
+        self.inputs.new(NLFloatFieldSocket.bl_idname, "Value")
 
     def get_netlogic_class_name(self): return "bgelogic.ActionSetGameObjectGameProperty"
     def get_input_sockets_field_names(self): return ["condition", "game_object", "property_name", "property_value"]
 _nodes.append(NLSetGameObjectGamePropertyActionNode)
+
+
+class NLToggleGameObjectGamePropertyActionNode(bpy.types.Node, NLActionNode):
+    bl_idname = "NLToggleGameObjectGamePropertyActionNode"
+    bl_label = "Toggle Property"
+    nl_category = "Properties"
+
+    def init(self, context):
+        NLActionNode.init(self, context)
+        self.inputs.new(NLConditionSocket.bl_idname, "Condition")
+        self.inputs.new(NLGameObjectSocket.bl_idname, "Game Object")
+        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Name")
+        self.inputs[-1].value = 'property'
+
+    def get_netlogic_class_name(self): return "bgelogic.ActionToggleGameObjectGameProperty"
+    def get_input_sockets_field_names(self): return ["condition", "game_object", "property_name", "property_value"]
+_nodes.append(NLToggleGameObjectGamePropertyActionNode)
+
+
+class NLAddToGameObjectGamePropertyActionNode(bpy.types.Node, NLActionNode):
+    bl_idname = "NLAddToGameObjectGamePropertyActionNode"
+    bl_label = "Add To Property"
+    nl_category = "Properties"
+
+    def init(self, context):
+        NLActionNode.init(self, context)
+        self.inputs.new(NLConditionSocket.bl_idname, "Condition")
+        self.inputs.new(NLGameObjectSocket.bl_idname, "Game Object")
+        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Name")
+        self.inputs[-1].value = 'property'
+        self.inputs.new(NLFloatFieldSocket.bl_idname, "Value")
+
+    def get_netlogic_class_name(self): return "bgelogic.ActionAddToGameObjectGameProperty"
+    def get_input_sockets_field_names(self): return ["condition", "game_object", "property_name", "property_value"]
+_nodes.append(NLAddToGameObjectGamePropertyActionNode)
 
 
 class NLSetObjectAttributeActionNode(bpy.types.Node, NLActionNode):
@@ -2810,6 +2847,7 @@ class NLActionMouseLookNode(bpy.types.Node, NLActionNode):
         self.inputs.new(NLGameObjectSocket.bl_idname, "Head (Optional)")
         self.inputs.new(NLBooleanSocket.bl_idname, "Inverted")
         self.inputs.new(NLFloatFieldSocket.bl_idname, "Sensitivity")
+        self.inputs[-1].value = 1.0
         self.inputs.new(NLFloatFieldSocket.bl_idname, "Max Z")
         self.inputs.new(NLFloatFieldSocket.bl_idname, "Min Z")
         self.inputs.new(NLFloatFieldSocket.bl_idname, "Max Y")
@@ -3295,10 +3333,10 @@ class NLParameterFormattedString(bpy.types.Node, NLParameterNode):
         NLParameterNode.init(self, context)
         self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Format String")
         self.inputs[-1].value = "A:{} B:{} C:{} D:{}"
-        self.inputs.new(NLValueFieldSocket.bl_idname, "A")
-        self.inputs.new(NLValueFieldSocket.bl_idname, "B")
-        self.inputs.new(NLValueFieldSocket.bl_idname, "C")
-        self.inputs.new(NLValueFieldSocket.bl_idname, "D")
+        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "A")
+        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "B")
+        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "C")
+        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "D")
         self.outputs.new(NLParameterSocket.bl_idname, "String")
     def get_input_sockets_field_names(self):
         return ["format_string", "value_a", "value_b", "value_c", "value_d"]

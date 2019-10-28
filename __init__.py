@@ -1,19 +1,19 @@
-bl_info = {
-    "name": "Uchronian Logic - UPBGE Logic Nodes",
-    "description": "A Node System to create game logic.",
-    "author": "pgi, Leopold A-C (Iza Zed)",
-    "version": (0, 3, 2),
-    "blender": (2, 82, 0),
-    "location": "View Menu",
-    "warning": "Alpha",
-    "category": "Game Engine"
-}
-
 import bpy
 import nodeitems_utils
 import os
 import sys
 import time
+
+bl_info = {
+    "name": "Uchronian Logic - UPBGE Logic Nodes",
+    "description": "A Node System to create game logic.",
+    "author": "pgi, Leopold A-C (Iza Zed)",
+    "version": (0, 3, 3),
+    "blender": (2, 82, 0),
+    "location": "View Menu",
+    "warning": "Alpha",
+    "category": "Game Engine"
+}
 
 _loaded_nodes = []
 _loaded_sockets = []
@@ -320,14 +320,21 @@ _registered_classes = [
     ops.TreeCodeWriterOperator,
     ops.NLSwitchInitialNetworkStatusOperator,
     ops.NLPopupTemplatesOperator,
+    ops.NLPropertyOperator,
     NLNodeTreeReference]
+
 _registered_classes.extend(basicnodes._sockets)
+
 _registered_classes.extend(basicnodes._nodes)
+
 _registered_classes.extend([
-    ui.BGELogicPanel])
+    ui.BGELogicPanel,
+    ui.BGEGamePropertyPanel])
+
 def _get_key_for_class(c):
     if hasattr(c, "bl_label"): return c.bl_label
     else: return "zzz"
+
 _registered_classes = sorted(_registered_classes, key=_get_key_for_class)
 
 #Create the menu items that allow the user to add nodes to a tree

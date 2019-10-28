@@ -1,11 +1,23 @@
 import bpy
 import bge_netlogic
 
-class BGELogicPanel(bpy.types.Panel):
-    bl_label = "BGE Logic Tree"
+class BGEGamePropertyPanel(bpy.types.Panel):
+    bl_label = "Object Properties"
     bl_space_type = "NODE_EDITOR"
     bl_region_type = "TOOLS"
-    #bl_category = "BGE Logic Tree"
+
+    def draw(self, context):
+        layout = self.layout
+        column = layout.column()
+        obj = bpy.context.object
+        for prop in obj.children:
+            column.operator(bge_netlogic.ops.NLPropertyOperator.bl_idname, text=prop.name)
+
+
+class BGELogicPanel(bpy.types.Panel):
+    bl_label = "Logic Nodes"
+    bl_space_type = "NODE_EDITOR"
+    bl_region_type = "TOOLS"
     _current_tree = None
 
     @classmethod
@@ -23,15 +35,15 @@ class BGELogicPanel(bpy.types.Panel):
         for e in tree_item_list:
             initial_status = e.tree_initial_status
             if last == None: last = initial_status
-            elif last != initial_status: return None#None means undefined, mixed, some are enabled, some are disabled
+            elif last != initial_status: return None  # None means undefined, mixed, some are enabled, some are disabled
         return last
 
     def draw(self, context):
         layout = self.layout
         layout.operator(bge_netlogic.ops.NLPopupTemplatesOperator.bl_idname, text="Custom Nodes Templates...")
-        layout.operator(bge_netlogic.ops.NLImportProjectNodes.bl_idname, text="Import logic nodes")
+        layout.operator(bge_netlogic.ops.NLImportProjectNodes.bl_idname, text="Import Custom Nodes")
         layout.operator(bge_netlogic.ops.NLLoadProjectNodes.bl_idname, text="Refresh Imported Nodes")
-        layout.operator(bge_netlogic.ops.NLApplyLogicOperator.bl_idname, text="Apply logic to selected objects").owner = "BGELogicPanel"
+        layout.operator(bge_netlogic.ops.NLApplyLogicOperator.bl_idname, text="Apply Tree to active Object").owner = "BGELogicPanel"
         layout.separator()
         layout.operator(bge_netlogic.ops.NLGenerateLogicNetworkOperator.bl_idname, text="Force Code Update")
         selected_objects = [ob for ob in context.scene.objects if ob.select_get()]
