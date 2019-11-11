@@ -9,7 +9,8 @@ CONDITION_SOCKET_COLOR = tools.Color.RGBA(.8, 0.2, 0.2, 1.0)
 PSEUDO_COND_SOCKET_COLOR = tools.Color.RGBA(.8, 0.2, 0.2, 1.0)
 PARAMETER_SOCKET_COLOR = tools.Color.RGBA(.8, 0.5, 0.2, 1.0)
 PARAM_OBJ_SOCKET_COLOR = tools.Color.RGBA(0.2, 0.5, .7, 1.0)
-PARAM_SCENE_SOCKET_COLOR = tools.Color.RGBA(0.8, 0.4, 0.2, 1.0)
+PARAM_SCENE_SOCKET_COLOR = tools.Color.RGBA(0.8, 0.8, 0.0, 1.0)
+PARAM_VECTOR_SOCKET_COLOR = tools.Color.RGBA(0.4, 0.8, 0.4, 1.0)
 PARAM_SOUND_SOCKET_COLOR = tools.Color.RGBA(0.2, 0.5, 0.2, 1.0)
 ACTION_SOCKET_COLOR = tools.Color.RGBA(0.2, .7, .7, 1)
 
@@ -257,7 +258,9 @@ def keyboard_key_string_to_bge_key(ks):
     pass
 
 
-class NetLogicType: pass
+class NetLogicType:
+    pass
+
 class NetLogicSocketType:
     def get_unlinked_value(self): raise NotImplementedError()
 
@@ -274,6 +277,7 @@ class NetLogicStatementGenerator(NetLogicType):
             if callable(field_value): field_value = field_value()
             line_writer.write_line('{}.{} = {}', cell_varname, field_name, field_value)
         for socket in self.inputs: self.write_socket_field_initialization(socket, cell_varname, uids, line_writer)
+
     def write_socket_field_initialization(self, socket, cell_varname, uids, line_writer):
         input_names = self.get_input_sockets_field_names()
         input_socket_index = self._index_of(socket, self.inputs)
@@ -297,32 +301,54 @@ class NetLogicStatementGenerator(NetLogicType):
         :return: the non socket fields initializers
         """
         return []
+
     def get_input_sockets_field_names(self): return None
-    def get_field_name_for_socket(self, socket): 
+
+    def get_field_name_for_socket(self, socket):
         print("not implemented in ", self)
         raise NotImplementedError()
-    def get_netlogic_class_name(self): raise NotImplementedError()
+
+    def get_netlogic_class_name(self):
+        raise NotImplementedError()
+
     def _index_of(self, item, a_iterable):
         i = 0
         for e in a_iterable:
             if e == item: return i
             i += 1
+
     def get_linked_socket_field_value(self, socket, cell_varname, field_name, uids):
         output_node = socket.links[0].from_socket.node
+        output_socket = socket.links[0].from_socket
+        output_socket_index = self._index_of(output_socket, output_node.outputs)
+        #print(cell_varname)
+        #print(field_name)
+        #print(uids)
+        #print('#######################################################')
+        #print(socket.node.parent)
+        #print(output_node.inputs)
+        #print(output_node.inputs.items())
+        #print(output_node)
+        #print('#######################################################')
+        if isinstance(output_node, bpy.types.NodeReroute):
+            return self.get_linked_socket_field_value(output_socket, cell_varname, field_name, uids)
         assert isinstance(output_node, NetLogicStatementGenerator)
         output_node_varname = uids.get_varname_for_node(socket.links[0].from_socket.node)
-        output_socket = socket.links[0].from_socket
         output_map = output_node.get_output_socket_varnames()
-        output_socket_index = self._index_of(output_socket, output_node.outputs)
         if output_map:
             varname = output_map[output_socket_index]
-            if varname is OUTCELL: return output_node_varname
-            else: return '{}.{}'.format(output_node_varname, varname)
+            if varname is OUTCELL:
+                return output_node_varname
+            else:
+                return '{}.{}'.format(output_node_varname, varname)
         else:
             return output_node_varname
-    def get_output_socket_varnames(self): return None
-    def update(self): bge_netlogic.update_current_tree_code()
-    pass
+
+    def get_output_socket_varnames(self):
+        return None
+
+    def update(self):
+        bge_netlogic.update_current_tree_code()
 
 
 class NLConditionSocket(bpy.types.NodeSocket, NetLogicSocketType):
@@ -422,19 +448,45 @@ class NLParameterNode(NLAbstractNode):
     pass
 
 
-#Sockets
+# MODERN OBJECT SELECTION!!!
+# TODO: get type=bge.types.KX_GameObject here
 class NLGameObjectSocket(bpy.types.NodeSocket, NetLogicSocketType):
     bl_idname = "NLGameObjectSocket"
     bl_label = "Game Object"
+    value = bpy.props.PointerProperty(name='Object', type=bpy.types.Object)
 
     def draw_color(self, context, node):
         return PARAM_OBJ_SOCKET_COLOR
 
     def draw(self, context, layout, node, text):
-        layout.label(text=text)
+        if self.is_output:
+            layout.label(text=self.name)
+        elif self.is_linked:
+            layout.label(text=self.name)
+        else:
+            col = layout.column(align=False)
+            col.label(text=self.name)
+            col.prop_search(self, 'value', bpy.context.scene, 'objects', icon='NONE', text='')
 
     def get_unlinked_value(self):
-        return "None"
+        if isinstance(self.value, bpy.types.Object):
+            return '"Object:{}"'.format(self.value.name)
+        return "{}".format(self.value)
+
+
+# Sockets
+# class NLGameObjectSocket(bpy.types.NodeSocket, NetLogicSocketType):
+#     bl_idname = "NLGameObjectSocket"
+#     bl_label = "Game Object"
+# 
+#     def draw_color(self, context, node):
+#         return PARAM_OBJ_SOCKET_COLOR
+# 
+#     def draw(self, context, layout, node, text):
+#         layout.label(text=text)
+# 
+#     def get_unlinked_value(self):
+#         return "None"
 _sockets.append(NLGameObjectSocket)
 
 
@@ -1048,11 +1100,34 @@ class NLSocketMouseMotion(bpy.types.NodeSocket, NetLogicSocketType):
             layout.prop(self, "value", text="")
 
     def get_unlinked_value(self):
-        if self.value == "UP": return "network.add_cell(bgelogic.ConditionMouseUp(repeat=True))"
-        if self.value == "DOWN": return "network.add_cell(bgelogic.ConditionMouseDown(repeat=True))"
-        if self.value == "LEFT": return "network.add_cell(bgelogic.ConditionMouseLeft(repeat=True))"
-        if self.value == "RIGHT": return "network.add_cell(bgelogic.ConditionMouseRight(repeat=True))"
+        if self.value == "UP":
+            return "network.add_cell(bgelogic.ConditionMouseUp(repeat=True))"
+
+        if self.value == "DOWN":
+            return "network.add_cell(bgelogic.ConditionMouseDown(repeat=True))"
+
+        if self.value == "LEFT":
+            return "network.add_cell(bgelogic.ConditionMouseLeft(repeat=True))"
+
+        if self.value == "RIGHT":
+            return "network.add_cell(bgelogic.ConditionMouseRight(repeat=True))"
+
+
 _sockets.append(NLSocketMouseMotion)
+
+
+class NLVectorSocket(bpy.types.NodeSocket, NetLogicSocketType):
+    bl_idname = "NLVectorSocket"
+    bl_label = "Parameter"
+
+    def draw_color(self, context, node):
+        return PARAM_VECTOR_SOCKET_COLOR
+
+    def draw(self, context, layout, node, text):
+        layout.label(text=text)
+
+    def get_unlinked_value(self): return "None"
+_sockets.append(NLVectorSocket)
 
 
 class NLSocketVectorField(bpy.types.NodeSocket, NetLogicSocketType):
@@ -1063,7 +1138,7 @@ class NLSocketVectorField(bpy.types.NodeSocket, NetLogicSocketType):
         description="Default to (0,0,0), type numbers separated by space or comma or anything but a dot")
 
     def draw_color(self, context, node):
-        return PARAMETER_SOCKET_COLOR
+        return PARAM_VECTOR_SOCKET_COLOR
 
     def draw(self, context, layout, node, text):
         if self.is_linked:
@@ -1333,7 +1408,7 @@ class NLParameterWorldPosition(bpy.types.Node, NLParameterNode):
 _nodes.append(NLParameterWorldPosition)
 
 class NLOwnerGameObjectParameterNode(bpy.types.Node, NLParameterNode):
-    """The owner of this logic tree. Each GameObject that has this tree installed is the "owner" of a logic tree"""
+    """The owner of this logic tree. Each Game Object that has this tree installed is the "owner" of a logic tree"""
     bl_idname = "NLOwnerGameObjectParameterNode"
     bl_label = "Get Owner"
     nl_category = "Objects"
@@ -1405,11 +1480,9 @@ class NLActiveCameraParameterNode(bpy.types.Node, NLParameterNode):
 
     def init(self, context):
         NLParameterNode.init(self, context)
-        tools.register_inputs(self, NLSceneSocket, "Scene")
         self.outputs.new(NLGameObjectSocket.bl_idname, "")
     def get_netlogic_class_name(self):
         return "bgelogic.ParameterActiveCamera"
-    def get_input_sockets_field_names(self): return ["scene"]
 _nodes.append(NLActiveCameraParameterNode)
 
 class NLArithmeticOpParameterNode(bpy.types.Node, NLParameterNode):
@@ -1687,7 +1760,7 @@ class NLParameterVector2SimpleNode(bpy.types.Node, NLParameterNode):
             NLFloatFieldSocket, "X",
             NLFloatFieldSocket, "Y"
         )
-        self.outputs.new(NLParameterSocket.bl_idname, "Vector")
+        self.outputs.new(NLVectorSocket.bl_idname, "Vector")
 
     def get_netlogic_class_name(self): return "bgelogic.Parameter2VectorSimple"
     def get_output_socket_varnames(self): return ["OUTV"]
@@ -1708,9 +1781,9 @@ class NLParameterVector3SimpleNode(bpy.types.Node, NLParameterNode):
             NLFloatFieldSocket, "Y",
             NLFloatFieldSocket, "Z"
         )
-        self.outputs.new(NLParameterSocket.bl_idname, "Vector")
+        self.outputs.new(NLVectorSocket.bl_idname, "Vector")
 
-    def get_netlogic_class_name(self): return "bgelogic.Parameter3VectorSimple"
+    def get_netlogic_class_name(self): return "bgelogic.ParameterVector3Simple"
     def get_output_socket_varnames(self): return ["OUTV"]
     def get_input_sockets_field_names(self): return ["input_x", "input_y", "input_z"]
 _nodes.append(NLParameterVector3SimpleNode)
@@ -1969,7 +2042,7 @@ class NLConditionMouseTargetingNode(bpy.types.Node, NLConditionNode):
 
     def init(self, context):
         NLConditionNode.init(self, context)
-        self.inputs.new(NLGameObjectSocket.bl_idname, "GameObject")
+        self.inputs.new(NLGameObjectSocket.bl_idname, "Game Object")
         self.outputs.new(NLConditionSocket.bl_idname, "On Mouse Enter")
         self.outputs.new(NLConditionSocket.bl_idname, "On Mouse Over")
         self.outputs.new(NLConditionSocket.bl_idname, "On Mouse Exit")
@@ -2213,7 +2286,7 @@ class NLConditionLogicNetworkStatusNode(bpy.types.Node, NLConditionNode):
 
     def init(self, context):
         NLConditionNode.init(self, context)
-        self.inputs.new(NLGameObjectSocket.bl_idname, "GameObject")
+        self.inputs.new(NLGameObjectSocket.bl_idname, "Game Object")
         self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Tree Name")
         self.outputs.new(NLConditionSocket.bl_idname, "If Running")
         self.outputs.new(NLConditionSocket.bl_idname, "If Stopped")
@@ -2349,7 +2422,7 @@ class NLStartLogicNetworkActionNode(bpy.types.Node, NLActionNode):
         NLActionNode.init(self, context)
         tools.register_inputs(self,
             NLConditionSocket, "Condition",
-            NLGameObjectSocket, "GameObject",
+            NLGameObjectSocket, "Game Object",
             NLQuotedStringFieldSocket, "Tree Name")
 
     def get_netlogic_class_name(self): return "bgelogic.ActionStartLogicNetwork"
@@ -2366,7 +2439,7 @@ class NLStopLogicNetworkActionNode(bpy.types.Node, NLActionNode):
         NLActionNode.init(self, context)
         tools.register_inputs(self,
             NLConditionSocket, "Condition",
-            NLGameObjectSocket, "GameObject",
+            NLGameObjectSocket, "Game Object",
             NLQuotedStringFieldSocket, "Tree Name")
 
     def get_netlogic_class_name(self): return "bgelogic.ActionStopLogicNetwork"
@@ -2402,7 +2475,8 @@ class NLActionRepeater(bpy.types.Node, NLActionNode):
             if output_socket.is_linked:
                 for output_link in output_socket.links:
                     output_target = output_link.to_socket.node
-                    output_uid = uids.get_varname_for_node(output_target)
+                    if not isinstance(output_target, bpy.types.NodeReroute):
+                        output_uid = uids.get_varname_for_node(output_target)
                     line_writer.write_line("{}.output_cells.append({})", cell_varname, output_uid)
                     uids.remove_cell_from_tree(output_uid)
 #_nodes.append(NLActionRepeater)
@@ -2429,25 +2503,44 @@ _nodes.append(NLActionSetGameObjectVisibility)
 
 class NLActionFindObjectNode(bpy.types.Node, NLActionNode):
     bl_idname = "NLActionFindObjectNode"
-    bl_label = "Find GameObject"
+    bl_label = "Get Game Object"
     nl_category = "Objects"
 
     def init(self, context):
         NLActionNode.init(self, context)
         tools.register_inputs(self,
-            NLConditionSocket, "Optional Condition",
-            NLSceneSocket, "Scene",
+            NLConditionSocket, "Condition (Optional)",
+            NLGameObjectSocket, "Object")
+            #NLQuotedStringFieldSocket, "Name")
+        self.outputs.new(NLGameObjectSocket.bl_idname, "Game Object")
+
+    def get_netlogic_class_name(self): return "bgelogic.ActionFindObject"
+    def get_input_sockets_field_names(self): return ["condition", "game_object"]
+    def get_output_socket_varnames(self):
+        return [OUTCELL]
+_nodes.append(NLActionFindObjectNode)
+
+class NLActionFindObjectFromSceneNode(bpy.types.Node, NLActionNode):
+    bl_idname = "NLActionFindObjectFromSceneNode"
+    bl_label = "Get Game Object From Scene"
+    nl_category = "Objects"
+
+    def init(self, context):
+        NLActionNode.init(self, context)
+        tools.register_inputs(self,
+            NLConditionSocket, "Condition (Optional)",
             NLGameObjectSocket, "Parent (Optional)",
-            NLQuotedStringFieldSocket, "Name:")
-        self.outputs.new(NLGameObjectSocket.bl_idname, "GameObject")
+            NLSceneSocket, "Scene",
+            NLQuotedStringFieldSocket, "Name")
+        self.outputs.new(NLGameObjectSocket.bl_idname, "Game Object")
         self.outputs.new(NLGameObjectSocket.bl_idname, "Parent Object")
         self.outputs.new(NLGameObjectSocket.bl_idname, "Relations Root")
 
-    def get_netlogic_class_name(self): return "bgelogic.ActionFindObject"
-    def get_input_sockets_field_names(self): return ["condition", "scene", "from_parent", "query"]
+    def get_netlogic_class_name(self): return "bgelogic.ActionFindObjectFromScene"
+    def get_input_sockets_field_names(self): return ["condition", "from_parent", "scene", "query"]
     def get_output_socket_varnames(self):
         return [OUTCELL, "PARENT", "BRANCH_ROOT"]
-_nodes.append(NLActionFindObjectNode)
+_nodes.append(NLActionFindObjectFromSceneNode)
 
 
 class NLActionSetActiveCamera(bpy.types.Node, NLActionNode):
@@ -2458,7 +2551,7 @@ class NLActionSetActiveCamera(bpy.types.Node, NLActionNode):
     def init(self, context):
         NLActionNode.init(self, context)
         tools.register_inputs(self, NLConditionSocket, "Condition",
-                              NLSceneSocket, "Scene",
+                              NLSceneSocket, "Scene (Optional)",
                               NLGameObjectSocket, "Camera")
 
     def get_netlogic_class_name(self): return "bgelogic.ActionSetActiveCamera"
@@ -2549,7 +2642,7 @@ _nodes.append(NLActionSetAnimationFrame)
 
 class NLActionApplyValue(bpy.types.Node, NLActionNode):
     bl_idname = "NLActionApplyValue"
-    bl_label = "Apply Motion/Rotation/Force/Torque to GameObject"
+    bl_label = "Apply Motion/Rotation/Force/Torque to Game Object"
     nl_category = "Transformation"
     local = bpy.props.BoolProperty(default=True, update=update_tree_code)
 
@@ -2558,11 +2651,11 @@ class NLActionApplyValue(bpy.types.Node, NLActionNode):
         tools.register_inputs(
             self,
             NLConditionSocket, "Condition",
-            NLGameObjectSocket, "GameObject",
-            NLValueFieldSocket, "XYZ Movement",
-            NLValueFieldSocket, "XYZ Rot",
-            NLValueFieldSocket, "XYZ Force",
-            NLValueFieldSocket, "XYZ Torque")
+            NLGameObjectSocket, "Game Object",
+            NLVectorSocket, "XYZ Movement",
+            NLVectorSocket, "XYZ Rot",
+            NLVectorSocket, "XYZ Force",
+            NLVectorSocket, "XYZ Torque")
 
     def draw_buttons(self, context, layout):
         layout.prop(self, "local", toggle=True, text="Apply Local" if self.local else "Apply Global")
@@ -2583,8 +2676,8 @@ class NLActionApplyLocation(bpy.types.Node, NLActionNode):
         tools.register_inputs(
             self,
             NLConditionSocket, "Condition",
-            NLGameObjectSocket, "GameObject",
-            NLParameterSocket, "Vector")
+            NLGameObjectSocket, "Game Object",
+            NLVectorSocket, "Vector")
 
     def draw_buttons(self, context, layout):
         layout.prop(self, "local", toggle=True, text="Apply Local" if self.local else "Apply Global")
@@ -2605,8 +2698,8 @@ class NLActionApplyRotation(bpy.types.Node, NLActionNode):
         tools.register_inputs(
             self,
             NLConditionSocket, "Condition",
-            NLGameObjectSocket, "GameObject",
-            NLParameterSocket, "Vector")
+            NLGameObjectSocket, "Game Object",
+            NLVectorSocket, "Vector")
 
     def draw_buttons(self, context, layout):
         layout.prop(self, "local", toggle=True, text="Apply Local" if self.local else "Apply Global")
@@ -2627,8 +2720,8 @@ class NLActionApplyForce(bpy.types.Node, NLActionNode):
         tools.register_inputs(
             self,
             NLConditionSocket, "Condition",
-            NLGameObjectSocket, "GameObject",
-            NLParameterSocket, "Vector")
+            NLGameObjectSocket, "Game Object",
+            NLVectorSocket, "Vector")
 
     def draw_buttons(self, context, layout):
         layout.prop(self, "local", toggle=True, text="Apply Local" if self.local else "Apply Global")
@@ -2649,8 +2742,8 @@ class NLActionApplyTorque(bpy.types.Node, NLActionNode):
         tools.register_inputs(
             self,
             NLConditionSocket, "Condition",
-            NLGameObjectSocket, "GameObject",
-            NLParameterSocket, "Vector")
+            NLGameObjectSocket, "Game Object",
+            NLVectorSocket, "Vector")
 
     def draw_buttons(self, context, layout):
         layout.prop(self, "local", toggle=True, text="Apply Local" if self.local else "Apply Global")
@@ -2669,7 +2762,7 @@ class NLActionEndObjectNode(bpy.types.Node, NLActionNode):
     def init(self, context):
         NLActionNode.init(self, context)
         self.inputs.new(NLConditionSocket.bl_idname, "Condition")
-        self.inputs.new(NLGameObjectSocket.bl_idname, "GameObject")
+        self.inputs.new(NLGameObjectSocket.bl_idname, "Game Object")
     def get_netlogic_class_name(self): return "bgelogic.ActionEndObject"
     def get_input_sockets_field_names(self): return ["condition", "game_object"]
 _nodes.append(NLActionEndObjectNode)
@@ -2707,6 +2800,61 @@ class NLActionReplaceMesh(bpy.types.Node, NLActionNode):
     def get_input_sockets_field_names(self):
         return ["condition", "target_game_object", "new_mesh_name", "use_display", "use_physics"]
 _nodes.append(NLActionReplaceMesh)
+
+
+class NLSetLightEnergyAction(bpy.types.Node, NLActionNode):
+    bl_idname = "NLSetLightEnergyAction"
+    bl_label = "Set Light Energy"
+    nl_category = "Lights"
+
+    def init(self, context):
+        NLActionNode.init(self, context)
+        tools.register_inputs(#TODO change into self.inputs.new...
+            self,
+            NLConditionSocket, "Condition",
+            NLGameObjectSocket, "Light Object",
+            NLFloatFieldSocket, "Energy",
+            NLIntegerFieldSocket, "Frames"
+        )
+
+    def get_netlogic_class_name(self):
+        return "bgelogic.SetLightEnergy"
+    def get_input_sockets_field_names(self):
+        return [
+            "condition",
+            "lamp",
+            "energy",
+            "frames"
+        ]
+_nodes.append(NLSetLightEnergyAction)
+
+
+class NLSetLightColorAction(bpy.types.Node, NLActionNode):
+    bl_idname = "NLSetLightColorAction"
+    bl_label = "Set Light Color"
+    nl_category = "Lights"
+
+    def init(self, context):
+        NLActionNode.init(self, context)
+        self.inputs.new(NLConditionSocket.bl_idname, "Condition")
+        self.inputs.new(NLGameObjectSocket.bl_idname, "Light Object")
+        self.inputs.new(NLSocketAlphaFloat.bl_idname, "Red")
+        self.inputs.new(NLSocketAlphaFloat.bl_idname, "Green")
+        self.inputs.new(NLSocketAlphaFloat.bl_idname, "Blue")
+        self.inputs.new(NLIntegerFieldSocket.bl_idname, "Frames")
+
+    def get_netlogic_class_name(self):
+        return "bgelogic.SetLightColor"
+    def get_input_sockets_field_names(self):
+        return [
+            "condition",
+            "lamp",
+            "red",
+            "green",
+            "blue",
+            "frames"
+        ]
+_nodes.append(NLSetLightColorAction)
 
 
 class NLActionPlayActionNode(bpy.types.Node, NLActionNode):
@@ -2786,7 +2934,7 @@ class NLActionAlignAxisToVector(bpy.types.Node, NLActionNode):
         NLActionNode.init(self, context)
         self.inputs.new(NLConditionSocket.bl_idname, "Condition")
         self.inputs.new(NLGameObjectSocket.bl_idname, "Game Object")
-        self.inputs.new(NLSocketVectorField.bl_idname, "Vector")
+        self.inputs.new(NLVectorSocket.bl_idname, "Vector")
         self.inputs.new(NLSocketLocalAxis.bl_idname, "Axis")
         self.inputs.new(NLSocketAlphaFloat.bl_idname, "Factor")
     def get_netlogic_class_name(self):
@@ -2910,8 +3058,7 @@ class NLActionCameraPickNode(bpy.types.Node, NLActionNode):
         NLActionNode.init(self, context)
         self.inputs.new(NLConditionSocket.bl_idname, "Condition")
         self.inputs.new(NLGameObjectSocket.bl_idname, "Camera")
-        self.inputs.new(NLSocketVectorField.bl_idname, "Aim")
-        self.inputs[-1].value = "0.5 0.5"
+        self.inputs.new(NLVectorSocket.bl_idname, "Aim XY")
         self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Property")
         self.inputs.new(NLFloatFieldSocket.bl_idname, "Distance")
         self.inputs[-1].value = 100.0
@@ -3370,7 +3517,7 @@ _nodes.append(NLActionRandomValues)
 
 class NLParameterDistance(bpy.types.Node, NLParameterNode):
     bl_idname = "NLParameterDistance"
-    bl_label = "Distance (Vec, XYZ, GameObject)"
+    bl_label = "Distance (Vec, XYZ, Game Object)"
     nl_category = "Math"
     def init(self, context):
         NLParameterNode.init(self, context)

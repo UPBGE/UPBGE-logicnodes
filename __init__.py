@@ -90,14 +90,19 @@ def _consume_update_tree_code_queue():
         else:
             if old_name != edit_tree.name:
                 update_tree_name(edit_tree, old_name)
-    if not _update_queue: return
+    if not _update_queue:
+        return
     now = time.time()
     last_event = _update_queue[-1]
     delta = now - last_event
     if delta > 0.25:
         debug("Updating tree code...")
         _update_queue.clear()
-        bpy.ops.bge_netlogic.generate_logicnetwork()
+        try:
+            bpy.ops.bge_netlogic.generate_logicnetwork()
+        except Exception:
+            print("Context Incorrect, abort generating Network code")
+            return _consume_update_tree_code_queue()
         return True
 
 def _get_this_module():

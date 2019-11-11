@@ -1,4 +1,5 @@
 import bge
+import bpy
 import mathutils
 import math
 import numbers
@@ -451,6 +452,18 @@ def none_or_invalid(ref):
     return ref.invalid
 
 
+def check_game_object(query, scene=None):
+    if not scene:
+        scene = bge.logic.getCurrentScene()
+    else:
+        scene = scene
+    if (query is None) or (query == ""):
+        return
+    if not none_or_invalid(scene):
+        # find from scene
+        return _name_query(scene.objects, query)
+
+
 def invalid(ref):
     if ref is None:
         return False
@@ -581,7 +594,9 @@ class LogicNetworkCell(StatefulValueProducer):
     def has_status(self, status):
         return status == self._status
 
-    def get_parameter_value(self, param):
+    def get_parameter_value(self, param, scene=None):
+        if str(param).startswith('Object:'):
+            return check_game_object(param.split(':')[-1], scene)
         if isinstance(param, StatefulValueProducer):
             if param.has_status(LogicNetworkCell.STATUS_READY):
                 return param.get_value()
@@ -1063,12 +1078,9 @@ class ParameterObjectProperty(ParameterCell):
 class ParameterActiveCamera(ParameterCell):
     def __init__(self):
         ParameterCell.__init__(self)
-        self.scene = None
 
     def evaluate(self):
-        scene = self.get_parameter_value(self.scene)
-        if scene is LogicNetworkCell.STATUS_WAITING:
-            return
+        scene = bge.logic.getCurrentScene()
         self._set_ready()
         if none_or_invalid(scene):
             raise Exception(
@@ -3250,9 +3262,29 @@ class ActionFindObject(ActionCell):
     def __init__(self):
         ActionCell.__init__(self)
         self.condition = None
-        self.scene = None
+        self.game_object = None
+
+    def evaluate(self):
+        self._set_ready()
+        condition = self.get_parameter_value(self.condition)
+        game_object = self.get_parameter_value(self.game_object)
+        if (condition is None):
+            # if no condition, early out
+            return self._set_value(game_object)
+        self._set_value(None)  # remove invalid objects, if any
+        if condition is False:  # no need to evaluate
+            return
+        # condition is either True or None
+        self._set_value(game_object)
+
+
+class ActionFindObjectFromScene(ActionCell):
+    def __init__(self):
+        ActionCell.__init__(self)
+        self.condition = None
         self.from_parent = None
-        self.query = None
+        self.scene = None
+        self.game_object = None
         self._branch_root = None
         self._parent_object = None
         self.PARENT = LogicNetworkSubCell(self, self.get_parent)
@@ -3283,17 +3315,17 @@ class ActionFindObject(ActionCell):
         if condition is False:  # no need to evaluate
             return
         # condition is either True or None
-        scene = self.get_parameter_value(self.scene)
         parent = self.get_parameter_value(self.from_parent)
-        query = self.get_parameter_value(self.query)
-        if (query is None) or (query == ""):
+        scene = self.get_parameter_value(self.scene)
+        game_object = self.get_parameter_value(self.game_object, scene=scene)
+        if game_object is LogicNetworkCell.STATUS_WAITING:
             return
         if not none_or_invalid(scene):
             # find from scene
-            self._set_value(_name_query(scene.objects, query))
+            self._set_value(game_object)
         elif not none_or_invalid(parent):
             # find from parent
-            self._set_value(_name_query(parent.childrenRecursive, query))
+            self._set_value(game_object)
         pass
     pass
 
@@ -3615,7 +3647,7 @@ class ActionSetActiveCamera(ActionCell):
             return
         scene = self.get_parameter_value(self.scene)
         if scene is LogicNetworkCell.STATUS_WAITING:
-            return
+            scene = bge.logic.getCurrentScene()
         camera = self.get_parameter_value(self.camera)
         if camera is LogicNetworkCell.STATUS_WAITING:
             return
@@ -3625,7 +3657,7 @@ class ActionSetActiveCamera(ActionCell):
         if none_or_invalid(camera):
             return
         if none_or_invalid(scene):
-            return
+            scene = bge.logic.getCurrentScene()
         scene.active_camera = camera
         pass
 
@@ -4934,6 +4966,68 @@ class ActionTranslate(ActionCell):
                 moving_object.worldPosition = npos
             self._t = t
             self._set_value(False)
+
+
+class SetLightEnergy(ActionCell):
+
+    def __init__(self):
+        ActionCell.__init__(self)
+        self.condition = None
+        self.lamp = None
+        self.energy = None
+        self.frames = None
+
+    def evaluate(self):
+        STATUS_WAITING = LogicNetworkCell.STATUS_WAITING
+
+        condition = self.get_parameter_value(self.condition)
+        if condition is STATUS_WAITING:
+            return
+        if not condition:
+            self._set_value(False)
+            return self._set_ready()
+        lamp = self.get_parameter_value(self.lamp)
+        energy = self.get_parameter_value(self.energy)
+        # frames = self.get_parameter_value(self.frames)
+        if lamp is STATUS_WAITING:
+            return
+        self._set_ready()
+        if condition:
+            lamp.energy = energy
+            print(lamp.energy)
+
+
+class SetLightColor(ActionCell):
+
+    def __init__(self):
+        ActionCell.__init__(self)
+        self.condition = None
+        self.lamp = None
+        self.red = None
+        self.green = None
+        self.blue = None
+        self.frames = None
+
+    def evaluate(self):
+        STATUS_WAITING = LogicNetworkCell.STATUS_WAITING
+
+        condition = self.get_parameter_value(self.condition)
+        if condition is STATUS_WAITING:
+            return
+        if not condition:
+            self._set_value(False)
+            return self._set_ready()
+        lamp = self.get_parameter_value(self.lamp)
+        r = self.get_parameter_value(self.red)
+        g = self.get_parameter_value(self.green)
+        b = self.get_parameter_value(self.blue)
+        # frames = self.get_parameter_value(self.frames)
+        if lamp is STATUS_WAITING:
+            return
+        self._set_ready()
+        if condition:
+            lamp.color = [r, g, b]
+            print(lamp.color)
 
 
 # Action "Move To": an object will follow a point

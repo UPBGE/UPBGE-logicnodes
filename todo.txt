@@ -21,6 +21,13 @@ finish templates
 
 0.3.2
 
+fixed MouseLook Node (screen centering)
+added Toggle Property Node
+added Add To Property Node
+
+
+0.3.2
+
 fixed MouseLook Node
 fixed Get Property Node
 fixed Time Node
@@ -33,6 +40,7 @@ Categorized the Nodes better
 0.3.1
 
 Some old 2.79 fixes, initial port to 2.8
+added Nodes (MouseLook, GetChildByName, etc)
 
 0.3.0
 
