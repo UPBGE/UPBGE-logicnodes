@@ -12,12 +12,20 @@ add joystick input control
 add movie player
 more arithmetic ops
 
-find a way to add a "group" node.
+find a way to add a "group" node
 
 add multiline comments
 finish templates
 
 --- DONE ---
+
+0.3.3
+
+Contextual Object selection now works
+Added Light Nodes (UPBGE not up-to-date)
+Added some Property Nodes
+Socket Colors
+Fixed bug where the node tree wouldn't update anymore
 
 0.3.2
 
