@@ -453,7 +453,7 @@ class NLParameterNode(NLAbstractNode):
 class NLGameObjectSocket(bpy.types.NodeSocket, NetLogicSocketType):
     bl_idname = "NLGameObjectSocket"
     bl_label = "Game Object"
-    value = bpy.props.PointerProperty(name='Object', type=bpy.types.Object)
+    value = bpy.props.PointerProperty(name='Object', type=bpy.types.Object, update=update_tree_code)
 
     def draw_color(self, context, node):
         return PARAM_OBJ_SOCKET_COLOR
@@ -1047,7 +1047,7 @@ _sockets.append(NLPlayActionModeSocket)
 class NLFloatFieldSocket(bpy.types.NodeSocket, NetLogicSocketType):
     bl_idname = "NLFloatFieldSocket"
     bl_label = "Float Value"
-    value = bpy.props.FloatProperty(default=0,update=update_tree_code)
+    value = bpy.props.FloatProperty(default=0, update=update_tree_code)
 
     def draw_color(self, context, node):
         return PARAMETER_SOCKET_COLOR

@@ -324,6 +324,9 @@ _registered_classes = [
     ops.WaitForKeyOperator,
     ops.TreeCodeWriterOperator,
     ops.NLSwitchInitialNetworkStatusOperator,
+    ops.NLAddPropertyOperator,
+    ops.NLRemovePropertyOperator,
+    ops.NLMovePropertyOperator,
     ops.NLPopupTemplatesOperator,
     ops.NLPropertyOperator,
     NLNodeTreeReference]
@@ -334,6 +337,7 @@ _registered_classes.extend(basicnodes._nodes)
 
 _registered_classes.extend([
     ui.BGELogicPanel,
+    ui.BGELogicTreeInfoPanel,
     ui.BGEGamePropertyPanel])
 
 def _get_key_for_class(c):

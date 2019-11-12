@@ -1,5 +1,4 @@
 import bge
-import bpy
 import mathutils
 import math
 import numbers
@@ -910,7 +909,7 @@ class LogicNetwork(LogicNetworkCell):
                 owner_object[node_tree_name].stopped = False
         else:
             print("Installing sub network...")
-            initial_status_key = 'NL_{}_initial_status'.format(node_tree_name)
+            initial_status_key = '{}.nodes'.format(node_tree_name)
             owner_object[initial_status_key] = initial_status
             module_name = 'bgelogic.NL{}'.format(stripped_name)
             module = load_user_module(module_name)

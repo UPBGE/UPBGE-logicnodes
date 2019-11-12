@@ -373,6 +373,55 @@ class NLGenerateLogicNetworkOperator(bpy.types.Operator):
         tree_code_generator.TreeCodeGenerator().write_code_for_tree(tree)
         return {"FINISHED"}
 
+
+class NLAddPropertyOperator(bpy.types.Operator):
+    bl_idname = "bge_netlogic.add_game_prop"
+    bl_label = "Add Game Property"
+    bl_description = "Adds a property available to the UPBGE"
+
+    @classmethod
+    def poll(cls, context):
+        return True
+
+    def execute(self, context):
+        bpy.ops.object.game_property_new()
+        bge_netlogic.update_current_tree_code()
+        return {'FINISHED'}
+
+
+class NLRemovePropertyOperator(bpy.types.Operator):
+    bl_idname = "bge_netlogic.remove_game_prop"
+    bl_label = "Add Game Property"
+    bl_description = "Remove this property"
+    index = bpy.props.IntProperty()
+
+    @classmethod
+    def poll(cls, context):
+        return True
+
+    def execute(self, context):
+        bpy.ops.object.game_property_remove(index=self.index)
+        bge_netlogic.update_current_tree_code()
+        return {'FINISHED'}
+
+
+class NLMovePropertyOperator(bpy.types.Operator):
+    bl_idname = "bge_netlogic.move_game_prop"
+    bl_label = "Move Game Property"
+    bl_description = "Move Game Property"
+    index = bpy.props.IntProperty()
+    direction = bpy.props.StringProperty()
+
+    @classmethod
+    def poll(cls, context):
+        return True
+
+    def execute(self, context):
+        bpy.ops.object.game_property_move(index=self.index, direction=self.direction)
+        bge_netlogic.update_current_tree_code()
+        return {'FINISHED'}
+
+
 class NLSwitchInitialNetworkStatusOperator(bpy.types.Operator):
     bl_idname = "bge_netlogic.switch_network_status"
     bl_label = "Enable/Disable at start"
@@ -393,7 +442,8 @@ class NLSwitchInitialNetworkStatusOperator(bpy.types.Operator):
         for ob in updated_objects:
             bge_netlogic.utilities.set_network_initial_status_key(ob, tree_name, new_status)
         bge_netlogic.update_current_tree_code()
-        return {'FINISHED'}	
+        return {'FINISHED'}
+
 
 #Popup the code templates for custom nodes and cells
 class NLPopupTemplatesOperator(bpy.types.Operator):
