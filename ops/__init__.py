@@ -329,9 +329,11 @@ class NLGenerateLogicNetworkOperator(bpy.types.Operator):
     @classmethod
     def poll(cls, context):
         if not context.space_data:
+            bge_netlogic.update_current_tree_code()
             raise Exception(
                 "TREE TO EDIT NOT FOUND - Update Manually"
             )
+            self.report({'ERROR'}, 'Tree to edit not found! Press "Update Code" manually.')
         tree = context.space_data.edit_tree
         if not tree:
             return False
@@ -368,6 +370,7 @@ class NLGenerateLogicNetworkOperator(bpy.types.Operator):
         #write the current tree in a python module, in the directory of the current blender file
         if (context is None) or (context.space_data is None) or (context.space_data.edit_tree is None):
             print("NLGenerateLogicNetworkOperator.execute: no context, space_data or edit_tree. Abort writing tree.")
+            self.report({'ERROR'}, 'Tree to edit not found! Press "Update Code" manually.')
             return {"FINISHED"}
         tree = context.space_data.edit_tree
         tree_code_generator.TreeCodeGenerator().write_code_for_tree(tree)

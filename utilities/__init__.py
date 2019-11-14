@@ -228,7 +228,7 @@ def py_module_file_path_for_stripped_tree_name(stripped_tree_name):
 
 
 def get_key_network_initial_status_for_tree_name(tree_name):
-    return '{}.nodes'.format(tree_name)
+    return 'NODELOGIC__{}'.format(tree_name)
 
 def get_key_network_initial_status_for_tree(nodetree):
     return get_key_network_initial_status_for_tree_name(nodetree.name)

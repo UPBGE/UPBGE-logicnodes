@@ -320,20 +320,28 @@ class NetLogicStatementGenerator(NetLogicType):
     def get_linked_socket_field_value(self, socket, cell_varname, field_name, uids):
         output_node = socket.links[0].from_socket.node
         output_socket = socket.links[0].from_socket
-        output_socket_index = self._index_of(output_socket, output_node.outputs)
-        #print(cell_varname)
-        #print(field_name)
-        #print(uids)
-        #print('#######################################################')
-        #print(socket.node.parent)
-        #print(output_node.inputs)
-        #print(output_node.inputs.items())
-        #print(output_node)
-        #print('#######################################################')
+        print('-------------------------------------------------------')
+        print(output_node)
+        print(output_node.inputs.items())
+        print(output_node.outputs.items())
+        print('#######################################################')
+        while isinstance(output_node, bpy.types.NodeReroute):
+            # cycle through and reset output_node until master is met
+            print('--------')
+            next_socket = output_node.inputs[0].links[0].from_socket
+            next_node = next_socket.node
+            output_socket = next_socket
+            if isinstance(next_node, NetLogicStatementGenerator):
+                break
+            output_node = next_node
+            print('--------')
+        print(output_node)
         if isinstance(output_node, bpy.types.NodeReroute):
-            return self.get_linked_socket_field_value(output_socket, cell_varname, field_name, uids)
+            output_node = output_node.inputs[0].links[0].from_socket.node
+        output_socket_index = self._index_of(output_socket, output_node.outputs)
+        print(output_socket_index)
         assert isinstance(output_node, NetLogicStatementGenerator)
-        output_node_varname = uids.get_varname_for_node(socket.links[0].from_socket.node)
+        output_node_varname = uids.get_varname_for_node(output_node)
         output_map = output_node.get_output_socket_varnames()
         if output_map:
             varname = output_map[output_socket_index]
@@ -1062,6 +1070,112 @@ class NLFloatFieldSocket(bpy.types.NodeSocket, NetLogicSocketType):
 _sockets.append(NLFloatFieldSocket)
 
 
+class NLVec2FieldSocket(bpy.types.NodeSocket, NetLogicSocketType):
+    bl_idname = "NLVec2FieldSocket"
+    bl_label = "Float Value"
+    value_x = bpy.props.FloatProperty(default=0, update=update_tree_code)
+    value_y = bpy.props.FloatProperty(default=0, update=update_tree_code)
+    title = bpy.props.StringProperty(default='')
+
+    def draw_color(self, context, node):
+        return PARAM_VECTOR_SOCKET_COLOR
+
+    def get_unlinked_value(self): 
+        return "mathutils.Vector(({}, {}))".format(self.value_x, self.value_y)
+
+    def draw(self, context, layout, node, text):
+        if self.is_linked or self.is_output:
+            layout.label(text=text)
+        else:
+            column = layout.column()
+            if self.title != '':
+                title = column.label(text=self.title)
+            row = column.row(align=True)
+            row.prop(self, "value_x", text='')
+            row.prop(self, "value_y", text='')
+_sockets.append(NLVec2FieldSocket)
+
+
+class NLVec2PositiveFieldSocket(bpy.types.NodeSocket, NetLogicSocketType):
+    bl_idname = "NLVec2PositiveFieldSocket"
+    bl_label = "Float Value"
+    value_x = bpy.props.FloatProperty(min=0.0, default=0, update=update_tree_code)
+    value_y = bpy.props.FloatProperty(min=0.0, default=0, update=update_tree_code)
+    title = bpy.props.StringProperty(default='')
+
+    def draw_color(self, context, node):
+        return PARAM_VECTOR_SOCKET_COLOR
+
+    def get_unlinked_value(self): 
+        return "mathutils.Vector(({}, {}))".format(self.value_x, self.value_y)
+
+    def draw(self, context, layout, node, text):
+        if self.is_linked or self.is_output:
+            layout.label(text=text)
+        else:
+            column = layout.column()
+            if self.title != '':
+                title = column.label(text=self.title)
+            row = column.row(align=True)
+            row.prop(self, "value_x", text='')
+            row.prop(self, "value_y", text='')
+_sockets.append(NLVec2PositiveFieldSocket)
+
+
+class NLVec3FieldSocket(bpy.types.NodeSocket, NetLogicSocketType):
+    bl_idname = "NLVec3FieldSocket"
+    bl_label = "Float Value"
+    value_x = bpy.props.FloatProperty(default=0, update=update_tree_code)
+    value_y = bpy.props.FloatProperty(default=0, update=update_tree_code)
+    value_z = bpy.props.FloatProperty(default=0, update=update_tree_code)
+    title = bpy.props.StringProperty(default='')
+
+    def draw_color(self, context, node):
+        return PARAM_VECTOR_SOCKET_COLOR
+
+    def get_unlinked_value(self): 
+        return "mathutils.Vector(({}, {}, {}))".format(self.value_x, self.value_y, self.value_z)
+
+    def draw(self, context, layout, node, text):
+        if self.is_linked or self.is_output:
+            layout.label(text=text)
+        else:
+            column = layout.column()
+            if self.title != '':
+                title = column.label(text=self.title)
+            column.prop(self, "value_x", text='X')
+            column.prop(self, "value_y", text='Y')
+            column.prop(self, "value_z", text='Z')
+_sockets.append(NLVec3FieldSocket)
+
+
+class NLVec3PositiveFieldSocket(bpy.types.NodeSocket, NetLogicSocketType):
+    bl_idname = "NLVec3PositiveFieldSocket"
+    bl_label = "Float Value"
+    value_x = bpy.props.FloatProperty(min=0.0, default=0, update=update_tree_code)
+    value_y = bpy.props.FloatProperty(min=0.0, default=0, update=update_tree_code)
+    value_z = bpy.props.FloatProperty(default=0, update=update_tree_code)
+    title = bpy.props.StringProperty(default='')
+
+    def draw_color(self, context, node):
+        return PARAM_VECTOR_SOCKET_COLOR
+
+    def get_unlinked_value(self): 
+        return "mathutils.Vector(({}, {}, {}))".format(self.value_x, self.value_y, self.value_z)
+
+    def draw(self, context, layout, node, text):
+        if self.is_linked or self.is_output:
+            layout.label(text=text)
+        else:
+            column = layout.column()
+            if self.title != '':
+                title = column.label(text=self.title)
+            column.prop(self, "value_x", text='X')
+            column.prop(self, "value_y", text='Y')
+            column.prop(self, "value_z", text='Z')
+_sockets.append(NLVec3PositiveFieldSocket)
+
+
 class NLBlendActionModeSocket(bpy.types.NodeSocket, NetLogicSocketType):
     bl_idname = "NLBlendActionMode"
     bl_label = "Blend Mode"
@@ -1762,7 +1876,7 @@ class NLParameterVector2SimpleNode(bpy.types.Node, NLParameterNode):
         )
         self.outputs.new(NLVectorSocket.bl_idname, "Vector")
 
-    def get_netlogic_class_name(self): return "bgelogic.Parameter2VectorSimple"
+    def get_netlogic_class_name(self): return "bgelogic.ParameterVector2Simple"
     def get_output_socket_varnames(self): return ["OUTV"]
     def get_input_sockets_field_names(self): return ["input_x", "input_y"]
 _nodes.append(NLParameterVector2SimpleNode)
@@ -2677,7 +2791,7 @@ class NLActionApplyLocation(bpy.types.Node, NLActionNode):
             self,
             NLConditionSocket, "Condition",
             NLGameObjectSocket, "Game Object",
-            NLVectorSocket, "Vector")
+            NLVec3FieldSocket, "Vector")
 
     def draw_buttons(self, context, layout):
         layout.prop(self, "local", toggle=True, text="Apply Local" if self.local else "Apply Global")
@@ -2996,16 +3110,16 @@ class NLActionMouseLookNode(bpy.types.Node, NLActionNode):
         self.inputs.new(NLBooleanSocket.bl_idname, "Inverted")
         self.inputs.new(NLFloatFieldSocket.bl_idname, "Sensitivity")
         self.inputs[-1].value = 1.0
-        self.inputs.new(NLFloatFieldSocket.bl_idname, "Max Z")
-        self.inputs.new(NLFloatFieldSocket.bl_idname, "Min Z")
-        self.inputs.new(NLFloatFieldSocket.bl_idname, "Max Y")
-        self.inputs.new(NLFloatFieldSocket.bl_idname, "Min Y")
+        self.inputs.new(NLBooleanSocket.bl_idname, "Cap Left / Right")
+        self.inputs.new(NLVec2PositiveFieldSocket.bl_idname, "Cap Z")
+        self.inputs.new(NLBooleanSocket.bl_idname, "Cap Up / Down")
+        self.inputs.new(NLVec2PositiveFieldSocket.bl_idname, "Cap Y")
 
     def get_netlogic_class_name(self):
         return "bgelogic.ActionMouseLook"
 
     def get_input_sockets_field_names(self):
-        return ["condition", "game_object_x", "game_object_y", "inverted", "sensitivity", "uppercapX", "lowercapX", "uppercapY", "lowercapY"]
+        return ["condition", "game_object_x", "game_object_y", "inverted", "sensitivity", "use_cap_z", "cap_z", "use_cap_y", "cap_y"]
 _nodes.append(NLActionMouseLookNode)
 
 

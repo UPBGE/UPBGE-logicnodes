@@ -91,8 +91,7 @@ class TreeCodeGenerator(object):
         for node in tree.nodes:
             prefix = None
             if not (
-                isinstance(node, bge_netlogic.basicnodes.NetLogicStatementGenerator) or
-                isinstance(node, bpy.types.NodeReroute)
+                isinstance(node, bge_netlogic.basicnodes.NetLogicStatementGenerator)
             ):
                 print("Skipping TreeNode of type {} because it is not an instance of NetLogicStatementGenerator".format(node.__class__.__name__))
                 continue
@@ -102,19 +101,13 @@ class TreeCodeGenerator(object):
                 prefix = "CON"
             elif isinstance(node, bge_netlogic.basicnodes.NLParameterNode):
                 prefix = "PAR"
-            elif isinstance(node, bpy.types.NodeReroute):
-                prefix = "REROUTE"
             else:
                 raise ValueError(
                         "netlogic node {} must extend one of NLActionNode, NLConditionNode or NLParameterNode".format(
                                 node.__class__.__name__))
             varname = "{0}{1:04d}".format(prefix, cell_uid)
             uid_map._register(varname, cell_uid, node)
-            if isinstance(node, bpy.types.NodeReroute):
-                classname = node.__class__
-                line_writer.write_line("{} = {}()", varname, classname)
-            else:
-                node.write_cell_declaration(varname, line_writer)
+            node.write_cell_declaration(varname, line_writer)
             cell_uid += 1
         for uid in range(0, cell_uid):
             tree_node = uid_map._get_node_for_uid(uid)

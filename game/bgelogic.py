@@ -858,6 +858,7 @@ class LogicNetwork(LogicNetworkCell):
         cells = self._iter
         max_loop_count = len(cells)
         loop_index = 0
+        done_cells = []
         while cells:
             if loop_index == self._max_blocking_loop_count:
                 print(
@@ -871,10 +872,15 @@ class LogicNetwork(LogicNetworkCell):
                 self.stop()
                 return
             cell = cells.popleft()
+            if cell in done_cells:
+                continue
+            else:
+                done_cells.append(cell)
             cell.evaluate()
             if not cell.has_status(LogicNetworkCell.STATUS_READY):
                 cells.append(cell)
             loop_index += 1
+        done_cells = []
         if(loop_index > max_loop_count):
             print(
                 "Wrong sorting alghorythm..itm..ymthf..ssss",
@@ -909,7 +915,7 @@ class LogicNetwork(LogicNetworkCell):
                 owner_object[node_tree_name].stopped = False
         else:
             print("Installing sub network...")
-            initial_status_key = '{}.nodes'.format(node_tree_name)
+            initial_status_key = 'NODELOGIC__{}'.format(node_tree_name)
             owner_object[initial_status_key] = initial_status
             module_name = 'bgelogic.NL{}'.format(stripped_name)
             module = load_user_module(module_name)
@@ -3034,12 +3040,12 @@ class ActionMouseLook(ActionCell):
         self.condition = None
         self.game_object_x = None
         self.game_object_y = None
-        self.sensitivity = None
-        self.uppercapX = None
-        self.lowercapX = None
-        self.uppercapY = None
-        self.lowercapY = None
         self.inverted = None
+        self.sensitivity = None
+        self.use_cap_z = None
+        self.cap_z = None
+        self.use_cap_z = None
+        self.cap_y = None
 
     def get_x_obj(self):
         game_object_x = self.get_parameter_value(self.game_object_x)
@@ -3061,10 +3067,14 @@ class ActionMouseLook(ActionCell):
         game_object_x = self.get_x_obj()
         game_object_y = self.get_y_obj()
         sensitivity = self.get_parameter_value(self.sensitivity * 1000)
-        uppercapX = self.get_parameter_value(self.uppercapX * caps * 2)
-        lowercapX = self.get_parameter_value(self.lowercapX * caps * 2)
-        uppercapY = -self.get_parameter_value(self.lowercapY * caps * 2)
-        lowercapY = -self.get_parameter_value(self.uppercapY * caps * 2)
+        use_cap_z = self.get_parameter_value(self.use_cap_z)
+        use_cap_y = self.get_parameter_value(self.use_cap_y)
+        cap_z = self.get_parameter_value(self.cap_z)
+        lowercapX = -cap_z.y * caps * 2
+        uppercapX = cap_z.x * caps * 2
+        cap_y = self.get_parameter_value(self.cap_y)
+        lowercapY = -cap_y.x * caps * 2
+        uppercapY = cap_y.y * caps * 2
         inverted = self.get_parameter_value(self.inverted)
         self._set_ready()
 
@@ -3084,7 +3094,7 @@ class ActionMouseLook(ActionCell):
 
             offset *= sensitivity
 
-            if (uppercapX != 0) or (lowercapX != 0):
+            if use_cap_z:
 
                 objectRotation = game_object_x.worldOrientation.to_euler()
 
@@ -3100,7 +3110,7 @@ class ActionMouseLook(ActionCell):
 
             game_object_x.applyRotation((0, 0, offset.x), False)
 
-            if (uppercapY != 0) or (lowercapY != 0):
+            if use_cap_y:
 
                 objectRotation = game_object_y.worldOrientation.to_euler()
 

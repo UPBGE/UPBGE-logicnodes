@@ -187,7 +187,7 @@ def register_nodes(category_label, *cls):
     node_category = NodeCategory(category_label, category_label, items=node_items)
     try:
         nodeitems_utils.unregister_node_categories(category_label)
-    except KeyError as ke:
+    except KeyError:
         print("Info: Node Category {} has not been registered before.".format(category_label))
     nodeitems_utils.register_node_categories(category_label, [node_category])
     pass
