@@ -3066,7 +3066,7 @@ class ActionMouseLook(ActionCell):
         caps = 0.0087266462599716
         game_object_x = self.get_x_obj()
         game_object_y = self.get_y_obj()
-        sensitivity = self.get_parameter_value(self.sensitivity * 1000)
+        sensitivity = self.get_parameter_value(self.sensitivity) * 1000
         use_cap_z = self.get_parameter_value(self.use_cap_z)
         use_cap_y = self.get_parameter_value(self.use_cap_y)
         cap_z = self.get_parameter_value(self.cap_z)

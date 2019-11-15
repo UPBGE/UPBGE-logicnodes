@@ -320,26 +320,17 @@ class NetLogicStatementGenerator(NetLogicType):
     def get_linked_socket_field_value(self, socket, cell_varname, field_name, uids):
         output_node = socket.links[0].from_socket.node
         output_socket = socket.links[0].from_socket
-        print('-------------------------------------------------------')
-        print(output_node)
-        print(output_node.inputs.items())
-        print(output_node.outputs.items())
-        print('#######################################################')
         while isinstance(output_node, bpy.types.NodeReroute):
             # cycle through and reset output_node until master is met
-            print('--------')
             next_socket = output_node.inputs[0].links[0].from_socket
             next_node = next_socket.node
             output_socket = next_socket
             if isinstance(next_node, NetLogicStatementGenerator):
                 break
             output_node = next_node
-            print('--------')
-        print(output_node)
         if isinstance(output_node, bpy.types.NodeReroute):
             output_node = output_node.inputs[0].links[0].from_socket.node
         output_socket_index = self._index_of(output_socket, output_node.outputs)
-        print(output_socket_index)
         assert isinstance(output_node, NetLogicStatementGenerator)
         output_node_varname = uids.get_varname_for_node(output_node)
         output_map = output_node.get_output_socket_varnames()
@@ -753,7 +744,8 @@ class NLIntegerFieldSocket(bpy.types.NodeSocket, NetLogicSocketType):
     def draw_color(self, context, node):
         return PARAMETER_SOCKET_COLOR
 
-    def get_unlinked_value(self): return '{}'.format(self.value)
+    def get_unlinked_value(self):
+        return '{}'.format(self.value)
 
     def draw(self, context, layout, node, text):
         if self.is_linked or self.is_output:
@@ -1670,9 +1662,9 @@ class NLParameterTimeNode(bpy.types.Node, NLParameterNode):
 
     def init(self, context):
         NLParameterNode.init(self, context)
-        self.outputs.new(NLParameterSocket.bl_idname, "Frames Per Second")
-        self.outputs.new(NLParameterSocket.bl_idname, "Time Per Frame")
-        self.outputs.new(NLParameterSocket.bl_idname, "Total Elapsed Time")
+        self.outputs.new(NLFloatFieldSocket.bl_idname, "Frames Per Second")
+        self.outputs.new(NLFloatFieldSocket.bl_idname, "Time Per Frame")
+        self.outputs.new(NLFloatFieldSocket.bl_idname, "Total Elapsed Time")
     def get_output_socket_varnames(self): return ["FPS", "TIME_PER_FRAME", "TIMELINE"]
     def get_netlogic_class_name(self): return "bgelogic.ParameterTime"
 _nodes.append(NLParameterTimeNode)

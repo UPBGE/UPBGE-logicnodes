@@ -329,11 +329,10 @@ class NLGenerateLogicNetworkOperator(bpy.types.Operator):
     @classmethod
     def poll(cls, context):
         if not context.space_data:
-            bge_netlogic.update_current_tree_code()
             raise Exception(
                 "TREE TO EDIT NOT FOUND - Update Manually"
             )
-            self.report({'ERROR'}, 'Tree to edit not found! Press "Update Code" manually.')
+            cls.report({'ERROR'}, 'Tree to edit not found! Press "Update Code" manually.')
         tree = context.space_data.edit_tree
         if not tree:
             return False
