@@ -6,7 +6,7 @@ It adds a new Editor in which you can create logic trees and apply them to objec
 
 Install:
 1. Download
-    * Download here: https://drive.google.com/open?id=1NBH27uxRsnleaTKxy4GPYlfswfoFLgev OR
+    * Download here: https://github.com/IzaZed/Uchronian-Logic-UPBGE-Logic-Nodes/releases OR
     * clone this repository in a folder named "bge_netlogic" and then zip it whenever you pull.
 2. Install
     * In Blender, go to Edit -> Preferences -> Add-Ons and click on "Install Add-On from file...".
