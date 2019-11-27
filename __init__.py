@@ -8,7 +8,7 @@ bl_info = {
     "name": "Uchronian Logic - UPBGE Logic Nodes",
     "description": "A Node System to create game logic.",
     "author": "pgi, Leopold A-C (Iza Zed)",
-    "version": (0, 3, 3),
+    "version": (0, 3, 5),
     "blender": (2, 82, 0),
     "location": "View Menu",
     "warning": "Alpha",
@@ -338,7 +338,8 @@ _registered_classes.extend(basicnodes._nodes)
 _registered_classes.extend([
     ui.BGELogicPanel,
     ui.BGELogicTreeInfoPanel,
-    ui.BGEGamePropertyPanel])
+    ui.BGEGamePropertyPanel,
+    ui.BGEGamePropertyPanel3DView])
 
 def _get_key_for_class(c):
     if hasattr(c, "bl_label"): return c.bl_label

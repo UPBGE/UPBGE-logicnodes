@@ -1027,7 +1027,6 @@ class ParameterSwitchValue(ParameterCell):
     def __init__(self):
         ParameterCell.__init__(self)
         self.state = None
-        self.condition = None
         self.outcome = False
         self.TRUE = LogicNetworkSubCell(self, self.get_true_value)
         self.FALSE = LogicNetworkSubCell(self, self.get_false_value)

@@ -370,14 +370,32 @@ _sockets.append(NLConditionSocket)
 class NLPseudoConditionSocket(bpy.types.NodeSocket, NetLogicSocketType):
     bl_idname = "NLPseudoConditionSocket"
     bl_label = "Condition"
+    value = bpy.props.BoolProperty(update=update_tree_code)
+    use_toggle = bpy.props.BoolProperty(default=False)
+    true_label = bpy.props.StringProperty()
+    false_label = bpy.props.StringProperty()
 
     def draw_color(self, context, node):
         return PSEUDO_COND_SOCKET_COLOR
 
     def draw(self, context, layout, node, text):
-        layout.label(text=text)
+        if self.is_linked or self.is_output:
+            layout.label(text=text)
+        else:
+            label = text
+            status = self.value
+            if self.use_toggle:
+                if status:
+                    label = '{}: ON'.format(text)
+                else:
+                    label = '{}: OFF'.format(text)
+            if self.true_label and status:
+                label = self.true_label
+            if self.false_label and (not status):
+                label = self.false_label
+            layout.prop(self, "value", text=label, toggle=self.use_toggle)
 
-    def get_unlinked_value(self): return "None"
+    def get_unlinked_value(self): return "True" if self.value else "False"
 _sockets.append(NLPseudoConditionSocket)
 
 
@@ -1641,15 +1659,14 @@ class NLParameterSwitchValue(bpy.types.Node, NLParameterNode):
 
     def init(self, context):
         NLParameterNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, "Condition")
-        self.inputs.new(NLBooleanSocket.bl_idname, "Bool")
+        self.inputs.new(NLPseudoConditionSocket.bl_idname, "Condition")
         self.outputs.new(NLPseudoConditionSocket.bl_idname, "True")
         self.outputs.new(NLPseudoConditionSocket.bl_idname, "False")
 
     def get_netlogic_class_name(self):
         return "bgelogic.ParameterSwitchValue"
     def get_input_sockets_field_names(self):
-        return ["condition", "state"]
+        return ["state"]
     def get_output_socket_varnames(self):
         return ["TRUE", "FALSE"]
 _nodes.append(NLParameterSwitchValue)
@@ -2885,7 +2902,7 @@ class NLActionApplyRotation(bpy.types.Node, NLActionNode):
             self,
             NLConditionSocket, "Condition",
             NLGameObjectSocket, "Game Object",
-            NLVectorSocket, "Vector")
+            NLVec3FieldSocket, "Vector")
 
     def draw_buttons(self, context, layout):
         layout.prop(self, "local", toggle=True, text="Apply Local" if self.local else "Apply Global")
@@ -2907,7 +2924,7 @@ class NLActionApplyForce(bpy.types.Node, NLActionNode):
             self,
             NLConditionSocket, "Condition",
             NLGameObjectSocket, "Game Object",
-            NLVectorSocket, "Vector")
+            NLVec3FieldSocket, "Vector")
 
     def draw_buttons(self, context, layout):
         layout.prop(self, "local", toggle=True, text="Apply Local" if self.local else "Apply Global")
@@ -2929,7 +2946,7 @@ class NLActionApplyTorque(bpy.types.Node, NLActionNode):
             self,
             NLConditionSocket, "Condition",
             NLGameObjectSocket, "Game Object",
-            NLVectorSocket, "Vector")
+            NLVec3FieldSocket, "Vector")
 
     def draw_buttons(self, context, layout):
         layout.prop(self, "local", toggle=True, text="Apply Local" if self.local else "Apply Global")
