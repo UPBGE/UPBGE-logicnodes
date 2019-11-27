@@ -1150,7 +1150,7 @@ class NLVec3FieldSocket(bpy.types.NodeSocket, NetLogicSocketType):
         if self.is_linked or self.is_output:
             layout.label(text=text)
         else:
-            column = layout.column()
+            column = layout.column(align=True)
             if self.title != '':
                 title = column.label(text=self.title)
             column.prop(self, "value_x", text='X')
@@ -2385,8 +2385,8 @@ class NLConditionDistanceCheck(bpy.types.Node, NLConditionNode):
     def init(self, context):
         NLConditionNode.init(self, context)
         self.inputs.new(NLSocketDistanceCheck.bl_idname, "Check")
-        self.inputs.new(NLSocketVectorField.bl_idname, "A")
-        self.inputs.new(NLSocketVectorField.bl_idname, "B")
+        self.inputs.new(NLVec3FieldSocket.bl_idname, "A")
+        self.inputs.new(NLVec3FieldSocket.bl_idname, "B")
         self.inputs.new(NLPositiveFloatSocket.bl_idname, "Dist.")
         self.inputs.new(NLSocketOptionalPositiveFloat.bl_idname, "Hyst.")
         self.outputs.new(NLConditionSocket.bl_idname, "Out")
@@ -3137,7 +3137,7 @@ class NLActionAlignAxisToVector(bpy.types.Node, NLActionNode):
         NLActionNode.init(self, context)
         self.inputs.new(NLConditionSocket.bl_idname, "Condition")
         self.inputs.new(NLGameObjectSocket.bl_idname, "Game Object")
-        self.inputs.new(NLVectorSocket.bl_idname, "Vector")
+        self.inputs.new(NLVec3FieldSocket.bl_idname, "Vector")
         self.inputs.new(NLSocketLocalAxis.bl_idname, "Axis")
         self.inputs.new(NLSocketAlphaFloat.bl_idname, "Factor")
     def get_netlogic_class_name(self):
