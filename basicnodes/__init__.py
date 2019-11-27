@@ -1874,6 +1874,47 @@ class NLParameterVector2SimpleNode(bpy.types.Node, NLParameterNode):
 _nodes.append(NLParameterVector2SimpleNode)
 
 
+class NLParameterVector2SplitNode(bpy.types.Node, NLParameterNode):
+    bl_idname = "NLParameterVector2SplitNode"
+    bl_label = "Separate XY"
+    nl_category = "Values"
+
+    def init(self, context):
+        NLParameterNode.init(self, context)
+        tools.register_inputs(
+            self,
+            NLVec2FieldSocket, 'Vector'
+        )
+        self.outputs.new(NLFloatFieldSocket.bl_idname, "X")
+        self.outputs.new(NLFloatFieldSocket.bl_idname, "Y")
+
+    def get_netlogic_class_name(self): return "bgelogic.ParameterVector2Split"
+    def get_output_socket_varnames(self): return ["OUTX", "OUTY"]
+    def get_input_sockets_field_names(self): return ["input_v"]
+_nodes.append(NLParameterVector2SplitNode)
+
+
+class NLParameterVector3SplitNode(bpy.types.Node, NLParameterNode):
+    bl_idname = "NLParameterVector3SplitNode"
+    bl_label = "Separate XYZ"
+    nl_category = "Values"
+
+    def init(self, context):
+        NLParameterNode.init(self, context)
+        tools.register_inputs(
+            self,
+            NLVec3FieldSocket, 'Vector'
+        )
+        self.outputs.new(NLFloatFieldSocket.bl_idname, "X")
+        self.outputs.new(NLFloatFieldSocket.bl_idname, "Y")
+        self.outputs.new(NLFloatFieldSocket.bl_idname, "Z")
+
+    def get_netlogic_class_name(self): return "bgelogic.ParameterVector3Split"
+    def get_output_socket_varnames(self): return ["OUTX", "OUTY", 'OUTZ']
+    def get_input_sockets_field_names(self): return ["input_v"]
+_nodes.append(NLParameterVector3SplitNode)
+
+
 class NLParameterVector3SimpleNode(bpy.types.Node, NLParameterNode):
     bl_idname = "NLParameterVector3SimpleNode"
     bl_label = "Vector 3"
@@ -1944,6 +1985,45 @@ class NLAlwaysConditionNode(bpy.types.Node, NLConditionNode):
         pass
     pass
 _nodes.append(NLAlwaysConditionNode)
+
+
+class NLOnInitConditionNode(bpy.types.Node, NLConditionNode):
+    bl_idname = "NLOnInitConditionNode"
+    bl_label = "On Start"
+    nl_category = "Events"
+    
+    repeat = bpy.props.BoolProperty(update=update_tree_code)
+
+    def init(self, context):
+        NLConditionNode.init(self, context)
+        self.outputs.new(NLConditionSocket.bl_idname, "On Init")
+
+    def get_netlogic_class_name(self):
+        return "bgelogic.ConditionOnInit"
+
+    def write_cell_fields_initialization(self, cell_varname, uids, line_writer):
+        NetLogicStatementGenerator.write_cell_fields_initialization(self, cell_varname, uids, line_writer)
+        
+_nodes.append(NLOnInitConditionNode)
+
+
+class NLOnUpdateConditionNode(bpy.types.Node, NLConditionNode):
+    bl_idname = "NLOnUpdateConditionNode"
+    bl_label = "On Update"
+    nl_category = "Events"
+    
+    repeat = bpy.props.BoolProperty(update=update_tree_code)
+
+    def init(self, context):
+        NLConditionNode.init(self, context)
+        self.outputs.new(NLConditionSocket.bl_idname, "On Update")
+
+    def get_netlogic_class_name(self):
+        return "bgelogic.ConditionOnUpdate"
+
+    def write_cell_fields_initialization(self, cell_varname, uids, line_writer):
+        NetLogicStatementGenerator.write_cell_fields_initialization(self, cell_varname, uids, line_writer)
+_nodes.append(NLOnUpdateConditionNode)
 
 
 class NLKeyPressedCondition(bpy.types.Node, NLConditionNode):

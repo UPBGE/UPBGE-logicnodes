@@ -1548,8 +1548,6 @@ class ParameterVector2Simple(ParameterCell):
         self.output_vector = mathutils.Vector()
         self.OUTV = LogicNetworkSubCell(self, self.get_out_v)
 
-    def get_out_x(self): return self.output_vector.x
-    def get_out_y(self): return self.output_vector.y
     def get_out_v(self): return self.output_vector.copy()
     def get_normalized_vector(self): return self.output_vector.normalized()
 
@@ -1562,6 +1560,46 @@ class ParameterVector2Simple(ParameterCell):
         if y is not None:
             self.output_vector.y = y
         self._set_value(self.output_vector)
+
+
+class ParameterVector2Split(ParameterCell):
+    def __init__(self):
+        ParameterCell.__init__(self)
+        self.input_v = None
+        self.output_v = mathutils.Vector()
+        self.OUTX = LogicNetworkSubCell(self, self.get_out_x)
+        self.OUTY = LogicNetworkSubCell(self, self.get_out_y)
+
+    def get_out_x(self): return self.output_v.x
+    def get_out_y(self): return self.output_v.y
+
+    def evaluate(self):
+        self._set_ready()
+        vec = self.get_parameter_value(self.input_v)
+        if vec is not None:
+            self.output_v = vec
+        self._set_value(vec)
+
+
+class ParameterVector3Split(ParameterCell):
+    def __init__(self):
+        ParameterCell.__init__(self)
+        self.input_v = None
+        self.output_v = mathutils.Vector()
+        self.OUTX = LogicNetworkSubCell(self, self.get_out_x)
+        self.OUTY = LogicNetworkSubCell(self, self.get_out_y)
+        self.OUTZ = LogicNetworkSubCell(self, self.get_out_z)
+
+    def get_out_x(self): return self.output_v.x
+    def get_out_y(self): return self.output_v.y
+    def get_out_z(self): return self.output_v.z
+
+    def evaluate(self):
+        self._set_ready()
+        vec = self.get_parameter_value(self.input_v)
+        if vec is not None:
+            self.output_v = vec
+        self._set_value(vec)
 
 
 class ParameterVector3Simple(ParameterCell):
@@ -1879,6 +1917,32 @@ class ConditionAlways(ConditionCell):
     def reset(self):
         if not self.repeat:
             self._value = False
+
+    def evaluate(self):
+        pass
+
+
+class ConditionOnInit(ConditionCell):
+    def __init__(self):
+        ConditionCell.__init__(self)
+        self._set_status(LogicNetworkCell.STATUS_READY)
+        self._value = True
+
+    def reset(self):
+        self._value = False
+
+    def evaluate(self):
+        pass
+
+
+class ConditionOnUpdate(ConditionCell):
+    def __init__(self):
+        ConditionCell.__init__(self)
+        self._set_status(LogicNetworkCell.STATUS_READY)
+        self._value = True
+
+    def reset(self):
+        self._value = True
 
     def evaluate(self):
         pass

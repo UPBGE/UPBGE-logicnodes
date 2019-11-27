@@ -49,7 +49,7 @@ class BGEGamePropertyPanel(bpy.types.Panel):
             bge_netlogic.ops.NLAddPropertyOperator.bl_idname,
             text="Add Game Property",
             icon='PLUS'
-            )
+        )
         props = [prop for prop in obj.game.properties]
         for prop in obj.game.properties:
             index = props.index(prop)
