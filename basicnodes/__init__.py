@@ -175,9 +175,27 @@ _enum_logic_operators = [
 ]
 
 
-_enum_joystick_stick_operators = [
+_enum_controller_stick_operators = [
     ("0", "Left Stick", "Left Stick Values"),
     ("1", "Right Stick", "Right Stick Values")
+]
+
+
+_enum_controller_buttons_operators = [
+    ("0", "A / X", "A / X Button"),
+    ("1", "B / Circle", "B / Circle Button"),
+    ("2", "X / Square", "X / Square Button"),
+    ("3", "Y / Triangle", "Y / Triangle Button"),
+    ("4", "Select / Share", "Select / Share Button"),
+    ("6", "Start / Options", "Start / Options Button"),
+    ("7", "L3", "L3 Button"),
+    ("8", "R3", "R3 Button"),
+    ("9", "LB / L1", "LB / L1 Button"),
+    ("10", "RB / R1", "RB / R1 Button"),
+    ("11", "D-Pad Up", "D-Pad Up Button"),
+    ("12", "D-Pad Down", "D-Pad Down Button"),
+    ("13", "D-Pad Left", "D-Pad Left Button"),
+    ("14", "D-Pad Right", "D-Pad Right Button")
 ]
 
 
@@ -575,16 +593,49 @@ class NLSocketLogicOperator(bpy.types.NodeSocket, NetLogicSocketType):
 _sockets.append(NLSocketLogicOperator)
 
 
-class NLSocketJoystickAxis(bpy.types.NodeSocket, NetLogicSocketType):
-    bl_idname = "NLSocketJoystickAxis"
-    bl_label = "Joystick Axis"
-    value = bpy.props.EnumProperty(items=_enum_joystick_stick_operators, update=update_tree_code)
-    def draw_color(self, context, node): return PARAMETER_SOCKET_COLOR
+class NLSocketControllerAxis(bpy.types.NodeSocket, NetLogicSocketType):
+    bl_idname = "NLSocketControllerAxis"
+    bl_label = "Controller Axis"
+    value = bpy.props.EnumProperty(items=_enum_controller_stick_operators, update=update_tree_code)
+
+    def draw_color(self, context, node):
+        return PARAMETER_SOCKET_COLOR
+
     def draw(self, context, layout, node, text):
-        if self.is_linked or self.is_output: layout.label(text=text)
-        else: layout.prop(self, "value", text=text)
-    def get_unlinked_value(self): return "{}".format(self.value)
-_sockets.append(NLSocketJoystickAxis)
+        if self.is_linked or self.is_output:
+            layout.label(text=text)
+        else:
+            layout.prop(self, "value", text=text)
+
+    def get_unlinked_value(self):
+        return "{}".format(self.value)
+
+
+_sockets.append(NLSocketControllerAxis)
+
+
+class NLSocketControllerButtons(bpy.types.NodeSocket, NetLogicSocketType):
+    bl_idname = "NLSocketControllerButtons"
+    bl_label = "Controller Buttons"
+    value = bpy.props.EnumProperty(
+        items=_enum_controller_buttons_operators,
+        update=update_tree_code
+    )
+
+    def draw_color(self, context, node):
+        return PARAMETER_SOCKET_COLOR
+    
+    def draw(self, context, layout, node, text):
+        if self.is_linked or self.is_output:
+            layout.label(text=text)
+        else:
+            layout.prop(self, "value", text=text)
+
+    def get_unlinked_value(self):
+        return "{}".format(self.value)
+
+
+_sockets.append(NLSocketControllerButtons)
 
 
 class NLSocketDistanceCheck(bpy.types.NodeSocket, NetLogicSocketType):
@@ -2094,14 +2145,18 @@ class NLOnUpdateConditionNode(bpy.types.Node, NLConditionNode):
 _nodes.append(NLOnUpdateConditionNode)
 
 
-class NLJoyStickCondition(bpy.types.Node, NLActionNode):
-    bl_idname = "NLJoyStickCondition"
+class NLControllerSticksCondition(bpy.types.Node, NLActionNode):
+    bl_idname = "NLControllerSticksCondition"
     bl_label = "Controller Sticks"
-    nl_category = "Joystick"
+    nl_category = "Controllers"
+    axis = bpy.props.EnumProperty(
+        items=_enum_controller_stick_operators,
+        description="PFFFL",
+        update=update_tree_code
+    )
 
     def init(self, context):
         NLConditionNode.init(self, context)
-        self.inputs.new(NLSocketJoystickAxis.bl_idname, 'Axis')
         self.inputs.new(NLBooleanSocket.bl_idname, 'Inverted')
         self.inputs.new(NLPositiveIntegerFieldSocket.bl_idname, 'Index')
         self.inputs.new(NLFloatFieldSocket.bl_idname, 'Sensitivity')
@@ -2111,19 +2166,64 @@ class NLJoyStickCondition(bpy.types.Node, NLActionNode):
         self.outputs.new(NLFloatFieldSocket.bl_idname, "Left / Right")
         self.outputs.new(NLFloatFieldSocket.bl_idname, "Up / Down")
 
+    def draw_buttons(self, context, layout):
+        layout.prop(self, "axis", text='')
+
     def get_netlogic_class_name(self):
-        return "bgelogic.ConditionJoystickController"
+        return "bgelogic.ConditionControllerSticks"
 
     def get_input_sockets_field_names(self):
-        return ['axis', 'inverted', "index", 'sensitivity', 'threshold']
+        return ['inverted', "index", 'sensitivity', 'threshold']
 
     def get_output_socket_varnames(self):
         return ["X", "Y"]
 
     def write_cell_fields_initialization(self, cell_varname, uids, line_writer):
         NetLogicStatementGenerator.write_cell_fields_initialization(self, cell_varname, uids, line_writer)
+        line_writer.write_line("{}.{} = {}", cell_varname, "axis", self.axis)
     pass
-_nodes.append(NLJoyStickCondition)
+_nodes.append(NLControllerSticksCondition)
+
+
+class NLControllerButtonsCondition(bpy.types.Node, NLActionNode):
+    bl_idname = "NLControllerButtonsCondition"
+    bl_label = "Controller Button"
+    nl_category = "Controllers"
+    button = bpy.props.EnumProperty(
+        items=_enum_controller_buttons_operators,
+        description="PFFFL",
+        update=update_tree_code
+    )
+    pulse = bpy.props.BoolProperty(
+        description="ON: True until the button is released, OFF: True when pressed, then False until pressed again",
+        update=update_tree_code
+    )
+
+    def init(self, context):
+        NLConditionNode.init(self, context)
+        self.inputs.new(NLPositiveIntegerFieldSocket.bl_idname, 'Index')
+        #self.inputs.new(NLSocketControllerButtons.bl_idname, 'Button')
+        self.outputs.new(NLConditionSocket.bl_idname, "Is Pressed")
+
+    def draw_buttons(self, context, layout):
+        layout.prop(self, "pulse", text="Down" if self.pulse else "Tap", toggle=True)
+        layout.prop(self, "button", text='')
+
+    def get_netlogic_class_name(self):
+        return "bgelogic.ConditionControllerButtons"
+
+    def get_input_sockets_field_names(self):
+        return ["index"]
+
+    def get_output_socket_varnames(self):
+        return ["BUTTON"]
+
+    def write_cell_fields_initialization(self, cell_varname, uids, line_writer):
+        NetLogicStatementGenerator.write_cell_fields_initialization(self, cell_varname, uids, line_writer)
+        line_writer.write_line("{}.{} = {}", cell_varname, "pulse", self.pulse)
+        line_writer.write_line("{}.{} = {}", cell_varname, "button", self.button)
+    pass
+_nodes.append(NLControllerButtonsCondition)
 
 
 class NLKeyPressedCondition(bpy.types.Node, NLConditionNode):
@@ -3803,13 +3903,13 @@ _nodes.append(NLActionRandomValues)
 
 class NLParameterDistance(bpy.types.Node, NLParameterNode):
     bl_idname = "NLParameterDistance"
-    bl_label = "Distance (Vec, XYZ, Game Object)"
+    bl_label = "Distance"
     nl_category = "Math"
     def init(self, context):
         NLParameterNode.init(self, context)
-        self.inputs.new(NLSocketVectorField.bl_idname, "A")
-        self.inputs.new(NLSocketVectorField.bl_idname, "B")
-        self.outputs.new(NLParameterSocket.bl_idname, "Dst")
+        self.inputs.new(NLVec3FieldSocket.bl_idname, "A")
+        self.inputs.new(NLVec3FieldSocket.bl_idname, "B")
+        self.outputs.new(NLParameterSocket.bl_idname, "Distance")
     def get_input_sockets_field_names(self):
         return ["parama", "paramb"]
     def get_netlogic_class_name(self):

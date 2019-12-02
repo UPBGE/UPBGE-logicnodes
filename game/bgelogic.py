@@ -2406,10 +2406,10 @@ class ConditionKeyPressed(ConditionCell):
         pass
 
 
-class ConditionJoystickController(ConditionCell):
-    def __init__(self, pulse=False, key_code=None):
+class ConditionControllerSticks(ConditionCell):
+    def __init__(self, axis=0):
         ConditionCell.__init__(self)
-        self.axis = None
+        self.axis = axis
         self.inverted = None
         self.index = None
         self.sensitivity = None
@@ -2456,6 +2456,40 @@ class ConditionJoystickController(ConditionCell):
         self._x_axis_values = x_axis
         self._y_axis_values = y_axis
 
+
+class ConditionControllerButtons(ConditionCell):
+    def __init__(self, pulse=False, button=0):
+        ConditionCell.__init__(self)
+        self.pulse = pulse
+        self.button = button
+        self.index = None
+        self._button_value = None
+        self.BUTTON = LogicNetworkSubCell(self, self.get_x_axis)
+        self.initialized = False
+
+    def get_x_axis(self):
+        return self._button_value
+
+    def evaluate(self):
+        self._set_ready()
+        index = self.get_parameter_value(self.index)
+        joystick = bge.logic.joysticks[index]
+
+        if none_or_invalid(joystick):
+            raise Exception('No Joystick at that Index!')
+            return
+
+        if self.button in joystick.activeButtons:
+            if not self.initialized:
+                self._button_value = True
+            else:
+                self._button_value = False
+            if not self.pulse:
+                self.initialized = True
+
+        else:
+            self._button_value = False
+            self.initialized = False
 
 class ActionKeyLogger(ActionCell):
     def __init__(self):
