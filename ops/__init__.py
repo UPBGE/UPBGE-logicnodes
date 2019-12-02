@@ -1,3 +1,4 @@
+from bpy_extras.io_utils import ImportHelper
 import os
 import bpy
 import bge_netlogic
@@ -45,12 +46,12 @@ class WaitForKeyOperator(bpy.types.Operator):
         context.region.tag_redraw()
     pass
     def modal(self, context, event):
-        if event.type == "MOUSEMOVE":
-            dx = event.mouse_x - event.mouse_prev_x
-            dy = event.mouse_y - event.mouse_prev_y
-            if dx != 0 or dy != 0:
-                self.cleanup(context)
-                return {'FINISHED'}
+        #if event.type == "MOUSEMOVE":
+        #    dx = event.mouse_x - event.mouse_prev_x
+        #    dy = event.mouse_y - event.mouse_prev_y
+        #    if dx != 0 or dy != 0:
+        #        self.cleanup(context)
+        #        return {'FINISHED'}
         if event.value == "PRESS":
             if event.value == "LEFTMOUSE":
                 return {'FINISHED'}
@@ -424,6 +425,16 @@ class NLMovePropertyOperator(bpy.types.Operator):
         return {'FINISHED'}
 
 
+class NLLoadSoundOperator(bpy.types.Operator):
+    bl_idname = "bge_netlogic.load_sound"
+    bl_label = "Load Sound"
+    bl_description = "Load any sound file"
+
+    def execute(self, context):
+        bpy.ops.sound.open()
+        return {'FINISHED'}
+
+
 class NLSwitchInitialNetworkStatusOperator(bpy.types.Operator):
     bl_idname = "bge_netlogic.switch_network_status"
     bl_label = "Enable/Disable at start"
@@ -480,16 +491,3 @@ class NLPopupTemplatesOperator(bpy.types.Operator):
         else:
             return bpy.data.texts[index]
         pass
-
-
-class NLPropertyOperator(bpy.types.Operator):
-    bl_idname = "bge_netlogic.game_properties"
-    bl_label = "Object Properties"
-    bl_description = "Shows the Game Properties for currently selected game"
-
-    @classmethod
-    def poll(cls, context): return True
-
-    def execute(self, context):
-        print(bpy.context.object['lil'])
-        return {'FINISHED'}

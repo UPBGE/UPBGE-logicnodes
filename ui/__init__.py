@@ -5,7 +5,8 @@ import bge_netlogic
 class BGEGamePropertyPanel(bpy.types.Panel):
     bl_label = "Game Properties"
     bl_space_type = "NODE_EDITOR"
-    bl_region_type = "TOOLS"
+    bl_region_type = "UI"
+    bl_category = "Item"
     name = bpy.props.StringProperty()
 
     @classmethod
@@ -144,7 +145,8 @@ class BGEGamePropertyPanel3DView(bpy.types.Panel):
 class BGELogicTreeInfoPanel(bpy.types.Panel):
     bl_label = "Object Trees"
     bl_space_type = "NODE_EDITOR"
-    bl_region_type = "TOOLS"
+    bl_region_type = "UI"
+    bl_category = "Item"
     _current_tree = None
 
     @classmethod
@@ -207,8 +209,8 @@ class BGELogicTreeInfoPanel(bpy.types.Panel):
 class BGELogicPanel(bpy.types.Panel):
     bl_label = "Custom Nodes"
     bl_space_type = "NODE_EDITOR"
-    bl_region_type = "TOOLS"
-    bl_options = {'DEFAULT_CLOSED'}
+    bl_region_type = "UI"
+    bl_category = "Custom Nodes"
     _current_tree = None
 
     @classmethod

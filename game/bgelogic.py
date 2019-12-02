@@ -1279,6 +1279,31 @@ class ParameterObjectAttribute(ParameterCell):
         self._set_value(getattr(game_object, attribute_name))
 
 
+class ClampValue(ParameterCell):
+    
+    def __init__(self):
+        ParameterCell.__init__(self)
+        self.value = None
+        self.range = None
+
+    def evaluate(self):
+        value = self.get_parameter_value(self.value)
+        range_ft = self.get_parameter_value(self.range)
+        if value is LogicNetworkCell.STATUS_WAITING:
+            return
+        if range_ft is LogicNetworkCell.STATUS_WAITING:
+            return
+        self._set_ready()
+        if range_ft.x == range_ft.y:
+            self._set_value(value)
+            return
+        if value < range_ft.x:
+            value = range_ft.x
+        if value > range_ft.y:
+            value = range_ft.y
+        self._set_value(value)
+
+
 class ParameterArithmeticOp(ParameterCell):
     @classmethod
     def op_by_code(cls, str):
@@ -1864,8 +1889,10 @@ class ParameterSound(ParameterCell):
             return
         self._set_ready()
         if file_path != self._loaded_path:
+            #self.set_value(self.file_path)
             self._file_path_value = file_path
             self.dispose_loaded_audio()
+            # print(self.load_audio(file_path))
             self.load_audio(file_path)
 
 
@@ -2377,6 +2404,57 @@ class ConditionKeyPressed(ConditionCell):
         else:
             self._set_value(keystat == bge.logic.KX_INPUT_JUST_ACTIVATED)
         pass
+
+
+class ConditionJoystickController(ConditionCell):
+    def __init__(self, pulse=False, key_code=None):
+        ConditionCell.__init__(self)
+        self.axis = None
+        self.inverted = None
+        self.index = None
+        self.sensitivity = None
+        self.threshold = None
+        self._x_axis_values = None
+        self._y_axis_values = None
+        self.X = LogicNetworkSubCell(self, self.get_x_axis)
+        self.Y = LogicNetworkSubCell(self, self.get_y_axis)
+
+    def get_x_axis(self):
+        return self._x_axis_values
+
+    def get_y_axis(self):
+        return self._y_axis_values
+
+    def evaluate(self):
+        self._set_ready()
+        axis = self.get_parameter_value(self.axis)
+        if none_or_invalid(axis):
+            raise Exception('Invalid Controller Stick!')
+        inverted = self.get_parameter_value(self.inverted)
+        index = self.get_parameter_value(self.index)
+        sensitivity = self.get_parameter_value(self.sensitivity)
+        threshold = self.get_parameter_value(self.threshold)
+        joystick = bge.logic.joysticks[index]
+
+        if none_or_invalid(joystick):
+            raise Exception('No Joystick at that Index!')
+            return
+        raw_values = joystick.axisValues
+        values = []
+        if axis == 2:
+            raw_values = [raw_values[0], raw_values[1]]
+        elif axis == 1:
+            raw_values = [raw_values[2], raw_values[3]]
+        for x in raw_values:
+            if -threshold < x < threshold:
+                x = 0
+            x *= sensitivity
+            values.append((-x if inverted else x))
+
+        x_axis = values[0]
+        y_axis = values[1]
+        self._x_axis_values = x_axis
+        self._y_axis_values = y_axis
 
 
 class ActionKeyLogger(ActionCell):

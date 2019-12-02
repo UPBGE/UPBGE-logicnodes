@@ -159,19 +159,25 @@ _enum_string_ops = [
 ]
 
 _enum_math_operations = [
-    ("ADD", "A + B", "Sum A and B"),
-    ("SUB", "A - B", "Subtract B from A"),
-    ("DIV", "A : B", "Divide A by B"),
-    ("MUL", "A x B", "Multiply A by B")
+    ("ADD", "Add", "Sum A and B"),
+    ("SUB", "Substract", "Subtract B from A"),
+    ("DIV", "Divide", "Divide A by B"),
+    ("MUL", "Multiply", "Multiply A by B")
 ]
 
 _enum_logic_operators = [
-    ("0", "A = B", "A equals B [Integer value 0]"),
-    ("1", "A != B", "A not equals B [Integer value 1]"),
-    ("2", "A > B", "A greater than B [Integer value 2]"),
-    ("3", "A < B", "A less than B [Integer value 3]"),
-    ("4", "A >= B", "A greater or equal to B [Integer value 4]"),
-    ("5", "A <= B", "A less or equal to B [Integer value 5]")
+    ("0", "Equal", "A equals B"),
+    ("1", "Not Equal", "A not equals B"),
+    ("2", "Greater Than", "A greater than B"),
+    ("3", "Less Than", "A less than B"),
+    ("4", "Greater or Equal", "A greater or equal to B"),
+    ("5", "Less or Equal", "A less or equal to B")
+]
+
+
+_enum_joystick_stick_operators = [
+    ("0", "Left Stick", "Left Stick Values"),
+    ("1", "Right Stick", "Right Stick Values")
 ]
 
 
@@ -489,22 +495,30 @@ class NLGameObjectSocket(bpy.types.NodeSocket, NetLogicSocketType):
         if isinstance(self.value, bpy.types.Object):
             return '"Object:{}"'.format(self.value.name)
         return "{}".format(self.value)
-
-
-# Sockets
-# class NLGameObjectSocket(bpy.types.NodeSocket, NetLogicSocketType):
-#     bl_idname = "NLGameObjectSocket"
-#     bl_label = "Game Object"
-# 
-#     def draw_color(self, context, node):
-#         return PARAM_OBJ_SOCKET_COLOR
-# 
-#     def draw(self, context, layout, node, text):
-#         layout.label(text=text)
-# 
-#     def get_unlinked_value(self):
-#         return "None"
 _sockets.append(NLGameObjectSocket)
+
+
+class NLGamePropertySocket(bpy.types.NodeSocket, NetLogicSocketType):
+    bl_idname = "NLGamePropertySocket"
+    bl_label = "Property"
+    value = bpy.props.CollectionProperty(name='Property', type=bpy.types.GameProperty, update=update_tree_code)
+
+    def draw_color(self, context, node):
+        return PARAM_OBJ_SOCKET_COLOR
+
+    def draw(self, context, layout, node, text):
+        if self.is_output:
+            layout.label(text=self.name)
+        elif self.is_linked:
+            layout.label(text=self.name)
+        else:
+            col = layout.column(align=False)
+            col.label(text=self.name)
+            col.prop_search(self, 'value', bpy.context.object.game, 'properties', icon='NONE', text='')
+
+    def get_unlinked_value(self):
+        return None
+#_sockets.append(NLGamePropertySocket)
 
 
 class NLSocketAlphaFloat(bpy.types.NodeSocket, NetLogicSocketType):
@@ -530,14 +544,22 @@ _sockets.append(NLSocketAlphaFloat)
 class NLSocketSound(bpy.types.NodeSocket, NetLogicSocketType):
     bl_idname = "NLSocketSound"
     bl_label = "Sound"
+    value = bpy.props.PointerProperty(name='Sound', type=bpy.types.Sound, update=update_tree_code)
+
     def draw_color(self, context, node):
         return PARAM_SOUND_SOCKET_COLOR
 
     def draw(self, context, layout, node, text):
-        layout.label(text=text)
+        if self.is_output:
+            layout.label(text=text)
+        elif self.is_linked:
+            layout.label(text=text)
+        else:
+            row = layout.row(align=True)
+            row.prop_search(self, 'value', bpy.context.blend_data, 'sounds', icon='NONE', text='')
 
     def get_unlinked_value(self):
-        return "None"
+        return "{}".format(self.value)
 _sockets.append(NLSocketSound)
 
 
@@ -551,6 +573,18 @@ class NLSocketLogicOperator(bpy.types.NodeSocket, NetLogicSocketType):
         else: layout.prop(self, "value", text=text)
     def get_unlinked_value(self): return "{}".format(self.value)
 _sockets.append(NLSocketLogicOperator)
+
+
+class NLSocketJoystickAxis(bpy.types.NodeSocket, NetLogicSocketType):
+    bl_idname = "NLSocketJoystickAxis"
+    bl_label = "Joystick Axis"
+    value = bpy.props.EnumProperty(items=_enum_joystick_stick_operators, update=update_tree_code)
+    def draw_color(self, context, node): return PARAMETER_SOCKET_COLOR
+    def draw(self, context, layout, node, text):
+        if self.is_linked or self.is_output: layout.label(text=text)
+        else: layout.prop(self, "value", text=text)
+    def get_unlinked_value(self): return "{}".format(self.value)
+_sockets.append(NLSocketJoystickAxis)
 
 
 class NLSocketDistanceCheck(bpy.types.NodeSocket, NetLogicSocketType):
@@ -1572,7 +1606,8 @@ class NLGameObjectPropertyParameterNode(bpy.types.Node, NLParameterNode):
     def init(self, context):
         NLParameterNode.init(self, context)
         self.inputs.new(NLGameObjectSocket.bl_idname, "Object")
-        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Name")
+        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, 'Property')
+        #self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Name")
         self.inputs[-1].value = 'property'
         self.outputs.new(NLParameterSocket.bl_idname, "Property Value")
 
@@ -1611,15 +1646,15 @@ _nodes.append(NLActiveCameraParameterNode)
 
 class NLArithmeticOpParameterNode(bpy.types.Node, NLParameterNode):
     bl_idname = "NLArithmeticOpParameterNode"
-    bl_label = "Arithmetic Op"
+    bl_label = "Math"
     nl_category = "Math"
     operator = bpy.props.EnumProperty(items=_enum_math_operations, update=update_tree_code)
 
     def init(self, context):
         NLParameterNode.init(self, context)
         tools.register_inputs(self,
-            NLValueFieldSocket, "A",
-            NLValueFieldSocket, "B")
+            NLFloatFieldSocket, "A",
+            NLFloatFieldSocket, "B")
         self.outputs.new(NLParameterSocket.bl_idname, "")
     def draw_buttons(self, context, layout):
         layout.prop(self, "operator", text="")
@@ -1628,6 +1663,22 @@ class NLArithmeticOpParameterNode(bpy.types.Node, NLParameterNode):
     def get_netlogic_class_name(self): return "bgelogic.ParameterArithmeticOp"
     def get_input_sockets_field_names(self): return ["operand_a", "operand_b"]
 _nodes.append(NLArithmeticOpParameterNode)
+
+
+class NLClampValueNode(bpy.types.Node, NLParameterNode):
+    bl_idname = "NLClampValueNode"
+    bl_label = "Clamp"
+    nl_category = "Math"
+    operator = bpy.props.EnumProperty(items=_enum_math_operations, update=update_tree_code)
+
+    def init(self, context):
+        NLParameterNode.init(self, context)
+        self.inputs.new(NLFloatFieldSocket.bl_idname, "Value")
+        self.inputs.new(NLVec2FieldSocket.bl_idname, "Min / Max")
+        self.outputs.new(NLParameterSocket.bl_idname, "Value")
+    def get_netlogic_class_name(self): return "bgelogic.ClampValue"
+    def get_input_sockets_field_names(self): return ["value", "range"]
+_nodes.append(NLClampValueNode)
 
 
 class NLParameterActionStatus(bpy.types.Node, NLParameterNode):
@@ -2013,7 +2064,7 @@ class NLOnInitConditionNode(bpy.types.Node, NLConditionNode):
 
     def init(self, context):
         NLConditionNode.init(self, context)
-        self.outputs.new(NLConditionSocket.bl_idname, "On Init")
+        self.outputs.new(NLConditionSocket.bl_idname, "On Start")
 
     def get_netlogic_class_name(self):
         return "bgelogic.ConditionOnInit"
@@ -2041,6 +2092,38 @@ class NLOnUpdateConditionNode(bpy.types.Node, NLConditionNode):
     def write_cell_fields_initialization(self, cell_varname, uids, line_writer):
         NetLogicStatementGenerator.write_cell_fields_initialization(self, cell_varname, uids, line_writer)
 _nodes.append(NLOnUpdateConditionNode)
+
+
+class NLJoyStickCondition(bpy.types.Node, NLActionNode):
+    bl_idname = "NLJoyStickCondition"
+    bl_label = "Controller Sticks"
+    nl_category = "Joystick"
+
+    def init(self, context):
+        NLConditionNode.init(self, context)
+        self.inputs.new(NLSocketJoystickAxis.bl_idname, 'Axis')
+        self.inputs.new(NLBooleanSocket.bl_idname, 'Inverted')
+        self.inputs.new(NLPositiveIntegerFieldSocket.bl_idname, 'Index')
+        self.inputs.new(NLFloatFieldSocket.bl_idname, 'Sensitivity')
+        self.inputs[-1].value = 1
+        self.inputs.new(NLFloatFieldSocket.bl_idname, 'Threshold')
+        self.inputs[-1].value = 0.05
+        self.outputs.new(NLFloatFieldSocket.bl_idname, "Left / Right")
+        self.outputs.new(NLFloatFieldSocket.bl_idname, "Up / Down")
+
+    def get_netlogic_class_name(self):
+        return "bgelogic.ConditionJoystickController"
+
+    def get_input_sockets_field_names(self):
+        return ['axis', 'inverted', "index", 'sensitivity', 'threshold']
+
+    def get_output_socket_varnames(self):
+        return ["X", "Y"]
+
+    def write_cell_fields_initialization(self, cell_varname, uids, line_writer):
+        NetLogicStatementGenerator.write_cell_fields_initialization(self, cell_varname, uids, line_writer)
+    pass
+_nodes.append(NLJoyStickCondition)
 
 
 class NLKeyPressedCondition(bpy.types.Node, NLConditionNode):
@@ -2363,8 +2446,8 @@ _nodes.append(NLConditionValueTriggerNode)
 
 class NLConditionLogicOperation(bpy.types.Node, NLConditionNode):
     bl_idname = "NLConditionLogicOperation"
-    bl_label = "Logic Operations"
-    nl_category = "Logic"
+    bl_label = "Compare"
+    nl_category = "Math"
     
     def init(self, context):
         NLConditionNode.init(self, context)
@@ -2380,7 +2463,7 @@ _nodes.append(NLConditionLogicOperation)
 class NLConditionDistanceCheck(bpy.types.Node, NLConditionNode):
     bl_idname = "NLConditionDistanceCheck"
     bl_label = "Check Distance"
-    nl_category = "Logic"
+    nl_category = "Math"
     
     def init(self, context):
         NLConditionNode.init(self, context)

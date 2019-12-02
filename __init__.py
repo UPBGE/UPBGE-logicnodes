@@ -327,8 +327,8 @@ _registered_classes = [
     ops.NLAddPropertyOperator,
     ops.NLRemovePropertyOperator,
     ops.NLMovePropertyOperator,
+    ops.NLLoadSoundOperator,
     ops.NLPopupTemplatesOperator,
-    ops.NLPropertyOperator,
     NLNodeTreeReference]
 
 _registered_classes.extend(basicnodes._sockets)
