@@ -2406,7 +2406,7 @@ class ConditionKeyPressed(ConditionCell):
         pass
 
 
-class ConditionControllerSticks(ConditionCell):
+class ConditionGamepadSticks(ConditionCell):
     def __init__(self, axis=0):
         ConditionCell.__init__(self)
         self.axis = axis
@@ -2457,7 +2457,7 @@ class ConditionControllerSticks(ConditionCell):
         self._y_axis_values = y_axis
 
 
-class ConditionControllerTrigger(ConditionCell):
+class ConditionGamepadTrigger(ConditionCell):
     def __init__(self, axis=0):
         ConditionCell.__init__(self)
         self.axis = axis
@@ -2490,7 +2490,7 @@ class ConditionControllerTrigger(ConditionCell):
         self._value = value * sensitivity
 
 
-class ConditionControllerButtons(ConditionCell):
+class ConditionGamepadButtons(ConditionCell):
     def __init__(self, pulse=False, button=0):
         ConditionCell.__init__(self)
         self.pulse = pulse

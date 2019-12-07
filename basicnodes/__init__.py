@@ -2172,13 +2172,13 @@ class NLOnUpdateConditionNode(bpy.types.Node, NLConditionNode):
 _nodes.append(NLOnUpdateConditionNode)
 
 
-class NLControllerSticksCondition(bpy.types.Node, NLActionNode):
-    bl_idname = "NLControllerSticksCondition"
-    bl_label = "Controller Sticks"
-    nl_category = "Controllers"
+class NLGamepadSticksCondition(bpy.types.Node, NLActionNode):
+    bl_idname = "NLGamepadSticksCondition"
+    bl_label = "Gamepad Sticks"
+    nl_category = "Gamepad"
     axis = bpy.props.EnumProperty(
         items=_enum_controller_stick_operators,
-        description="Controller Sticks",
+        description="Gamepad Sticks",
         update=update_tree_code
     )
 
@@ -2197,7 +2197,7 @@ class NLControllerSticksCondition(bpy.types.Node, NLActionNode):
         layout.prop(self, "axis", text='')
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ConditionControllerSticks"
+        return "bgelogic.ConditionGamepadSticks"
 
     def get_input_sockets_field_names(self):
         return ['inverted', "index", 'sensitivity', 'threshold']
@@ -2209,13 +2209,13 @@ class NLControllerSticksCondition(bpy.types.Node, NLActionNode):
         NetLogicStatementGenerator.write_cell_fields_initialization(self, cell_varname, uids, line_writer)
         line_writer.write_line("{}.{} = {}", cell_varname, "axis", self.axis)
     pass
-_nodes.append(NLControllerSticksCondition)
+_nodes.append(NLGamepadSticksCondition)
 
 
-class NLControllerTriggerCondition(bpy.types.Node, NLActionNode):
-    bl_idname = "NLControllerTriggerCondition"
-    bl_label = "Controller Trigger"
-    nl_category = "Controllers"
+class NLGamepadTriggerCondition(bpy.types.Node, NLActionNode):
+    bl_idname = "NLGamepadTriggerCondition"
+    bl_label = "Gamepad Trigger"
+    nl_category = "Gamepad"
     axis = bpy.props.EnumProperty(
         items=_enum_controller_trigger_operators,
         description="Left or Right Trigger",
@@ -2235,7 +2235,7 @@ class NLControllerTriggerCondition(bpy.types.Node, NLActionNode):
         layout.prop(self, "axis", text='')
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ConditionControllerTrigger"
+        return "bgelogic.ConditionGamepadTrigger"
 
     def get_input_sockets_field_names(self):
         return ["index", 'sensitivity', 'threshold']
@@ -2247,13 +2247,13 @@ class NLControllerTriggerCondition(bpy.types.Node, NLActionNode):
         NetLogicStatementGenerator.write_cell_fields_initialization(self, cell_varname, uids, line_writer)
         line_writer.write_line("{}.{} = {}", cell_varname, "axis", self.axis)
     pass
-_nodes.append(NLControllerTriggerCondition)
+_nodes.append(NLGamepadTriggerCondition)
 
 
-class NLControllerButtonsCondition(bpy.types.Node, NLActionNode):
-    bl_idname = "NLControllerButtonsCondition"
-    bl_label = "Controller Button"
-    nl_category = "Controllers"
+class NLGamepadButtonsCondition(bpy.types.Node, NLActionNode):
+    bl_idname = "NLGamepadButtonsCondition"
+    bl_label = "Gamepad Button"
+    nl_category = "Gamepad"
     button = bpy.props.EnumProperty(
         items=_enum_controller_buttons_operators,
         description="Controller Buttons",
@@ -2275,7 +2275,7 @@ class NLControllerButtonsCondition(bpy.types.Node, NLActionNode):
         layout.prop(self, "button", text='')
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ConditionControllerButtons"
+        return "bgelogic.ConditionGamepadButtons"
 
     def get_input_sockets_field_names(self):
         return ["index"]
@@ -2288,7 +2288,7 @@ class NLControllerButtonsCondition(bpy.types.Node, NLActionNode):
         line_writer.write_line("{}.{} = {}", cell_varname, "pulse", self.pulse)
         line_writer.write_line("{}.{} = {}", cell_varname, "button", self.button)
     pass
-_nodes.append(NLControllerButtonsCondition)
+_nodes.append(NLGamepadButtonsCondition)
 
 
 class NLKeyPressedCondition(bpy.types.Node, NLConditionNode):
