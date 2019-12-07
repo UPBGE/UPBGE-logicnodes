@@ -59,9 +59,6 @@ _enum_ik_mode_values = [
 
 
 _enum_field_value_types = [
-    ("NONE", "None", "The None value"),
-    ("EXPRESSION", "Expression", "An expression evaluated at initialization time"),
-    ("VECTOR", "Vector", "A Vector"),
     ("STRING", "String", "A String"),
     ("FLOAT", "Float", "A Float value"),
     ("INTEGER", "Integer", "An Integer value"),
@@ -124,15 +121,13 @@ _enum_readable_member_names = [
 ]
 
 _enum_writable_member_names = [
-    ("CUSTOM", "By Name", "Type the name of the attribute"),
     ("localPosition", "Local Position", "The local position of the object"),
     ("localOrientation", "Local Orientation", "The local orientation of the object"),
     ("localScale", "Local Scale", "The local scale of the object"),
     ("localTransform", "Local Transform", "The local transform of the object"),
     ("worldPosition", "World Position", "The World Position of the object"),
     ("worldOrientation", "World Orientation", "The World Orientation of the object"),
-    ("worldTransform", "World Transform", "The World Transform of the object"),
-    ("color", "Object Color", "The solid color of the object")
+    ("worldTransform", "World Transform", "The World Transform of the object")
 ]
 
 _enum_mouse_buttons = [
@@ -178,6 +173,11 @@ _enum_logic_operators = [
 _enum_controller_stick_operators = [
     ("0", "Left Stick", "Left Stick Values"),
     ("1", "Right Stick", "Right Stick Values")
+]
+
+_enum_controller_trigger_operators = [
+    ("0", "Left Trigger", "Left Trigger Values"),
+    ("1", "Right Trigger", "Right Trigger Values")
 ]
 
 
@@ -240,15 +240,21 @@ def parse_field_value(value_type, value):
         return '"{}"'.format(v)
     if t == "VECTOR":
         numbers = re.findall("[-+]?\d+[\.]?\d*", v)
-        if len(numbers) == 2: return "mathutils.Vector(({},{}))".format(numbers[0], numbers[1])
-        if len(numbers) == 3: return "mathutils.Vector(({},{},{}))".format(*numbers)
-        if len(numbers) == 4: return "mathutils.Vector(({},{},{},{}))".format(*numbers)
+        if len(numbers) == 2:
+            return "mathutils.Vector(({},{}))".format(numbers[0], numbers[1])
+        if len(numbers) == 3:
+            return "mathutils.Vector(({},{},{}))".format(*numbers)
+        if len(numbers) == 4:
+            return "mathutils.Vector(({},{},{},{}))".format(*numbers)
         return "mathutils.Vector()"
     if t == "EULER":
         numbers = re.findall("[-+]?\d+[\.]?\d*", v)
-        if len(numbers) == 1: return 'mathutils.Euler(({}, 0.0, 0.0), "XYZ")'.format(numbers[0])
-        if len(numbers) == 2: return 'mathutils.Euler(({}, {}, 0.0), "XYZ")'.format(numbers[0], numbers[1])
-        if len(numbers) == 3: return 'mathutils.Euler(({}, {}, {}), "XYZ")'.format(numbers[0], numbers[1], numbers[2])
+        if len(numbers) == 1:
+            return 'mathutils.Euler(({}, 0.0, 0.0), "XYZ")'.format(numbers[0])
+        if len(numbers) == 2:
+            return 'mathutils.Euler(({}, {}, 0.0), "XYZ")'.format(numbers[0], numbers[1])
+        if len(numbers) == 3:
+            return 'mathutils.Euler(({}, {}, {}), "XYZ")'.format(numbers[0], numbers[1], numbers[2])
         return 'mathutils.Euler((0,0,0), "XYZ")'
     if t == "EXPRESSION":
         return v
@@ -257,19 +263,22 @@ def parse_field_value(value_type, value):
     raise ValueError("Cannot parse enum {} type for NLValueFieldSocket".format(t))
     pass
 
+
 def update_tree_code(self, context):
     bge_netlogic.update_current_tree_code()
     pass
+
 
 def socket_field(s):
     return parse_field_value(s.value_type, s.value)
 
 
-
 def keyboard_key_string_to_bge_key(ks):
     ks = ks.replace("ASTERIX", "ASTER")
-    if ks == "NONE": return "None"
-    if ks == "RET": ks = "ENTER"
+    if ks == "NONE":
+        return "None"
+    if ks == "RET":
+        ks = "ENTER"
     if ks.startswith("NUMPAD_"):
         ks = ks.replace("NUMPAD_", "PAD")
         if("SLASH" in ks or "ASTER" in ks or "PLUS" in ks):
@@ -285,24 +294,48 @@ def keyboard_key_string_to_bge_key(ks):
 class NetLogicType:
     pass
 
+
 class NetLogicSocketType:
     def get_unlinked_value(self): raise NotImplementedError()
 
-class NetLogicStatementGenerator(NetLogicType):
 
+class NetLogicStatementGenerator(NetLogicType):
     def write_cell_declaration(self, cell_varname, line_writer):
         classname = self.get_netlogic_class_name()
         line_writer.write_line("{} = {}()", cell_varname, classname)
 
-    def write_cell_fields_initialization(self, cell_varname, uids, line_writer):
+    def write_cell_fields_initialization(
+        self,
+        cell_varname,
+        uids,
+        line_writer
+    ):
         for t in self.get_nonsocket_fields():
             field_name = t[0]
             field_value = t[1]
-            if callable(field_value): field_value = field_value()
-            line_writer.write_line('{}.{} = {}', cell_varname, field_name, field_value)
-        for socket in self.inputs: self.write_socket_field_initialization(socket, cell_varname, uids, line_writer)
+            if callable(field_value):
+                field_value = field_value()
+            line_writer.write_line(
+                '{}.{} = {}',
+                cell_varname,
+                field_name,
+                field_value
+            )
+        for socket in self.inputs:
+            self.write_socket_field_initialization(
+                socket,
+                cell_varname,
+                uids,
+                line_writer
+            )
 
-    def write_socket_field_initialization(self, socket, cell_varname, uids, line_writer):
+    def write_socket_field_initialization(
+        self,
+        socket,
+        cell_varname,
+        uids,
+        line_writer
+    ):
         input_names = self.get_input_sockets_field_names()
         input_socket_index = self._index_of(socket, self.inputs)
         field_name = None
@@ -312,21 +345,32 @@ class NetLogicStatementGenerator(NetLogicType):
             field_name = self.get_field_name_for_socket(socket)
         field_value = None
         if socket.is_linked:
-            field_value = self.get_linked_socket_field_value(socket, cell_varname, field_name, uids)
+            field_value = self.get_linked_socket_field_value(
+                socket,
+                cell_varname,
+                field_name,
+                uids
+            )
         else:
             field_value = socket.get_unlinked_value()
-        line_writer.write_line("{}.{} = {}", cell_varname, field_name, field_value)
-        pass
+        line_writer.write_line(
+            "{}.{} = {}",
+            cell_varname,
+            field_name,
+            field_value
+        )
 
     def get_nonsocket_fields(self):
         """
-        Return a list of (field_name, field_value) tuples, where field_name couples to output socket with a cell field
-        and field_value is either a value or a no-arg callable producing a value
+        Return a list of (field_name, field_value) tuples, where field_name
+        couples to output socket with a cell field and field_value is
+        either a value or a no-arg callable producing value
         :return: the non socket fields initializers
         """
         return []
 
-    def get_input_sockets_field_names(self): return None
+    def get_input_sockets_field_names(self):
+        return None
 
     def get_field_name_for_socket(self, socket):
         print("not implemented in ", self)
@@ -338,10 +382,17 @@ class NetLogicStatementGenerator(NetLogicType):
     def _index_of(self, item, a_iterable):
         i = 0
         for e in a_iterable:
-            if e == item: return i
+            if e == item:
+                return i
             i += 1
 
-    def get_linked_socket_field_value(self, socket, cell_varname, field_name, uids):
+    def get_linked_socket_field_value(
+        self,
+        socket,
+        cell_varname,
+        field_name,
+        uids
+    ):
         output_node = socket.links[0].from_socket.node
         output_socket = socket.links[0].from_socket
         while isinstance(output_node, bpy.types.NodeReroute):
@@ -354,7 +405,10 @@ class NetLogicStatementGenerator(NetLogicType):
             output_node = next_node
         if isinstance(output_node, bpy.types.NodeReroute):
             output_node = output_node.inputs[0].links[0].from_socket.node
-        output_socket_index = self._index_of(output_socket, output_node.outputs)
+        output_socket_index = self._index_of(
+            output_socket,
+            output_node.outputs
+        )
         assert isinstance(output_node, NetLogicStatementGenerator)
         output_node_varname = uids.get_varname_for_node(output_node)
         output_map = output_node.get_output_socket_varnames()
@@ -388,6 +442,8 @@ class NLConditionSocket(bpy.types.NodeSocket, NetLogicSocketType):
     def get_unlinked_value(self): return self.default_value
 
     pass
+
+
 _sockets.append(NLConditionSocket)
 
 
@@ -513,13 +569,15 @@ class NLGameObjectSocket(bpy.types.NodeSocket, NetLogicSocketType):
         if isinstance(self.value, bpy.types.Object):
             return '"Object:{}"'.format(self.value.name)
         return "{}".format(self.value)
+
+
 _sockets.append(NLGameObjectSocket)
 
 
 class NLGamePropertySocket(bpy.types.NodeSocket, NetLogicSocketType):
     bl_idname = "NLGamePropertySocket"
     bl_label = "Property"
-    value = bpy.props.CollectionProperty(name='Property', type=bpy.types.GameProperty, update=update_tree_code)
+    #value = bpy.props.CollectionProperty(name='Property', type=bpy.types.GameProperty, update=update_tree_code)
 
     def draw_color(self, context, node):
         return PARAM_OBJ_SOCKET_COLOR
@@ -591,27 +649,6 @@ class NLSocketLogicOperator(bpy.types.NodeSocket, NetLogicSocketType):
         else: layout.prop(self, "value", text=text)
     def get_unlinked_value(self): return "{}".format(self.value)
 _sockets.append(NLSocketLogicOperator)
-
-
-class NLSocketControllerAxis(bpy.types.NodeSocket, NetLogicSocketType):
-    bl_idname = "NLSocketControllerAxis"
-    bl_label = "Controller Axis"
-    value = bpy.props.EnumProperty(items=_enum_controller_stick_operators, update=update_tree_code)
-
-    def draw_color(self, context, node):
-        return PARAMETER_SOCKET_COLOR
-
-    def draw(self, context, layout, node, text):
-        if self.is_linked or self.is_output:
-            layout.label(text=text)
-        else:
-            layout.prop(self, "value", text=text)
-
-    def get_unlinked_value(self):
-        return "{}".format(self.value)
-
-
-_sockets.append(NLSocketControllerAxis)
 
 
 class NLSocketControllerButtons(bpy.types.NodeSocket, NetLogicSocketType):
@@ -895,18 +932,36 @@ _sockets.append(NLSceneSocket)
 class NLValueFieldSocket(bpy.types.NodeSocket, NetLogicSocketType):
     bl_idname = "NLValueFieldSocket"
     bl_label = "Value"
+
     def on_type_changed(self, context):
         tp = self.value_type
-        if tp == "BOOLEAN":
+        if tp == "BOOL":
             self.value = "True" if (self.bool_editor == "True") else "False"
         update_tree_code(self, context)
         pass
-    value_type = bpy.props.EnumProperty(items=_enum_field_value_types, update=on_type_changed)
+    value_type = bpy.props.EnumProperty(items=_enum_field_value_types, update=update_tree_code)
     value = bpy.props.StringProperty(update=update_tree_code)
+
     def store_boolean_value(self, context):
-        self.value = "True" if (self.bool_editor == "True") else "False"
+        self.value = str(self.bool_editor)
         update_tree_code(self, context)
-    bool_editor = bpy.props.EnumProperty(items=_enum_boolean_values, update=store_boolean_value)
+
+    bool_editor = bpy.props.BoolProperty(update=store_boolean_value)
+
+    def store_int_value(self, context):
+        self.value = str(self.int_editor)
+
+    int_editor = bpy.props.IntProperty(update=store_int_value)
+
+    def store_float_value(self, context):
+        self.value = str(self.float_editor)
+
+    float_editor = bpy.props.FloatProperty(update=store_float_value)
+
+    def store_string_value(self, context):
+        self.value = self.string_editor
+
+    string_editor = bpy.props.StringProperty(update=store_string_value)
 
     def draw_color(self, context, node):
         return PARAMETER_SOCKET_COLOR
@@ -917,18 +972,21 @@ class NLValueFieldSocket(bpy.types.NodeSocket, NetLogicSocketType):
         if self.is_linked or self.is_output:
             layout.label(text=text)
         else:
-            split = layout.split(factor=0.25)
-            split.label(text=text)
-            if self.value_type == "NONE":
-                split.prop(self, "value_type", text="")
-            elif self.value_type == "BOOLEAN":
-                row = split.row(align=True)
-                row.prop(self, "value_type", text="")
-                row.prop(self, "bool_editor", text="")
-            else:
-                row = split.row(align=True)
-                row.prop(self, "value_type", text="")
-                row.prop(self, "value", text="")
+            main = layout.split(factor=.4)
+            if self.value_type == "BOOLEAN":
+                main.prop(self, "value_type", text="")
+                main.prop(self, "bool_editor", text="")
+            elif self.value_type == "INTEGER":
+                main.prop(self, "value_type", text="")
+                main.prop(self, "int_editor", text="")
+            elif self.value_type == "FLOAT":
+                main.prop(self, "value_type", text="")
+                main.prop(self, "float_editor", text="")
+            elif self.value_type == "STRING":
+                main.prop(self, "value_type", text="")
+                main.prop(self, "string_editor", text="")
+
+
 _sockets.append(NLValueFieldSocket)
 
 
@@ -1028,37 +1086,6 @@ class NLSocketReadableMemberName(bpy.types.NodeSocket, NetLogicSocketType):
             else:
                 layout.prop(self, "value_type", text="")
 _sockets.append(NLSocketReadableMemberName)
-
-
-class NLSocketWritableMemberName(bpy.types.NodeSocket, NetLogicSocketType):
-    bl_idname = "NLSocketWritableMemberName"
-    bl_label = "Att. Name"
-    value = bpy.props.StringProperty(update=update_tree_code)
-
-    def _set_value(self, context):
-        t = self.value_type
-        if t == "CUSTOM": self.value = ""
-        else: self.value = t
-        bge_netlogic.update_current_tree_code()
-    value_type = bpy.props.EnumProperty(items=_enum_writable_member_names, update=_set_value)
-
-    def draw_color(self, context, node):
-        return PARAM_SCENE_SOCKET_COLOR
-
-    def get_unlinked_value(self): return '"{}"'.format(self.value)
-
-    def draw(self, context, layout, node, text):
-        if self.is_linked or self.is_output:
-            layout.label(text=text)
-        else:
-            if self.value_type == "CUSTOM":
-                row = layout.row(align=True)
-                row.prop(self, "value_type", text="")
-                row.prop(self, "value", text="")
-                pass
-            else:
-                layout.prop(self, "value_type", text="")
-_sockets.append(NLSocketWritableMemberName)
 
 
 class NLKeyboardKeySocket(bpy.types.NodeSocket, NetLogicSocketType):
@@ -1659,7 +1686,7 @@ class NLGameObjectPropertyParameterNode(bpy.types.Node, NLParameterNode):
         self.inputs.new(NLGameObjectSocket.bl_idname, "Object")
         self.inputs.new(NLQuotedStringFieldSocket.bl_idname, 'Property')
         #self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Name")
-        self.inputs[-1].value = 'property'
+        self.inputs[-1].value = 'prop'
         self.outputs.new(NLParameterSocket.bl_idname, "Property Value")
 
     def get_netlogic_class_name(self): return "bgelogic.ParameterObjectProperty"
@@ -2151,7 +2178,7 @@ class NLControllerSticksCondition(bpy.types.Node, NLActionNode):
     nl_category = "Controllers"
     axis = bpy.props.EnumProperty(
         items=_enum_controller_stick_operators,
-        description="PFFFL",
+        description="Controller Sticks",
         update=update_tree_code
     )
 
@@ -2185,13 +2212,51 @@ class NLControllerSticksCondition(bpy.types.Node, NLActionNode):
 _nodes.append(NLControllerSticksCondition)
 
 
+class NLControllerTriggerCondition(bpy.types.Node, NLActionNode):
+    bl_idname = "NLControllerTriggerCondition"
+    bl_label = "Controller Trigger"
+    nl_category = "Controllers"
+    axis = bpy.props.EnumProperty(
+        items=_enum_controller_trigger_operators,
+        description="Left or Right Trigger",
+        update=update_tree_code
+    )
+
+    def init(self, context):
+        NLConditionNode.init(self, context)
+        self.inputs.new(NLPositiveIntegerFieldSocket.bl_idname, 'Index')
+        self.inputs.new(NLFloatFieldSocket.bl_idname, 'Sensitivity')
+        self.inputs[-1].value = 1
+        self.inputs.new(NLFloatFieldSocket.bl_idname, 'Threshold')
+        self.inputs[-1].value = 0.05
+        self.outputs.new(NLFloatFieldSocket.bl_idname, "Value")
+
+    def draw_buttons(self, context, layout):
+        layout.prop(self, "axis", text='')
+
+    def get_netlogic_class_name(self):
+        return "bgelogic.ConditionControllerTrigger"
+
+    def get_input_sockets_field_names(self):
+        return ["index", 'sensitivity', 'threshold']
+
+    def get_output_socket_varnames(self):
+        return ["VAL"]
+
+    def write_cell_fields_initialization(self, cell_varname, uids, line_writer):
+        NetLogicStatementGenerator.write_cell_fields_initialization(self, cell_varname, uids, line_writer)
+        line_writer.write_line("{}.{} = {}", cell_varname, "axis", self.axis)
+    pass
+_nodes.append(NLControllerTriggerCondition)
+
+
 class NLControllerButtonsCondition(bpy.types.Node, NLActionNode):
     bl_idname = "NLControllerButtonsCondition"
     bl_label = "Controller Button"
     nl_category = "Controllers"
     button = bpy.props.EnumProperty(
         items=_enum_controller_buttons_operators,
-        description="PFFFL",
+        description="Controller Buttons",
         update=update_tree_code
     )
     pulse = bpy.props.BoolProperty(
@@ -2444,7 +2509,7 @@ _nodes.append(NLConditionMouseTargetingNode)
 class NLConditionAndNode(bpy.types.Node, NLConditionNode):
     bl_idname = "NLConditionAndNode"
     bl_label = "And"
-    nl_category = "Events"
+    nl_category = "Logic"
 
     def init(self, context):
         NLConditionNode.init(self, context)
@@ -2460,7 +2525,7 @@ _nodes.append(NLConditionAndNode)
 class NLConditionOrNode(bpy.types.Node, NLConditionNode):
     bl_idname = "NLConditionOrNode"
     bl_label = "Or"
-    nl_category = "Events"
+    nl_category = "Logic"
 
     def init(self, context):
         NLConditionNode.init(self, context)
@@ -2475,7 +2540,7 @@ _nodes.append(NLConditionOrNode)
 class NLConditionOrList(bpy.types.Node, NLConditionNode):
     bl_idname = "NLConditionOrList"
     bl_label = "Or List"
-    nl_category = "Events"
+    nl_category = "Logic"
     
     def init(self, context):
         NLConditionNode.init(self, context)
@@ -2500,7 +2565,7 @@ _nodes.append(NLConditionOrList)
 class NLConditionAndList(bpy.types.Node, NLConditionNode):
     bl_idname = "NLConditionAndList"
     bl_label = "And List"
-    nl_category = "Events"
+    nl_category = "Logic"
     
     def init(self, context):
         NLConditionNode.init(self, context)
@@ -2526,8 +2591,8 @@ _nodes.append(NLConditionAndList)
 class NLConditionValueTriggerNode(bpy.types.Node, NLConditionNode):
     """When input becomes trigger, sends a true signal"""
     bl_idname = "NLConditionValueTriggerNode"
-    bl_label = "Value Changed To"
-    nl_category = "Logic"
+    bl_label = "On Value Changed To"
+    nl_category = "Events"
 
     def init(self, context):
         NLConditionNode.init(self, context)
@@ -2548,15 +2613,21 @@ class NLConditionLogicOperation(bpy.types.Node, NLConditionNode):
     bl_idname = "NLConditionLogicOperation"
     bl_label = "Compare"
     nl_category = "Math"
+    operator = bpy.props.EnumProperty(items=_enum_logic_operators, update=update_tree_code)
+
+    def draw_buttons(self, context, layout):
+        layout.prop(self, "operator", text='')
     
     def init(self, context):
         NLConditionNode.init(self, context)
-        self.inputs.new(NLSocketLogicOperator.bl_idname, "Op")
         self.inputs.new(NLValueFieldSocket.bl_idname, "A")
         self.inputs.new(NLValueFieldSocket.bl_idname, "B")
         self.outputs.new(NLConditionSocket.bl_idname, "If True")
     def get_netlogic_class_name(self): return "bgelogic.ConditionLogicOp"
-    def get_input_sockets_field_names(self): return ["operator", "param_a", "param_b"]
+    def get_input_sockets_field_names(self): return ["param_a", "param_b"]
+    def write_cell_fields_initialization(self, cell_varname, uids, line_writer):
+        NetLogicStatementGenerator.write_cell_fields_initialization(self, cell_varname, uids, line_writer)
+        line_writer.write_line("{}.{} = {}", cell_varname, "operator", self.operator)
 _nodes.append(NLConditionLogicOperation)
 
 
@@ -2580,8 +2651,8 @@ _nodes.append(NLConditionDistanceCheck)
 
 class NLConditionValueChanged(bpy.types.Node, NLConditionNode):
     bl_idname = "NLConditionValueChanged"
-    bl_label = "Value Changed"
-    nl_category = "Logic"
+    bl_label = " On Value Changed"
+    nl_category = "Events"
     
     initialize = bpy.props.BoolProperty(
         description="When ON, skip the first change. When OFF, compare the first value to None",
@@ -2651,7 +2722,7 @@ _nodes.append(NLConditionNoneNode)
 class NLConditionNotNode(bpy.types.Node, NLConditionNode):
     bl_idname = "NLConditionNotNode"
     bl_label = "Not"
-    nl_category = "Events"
+    nl_category = "Logic"
 
     def init(self, context):
         NLConditionNode.init(self, context)
@@ -2710,8 +2781,8 @@ class NLSetGameObjectGamePropertyActionNode(bpy.types.Node, NLActionNode):
         self.inputs.new(NLConditionSocket.bl_idname, "Condition")
         self.inputs.new(NLGameObjectSocket.bl_idname, "Game Object")
         self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Name")
-        self.inputs[-1].value = 'property'
-        self.inputs.new(NLFloatFieldSocket.bl_idname, "Value")
+        self.inputs[-1].value = 'prop'
+        self.inputs.new(NLValueFieldSocket.bl_idname, "Value")
 
     def get_netlogic_class_name(self): return "bgelogic.ActionSetGameObjectGameProperty"
     def get_input_sockets_field_names(self): return ["condition", "game_object", "property_name", "property_value"]
@@ -2728,7 +2799,7 @@ class NLToggleGameObjectGamePropertyActionNode(bpy.types.Node, NLActionNode):
         self.inputs.new(NLConditionSocket.bl_idname, "Condition")
         self.inputs.new(NLGameObjectSocket.bl_idname, "Game Object")
         self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Name")
-        self.inputs[-1].value = 'property'
+        self.inputs[-1].value = 'prop'
 
     def get_netlogic_class_name(self): return "bgelogic.ActionToggleGameObjectGameProperty"
     def get_input_sockets_field_names(self): return ["condition", "game_object", "property_name", "property_value"]
@@ -2757,16 +2828,26 @@ class NLSetObjectAttributeActionNode(bpy.types.Node, NLActionNode):
     bl_idname = "NLSetObjectAttributeActionNode"
     bl_label = "Set Game Object Data"
     nl_category = "Objects"
+    value_type = bpy.props.EnumProperty(items=_enum_writable_member_names, update=update_tree_code)
 
     def init(self, context):
         NLActionNode.init(self, context)
         self.inputs.new(NLConditionSocket.bl_idname, "Condition")
         self.inputs.new(NLGameObjectSocket.bl_idname, "Game Object")
-        self.inputs.new(NLSocketWritableMemberName.bl_idname, "Name")
-        self.inputs.new(NLValueFieldSocket.bl_idname, "Value")
+        self.inputs.new(NLVec3FieldSocket.bl_idname, "Value")
 
-    def get_netlogic_class_name(self): return "bgelogic.ActionSetObjectAttribute"
-    def get_input_sockets_field_names(self): return ["condition", "game_object", "attribute_name", "attribute_value"]
+    def draw_buttons(self, context, layout):
+        layout.prop(self, "value_type", text='')
+
+    def get_netlogic_class_name(self):
+        return "bgelogic.ActionSetObjectAttribute"
+    
+    def get_input_sockets_field_names(self):
+        return ["condition", "game_object", "attribute_value"]
+    
+    def write_cell_fields_initialization(self, cell_varname, uids, line_writer):
+        NetLogicStatementGenerator.write_cell_fields_initialization(self, cell_varname, uids, line_writer)
+        line_writer.write_line("{}.{} = '{}'", cell_varname, "value_type", self.value_type)
 _nodes.append(NLSetObjectAttributeActionNode)
 
 

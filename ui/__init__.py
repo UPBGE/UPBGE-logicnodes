@@ -76,10 +76,79 @@ class BGEGamePropertyPanel(bpy.types.Panel):
 
 
 class BGEGamePropertyPanel3DView(bpy.types.Panel):
+    bl_idname = "PropertiesPanel3D"
     bl_label = "Game Properties"
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
     bl_category = "Item"
+    name = bpy.props.StringProperty()
+
+    @classmethod
+    def poll(cls, context):
+        return True
+
+    def draw_tree_prop(self, prop, index, box):
+        row = box.row()
+        name = prop.name.split('__')[-1]
+        text = 'Applied Tree: {}'.format(name)
+        row.label(text=text)
+        self.add_movers(index, row)
+
+    def add_movers(self, index, layout):
+        movers = layout.row(align=True)
+        move_up = movers.operator(
+            bge_netlogic.ops.NLMovePropertyOperator.bl_idname,
+            text='',
+            icon='TRIA_UP'
+        )
+        move_up.direction = 'UP'
+        move_down = movers.operator(
+            bge_netlogic.ops.NLMovePropertyOperator.bl_idname,
+            text='',
+            icon='TRIA_DOWN'
+        )
+        move_down.direction = 'DOWN'
+        move_down.index = move_up.index = index
+
+    def draw(self, context):
+        layout = self.layout
+        column = layout.column()
+        obj = bpy.context.object
+        column.operator(
+            bge_netlogic.ops.NLAddPropertyOperator.bl_idname,
+            text="Add Game Property",
+            icon='PLUS'
+        )
+        props = [prop for prop in obj.game.properties]
+        for prop in obj.game.properties:
+            index = props.index(prop)
+            column.separator()
+            box = column.box()
+            if prop.name.startswith('NODELOGIC__'):
+                self.draw_tree_prop(prop, index, box)
+                continue
+            entry = box.column()
+            row_title = entry.row()
+            row_title.prop(prop, 'name', text='')
+            row_title.prop(prop, 'show_debug', text='', icon='INFO')
+            self.add_movers(index, row_title)
+            remove = row_title.operator(
+                bge_netlogic.ops.NLRemovePropertyOperator.bl_idname,
+                text='',
+                icon='X'
+            )
+            remove.index = index
+            row_info = entry.row()
+            row_info.prop(prop, 'type', text='')
+            row_info.prop(prop, 'value', text='Value')
+
+
+class BGEGamePropertyPanelObject(bpy.types.Panel):
+    bl_idname = "PropertiesPanelProperties"
+    bl_label = "Game Properties"
+    bl_space_type = "PROPERTIES"
+    bl_region_type = "WINDOW"
+    bl_context = "object"
     name = bpy.props.StringProperty()
 
     @classmethod

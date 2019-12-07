@@ -2149,11 +2149,11 @@ class ConditionValueTrigger(ConditionCell):
 
 
 class ConditionLogicOp(ConditionCell):
-    def __init__(self):
+    def __init__(self, operator='ADD'):
         ConditionCell.__init__(self)
+        self.operator = operator
         self.param_a = None
         self.param_b = None
-        self.operator = None
 
     def evaluate(self):
         a = self.get_parameter_value(self.param_a)
@@ -2455,6 +2455,39 @@ class ConditionControllerSticks(ConditionCell):
         y_axis = values[1]
         self._x_axis_values = x_axis
         self._y_axis_values = y_axis
+
+
+class ConditionControllerTrigger(ConditionCell):
+    def __init__(self, axis=0):
+        ConditionCell.__init__(self)
+        self.axis = axis
+        self.index = None
+        self.sensitivity = None
+        self.threshold = None
+        self._value = None
+        self.VAL = LogicNetworkSubCell(self, self.get_value)
+        
+    def get_x_axis(self):
+        return self._value
+
+    def evaluate(self):
+        self._set_ready()
+        axis = self.get_parameter_value(self.axis)
+        if none_or_invalid(axis):
+            raise Exception('Invalid Controller Trigger!')
+        index = self.get_parameter_value(self.index)
+        sensitivity = self.get_parameter_value(self.sensitivity)
+        threshold = self.get_parameter_value(self.threshold)
+        joystick = bge.logic.joysticks[index]
+
+        if none_or_invalid(joystick):
+            raise Exception('No Joystick at that Index!')
+            return
+        value = joystick.axisValues[4] if axis == 0 else joystick.axisValues[5]
+
+        if -threshold < value < threshold:
+            value = 0
+        self._value = value * sensitivity
 
 
 class ConditionControllerButtons(ConditionCell):
@@ -3322,11 +3355,11 @@ class ActionPrint(ActionCell):
 
 
 class ActionSetObjectAttribute(ActionCell):
-    def __init__(self):
+    def __init__(self, value_type='localPosition'):
         ActionCell.__init__(self)
+        self.value_type = str(value_type)
         self.condition = None
         self.game_object = None
-        self.attribute_name = None
         self.attribute_value = None
 
     def evaluate(self):
@@ -3336,8 +3369,8 @@ class ActionSetObjectAttribute(ActionCell):
         game_object_value = self.get_parameter_value(self.game_object)
         if game_object_value is LogicNetworkCell.STATUS_WAITING:
             return
-        attribute_name_value = self.get_parameter_value(self.attribute_name)
-        if attribute_name_value is LogicNetworkCell.STATUS_WAITING:
+        value_type = self.get_parameter_value(self.value_type)
+        if value_type is LogicNetworkCell.STATUS_WAITING:
             return
         attribute_value_value = self.get_parameter_value(self.attribute_value)
         if attribute_value_value is LogicNetworkCell.STATUS_WAITING:
@@ -3348,7 +3381,7 @@ class ActionSetObjectAttribute(ActionCell):
         if condition_value:
             setattr(
                 game_object_value,
-                attribute_name_value,
+                value_type,
                 attribute_value_value
             )
 

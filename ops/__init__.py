@@ -255,11 +255,14 @@ class NLApplyLogicOperator(bpy.types.Operator):
     @classmethod
     def poll(cls, context):
         tree = context.space_data.edit_tree
-        if not tree: return False
-        if not (tree.bl_idname == bge_netlogic.ui.BGELogicTree.bl_idname): return False
+        if not tree:
+            return False
+        if not (tree.bl_idname == bge_netlogic.ui.BGELogicTree.bl_idname):
+            return False
         scene = context.scene
         for ob in scene.objects:
-            if ob.select_get(): return True
+            if ob.select_get():
+                return True
         return False
 
     def execute(self, context):

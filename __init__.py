@@ -339,13 +339,19 @@ _registered_classes.extend([
     ui.BGELogicPanel,
     ui.BGELogicTreeInfoPanel,
     ui.BGEGamePropertyPanel,
-    ui.BGEGamePropertyPanel3DView])
+    ui.BGEGamePropertyPanel3DView,
+    ui.BGEGamePropertyPanelObject])
+
 
 def _get_key_for_class(c):
-    if hasattr(c, "bl_label"): return c.bl_label
-    else: return "zzz"
+    if hasattr(c, "bl_label"):
+        return c.bl_label
+    else:
+        return "zzz"
+
 
 _registered_classes = sorted(_registered_classes, key=_get_key_for_class)
+
 
 #Create the menu items that allow the user to add nodes to a tree
 def _list_menu_nodes():
@@ -373,7 +379,7 @@ def _list_menu_nodes():
         elif issubclass(c, basicnodes.NLActionNode):
             get_act_list(c).append(nodeitems_utils.NodeItem(c.bl_idname))
     pmap_keys = list(proxy_map.keys())
-    pmap_keys.sort(reverse=True)
+    pmap_keys.sort()
     menu_nodes = []
     for name in pmap_keys:
         itemlist = proxy_map[name]
