@@ -433,4 +433,3 @@ def unregister():
             nodeitems_utils.unregister_node_categories(cat)
         except RuntimeError as ex:
             print("Custom category {} not unloaded [{}]".format(cat, ex))
-    pass

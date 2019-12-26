@@ -2,7 +2,6 @@ import re
 import bpy
 import bge_netlogic
 from bge_netlogic import utilities as tools
-import math
 
 
 CONDITION_SOCKET_COLOR = tools.Color.RGBA(.8, 0.2, 0.2, 1.0)
@@ -52,9 +51,21 @@ _enum_mouse_wheel_direction = [
 
 _enum_ik_mode_values = [
     ("None", "None", "Not set"),
-    ("bge.logic.CONSTRAINT_IK_MODE_INSIDE", "Inside", "Keep the bone with IK Distance of target"),
-    ("bge.logic.CONSTRAINT_IK_MODE_OUTSIDE", "Outside", "Keep the bone outside IK Distance of target"),
-    ("bge.logic.CONSTRAINT_IK_MODE_ONSURFACE", "On Surface", "Keep the bone exactly at IK Distance of the target")
+    (
+        "bge.logic.CONSTRAINT_IK_MODE_INSIDE",
+        "Inside",
+        "Keep the bone with IK Distance of target"
+    ),
+    (
+        "bge.logic.CONSTRAINT_IK_MODE_OUTSIDE",
+        "Outside",
+        "Keep the bone outside IK Distance of target"
+    ),
+    (
+        "bge.logic.CONSTRAINT_IK_MODE_ONSURFACE",
+        "On Surface",
+        "Keep the bone exactly at IK Distance of the target"
+    )
 ]
 
 
@@ -100,33 +111,65 @@ _enum_mouse_motion = [
 ]
 
 _enum_loop_count_values = [
-    ("ONCE", "No repeat", "Play once when condition is TRUE, then wait for the condition to become TRUE again to play it again."),
-    ("INFINITE", "Infinite", "When condition is TRUE, start repeating the sound until stopped."),
-    ("CUSTOM", "N times...", "When the condition it TRUE, play the sound N times")
+    (
+        "ONCE",
+        "No repeat",
+        "Play once when condition is TRUE, then wait for \
+            the condition to become TRUE again to play it again."
+    ),
+    (
+        "INFINITE",
+        "Infinite",
+        "When condition is TRUE, start repeating the sound until stopped."
+    ),
+    (
+        "CUSTOM",
+        "N times...",
+        "When the condition it TRUE, play the sound N times"
+    )
 ]
 
 
 _enum_readable_member_names = [
-    ("CUSTOM", "By Name", "Type the name of the attribute"),
     ("localPosition", "Local Position", "The local position of the object"),
-    ("localOrientation", "Local Orientation", "The local orientation of the object"),
+    (
+        "localOrientation",
+        "Local Orientation",
+        "The local orientation of the object"
+    ),
     ("localScale", "Local Scale", "The local scale of the object"),
     ("localTransform", "Local Transform", "The local transform of the object"),
     ("worldPosition", "World Position", "The World Position of the object"),
-    ("worldOrientation", "World Orientation", "The World Orientation of the object"),
+    (
+        "worldOrientation",
+        "World Orientation",
+        "The World Orientation of the object"
+    ),
     ("worldTransform", "World Transform", "The World Transform of the object"),
-    ("color", "Object Color", "The solid color of the object"),
-    ("name", "Object Name", "The name of the object"),
-    ("visible", "Object Visibility Status", "True if the object is set to visible, False if it is set of invisible")
+    ("color", "Color", "The solid color of the object"),
+    ("name", "Name", "The name of the object"),
+    (
+        "visible",
+        "Visibility",
+        "True if the object is set to visible, False if it is set of invisible"
+    )
 ]
 
 _enum_writable_member_names = [
     ("localPosition", "Local Position", "The local position of the object"),
-    ("localOrientation", "Local Orientation", "The local orientation of the object"),
+    (
+        "localOrientation",
+        "Local Orientation",
+        "The local orientation of the object"
+    ),
     ("localScale", "Local Scale", "The local scale of the object"),
     ("localTransform", "Local Transform", "The local transform of the object"),
     ("worldPosition", "World Position", "The World Position of the object"),
-    ("worldOrientation", "World Orientation", "The World Orientation of the object"),
+    (
+        "worldOrientation",
+        "World Orientation",
+        "The World Orientation of the object"
+    ),
     ("worldTransform", "World Transform", "The World Transform of the object")
 ]
 
@@ -142,15 +185,50 @@ _enum_string_ops = [
     ("2", "Infix", "OUT = PARAMETER A + STRING + PARAMETER B"),
     ("3", "Remove Last", "OUT = STRING - LAST CHARACTER"),
     ("4", "Remove First", "OUT = STRING - FIRST CHARACTER"),
-    ("5", "Replace", "OUT = STRING with all PARAMETER A occurrences replaced by PARAMETER B"),
+    (
+        "5",
+        "Replace",
+        "OUT = STRING with all PARAMETER A \
+            occurrences replaced by PARAMETER B"
+    ),
     ("6", "Upper Case", "OUT = STRING to upper case"),
     ("7", "Lower Case", "OUT = STRING to lower case"),
-    ("8", "Remove Range", "OUT = STRING - the character from index PARAMETER A to index PARAMETER B"),
-    ("9", "Insert At", "OUT = STRING + the PARAMETER A inserted ad the index PARAMETER B"),
-    ("10", "Length", "OUT = the length (character cout, integer value) of the input STRING"),
-    ("11", "Substring", "OUT = the STRING portion from PARAMETER A to PARAMETER B"),
-    ("12", "First Index Of", "OUT = the position (integer value) of the first PARAMETER A occurrence in STRING"),
-    ("13", "Last Index Of", "OUT = the position (integer value) of the first PARAMETER A occurrence int STRING")
+    (
+        "8",
+        "Remove Range",
+        "OUT = STRING - the character from index \
+            PARAMETER A to index PARAMETER B"
+    ),
+    (
+        "9",
+        "Insert At",
+        "OUT = STRING + the PARAMETER A \
+            inserted ad the index PARAMETER B"
+    ),
+    (
+        "10",
+        "Length",
+        "OUT = the length (character cout, integer value) \
+            of the input STRING"
+    ),
+    (
+        "11",
+        "Substring",
+        "OUT = the STRING portion from PARAMETER \
+            A to PARAMETER B"
+    ),
+    (
+        "12",
+        "First Index Of",
+        "OUT = the position (integer value) of the \
+            first PARAMETER A occurrence in STRING"
+    ),
+    (
+        "13",
+        "Last Index Of",
+        "OUT = the position (integer value) of the \
+            first PARAMETER A occurrence int STRING"
+    )
 ]
 
 _enum_math_operations = [
@@ -182,16 +260,16 @@ _enum_controller_trigger_operators = [
 
 
 _enum_controller_buttons_operators = [
-    ("0", "A / X", "A / X Button"),
+    ("0", "A / Cross", "A / Cross Button"),
     ("1", "B / Circle", "B / Circle Button"),
     ("2", "X / Square", "X / Square Button"),
     ("3", "Y / Triangle", "Y / Triangle Button"),
     ("4", "Select / Share", "Select / Share Button"),
     ("6", "Start / Options", "Start / Options Button"),
-    ("7", "L3", "L3 Button"),
-    ("8", "R3", "R3 Button"),
-    ("9", "LB / L1", "LB / L1 Button"),
-    ("10", "RB / R1", "RB / R1 Button"),
+    ("7", "L3", "Left Stick Button"),
+    ("8", "R3", "Right Stick Button"),
+    ("9", "LB / L1", "Left Bumper / L1 Button"),
+    ("10", "RB / R1", "Right Bumper / R1 Button"),
     ("11", "D-Pad Up", "D-Pad Up Button"),
     ("12", "D-Pad Down", "D-Pad Down Button"),
     ("13", "D-Pad Left", "D-Pad Left Button"),
@@ -204,40 +282,63 @@ _enum_distance_checks = [
     ("1", "AB != Dist", "AB Distance not equal to Dist [Integer value 1]"),
     ("2", "AB > Dist", "AB Distance greater than Dist [Integer value 2]"),
     ("3", "AB < Dist", "AB Distance less than Dist [Integer value 3]"),
-    ("4", "AB >= Dist", "AB Distance greater than or equal to Dist [Integer value 4]"),
-    ("5", "AB <= Dist", "AB Distance less than or equal to Dist [Integer value 5]"),
+    (
+        "4",
+        "AB >= Dist",
+        "AB Distance greater than or equal to Dist [Integer value 4]"
+    ),
+    (
+        "5",
+        "AB <= Dist",
+        "AB Distance less than or equal to Dist [Integer value 5]"
+    ),
 ]
 
 
 _enum_play_mode_values = [
     ("bge.logic.KX_ACTION_MODE_PLAY", "Play", "Play the action once"),
     ("bge.logic.KX_ACTION_MODE_LOOP", "Loop", "Loop the action"),
-    ("bge.logic.KX_ACTION_MODE_PING_PONG", "Ping Pong", "Play the action in one direction then in the opposite one")
+    (
+        "bge.logic.KX_ACTION_MODE_PING_PONG",
+        "Ping Pong",
+        "Play the action in one direction then in the opposite one"
+    )
 ]
 
 _enum_blend_mode_values = [
-    ("bge.logic.KX_ACTION_BLEND_BLEND", "Blend", "Blend layers using linear interpolation"),
+    (
+        "bge.logic.KX_ACTION_BLEND_BLEND",
+        "Blend",
+        "Blend layers using linear interpolation"
+    ),
     ("bge.logic.KX_ACTION_BLEND_ADD", "Add", "Adds the layer together")
 ]
 
 OUTCELL = "__standard_logic_cell_value__"
 
+
 def parse_field_value(value_type, value):
     t = value_type
     v = value
-    if t == "NONE": return "None"
+
+    if t == "NONE":
+        return "None"
+
     if t == "INTEGER":
         try:
             return int(v)
-        except ValueError as ex:
+        except ValueError:
             return "0.0"
+
     if t == "FLOAT":
         try:
             return float(v)
-        except ValueError as ex:
+        except ValueError:
             return "0.0"
+
     if t == "STRING":
         return '"{}"'.format(v)
+
     if t == "VECTOR":
         numbers = re.findall("[-+]?\d+[\.]?\d*", v)
         if len(numbers) == 2:
@@ -247,26 +348,41 @@ def parse_field_value(value_type, value):
         if len(numbers) == 4:
             return "mathutils.Vector(({},{},{},{}))".format(*numbers)
         return "mathutils.Vector()"
+
     if t == "EULER":
         numbers = re.findall("[-+]?\d+[\.]?\d*", v)
         if len(numbers) == 1:
             return 'mathutils.Euler(({}, 0.0, 0.0), "XYZ")'.format(numbers[0])
         if len(numbers) == 2:
-            return 'mathutils.Euler(({}, {}, 0.0), "XYZ")'.format(numbers[0], numbers[1])
+            return (
+                'mathutils.Euler(({}, {}, 0.0), "XYZ")'.format(
+                    numbers[0],
+                    numbers[1]
+                )
+            )
         if len(numbers) == 3:
-            return 'mathutils.Euler(({}, {}, {}), "XYZ")'.format(numbers[0], numbers[1], numbers[2])
+            return (
+                'mathutils.Euler(({}, {}, {}), "XYZ")'.format(
+                    numbers[0],
+                    numbers[1],
+                    numbers[2]
+                )
+            )
         return 'mathutils.Euler((0,0,0), "XYZ")'
+
     if t == "EXPRESSION":
         return v
+
     if t == "BOOLEAN":
         return v
-    raise ValueError("Cannot parse enum {} type for NLValueFieldSocket".format(t))
-    pass
+
+    raise ValueError(
+        "Cannot parse enum {} type for NLValueFieldSocket".format(t)
+    )
 
 
 def update_tree_code(self, context):
     bge_netlogic.update_current_tree_code()
-    pass
 
 
 def socket_field(s):
@@ -275,10 +391,13 @@ def socket_field(s):
 
 def keyboard_key_string_to_bge_key(ks):
     ks = ks.replace("ASTERIX", "ASTER")
+
     if ks == "NONE":
         return "None"
+
     if ks == "RET":
         ks = "ENTER"
+
     if ks.startswith("NUMPAD_"):
         ks = ks.replace("NUMPAD_", "PAD")
         if("SLASH" in ks or "ASTER" in ks or "PLUS" in ks):
@@ -286,9 +405,10 @@ def keyboard_key_string_to_bge_key(ks):
             ks = ks.replace("ASTER", "ASTERKEY")
             ks = ks.replace("PLUS", "PLUSKEY")
         return "bge.events.{}".format(ks)
+
     x = "{}KEY".format(ks.replace("_", ""))
+
     return "bge.events.{}".format(x)
-    pass
 
 
 class NetLogicType:
@@ -395,6 +515,7 @@ class NetLogicStatementGenerator(NetLogicType):
     ):
         output_node = socket.links[0].from_socket.node
         output_socket = socket.links[0].from_socket
+
         while isinstance(output_node, bpy.types.NodeReroute):
             # cycle through and reset output_node until master is met
             next_socket = output_node.inputs[0].links[0].from_socket
@@ -403,6 +524,7 @@ class NetLogicStatementGenerator(NetLogicType):
             if isinstance(next_node, NetLogicStatementGenerator):
                 break
             output_node = next_node
+
         if isinstance(output_node, bpy.types.NodeReroute):
             output_node = output_node.inputs[0].links[0].from_socket.node
         output_socket_index = self._index_of(
@@ -412,6 +534,7 @@ class NetLogicStatementGenerator(NetLogicType):
         assert isinstance(output_node, NetLogicStatementGenerator)
         output_node_varname = uids.get_varname_for_node(output_node)
         output_map = output_node.get_output_socket_varnames()
+
         if output_map:
             varname = output_map[output_socket_index]
             if varname is OUTCELL:
@@ -441,8 +564,6 @@ class NLConditionSocket(bpy.types.NodeSocket, NetLogicSocketType):
 
     def get_unlinked_value(self): return self.default_value
 
-    pass
-
 
 _sockets.append(NLConditionSocket)
 
@@ -464,18 +585,23 @@ class NLPseudoConditionSocket(bpy.types.NodeSocket, NetLogicSocketType):
         else:
             label = text
             status = self.value
+
             if self.use_toggle:
                 if status:
                     label = '{}: ON'.format(text)
                 else:
                     label = '{}: OFF'.format(text)
+
             if self.true_label and status:
                 label = self.true_label
+
             if self.false_label and (not status):
                 label = self.false_label
             layout.prop(self, "value", text=label, toggle=self.use_toggle)
 
     def get_unlinked_value(self): return "True" if self.value else "False"
+
+
 _sockets.append(NLPseudoConditionSocket)
 
 
@@ -490,6 +616,8 @@ class NLParameterSocket(bpy.types.NodeSocket, NetLogicSocketType):
         layout.label(text=text)
 
     def get_unlinked_value(self): return "None"
+
+
 _sockets.append(NLParameterSocket)
 
 
@@ -504,21 +632,27 @@ class NLActionSocket(bpy.types.NodeSocket, NetLogicSocketType):
         layout.label(text=text)
 
     pass
+
+
 _sockets.append(NLActionSocket)
 
 
 class NLAbstractNode(NetLogicStatementGenerator):
     @classmethod
     def poll(cls, node_tree):
-        enabled = (node_tree.bl_idname == bge_netlogic.ui.BGELogicTree.bl_idname)
+        pass
 
-    def free(self): pass
+    def free(self):
+        pass
 
-    def draw_buttons(self, context, layout): pass
+    def draw_buttons(self, context, layout):
+        pass
 
-    def draw_buttons_ext(self, context, layout): pass
+    def draw_buttons_ext(self, context, layout):
+        pass
 
-    def draw_label(self): return self.__class__.bl_label
+    def draw_label(self):
+        return self.__class__.bl_label
 
 
 class NLConditionNode(NLAbstractNode):
@@ -537,6 +671,14 @@ class NLActionNode(NLAbstractNode):
     pass
 
 
+class NLActuatorNode(NLAbstractNode):
+    def init(self, context):
+        self.use_custom_color = True
+        self.color = ACTION_NODE_COLOR
+
+    pass
+
+
 class NLParameterNode(NLAbstractNode):
     def init(self, context):
         self.use_custom_color = True
@@ -545,12 +687,14 @@ class NLParameterNode(NLAbstractNode):
     pass
 
 
-# MODERN OBJECT SELECTION!!!
-# TODO: get type=bge.types.KX_GameObject here
 class NLGameObjectSocket(bpy.types.NodeSocket, NetLogicSocketType):
     bl_idname = "NLGameObjectSocket"
     bl_label = "Game Object"
-    value = bpy.props.PointerProperty(name='Object', type=bpy.types.Object, update=update_tree_code)
+    value = bpy.props.PointerProperty(
+        name='Object',
+        type=bpy.types.Object,
+        update=update_tree_code
+    )
 
     def draw_color(self, context, node):
         return PARAM_OBJ_SOCKET_COLOR
@@ -563,7 +707,14 @@ class NLGameObjectSocket(bpy.types.NodeSocket, NetLogicSocketType):
         else:
             col = layout.column(align=False)
             col.label(text=self.name)
-            col.prop_search(self, 'value', bpy.context.scene, 'objects', icon='NONE', text='')
+            col.prop_search(
+                self,
+                'value',
+                bpy.context.scene,
+                'objects',
+                icon='NONE',
+                text=''
+            )
 
     def get_unlinked_value(self):
         if isinstance(self.value, bpy.types.Object):
@@ -572,29 +723,6 @@ class NLGameObjectSocket(bpy.types.NodeSocket, NetLogicSocketType):
 
 
 _sockets.append(NLGameObjectSocket)
-
-
-class NLGamePropertySocket(bpy.types.NodeSocket, NetLogicSocketType):
-    bl_idname = "NLGamePropertySocket"
-    bl_label = "Property"
-    #value = bpy.props.CollectionProperty(name='Property', type=bpy.types.GameProperty, update=update_tree_code)
-
-    def draw_color(self, context, node):
-        return PARAM_OBJ_SOCKET_COLOR
-
-    def draw(self, context, layout, node, text):
-        if self.is_output:
-            layout.label(text=self.name)
-        elif self.is_linked:
-            layout.label(text=self.name)
-        else:
-            col = layout.column(align=False)
-            col.label(text=self.name)
-            col.prop_search(self, 'value', bpy.context.object.game, 'properties', icon='NONE', text='')
-
-    def get_unlinked_value(self):
-        return None
-#_sockets.append(NLGamePropertySocket)
 
 
 class NLSocketAlphaFloat(bpy.types.NodeSocket, NetLogicSocketType):
@@ -614,13 +742,19 @@ class NLSocketAlphaFloat(bpy.types.NodeSocket, NetLogicSocketType):
 
     def get_unlinked_value(self):
         return "{}".format(self.value)
+
+
 _sockets.append(NLSocketAlphaFloat)
 
 
 class NLSocketSound(bpy.types.NodeSocket, NetLogicSocketType):
     bl_idname = "NLSocketSound"
     bl_label = "Sound"
-    value = bpy.props.PointerProperty(name='Sound', type=bpy.types.Sound, update=update_tree_code)
+    value = bpy.props.PointerProperty(
+        name='Sound',
+        type=bpy.types.Sound,
+        update=update_tree_code
+    )
 
     def draw_color(self, context, node):
         return PARAM_SOUND_SOCKET_COLOR
@@ -632,22 +766,42 @@ class NLSocketSound(bpy.types.NodeSocket, NetLogicSocketType):
             layout.label(text=text)
         else:
             row = layout.row(align=True)
-            row.prop_search(self, 'value', bpy.context.blend_data, 'sounds', icon='NONE', text='')
+            row.prop_search(
+                self,
+                'value',
+                bpy.context.blend_data,
+                'sounds',
+                icon='NONE',
+                text=''
+            )
 
     def get_unlinked_value(self):
         return "{}".format(self.value)
+
+
 _sockets.append(NLSocketSound)
 
 
 class NLSocketLogicOperator(bpy.types.NodeSocket, NetLogicSocketType):
     bl_idname = "NLSocketLogicOperator"
     bl_label = "Logic Operator"
-    value = bpy.props.EnumProperty(items=_enum_logic_operators, update=update_tree_code)
-    def draw_color(self, context, node): return PARAMETER_SOCKET_COLOR
+    value = bpy.props.EnumProperty(
+        items=_enum_logic_operators,
+        update=update_tree_code
+    )
+
+    def draw_color(self, context, node):
+        return PARAMETER_SOCKET_COLOR
+
     def draw(self, context, layout, node, text):
-        if self.is_linked or self.is_output: layout.label(text=text)
-        else: layout.prop(self, "value", text=text)
+        if self.is_linked or self.is_output:
+            layout.label(text=text)
+        else:
+            layout.prop(self, "value", text=text)
+
     def get_unlinked_value(self): return "{}".format(self.value)
+
+
 _sockets.append(NLSocketLogicOperator)
 
 
@@ -661,7 +815,7 @@ class NLSocketControllerButtons(bpy.types.NodeSocket, NetLogicSocketType):
 
     def draw_color(self, context, node):
         return PARAMETER_SOCKET_COLOR
-    
+
     def draw(self, context, layout, node, text):
         if self.is_linked or self.is_output:
             layout.label(text=text)
@@ -678,12 +832,21 @@ _sockets.append(NLSocketControllerButtons)
 class NLSocketDistanceCheck(bpy.types.NodeSocket, NetLogicSocketType):
     bl_idname = "NLSocketDistanceCheck"
     bl_label = "Distance Operator"
-    value = bpy.props.EnumProperty(items=_enum_distance_checks, update=update_tree_code)
+    value = bpy.props.EnumProperty(
+        items=_enum_distance_checks,
+        update=update_tree_code
+    )
     def draw_color(self, context, node): return PARAMETER_SOCKET_COLOR
+
     def draw(self, context, layout, node, text):
-        if self.is_linked or self.is_output: layout.label(text=text)
-        else: layout.prop(self, "value", text=text)
+        if self.is_linked or self.is_output:
+            layout.label(text=text)
+        else:
+            layout.prop(self, "value", text=text)
+
     def get_unlinked_value(self): return "{}".format(self.value)
+
+
 _sockets.append(NLSocketDistanceCheck)
 
 
@@ -691,6 +854,7 @@ class NLSocketLoopCount(bpy.types.NodeSocket, NetLogicSocketType):
     bl_idname = "NLSocketLoopCount"
     bl_label = "Loop Count"
     value = bpy.props.StringProperty(update=update_tree_code)
+
     def update_value(self, context):
         current_type = self.value_type
         if current_type == "INFINITE":
@@ -704,7 +868,13 @@ class NLSocketLoopCount(bpy.types.NodeSocket, NetLogicSocketType):
         items=_enum_loop_count_values,
         update=update_value
     )
-    integer_editor = bpy.props.IntProperty(update=update_value, min=1, description="How many times the sound should be repeated when the condition is TRUE")
+    integer_editor = bpy.props.IntProperty(
+        update=update_value,
+        min=1,
+        description="How many times the sound should \
+            be repeated when the condition is TRUE"
+        )
+
     def draw_color(self, context, node):
         return PARAMETER_SOCKET_COLOR
 
@@ -746,8 +916,10 @@ class NLBooleanSocket(bpy.types.NodeSocket, NetLogicSocketType):
             label = text
             status = self.value
             if self.use_toggle:
-                if status: label = '{}: ON'.format(text)
-                else: label = '{}: OFF'.format(text)
+                if status:
+                    label = '{}: ON'.format(text)
+                else:
+                    label = '{}: OFF'.format(text)
             if self.true_label and status:
                 label = self.true_label
             if self.false_label and (not status):
@@ -926,6 +1098,8 @@ class NLSceneSocket(bpy.types.NodeSocket, NetLogicSocketType):
 
     def draw(self, context, layout, node, text):
         layout.label(text=text)
+
+
 _sockets.append(NLSceneSocket)
 
 
@@ -939,7 +1113,10 @@ class NLValueFieldSocket(bpy.types.NodeSocket, NetLogicSocketType):
             self.value = "True" if (self.bool_editor == "True") else "False"
         update_tree_code(self, context)
         pass
-    value_type = bpy.props.EnumProperty(items=_enum_field_value_types, update=update_tree_code)
+    value_type = bpy.props.EnumProperty(
+        items=_enum_field_value_types,
+        update=update_tree_code
+    )
     value = bpy.props.StringProperty(update=update_tree_code)
 
     def store_boolean_value(self, context):
@@ -994,9 +1171,12 @@ class NLNumericFieldSocket(bpy.types.NodeSocket, NetLogicSocketType):
     bl_idname = "NLNumericFieldSocket"
     bl_label = "Value"
 
-    value_type = bpy.props.EnumProperty(items=_enum_numeric_field_value_types, update=update_tree_code)
-    #value_type = "FLOAT"
+    value_type = bpy.props.EnumProperty(
+        items=_enum_numeric_field_value_types,
+        update=update_tree_code
+    )
     value = bpy.props.StringProperty(update=update_tree_code)
+    
     def draw_color(self, context, node):
         return PARAMETER_SOCKET_COLOR
 
@@ -1006,14 +1186,16 @@ class NLNumericFieldSocket(bpy.types.NodeSocket, NetLogicSocketType):
         if self.is_linked or self.is_output:
             layout.label(text=text)
         else:
-            split = layout.split(0.15)
-            split.label(text)
+            split = layout.split(factor=0.4)
+            split.label(text=text)
             if self.value_type == "NONE":
                 split.prop(self, "value_type", text="")
             else:
                 row = split.row(align=True)
                 row.prop(self, "value_type", text="")
                 row.prop(self, "value", text="")
+
+
 _sockets.append(NLNumericFieldSocket)
 
 
@@ -1021,12 +1203,15 @@ class NLOptionalRadiansFieldSocket(bpy.types.NodeSocket, NetLogicSocketType):
     bl_idname = "NLOptionalRadiansFieldSocket"
     bl_label = "Value"
     radians = bpy.props.StringProperty(update=update_tree_code, default="0.0")
+    
     def store_radians(self, context):
         self.radians = str(float(self.float_field))
         update_tree_code(self, context)
+    
     def store_expression(self, context):
         self.radians = self.string_field
         update_tree_code(self, context)
+    
     def on_type_change(self, context):
         if self.type == "NONE": self.radians = "None"
         if self.type == "EXPRESSION": self.radians = self.expression_field
@@ -1038,22 +1223,26 @@ class NLOptionalRadiansFieldSocket(bpy.types.NodeSocket, NetLogicSocketType):
                                         update=on_type_change, default="FLOAT")
 
     def draw_color(self, context, node): return PARAMETER_SOCKET_COLOR
+    
     def get_unlinked_value(self):
         return "None" if self.input_type == "NONE" else self.radians
+    
     def draw(self, context, layout, node, text):
         if self.is_linked or self.is_output:
             layout.label(text=text)
         else:
             if self.input_type == "FLOAT":
-                row = layout.split(0.6)
+                row = layout.split(factor=0.6)
                 row.prop(self, "float_field", text=text)
                 row.prop(self, "input_type", text="")
             elif self.input_type == "EXPRESSION":
-                row = layout.split(0.6)
+                row = layout.split(factor=0.6)
                 row.prop(self, "expression_field", text=text)
                 row.prop(self, "input_type", text="")
             else:
                 layout.prop(self, "input_type", text=text)
+
+
 _sockets.append(NLOptionalRadiansFieldSocket)
 
 
@@ -3196,7 +3385,30 @@ class NLActionApplyForce(bpy.types.Node, NLActionNode):
     def get_netlogic_class_name(self): return "bgelogic.ActionApplyForce"
     def get_input_sockets_field_names(self): return ["condition", "game_object", "force"]
     def get_nonsocket_fields(self): return [("local", lambda : "True" if self.local else "False")]
+
+
 _nodes.append(NLActionApplyForce)
+
+
+class NLActionCharacterJump(bpy.types.Node, NLActionNode):
+    bl_idname = "NLActionCharacterJump"
+    bl_label = "Jump"
+    nl_category = "Character Physics"
+
+    def init(self, context):
+        NLActionNode.init(self, context)
+        tools.register_inputs(
+            self,
+            NLConditionSocket, "Condition",
+            NLGameObjectSocket, "Game Object"
+        )
+
+    def get_netlogic_class_name(self): return "bgelogic.ActionCharacterJump"
+    def get_input_sockets_field_names(self): return ["condition", "game_object"]
+
+
+_nodes.append(NLActionCharacterJump)
+
 
 class NLActionApplyTorque(bpy.types.Node, NLActionNode):
     bl_idname = "NLActionApplyTorque"

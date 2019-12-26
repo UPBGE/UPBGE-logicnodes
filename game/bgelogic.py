@@ -4446,6 +4446,9 @@ class ActionApplyForce(ActionCell):
         game_object = self.get_parameter_value(self.game_object)
         if game_object is LogicNetworkCell.STATUS_WAITING:
             return
+        print(game_object.get('physics_type'))
+        #if game_object.physics_type != 'DYNAMIC' or 'RIGID_BODY':
+        #    raise Exception('Wrong Physics type on {}'.format(game_object.name))
         force = self.get_parameter_value(self.force)
         local = self.local
         if force is LogicNetworkCell.STATUS_WAITING:
@@ -4457,6 +4460,32 @@ class ActionApplyForce(ActionCell):
             return
         if force:
             game_object.applyForce(force, local)
+
+
+class ActionCharacterJump(ActionCell):
+    def __init__(self):
+        ActionCell.__init__(self)
+        self.condition = None
+        self.game_object = None
+
+    def evaluate(self):
+        condition = self.get_parameter_value(self.condition)
+        if condition is LogicNetworkCell.STATUS_WAITING:
+            return
+        game_object = self.get_parameter_value(self.game_object)
+        if game_object is LogicNetworkCell.STATUS_WAITING:
+            return
+        try:
+            physics = bge.constraints.getCharacter(game_object)
+        except Exception:
+            print('not jumping')
+            return 'Object not set to Character Physics'
+        self._set_ready()
+        if not condition:
+            return
+        if none_or_invalid(game_object):
+            return
+        physics.jump()
 
 
 class ActionApplyTorque(ActionCell):
