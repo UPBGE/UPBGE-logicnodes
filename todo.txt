@@ -17,6 +17,8 @@ find a way to add a "group" node
 add multiline comments
 finish templates
 
+Rename Object Node
+
 --- DONE ---
 
 0.3.3

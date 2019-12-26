@@ -337,6 +337,12 @@ class NLGenerateLogicNetworkOperator(bpy.types.Operator):
                 "TREE TO EDIT NOT FOUND - Update Manually"
             )
             cls.report({'ERROR'}, 'Tree to edit not found! Press "Update Code" manually.')
+
+            def oops(self, context):
+                self.layout.label("Tree to edit not found - update manually!")
+
+            bpy.context.window_manager.popup_menu(oops, title="Error", icon='ERROR')
+
         tree = context.space_data.edit_tree
         if not tree:
             return False

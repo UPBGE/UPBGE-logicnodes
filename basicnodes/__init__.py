@@ -3410,6 +3410,46 @@ class NLActionCharacterJump(bpy.types.Node, NLActionNode):
 _nodes.append(NLActionCharacterJump)
 
 
+class NLActionSetCharacterJump(bpy.types.Node, NLActionNode):
+    bl_idname = "NLSetActionCharacterJump"
+    bl_label = "Set Max Jumps"
+    nl_category = "Character Physics"
+
+    def init(self, context):
+        NLActionNode.init(self, context)
+        self.inputs.new(NLConditionSocket.bl_idname, "Condition")
+        self.inputs.new(NLGameObjectSocket.bl_idname, "Game Object")
+        self.inputs.new(NLPositiveIntegerFieldSocket.bl_idname, "Max Jumps")
+
+    def get_netlogic_class_name(self): return "bgelogic.ActionSetCharacterJump"
+    def get_input_sockets_field_names(self): return ["condition", "game_object", 'max_jumps']
+
+
+_nodes.append(NLActionSetCharacterJump)
+
+
+class NLActionGetCharacterInfo(bpy.types.Node, NLActionNode):
+    bl_idname = "NLActionGetCharacterInfo"
+    bl_label = "Get Physics Info"
+    nl_category = "Character Physics"
+
+    def init(self, context):
+        NLActionNode.init(self, context)
+        self.inputs.new(NLConditionSocket.bl_idname, "Condition")
+        self.inputs.new(NLGameObjectSocket.bl_idname, "Game Object")
+        self.outputs.new(NLIntegerFieldSocket.bl_idname, 'Max Jumps')
+        self.outputs.new(NLFloatFieldSocket.bl_idname, 'Gravity')
+        self.outputs.new(NLBooleanSocket.bl_idname, 'On Ground')
+
+    def get_netlogic_class_name(self): return "bgelogic.ActionGetCharacterInfo"
+    def get_input_sockets_field_names(self): return ["condition", "game_object"]
+    def get_output_socket_varnames(self):
+        return ["MAX_JUMPS", "GRAVITY", 'ON_GROUND']
+
+
+_nodes.append(NLActionGetCharacterInfo)
+
+
 class NLActionApplyTorque(bpy.types.Node, NLActionNode):
     bl_idname = "NLActionApplyTorque"
     bl_label = "Apply Torque"
