@@ -1,21 +1,30 @@
 import bpy
 
+
 class Color(object):
 
     _SPACE_RGBA = "RGBA"
     _SPACE_HSLA = "HSLA"
 
     @classmethod
-    def RGBA(cls, r, g, b, a = 1.0):
+    def RGBA(cls, r, g, b, a=1.0):
         import numbers
-        if r < 0: raise ValueError("RED component cannot be negative")
-        if g < 0: raise ValueError("GREEN component cannot be negative")
-        if b < 0: raise ValueError("BLUE component cannot be negative")
-        if a < 0: raise ValueError("ALPHA component cannot be negative")
-        if isinstance(r, numbers.Integral): r = float(r) / 255.0
-        if isinstance(g, numbers.Integral): g = float(g) / 255.0
-        if isinstance(b, numbers.Integral): b = float(b) / 255.0
-        if isinstance(a, numbers.Integral): a = float(a) / 255.0
+        if r < 0:
+            raise ValueError("RED component cannot be negative")
+        if g < 0:
+            raise ValueError("GREEN component cannot be negative")
+        if b < 0:
+            raise ValueError("BLUE component cannot be negative")
+        if a < 0:
+            raise ValueError("ALPHA component cannot be negative")
+        if isinstance(r, numbers.Integral):
+            r = float(r) / 255.0
+        if isinstance(g, numbers.Integral):
+            g = float(g) / 255.0
+        if isinstance(b, numbers.Integral):
+            b = float(b) / 255.0
+        if isinstance(a, numbers.Integral):
+            a = float(a) / 255.0
         return cls([r, g, b, a], cls._SPACE_RGBA)
 
     @classmethod

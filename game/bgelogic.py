@@ -444,7 +444,7 @@ def project_vector3(v, xi, yi):
 
 
 def none_or_invalid(ref):
-    if ref is None:
+    if ref is None or ref == '':
         return True
     if not hasattr(ref, "invalid"):
         return False
@@ -1077,6 +1077,147 @@ class ParameterObjectProperty(ParameterCell):
             self._set_value(property_default)
         else:
             self._set_value(game_object[property_name])
+
+
+class GetActuator(ParameterCell):
+
+    @classmethod
+    def act(cls, actuator):
+        return actuator
+
+    @classmethod
+    def obj(cls, obj_name):
+        return obj_name
+
+    def __init__(self):
+        ParameterCell.__init__(self)
+        self.obj_name = None
+        self.act_name = None
+
+    def evaluate(self):
+        game_obj = self.get_parameter_value(self.obj_name)
+        if none_or_invalid(game_obj):
+            return
+        if none_or_invalid(self.act_name):
+            return
+        self._set_ready()
+        self._set_value(game_obj.actuators[self.act_name])
+
+
+class ActivateActuator(ParameterCell):
+
+    def __init__(self):
+        ParameterCell.__init__(self)
+        self.condition = None
+        self.actuator = None
+
+    def evaluate(self):
+        condition = self.get_parameter_value(self.condition)
+        actuator = self.get_parameter_value(self.actuator)
+        controller = bge.logic.getCurrentController()
+        if none_or_invalid(condition) or not condition:
+            controller.deactivate(actuator)
+            return
+        if none_or_invalid(actuator):
+            return
+        self._set_ready()
+        controller.activate(actuator)
+
+
+class GetController(ParameterCell):
+
+    @classmethod
+    def cont(cls, controller):
+        return controller
+
+    @classmethod
+    def obj(cls, obj_name):
+        return obj_name
+
+    def __init__(self):
+        ParameterCell.__init__(self)
+        self.obj_name = None
+        self.cont_name = None
+
+    def evaluate(self):
+        game_obj = self.get_parameter_value(self.obj_name)
+        if none_or_invalid(game_obj):
+            raise Exception('No Game Object selected for Get Controller!')
+            return
+        if none_or_invalid(self.cont_name):
+            raise Exception('No Controller selected for Get Controller!')
+            return
+        self._set_ready()
+        self._set_value(game_obj.controllers[self.cont_name])
+
+
+class GetCurrentControllerLB(ParameterCell):
+
+    def __init__(self):
+        ParameterCell.__init__(self)
+
+    def evaluate(self):
+        self._set_ready()
+        self._set_value(bge.logic.getCurrentController())
+
+
+class GetSensor(ParameterCell):
+
+    @classmethod
+    def sens(cls, sensor):
+        return sensor
+
+    @classmethod
+    def obj(cls, obj_name):
+        return obj_name
+
+    def __init__(self):
+        ParameterCell.__init__(self)
+        self.obj_name = None
+        self.sens_name = None
+
+    def evaluate(self):
+        game_obj = self.get_parameter_value(self.obj_name)
+        if none_or_invalid(game_obj):
+            raise Exception('No Game Object selected for Get Sensor!')
+            return
+        if none_or_invalid(self.sens_name):
+            raise Exception('No Sensor selected for Get Sensor!')
+            return
+        self._set_ready()
+        self._set_value(game_obj.sensors[self.sens_name].positive)
+
+
+class SensorPositive(ParameterCell):
+
+    def __init__(self):
+        ParameterCell.__init__(self)
+        self.sensor = None
+        self.positive = None
+
+    def evaluate(self):
+        sens = self.get_parameter_value(self.sensor)
+        if none_or_invalid(sens):
+            return
+        self._set_ready()
+        self._set_value(sens.positive)
+
+
+class ActuatorValues(ParameterCell):
+
+    def __init__(self):
+        ParameterCell.__init__(self)
+        self.actuator = None
+
+    def evaluate(self):
+        actuator = self.get_parameter_value(self.actuator)
+        if none_or_invalid(actuator):
+            return
+        self._set_ready()
+        #if isinstance(actuator, bpy.types.VisibilityActuator):
+        #    self._set_value(True)
+        #    return
+        #self._set_value(False)
 
 
 class ParameterActiveCamera(ParameterCell):
@@ -3193,6 +3334,42 @@ class ActionAddToGameObjectGameProperty(ActionCell):
             )
 
 
+class InvertBool(ActionCell):
+    def __init__(self):
+        ActionCell.__init__(self)
+        self.value = None
+        self.out_value = False
+        self.OUT = LogicNetworkSubCell(self, self._get_out_value)
+
+    def _get_out_value(self):
+        return self.out_value
+
+    def evaluate(self):
+        if none_or_invalid(self.value):
+            return
+        value = self.get_parameter_value(self.value)
+        self._set_ready()
+        self.out_value = not value
+
+
+class InvertValue(ActionCell):
+    def __init__(self):
+        ActionCell.__init__(self)
+        self.value = None
+        self.out_value = False
+        self.OUT = LogicNetworkSubCell(self, self._get_out_value)
+
+    def _get_out_value(self):
+        return self.out_value
+
+    def evaluate(self):
+        if none_or_invalid(self.value):
+            return
+        value = self.get_parameter_value(self.value)
+        self._set_ready()
+        self.out_value = -value
+
+
 class ActionEndGame(ActionCell):
     def __init__(self):
         ActionCell.__init__(self)
@@ -3355,7 +3532,7 @@ class ActionPrint(ActionCell):
 
 
 class ActionSetObjectAttribute(ActionCell):
-    def __init__(self, value_type='localPosition'):
+    def __init__(self, value_type='worldPosition'):
         ActionCell.__init__(self)
         self.value_type = str(value_type)
         self.condition = None
@@ -5121,72 +5298,65 @@ class ActionSetGlobalValue(ActionCell):
                 self.deactivate()
 
 
-class ActionRandomValues(ActionCell):
+class ActionRandomInt(ActionCell):
     def __init__(self):
-        self.condition = None
-        self.min_value = None
         self.max_value = None
-        self._output_a = 0
-        self._output_b = 0
-        self._output_c = 0
-        self._output_d = 0
-        self.OUT_A = LogicNetworkSubCell(self, self._get_output_a)
-        self.OUT_B = LogicNetworkSubCell(self, self._get_output_b)
-        self.OUT_C = LogicNetworkSubCell(self, self._get_output_c)
-        self.OUT_D = LogicNetworkSubCell(self, self._get_output_d)
+        self.min_value = None
+        self._output = 0
+        self.OUT_A = LogicNetworkSubCell(self, self._get_output)
 
-    def _get_output_a(self):
-        return self._output_a
-
-    def _get_output_b(self):
-        return self._output_b
-
-    def _get_output_c(self):
-        return self._output_c
-
-    def _get_output_d(self):
-        return self._output_d
+    def _get_output(self):
+        return self._output
 
     def evaluate(self):
-        STATUS_WAITING = LogicNetworkCell.STATUS_WAITING
-        condition = self.get_parameter_value(self.condition)
-        if condition is STATUS_WAITING:
-            return
-        if not condition:
-            self._set_ready()
-            return
         min_value = self.get_parameter_value(self.min_value)
         max_value = self.get_parameter_value(self.max_value)
-        if min_value is STATUS_WAITING:
+        if none_or_invalid(min_value):
+            raise Exception('Min Value not set correctly for Random Int!')
             return
-        if max_value is STATUS_WAITING:
+        if none_or_invalid(max_value):
+            raise Exception('Max Value not set correctly for Random Int!')
+            return
+        if min_value > max_value:
+            raise Exception('Min Value bigger than Max Value for Random Int!')
             return
         self._set_ready()
-        if (min_value is None) and (max_value is None):
-            min_value = 0.0
-            max_value = 1.0
-        elif min_value is None:
-            if isinstance(max_value, int):
-                min_value = -(sys.maxsize)
-            elif isinstance(max_value, float):
-                min_value = sys.float_info.min
-        elif max_value is None:
-            if isinstance(min_value, int):
-                max_value = sys.maxsize
-            elif isinstance(min_value, float):
-                max_value = sys.float_info.max
-        do_int = isinstance(min_value, int) and isinstance(max_value, int)
-        if do_int:
-            self._output_a = random.randint(min_value, max_value)
-            self._output_b = random.randint(min_value, max_value)
-            self._output_c = random.randint(min_value, max_value)
-            self._output_d = random.randint(min_value, max_value)
-        else:
-            delta = max_value - min_value
-            self._output_a = min_value + (delta * random.random())
-            self._output_b = min_value + (delta * random.random())
-            self._output_c = min_value + (delta * random.random())
-            self._output_d = min_value + (delta * random.random())
+        if min_value == max_value:
+            min_value = -sys.maxsize
+            max_value = sys.maxsize
+
+        self._output = random.randint(min_value, max_value)
+
+
+class ActionRandomFloat(ActionCell):
+    def __init__(self):
+        self.max_value = None
+        self.min_value = None
+        self._output = 0
+        self.OUT_A = LogicNetworkSubCell(self, self._get_output)
+
+    def _get_output(self):
+        return self._output
+
+    def evaluate(self):
+        min_value = self.get_parameter_value(self.min_value)
+        max_value = self.get_parameter_value(self.max_value)
+        if none_or_invalid(min_value):
+            raise Exception('Min Value not set correctly for Random Float!')
+            return
+        if none_or_invalid(max_value):
+            raise Exception('Max Value not set correctly for Random Float!')
+            return
+        if min_value > max_value:
+            raise Exception('Min Value bigger than Max Value for Random Float!')
+            return
+        self._set_ready()
+        if min_value == max_value:
+            min_value = sys.float_info.min
+            max_value = sys.float_info.max
+
+        delta = max_value - min_value
+        self._output = min_value + (delta * random.random())
 
 
 class ActionTranslate(ActionCell):
