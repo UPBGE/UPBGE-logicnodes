@@ -1994,6 +1994,31 @@ class NLGetActuatorNode(bpy.types.Node, NLParameterNode):
 _nodes.append(NLGetActuatorNode)
 
 
+class NLGetActuatorNameNode(bpy.types.Node, NLParameterNode):
+    bl_idname = "NLGetActuatorNameNode"
+    bl_label = "Get Actuator By Name"
+    nl_category = "Logic Bricks"
+    obj = bpy.props.PointerProperty(
+        name='Object',
+        type=bpy.types.Object,
+        update=update_tree_code
+    )
+    actuator = bpy.props.StringProperty(update=update_tree_code)
+
+    def init(self, context):
+        NLParameterNode.init(self, context)
+        self.inputs.new(NLLogicBrickSocket.bl_idname, "Object")
+        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Actuator Name")
+
+    def get_netlogic_class_name(self): return "bgelogic.GetActuatorByName"
+
+    def get_output_socket_varnames(self):
+        return [OUTCELL]
+
+
+_nodes.append(NLGetActuatorNameNode)
+
+
 class NLRunActuatorNode(bpy.types.Node, NLParameterNode):
     bl_idname = "NLRunActuatorNode"
     bl_label = "Execute Actuator"
@@ -2172,7 +2197,7 @@ class NLSensorPositiveNode(bpy.types.Node, NLParameterNode):
 
 class NLObjectAttributeParameterNode(bpy.types.Node, NLParameterNode):
     bl_idname = "NLObjectAttributeParameterNode"
-    bl_label = "Get Object Info"
+    bl_label = "Get Object Data"
     nl_category = "Objects"
 
     def init(self, context):
@@ -3336,7 +3361,7 @@ _nodes.append(NLInvertValueNode)
 
 class NLSetObjectAttributeActionNode(bpy.types.Node, NLActionNode):
     bl_idname = "NLSetObjectAttributeActionNode"
-    bl_label = "Set Object Info"
+    bl_label = "Set Object Data"
     nl_category = "Objects"
     value_type = bpy.props.EnumProperty(items=_enum_writable_member_names, update=update_tree_code)
 
@@ -4499,9 +4524,11 @@ class NLParameterFormattedString(bpy.types.Node, NLParameterNode):
     def init(self, context):
         NLParameterNode.init(self, context)
         self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Format String")
-        self.inputs[-1].value = "A:{} B:{} C:{} D:{}"
+        self.inputs[-1].value = "Value A:{}, Value B:{}"
         self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "A")
+        self.inputs[-1].value = "Hello"
         self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "B")
+        self.inputs[-1].value = "World"
         self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "C")
         self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "D")
         self.outputs.new(NLParameterSocket.bl_idname, "String")

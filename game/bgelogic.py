@@ -1116,7 +1116,7 @@ class ActivateActuator(ParameterCell):
         condition = self.get_parameter_value(self.condition)
         actuator = self.get_parameter_value(self.actuator)
         controller = bge.logic.getCurrentController()
-        if actuator is STATUS_WAITING or none_or_invalid(actuator):
+        if actuator is STATUS_WAITING or none_or_invalid(actuator) or actuator not in controller.actuators:
             return
         if none_or_invalid(condition) or not condition:
             controller.deactivate(actuator)
