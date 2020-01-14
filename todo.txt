@@ -19,6 +19,8 @@ finish templates
 
 Rename Object Node
 
+Threshold Node (only true if value >/< threshold)
+
 --- DONE ---
 
 0.3.3

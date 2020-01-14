@@ -641,24 +641,6 @@ class NLLogicBrickSocket(bpy.types.NodeSocket, NetLogicSocketType):
 _sockets.append(NLLogicBrickSocket)
 
 
-class NLLogicBrickControllerSocket(bpy.types.NodeSocket, NetLogicSocketType):
-    bl_idname = "NLLogicBrickControllerSocket"
-    bl_label = "Logic Controller"
-    #value = bpy.props.CollectionProperty(type=bpy.types.Controller, update=update_tree_code)
-
-    def draw_color(self, context, node):
-        return PARAM_LOGIC_BRICK_SOCKET_COLOR
-
-    def draw(self, context, layout, node, text):
-        layout.label(text=text)
-
-    def get_unlinked_value(self):
-        return "None"
-
-
-_sockets.append(NLLogicBrickControllerSocket)
-
-
 class NLActionSocket(bpy.types.NodeSocket, NetLogicSocketType):
     bl_idname = "NLActionSocket"
     bl_label = "Action"
@@ -931,9 +913,13 @@ class NLSocketLoopCount(bpy.types.NodeSocket, NetLogicSocketType):
 
     def get_unlinked_value(self):
         current_type = self.value_type
-        if current_type == "INFINITE": return "-1"
-        if current_type == "ONCE": return "0"
+        if current_type == "INFINITE":
+            return "-1"
+        if current_type == "ONCE":
+            return "0"
         return '{}'.format(self.value)
+
+
 _sockets.append(NLSocketLoopCount)
 
 
@@ -966,6 +952,8 @@ class NLBooleanSocket(bpy.types.NodeSocket, NetLogicSocketType):
             layout.prop(self, "value", text=label, toggle=self.use_toggle)
 
     def get_unlinked_value(self): return "True" if self.value else "False"
+
+
 _sockets.append(NLBooleanSocket)
 
 
@@ -985,6 +973,8 @@ class NLPositiveFloatSocket(bpy.types.NodeSocket, NetLogicSocketType):
 
     def get_unlinked_value(self):
         return '{}'.format(self.value)
+
+
 _sockets.append(NLPositiveFloatSocket)
 
 
@@ -992,19 +982,27 @@ class NLSocketOptionalPositiveFloat(bpy.types.NodeSocket, NetLogicSocketType):
     bl_idname = "NLSocketOptionalPositiveFloat"
     bl_label = "Positive Float"
     value = bpy.props.StringProperty(update=update_tree_code)
+    
     def update_value(self, context):
         enum_value = self.value_type
-        if enum_value == "NONE": self.value = ""
-        else: self.value = '{}'.format(self.float_editor)
+
+        if enum_value == "NONE":
+            self.value = ""
+        else:
+            self.value = '{}'.format(self.float_editor)
+
         update_tree_code(self, context)
+
     value_type = bpy.props.EnumProperty(
         update=update_value,
         items=_enum_optional_positive_float_value_types
     )
+
     float_editor = bpy.props.FloatProperty(
         min=0.0,
         update=update_value
     )
+
     def draw_color(self, context, node):
         return PARAMETER_SOCKET_COLOR
 
@@ -1023,13 +1021,18 @@ class NLSocketOptionalPositiveFloat(bpy.types.NodeSocket, NetLogicSocketType):
             return '{}'.format(float(self.value))
         except ValueError:
             return "None"
+
+
 _sockets.append(NLSocketOptionalPositiveFloat)
 
 
 class NLSocketIKMode(bpy.types.NodeSocket, NetLogicSocketType):
     bl_idname = "NLSocketIKMode"
     bl_label = "IK Mode"
-    value = bpy.props.EnumProperty(items=_enum_ik_mode_values, update=update_tree_code)
+    value = bpy.props.EnumProperty(
+        items=_enum_ik_mode_values,
+        update=update_tree_code
+    )
 
     def draw_color(self, context, node):
         return PARAMETER_SOCKET_COLOR
@@ -1042,6 +1045,8 @@ class NLSocketIKMode(bpy.types.NodeSocket, NetLogicSocketType):
 
     def get_unlinked_value(self):
         return self.value
+
+
 _sockets.append(NLSocketIKMode)
 
 
@@ -1060,11 +1065,14 @@ class NLAlphaSocket(bpy.types.NodeSocket, NetLogicSocketType):
             layout.prop(self, "value", text=text)
 
     def get_unlinked_value(self):
-        if not self.value: return None
+        if not self.value:
+            return None
         try:
             return float(self.value)
         except ValueError:
             return None
+
+
 _sockets.append(NLAlphaSocket)
 
 
@@ -1084,6 +1092,8 @@ class NLQuotedStringFieldSocket(bpy.types.NodeSocket, NetLogicSocketType):
 
     def get_unlinked_value(self): return '"{}"'.format(self.value)
     pass
+
+
 _sockets.append(NLQuotedStringFieldSocket)
 
 
@@ -1104,6 +1114,8 @@ class NLIntegerFieldSocket(bpy.types.NodeSocket, NetLogicSocketType):
         else:
             layout.prop(self, "value", text=text)
     pass
+
+
 _sockets.append(NLIntegerFieldSocket)
 
 
@@ -1123,6 +1135,8 @@ class NLPositiveIntegerFieldSocket(bpy.types.NodeSocket, NetLogicSocketType):
 
     def get_unlinked_value(self): return '{}'.format(self.value)
     pass
+
+
 _sockets.append(NLPositiveIntegerFieldSocket)
 
 
@@ -1215,7 +1229,7 @@ class NLNumericFieldSocket(bpy.types.NodeSocket, NetLogicSocketType):
         update=update_tree_code
     )
     value = bpy.props.StringProperty(update=update_tree_code)
-    
+
     def draw_color(self, context, node):
         return PARAMETER_SOCKET_COLOR
 
@@ -1252,9 +1266,12 @@ class NLOptionalRadiansFieldSocket(bpy.types.NodeSocket, NetLogicSocketType):
         update_tree_code(self, context)
 
     def on_type_change(self, context):
-        if self.type == "NONE": self.radians = "None"
-        if self.type == "EXPRESSION": self.radians = self.expression_field
-        if self.type == "FLOAT": self.radians = str(float(self.input_field))
+        if self.type == "NONE":
+            self.radians = "None"
+        if self.type == "EXPRESSION":
+            self.radians = self.expression_field
+        if self.type == "FLOAT":
+            self.radians = str(float(self.input_field))
         update_tree_code(self, context)
     float_field = bpy.props.FloatProperty(update=store_radians)
     expression_field = bpy.props.StringProperty(update=store_expression)
@@ -1297,7 +1314,10 @@ class NLSocketReadableMemberName(bpy.types.NodeSocket, NetLogicSocketType):
         else:
             self.value = t
         bge_netlogic.update_current_tree_code()
-    value_type = bpy.props.EnumProperty(items=_enum_readable_member_names, update=_set_value)
+    value_type = bpy.props.EnumProperty(
+        items=_enum_readable_member_names,
+        update=_set_value
+    )
 
     def draw_color(self, context, node):
         return PARAM_VECTOR_SOCKET_COLOR if (
@@ -1318,6 +1338,8 @@ class NLSocketReadableMemberName(bpy.types.NodeSocket, NetLogicSocketType):
                 pass
             else:
                 layout.prop(self, "value_type", text="")
+
+
 _sockets.append(NLSocketReadableMemberName)
 
 
@@ -1337,8 +1359,11 @@ class NLKeyboardKeySocket(bpy.types.NodeSocket, NetLogicSocketType):
             layout.label(text=text)
         else:
             label = self.value
-            if not label: label = "Press & Choose"
+            if not label:
+                label = "Press & Choose"
             layout.operator("bge_netlogic.waitforkey", text=label)
+
+
 _sockets.append(NLKeyboardKeySocket)
 
 
@@ -1360,8 +1385,11 @@ class NLSocketKeyboardKeyPressed(bpy.types.NodeSocket, NetLogicSocketType):
         else:
             layout.label(text=text)
             label = self.value
-            if not label: label = "Press & Choose"
+            if not label:
+                label = "Press & Choose"
             layout.operator("bge_netlogic.waitforkey", text=label)
+
+
 _sockets.append(NLSocketKeyboardKeyPressed)
 
 
@@ -1382,6 +1410,8 @@ class NLMouseButtonSocket(bpy.types.NodeSocket, NetLogicSocketType):
             layout.label(text=text)
         else:
             layout.prop(self, "value", text="")
+
+
 _sockets.append(NLMouseButtonSocket)
 
 
@@ -1389,7 +1419,7 @@ class NLPlayActionModeSocket(bpy.types.NodeSocket, NetLogicSocketType):
     bl_idname = "NLPlayActionModeSocket"
     bl_label = "Play Mode"
     value = bpy.props.EnumProperty(
-        items= _enum_play_mode_values,
+        items=_enum_play_mode_values,
         description="The play mode of the action",
         update=update_tree_code
     )
@@ -1404,6 +1434,8 @@ class NLPlayActionModeSocket(bpy.types.NodeSocket, NetLogicSocketType):
             layout.label(text=text)
         else:
             layout.prop(self, "value", text=text)
+
+
 _sockets.append(NLPlayActionModeSocket)
 
 
@@ -1422,6 +1454,8 @@ class NLFloatFieldSocket(bpy.types.NodeSocket, NetLogicSocketType):
             layout.label(text=text)
         else:
             layout.prop(self, "value", text=text)
+
+
 _sockets.append(NLFloatFieldSocket)
 
 
@@ -1435,7 +1469,7 @@ class NLVec2FieldSocket(bpy.types.NodeSocket, NetLogicSocketType):
     def draw_color(self, context, node):
         return PARAM_VECTOR_SOCKET_COLOR
 
-    def get_unlinked_value(self): 
+    def get_unlinked_value(self):
         return "mathutils.Vector(({}, {}))".format(self.value_x, self.value_y)
 
     def draw(self, context, layout, node, text):
@@ -1443,19 +1477,29 @@ class NLVec2FieldSocket(bpy.types.NodeSocket, NetLogicSocketType):
             layout.label(text=text)
         else:
             column = layout.column()
-            if self.title != '':
-                title = column.label(text=self.title)
+            # if self.title != '':
+            #     title = column.label(text=self.title)
             row = column.row(align=True)
             row.prop(self, "value_x", text='')
             row.prop(self, "value_y", text='')
+
+
 _sockets.append(NLVec2FieldSocket)
 
 
 class NLVec2PositiveFieldSocket(bpy.types.NodeSocket, NetLogicSocketType):
     bl_idname = "NLVec2PositiveFieldSocket"
     bl_label = "Float Value"
-    value_x = bpy.props.FloatProperty(min=0.0, default=0, update=update_tree_code)
-    value_y = bpy.props.FloatProperty(min=0.0, default=0, update=update_tree_code)
+    value_x = bpy.props.FloatProperty(
+        min=0.0,
+        default=0,
+        update=update_tree_code
+    )
+    value_y = bpy.props.FloatProperty(
+        min=0.0,
+        default=0,
+        update=update_tree_code
+    )
     title = bpy.props.StringProperty(default='')
 
     def draw_color(self, context, node):
@@ -1469,11 +1513,13 @@ class NLVec2PositiveFieldSocket(bpy.types.NodeSocket, NetLogicSocketType):
             layout.label(text=text)
         else:
             column = layout.column()
-            if self.title != '':
-                title = column.label(text=self.title)
+            # if self.title != '':
+            #     title = column.label(text=self.title)
             row = column.row(align=True)
             row.prop(self, "value_x", text='')
             row.prop(self, "value_y", text='')
+
+
 _sockets.append(NLVec2PositiveFieldSocket)
 
 
@@ -1488,46 +1534,66 @@ class NLVec3FieldSocket(bpy.types.NodeSocket, NetLogicSocketType):
     def draw_color(self, context, node):
         return PARAM_VECTOR_SOCKET_COLOR
 
-    def get_unlinked_value(self): 
-        return "mathutils.Vector(({}, {}, {}))".format(self.value_x, self.value_y, self.value_z)
+    def get_unlinked_value(self):
+        return "mathutils.Vector(({}, {}, {}))".format(
+            self.value_x,
+            self.value_y,
+            self.value_z
+        )
 
     def draw(self, context, layout, node, text):
         if self.is_linked or self.is_output:
             layout.label(text=text)
         else:
             column = layout.column(align=True)
-            if self.title != '':
-                title = column.label(text=self.title)
+            # if self.title != '':
+            #     title = column.label(text=self.title)
             column.prop(self, "value_x", text='X')
             column.prop(self, "value_y", text='Y')
             column.prop(self, "value_z", text='Z')
+
+
 _sockets.append(NLVec3FieldSocket)
 
 
 class NLVec3PositiveFieldSocket(bpy.types.NodeSocket, NetLogicSocketType):
     bl_idname = "NLVec3PositiveFieldSocket"
     bl_label = "Float Value"
-    value_x = bpy.props.FloatProperty(min=0.0, default=0, update=update_tree_code)
-    value_y = bpy.props.FloatProperty(min=0.0, default=0, update=update_tree_code)
+    value_x = bpy.props.FloatProperty(
+        min=0.0,
+        default=0,
+        update=update_tree_code
+    )
+    value_y = bpy.props.FloatProperty(
+        min=0.0,
+        default=0,
+        update=update_tree_code
+    )
     value_z = bpy.props.FloatProperty(default=0, update=update_tree_code)
     title = bpy.props.StringProperty(default='')
 
     def draw_color(self, context, node):
         return PARAM_VECTOR_SOCKET_COLOR
 
-    def get_unlinked_value(self): 
-        return "mathutils.Vector(({}, {}, {}))".format(self.value_x, self.value_y, self.value_z)
+    def get_unlinked_value(self):
+        return "mathutils.Vector(({}, {}, {}))".format(
+            self.value_x,
+            self.value_y,
+            self.value_z
+        )
 
     def draw(self, context, layout, node, text):
         if self.is_linked or self.is_output:
             layout.label(text=text)
         else:
             column = layout.column()
-            if self.title != '':
-                title = column.label(text=self.title)
+            # if self.title != '':
+            #     title = column.label(text=self.title)
             column.prop(self, "value_x", text='X')
             column.prop(self, "value_y", text='Y')
             column.prop(self, "value_z", text='Z')
+
+
 _sockets.append(NLVec3PositiveFieldSocket)
 
 
@@ -1540,7 +1606,8 @@ class NLBlendActionModeSocket(bpy.types.NodeSocket, NetLogicSocketType):
         update=update_tree_code
     )
 
-    def get_unlinked_value(self): return self.value;
+    def get_unlinked_value(self):
+        return self.value
 
     def draw_color(self, context, node):
         return PARAMETER_SOCKET_COLOR
@@ -1550,13 +1617,19 @@ class NLBlendActionModeSocket(bpy.types.NodeSocket, NetLogicSocketType):
             layout.label(text=text)
         else:
             layout.prop(self, "value", text=text)
+
+
 _sockets.append(NLBlendActionModeSocket)
 
 
 class NLSocketMouseMotion(bpy.types.NodeSocket, NetLogicSocketType):
     bl_idname = "NLSocketMouseMotion"
     bl_label = "Mouse Motion"
-    value = bpy.props.EnumProperty(items=_enum_mouse_motion, description="The direction of the mouse movement", update=update_tree_code)
+    value = bpy.props.EnumProperty(
+        items=_enum_mouse_motion,
+        description="The direction of the mouse movement",
+        update=update_tree_code
+    )
 
     def draw_color(self, context, node):
         return CONDITION_SOCKET_COLOR
@@ -1579,7 +1652,9 @@ class NLSocketMouseMotion(bpy.types.NodeSocket, NetLogicSocketType):
             return "network.add_cell(bgelogic.ConditionMouseLeft(repeat=True))"
 
         if self.value == "RIGHT":
-            return "network.add_cell(bgelogic.ConditionMouseRight(repeat=True))"
+            return (
+                "network.add_cell(bgelogic.ConditionMouseRight(repeat=True))"
+            )
 
 
 _sockets.append(NLSocketMouseMotion)
@@ -1596,6 +1671,8 @@ class NLVectorSocket(bpy.types.NodeSocket, NetLogicSocketType):
         layout.label(text=text)
 
     def get_unlinked_value(self): return "None"
+
+
 _sockets.append(NLVectorSocket)
 
 
@@ -1604,7 +1681,9 @@ class NLSocketVectorField(bpy.types.NodeSocket, NetLogicSocketType):
     bl_label = "Vector"
     value = bpy.props.StringProperty(
         update=update_tree_code,
-        description="Default to (0,0,0), type numbers separated by space or comma or anything but a dot")
+        description=("Default to (0,0,0), \
+            type numbers separated by space or \
+                comma or anything but a dot"))
 
     def draw_color(self, context, node):
         return PARAM_VECTOR_SOCKET_COLOR
@@ -1618,6 +1697,8 @@ class NLSocketVectorField(bpy.types.NodeSocket, NetLogicSocketType):
 
     def get_unlinked_value(self):
         return parse_field_value("VECTOR", self.value)
+
+
 _sockets.append(NLSocketVectorField)
 
 
@@ -1626,7 +1707,8 @@ class NLOptionalSocketVectorField(bpy.types.NodeSocket, NetLogicSocketType):
     bl_label = "Vector"
     value = bpy.props.StringProperty(
         update=update_tree_code,
-        description="Default to None, type numbers separated by space or comma or anything but a dot")
+        description=("Default to None, type numbers separated by space or comma \
+            or anything but a dot"))
 
     def draw_color(self, context, node):
         return PARAMETER_SOCKET_COLOR
@@ -1650,7 +1732,11 @@ _sockets.append(NLOptionalSocketVectorField)
 class NLSocketOptionalFilePath(bpy.types.NodeSocket, NetLogicSocketType):
     bl_idname = "NLSocketOptionalFilePath"
     bl_label = "File"
-    value = bpy.props.StringProperty(update=update_tree_code, description="None if empty. Absolute or Relative path. Relative paths start with //")
+    value = bpy.props.StringProperty(
+        update=update_tree_code,
+        description=("None if empty. Absolute or Relative path. \
+            Relative paths start with //")
+    )
 
     def draw_color(self, context, node):
         return PARAMETER_SOCKET_COLOR
@@ -1675,91 +1761,149 @@ class NLSocketOptionalOrientation(bpy.types.NodeSocket, NetLogicSocketType):
     bl_label = "File"
     value = bpy.props.StringProperty(
         update=update_tree_code,
-        description="None if empty. 3 numeric values separated by anything but a dot. Can be linked to any orientation or vector value-")
+        description="None if empty. 3 numeric values separated by anything \
+            but a dot. Can be linked to any orientation or vector value-")
 
     def draw_color(self, context, node):
         return PARAMETER_SOCKET_COLOR
+
     def draw(self, context, layout, node, text):
         if self.is_linked:
             layout.label(text=text)
         else:
             layout.label(text=text)
             layout.prop(self, "value", text="")
+
     def get_unlinked_value(self):
-        if not self.value: return "None"
+        if not self.value:
+            return "None"
         return parse_field_value("EULER", self.value)
+
+
 _sockets.append(NLSocketOptionalOrientation)
 
 
 class NLSocketMouseWheelDirection(bpy.types.NodeSocket, NetLogicSocketType):
     bl_idname = "NLSocketMouseWheelDirection"
     bl_label = "Mouse Wheel"
-    value = bpy.props.EnumProperty(items=_enum_mouse_wheel_direction, update=update_tree_code)
+    value = bpy.props.EnumProperty(
+        items=_enum_mouse_wheel_direction,
+        update=update_tree_code
+    )
+
     def draw_color(self, context, node):
         return PARAMETER_SOCKET_COLOR
+
     def draw(self, context, layout, node, text):
         if self.is_linked:
             layout.label(text=text)
         else:
             layout.prop(self, "value", text="")
+
     def get_unlinked_value(self):
         return self.value
+
+
 _sockets.append(NLSocketMouseWheelDirection)
 
 
 class NLSocketFilter3(bpy.types.NodeSocket, NetLogicSocketType):
     bl_idname = "NLSocketFilter3"
     bl_label = "Filter 3"
-    value = bpy.props.EnumProperty(items=_enum_value_filters_3, update=update_tree_code)
-    def draw_color(self, context, node): return PARAMETER_SOCKET_COLOR
+    value = bpy.props.EnumProperty(
+        items=_enum_value_filters_3,
+        update=update_tree_code
+    )
+
+    def draw_color(self, context, node):
+        return PARAMETER_SOCKET_COLOR
+
     def draw(self, context, layout, node, text):
-        if self.is_linked: layout.label(text=text)
-        else: layout.prop(self, "value", text="")
-    def get_unlinked_value(self): return self.value
+        if self.is_linked:
+            layout.label(text=text)
+        else:
+            layout.prop(self, "value", text="")
+
+    def get_unlinked_value(self):
+        return self.value
+
+
 _sockets.append(NLSocketFilter3)
 
 
 class NLSocketLocalAxis(bpy.types.NodeSocket, NetLogicSocketType):
     bl_idname = "NLSocketLocalAxis"
     bl_label = "Local Axis"
-    value = bpy.props.EnumProperty(items=_enum_local_axis, update=update_tree_code)
-    def draw_color(self, context, node): return PARAMETER_SOCKET_COLOR
+    value = bpy.props.EnumProperty(
+        items=_enum_local_axis,
+        update=update_tree_code
+    )
+
+    def draw_color(self, context, node):
+        return PARAMETER_SOCKET_COLOR
+
     def draw(self, context, layout, node, text):
-        if self.is_linked: layout.label(text=text)
-        else: layout.prop(self, "value", text=text)
+        if self.is_linked:
+            layout.label(text=text)
+        else:
+            layout.prop(self, "value", text=text)
+
     def get_unlinked_value(self): return self.value
+
+
 _sockets.append(NLSocketLocalAxis)
 
 
 class NLSocketOrientedLocalAxis(bpy.types.NodeSocket, NetLogicSocketType):
     bl_idname = "NLSocketOrientedLocalAxis"
     bl_label = "Local Axis"
-    value = bpy.props.EnumProperty(items=_enum_local_oriented_axis, update=update_tree_code)
-    def draw_color(self, context, node): return PARAMETER_SOCKET_COLOR
+    value = bpy.props.EnumProperty(
+        items=_enum_local_oriented_axis,
+        update=update_tree_code
+    )
+
+    def draw_color(self, context, node):
+        return PARAMETER_SOCKET_COLOR
+
     def draw(self, context, layout, node, text):
-        if self.is_linked: layout.label(text=text)
-        else: layout.prop(self, "value", text=text)
-    def get_unlinked_value(self): return self.value
+        if self.is_linked:
+            layout.label(text=text)
+        else:
+            layout.prop(self, "value", text=text)
+
+    def get_unlinked_value(self):
+        return self.value
+
+
 _sockets.append(NLSocketOrientedLocalAxis)
 
 
-#Parameters
+# Parameters
 class NLParameterConstantValue(bpy.types.Node, NLParameterNode):
-    bl_idname="NLParameterConstantValue"
-    bl_label="Value"
-    nl_category="Values"
+    bl_idname = "NLParameterConstantValue"
+    bl_label = "Value"
+    nl_category = "Values"
+
     def on_type_changed(self, context):
         tp = self.value_type
         if tp == "BOOLEAN":
             self.value = "True" if (self.bool_editor == "True") else "False"
         update_tree_code(self, context)
         pass
-    value_type = bpy.props.EnumProperty(items=_enum_field_value_types, update=on_type_changed)
+    value_type = bpy.props.EnumProperty(
+        items=_enum_field_value_types,
+        update=on_type_changed
+    )
+
     value = bpy.props.StringProperty(update=update_tree_code)
+
     def store_boolean_value(self, context):
         self.value = "True" if (self.bool_editor == "True") else "False"
         update_tree_code(self, context)
-    bool_editor = bpy.props.EnumProperty(items=_enum_boolean_values, update=store_boolean_value)
+    bool_editor = bpy.props.EnumProperty(
+        items=_enum_boolean_values,
+        update=store_boolean_value
+    )
 
     def draw_color(self, context, node):
         return PARAMETER_SOCKET_COLOR
@@ -1780,30 +1924,40 @@ class NLParameterConstantValue(bpy.types.Node, NLParameterNode):
     def init(self, context):
         NLParameterNode.init(self, context)
         self.outputs.new(NLParameterSocket.bl_idname, "")
+
     def get_nonsocket_fields(self):
         v = parse_field_value(self.value_type, self.value)
         return [("value", v)]
+
     def get_netlogic_class_name(self):
         return "bgelogic.ParameterConstantValue"
-#_nodes.append(NLParameterConstantValue)
+
+
+# _nodes.append(NLParameterConstantValue)
+
 
 class NLParameterFindChildByNameNode(bpy.types.Node, NLParameterNode):
     bl_idname = "NLParameterFindChildByNameNode"
     bl_label = "Get Child By Name"
     nl_category = "Objects"
-    
+
     def init(self, context):
         NLParameterNode.init(self, context)
-        tools.register_inputs(self,
-            NLGameObjectSocket, "Parent",
-            NLQuotedStringFieldSocket, "Name:")
+        self.inputs.new(NLGameObjectSocket.bl_idname, "Parent")
+        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Name")
         self.outputs.new(NLGameObjectSocket.bl_idname, "Child")
         self.outputs.new(NLGameObjectSocket.bl_idname, "Parent")
 
-    def get_netlogic_class_name(self): return "bgelogic.ParameterFindChildByName"
-    def get_input_sockets_field_names(self): return ["from_parent", "child"]
+    def get_netlogic_class_name(self):
+        return "bgelogic.ParameterFindChildByName"
+
+    def get_input_sockets_field_names(self):
+        return ["from_parent", "child"]
+
     def get_output_socket_varnames(self):
         return [OUTCELL, "PARENT"]
+
+
 _nodes.append(NLParameterFindChildByNameNode)
 
 
@@ -1818,13 +1972,18 @@ class NLParameterSound(bpy.types.Node, NLParameterNode):
         self.outputs.new(NLSocketSound.bl_idname, "Sound")
         self.outputs.new(NLConditionSocket.bl_idname, "Is Playing")
         self.outputs.new(NLParameterSocket.bl_idname, "Current Frame")
+
     def get_netlogic_class_name(self):
         return "bgelogic.ParameterSound"
+
     def get_input_sockets_field_names(self):
         return ["file_path"]
+
     def get_output_socket_varnames(self):
         return [OUTCELL, "IS_PLAYING", "CURRENT_FRAME"]
-#_nodes.append(NLParameterSound)
+
+
+# _nodes.append(NLParameterSound)
 
 
 class NLParameterValueFilter3(bpy.types.Node, NLParameterNode):
@@ -1839,10 +1998,14 @@ class NLParameterValueFilter3(bpy.types.Node, NLParameterNode):
         self.inputs.new(NLValueFieldSocket.bl_idname, "B")
         self.inputs.new(NLValueFieldSocket.bl_idname, "C")
         self.outputs.new(NLParameterSocket.bl_idname, "Out")
+
     def get_netlogic_class_name(self):
         return "bgelogic.ParameterValueFilter3"
+
     def get_input_sockets_field_names(self):
         return ["opcode", "parama", "paramb", "paramc"]
+
+
 _nodes.append(NLParameterValueFilter3)
 
 
@@ -1857,12 +2020,17 @@ class NLParameterScreenPosition(bpy.types.Node, NLParameterNode):
         self.inputs.new(NLGameObjectSocket.bl_idname, "Camera")
         self.outputs.new(NLParameterSocket.bl_idname, "Screen X")
         self.outputs.new(NLParameterSocket.bl_idname, "Screen Y")
+
     def get_netlogic_class_name(self):
         return "bgelogic.ParameterScreenPosition"
+
     def get_input_sockets_field_names(self):
         return ["game_object", "camera"]
+
     def get_output_socket_varnames(self):
         return ["xposition", "yposition"]
+
+
 _nodes.append(NLParameterScreenPosition)
 
 
@@ -1878,14 +2046,22 @@ class NLParameterWorldPosition(bpy.types.Node, NLParameterNode):
         self.inputs.new(NLFloatFieldSocket.bl_idname, "Screen Y")
         self.inputs.new(NLFloatFieldSocket.bl_idname, "Depth")
         self.outputs.new(NLParameterSocket.bl_idname, "Vec3 World Position")
+
     def get_netlogic_class_name(self):
         return "bgelogic.ParameterWorldPosition"
+
     def get_input_sockets_field_names(self):
         return ["camera", "screen_x", "screen_y", "world_z"]
+
+
 _nodes.append(NLParameterWorldPosition)
 
+
 class NLOwnerGameObjectParameterNode(bpy.types.Node, NLParameterNode):
-    """The owner of this logic tree. Each Object that has this tree installed is the "owner" of a logic tree"""
+    """The owner of this logic tree.
+    Each Object that has this tree installed is
+    the "owner" of a logic tree
+    """
     bl_idname = "NLOwnerGameObjectParameterNode"
     bl_label = "Get Owner"
     nl_category = "Objects"
@@ -1898,6 +2074,8 @@ class NLOwnerGameObjectParameterNode(bpy.types.Node, NLParameterNode):
         return "bgelogic.ParamOwnerObject"
 
     pass
+
+
 _nodes.append(NLOwnerGameObjectParameterNode)
 
 
@@ -1914,6 +2092,8 @@ class NLCurrentSceneNode(bpy.types.Node, NLParameterNode):
         return "bgelogic.ParameterCurrentScene"
 
     pass
+
+
 _nodes.append(NLCurrentSceneNode)
 
 
@@ -1929,10 +2109,16 @@ class NLGameObjectPropertyParameterNode(bpy.types.Node, NLParameterNode):
         self.inputs[-1].value = 'prop'
         self.outputs.new(NLParameterSocket.bl_idname, "Property Value")
 
-    def get_netlogic_class_name(self): return "bgelogic.ParameterObjectProperty"
-    def get_input_sockets_field_names(self): return ["game_object", "property_name"]
+    def get_netlogic_class_name(self):
+        return "bgelogic.ParameterObjectProperty"
+
+    def get_input_sockets_field_names(self):
+        return ["game_object", "property_name"]
+
     def get_output_socket_varnames(self):
         return [OUTCELL]
+
+
 _nodes.append(NLGameObjectPropertyParameterNode)
 
 
@@ -1958,7 +2144,8 @@ class NLGetActuatorNode(bpy.types.Node, NLParameterNode):
         row1 = col.row()
         row2 = col.row()
         row1.label(text='From Object')
-        row2.prop_search(self,
+        row2.prop_search(
+            self,
             "obj",
             bpy.context.scene,
             'objects',
@@ -1969,7 +2156,8 @@ class NLGetActuatorNode(bpy.types.Node, NLParameterNode):
             row3 = col.row()
             row4 = col.row()
             row3.label(text='Actuator')
-            row4.prop_search(self,
+            row4.prop_search(
+                self,
                 "actuator",
                 self.obj.game,
                 'actuators',
@@ -1980,11 +2168,15 @@ class NLGetActuatorNode(bpy.types.Node, NLParameterNode):
     def get_nonsocket_fields(self):
         return [
             (
-                "obj_name", lambda : 'bgelogic.GetActuator.obj("{}")'.format(
+                "obj_name", lambda: 'bgelogic.GetActuator.obj("{}")'.format(
                     'Object:{}'.format(self.obj.name)
                 )
             ),
-            ("act_name", lambda : 'bgelogic.GetActuator.act("{}")'.format(self.actuator))
+            (
+                "act_name", lambda: 'bgelogic.GetActuator.act("{}")'.format(
+                    self.actuator
+                )
+            )
         ] if self.obj else []
 
     def get_output_socket_varnames(self):
@@ -1998,19 +2190,18 @@ class NLGetActuatorNameNode(bpy.types.Node, NLParameterNode):
     bl_idname = "NLGetActuatorNameNode"
     bl_label = "Get Actuator By Name"
     nl_category = "Logic Bricks"
-    obj = bpy.props.PointerProperty(
-        name='Object',
-        type=bpy.types.Object,
-        update=update_tree_code
-    )
-    actuator = bpy.props.StringProperty(update=update_tree_code)
 
     def init(self, context):
         NLParameterNode.init(self, context)
-        self.inputs.new(NLLogicBrickSocket.bl_idname, "Object")
+        self.inputs.new(NLGameObjectSocket.bl_idname, "Object")
         self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Actuator Name")
+        self.outputs.new(NLLogicBrickSocket.bl_idname, "Actuator")
 
-    def get_netlogic_class_name(self): return "bgelogic.GetActuatorByName"
+    def get_netlogic_class_name(self):
+        return "bgelogic.GetActuatorByName"
+
+    def get_input_sockets_field_names(self):
+        return ["obj_name", "act_name"]
 
     def get_output_socket_varnames(self):
         return [OUTCELL]
@@ -2053,7 +2244,7 @@ class NLGetCurrentControllerNode(bpy.types.Node, NLParameterNode):
         return [OUTCELL]
 
 
-#_nodes.append(NLGetCurrentControllerNode)
+# _nodes.append(NLGetCurrentControllerNode)
 
 
 class NLGetControllerNode(bpy.types.Node, NLParameterNode):
@@ -2078,7 +2269,8 @@ class NLGetControllerNode(bpy.types.Node, NLParameterNode):
         row1 = col.row()
         row2 = col.row()
         row1.label(text='From Object')
-        row2.prop_search(self,
+        row2.prop_search(
+            self,
             "obj",
             bpy.context.scene,
             'objects',
@@ -2089,7 +2281,8 @@ class NLGetControllerNode(bpy.types.Node, NLParameterNode):
             row3 = col.row()
             row4 = col.row()
             row3.label(text='Controller')
-            row4.prop_search(self,
+            row4.prop_search(
+                self,
                 "controller",
                 self.obj.game,
                 'controllers',
@@ -2100,18 +2293,20 @@ class NLGetControllerNode(bpy.types.Node, NLParameterNode):
     def get_nonsocket_fields(self):
         return [
             (
-                "obj_name", lambda : 'bgelogic.GetController.obj("{}")'.format(
+                "obj_name", lambda: 'bgelogic.GetController.obj("{}")'.format(
                     'Object:{}'.format(self.obj.name)
                 )
             ),
-            ("cont_name", lambda : 'bgelogic.GetController.cont("{}")'.format(self.controller))
+            ("cont_name", lambda: 'bgelogic.GetController.cont("{}")'.format(
+                    self.controller
+                ))
         ] if self.obj else []
 
     def get_output_socket_varnames(self):
         return [OUTCELL]
 
 
-#_nodes.append(NLGetControllerNode)
+# _nodes.append(NLGetControllerNode)
 
 
 class NLGetSensorNode(bpy.types.Node, NLParameterNode):
@@ -2136,7 +2331,8 @@ class NLGetSensorNode(bpy.types.Node, NLParameterNode):
         row1 = col.row()
         row2 = col.row()
         row1.label(text='From Object')
-        row2.prop_search(self,
+        row2.prop_search(
+            self,
             "obj",
             bpy.context.scene,
             'objects',
@@ -2147,7 +2343,8 @@ class NLGetSensorNode(bpy.types.Node, NLParameterNode):
             row3 = col.row()
             row4 = col.row()
             row3.label(text='Sensor')
-            row4.prop_search(self,
+            row4.prop_search(
+                self,
                 "sensor",
                 self.obj.game,
                 'sensors',
@@ -2158,11 +2355,15 @@ class NLGetSensorNode(bpy.types.Node, NLParameterNode):
     def get_nonsocket_fields(self):
         return [
             (
-                "obj_name", lambda : 'bgelogic.GetSensor.obj("{}")'.format(
+                "obj_name", lambda: 'bgelogic.GetSensor.obj("{}")'.format(
                     'Object:{}'.format(self.obj.name)
                 )
             ),
-            ("sens_name", lambda : 'bgelogic.GetSensor.sens("{}")'.format(self.sensor))
+            (
+                "sens_name", lambda: 'bgelogic.GetSensor.sens("{}")'.format(
+                    self.sensor
+                )
+            )
         ] if self.obj else []
 
     def get_output_socket_varnames(self):
@@ -2192,7 +2393,7 @@ class NLSensorPositiveNode(bpy.types.Node, NLParameterNode):
         return [OUTCELL]
 
 
-#_nodes.append(NLSensorPositiveNode)
+# _nodes.append(NLSensorPositiveNode)
 
 
 class NLObjectAttributeParameterNode(bpy.types.Node, NLParameterNode):
@@ -2206,8 +2407,14 @@ class NLObjectAttributeParameterNode(bpy.types.Node, NLParameterNode):
         self.inputs.new(NLSocketReadableMemberName.bl_idname, "Value")
         self.inputs[-1].value = 'worldPosition'
         self.outputs.new(NLParameterSocket.bl_idname, "Value")
-    def get_netlogic_class_name(self): return "bgelogic.ParameterObjectAttribute"
-    def get_input_sockets_field_names(self):return ["game_object", "attribute_name"]
+
+    def get_netlogic_class_name(self):
+        return "bgelogic.ParameterObjectAttribute"
+
+    def get_input_sockets_field_names(self):
+        return ["game_object", "attribute_name"]
+
+
 _nodes.append(NLObjectAttributeParameterNode)
 
 
@@ -2219,28 +2426,49 @@ class NLActiveCameraParameterNode(bpy.types.Node, NLParameterNode):
     def init(self, context):
         NLParameterNode.init(self, context)
         self.outputs.new(NLGameObjectSocket.bl_idname, "")
+
     def get_netlogic_class_name(self):
         return "bgelogic.ParameterActiveCamera"
+
+
 _nodes.append(NLActiveCameraParameterNode)
+
 
 class NLArithmeticOpParameterNode(bpy.types.Node, NLParameterNode):
     bl_idname = "NLArithmeticOpParameterNode"
     bl_label = "Math"
     nl_category = "Math"
-    operator = bpy.props.EnumProperty(items=_enum_math_operations, update=update_tree_code)
+    operator = bpy.props.EnumProperty(
+        items=_enum_math_operations,
+        update=update_tree_code
+    )
 
     def init(self, context):
         NLParameterNode.init(self, context)
-        tools.register_inputs(self,
-            NLFloatFieldSocket, "A",
-            NLFloatFieldSocket, "B")
+        self.inputs.new(NLFloatFieldSocket.bl_idname, "A")
+        self.inputs.new(NLFloatFieldSocket.bl_idname, "B")
         self.outputs.new(NLParameterSocket.bl_idname, "")
+
     def draw_buttons(self, context, layout):
         layout.prop(self, "operator", text="")
+
     def get_nonsocket_fields(self):
-        return [("operator", lambda : 'bgelogic.ParameterArithmeticOp.op_by_code("{}")'.format(self.operator))]
-    def get_netlogic_class_name(self): return "bgelogic.ParameterArithmeticOp"
-    def get_input_sockets_field_names(self): return ["operand_a", "operand_b"]
+        return [
+                (
+                    "operator", lambda:
+                    'bgelogic.ParameterArithmeticOp.op_by_code("{}")'.format(
+                        self.operator
+                    )
+                )
+            ]
+
+    def get_netlogic_class_name(self):
+        return "bgelogic.ParameterArithmeticOp"
+
+    def get_input_sockets_field_names(self):
+        return ["operand_a", "operand_b"]
+
+
 _nodes.append(NLArithmeticOpParameterNode)
 
 
@@ -2248,15 +2476,24 @@ class NLClampValueNode(bpy.types.Node, NLParameterNode):
     bl_idname = "NLClampValueNode"
     bl_label = "Clamp"
     nl_category = "Math"
-    operator = bpy.props.EnumProperty(items=_enum_math_operations, update=update_tree_code)
+    operator = bpy.props.EnumProperty(
+        items=_enum_math_operations,
+        update=update_tree_code
+    )
 
     def init(self, context):
         NLParameterNode.init(self, context)
         self.inputs.new(NLFloatFieldSocket.bl_idname, "Value")
         self.inputs.new(NLVec2FieldSocket.bl_idname, "Min / Max")
         self.outputs.new(NLParameterSocket.bl_idname, "Value")
-    def get_netlogic_class_name(self): return "bgelogic.ClampValue"
-    def get_input_sockets_field_names(self): return ["value", "range"]
+
+    def get_netlogic_class_name(self):
+        return "bgelogic.ClampValue"
+
+    def get_input_sockets_field_names(self):
+        return ["value", "range"]
+
+
 _nodes.append(NLClampValueNode)
 
 
@@ -2273,12 +2510,17 @@ class NLParameterActionStatus(bpy.types.Node, NLParameterNode):
         self.outputs.new(NLConditionSocket.bl_idname, "Not Playing")
         self.outputs.new(NLParameterSocket.bl_idname, "Action Name")
         self.outputs.new(NLParameterSocket.bl_idname, "Action Frame")
+
     def get_netlogic_class_name(self):
-         return "bgelogic.ParameterActionStatus"
+        return "bgelogic.ParameterActionStatus"
+
     def get_input_sockets_field_names(self):
         return ["game_object", "action_layer"]
+
     def get_output_socket_varnames(self):
         return [OUTCELL, "NOT_PLAYING", "ACTION_NAME", "ACTION_FRAME"]
+
+
 _nodes.append(NLParameterActionStatus)
 
 
@@ -2295,25 +2537,35 @@ class NLParameterSwitchValue(bpy.types.Node, NLParameterNode):
 
     def get_netlogic_class_name(self):
         return "bgelogic.ParameterSwitchValue"
+
     def get_input_sockets_field_names(self):
         return ["state"]
+
     def get_output_socket_varnames(self):
         return ["TRUE", "FALSE"]
+
+
 _nodes.append(NLParameterSwitchValue)
 
 
 class NLParameterTimeNode(bpy.types.Node, NLParameterNode):
     bl_idname = "NLParameterTimeNode"
     bl_label = "Time Data"
-    nl_category = "Utilities"
+    nl_category = "Time"
 
     def init(self, context):
         NLParameterNode.init(self, context)
         self.outputs.new(NLFloatFieldSocket.bl_idname, "Frames Per Second")
         self.outputs.new(NLFloatFieldSocket.bl_idname, "Time Per Frame")
         self.outputs.new(NLFloatFieldSocket.bl_idname, "Total Elapsed Time")
-    def get_output_socket_varnames(self): return ["FPS", "TIME_PER_FRAME", "TIMELINE"]
-    def get_netlogic_class_name(self): return "bgelogic.ParameterTime"
+
+    def get_output_socket_varnames(self):
+        return ["FPS", "TIME_PER_FRAME", "TIMELINE"]
+
+    def get_netlogic_class_name(self):
+        return "bgelogic.ParameterTime"
+
+
 _nodes.append(NLParameterTimeNode)
 
 
@@ -2324,19 +2576,21 @@ class NLMouseDataParameter(bpy.types.Node, NLParameterNode):
 
     def init(self, context):
         NLParameterNode.init(self, context)
-        self.outputs.new(NLParameterSocket.bl_idname, "X")
-        self.outputs.new(NLParameterSocket.bl_idname, "Y")
-        self.outputs.new(NLParameterSocket.bl_idname, "DX")
-        self.outputs.new(NLParameterSocket.bl_idname, "DY")
-        self.outputs.new(NLParameterSocket.bl_idname, "DWHEEL")
-        self.outputs.new(NLParameterSocket.bl_idname, "(X,Y,0)")
-        self.outputs.new(NLParameterSocket.bl_idname, "(DX,DY,0)")
+        self.outputs.new(NLParameterSocket.bl_idname, "X Position")
+        self.outputs.new(NLParameterSocket.bl_idname, "Y Position")
+        self.outputs.new(NLParameterSocket.bl_idname, "X Difference")
+        self.outputs.new(NLParameterSocket.bl_idname, "Y Difference")
+        self.outputs.new(NLParameterSocket.bl_idname, "Wheel Difference")
+        self.outputs.new(NLParameterSocket.bl_idname, "Position (Vec)")
+        self.outputs.new(NLParameterSocket.bl_idname, "Difference (Vec)")
 
     def get_netlogic_class_name(self):
         return "bgelogic.ParameterMouseData"
 
     def get_output_socket_varnames(self):
         return ["MX", "MY", "MDX", "MDY", "MDWHEEL", "MXY0", "MDXY0"]
+
+
 _nodes.append(NLMouseDataParameter)
 
 
@@ -2351,16 +2605,22 @@ class NLParameterOrientationNode(bpy.types.Node, NLParameterNode):
         self.inputs.new(NLOptionalRadiansFieldSocket.bl_idname, "Y Rad")
         self.inputs.new(NLOptionalRadiansFieldSocket.bl_idname, "Z Rad")
         self.inputs.new(NLParameterSocket.bl_idname, "Orientation")
-        tools.register_outputs(
-            self,
-            NLParameterSocket, "Orientation",
-            NLParameterSocket, "XYZ Rad Euler",
-            NLParameterSocket, "X Rad", NLParameterSocket, "Y Rad", NLParameterSocket, "Z Rad",
-        )
+        self.outputs.new(NLParameterSocket.bl_idname, "Orientation")
+        self.outputs.new(NLParameterSocket.bl_idname, "Rad Euler")
+        self.outputs.new(NLParameterSocket.bl_idname, "X")
+        self.outputs.new(NLParameterSocket.bl_idname, "Y")
+        self.outputs.new(NLParameterSocket.bl_idname, "Z")
 
-    def get_netlogic_class_name(self): return "bgelogic.ParameterOrientation"
-    def get_output_socket_varnames(self): return [OUTCELL, "OUTEULER", "OUTX", "OUTY", "OUTZ"]
-    def get_input_sockets_field_names(self): return ["input_x", "input_y", "input_z", "source_matrix"]
+    def get_netlogic_class_name(self):
+        return "bgelogic.ParameterOrientation"
+
+    def get_output_socket_varnames(self):
+        return [OUTCELL, "OUTEULER", "OUTX", "OUTY", "OUTZ"]
+
+    def get_input_sockets_field_names(self):
+        return ["input_x", "input_y", "input_z", "source_matrix"]
+
+
 _nodes.append(NLParameterOrientationNode)
 
 
@@ -2376,12 +2636,17 @@ class NLParameterBoneStatus(bpy.types.Node, NLParameterNode):
         self.outputs.new(NLParameterSocket.bl_idname, "XYZ Pos")
         self.outputs.new(NLParameterSocket.bl_idname, "XYZ Rot")
         self.outputs.new(NLParameterSocket.bl_idname, "XYZ Scale")
+
     def get_netlogic_class_name(self):
         return "bgelogic.ParameterBoneStatus"
+
     def get_input_sockets_field_names(self):
         return ["armature", "bone_name"]
+
     def get_output_socket_varnames(self):
         return ["XYZ_POS","XYZ_ROT", "XYZ_SCA"]
+
+
 _nodes.append(NLParameterBoneStatus)
 
 
@@ -2404,11 +2669,18 @@ class NLParameterPythonModuleFunction(bpy.types.Node, NLParameterNode):
         self.outputs.new(NLParameterSocket.bl_idname, "OUT3")
         self.use_custom_color = True
         self.color = PYTHON_NODE_COLOR
+
     def get_netlogic_class_name(self):
         return "bgelogic.ParameterPythonModuleFunction"
-    def get_input_sockets_field_names(self): return ["module_name", "module_func", "IN0", "IN1", "IN2", "IN3"]
-    def get_output_socket_varnames(self): return ["OUT0", "OUT1", "OUT2", "OUT3"]
-#_nodes.append(NLParameterPythonModuleFunction)
+
+    def get_input_sockets_field_names(self):
+        return ["module_name", "module_func", "IN0", "IN1", "IN2", "IN3"]
+
+    def get_output_socket_varnames(self):
+        return ["OUT0", "OUT1", "OUT2", "OUT3"]
+
+
+# _nodes.append(NLParameterPythonModuleFunction)
 
 
 class NLParameterBooleanValue(bpy.types.Node, NLParameterNode):
@@ -2421,9 +2693,16 @@ class NLParameterBooleanValue(bpy.types.Node, NLParameterNode):
         self.inputs.new(NLBooleanSocket.bl_idname, "Bool")
         self.outputs.new(NLParameterSocket.bl_idname, "Bool")
 
-    def get_netlogic_class_name(self): return "bgelogic.ParameterSimpleValue"
-    def get_output_socket_varnames(self): return ["OUT"]
-    def get_input_sockets_field_names(self): return ["value"]
+    def get_netlogic_class_name(self):
+        return "bgelogic.ParameterSimpleValue"
+
+    def get_output_socket_varnames(self):
+        return ["OUT"]
+
+    def get_input_sockets_field_names(self):
+        return ["value"]
+
+
 _nodes.append(NLParameterBooleanValue)
 
 
@@ -3878,8 +4157,7 @@ class NLSetLightEnergyAction(bpy.types.Node, NLActionNode):
             self,
             NLConditionSocket, "Condition",
             NLGameObjectSocket, "Light Object",
-            NLFloatFieldSocket, "Energy",
-            NLIntegerFieldSocket, "Frames"
+            NLFloatFieldSocket, "Energy"
         )
 
     def get_netlogic_class_name(self):
@@ -3888,8 +4166,7 @@ class NLSetLightEnergyAction(bpy.types.Node, NLActionNode):
         return [
             "condition",
             "lamp",
-            "energy",
-            "frames"
+            "energy"
         ]
 _nodes.append(NLSetLightEnergyAction)
 
@@ -3906,7 +4183,6 @@ class NLSetLightColorAction(bpy.types.Node, NLActionNode):
         self.inputs.new(NLSocketAlphaFloat.bl_idname, "Red")
         self.inputs.new(NLSocketAlphaFloat.bl_idname, "Green")
         self.inputs.new(NLSocketAlphaFloat.bl_idname, "Blue")
-        self.inputs.new(NLIntegerFieldSocket.bl_idname, "Frames")
 
     def get_netlogic_class_name(self):
         return "bgelogic.SetLightColor"
@@ -3916,8 +4192,7 @@ class NLSetLightColorAction(bpy.types.Node, NLActionNode):
             "lamp",
             "red",
             "green",
-            "blue",
-            "frames"
+            "blue"
         ]
 _nodes.append(NLSetLightColorAction)
 
@@ -4857,31 +5132,41 @@ _enum_predefined_math_fun = {
 }
 class NLParameterMathFun(bpy.types.Node, NLParameterNode):
     bl_idname = "NLParameterMathFun"
-    bl_label = "Formulas (Math & Co.)"
+    bl_label = "Formula"
     nl_category = "Math"
     def on_fun_changed(self, context):
         if(self.predefined_formulas != "User Defined"):
             self.value = self.predefined_formulas
         update_tree_code(self, context)
-    value = bpy.props.StringProperty(update=update_tree_code)
+    value = bpy.props.StringProperty(
+        update=update_tree_code
+    )
     predefined_formulas = bpy.props.EnumProperty(
         items=_enum_predefined_math_fun, 
         update=on_fun_changed,
         default="User Defined")
+
     def init(self, context):
         NLParameterNode.init(self, context)
-        self.inputs.new(NLNumericFieldSocket.bl_idname, "a")
-        self.inputs.new(NLNumericFieldSocket.bl_idname, "b")
-        self.inputs.new(NLNumericFieldSocket.bl_idname, "c")
-        self.inputs.new(NLNumericFieldSocket.bl_idname, "d")
-        self.outputs.new(NLParameterSocket.bl_idname, "Result");
+        self.inputs.new(NLFloatFieldSocket.bl_idname, "a")
+        self.inputs.new(NLFloatFieldSocket.bl_idname, "b")
+        self.inputs.new(NLFloatFieldSocket.bl_idname, "c")
+        self.inputs.new(NLFloatFieldSocket.bl_idname, "d")
+        self.outputs.new(NLParameterSocket.bl_idname, "Result")
+        self.value = "a + b"
+
     def draw_buttons(self, context, layout):
-        layout.prop(self, "predefined_formulas", "Predef.")
-        layout.prop(self, "value", "Formula")
+        layout.prop(self, "predefined_formulas", text="Predef.")
+        if self.predefined_formulas == 'User Defined':
+            layout.prop(self, "value", text="Formula")
+
     def get_input_sockets_field_names(self):
         return ["a", "b", "c", "d"]
+
     def get_nonsocket_fields(self):
         return [("formula", '"{0}"'.format(self.value))]
+
     def get_netlogic_class_name(self):
         return "bgelogic.ParameterMathFun"
-#_nodes.append(NLParameterMathFun)
+
+_nodes.append(NLParameterMathFun)

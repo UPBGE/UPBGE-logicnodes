@@ -1104,6 +1104,24 @@ class GetActuator(ParameterCell):
         self._set_value(game_obj.actuators[self.act_name])
 
 
+class GetActuatorByName(ParameterCell):
+
+    def __init__(self):
+        ParameterCell.__init__(self)
+        self.obj_name = None
+        self.act_name = None
+
+    def evaluate(self):
+        game_obj = self.get_parameter_value(self.obj_name)
+        act_name = self.get_parameter_value(self.act_name)
+        if none_or_invalid(game_obj):
+            return
+        if none_or_invalid(act_name):
+            return
+        self._set_ready()
+        self._set_value(game_obj.actuators[act_name])
+
+
 class ActivateActuator(ParameterCell):
 
     def __init__(self):
@@ -1116,7 +1134,8 @@ class ActivateActuator(ParameterCell):
         condition = self.get_parameter_value(self.condition)
         actuator = self.get_parameter_value(self.actuator)
         controller = bge.logic.getCurrentController()
-        if actuator is STATUS_WAITING or none_or_invalid(actuator) or actuator not in controller.actuators:
+        if actuator is STATUS_WAITING or none_or_invalid(actuator):
+            print("There is a problem with the actuator in Execute Actuator Node!")
             return
         if none_or_invalid(condition) or not condition:
             controller.deactivate(actuator)
@@ -1399,7 +1418,8 @@ class ParameterTime(ParameterCell):
     def has_status(self, status):
         return status is LogicNetworkCell.STATUS_READY
 
-    def evaluate(self): pass
+    def evaluate(self):
+        pass
 
 
 class ParameterObjectAttribute(ParameterCell):
@@ -5457,7 +5477,6 @@ class SetLightEnergy(ActionCell):
         self.condition = None
         self.lamp = None
         self.energy = None
-        self.frames = None
 
     def evaluate(self):
         STATUS_WAITING = LogicNetworkCell.STATUS_WAITING
@@ -5488,7 +5507,6 @@ class SetLightColor(ActionCell):
         self.red = None
         self.green = None
         self.blue = None
-        self.frames = None
 
     def evaluate(self):
         STATUS_WAITING = LogicNetworkCell.STATUS_WAITING
