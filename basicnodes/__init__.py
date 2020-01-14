@@ -4251,22 +4251,20 @@ class NLActionPlayActionNode(bpy.types.Node, NLActionNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
-        tools.register_inputs(#TODO change into self.inputs.new...
-            self,
-            NLConditionSocket, "Condition",
-            NLGameObjectSocket, "Armature",
-            NLQuotedStringFieldSocket, "Action Name",
-            NLFloatFieldSocket, "Start Frame",
-            NLFloatFieldSocket, "End Frame",
-            NLPositiveIntegerFieldSocket, "Layer",
-            NLPositiveIntegerFieldSocket, "Priority",
-            NLPlayActionModeSocket, "Play Mode",
-            NLFloatFieldSocket, "Layer Weight",
-            NLFloatFieldSocket, "Speed",
-            NLFloatFieldSocket, "Blendin",
-            NLBlendActionModeSocket, "Blend Mode"
-        )
-        self.inputs[9].value = 1.0
+        self.inputs.new(NLConditionSocket.bl_idname, "Condition")
+        self.inputs.new(NLGameObjectSocket.bl_idname, "Armature")
+        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Action Name")
+        self.inputs.new(NLBooleanSocket.bl_idname, "Stop When Done")
+        self.inputs.new(NLFloatFieldSocket.bl_idname, "Start Frame")
+        self.inputs.new(NLFloatFieldSocket.bl_idname, "End Frame")
+        self.inputs.new(NLPositiveIntegerFieldSocket.bl_idname, "Layer")
+        self.inputs.new(NLPositiveIntegerFieldSocket.bl_idname, "Priority")
+        self.inputs.new(NLPlayActionModeSocket.bl_idname, "Play Mode")
+        self.inputs.new(NLFloatFieldSocket.bl_idname, "Layer Weight")
+        self.inputs.new(NLFloatFieldSocket.bl_idname, "Speed")
+        self.inputs[-1].value = 1.0
+        self.inputs.new(NLFloatFieldSocket.bl_idname, "Blendin")
+        self.inputs.new(NLBlendActionModeSocket.bl_idname, "Blend Mode")
         self.outputs.new(NLConditionSocket.bl_idname, "Started")
         self.outputs.new(NLConditionSocket.bl_idname, "Running")
         self.outputs.new(NLConditionSocket.bl_idname, "Finished")
@@ -4275,7 +4273,7 @@ class NLActionPlayActionNode(bpy.types.Node, NLActionNode):
     def get_netlogic_class_name(self):
         return "bgelogic.ActionPlayAction"
     def get_input_sockets_field_names(self): return [
-        "condition", "game_object", "action_name", "start_frame", "end_frame", "layer",
+        "condition", "game_object", "action_name", "stop", "start_frame", "end_frame", "layer",
         "priority", "play_mode", "layer_weight", "speed", "blendin", "blend_mode"]
     def get_output_socket_varnames(self):
         return ["STARTED", "RUNNING", "FINISHED", "FRAME"]

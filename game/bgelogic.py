@@ -3190,15 +3190,20 @@ class ConditionCollision(ConditionCell):
         self.OBJECTS = LogicNetworkSubCell(self, self.get_objects)
         self.OPN_SET = LogicNetworkSubCell(self, self.get_opn_set)
 
-    def get_point(self): return self._point
+    def get_point(self):
+        return self._point
 
-    def get_normal(self): return self._normal
+    def get_normal(self):
+        return self._normal
 
-    def get_target(self): return self._target
+    def get_target(self):
+        return self._target
 
-    def get_objects(self): return self._objects
+    def get_objects(self):
+        return self._objects
 
-    def get_opn_set(self): return self._opn_set
+    def get_opn_set(self):
+        return self._opn_set
 
     def _collision_callback(self, obj, point, normal):
         self._collision_triggered = True
@@ -4844,6 +4849,7 @@ class ActionPlayAction(ActionCell):
         self.condition = None
         self.game_object = None
         self.action_name = None
+        self.stop = None
         self.start_frame = None
         self.end_frame = None
         self.layer = None
@@ -4882,10 +4888,12 @@ class ActionPlayAction(ActionCell):
         self._frame = 0.0
         self._finish_notified = False
 
-    def _notify_finished(self):
+    def _notify_finished(self, obj, layer):
         if not self._finish_notified:
             self._finish_notified = True
             self._finished = True
+            if self.stop:
+                obj.stopAction(layer)
         else:
             self._finished = False
 
@@ -4895,6 +4903,7 @@ class ActionPlayAction(ActionCell):
             return
         game_object = self.get_parameter_value(self.game_object)
         action_name = self.get_parameter_value(self.action_name)
+        stop = self.get_parameter_value(self.stop)
         start_frame = self.get_parameter_value(self.start_frame)
         end_frame = self.get_parameter_value(self.end_frame)
         layer = self.get_parameter_value(self.layer)
@@ -4958,7 +4967,7 @@ class ActionPlayAction(ActionCell):
                     print(playing_frame, end_frame)
                     is_near_end = (playing_frame <= (end_frame + 0.5))
                 if is_near_end:
-                    self._notify_finished()
+                    self._notify_finished(game_object, layer)
                 pass
             elif condition:  # start the animation if the condition is True
                 game_object.playAction(
