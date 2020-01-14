@@ -239,6 +239,11 @@ _enum_math_operations = [
     ("MUL", "Multiply", "Multiply A by B")
 ]
 
+_enum_greater_less = [
+    ("GREATER", "Greater", "Value greater than Threshold."),
+    ("LESS", "Less", "Value less than Threshold")
+]
+
 _enum_logic_operators = [
     ("0", "Equal", "A equals B"),
     ("1", "Not Equal", "A not equals B"),
@@ -2193,7 +2198,7 @@ class NLGetActuatorNameNode(bpy.types.Node, NLParameterNode):
 
     def init(self, context):
         NLParameterNode.init(self, context)
-        self.inputs.new(NLGameObjectSocket.bl_idname, "Object")
+        # self.inputs.new(NLGameObjectSocket.bl_idname, "Object")
         self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Actuator Name")
         self.outputs.new(NLLogicBrickSocket.bl_idname, "Actuator")
 
@@ -2201,7 +2206,7 @@ class NLGetActuatorNameNode(bpy.types.Node, NLParameterNode):
         return "bgelogic.GetActuatorByName"
 
     def get_input_sockets_field_names(self):
-        return ["obj_name", "act_name"]
+        return ["act_name"]
 
     def get_output_socket_varnames(self):
         return [OUTCELL]
@@ -2472,6 +2477,44 @@ class NLArithmeticOpParameterNode(bpy.types.Node, NLParameterNode):
 _nodes.append(NLArithmeticOpParameterNode)
 
 
+class NLThresholdNode(bpy.types.Node, NLParameterNode):
+    bl_idname = "NLThresholdNode"
+    bl_label = "Threshold"
+    nl_category = "Math"
+    operator = bpy.props.EnumProperty(
+        items=_enum_greater_less,
+        update=update_tree_code
+    )
+
+    def init(self, context):
+        NLParameterNode.init(self, context)
+        self.inputs.new(NLFloatFieldSocket.bl_idname, "Value")
+        self.inputs.new(NLFloatFieldSocket.bl_idname, "Threshold")
+        self.outputs.new(NLParameterSocket.bl_idname, "Value")
+
+    def draw_buttons(self, context, layout):
+        layout.prop(self, "operator", text="")
+
+    def get_nonsocket_fields(self):
+        return [
+                (
+                    "operator", lambda:
+                    'bgelogic.Threshold.op_by_code("{}")'.format(
+                        self.operator
+                    )
+                )
+            ]
+
+    def get_netlogic_class_name(self):
+        return "bgelogic.Threshold"
+
+    def get_input_sockets_field_names(self):
+        return ["value", "threshold"]
+
+
+_nodes.append(NLThresholdNode)
+
+
 class NLClampValueNode(bpy.types.Node, NLParameterNode):
     bl_idname = "NLClampValueNode"
     bl_label = "Clamp"
@@ -2633,9 +2676,9 @@ class NLParameterBoneStatus(bpy.types.Node, NLParameterNode):
         NLParameterNode.init(self, context)
         self.inputs.new(NLGameObjectSocket.bl_idname, "Armature Object")
         self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Bone Name")
-        self.outputs.new(NLParameterSocket.bl_idname, "XYZ Pos")
-        self.outputs.new(NLParameterSocket.bl_idname, "XYZ Rot")
-        self.outputs.new(NLParameterSocket.bl_idname, "XYZ Scale")
+        self.outputs.new(NLParameterSocket.bl_idname, "Position")
+        self.outputs.new(NLParameterSocket.bl_idname, "Rotation")
+        self.outputs.new(NLParameterSocket.bl_idname, "Scale")
 
     def get_netlogic_class_name(self):
         return "bgelogic.ParameterBoneStatus"
@@ -2644,7 +2687,7 @@ class NLParameterBoneStatus(bpy.types.Node, NLParameterNode):
         return ["armature", "bone_name"]
 
     def get_output_socket_varnames(self):
-        return ["XYZ_POS","XYZ_ROT", "XYZ_SCA"]
+        return ["XYZ_POS", "XYZ_ROT", "XYZ_SCA"]
 
 
 _nodes.append(NLParameterBoneStatus)
@@ -2680,7 +2723,7 @@ class NLParameterPythonModuleFunction(bpy.types.Node, NLParameterNode):
         return ["OUT0", "OUT1", "OUT2", "OUT3"]
 
 
-# _nodes.append(NLParameterPythonModuleFunction)
+#x_nodes.append(NLParameterPythonModuleFunction)
 
 
 class NLParameterBooleanValue(bpy.types.Node, NLParameterNode):
@@ -2719,6 +2762,8 @@ class NLParameterFloatValue(bpy.types.Node, NLParameterNode):
     def get_netlogic_class_name(self): return "bgelogic.ParameterSimpleValue"
     def get_output_socket_varnames(self): return ["OUT"]
     def get_input_sockets_field_names(self): return ["value"]
+
+
 _nodes.append(NLParameterFloatValue)
 
 
@@ -2735,6 +2780,8 @@ class NLParameterIntValue(bpy.types.Node, NLParameterNode):
     def get_netlogic_class_name(self): return "bgelogic.ParameterSimpleValue"
     def get_output_socket_varnames(self): return ["OUT"]
     def get_input_sockets_field_names(self): return ["value"]
+
+
 _nodes.append(NLParameterIntValue)
 
 
@@ -4817,7 +4864,7 @@ _nodes.append(NLParameterFormattedString)
 class NLActionRandomInteger(bpy.types.Node, NLActionNode):
     bl_idname = "NLActionRandomInteger"
     bl_label = "Random Integer"
-    nl_category = "Math"
+    nl_category = "Values"
 
     def init(self, context):
         NLActionNode.init(self, context)
@@ -4836,7 +4883,7 @@ _nodes.append(NLActionRandomInteger)
 class NLActionRandomFloat(bpy.types.Node, NLActionNode):
     bl_idname = "NLActionRandomFloat"
     bl_label = "Random Float"
-    nl_category = "Math"
+    nl_category = "Values"
 
     def init(self, context):
         NLActionNode.init(self, context)

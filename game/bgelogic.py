@@ -1108,18 +1108,22 @@ class GetActuatorByName(ParameterCell):
 
     def __init__(self):
         ParameterCell.__init__(self)
-        self.obj_name = None
+        # self.obj_name = None
         self.act_name = None
 
     def evaluate(self):
-        game_obj = self.get_parameter_value(self.obj_name)
+        # game_obj = self.get_parameter_value(self.obj_name)
         act_name = self.get_parameter_value(self.act_name)
-        if none_or_invalid(game_obj):
-            return
+        # if none_or_invalid(game_obj):
+        #     return
+        cont = bge.logic.getCurrentController()
         if none_or_invalid(act_name):
             return
+        if act_name not in cont.actuators:
+            raise Exception('Actu')
+            return    
         self._set_ready()
-        self._set_value(game_obj.actuators[act_name])
+        self._set_value(bge.logic.getCurrentController().actuators[act_name])
 
 
 class ActivateActuator(ParameterCell):
@@ -1496,6 +1500,39 @@ class ParameterArithmeticOp(ParameterCell):
             self._set_value(None)
         else:
             self._set_value(self.operator(a, b))
+
+
+class Threshold(ParameterCell):
+
+    @classmethod
+    def op_by_code(cls, op):
+        return op
+
+    def __init__(self):
+        ParameterCell.__init__(self)
+        self.value = None
+        self.threshold = None
+        self.operator = None
+
+    def calc_threshold(self, op, v, t):
+        if op == 'GREATER':
+            return v if v > t else t
+        if op == 'LESS':
+            return v if v < t else t
+
+    def evaluate(self):
+        v = self.get_parameter_value(self.value)
+        t = self.get_parameter_value(self.threshold)
+        if v is LogicNetworkCell.STATUS_WAITING:
+            return
+        if t is LogicNetworkCell.STATUS_WAITING:
+            return
+        value = self.calc_threshold(self.operator, v, t)
+        self._set_ready()
+        if (v is None) or (t is None):
+            self._set_value(None)
+        else:
+            self._set_value(value)
 
 
 class ParameterValueFilter3(ParameterCell):
