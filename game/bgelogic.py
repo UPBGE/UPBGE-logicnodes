@@ -1120,8 +1120,8 @@ class GetActuatorByName(ParameterCell):
         if none_or_invalid(act_name):
             return
         if act_name not in cont.actuators:
-            raise Exception('Actu')
-            return    
+            raise Exception('Actuator not conneted or does not exist!')
+            return
         self._set_ready()
         self._set_value(bge.logic.getCurrentController().actuators[act_name])
 
