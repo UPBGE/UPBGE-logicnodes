@@ -2464,6 +2464,24 @@ class ConditionAnd(ConditionCell):
     pass
 
 
+class ConditionAndNot(ConditionCell):
+    def __init__(self):
+        ConditionCell.__init__(self)
+        self.condition_a = None
+        self.condition_b = None
+
+    def evaluate(self):
+        ca = self.get_parameter_value(self.condition_a)
+        cb = not self.get_parameter_value(self.condition_b)
+        if ca is LogicNetworkCell.STATUS_WAITING:
+            return
+        if cb is LogicNetworkCell.STATUS_WAITING:
+            return
+        self._set_ready()
+        self._set_value(ca and cb)
+    pass
+
+
 class ConditionNotNone(ConditionCell):
 
     def __init__(self):

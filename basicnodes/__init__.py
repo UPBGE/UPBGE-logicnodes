@@ -1207,7 +1207,7 @@ class NLValueFieldSocket(bpy.types.NodeSocket, NetLogicSocketType):
         if self.is_linked or self.is_output:
             layout.label(text=text)
         else:
-            main = layout.split(factor=.4)
+            main = layout.split()
             if self.value_type == "BOOLEAN":
                 main.prop(self, "value_type", text="")
                 main.prop(self, "bool_editor", text="")
@@ -3342,11 +3342,27 @@ class NLConditionAndNode(bpy.types.Node, NLConditionNode):
         NLConditionNode.init(self, context)
         self.inputs.new(NLConditionSocket.bl_idname, "A")
         self.inputs.new(NLConditionSocket.bl_idname, "B")
-        self.outputs.new(NLConditionSocket.bl_idname, "A and B")
+        self.outputs.new(NLConditionSocket.bl_idname, "If A and B")
 
     def get_netlogic_class_name(self): return "bgelogic.ConditionAnd"
     def get_input_sockets_field_names(self):return ["condition_a", "condition_b"]
 _nodes.append(NLConditionAndNode)
+
+
+class NLConditionAndNotNode(bpy.types.Node, NLConditionNode):
+    bl_idname = "NLConditionAndNotNode"
+    bl_label = "And Not"
+    nl_category = "Logic"
+
+    def init(self, context):
+        NLConditionNode.init(self, context)
+        self.inputs.new(NLConditionSocket.bl_idname, "A")
+        self.inputs.new(NLConditionSocket.bl_idname, "B")
+        self.outputs.new(NLConditionSocket.bl_idname, "If A and not B")
+
+    def get_netlogic_class_name(self): return "bgelogic.ConditionAndNot"
+    def get_input_sockets_field_names(self):return ["condition_a", "condition_b"]
+_nodes.append(NLConditionAndNotNode)
 
 
 class NLConditionOrNode(bpy.types.Node, NLConditionNode):
@@ -4255,6 +4271,7 @@ class NLActionPlayActionNode(bpy.types.Node, NLActionNode):
         self.inputs.new(NLGameObjectSocket.bl_idname, "Armature")
         self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Action Name")
         self.inputs.new(NLBooleanSocket.bl_idname, "Stop When Done")
+        self.inputs[-1].value = True
         self.inputs.new(NLFloatFieldSocket.bl_idname, "Start Frame")
         self.inputs.new(NLFloatFieldSocket.bl_idname, "End Frame")
         self.inputs.new(NLPositiveIntegerFieldSocket.bl_idname, "Layer")

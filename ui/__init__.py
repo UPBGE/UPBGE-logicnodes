@@ -349,7 +349,7 @@ class BGELogicTree(bpy.types.NodeTree):
     bl_idname = "BGELogicTree"
     bl_label = "Logic Tree Editor"
     bl_icon = "OUTLINER"
-    bl_type = "Scripting"
+    bl_category = "Scripting"
 
     @classmethod
     def poll(cls, context):
