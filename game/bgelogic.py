@@ -5751,6 +5751,8 @@ class ActionRotateTo(ActionCell):
             return
         if speed is STATUS_WAITING:
             return
+        if speed == 0:
+            speed = None
         if rot_axis is STATUS_WAITING:
             return
         if front_axis is STATUS_WAITING:

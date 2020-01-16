@@ -383,8 +383,12 @@ class NLApplyLogicOperator(bpy.types.Operator):
                 sensor = s
                 break
         if sensor is None:
-            bpy.ops.logic.sensor_add(type="DELAY", object=obj.name)
+            bpy.ops.logic.sensor_add(
+                type="DELAY",
+                object=obj.name
+            )
             sensor = game_settings.sensors[-1]
+            sensor.show_expanded = False
         sensor.pin = True
         sensor.name = sensor_name
         sensor.type = "DELAY"
@@ -399,8 +403,18 @@ class NLApplyLogicOperator(bpy.types.Operator):
                 controller = c
                 break
         if controller is None:
-            bpy.ops.logic.controller_add(type="PYTHON", object=obj.name)
+            bpy.ops.logic.controller_add(
+                type="PYTHON",
+                object=obj.name
+            )
             controller = game_settings.controllers[-1]
+            controller.show_expanded = False
+            bpy.ops.logic.controller_add(
+                type="LOGIC_OR",
+                object=obj.name,
+                name='NLOR' + py_module_name
+            )
+            game_settings.controllers[-1].show_expanded = False
         controller.name = controller_name
         controller.type = "PYTHON"
         controller.mode = "MODULE"
