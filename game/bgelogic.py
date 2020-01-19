@@ -1138,13 +1138,34 @@ class ActivateActuator(ParameterCell):
         condition = self.get_parameter_value(self.condition)
         actuator = self.get_parameter_value(self.actuator)
         controller = bge.logic.getCurrentController()
+        self._set_ready()
         if actuator is STATUS_WAITING or none_or_invalid(actuator):
             print("There is a problem with the actuator in Execute Actuator Node!")
             return
-        if none_or_invalid(condition) or not condition:
+        if none_or_invalid(condition) or condition is STATUS_WAITING or not condition:
             controller.deactivate(actuator)
             return
+        controller.activate(actuator)
+
+class ActivateActuatorByName(ParameterCell):
+
+    def __init__(self):
+        ParameterCell.__init__(self)
+        self.condition = None
+        self.actuator = None
+
+    def evaluate(self):
+        STATUS_WAITING = LogicNetworkCell.STATUS_WAITING
+        condition = self.get_parameter_value(self.condition)
+        controller = bge.logic.getCurrentController()
+        actuator = self.get_parameter_value(self.actuator)
         self._set_ready()
+        if actuator is STATUS_WAITING or none_or_invalid(actuator):
+            print("There is a problem with the actuator in Execute Actuator Node!")
+            return
+        if condition is STATUS_WAITING or not condition:
+            controller.deactivate(actuator)
+            return
         controller.activate(actuator)
 
 
@@ -3322,8 +3343,14 @@ class ActionSetGameObjectGameProperty(ActionCell):
         self.game_object = None
         self.property_name = None
         self.property_value = None
+        self.done = False
+        self.OUT = LogicNetworkSubCell(self, self._get_done)
+        
+    def _get_done(self):
+        return self.done
 
     def evaluate(self):
+        self.done = False
         STATUS_WAITING = LogicNetworkCell.STATUS_WAITING
         condition_value = self.get_parameter_value(self.condition)
         if condition_value is STATUS_WAITING:
@@ -3340,10 +3367,11 @@ class ActionSetGameObjectGameProperty(ActionCell):
             return
         if property_value_value is STATUS_WAITING:
             return
-        self._set_ready()
         if none_or_invalid(game_object_value):
             return
         if condition_value:
+            self.done = True
+            self._set_ready()
             game_object_value[property_name_value] = property_value_value
 
 
