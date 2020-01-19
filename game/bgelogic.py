@@ -271,7 +271,7 @@ def xrot_to(
 ):
     front_vector = LO_AXIS_TO_VECTOR[front_axis_code]
     direction_vector = rotating_object.getVectTo(target_pos)[1]
-    if speed is None:
+    if speed == 0:
         if front_axis_code >= 3:
             direction_vector.negate()
             front_axis_code = front_axis_code - 3
@@ -306,7 +306,7 @@ def yrot_to(
 ):
     front_vector = LO_AXIS_TO_VECTOR[front_axis_code]
     direction_vector = rotating_object.getVectTo(target_pos)[1]
-    if speed is None:
+    if speed == 0:
         if front_axis_code >= 3:
             direction_vector.negate()
             front_axis_code = front_axis_code - 3
@@ -342,7 +342,7 @@ def zrot_to(
 ):
     front_vector = LO_AXIS_TO_VECTOR[front_axis_code]
     direction_vector = rotating_object.getVectTo(target_pos)[1]
-    if speed is None:
+    if speed == 0:
         if front_axis_code >= 3:
             direction_vector.negate()
             front_axis_code = front_axis_code - 3

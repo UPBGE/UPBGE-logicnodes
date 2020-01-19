@@ -5048,7 +5048,7 @@ class NLActionRotateTo(bpy.types.Node, NLActionNode):
         self.inputs.new(NLParameterSocket.bl_idname, "Target Vector")
         self.inputs.new(NLSocketLocalAxis.bl_idname, "Rot Axis")
         self.inputs.new(NLSocketOrientedLocalAxis.bl_idname, "Front")
-        self.inputs.new(NLSocketPositiveFloat.bl_idname, "Speed")
+        self.inputs.new(NLPositiveFloatSocket.bl_idname, "Speed")
         self.outputs.new(NLConditionSocket.bl_idname, "When Done")
 
     def get_input_sockets_field_names(self):
