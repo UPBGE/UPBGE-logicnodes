@@ -2234,6 +2234,25 @@ class NLRunActuatorNode(bpy.types.Node, NLParameterNode):
 _nodes.append(NLRunActuatorNode)
 
 
+class NLRunActuatorByNameNode(bpy.types.Node, NLParameterNode):
+    bl_idname = "NLRunActuatorByNameNode"
+    bl_label = "Execute Actuator By Name"
+    nl_category = "Logic Bricks"
+
+    def init(self, context):
+        NLParameterNode.init(self, context)
+        self.inputs.new(NLConditionSocket.bl_idname, "Condition")
+        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Actuator")
+
+    def get_netlogic_class_name(self): return "bgelogic.ActivateActuatorByName"
+
+    def get_input_sockets_field_names(self):
+        return ["condition", 'actuator']
+
+
+_nodes.append(NLRunActuatorByNameNode)
+
+
 class NLGetCurrentControllerNode(bpy.types.Node, NLParameterNode):
     bl_idname = "NLGetCurrentControllerNode"
     bl_label = "Get Tree Controller"
@@ -3626,9 +3645,13 @@ class NLSetGameObjectGamePropertyActionNode(bpy.types.Node, NLActionNode):
         self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Name")
         self.inputs[-1].value = 'prop'
         self.inputs.new(NLValueFieldSocket.bl_idname, "Value")
+        self.outputs.new(NLConditionSocket.bl_idname, "Done")
 
     def get_netlogic_class_name(self): return "bgelogic.ActionSetGameObjectGameProperty"
     def get_input_sockets_field_names(self): return ["condition", "game_object", "property_name", "property_value"]
+    def get_output_socket_varnames(self):
+        return ['OUT']
+
 _nodes.append(NLSetGameObjectGamePropertyActionNode)
 
 
