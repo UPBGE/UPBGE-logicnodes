@@ -5212,8 +5212,6 @@ class NLParameterMathFun(bpy.types.Node, NLParameterNode):
         NLParameterNode.init(self, context)
         self.inputs.new(NLFloatFieldSocket.bl_idname, "a")
         self.inputs.new(NLFloatFieldSocket.bl_idname, "b")
-        self.inputs.new(NLFloatFieldSocket.bl_idname, "c")
-        self.inputs.new(NLFloatFieldSocket.bl_idname, "d")
         self.outputs.new(NLParameterSocket.bl_idname, "Result")
         self.value = "a + b"
 
@@ -5223,7 +5221,7 @@ class NLParameterMathFun(bpy.types.Node, NLParameterNode):
             layout.prop(self, "value", text="Formula")
 
     def get_input_sockets_field_names(self):
-        return ["a", "b", "c", "d"]
+        return ["a", "b"]
 
     def get_nonsocket_fields(self):
         return [("formula", '"{0}"'.format(self.value))]

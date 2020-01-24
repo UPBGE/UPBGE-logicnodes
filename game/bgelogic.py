@@ -6362,8 +6362,6 @@ class ParameterMathFun(ParameterCell):
         ParameterCell.__init__(self)
         self.a = None
         self.b = None
-        self.c = None
-        self.d = None
         self.formula = ""
         self._previous_values = [None, None, None, None]
         self._formula_globals = globals()
@@ -6406,23 +6404,16 @@ class ParameterMathFun(ParameterCell):
         self._set_ready()
         a = self.get_parameter_value(self.a)
         b = self.get_parameter_value(self.b)
-        c = self.get_parameter_value(self.c)
-        d = self.get_parameter_value(self.d)
         olds = self._previous_values
         do_update = (
             (a != olds[0]) or
-            (b != olds[1]) or
-            (c != olds[2]) or
-            (d != olds[3]))
+            (b != olds[1])
+        )
         if do_update:
             formula_locals = self._formula_locals
             formula_locals["a"] = a
             formula_locals["b"] = b
-            formula_locals["c"] = c
-            formula_locals["d"] = d
             out = eval(self.formula, self._formula_globals, formula_locals)
             olds[0] = a
             olds[1] = b
-            olds[2] = c
-            olds[3] = d
             self._set_value(out)
