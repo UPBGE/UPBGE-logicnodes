@@ -25,6 +25,11 @@ class BGEGamePropertyPanel(bpy.types.Panel):
         text = 'Applied Tree: {}'.format(name)
         row.label(text=text)
         self.add_movers(index, row)
+        row.operator(
+                bge_netlogic.ops.NLRemoveTreeByNameOperator.bl_idname,
+                text="",
+                icon="X"
+        ).tree_name = name
 
     def add_movers(self, index, layout):
         movers = layout.row(align=True)
@@ -95,6 +100,11 @@ class BGEGamePropertyPanel3DView(bpy.types.Panel):
         text = 'Applied Tree: {}'.format(name)
         row.label(text=text)
         self.add_movers(index, row)
+        row.operator(
+                bge_netlogic.ops.NLRemoveTreeByNameOperator.bl_idname,
+                text="",
+                icon="X"
+        ).tree_name = name
 
     def add_movers(self, index, layout):
         movers = layout.row(align=True)
@@ -165,6 +175,11 @@ class BGEGamePropertyPanelObject(bpy.types.Panel):
         text = 'Applied Tree: {}'.format(name)
         row.label(text=text)
         self.add_movers(index, row)
+        row.operator(
+                bge_netlogic.ops.NLRemoveTreeByNameOperator.bl_idname,
+                text="",
+                icon="X"
+        ).tree_name = name
 
     def add_movers(self, index, layout):
         movers = layout.row(align=True)
