@@ -9,6 +9,9 @@ import os
 import random
 import sys
 import operator
+import getpass
+import json
+
 
 # Persistent maps
 
@@ -4768,6 +4771,169 @@ class ActionCharacterJump(ActionCell):
             physics.jump()
         except Exception:
             print('Error: {} not set to Character Physics!'.format(game_object.name))
+
+
+class ActionSaveGame(ActionCell):
+    def __init__(self):
+        ActionCell.__init__(self)
+        self.condition = None
+        self.slot = None
+        self.game_name = None
+        self.path = ''
+        self.done = None
+        self.OUT = LogicNetworkSubCell(self, self.get_max_jumps)
+
+    def get_max_jumps(self):
+        return self.done
+
+    def evaluate(self):
+        condition = self.get_parameter_value(self.condition)
+        if condition is LogicNetworkCell.STATUS_WAITING:
+            return
+        self.done = False
+        if not condition:
+            return
+        game_name = self.get_parameter_value(self.game_name)
+        if game_name is LogicNetworkCell.STATUS_WAITING:
+            return
+        self._set_ready()
+
+        path = "C:/Users/{}/Documents/My Games/{}/Saves/".format(
+            getpass.getuser(),
+            game_name
+        ) if self.path == '' else self.path
+        os.makedirs(path, exist_ok=True)
+
+        data = {
+            'objects': []
+        }
+
+        objs = data['objects']
+        scene = bge.logic.getCurrentScene()
+
+        for obj in scene.objects:
+            if obj.name == '__default__cam__':
+                continue
+            props = obj.getPropertyNames()
+            prop_list = []
+            for prop in props:
+                if prop != 'NodeTree':
+                    prop_set = {}
+                    prop_set['name'] = prop
+                    prop_set['value'] = obj[prop]
+                    prop_list.append(prop_set)
+            loc = obj.worldPosition
+            rot = obj.worldOrientation.to_euler()
+            sca = obj.worldScale
+            if obj.mass:
+                lin_vel = obj.worldLinearVelocity
+                ang_vel = obj.worldAngularVelocity
+
+                objs.append(
+                    {
+                        'name': obj.name,
+                        'type': 'dynamic',
+                        'data': {
+                            'worldPosition': {'x': loc.x, 'y': loc.y, 'z': loc.z},
+                            'worldOrientation': {'x': rot.x, 'y': rot.y, 'z': rot.z},
+                            'worldLinearVelocity': {'x': lin_vel.x, 'y': lin_vel.y, 'z': lin_vel.z},
+                            'worldAngularVelocity': {'x': ang_vel.x, 'y': ang_vel.y, 'z': ang_vel.z},
+                            'worldScale': {'x': sca.x, 'y': sca.y, 'z': sca.z},
+                            'props': prop_list
+                        }
+                    }
+                )
+            elif isinstance(obj, bge.types.KX_LightObject):
+                objs.append(
+                    {
+                        'name': obj.name,
+                        'type': 'light',
+                        'data': {
+                            'worldPosition': {'x': loc.x, 'y': loc.y, 'z': loc.z},
+                            'worldOrientation': {'x': rot.x, 'y': rot.y, 'z': rot.z},
+                            'worldScale': {'x': sca.x, 'y': sca.y, 'z': sca.z},
+                            'energy': obj.energy,
+                            'props': prop_list
+                        }
+                    }
+                )
+            else:
+                objs.append(
+                    {
+                        'name': obj.name,
+                        'type': 'static',
+                        'data': {
+                            'worldPosition': {'x': loc.x, 'y': loc.y, 'z': loc.z},
+                            'worldOrientation': {'x': rot.x, 'y': rot.y, 'z': rot.z},
+                            'worldScale': {'x': sca.x, 'y': sca.y, 'z': sca.z},
+                            'props': prop_list
+                        }
+                    }
+                )
+
+        with open(path + 'save' + str(self.slot) + ".json", "w") as file:
+            json.dump(data, file, indent=2)
+
+        self.done = True
+
+
+class ActionLoadGame(ActionCell):
+    def __init__(self):
+        ActionCell.__init__(self)
+        self.condition = None
+        self.slot = None
+        self.game_name = None
+        self.path = ''
+        self.done = None
+        self.OUT = LogicNetworkSubCell(self, self.get_max_jumps)
+
+    def get_max_jumps(self):
+        return self.done
+
+    def get_game_vec(self, data):
+        return mathutils.Vector((data['x'], data['y'], data['z']))
+
+    def evaluate(self):
+        condition = self.get_parameter_value(self.condition)
+        if condition is LogicNetworkCell.STATUS_WAITING:
+            return
+        self.done = False
+        if not condition:
+            return
+        game_name = self.get_parameter_value(self.game_name)
+        if game_name is LogicNetworkCell.STATUS_WAITING:
+            return
+        self._set_ready()
+
+        path = "C:/Users/{}/Documents/My Games/{}/Saves/".format(
+            getpass.getuser(),
+            game_name
+        ) if self.path == '' else self.path
+
+        scene = bge.logic.getCurrentScene()
+
+        with open(path + 'save' + str(self.slot) + '.json') as json_file:
+            data = json.load(json_file)
+
+            for obj in data['objects']:
+                game_obj = scene.objects[obj['name']]
+                
+                wPos = self.get_game_vec(obj['data']['worldPosition'])
+                wSca = self.get_game_vec(obj['data']['worldScale'])
+
+                if obj['type'] == 'dynamic':
+                    linVel = self.get_game_vec(obj['data']['worldLinearVelocity'])
+                    angVel = self.get_game_vec(obj['data']['worldAngularVelocity'])
+                    game_obj.worldLinearVelocity = linVel
+                    game_obj.worldAngularVelocity = angVel
+
+                game_obj.worldPosition = wPos
+                game_obj.worldScale = wSca
+
+                for prop in obj['data']['props']:
+                    game_obj[prop['name']] = prop['value']
+
+        self.done = True
 
 
 class ActionSetCharacterJump(ActionCell):
