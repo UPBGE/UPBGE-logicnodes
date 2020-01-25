@@ -3348,7 +3348,7 @@ class ActionSetGameObjectGameProperty(ActionCell):
         self.property_value = None
         self.done = False
         self.OUT = LogicNetworkSubCell(self, self._get_done)
-        
+
     def _get_done(self):
         return self.done
 
@@ -3373,9 +3373,9 @@ class ActionSetGameObjectGameProperty(ActionCell):
         if none_or_invalid(game_object_value):
             return
         if condition_value:
-            self.done = True
             self._set_ready()
             game_object_value[property_name_value] = property_value_value
+            self.done = True
 
 
 class ActionToggleGameObjectGameProperty(ActionCell):
@@ -3385,8 +3385,14 @@ class ActionToggleGameObjectGameProperty(ActionCell):
         self.game_object = None
         self.property_name = None
         self.property_value = None
+        self.done = False
+        self.OUT = LogicNetworkSubCell(self, self._get_done)
+
+    def _get_done(self):
+        return self.done
 
     def evaluate(self):
+        self.done = False
         STATUS_WAITING = LogicNetworkCell.STATUS_WAITING
         condition_value = self.get_parameter_value(self.condition)
         if condition_value is STATUS_WAITING:
@@ -3409,6 +3415,7 @@ class ActionToggleGameObjectGameProperty(ActionCell):
         if condition_value:
             value = game_object_value[property_name_value]
             game_object_value[property_name_value] = not value
+            self.done = True
 
 
 class ActionAddToGameObjectGameProperty(ActionCell):
@@ -3418,8 +3425,14 @@ class ActionAddToGameObjectGameProperty(ActionCell):
         self.game_object = None
         self.property_name = None
         self.property_value = None
+        self.done = False
+        self.OUT = LogicNetworkSubCell(self, self._get_done)
+
+    def _get_done(self):
+        return self.done
 
     def evaluate(self):
+        self.done = False
         STATUS_WAITING = LogicNetworkCell.STATUS_WAITING
         condition_value = self.get_parameter_value(self.condition)
         if condition_value is STATUS_WAITING:
@@ -3444,6 +3457,7 @@ class ActionAddToGameObjectGameProperty(ActionCell):
             game_object_value[property_name_value] = (
                 value + property_value_value
             )
+            self.done = True
 
 
 class InvertBool(ActionCell):
@@ -6556,8 +6570,6 @@ class ParameterMathFun(ParameterCell):
         ParameterCell.__init__(self)
         self.a = None
         self.b = None
-        self.c = None
-        self.d = None
         self.formula = ""
         self._previous_values = [None, None, None, None]
         self._formula_globals = globals()
@@ -6600,23 +6612,16 @@ class ParameterMathFun(ParameterCell):
         self._set_ready()
         a = self.get_parameter_value(self.a)
         b = self.get_parameter_value(self.b)
-        c = self.get_parameter_value(self.c)
-        d = self.get_parameter_value(self.d)
         olds = self._previous_values
         do_update = (
             (a != olds[0]) or
-            (b != olds[1]) or
-            (c != olds[2]) or
-            (d != olds[3]))
+            (b != olds[1])
+        )
         if do_update:
             formula_locals = self._formula_locals
             formula_locals["a"] = a
             formula_locals["b"] = b
-            formula_locals["c"] = c
-            formula_locals["d"] = d
             out = eval(self.formula, self._formula_globals, formula_locals)
             olds[0] = a
             olds[1] = b
-            olds[2] = c
-            olds[3] = d
             self._set_value(out)

@@ -257,7 +257,7 @@ def get_network_initial_status_for_object(ob, tree_name):
 def set_network_initial_status_key(ob, tree_name, initial_status_value, update_object_tree_item=True):
     current_active_object = bpy.context.object
     bpy.context.view_layer.objects.active = ob
-    print("set_network_initial_status_key", ob, update_object_tree_item)
+    # print("set_network_initial_status_key", ob, update_object_tree_item)
     status_key = get_key_network_initial_status_for_tree_name(tree_name)
     game_properties = ob.game.properties
     index = -1
@@ -274,11 +274,11 @@ def set_network_initial_status_key(ob, tree_name, initial_status_value, update_o
         game_property = game_properties[-1]
         game_property.value = initial_status_value
     if update_object_tree_item:
-        print("also updating the tree_item...", ob)
+        # print("also updating the tree_item...", ob)
         for tree_item in ob.bgelogic_treelist:
-            print("looking at", tree_item.tree_name, "vs", tree_name)
+            # print("looking at", tree_item.tree_name, "vs", tree_name)
             if tree_item.tree_name == tree_name:
-                print("set initial status", ob.name, tree_name, initial_status_value)
+                # print("set initial status", ob.name, tree_name, initial_status_value)
                 tree_item.tree_initial_status = initial_status_value
     bpy.context.view_layer.objects.active = current_active_object
 
@@ -301,7 +301,7 @@ def remove_network_initial_status_key(ob, tree_name):
             assert p.type == "BOOL"
             break
     if index >= 0:
-        print("Utilities.remove_network_initial_status_key, removing from {} index {}", ob.name, index)
+        # print("Utilities.remove_network_initial_status_key, removing from {} index {}", ob.name, index)
         bpy.ops.object.game_property_remove(index=index)
 
 

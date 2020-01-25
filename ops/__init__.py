@@ -279,24 +279,28 @@ class NLRemoveTreeByNameOperator(bpy.types.Operator):
             sensors = [
                 s for s in gs.sensors if py_module_name in s.name
             ]
+            for s in sensors:
+                print("Removed Sensor", s.name, "from", ob.name)
+                bpy.ops.logic.sensor_remove(sensor=s.name, object=ob.name)
             for c in controllers:
-                bge_netlogic.debug("remove", c.name, "from", ob.name)
+                print("Removed Controller", c.name, "from", ob.name)
                 bpy.ops.logic.controller_remove(
                     controller=c.name, object=ob.name
                 )
-
             for a in actuators:
-                bge_netlogic.debug("remove", a.name, "from", ob.name)
+                print("Removed Actuator", a.name, "from", ob.name)
                 bpy.ops.logic.actuator_remove(actuator=a.name, object=ob.name)
-            for s in sensors:
-                bge_netlogic.debug("remove", s.name, "from", ob.name)
-                bpy.ops.logic.sensor_remove(sensor=s.name, object=ob.name)
+
             bge_netlogic.utilities.remove_tree_item_from_object(
                 ob, self.tree_name
             )
             bge_netlogic.utilities.remove_network_initial_status_key(
                 ob, self.tree_name
             )
+            print("Succsessfully removed tree {} from object {}.".format(
+                self.tree_name,
+                ob.name
+            ))
         return {'FINISHED'}
 
     def remove_tree_from_object_pcoll(self, ob, treename):
@@ -308,7 +312,7 @@ class NLRemoveTreeByNameOperator(bpy.types.Operator):
                 break
             i += 1
         if index is not None:
-            bge_netlogic.debug("remove tree", treename, "from object", ob.name)
+            # bge_netlogic.debug("remove tree", treename, "from object", ob.name)
             ob.bgelogic_treelist.remove(index)
 
 
@@ -344,8 +348,11 @@ class NLApplyLogicOperator(bpy.types.Operator):
         )
         initial_status = True if initial_status is None else False
         for obj in selected_objects:
-            bge_netlogic.debug(
-                "Apply operator to object", obj.name, self.owner
+            print(
+                "Applied tree {} to object {}".format(
+                    tree.name,
+                    obj.name
+                )
             )
             self._setup_logic_bricks_for_object(
                 tree, py_module_name, obj, context

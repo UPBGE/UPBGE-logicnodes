@@ -3666,9 +3666,12 @@ class NLToggleGameObjectGamePropertyActionNode(bpy.types.Node, NLActionNode):
         self.inputs.new(NLGameObjectSocket.bl_idname, "Object")
         self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Name")
         self.inputs[-1].value = 'prop'
+        self.outputs.new(NLConditionSocket.bl_idname, "Done")
 
     def get_netlogic_class_name(self): return "bgelogic.ActionToggleGameObjectGameProperty"
     def get_input_sockets_field_names(self): return ["condition", "game_object", "property_name", "property_value"]
+    def get_output_socket_varnames(self):
+        return ['OUT']
 _nodes.append(NLToggleGameObjectGamePropertyActionNode)
 
 
@@ -3682,11 +3685,14 @@ class NLAddToGameObjectGamePropertyActionNode(bpy.types.Node, NLActionNode):
         self.inputs.new(NLConditionSocket.bl_idname, "Condition")
         self.inputs.new(NLGameObjectSocket.bl_idname, "Object")
         self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Name")
-        self.inputs[-1].value = 'property'
+        self.inputs[-1].value = 'prop'
         self.inputs.new(NLFloatFieldSocket.bl_idname, "Value")
+        self.outputs.new(NLConditionSocket.bl_idname, "Done")
 
     def get_netlogic_class_name(self): return "bgelogic.ActionAddToGameObjectGameProperty"
     def get_input_sockets_field_names(self): return ["condition", "game_object", "property_name", "property_value"]
+    def get_output_socket_varnames(self):
+        return ['OUT']
 _nodes.append(NLAddToGameObjectGamePropertyActionNode)
 
 
@@ -3699,6 +3705,7 @@ class NLInvertBoolNode(bpy.types.Node, NLActionNode):
         NLActionNode.init(self, context)
         self.inputs.new(NLBooleanSocket.bl_idname, "Bool")
         self.outputs.new(NLParameterSocket.bl_idname, "Value")
+        
 
     def get_netlogic_class_name(self): return "bgelogic.InvertBool"
     def get_input_sockets_field_names(self): return ["value"]
@@ -5305,8 +5312,6 @@ class NLParameterMathFun(bpy.types.Node, NLParameterNode):
         NLParameterNode.init(self, context)
         self.inputs.new(NLFloatFieldSocket.bl_idname, "a")
         self.inputs.new(NLFloatFieldSocket.bl_idname, "b")
-        self.inputs.new(NLFloatFieldSocket.bl_idname, "c")
-        self.inputs.new(NLFloatFieldSocket.bl_idname, "d")
         self.outputs.new(NLParameterSocket.bl_idname, "Result")
         self.value = "a + b"
 
@@ -5316,7 +5321,7 @@ class NLParameterMathFun(bpy.types.Node, NLParameterNode):
             layout.prop(self, "value", text="Formula")
 
     def get_input_sockets_field_names(self):
-        return ["a", "b", "c", "d"]
+        return ["a", "b"]
 
     def get_nonsocket_fields(self):
         return [("formula", '"{0}"'.format(self.value))]
