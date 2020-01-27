@@ -1,6 +1,8 @@
 # Uchronian Logic: UPBGE Logic Nodes
 A Node-based Logic system for UPBGE 2.8+
 
+![Alt text](./header.png "Title")
+
 This is an Add-On for the recent UPBGE-EEVEE build.
 It adds a new Editor in which you can create logic trees and apply them to objects.
 
