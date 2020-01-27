@@ -1534,7 +1534,6 @@ class NLVec3FieldSocket(bpy.types.NodeSocket, NetLogicSocketType):
     value_x = bpy.props.FloatProperty(default=0, update=update_tree_code)
     value_y = bpy.props.FloatProperty(default=0, update=update_tree_code)
     value_z = bpy.props.FloatProperty(default=0, update=update_tree_code)
-    title = bpy.props.StringProperty(default='')
 
     def draw_color(self, context, node):
         return PARAM_VECTOR_SOCKET_COLOR
@@ -1551,8 +1550,8 @@ class NLVec3FieldSocket(bpy.types.NodeSocket, NetLogicSocketType):
             layout.label(text=text)
         else:
             column = layout.column(align=True)
-            # if self.title != '':
-            #     title = column.label(text=self.title)
+            if text != '':
+                column.label(text=text)
             column.prop(self, "value_x", text='X')
             column.prop(self, "value_y", text='Y')
             column.prop(self, "value_z", text='Z')
@@ -5232,7 +5231,7 @@ class NLActionMoveTo(bpy.types.Node, NLActionNode):
         NLActionNode.init(self, context)
         self.inputs.new(NLConditionSocket.bl_idname, "Condition")
         self.inputs.new(NLGameObjectSocket.bl_idname, "Object")
-        self.inputs.new(NLParameterSocket.bl_idname, "Target Location")
+        self.inputs.new(NLVec3FieldSocket.bl_idname, "Target Location")
         self.inputs.new(NLBooleanSocket.bl_idname, "Move as Dynamic")
         self.inputs.new(NLPositiveFloatSocket.bl_idname, "Speed")
         self.inputs[-1].value = 1.0
@@ -5240,9 +5239,11 @@ class NLActionMoveTo(bpy.types.Node, NLActionNode):
         self.inputs[-1].value = 0.5
         self.outputs.new(NLConditionSocket.bl_idname, "When Done")
     def get_input_sockets_field_names(self):
-        return ["condition", "moving_object", "dynamic", "destination_point", "speed", "distance"]
+        return ["condition", "moving_object", "destination_point", 'dynamic', "speed", "distance"]
     def get_netlogic_class_name(self):
         return "bgelogic.ActionMoveTo"
+
+
 _nodes.append(NLActionMoveTo)
 
 
@@ -5288,7 +5289,7 @@ class NLActionTrackTo(bpy.types.Node, NLActionNode):
 
     def get_netlogic_class_name(self):
         return "bgelogic.ActionTrackTo"
-_nodes.append(NLActionTrackTo)
+#_nodes.append(NLActionTrackTo)
 
 class NLActionRotateTo(bpy.types.Node, NLActionNode):
     bl_idname = "NLActionRotateTo"
@@ -5299,14 +5300,13 @@ class NLActionRotateTo(bpy.types.Node, NLActionNode):
         NLActionNode.init(self, context)
         self.inputs.new(NLConditionSocket.bl_idname, "Condition")
         self.inputs.new(NLGameObjectSocket.bl_idname, "Object")
-        self.inputs.new(NLParameterSocket.bl_idname, "Target Vector")
+        self.inputs.new(NLVec3FieldSocket.bl_idname, "Target Vector")
         self.inputs.new(NLSocketLocalAxis.bl_idname, "Rot Axis")
         self.inputs.new(NLSocketOrientedLocalAxis.bl_idname, "Front")
-        self.inputs.new(NLPositiveFloatSocket.bl_idname, "Speed")
         self.outputs.new(NLConditionSocket.bl_idname, "When Done")
 
     def get_input_sockets_field_names(self):
-        return ["condition", "moving_object", "target_point", "rot_axis", "front_axis", "speed"]
+        return ["condition", "moving_object", "target_point", "rot_axis", "front_axis"]
 
     def get_netlogic_class_name(self):
         return "bgelogic.ActionRotateTo"
@@ -5324,7 +5324,7 @@ class NLActionNavigate(bpy.types.Node, NLActionNode):
         self.inputs.new(NLGameObjectSocket.bl_idname, "Moving Object")
         self.inputs.new(NLGameObjectSocket.bl_idname, "Rotating Object")
         self.inputs.new(NLGameObjectSocket.bl_idname, "Navmesh Object")
-        self.inputs.new(NLSocketVectorField.bl_idname, "Destination XYZ")
+        self.inputs.new(NLVec3FieldSocket.bl_idname, "Destination")
         self.inputs.new(NLBooleanSocket.bl_idname, "Move as Dynamic")
         self.inputs.new(NLPositiveFloatSocket.bl_idname, "Lin Speed")
         self.inputs[-1].value = 1.0
@@ -5334,7 +5334,8 @@ class NLActionNavigate(bpy.types.Node, NLActionNode):
         self.inputs[-1].value = True
         self.inputs.new(NLSocketLocalAxis.bl_idname, "Rot Axis")
         self.inputs.new(NLSocketOrientedLocalAxis.bl_idname, "Front")
-        self.inputs.new(NLSocketOptionalPositiveFloat.bl_idname, "Rot Speed")
+        self.inputs.new(NLFloatFieldSocket.bl_idname, "Rot Speed")
+        self.inputs[-1].value = 1.0
         self.outputs.new(NLConditionSocket.bl_idname, "When Reached")
     def get_netlogic_class_name(self):
         return "bgelogic.ActionNavigateWithNavmesh"

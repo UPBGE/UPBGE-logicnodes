@@ -415,7 +415,7 @@ def move_to(
 ):
     if dynamic:
         direction = (
-            mathutils.Vector(destination_point) -
+            destination_point -
             moving_object.worldPosition)
         dst = direction.length
         if(dst <= distance):
@@ -428,7 +428,7 @@ def move_to(
         return False
     else:
         direction = (
-            mathutils.Vector(destination_point) -
+            destination_point -
             moving_object.worldPosition
             )
         dst = direction.length
@@ -5114,7 +5114,11 @@ class ActionLoadGame(ActionCell):
             data = json.load(json_file)
 
             for obj in data['objects']:
-                game_obj = scene.objects[obj['name']]
+                if obj['name'] in scene.objects:
+                    game_obj = scene.objects[obj['name']]
+                else:
+                    print('Object {} is not present anymore.'.format(obj['name']))
+                    continue
 
                 wPos = self.get_game_vec(obj['data']['worldPosition'])
                 wOri = self.get_game_vec(obj['data']['worldOrientation'])
@@ -5137,9 +5141,6 @@ class ActionLoadGame(ActionCell):
                 if obj['type'] == 'character':
                     wDir = self.get_game_vec(obj['data']['walkDirection'])
                     bge.constraints.getCharacter(game_obj).walkDirection = wDir
-
-                game_obj.worldPosition = wPos
-                game_obj.worldScale = wSca
 
                 for prop in obj['data']['props']:
                     game_obj[prop['name']] = prop['value']
@@ -6076,8 +6077,8 @@ class ActionMoveTo(ActionCell):
         self.moving_object = None
         self.destination_point = None
         self.speed = None
-        self.distance = None
         self.dynamic = None
+        self.distance = None
 
     def evaluate(self):  # the actual execution of this cell
         condition = self.get_parameter_value(self.condition)
@@ -6202,7 +6203,6 @@ class ActionRotateTo(ActionCell):
         self.target_point = None
         self.rot_axis = 2
         self.front_axis = 0
-        self.speed = None
 
     def evaluate(self):
         self._set_value(False)
@@ -6214,14 +6214,11 @@ class ActionRotateTo(ActionCell):
             return self._set_ready()
         moving_object = self.get_parameter_value(self.moving_object)
         target_point = self.get_parameter_value(self.target_point)
-        speed = self.get_parameter_value(self.speed)
         rot_axis = self.get_parameter_value(self.rot_axis)
         front_axis = self.get_parameter_value(self.front_axis)
         if moving_object is STATUS_WAITING:
             return
         if target_point is STATUS_WAITING:
-            return
-        if speed is STATUS_WAITING:
             return
         if rot_axis is STATUS_WAITING:
             return
@@ -6244,7 +6241,7 @@ class ActionRotateTo(ActionCell):
                     moving_object,
                     target_point,
                     front_axis,
-                    speed,
+                    0,
                     self.network.time_per_frame
                 )
             )
@@ -6254,7 +6251,7 @@ class ActionRotateTo(ActionCell):
                     moving_object,
                     target_point,
                     front_axis,
-                    speed,
+                    0,
                     self.network.time_per_frame
                 )
             )
@@ -6264,7 +6261,7 @@ class ActionRotateTo(ActionCell):
                     moving_object,
                     target_point,
                     front_axis,
-                    speed,
+                    0,
                     self.network.time_per_frame
                 )
             )
