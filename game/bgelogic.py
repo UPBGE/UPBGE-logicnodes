@@ -4,7 +4,6 @@ import math
 import numbers
 import collections
 import time
-import aud
 import os
 import random
 import sys
@@ -667,39 +666,39 @@ class ConditionCell(LogicNetworkCell):
         LogicNetworkCell.__init__(self)
 
 
-class AudioSystem(object):
-    def __init__(self):
-        self.device = None
-        self.factories = {}
+# class AudioSystem(object):
+#     def __init__(self):
+#         self.device = None
+#         self.factories = {}
 
-    def get_or_create_audio_factory(self, fpath):
-        if self.device is None:
-            self.device = aud.device()
-        fac = self.factories.get(fpath, None)
-        fpath = bge.logic.expandPath(fpath)
-        if fac is None:
-            fac = aud.Factory(fpath)
-        return fac
+#     def get_or_create_audio_factory(self, fpath):
+#         if self.device is None:
+#             self.device = aud.device()
+#         fac = self.factories.get(fpath, None)
+#         fpath = bge.logic.expandPath(fpath)
+#         if fac is None:
+#             fac = aud.Factory(fpath)
+#         return fac
 
-    def create_sound_handle(self, fpath):
-        factory = self.get_or_create_audio_factory(fpath)
-        handle = self.device.play(factory)
-        return handle
+#     def create_sound_handle(self, fpath):
+#         factory = self.get_or_create_audio_factory(fpath)
+#         handle = self.device.play(factory)
+#         return handle
 
-    def compute_listener_velocity(self, listener):
-        return (0, 0, 0)
+#     def compute_listener_velocity(self, listener):
+#         return (0, 0, 0)
 
-    def update(self, network):
-        device = self.device
-        if not device:
-            return  # do not update if no sound has been installed
-        # update the listener data
-        scene = network._owner.scene
-        listener = scene.active_camera
-        device.listener_location = listener.worldPosition
-        device.listener_orientation = listener.worldOrientation.to_quaternion()
-        device.listener_velocity = self.compute_listener_velocity(listener)
-        pass
+#     def update(self, network):
+#         device = self.device
+#         if not device:
+#             return  # do not update if no sound has been installed
+#         # update the listener data
+#         scene = network._owner.scene
+#         listener = scene.active_camera
+#         device.listener_location = listener.worldPosition
+#         device.listener_orientation = listener.worldOrientation.to_quaternion()
+#         device.listener_velocity = self.compute_listener_velocity(listener)
+#         pass
 
 
 class LogicNetwork(LogicNetworkCell):
@@ -724,7 +723,7 @@ class LogicNetwork(LogicNetworkCell):
         ]
         self.mouse_motion_delta = [0.0, 0.0]
         self.mouse_wheel_delta = 0
-        self.audio_system = AudioSystem()
+        #self.audio_system = AudioSystem()
         self.sub_networks = []  # a list of networks updated by this network
         self.capslock_pressed = False
         pass
@@ -894,7 +893,7 @@ class LogicNetwork(LogicNetworkCell):
             if cell.has_status(LogicNetworkCell.STATUS_WAITING):
                 cells.append(cell)
         # update the sound system
-        self.audio_system.update(self)
+        #self.audio_system.update(self)
         # pulse subnetworks
         for network in self.sub_networks:
             if network._owner.invalid:
@@ -1136,7 +1135,7 @@ class ActivateActuator(ParameterCell):
         self.condition = None
         self.actuator = None
         self.done = None
-        self.OUT = LogicNetworkSubCell(self, self.done)
+        self.OUT = LogicNetworkSubCell(self, self.get_done)
 
     def get_done(self):
         return self.done
@@ -1165,7 +1164,7 @@ class ActivateActuatorByName(ParameterCell):
         self.condition = None
         self.actuator = None
         self.done = None
-        self.OUT = LogicNetworkSubCell(self, self.done)
+        self.OUT = LogicNetworkSubCell(self, self.get_done)
 
     def get_done(self):
         return self.done
@@ -1966,172 +1965,172 @@ class ParameterVector4(ParameterCell):
             self.out_vec[:] = (self.out_x, self.out_y, self.out_z, self.out_w)
 
 
-class ParameterSound(ParameterCell):
-    class SoundHandleController():
-        def __init__(self, ps_cell):
-            self.owner = ps_cell
-            self.handle = None
+# class ParameterSound(ParameterCell):
+#     class SoundHandleController():
+#         def __init__(self, ps_cell):
+#             self.owner = ps_cell
+#             self.handle = None
 
-        def update(
-            self,
-            location,
-            orientation_quat,
-            velocity,
-            pitch,
-            volume,
-            loop_count,
-            attenuation,
-            distance_ref,
-            distance_max
-        ):
-            handle = self.handle
-            if handle is None:
-                return
-            if not (handle.status == aud.AUD_STATUS_PLAYING):
-                return
-            if location is not None:
-                handle.location = location
-            if orientation_quat is not None:
-                handle.orientation = orientation_quat
-            if velocity is not None:
-                handle.velocity = velocity
-            if volume is not None:
-                handle.volume = volume
-            if pitch is not None:
-                handle.pitch = pitch
-            if loop_count is not None:
-                handle.loop_count = loop_count
-            if attenuation is not None:
-                handle.attenuation = attenuation
-            if distance_ref is not None:
-                handle.distance_reference = distance_ref
-            if distance_max is not None:
-                handle.distance_maximum = distance_max
+#         def update(
+#             self,
+#             location,
+#             orientation_quat,
+#             velocity,
+#             pitch,
+#             volume,
+#             loop_count,
+#             attenuation,
+#             distance_ref,
+#             distance_max
+#         ):
+#             handle = self.handle
+#             if handle is None:
+#                 return
+#             if not (handle.status == aud.AUD_STATUS_PLAYING):
+#                 return
+#             if location is not None:
+#                 handle.location = location
+#             if orientation_quat is not None:
+#                 handle.orientation = orientation_quat
+#             if velocity is not None:
+#                 handle.velocity = velocity
+#             if volume is not None:
+#                 handle.volume = volume
+#             if pitch is not None:
+#                 handle.pitch = pitch
+#             if loop_count is not None:
+#                 handle.loop_count = loop_count
+#             if attenuation is not None:
+#                 handle.attenuation = attenuation
+#             if distance_ref is not None:
+#                 handle.distance_reference = distance_ref
+#             if distance_max is not None:
+#                 handle.distance_maximum = distance_max
 
-        def play(
-            self,
-            location,
-            orientation_quat,
-            velocity,
-            pitch,
-            volume,
-            loop_count,
-            attenuation,
-            distance_ref,
-            distance_max
-        ):
-            handle = self.handle
-            if (
-                handle is None or (handle.status == aud.AUD_STATUS_STOPPED) or
-                (handle.status == aud.AUD_STATUS_INVALID)
-            ):
-                handle = self.owner.create_handle()
-                handle.relative = False
-                self.handle = handle
-            elif handle.status == aud.AUD_STATUS_PLAYING:
-                handle.position = 0.0
-            if handle.status == aud.AUD_STATUS_PAUSED:
-                handle.resume()
-            if location is not None:
-                handle.location = location
-            if orientation_quat is not None:
-                handle.orientation = orientation_quat
-            if velocity is not None:
-                handle.velocity = velocity
-            if volume is not None:
-                handle.volume = volume
-            if pitch is not None:
-                handle.pitch = pitch
-            if loop_count is not None:
-                handle.loop_count = loop_count
-            if attenuation is not None:
-                handle.attenuation = attenuation
-            if distance_ref is not None:
-                handle.distance_reference = distance_ref
-            if distance_max is not None:
-                handle.distance_maximum = distance_max
+#         def play(
+#             self,
+#             location,
+#             orientation_quat,
+#             velocity,
+#             pitch,
+#             volume,
+#             loop_count,
+#             attenuation,
+#             distance_ref,
+#             distance_max
+#         ):
+#             handle = self.handle
+#             if (
+#                 handle is None or (handle.status == aud.AUD_STATUS_STOPPED) or
+#                 (handle.status == aud.AUD_STATUS_INVALID)
+#             ):
+#                 handle = self.owner.create_handle()
+#                 handle.relative = False
+#                 self.handle = handle
+#             elif handle.status == aud.AUD_STATUS_PLAYING:
+#                 handle.position = 0.0
+#             if handle.status == aud.AUD_STATUS_PAUSED:
+#                 handle.resume()
+#             if location is not None:
+#                 handle.location = location
+#             if orientation_quat is not None:
+#                 handle.orientation = orientation_quat
+#             if velocity is not None:
+#                 handle.velocity = velocity
+#             if volume is not None:
+#                 handle.volume = volume
+#             if pitch is not None:
+#                 handle.pitch = pitch
+#             if loop_count is not None:
+#                 handle.loop_count = loop_count
+#             if attenuation is not None:
+#                 handle.attenuation = attenuation
+#             if distance_ref is not None:
+#                 handle.distance_reference = distance_ref
+#             if distance_max is not None:
+#                 handle.distance_maximum = distance_max
 
-        def stop(self):
-            handle = self.handle
-            if handle is not None:
-                if handle.status == aud.AUD_STATUS_INVALID:
-                    self.handle = None
-                else:
-                    handle.stop()
-                    self.handle = None
+#         def stop(self):
+#             handle = self.handle
+#             if handle is not None:
+#                 if handle.status == aud.AUD_STATUS_INVALID:
+#                     self.handle = None
+#                 else:
+#                     handle.stop()
+#                     self.handle = None
 
-        def pause(self):
-            handle = self.handle
-            if handle is not None:
-                if handle.status == aud.AUD_STATUS_INVALID:
-                    self.handle = None
-                else:
-                    handle.pause()
+#         def pause(self):
+#             handle = self.handle
+#             if handle is not None:
+#                 if handle.status == aud.AUD_STATUS_INVALID:
+#                     self.handle = None
+#                 else:
+#                     handle.pause()
 
-        def is_playing(self):
-            handle = self.handle
-            if handle is None:
-                return False
-            if handle.status == aud.AUD_STATUS_PLAYING:
-                return True
-            return False
+#         def is_playing(self):
+#             handle = self.handle
+#             if handle is None:
+#                 return False
+#             if handle.status == aud.AUD_STATUS_PLAYING:
+#                 return True
+#             return False
 
-        def get_frame(self):
-            if self.is_playing():
-                return self.handle.position
-            return 0.0
+#         def get_frame(self):
+#             if self.is_playing():
+#                 return self.handle.position
+#             return 0.0
 
-    def __init__(self):
-        ParameterCell.__init__(self)
-        self.file_path = None
-        self._loaded_path = None
-        self._file_path_value = None
-        self._factory = None
-        self.network = None
-        self.controller = self.__class__.SoundHandleController(self)
-        self.IS_PLAYING = LogicNetworkSubCell(self, self._is_playing)
-        self.CURRENT_FRAME = LogicNetworkSubCell(self, self._current_frame)
+#     def __init__(self):
+#         ParameterCell.__init__(self)
+#         self.file_path = None
+#         self._loaded_path = None
+#         self._file_path_value = None
+#         self._factory = None
+#         self.network = None
+#         self.controller = self.__class__.SoundHandleController(self)
+#         self.IS_PLAYING = LogicNetworkSubCell(self, self._is_playing)
+#         self.CURRENT_FRAME = LogicNetworkSubCell(self, self._current_frame)
 
-    def _is_playing(self):
-        return self.controller.is_playing()
+#     def _is_playing(self):
+#         return self.controller.is_playing()
 
-    def _current_frame(self):
-        return self.controller.get_frame()
+#     def _current_frame(self):
+#         return self.controller.get_frame()
 
-    def create_handle(self):
-        return self.network.audio_system.create_sound_handle(
-            self._file_path_value
-        )
+#     def create_handle(self):
+#         return self.network.audio_system.create_sound_handle(
+#             self._file_path_value
+#         )
 
-    def get_value(self):
-        return self.controller
+#     def get_value(self):
+#         return self.controller
 
-    def setup(self, network):
-        self.network = network
+#     def setup(self, network):
+#         self.network = network
 
-    def dispose_loaded_audio(self):
-        if not self._loaded_path:
-            return
-        self._loaded_path = None
-        self._handle = None
+#     def dispose_loaded_audio(self):
+#         if not self._loaded_path:
+#             return
+#         self._loaded_path = None
+#         self._handle = None
 
-    def load_audio(self, fpath):
-        self._loaded_path = fpath
-        self._factory = self.network.audio_system.get_or_create_audio_factory(
-            fpath
-        )
+#     def load_audio(self, fpath):
+#         self._loaded_path = fpath
+#         self._factory = self.network.audio_system.get_or_create_audio_factory(
+#             fpath
+#         )
 
-    def evaluate(self):
-        file_path = self.get_parameter_value(self.file_path)
-        if file_path is LogicNetworkCell.STATUS_WAITING:
-            return
-        self._set_ready()
-        if file_path != self._loaded_path:
-            #self.set_value(self.file_path)
-            self._file_path_value = file_path
-            self.dispose_loaded_audio()
-            # print(self.load_audio(file_path))
-            self.load_audio(file_path)
+#     def evaluate(self):
+#         file_path = self.get_parameter_value(self.file_path)
+#         if file_path is LogicNetworkCell.STATUS_WAITING:
+#             return
+#         self._set_ready()
+#         if file_path != self._loaded_path:
+#             #self.set_value(self.file_path)
+#             self._file_path_value = file_path
+#             self.dispose_loaded_audio()
+#             # print(self.load_audio(file_path))
+#             self.load_audio(file_path)
 
 
 class ParameterFindChildByName(ParameterCell):
@@ -3529,7 +3528,7 @@ class ActionStartGame(ActionCell):
         self.condition = None
         self.file_name = None
         self.done = None
-        self.OUT = LogicNetworkSubCell(self, self.done)
+        self.OUT = LogicNetworkSubCell(self, self.get_done)
 
     def get_done(self):
         return self.done
@@ -3550,7 +3549,7 @@ class ActionRestartGame(ActionCell):
         ActionCell.__init__(self)
         self.condition = None
         self.done = None
-        self.OUT = LogicNetworkSubCell(self, self.done)
+        self.OUT = LogicNetworkSubCell(self, self.get_done)
 
     def get_done(self):
         return self.done
@@ -3587,7 +3586,7 @@ class ActionMouseLook(ActionCell):
         self.use_cap_z = None
         self.cap_y = None
         self.done = None
-        self.OUT = LogicNetworkSubCell(self, self.done)
+        self.OUT = LogicNetworkSubCell(self, self.get_done)
 
     def get_done(self):
         return self.done
@@ -3680,7 +3679,7 @@ class ActionPrint(ActionCell):
         self.condition = None
         self.value = None
         self.done = None
-        self.OUT = LogicNetworkSubCell(self, self.done)
+        self.OUT = LogicNetworkSubCell(self, self.get_done)
 
     def get_done(self):
         return self.done
@@ -3694,7 +3693,6 @@ class ActionPrint(ActionCell):
             return
         value = self.get_parameter_value(self.value)
         self._set_ready()
-
         print(value)
         self.done = True
 
@@ -3707,7 +3705,7 @@ class ActionSetObjectAttribute(ActionCell):
         self.game_object = None
         self.attribute_value = None
         self.done = None
-        self.OUT = LogicNetworkSubCell(self, self.done)
+        self.OUT = LogicNetworkSubCell(self, self.get_done)
 
     def get_done(self):
         return self.done
@@ -3748,7 +3746,7 @@ class ActionInstalSubNetwork(ActionCell):
         self.initial_status = None
         self._network = None
         self.done = None
-        self.OUT = LogicNetworkSubCell(self, self.done)
+        self.OUT = LogicNetworkSubCell(self, self.get_done)
 
     def get_done(self):
         return self.done
@@ -3790,7 +3788,7 @@ class ActionStartLogicNetwork(ActionCell):
         self.game_object = None
         self.logic_network_name = None
         self.done = None
-        self.OUT = LogicNetworkSubCell(self, self.done)
+        self.OUT = LogicNetworkSubCell(self, self.get_done)
 
     def get_done(self):
         return self.done
@@ -3825,7 +3823,7 @@ class ActionStopLogicNetwork(ActionCell):
         self.game_object = None
         self.logic_network_name = None
         self.done = None
-        self.OUT = LogicNetworkSubCell(self, self.done)
+        self.OUT = LogicNetworkSubCell(self, self.get_done)
 
     def get_done(self):
         return self.done
@@ -3957,7 +3955,7 @@ class ActionSetGameObjectVisibility(ActionCell):
         self.visible = None
         self.recursive = None
         self.done = None
-        self.OUT = LogicNetworkSubCell(self, self.done)
+        self.OUT = LogicNetworkSubCell(self, self.get_done)
 
     def get_done(self):
         return self.done
@@ -4241,7 +4239,7 @@ class ActionSetActiveCamera(ActionCell):
         self.scene = None
         self.camera = None
         self.done = None
-        self.OUT = LogicNetworkSubCell(self, self.done)
+        self.OUT = LogicNetworkSubCell(self, self.get_done)
 
     def get_done(self):
         return self.done
@@ -4277,7 +4275,7 @@ class ActionSetParent(ActionCell):
         self.compound = True
         self.ghost = True
         self.done = None
-        self.OUT = LogicNetworkSubCell(self, self.done)
+        self.OUT = LogicNetworkSubCell(self, self.get_done)
 
     def get_done(self):
         return self.done
@@ -4319,7 +4317,7 @@ class ActionRemoveParent(ActionCell):
         self.condition = None
         self.child_object = None
         self.done = None
-        self.OUT = LogicNetworkSubCell(self, self.done)
+        self.OUT = LogicNetworkSubCell(self, self.get_done)
 
     def get_done(self):
         return self.done
@@ -4358,7 +4356,7 @@ class ActionEditArmatureConstraint(ActionCell):
         self.ik_distance = None
         self.distance_mode = None
         self.done = None
-        self.OUT = LogicNetworkSubCell(self, self.done)
+        self.OUT = LogicNetworkSubCell(self, self.get_done)
 
     def get_done(self):
         return self.done
@@ -4448,7 +4446,7 @@ class ActionEditBone(ActionCell):
         self._eulers = mathutils.Euler((0, 0, 0), "XYZ")
         self._vector = mathutils.Vector((0, 0, 0))
         self.done = None
-        self.OUT = LogicNetworkSubCell(self, self.done)
+        self.OUT = LogicNetworkSubCell(self, self.get_done)
 
     def get_done(self):
         return self.done
@@ -4630,7 +4628,7 @@ class ActionSetDynamics(ActionCell):
         self.ghost = None
         self.activate = False
         self.done = None
-        self.OUT = LogicNetworkSubCell(self, self.done)
+        self.OUT = LogicNetworkSubCell(self, self.get_done)
 
     def get_done(self):
         return self.done
@@ -4670,7 +4668,7 @@ class ActionEndObject(ActionCell):
         self.scene = None
         self.game_object = None
         self.done = None
-        self.OUT = LogicNetworkSubCell(self, self.done)
+        self.OUT = LogicNetworkSubCell(self, self.get_done)
 
     def get_done(self):
         return self.done
@@ -4698,7 +4696,7 @@ class ActionEndScene(ActionCell):
         self.condition = None
         self.scene = None
         self.done = None
-        self.OUT = LogicNetworkSubCell(self, self.done)
+        self.OUT = LogicNetworkSubCell(self, self.get_done)
 
     def get_done(self):
         return self.done
@@ -4728,7 +4726,7 @@ class ActionSetMousePosition(ActionCell):
         self.screen_y = None
         self.network = None
         self.done = None
-        self.OUT = LogicNetworkSubCell(self, self.done)
+        self.OUT = LogicNetworkSubCell(self, self.get_done)
 
     def get_done(self):
         return self.done
@@ -4760,7 +4758,7 @@ class ActionSetMouseCursorVisibility(ActionCell):
         self.condition = None
         self.visibility_status = None
         self.done = None
-        self.OUT = LogicNetworkSubCell(self, self.done)
+        self.OUT = LogicNetworkSubCell(self, self.get_done)
 
     def get_done(self):
         return self.done
@@ -4836,7 +4834,7 @@ class ActionApplyLocation(ActionCell):
         self.game_object = None
         self.movement = None
         self.done = None
-        self.OUT = LogicNetworkSubCell(self, self.done)
+        self.OUT = LogicNetworkSubCell(self, self.get_done)
 
     def get_done(self):
         return self.done
@@ -4870,7 +4868,7 @@ class ActionApplyRotation(ActionCell):
         self.game_object = None
         self.rotation = None
         self.done = None
-        self.OUT = LogicNetworkSubCell(self, self.done)
+        self.OUT = LogicNetworkSubCell(self, self.get_done)
 
     def get_done(self):
         return self.done
@@ -4907,7 +4905,7 @@ class ActionApplyForce(ActionCell):
         self.game_object = None
         self.force = None
         self.done = None
-        self.OUT = LogicNetworkSubCell(self, self.done)
+        self.OUT = LogicNetworkSubCell(self, self.get_done)
 
     def get_done(self):
         return self.done
@@ -4940,7 +4938,7 @@ class ActionCharacterJump(ActionCell):
         self.condition = None
         self.game_object = None
         self.done = None
-        self.OUT = LogicNetworkSubCell(self, self.done)
+        self.OUT = LogicNetworkSubCell(self, self.get_done)
 
     def get_done(self):
         return self.done
@@ -4974,7 +4972,7 @@ class ActionSaveGame(ActionCell):
         self.game_name = None
         self.path = ''
         self.done = None
-        self.OUT = LogicNetworkSubCell(self, self.done)
+        self.OUT = LogicNetworkSubCell(self, self.get_done)
 
     def get_done(self):
         return self.done
@@ -5136,7 +5134,7 @@ class ActionSetCharacterJump(ActionCell):
         self.game_object = None
         self.max_jumps = None
         self.done = None
-        self.OUT = LogicNetworkSubCell(self, self.done)
+        self.OUT = LogicNetworkSubCell(self, self.get_done)
 
     def get_done(self):
         return self.done
@@ -5213,7 +5211,7 @@ class ActionApplyTorque(ActionCell):
         self.torque = None
         self.local = False
         self.done = None
-        self.OUT = LogicNetworkSubCell(self, self.done)
+        self.OUT = LogicNetworkSubCell(self, self.get_done)
 
     def get_done(self):
         return self.done
@@ -5245,7 +5243,7 @@ class ActionAddScene(ActionCell):
         self.scene_name = None
         self.overlay = None
         self.done = None
-        self.OUT = LogicNetworkSubCell(self, self.done)
+        self.OUT = LogicNetworkSubCell(self, self.get_done)
 
     def get_done(self):
         return self.done
@@ -5423,7 +5421,7 @@ class ActionStopAnimation(ActionCell):
         self.game_object = None
         self.action_layer = None
         self.done = None
-        self.OUT = LogicNetworkSubCell(self, self.done)
+        self.OUT = LogicNetworkSubCell(self, self.get_done)
 
     def get_done(self):
         return self.done
@@ -5459,7 +5457,7 @@ class ActionSetAnimationFrame(ActionCell):
         self.action_frame = None
         self.action_name = None
         self.done = None
-        self.OUT = LogicNetworkSubCell(self, self.done)
+        self.OUT = LogicNetworkSubCell(self, self.get_done)
 
     def get_done(self):
         return self.done
@@ -5499,7 +5497,7 @@ class ActionFindScene(ActionCell):
         self.condition = None
         self.query = None
         self.done = None
-        self.OUT = LogicNetworkSubCell(self, self.done)
+        self.OUT = LogicNetworkSubCell(self, self.get_done)
 
     def get_done(self):
         return self.done
@@ -5778,7 +5776,7 @@ class ActionSetGlobalValue(ActionCell):
         self.key = None
         self.value = None
         self.done = None
-        self.OUT = LogicNetworkSubCell(self, self.done)
+        self.OUT = LogicNetworkSubCell(self, self.get_done)
 
     def get_done(self):
         return self.done
@@ -5978,7 +5976,7 @@ class SetLightEnergy(ActionCell):
         self.lamp = None
         self.energy = None
         self.done = None
-        self.OUT = LogicNetworkSubCell(self, self.done)
+        self.OUT = LogicNetworkSubCell(self, self.get_done)
 
     def get_done(self):
         return self.done
@@ -6014,7 +6012,7 @@ class SetLightColor(ActionCell):
         self.green = None
         self.blue = None
         self.done = None
-        self.OUT = LogicNetworkSubCell(self, self.done)
+        self.OUT = LogicNetworkSubCell(self, self.get_done)
 
     def get_done(self):
         return self.done
@@ -6425,7 +6423,7 @@ class ActionFollowPath(ActionCell):
         self.rot_speed = None
         self._motion_path = None
         self.done = None
-        self.OUT = LogicNetworkSubCell(self, self.done)
+        self.OUT = LogicNetworkSubCell(self, self.get_done)
 
     def get_done(self):
         return self.done
@@ -6593,7 +6591,7 @@ class ActionReplaceMesh(ActionCell):
         self.use_display = None
         self.use_physics = None
         self.done = None
-        self.OUT = LogicNetworkSubCell(self, self.done)
+        self.OUT = LogicNetworkSubCell(self, self.get_done)
 
     def get_done(self):
         return self.done
@@ -6657,7 +6655,7 @@ class ActionUpdateBitmapFontQuads(ActionCell):
         self.grid_size = None
         self.condition = None
         self.done = None
-        self.OUT = LogicNetworkSubCell(self, self.done)
+        self.OUT = LogicNetworkSubCell(self, self.get_done)
 
     def get_done(self):
         return self.done
@@ -6717,7 +6715,7 @@ class ActionSetCurrentScene(ActionCell):
         self.condition = None
         self.scene_name = None
         self.done = None
-        self.OUT = LogicNetworkSubCell(self, self.done)
+        self.OUT = LogicNetworkSubCell(self, self.get_done)
 
     def get_done(self):
         return self.done
