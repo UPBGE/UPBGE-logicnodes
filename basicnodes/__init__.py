@@ -4226,7 +4226,8 @@ class NLActionSaveGame(bpy.types.Node, NLActionNode):
     def get_input_sockets_field_names(self):
         return ["condition", 'slot', "game_name"]
 
-    def get_nonsocket_fields(self): return [("path", lambda : self.path if self.custom_path else "''")]
+    def get_nonsocket_fields(self):
+        return [("path", lambda : "'{}'".format(self.path) if self.custom_path else "''")]
 
     def get_output_socket_varnames(self):
         return ["OUT"]
@@ -4261,7 +4262,8 @@ class NLActionLoadGame(bpy.types.Node, NLActionNode):
     def get_input_sockets_field_names(self):
         return ["condition", 'slot', "game_name"]
 
-    def get_nonsocket_fields(self): return [("path", lambda : self.path if self.custom_path else "''")]
+    def get_nonsocket_fields(self):
+        return [("path", lambda : "'{}'".format(self.path) if self.custom_path else "''")]
 
     def get_output_socket_varnames(self):
         return ["OUT"]
