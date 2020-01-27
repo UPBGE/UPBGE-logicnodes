@@ -5007,6 +5007,7 @@ class ActionSaveGame(ActionCell):
                 continue
             props = obj.getPropertyNames()
             prop_list = []
+            cha = bge.constraints.getCharacter(obj)
             for prop in props:
                 if prop != 'NodeTree':
                     if isinstance(obj[prop], LogicNetwork):
@@ -5018,6 +5019,7 @@ class ActionSaveGame(ActionCell):
             loc = obj.worldPosition
             rot = obj.worldOrientation.to_euler()
             sca = obj.worldScale
+
             if obj.mass:
                 lin_vel = obj.worldLinearVelocity
                 ang_vel = obj.worldAngularVelocity
@@ -5032,6 +5034,23 @@ class ActionSaveGame(ActionCell):
                             'worldLinearVelocity': {'x': lin_vel.x, 'y': lin_vel.y, 'z': lin_vel.z},
                             'worldAngularVelocity': {'x': ang_vel.x, 'y': ang_vel.y, 'z': ang_vel.z},
                             'worldScale': {'x': sca.x, 'y': sca.y, 'z': sca.z},
+                            'props': prop_list
+                        }
+                    }
+                )
+            if cha:
+                wDir = cha.walkDirection
+                print(wDir)
+
+                objs.append(
+                    {
+                        'name': obj.name,
+                        'type': 'character',
+                        'data': {
+                            'worldPosition': {'x': loc.x, 'y': loc.y, 'z': loc.z},
+                            'worldOrientation': {'x': rot.x, 'y': rot.y, 'z': rot.z},
+                            'worldScale': {'x': sca.x, 'y': sca.y, 'z': sca.z},
+                            'walkDirection': {'x': wDir.x, 'y': wDir.y, 'z': wDir.z},
                             'props': prop_list
                         }
                     }
@@ -5063,8 +5082,6 @@ class ActionSaveGame(ActionCell):
                         }
                     }
                 )
-        
-        print(data)
 
         with open(path + 'save' + str(self.slot) + ".json", "w") as file:
             json.dump(data, file, indent=2)
@@ -5080,9 +5097,9 @@ class ActionLoadGame(ActionCell):
         self.game_name = None
         self.path = ''
         self.done = None
-        self.OUT = LogicNetworkSubCell(self, self.get_max_jumps)
+        self.OUT = LogicNetworkSubCell(self, self.get_done)
 
-    def get_max_jumps(self):
+    def get_done(self):
         return self.done
 
     def get_game_vec(self, data):
@@ -5121,6 +5138,10 @@ class ActionLoadGame(ActionCell):
                     angVel = self.get_game_vec(obj['data']['worldAngularVelocity'])
                     game_obj.worldLinearVelocity = linVel
                     game_obj.worldAngularVelocity = angVel
+
+                if obj['type'] == 'character':
+                    wDir = self.get_game_vec(obj['data']['walkDirection'])
+                    bge.constraints.getCharacter(game_obj).walkDirection = wDir
 
                 game_obj.worldPosition = wPos
                 game_obj.worldScale = wSca
@@ -5171,14 +5192,19 @@ class ActionGetCharacterInfo(ActionCell):
         self.condition = None
         self.game_object = None
         self.max_jumps = None
+        self.cur_jump = None
         self.gravity = None
         self.on_ground = None
         self.MAX_JUMPS = LogicNetworkSubCell(self, self.get_max_jumps)
+        self.CUR_JUMP = LogicNetworkSubCell(self, self.get_current_jump)
         self.GRAVITY = LogicNetworkSubCell(self, self.get_gravity)
         self.ON_GROUND = LogicNetworkSubCell(self, self.get_on_ground)
 
     def get_max_jumps(self):
         return self.max_jumps
+
+    def get_current_jump(self):
+        return self.cur_jump
 
     def get_gravity(self):
         return self.gravity
@@ -5201,6 +5227,7 @@ class ActionGetCharacterInfo(ActionCell):
             return
         try:
             self.max_jumps = physics.maxJumps
+            self.cur_jump = physics.jumpCount
             self.gravity = physics.gravity
             self.on_ground = physics.onGround
         except Exception:
