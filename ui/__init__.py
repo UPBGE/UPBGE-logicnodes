@@ -3,7 +3,7 @@ import bge_netlogic
 
 
 class BGEGamePropertyPanel(bpy.types.Panel):
-    bl_label = "Game Properties"
+    bl_label = "Object Properties"
     bl_space_type = "NODE_EDITOR"
     bl_region_type = "UI"
     bl_category = "Item"
@@ -84,7 +84,7 @@ class BGEGamePropertyPanel(bpy.types.Panel):
 
 class BGEGamePropertyPanel3DView(bpy.types.Panel):
     bl_idname = "PropertiesPanel3D"
-    bl_label = "Game Properties"
+    bl_label = "Object Properties"
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
     bl_category = "Item"
@@ -159,7 +159,7 @@ class BGEGamePropertyPanel3DView(bpy.types.Panel):
 
 class BGEGamePropertyPanelObject(bpy.types.Panel):
     bl_idname = "PropertiesPanelProperties"
-    bl_label = "Game Properties"
+    bl_label = "Object Properties"
     bl_space_type = "PROPERTIES"
     bl_region_type = "WINDOW"
     bl_context = "object"
