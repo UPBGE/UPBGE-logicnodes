@@ -5009,6 +5009,8 @@ class ActionSaveGame(ActionCell):
             prop_list = []
             for prop in props:
                 if prop != 'NodeTree':
+                    if isinstance(obj[prop], LogicNetwork):
+                        continue
                     prop_set = {}
                     prop_set['name'] = prop
                     prop_set['value'] = obj[prop]
@@ -5061,6 +5063,8 @@ class ActionSaveGame(ActionCell):
                         }
                     }
                 )
+        
+        print(data)
 
         with open(path + 'save' + str(self.slot) + ".json", "w") as file:
             json.dump(data, file, indent=2)

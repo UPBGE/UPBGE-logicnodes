@@ -159,7 +159,7 @@ class BGEGamePropertyPanel3DView(bpy.types.Panel):
 
 class BGEGamePropertyPanelObject(bpy.types.Panel):
     bl_idname = "PropertiesPanelProperties"
-    bl_label = "Object Properties"
+    bl_label = "Game Properties"
     bl_space_type = "PROPERTIES"
     bl_region_type = "WINDOW"
     bl_context = "object"
