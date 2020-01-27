@@ -6268,12 +6268,12 @@ class ActionRotateTo(ActionCell):
 
 
 class ActionNavigateWithNavmesh(ActionCell):
+
     class MotionPath(object):
         def __init__(self):
             self.points = []
             self.cursor = 0
             self.destination = None
-            pass
 
         def next_point(self):
             if self.cursor < len(self.points):
@@ -6377,7 +6377,7 @@ class ActionNavigateWithNavmesh(ActionCell):
             )
             motion_path = ActionNavigateWithNavmesh.MotionPath()
             motion_path.points = points[1:]
-            motion_path.destination = mathutils.Vector(destination_point)
+            motion_path.destination = destination_point
             self._motion_path = motion_path
         next_point = self._motion_path.next_point()
         if next_point:
@@ -6649,8 +6649,13 @@ class ActionAlignAxisToVector(ActionCell):
         self.vector = None
         self.axis = None
         self.factor = None
+        self.OUT = LogicNetworkSubCell(self, self.get_done)
+
+    def get_done(self):
+        return self.done
 
     def evaluate(self):
+        self.done = False
         condition = self.get_parameter_value(self.condition)
         self._set_ready()
         if not condition:
@@ -6668,6 +6673,7 @@ class ActionAlignAxisToVector(ActionCell):
         if factor is None:
             return
         game_object.alignAxisToVect(vector, axis, factor)
+        self.done = True
 
 
 class ActionUpdateBitmapFontQuads(ActionCell):

@@ -8,10 +8,10 @@ bl_info = {
     "name": "Uchronian Logic - UPBGE Logic Nodes",
     "description": "A Node System to create game logic.",
     "author": "pgi, Leopold A-C (Iza Zed)",
-    "version": (0, 8, 0),
+    "version": (0, 8, 1),
     "blender": (2, 83, 0),
     "location": "View Menu",
-    "warning": "Alpha",
+    "warning": "Beta",
     "category": "Game Engine"
 }
 
@@ -387,17 +387,19 @@ def _list_menu_nodes():
     return menu_nodes
 
 
-#blender add-on registration callback
+# blender add-on registration callback
 def register():
     for cls in _registered_classes:
         print("Registering... {}".format(cls.__name__))
         bpy.utils.register_class(cls)
     menu_nodes = _list_menu_nodes()
     nodeitems_utils.register_node_categories("NETLOGIC_NODES", menu_nodes)
-    bpy.types.Object.bgelogic_treelist = bpy.props.CollectionProperty(type=NLNodeTreeReference)
-    pass
+    bpy.types.Object.bgelogic_treelist = bpy.props.CollectionProperty(
+        type=NLNodeTreeReference
+    )
 
-#blender add-on unregistration callback
+
+# blender add-on unregistration callback
 def unregister():
     print("Unregister node category [{}]".format("NETLOGIC_NODES"))
     nodeitems_utils.unregister_node_categories("NETLOGIC_NODES")

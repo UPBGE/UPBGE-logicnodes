@@ -1,6 +1,7 @@
 import re
 import bpy
 import bge_netlogic
+from bge_netlogic import NLNodeTreeReference
 from bge_netlogic import utilities as tools
 
 
@@ -748,6 +749,34 @@ class NLGameObjectSocket(bpy.types.NodeSocket, NetLogicSocketType):
 _sockets.append(NLGameObjectSocket)
 
 
+class NLSocketLogicTree(bpy.types.NodeSocket, NetLogicSocketType):
+    bl_idname = "NLSocketLogicTree"
+    bl_label = "Logic Tree"
+    value = bpy.props.StringProperty(update=update_tree_code)
+
+    def draw_color(self, context, node):
+        return PARAMETER_SOCKET_COLOR
+
+    def draw(self, context, layout, node, text):
+        if self.is_linked or self.is_output:
+            layout.label(text=text)
+        else:
+            layout.prop_search(
+                self,
+                "value",
+                bpy.context,
+                'bgelogic_treelist',
+                icon='OUTLINER',
+                text=''
+            )
+
+    def get_unlinked_value(self):
+        return "{}".format(self.value)
+
+
+_sockets.append(NLSocketLogicTree)
+
+
 class NLSocketAlphaFloat(bpy.types.NodeSocket, NetLogicSocketType):
     bl_idname = "NLSocketAlphaFloat"
     bl_label = "Factor"
@@ -1482,8 +1511,8 @@ class NLVec2FieldSocket(bpy.types.NodeSocket, NetLogicSocketType):
             layout.label(text=text)
         else:
             column = layout.column()
-            # if self.title != '':
-            #     title = column.label(text=self.title)
+            if text != '':
+                column.label(text=text)
             row = column.row(align=True)
             row.prop(self, "value_x", text='')
             row.prop(self, "value_y", text='')
@@ -2553,7 +2582,7 @@ class NLClampValueNode(bpy.types.Node, NLParameterNode):
     def init(self, context):
         NLParameterNode.init(self, context)
         self.inputs.new(NLFloatFieldSocket.bl_idname, "Value")
-        self.inputs.new(NLVec2FieldSocket.bl_idname, "Min / Max")
+        self.inputs.new(NLVec2FieldSocket.bl_idname, "")
         self.outputs.new(NLParameterSocket.bl_idname, "Value")
 
     def get_netlogic_class_name(self):
@@ -4010,7 +4039,6 @@ class NLActionInstallSubNetwork(bpy.types.Node, NLActionNode):
         self.inputs[-1].use_toggle = True
         self.outputs.new(NLConditionSocket.bl_idname, 'Done')
 
-
     def get_output_socket_varnames(self):
         return ["OUT"]
 
@@ -4018,6 +4046,8 @@ class NLActionInstallSubNetwork(bpy.types.Node, NLActionNode):
         return "bgelogic.ActionInstalSubNetwork"
     def get_input_sockets_field_names(self):
         return ["condition", "target_object", "tree_name", "initial_status"]
+
+
 _nodes.append(NLActionInstallSubNetwork)
 
 
@@ -4559,6 +4589,8 @@ class NLActionAlignAxisToVector(bpy.types.Node, NLActionNode):
         return "bgelogic.ActionAlignAxisToVector"
     def get_input_sockets_field_names(self):
         return ["condition", "game_object", "vector", "axis", "factor"]
+
+
 _nodes.append(NLActionAlignAxisToVector)
 
 
@@ -4615,9 +4647,9 @@ class NLActionMouseLookNode(bpy.types.Node, NLActionNode):
         self.inputs.new(NLFloatFieldSocket.bl_idname, "Sensitivity")
         self.inputs[-1].value = 1.0
         self.inputs.new(NLBooleanSocket.bl_idname, "Cap Left / Right")
-        self.inputs.new(NLVec2PositiveFieldSocket.bl_idname, "Cap Z")
+        self.inputs.new(NLVec2PositiveFieldSocket.bl_idname, "")
         self.inputs.new(NLBooleanSocket.bl_idname, "Cap Up / Down")
-        self.inputs.new(NLVec2PositiveFieldSocket.bl_idname, "Cap Y")
+        self.inputs.new(NLVec2PositiveFieldSocket.bl_idname, "")
         self.outputs.new(NLConditionSocket.bl_idname, 'Done')
 
     def get_output_socket_varnames(self):

@@ -381,8 +381,6 @@ class NLApplyLogicOperator(bpy.types.Operator):
         context
     ):
         game_settings = obj.game
-        # TODO: allow custom sensors
-        # (like one time, on mouse press... things like that)
         sensor_name = "NLP" + py_module_name
         sensor = None
         for s in game_settings.sensors:
