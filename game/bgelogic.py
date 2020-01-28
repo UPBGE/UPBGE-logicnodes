@@ -1081,6 +1081,29 @@ class ParameterObjectProperty(ParameterCell):
             self._set_value(game_object[property_name])
 
 
+class ParameterDictionaryValue(ParameterCell):
+    def __init__(self):
+        ParameterCell.__init__(self)
+        self.dict = None
+        self.key = None
+
+    def evaluate(self):
+        dictionary = self.get_parameter_value(self.dict)
+        key = self.get_parameter_value(self.key)
+        if dictionary is LogicNetworkCell.STATUS_WAITING:
+            return
+        if key is LogicNetworkCell.STATUS_WAITING:
+            return
+        self._set_ready()
+        if none_or_invalid(dictionary) or (not key):
+            raise Exception(
+                'Get Property Node: Object or Property Name invalid!'
+            )
+            self._set_value(None)
+        else:
+            self._set_value(dictionary[key])
+
+
 class GetActuator(ParameterCell):
 
     @classmethod
@@ -4252,6 +4275,73 @@ class ActionSetActiveCamera(ActionCell):
         self.done = True
 
 
+class InitEmptyDict(ActionCell):
+    def __init__(self):
+        ActionCell.__init__(self)
+        self.condition = None
+        self.dict = None
+        self.done = None
+        self.OUT = LogicNetworkSubCell(self, self.get_done)
+        self.DICT = LogicNetworkSubCell(self, self.get_dict)
+
+    def get_done(self):
+        return self.done
+
+    def get_dict(self):
+        return self.dict
+
+    def evaluate(self):
+        self.done = False
+        condition = self.get_parameter_value(self.condition)
+        if condition is LogicNetworkCell.STATUS_WAITING:
+            return
+        if not condition:
+            return
+        self._set_ready()
+        self.dict = {}
+        self.done = True
+
+
+class SetDictKeyValue(ActionCell):
+    def __init__(self):
+        ActionCell.__init__(self)
+        self.condition = None
+        self.dict = None
+        self.key = None
+        self.val = None
+        self.new_dict = None
+        self.done = None
+        self.OUT = LogicNetworkSubCell(self, self.get_done)
+        self.DICT = LogicNetworkSubCell(self, self.get_dict)
+
+    def get_done(self):
+        return self.done
+
+    def get_dict(self):
+        return self.new_dict
+
+    def evaluate(self):
+        self.done = False
+        condition = self.get_parameter_value(self.condition)
+        if condition is LogicNetworkCell.STATUS_WAITING:
+            return
+        if not condition:
+            return
+        dictionary = self.get_parameter_value(self.dict)
+        if dictionary is LogicNetworkCell.STATUS_WAITING:
+            return
+        key = self.get_parameter_value(self.key)
+        if key is LogicNetworkCell.STATUS_WAITING:
+            return
+        val = self.get_parameter_value(self.val)
+        if val is LogicNetworkCell.STATUS_WAITING:
+            return
+        self._set_ready()
+        dictionary[key] = val
+        self.new_dict = dictionary
+        self.done = True
+
+
 class ActionSetParent(ActionCell):
     def __init__(self):
         ActionCell.__init__(self)
@@ -5221,12 +5311,18 @@ class ActionLoadVariable(ActionCell):
         self.game_name = None
         self.path = ''
         self.var = None
-        self.OUT = LogicNetworkSubCell(self, self.get_var)
+        self.done = None
+        self.OUT = LogicNetworkSubCell(self, self.get_done)
+        self.VAR = LogicNetworkSubCell(self, self.get_var)
+
+    def get_done(self):
+        return self.done
 
     def get_var(self):
         return self.var
 
     def read_from_json(self, path, name):
+        self.done = False
         try:
             f = open(path + 'variables.json', 'r')
             data = json.load(f)
@@ -5235,15 +5331,12 @@ class ActionLoadVariable(ActionCell):
             except Exception:
                 print('Error: {} not saved in variables!'.format(name))
                 return
-        except IOError:
-            print('file does not exist - creating...')
-        finally:
             f.close()
+        except IOError:
+            print('No saved variables!')
 
     def evaluate(self):
         condition = self.get_parameter_value(self.condition)
-        if condition is LogicNetworkCell.STATUS_WAITING:
-            return
         if not condition:
             return
         game_name = self.get_parameter_value(self.game_name)
@@ -5261,6 +5354,7 @@ class ActionLoadVariable(ActionCell):
         os.makedirs(path, exist_ok=True)
 
         self.read_from_json(path, name)
+        self.done = True
 
 
 class ActionRemoveVariable(ActionCell):

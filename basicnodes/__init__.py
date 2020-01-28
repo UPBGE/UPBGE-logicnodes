@@ -2155,6 +2155,31 @@ class NLGameObjectPropertyParameterNode(bpy.types.Node, NLParameterNode):
 _nodes.append(NLGameObjectPropertyParameterNode)
 
 
+class NLGetDictKeyNode(bpy.types.Node, NLParameterNode):
+    bl_idname = "NLGetDictKeyNode"
+    bl_label = "Get Dictionary Value"
+    nl_category = "Python"
+
+    def init(self, context):
+        NLParameterNode.init(self, context)
+        self.inputs.new(NLParameterSocket.bl_idname, "Dictionary")
+        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Key")
+        self.inputs[-1].value = 'key'
+        self.outputs.new(NLParameterSocket.bl_idname, "Property Value")
+
+    def get_netlogic_class_name(self):
+        return "bgelogic.ParameterDictionaryValue"
+
+    def get_input_sockets_field_names(self):
+        return ["game_object", "property_name"]
+
+    def get_output_socket_varnames(self):
+        return [OUTCELL]
+
+
+_nodes.append(NLGetDictKeyNode)
+
+
 class NLGetActuatorNode(bpy.types.Node, NLParameterNode):
     bl_idname = "NLGetActuatorNode"
     bl_label = "Get Actuator"
@@ -3981,9 +4006,9 @@ class NLActionSetActiveCamera(bpy.types.Node, NLActionNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
-        tools.register_inputs(self, NLConditionSocket, "Condition",
-                              NLSceneSocket, "Scene (Optional)",
-                              NLGameObjectSocket, "Camera")
+        self.inputs.new(NLConditionSocket.bl_idname, 'Condition')
+        self.inputs.new(NLSceneSocket.bl_idname, 'Scene (Optional)')
+        self.inputs.new(NLGameObjectSocket.bl_idname, 'Camera')
         self.outputs.new(NLConditionSocket.bl_idname, 'Done')
 
     def get_output_socket_varnames(self):
@@ -3992,6 +4017,51 @@ class NLActionSetActiveCamera(bpy.types.Node, NLActionNode):
     def get_netlogic_class_name(self): return "bgelogic.ActionSetActiveCamera"
     def get_input_sockets_field_names(self): return ["condition", "scene", "camera"]
 _nodes.append(NLActionSetActiveCamera)
+
+
+class NLInitEmptyDict(bpy.types.Node, NLActionNode):
+    bl_idname = "NLInitEmptyDict"
+    bl_label = "Initialize Empty Dict"
+    nl_category = "Python"
+
+    def init(self, context):
+        NLActionNode.init(self, context)
+        self.inputs.new(NLPseudoConditionSocket.bl_idname, 'Condition')
+        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+        self.outputs.new(NLParameterSocket.bl_idname, 'Dictionary')
+
+    def get_output_socket_varnames(self):
+        return ["OUT", 'DICT']
+
+    def get_netlogic_class_name(self): return "bgelogic.InitEmptyDict"
+    def get_input_sockets_field_names(self): return ["condition"]
+
+
+_nodes.append(NLInitEmptyDict)
+
+
+class NLSetDictKeyValue(bpy.types.Node, NLActionNode):
+    bl_idname = "NLSetDictKeyValue"
+    bl_label = "Key: Value"
+    nl_category = "Python"
+
+    def init(self, context):
+        NLActionNode.init(self, context)
+        self.inputs.new(NLConditionSocket.bl_idname, 'Condition')
+        self.inputs.new(NLParameterSocket.bl_idname, 'Dictionary')
+        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, 'Key')
+        self.inputs.new(NLValueFieldSocket.bl_idname, 'Value')
+        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+        self.outputs.new(NLParameterSocket.bl_idname, 'Dictionary')
+
+    def get_output_socket_varnames(self):
+        return ["OUT", "DICT"]
+
+    def get_netlogic_class_name(self): return "bgelogic.SetDictKeyValue"
+    def get_input_sockets_field_names(self): return ["condition", 'dict', 'key', 'val']
+
+
+_nodes.append(NLSetDictKeyValue)
 
 
 class NLActionAddScene(bpy.types.Node, NLActionNode):
@@ -4313,7 +4383,7 @@ class NLActionSaveVariable(bpy.types.Node, NLActionNode):
         self.inputs.new(NLConditionSocket.bl_idname, 'Condition')
         self.inputs.new(NLQuotedStringFieldSocket.bl_idname, 'Name')
         self.inputs[-1].value = 'var'
-        self.inputs.new(NLFloatFieldSocket.bl_idname, 'Value')
+        self.inputs.new(NLValueFieldSocket.bl_idname, 'Value')
         self.inputs.new(NLQuotedStringFieldSocket.bl_idname, 'Game Title')
         self.inputs[-1].value = 'Your Game'
         self.outputs.new(NLConditionSocket.bl_idname, 'Done')
@@ -4349,11 +4419,12 @@ class NLActionLoadVariable(bpy.types.Node, NLActionNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, 'Condition')
+        self.inputs.new(NLConditionSocket.bl_idname, 'Optional Condition')
         self.inputs.new(NLQuotedStringFieldSocket.bl_idname, 'Name')
         self.inputs[-1].value = 'var'
         self.inputs.new(NLQuotedStringFieldSocket.bl_idname, 'Game Title')
         self.inputs[-1].value = 'Your Game'
+        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
         self.outputs.new(NLParameterSocket.bl_idname, 'Value')
 
     def draw_buttons(self, context, layout):
@@ -4372,7 +4443,7 @@ class NLActionLoadVariable(bpy.types.Node, NLActionNode):
         return [("path", lambda : "'{}'".format(self.path) if self.custom_path else "''")]
 
     def get_output_socket_varnames(self):
-        return ["OUT"]
+        return ["OUT", "VAR"]
 
 
 _nodes.append(NLActionLoadVariable)
