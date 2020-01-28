@@ -4973,6 +4973,9 @@ class ActionSaveGame(ActionCell):
         game_name = self.get_parameter_value(self.game_name)
         if game_name is LogicNetworkCell.STATUS_WAITING:
             return
+        slot = self.get_parameter_value(self.slot)
+        if slot is LogicNetworkCell.STATUS_WAITING:
+            return
         self._set_ready()
 
         path = "C:/Users/{}/Documents/My Games/{}/Saves/".format(
@@ -5069,7 +5072,7 @@ class ActionSaveGame(ActionCell):
                     }
                 )
 
-        with open(path + 'save' + str(self.slot) + ".json", "w") as file:
+        with open(path + 'save' + str(slot) + ".json", "w") as file:
             json.dump(data, file, indent=2)
 
         self.done = True
@@ -5102,6 +5105,9 @@ class ActionLoadGame(ActionCell):
         if game_name is LogicNetworkCell.STATUS_WAITING:
             return
         self._set_ready()
+        slot = self.get_parameter_value(self.slot)
+        if slot is LogicNetworkCell.STATUS_WAITING:
+            return
 
         path = "C:/Users/{}/Documents/My Games/{}/Saves/".format(
             getpass.getuser(),
@@ -5110,7 +5116,7 @@ class ActionLoadGame(ActionCell):
 
         scene = bge.logic.getCurrentScene()
 
-        with open(path + 'save' + str(self.slot) + '.json') as json_file:
+        with open(path + 'save' + str(slot) + '.json') as json_file:
             data = json.load(json_file)
 
             for obj in data['objects']:
@@ -5146,6 +5152,111 @@ class ActionLoadGame(ActionCell):
                     game_obj[prop['name']] = prop['value']
 
         self.done = True
+
+
+class ActionSaveVariable(ActionCell):
+    def __init__(self):
+        ActionCell.__init__(self)
+        self.condition = None
+        self.name = None
+        self.val = None
+        self.game_name = None
+        self.path = ''
+        self.done = None
+        self.OUT = LogicNetworkSubCell(self, self.get_done)
+
+    def get_done(self):
+        return self.done
+
+    def write_to_json(self, path, name, val):
+        data = None
+        try:
+            f = open(path + 'variables.json', 'r')
+            data = json.load(f)
+            data[name] = val
+            f.close()
+            f = open(path + 'variables.json', 'w')
+            json.dump(data, f, indent=2)
+        except IOError:
+            print('file does not exist - creating...')
+            f = open(path + 'variables.json', 'w')
+            data = {name: val}
+            json.dump(data, f, indent=2)
+        finally:
+            f.close()
+
+    def evaluate(self):
+        self.done = False
+        condition = self.get_parameter_value(self.condition)
+        if condition is LogicNetworkCell.STATUS_WAITING:
+            return
+        if not condition:
+            return
+        game_name = self.get_parameter_value(self.game_name)
+        if game_name is LogicNetworkCell.STATUS_WAITING:
+            return
+        name = self.get_parameter_value(self.name)
+        if name is LogicNetworkCell.STATUS_WAITING:
+            return
+        val = self.get_parameter_value(self.val)
+        if val is LogicNetworkCell.STATUS_WAITING:
+            return
+        self._set_ready()
+
+        path = "C:/Users/{}/Documents/My Games/{}/Data/".format(
+            getpass.getuser(),
+            game_name
+        ) if self.path == '' else self.path
+        os.makedirs(path, exist_ok=True)
+
+        self.write_to_json(path, name, val)
+        self.done = True
+
+
+class ActionLoadVariable(ActionCell):
+    def __init__(self):
+        ActionCell.__init__(self)
+        self.condition = None
+        self.name = None
+        self.game_name = None
+        self.path = ''
+        self.var = None
+        self.OUT = LogicNetworkSubCell(self, self.get_var)
+
+    def get_var(self):
+        return self.var
+
+    def read_from_json(self, path, name):
+        try:
+            f = open(path + 'variables.json', 'r')
+            data = json.load(f)
+            self.var = data[name]
+        except IOError:
+            print('file does not exist - creating...')
+        finally:
+            f.close()
+
+    def evaluate(self):
+        condition = self.get_parameter_value(self.condition)
+        if condition is LogicNetworkCell.STATUS_WAITING:
+            return
+        if not condition:
+            return
+        game_name = self.get_parameter_value(self.game_name)
+        if game_name is LogicNetworkCell.STATUS_WAITING:
+            return
+        name = self.get_parameter_value(self.name)
+        if name is LogicNetworkCell.STATUS_WAITING:
+            return
+        self._set_ready()
+
+        path = "C:/Users/{}/Documents/My Games/{}/Data/".format(
+            getpass.getuser(),
+            game_name
+        ) if self.path == '' else self.path
+        os.makedirs(path, exist_ok=True)
+
+        self.read_from_json(path, name)
 
 
 class ActionSetCharacterJump(ActionCell):

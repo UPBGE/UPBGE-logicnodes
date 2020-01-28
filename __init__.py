@@ -22,6 +22,7 @@ _update_queue = []
 _tree_to_name_map = {}
 _tree_code_writer_started = False
 
+
 def debug(*message):
     import traceback, sys
     e = traceback.extract_stack(limit=2)
@@ -34,6 +35,7 @@ def debug(*message):
         print('[{}:{}] {}'.format(source, line, text))
     pass
 
+
 def update_current_tree_code(*ignored):
     global _tree_code_writer_started
     if not _tree_code_writer_started:
@@ -41,6 +43,7 @@ def update_current_tree_code(*ignored):
         bpy.ops.bgenetlogic.treecodewriter_operator()
     now = time.time()
     _update_queue.append(now)
+
 
 def update_tree_name(tree, old_name):
     new_name = tree.name
