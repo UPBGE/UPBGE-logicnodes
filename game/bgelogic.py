@@ -1096,12 +1096,39 @@ class ParameterDictionaryValue(ParameterCell):
             return
         self._set_ready()
         if none_or_invalid(dictionary) or (not key):
+            return
+            self._set_value(None)
+        else:
+            try:
+                self._set_value(dictionary[key])
+            except Exception:
+                print("Dict Get Value Node: Key '{}' Not In Dict!".format(key))
+
+
+class ParameterListIndex(ParameterCell):
+    def __init__(self):
+        ParameterCell.__init__(self)
+        self.list = None
+        self.index = None
+
+    def evaluate(self):
+        list_d = self.get_parameter_value(self.list)
+        index = self.get_parameter_value(self.index)
+        if list_d is LogicNetworkCell.STATUS_WAITING:
+            return
+        if index is LogicNetworkCell.STATUS_WAITING:
+            return
+        self._set_ready()
+        if none_or_invalid(list_d):
             raise Exception(
-                'Get Property Node: Object or Property Name invalid!'
+                'List Index Node: Invalid List!'
             )
             self._set_value(None)
         else:
-            self._set_value(dictionary[key])
+            try:
+                self._set_value(list_d[index])
+            except Exception:
+                print('List Index Node: Index Out Of Range!')
 
 
 class GetActuator(ParameterCell):
@@ -2262,6 +2289,8 @@ class ConditionOnce(ConditionCell):
         if input_condition:
             self._consumed = True
             self._set_value(True)
+            return
+        self._consumed = False
 
 
 class ConditionNot(ConditionCell):
@@ -4342,6 +4371,108 @@ class SetDictKeyValue(ActionCell):
         self.done = True
 
 
+class SetDictDelKey(ActionCell):
+    def __init__(self):
+        ActionCell.__init__(self)
+        self.condition = None
+        self.dict = None
+        self.key = None
+        self.new_dict = None
+        self.done = None
+        self.OUT = LogicNetworkSubCell(self, self.get_done)
+        self.DICT = LogicNetworkSubCell(self, self.get_dict)
+
+    def get_done(self):
+        return self.done
+
+    def get_dict(self):
+        return self.new_dict
+
+    def evaluate(self):
+        self.done = False
+        condition = self.get_parameter_value(self.condition)
+        if condition is LogicNetworkCell.STATUS_WAITING:
+            return
+        if not condition:
+            return
+        dictionary = self.get_parameter_value(self.dict)
+        if dictionary is LogicNetworkCell.STATUS_WAITING:
+            return
+        key = self.get_parameter_value(self.key)
+        if key is LogicNetworkCell.STATUS_WAITING:
+            return
+        self._set_ready()
+        try:
+            del dictionary[key]
+        except Exception:
+            print("Dict Delete Key Node: Key '{}' not in Dict!".format(key))
+        self.new_dict = dictionary
+        self.done = True
+
+
+class InitEmptyList(ActionCell):
+    def __init__(self):
+        ActionCell.__init__(self)
+        self.condition = None
+        self.list = None
+        self.done = None
+        self.OUT = LogicNetworkSubCell(self, self.get_done)
+        self.LIST = LogicNetworkSubCell(self, self.get_list)
+
+    def get_done(self):
+        return self.done
+
+    def get_list(self):
+        return self.list
+
+    def evaluate(self):
+        self.done = False
+        condition = self.get_parameter_value(self.condition)
+        if condition is LogicNetworkCell.STATUS_WAITING:
+            return
+        if not condition:
+            return
+        self._set_ready()
+        self.list = []
+        self.done = True
+
+
+class AppendListItem(ActionCell):
+    def __init__(self):
+        ActionCell.__init__(self)
+        self.condition = None
+        self.list = None
+        self.val = None
+        self.new_list = None
+        self.done = None
+        self.OUT = LogicNetworkSubCell(self, self.get_done)
+        self.LIST = LogicNetworkSubCell(self, self.get_list)
+
+    def get_done(self):
+        return self.done
+
+    def get_list(self):
+        return self.new_list
+
+    def evaluate(self):
+        self.done = False
+        condition = self.get_parameter_value(self.condition)
+        if condition is LogicNetworkCell.STATUS_WAITING:
+            return
+        if not condition:
+            return
+        list_d = self.get_parameter_value(self.list)
+        if list_d is LogicNetworkCell.STATUS_WAITING:
+            return
+        val = self.get_parameter_value(self.val)
+        if val is LogicNetworkCell.STATUS_WAITING:
+            return
+        self._set_ready()
+        list_d.append(val)
+        self.new_list = list_d
+        self.done = True
+
+
 class ActionSetParent(ActionCell):
     def __init__(self):
         ActionCell.__init__(self)
@@ -5206,40 +5337,43 @@ class ActionLoadGame(ActionCell):
 
         scene = bge.logic.getCurrentScene()
 
-        with open(path + 'save' + str(slot) + '.json') as json_file:
-            data = json.load(json_file)
+        try:
+            with open(path + 'save' + str(slot) + '.json') as json_file:
+                data = json.load(json_file)
 
-            for obj in data['objects']:
-                if obj['name'] in scene.objects:
-                    game_obj = scene.objects[obj['name']]
-                else:
-                    print('Object {} is not present anymore.'.format(obj['name']))
-                    continue
+                for obj in data['objects']:
+                    if obj['name'] in scene.objects:
+                        game_obj = scene.objects[obj['name']]
+                    else:
+                        print('Could not load Object {}: Not in active Scene!'.format(obj['name']))
+                        continue
 
-                wPos = self.get_game_vec(obj['data']['worldPosition'])
-                wOri = self.get_game_vec(obj['data']['worldOrientation'])
-                wSca = self.get_game_vec(obj['data']['worldScale'])
+                    wPos = self.get_game_vec(obj['data']['worldPosition'])
+                    wOri = self.get_game_vec(obj['data']['worldOrientation'])
+                    wSca = self.get_game_vec(obj['data']['worldScale'])
 
-                game_obj.worldPosition = wPos
-                game_obj.worldOrientation = wOri.to_matrix()
-                game_obj.worldScale = wSca
+                    game_obj.worldPosition = wPos
+                    game_obj.worldOrientation = wOri.to_matrix()
+                    game_obj.worldScale = wSca
 
-                if obj['type'] == 'dynamic':
-                    linVel = self.get_game_vec(obj['data']['worldLinearVelocity'])
-                    angVel = self.get_game_vec(obj['data']['worldAngularVelocity'])
-                    game_obj.worldLinearVelocity = linVel
-                    game_obj.worldAngularVelocity = angVel
+                    if obj['type'] == 'dynamic':
+                        linVel = self.get_game_vec(obj['data']['worldLinearVelocity'])
+                        angVel = self.get_game_vec(obj['data']['worldAngularVelocity'])
+                        game_obj.worldLinearVelocity = linVel
+                        game_obj.worldAngularVelocity = angVel
 
-                if obj['type'] == 'light':
-                    energy = obj['data']['energy']
-                    game_obj.energy = energy
+                    if obj['type'] == 'light':
+                        energy = obj['data']['energy']
+                        game_obj.energy = energy
 
-                if obj['type'] == 'character':
-                    wDir = self.get_game_vec(obj['data']['walkDirection'])
-                    bge.constraints.getCharacter(game_obj).walkDirection = wDir
+                    if obj['type'] == 'character':
+                        wDir = self.get_game_vec(obj['data']['walkDirection'])
+                        bge.constraints.getCharacter(game_obj).walkDirection = wDir
 
-                for prop in obj['data']['props']:
-                    game_obj[prop['name']] = prop['value']
+                    for prop in obj['data']['props']:
+                        game_obj[prop['name']] = prop['value']
+        except Exception:
+            print('Load Game Node: Could Not Find Saved Game on Slot {}!'.format(slot))
 
         self.done = True
 
@@ -5270,7 +5404,10 @@ class ActionSaveVariable(ActionCell):
         except IOError:
             print('file does not exist - creating...')
             f = open(path + 'variables.json', 'w')
-            data = {name: val}
+            try:
+                data = {name: val}
+            except Exception:
+                data = {}
             json.dump(data, f, indent=2)
         finally:
             f.close()
@@ -5337,7 +5474,7 @@ class ActionLoadVariable(ActionCell):
 
     def evaluate(self):
         condition = self.get_parameter_value(self.condition)
-        if not condition:
+        if condition == False:
             return
         game_name = self.get_parameter_value(self.game_name)
         if game_name is LogicNetworkCell.STATUS_WAITING:

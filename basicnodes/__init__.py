@@ -2171,13 +2171,37 @@ class NLGetDictKeyNode(bpy.types.Node, NLParameterNode):
         return "bgelogic.ParameterDictionaryValue"
 
     def get_input_sockets_field_names(self):
-        return ["game_object", "property_name"]
+        return ["dict", "key"]
 
     def get_output_socket_varnames(self):
         return [OUTCELL]
 
 
 _nodes.append(NLGetDictKeyNode)
+
+
+class NLGetListIndexNode(bpy.types.Node, NLParameterNode):
+    bl_idname = "NLGetListIndexNode"
+    bl_label = "List: Get Index"
+    nl_category = "Python"
+
+    def init(self, context):
+        NLParameterNode.init(self, context)
+        self.inputs.new(NLParameterSocket.bl_idname, "List")
+        self.inputs.new(NLIntegerFieldSocket.bl_idname, "Index")
+        self.outputs.new(NLParameterSocket.bl_idname, "Property Value")
+
+    def get_netlogic_class_name(self):
+        return "bgelogic.ParameterListIndex"
+
+    def get_input_sockets_field_names(self):
+        return ["list", "index"]
+
+    def get_output_socket_varnames(self):
+        return [OUTCELL]
+
+
+_nodes.append(NLGetListIndexNode)
 
 
 class NLGetActuatorNode(bpy.types.Node, NLParameterNode):
@@ -3042,21 +3066,20 @@ _nodes.append(NLAlwaysConditionNode)
 
 class NLOnInitConditionNode(bpy.types.Node, NLConditionNode):
     bl_idname = "NLOnInitConditionNode"
-    bl_label = "On Start"
+    bl_label = "On Init"
     nl_category = "Events"
-    
-    repeat = bpy.props.BoolProperty(update=update_tree_code)
 
     def init(self, context):
         NLConditionNode.init(self, context)
-        self.outputs.new(NLConditionSocket.bl_idname, "On Start")
+        self.outputs.new(NLConditionSocket.bl_idname, "Init")
 
     def get_netlogic_class_name(self):
         return "bgelogic.ConditionOnInit"
 
     def write_cell_fields_initialization(self, cell_varname, uids, line_writer):
         NetLogicStatementGenerator.write_cell_fields_initialization(self, cell_varname, uids, line_writer)
-   
+
+
 _nodes.append(NLOnInitConditionNode)
 
 
@@ -3320,7 +3343,8 @@ class NLMouseReleasedCondition(bpy.types.Node, NLConditionNode):
     def write_cell_fields_initialization(self, cell_varname, uids, line_writer):
         NetLogicStatementGenerator.write_cell_fields_initialization(self, cell_varname, uids, line_writer)
         line_writer.write_line("{}.{} = {}", cell_varname, "pulse", self.pulse)
-    pass
+
+
 _nodes.append(NLMouseReleasedCondition)
 
 
@@ -3331,12 +3355,16 @@ class NLConditionOnceNode(bpy.types.Node, NLConditionNode):
 
     def init(self, context):
         NLConditionNode.init(self, context)
-        tools.register_inputs(self, NLConditionSocket, "Condition")
-        tools.register_outputs(self, NLConditionSocket, "If true, once")
+        tools.register_inputs(self, NLPseudoConditionSocket, "Condition")
+        tools.register_outputs(self, NLConditionSocket, "Once")
 
     def get_netlogic_class_name(self):
         return "bgelogic.ConditionOnce"
-    def get_input_sockets_field_names(self): return ["input_condition"]
+
+    def get_input_sockets_field_names(self):
+        return ["input_condition"]
+
+
 _nodes.append(NLConditionOnceNode)
 
 
@@ -4062,6 +4090,74 @@ class NLSetDictKeyValue(bpy.types.Node, NLActionNode):
 
 
 _nodes.append(NLSetDictKeyValue)
+
+
+class NLSetDictDelKey(bpy.types.Node, NLActionNode):
+    bl_idname = "NLSetDictDelKey"
+    bl_label = "Dict: Delete Key"
+    nl_category = "Python"
+
+    def init(self, context):
+        NLActionNode.init(self, context)
+        self.inputs.new(NLConditionSocket.bl_idname, 'Condition')
+        self.inputs.new(NLParameterSocket.bl_idname, 'Dictionary')
+        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, 'Key')
+        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+        self.outputs.new(NLParameterSocket.bl_idname, 'Dictionary')
+
+    def get_output_socket_varnames(self):
+        return ["OUT", "DICT"]
+
+    def get_netlogic_class_name(self): return "bgelogic.SetDictDelKey"
+    def get_input_sockets_field_names(self): return ["condition", 'dict', 'key']
+
+
+_nodes.append(NLSetDictDelKey)
+
+
+class NLInitEmptyList(bpy.types.Node, NLActionNode):
+    bl_idname = "NLInitEmptyList"
+    bl_label = "List: Init Empty"
+    nl_category = "Python"
+
+    def init(self, context):
+        NLActionNode.init(self, context)
+        self.inputs.new(NLPseudoConditionSocket.bl_idname, 'Condition')
+        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+        self.outputs.new(NLParameterSocket.bl_idname, 'List')
+
+    def get_output_socket_varnames(self):
+        return ["OUT", 'LIST']
+
+    def get_netlogic_class_name(self): return "bgelogic.InitEmptyList"
+    def get_input_sockets_field_names(self): return ["condition"]
+
+
+_nodes.append(NLInitEmptyList)
+
+
+class NLAppendListItem(bpy.types.Node, NLActionNode):
+    bl_idname = "NLAppendListItem"
+    bl_label = "List: Append"
+    nl_category = "Python"
+
+    def init(self, context):
+        NLActionNode.init(self, context)
+        self.inputs.new(NLConditionSocket.bl_idname, 'Condition')
+        self.inputs.new(NLParameterSocket.bl_idname, 'List')
+        self.inputs.new(NLValueFieldSocket.bl_idname, 'Value')
+        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+        self.outputs.new(NLParameterSocket.bl_idname, 'List')
+
+    def get_output_socket_varnames(self):
+        return ["OUT", "LIST"]
+
+    def get_netlogic_class_name(self): return "bgelogic.AppendListItem"
+
+    def get_input_sockets_field_names(self): return ["condition", 'list', 'val']
+
+
+_nodes.append(NLAppendListItem)
 
 
 class NLActionAddScene(bpy.types.Node, NLActionNode):
