@@ -2157,7 +2157,7 @@ _nodes.append(NLGameObjectPropertyParameterNode)
 
 class NLGetDictKeyNode(bpy.types.Node, NLParameterNode):
     bl_idname = "NLGetDictKeyNode"
-    bl_label = "Get Dictionary Value"
+    bl_label = "Dict: Get Value"
     nl_category = "Python"
 
     def init(self, context):
@@ -4021,7 +4021,7 @@ _nodes.append(NLActionSetActiveCamera)
 
 class NLInitEmptyDict(bpy.types.Node, NLActionNode):
     bl_idname = "NLInitEmptyDict"
-    bl_label = "Initialize Empty Dict"
+    bl_label = "Dict: Init Empty"
     nl_category = "Python"
 
     def init(self, context):
@@ -4042,7 +4042,7 @@ _nodes.append(NLInitEmptyDict)
 
 class NLSetDictKeyValue(bpy.types.Node, NLActionNode):
     bl_idname = "NLSetDictKeyValue"
-    bl_label = "Key: Value"
+    bl_label = "Dict: Key Value"
     nl_category = "Python"
 
     def init(self, context):
