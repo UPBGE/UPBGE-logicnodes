@@ -263,6 +263,7 @@ class NLRemoveTreeByNameOperator(bpy.types.Operator):
         py_module_name = tools.py_module_name_for_stripped_tree_name(
             stripped_tree_name
         )
+        py_module_name = py_module_name.split('NL')[-1]
         for ob in [
             x for x in context.scene.objects if x.select_get() and
             tools.object_has_treeitem_for_treename(
@@ -381,7 +382,9 @@ class NLApplyLogicOperator(bpy.types.Operator):
         context
     ):
         game_settings = obj.game
-        sensor_name = "NLP" + py_module_name
+        disp_name = py_module_name
+        disp_name = disp_name.split('NL')[-1] + '_NL'
+        sensor_name = disp_name
         sensor = None
         for s in game_settings.sensors:
             if s.name == sensor_name:
@@ -401,7 +404,7 @@ class NLApplyLogicOperator(bpy.types.Operator):
         sensor.delay = 0
         sensor.duration = 0
         # create the controller
-        controller_name = "NLC" + py_module_name
+        controller_name = disp_name + '_PY'
         controller = None
         for c in game_settings.controllers:
             if c.name == controller_name:
@@ -417,7 +420,7 @@ class NLApplyLogicOperator(bpy.types.Operator):
             bpy.ops.logic.controller_add(
                 type="LOGIC_OR",
                 object=obj.name,
-                name='NLOR' + py_module_name
+                name=disp_name + '_OR'
             )
             game_settings.controllers[-1].show_expanded = False
         controller.name = controller_name

@@ -7,8 +7,8 @@ from bge_netlogic import utilities as tools
 CONDITION_SOCKET_COLOR = tools.Color.RGBA(.8, 0.2, 0.2, 1.0)
 PSEUDO_COND_SOCKET_COLOR = tools.Color.RGBA(.8, 0.2, 0.2, 1.0)
 PARAMETER_SOCKET_COLOR = tools.Color.RGBA(.8, 0.5, 0.2, 1.0)
-PARAM_DICT_SOCKET_COLOR = tools.Color.RGBA(0.66, 0.32, .72, 1.0)
-PARAM_LIST_SOCKET_COLOR = tools.Color.RGBA(0.61, 0.72, .32, 1.0)
+PARAM_LIST_SOCKET_COLOR = tools.Color.RGBA(0.74, .65, .48, 1.0)
+PARAM_DICT_SOCKET_COLOR = tools.Color.RGBA(0.58, 0.48, .74, 1.0)
 PARAM_OBJ_SOCKET_COLOR = tools.Color.RGBA(0.2, 0.5, .7, 1.0)
 PARAM_SCENE_SOCKET_COLOR = tools.Color.RGBA(0.5, 0.5, 0.6, 1.0)
 PARAM_VECTOR_SOCKET_COLOR = tools.Color.RGBA(0.4, 0.8, 0.4, 1.0)
@@ -2192,7 +2192,7 @@ _nodes.append(NLGameObjectPropertyParameterNode)
 
 class NLGetDictKeyNode(bpy.types.Node, NLParameterNode):
     bl_idname = "NLGetDictKeyNode"
-    bl_label = "Dict: Get Value"
+    bl_label = "Dict: Get Key"
     nl_category = "Python"
 
     def init(self, context):
@@ -4124,7 +4124,7 @@ _nodes.append(NLSetDictKeyValue)
 
 class NLSetDictDelKey(bpy.types.Node, NLActionNode):
     bl_idname = "NLSetDictDelKey"
-    bl_label = "Dict: Delete Key"
+    bl_label = "Dict: Remove Key"
     nl_category = "Python"
 
     def init(self, context):
@@ -4682,13 +4682,15 @@ class NLActionListVariables(bpy.types.Node, NLActionNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, 'Condition')
+        self.inputs.new(NLPseudoConditionSocket.bl_idname, 'Condition')
         self.inputs.new(NLQuotedStringFieldSocket.bl_idname, 'Game Title')
         self.inputs[-1].value = 'Your Game'
+        self.inputs.new(NLBooleanSocket.bl_idname, 'Print')
         self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+        self.outputs.new(NLListSocket.bl_idname, 'List')
 
     def draw_buttons(self, context, layout):
-        layout.label(text='Clear In:')
+        layout.label(text='List From:')
         layout.prop(self, "custom_path", toggle=True, text="Custom Path" if self.custom_path else "User/Documents")
         if self.custom_path:
             layout.prop(self, "path", text='Path')
@@ -4697,13 +4699,13 @@ class NLActionListVariables(bpy.types.Node, NLActionNode):
         return "bgelogic.ActionListVariables"
 
     def get_input_sockets_field_names(self):
-        return ["condition", "game_name"]
+        return ["condition", "game_name", 'print_list']
 
     def get_nonsocket_fields(self):
         return [("path", lambda : "'{}'".format(self.path) if self.custom_path else "''")]
 
     def get_output_socket_varnames(self):
-        return ["OUT"]
+        return ["OUT", 'LIST']
 
 
 _nodes.append(NLActionListVariables)
@@ -5078,7 +5080,7 @@ class NLActionPrint(bpy.types.Node, NLActionNode):
     
     def init(self, context):
         NLActionNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, "Condition")
+        self.inputs.new(NLPseudoConditionSocket.bl_idname, "Condition")
         self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Value")
         self.outputs.new(NLConditionSocket.bl_idname, 'Done')
 
@@ -5247,12 +5249,12 @@ class NLActionEditBoneNode(bpy.types.Node, NLActionNode):
         self.inputs.new(NLConditionSocket.bl_idname, "Condition")
         self.inputs.new(NLGameObjectSocket.bl_idname, "Armature")
         self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Bone Name")
-        self.inputs.new(NLOptionalSocketVectorField.bl_idname, "Set XYZ Pos")
-        self.inputs.new(NLOptionalSocketVectorField.bl_idname, "Set XYZ Rot")
-        self.inputs.new(NLOptionalSocketVectorField.bl_idname, "Set XYZ Scale")
-        self.inputs.new(NLOptionalSocketVectorField.bl_idname, "Trans XYZ")
-        self.inputs.new(NLOptionalSocketVectorField.bl_idname, "Rot XYZ")
-        self.inputs.new(NLOptionalSocketVectorField.bl_idname, "Scale XYZ")
+        self.inputs.new(NLVec3FieldSocket.bl_idname, "Set Pos")
+        self.inputs.new(NLVec3FieldSocket.bl_idname, "Set Rot")
+        self.inputs.new(NLVec3FieldSocket.bl_idname, "Set Scale")
+        self.inputs.new(NLVec3FieldSocket.bl_idname, "Translate")
+        self.inputs.new(NLVec3FieldSocket.bl_idname, "Rotate")
+        self.inputs.new(NLVec3FieldSocket.bl_idname, "Scale")
         self.outputs.new(NLConditionSocket.bl_idname, 'Done')
 
     def get_output_socket_varnames(self):
@@ -5277,10 +5279,7 @@ class NLActionSetDynamicsNode(bpy.types.Node, NLActionNode):
         self.inputs.new(NLGameObjectSocket.bl_idname, "Object")
         self.inputs.new(NLBooleanSocket.bl_idname, "Ghost")
         self.inputs[-1].value = False
-        self.inputs.new(NLBooleanSocket.bl_idname, "Activate")
-        s = self.inputs[-1]
-        s.true_label = "Activate"
-        s.false_label = "Suspend"
+        self.inputs.new(NLBooleanSocket.bl_idname, "Suspend")
         self.outputs.new(NLConditionSocket.bl_idname, 'Done')
 
     def get_output_socket_varnames(self):

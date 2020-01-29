@@ -1073,9 +1073,7 @@ class ParameterObjectProperty(ParameterCell):
             return
         self._set_ready()
         if none_or_invalid(game_object) or (not property_name):
-            raise Exception(
-                'Get Property Node: Object or Property Name invalid!'
-            )
+            print('Get Property Node: Object or Property Name invalid!')
             self._set_value(property_default)
         else:
             self._set_value(game_object[property_name])
@@ -1120,9 +1118,7 @@ class ParameterListIndex(ParameterCell):
             return
         self._set_ready()
         if none_or_invalid(list_d):
-            raise Exception(
-                'List Index Node: Invalid List!'
-            )
+            print('List Index Node: Invalid List!')
             self._set_value(None)
         else:
             try:
@@ -1172,7 +1168,7 @@ class GetActuatorByName(ParameterCell):
         if none_or_invalid(act_name):
             return
         if act_name not in cont.actuators:
-            raise Exception('Actuator not conneted or does not exist!')
+            print('Get Actuator By Name Node: Actuator not conneted or does not exist!')
             return
         self._set_ready()
         self._set_value(bge.logic.getCurrentController().actuators[act_name])
@@ -1254,10 +1250,10 @@ class GetController(ParameterCell):
     def evaluate(self):
         game_obj = self.get_parameter_value(self.obj_name)
         if none_or_invalid(game_obj):
-            raise Exception('No Game Object selected for Get Controller!')
+            print('Get Controller Node: No Game Object selected!')
             return
         if none_or_invalid(self.cont_name):
-            raise Exception('No Controller selected for Get Controller!')
+            print('Get Controller Node: No Controller selected!')
             return
         self._set_ready()
         self._set_value(game_obj.controllers[self.cont_name])
@@ -1291,10 +1287,10 @@ class GetSensor(ParameterCell):
     def evaluate(self):
         game_obj = self.get_parameter_value(self.obj_name)
         if none_or_invalid(game_obj):
-            raise Exception('No Game Object selected for Get Sensor!')
+            print('Get Sensor Node: No Game Object selected!')
             return
         if none_or_invalid(self.sens_name):
-            raise Exception('No Sensor selected for Get Sensor!')
+            print('Get Sensor Node: No Sensor selected!')
             return
         self._set_ready()
         self._set_value(game_obj.sensors[self.sens_name].positive)
@@ -1340,9 +1336,7 @@ class ParameterActiveCamera(ParameterCell):
         scene = bge.logic.getCurrentScene()
         self._set_ready()
         if none_or_invalid(scene):
-            raise Exception(
-                'Active Camera Node: Invalid Scene!'
-            )
+            print('Active Camera Node: Invalid Scene!')
             self._set_value(None)
         else:
             self._set_value(scene.active_camera)
@@ -2717,7 +2711,7 @@ class ConditionGamepadSticks(ConditionCell):
         self._set_ready()
         axis = self.get_parameter_value(self.axis)
         if none_or_invalid(axis):
-            raise Exception('Invalid Controller Stick!')
+            print('Gamepad Sticks Node: Invalid Controller Stick!')
         inverted = self.get_parameter_value(self.inverted)
         index = self.get_parameter_value(self.index)
         sensitivity = self.get_parameter_value(self.sensitivity)
@@ -2725,7 +2719,7 @@ class ConditionGamepadSticks(ConditionCell):
         joystick = bge.logic.joysticks[index]
 
         if none_or_invalid(joystick):
-            raise Exception('No Joystick at that Index!')
+            print('Gamepad Sticks Node: No Joystick at that Index!')
             return
         raw_values = joystick.axisValues
         values = []
@@ -2762,14 +2756,14 @@ class ConditionGamepadTrigger(ConditionCell):
         self._set_ready()
         axis = self.get_parameter_value(self.axis)
         if none_or_invalid(axis):
-            raise Exception('Invalid Controller Trigger!')
+            print('Gamepad Trigger Node: Invalid Controller Trigger!')
         index = self.get_parameter_value(self.index)
         sensitivity = self.get_parameter_value(self.sensitivity)
         threshold = self.get_parameter_value(self.threshold)
         joystick = bge.logic.joysticks[index]
 
         if none_or_invalid(joystick):
-            raise Exception('No Joystick at that Index!')
+            print('No Joystick at that Index!')
             return
         value = joystick.axisValues[4] if axis == 0 else joystick.axisValues[5]
 
@@ -2797,7 +2791,7 @@ class ConditionGamepadButtons(ConditionCell):
         joystick = bge.logic.joysticks[index]
 
         if none_or_invalid(joystick):
-            raise Exception('No Joystick at that Index!')
+            print('Gamepad Button Node: No Joystick at that Index!')
             return
 
         if self.button in joystick.activeButtons:
@@ -3645,10 +3639,10 @@ class ActionMouseLook(ActionCell):
         self._set_ready()
 
         if none_or_invalid(game_object_x):
-            raise Exception('MouseLook Node: Invalid Main Object!')
+            print('MouseLook Node: Invalid Main Object!')
             return
         if none_or_invalid(game_object_y):
-            raise Exception('MouseLook Node: Invalid Head Object!')
+            print('MouseLook Node: Invalid Head Object!')
             return
 
         mouse_position = mathutils.Vector(self.mouse.position)
@@ -4865,7 +4859,7 @@ class ActionSetDynamics(ActionCell):
         condition = self.get_parameter_value(self.condition)
         if condition is LogicNetworkCell.STATUS_WAITING:
             return
-        if not condition:
+        if condition is False:
             self._set_ready()
             return
         game_object = self.get_parameter_value(self.game_object)
@@ -4880,11 +4874,13 @@ class ActionSetDynamics(ActionCell):
         self._set_ready()
         if none_or_invalid(game_object):
             return
-        if condition:
-            if activate:
-                game_object.restoreDynamics()
-            else:
-                game_object.suspendDynamics(ghost)
+        print('Here shoudl asdak haonn')
+        if activate:
+            print('activate')
+            game_object.suspendDynamics(ghost)
+        else:
+            print('deactiv')
+            game_object.restoreDynamics()
         self.done = False
 
 
@@ -5628,14 +5624,20 @@ class ActionListVariables(ActionCell):
         ActionCell.__init__(self)
         self.condition = None
         self.game_name = None
+        self.print_list = None
         self.path = ''
         self.done = None
+        self.list = None
         self.OUT = LogicNetworkSubCell(self, self.get_done)
+        self.LIST = LogicNetworkSubCell(self, self.get_list)
 
     def get_done(self):
         return self.done
 
-    def write_to_json(self, path):
+    def get_list(self):
+        return self.list
+
+    def write_to_json(self, path, p_l):
         data = None
         try:
             f = open(path + 'variables.json', 'r')
@@ -5643,8 +5645,12 @@ class ActionListVariables(ActionCell):
             if len(data) == 0:
                 print('There are no saved variables')
                 return
+            li = []
             for x in data:
-                print('{}\t->\t{}'.format(x, data[x]))
+                if p_l:
+                    print('{}\t->\t{}'.format(x, data[x]))
+                li.append(x)
+            self.list = li
         except IOError:
             print('There are no saved variables')
         finally:
@@ -5660,6 +5666,10 @@ class ActionListVariables(ActionCell):
         game_name = self.get_parameter_value(self.game_name)
         if game_name is LogicNetworkCell.STATUS_WAITING:
             return
+
+        print_list = self.get_parameter_value(self.print_list)
+        if print_list is LogicNetworkCell.STATUS_WAITING:
+            return
         self._set_ready()
 
         path = "C:/Users/{}/Documents/My Games/{}/Data/".format(
@@ -5668,7 +5678,7 @@ class ActionListVariables(ActionCell):
         ) if self.path == '' else self.path
         os.makedirs(path, exist_ok=True)
 
-        self.write_to_json(path)
+        self.write_to_json(path, print_list)
         self.done = True
 
 
@@ -5911,9 +5921,7 @@ class ActionPlayAction(ActionCell):
             return
         self._set_ready()
         if none_or_invalid(game_object):  # can't play
-            raise Exception(
-                "Play Action Node: Invalid Game Object!"
-            )
+            print("Play Action Node: Invalid Game Object!")
             self._reset_subvalues()
         else:
             # Condition might be false and the animation running
@@ -6382,13 +6390,13 @@ class ActionRandomInt(ActionCell):
         min_value = self.get_parameter_value(self.min_value)
         max_value = self.get_parameter_value(self.max_value)
         if none_or_invalid(min_value):
-            raise Exception('Min Value not set correctly for Random Int!')
+            print('Random Int Node: Min Value not set correctly!')
             return
         if none_or_invalid(max_value):
-            raise Exception('Max Value not set correctly for Random Int!')
+            print('Random Int Node: Max Value not set correctly!')
             return
         if min_value > max_value:
-            raise Exception('Min Value bigger than Max Value for Random Int!')
+            print('Random Int Node: Min Value bigger than Max Value!')
             return
         self._set_ready()
         if min_value == max_value:
@@ -6412,13 +6420,13 @@ class ActionRandomFloat(ActionCell):
         min_value = self.get_parameter_value(self.min_value)
         max_value = self.get_parameter_value(self.max_value)
         if none_or_invalid(min_value):
-            raise Exception('Min Value not set correctly for Random Float!')
+            print('Random Float Node: Min Value not set correctly!')
             return
         if none_or_invalid(max_value):
-            raise Exception('Max Value not set correctly for Random Float!')
+            print('Random Float Node: Max Value not set correctly!')
             return
         if min_value > max_value:
-            raise Exception('Min Value bigger than Max Value for Random Float!')
+            print('Random Float Node: Min Value bigger than Max Value!')
             return
         self._set_ready()
         if min_value == max_value:
