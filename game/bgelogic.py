@@ -5493,7 +5493,10 @@ class ActionLoadVariable(ActionCell):
             print('No saved variables!')
 
     def evaluate(self):
+        self.done = False
         condition = self.get_parameter_value(self.condition)
+        if condition is LogicNetworkCell.STATUS_WAITING:
+            return
         if condition == False:
             return
         game_name = self.get_parameter_value(self.game_name)
@@ -5637,10 +5640,13 @@ class ActionListVariables(ActionCell):
         try:
             f = open(path + 'variables.json', 'r')
             data = json.load(f)
+            if len(data) == 0:
+                print('There are no saved variables')
+                return
             for x in data:
                 print('{}\t->\t{}'.format(x, data[x]))
         except IOError:
-            print('There are no saved variables yet!')
+            print('There are no saved variables')
         finally:
             f.close()
 

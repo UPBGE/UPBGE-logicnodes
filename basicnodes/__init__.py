@@ -4452,7 +4452,7 @@ _nodes.append(NLActionCharacterJump)
 class NLActionSaveGame(bpy.types.Node, NLActionNode):
     bl_idname = "NLActionSaveGame"
     bl_label = "Save Game"
-    nl_category = "Save / Load"
+    nl_category = "Game"
     custom_path = bpy.props.BoolProperty(update=update_tree_code)
     path = bpy.props.StringProperty(update=update_tree_code)
 
@@ -4488,7 +4488,7 @@ _nodes.append(NLActionSaveGame)
 class NLActionLoadGame(bpy.types.Node, NLActionNode):
     bl_idname = "NLActionLoadGame"
     bl_label = "Load Game"
-    nl_category = "Save / Load"
+    nl_category = "Game"
     custom_path = bpy.props.BoolProperty(update=update_tree_code)
     path = bpy.props.StringProperty(update=update_tree_code)
 
@@ -4524,7 +4524,7 @@ _nodes.append(NLActionLoadGame)
 class NLActionSaveVariable(bpy.types.Node, NLActionNode):
     bl_idname = "NLActionSaveVariable"
     bl_label = "Save Variable"
-    nl_category = "Save / Load"
+    nl_category = "Variables"
     custom_path = bpy.props.BoolProperty(update=update_tree_code)
     path = bpy.props.StringProperty(update=update_tree_code)
 
@@ -4563,7 +4563,7 @@ _nodes.append(NLActionSaveVariable)
 class NLActionLoadVariable(bpy.types.Node, NLActionNode):
     bl_idname = "NLActionLoadVariable"
     bl_label = "Load Variable"
-    nl_category = "Save / Load"
+    nl_category = "Variables"
     custom_path = bpy.props.BoolProperty(update=update_tree_code)
     path = bpy.props.StringProperty(update=update_tree_code)
 
@@ -4602,7 +4602,7 @@ _nodes.append(NLActionLoadVariable)
 class NLActionRemoveVariable(bpy.types.Node, NLActionNode):
     bl_idname = "NLActionRemoveVariable"
     bl_label = "Remove Variable"
-    nl_category = "Save / Load"
+    nl_category = "Variables"
     custom_path = bpy.props.BoolProperty(update=update_tree_code)
     path = bpy.props.StringProperty(update=update_tree_code)
 
@@ -4640,7 +4640,7 @@ _nodes.append(NLActionRemoveVariable)
 class NLActionClearVariables(bpy.types.Node, NLActionNode):
     bl_idname = "NLActionClearVariables"
     bl_label = "Clear Variables"
-    nl_category = "Save / Load"
+    nl_category = "Variables"
     custom_path = bpy.props.BoolProperty(update=update_tree_code)
     path = bpy.props.StringProperty(update=update_tree_code)
 
@@ -4676,7 +4676,7 @@ _nodes.append(NLActionClearVariables)
 class NLActionListVariables(bpy.types.Node, NLActionNode):
     bl_idname = "NLActionListVariables"
     bl_label = "List Saved Variables"
-    nl_category = "Save / Load"
+    nl_category = "Variables"
     custom_path = bpy.props.BoolProperty(update=update_tree_code)
     path = bpy.props.StringProperty(update=update_tree_code)
 
