@@ -2834,7 +2834,7 @@ _nodes.append(NLParameterBoneStatus)
 
 class NLParameterPythonModuleFunction(bpy.types.Node, NLParameterNode):
     bl_idname = "NLParameterPythonModuleFunction"
-    bl_label = "Python Module Function"
+    bl_label = "Run Python Code"
     nl_category = "Python"
 
     def init(self, context):
@@ -4569,7 +4569,7 @@ class NLActionLoadVariable(bpy.types.Node, NLActionNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, 'Optional Condition')
+        self.inputs.new(NLPseudoConditionSocket.bl_idname, 'Condition')
         self.inputs.new(NLQuotedStringFieldSocket.bl_idname, 'Name')
         self.inputs[-1].value = 'var'
         self.inputs.new(NLQuotedStringFieldSocket.bl_idname, 'Game Title')
