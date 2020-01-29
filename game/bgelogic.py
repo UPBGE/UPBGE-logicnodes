@@ -1414,70 +1414,51 @@ class ParameterWorldPosition(ParameterCell):
 class ParameterPythonModuleFunction(ParameterCell):
     def __init__(self):
         ParameterCell.__init__(self)
-        self.IN0 = None
-        self.IN1 = None
-        self.IN2 = None
-        self.IN3 = None
-        self.OUT0 = LogicNetworkSubCell(self, self.get_out_0)
-        self.OUT1 = LogicNetworkSubCell(self, self.get_out_1)
-        self.OUT2 = LogicNetworkSubCell(self, self.get_out_2)
-        self.OUT3 = LogicNetworkSubCell(self, self.get_out_3)
-        self.inputs = [None, None, None, None]
-        self.outputs = [None, None, None, None]
+        self.condition = None
         self.module_name = None
         self.module_func = None
+        self.val = None
+        self.OUT = LogicNetworkSubCell(self, self.get_done)
+        self.VAL = LogicNetworkSubCell(self, self.get_val)
         self._old_mod_name = None
         self._old_mod_fun = None
         self._module = None
         self._modfun = None
 
-    def get_out_0(self):
-        return self.outputs[0]
+    def get_done(self):
+        return self.done
 
-    def get_out_1(self):
-        return self.outputs[1]
-
-    def get_out_2(self):
-        return self.outputs[2]
-
-    def get_out_3(self):
-        return self.outputs[3]
+    def get_val(self):
+        return self.val
 
     def evaluate(self):
+        self.done = False
+        condition = self.get_parameter_value(self.condition)
+        if condition is LogicNetworkCell.STATUS_WAITING:
+            return
+        if not condition:
+            return
         mname = self.get_parameter_value(self.module_name)
         mfun = self.get_parameter_value(self.module_func)
-        in0 = self.get_parameter_value(self.IN0)
-        in1 = self.get_parameter_value(self.IN1)
-        in2 = self.get_parameter_value(self.IN2)
-        in3 = self.get_parameter_value(self.IN3)
         STATUS_WAITING = LogicNetworkCell.STATUS_WAITING
         if mname is STATUS_WAITING:
             return
         if mfun is STATUS_WAITING:
             return
-        if in0 is STATUS_WAITING:
-            return
-        if in1 is STATUS_WAITING:
-            return
-        if in2 is STATUS_WAITING:
-            return
-        if in3 is STATUS_WAITING:
-            return
         self._set_ready()
-        if (not mname) or (not mfun):
-            if in0:
-                print("Debug {} {} {} {}".format(in0, in1, in2, in3))
-            return
         if mname and (self._old_mod_name != mname):
             exec("import {}".format(mname))
             self._old_mod_name = mname
             self._module = eval(mname)
         if self._old_mod_fun != mfun:
-            self._modfun = getattr(self._module, mfun)
+            try:
+                self._modfun = getattr(self._module, mfun)
+            except Exception:
+                print("Python Module Node: Module '{}' has no function '{}'!".format(self._module, mfun))
+                return
             self._old_mod_fun = mfun
-        inputs = self.inputs
-        inputs[:] = (in0, in1, in2, in3)
-        self._modfun(self)
+        self.val = self._modfun()
+        self.done = True
 
 
 class ParameterTime(ParameterCell):

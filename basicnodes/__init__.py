@@ -1,13 +1,14 @@
 import re
 import bpy
 import bge_netlogic
-from bge_netlogic import NLNodeTreeReference
 from bge_netlogic import utilities as tools
 
 
 CONDITION_SOCKET_COLOR = tools.Color.RGBA(.8, 0.2, 0.2, 1.0)
 PSEUDO_COND_SOCKET_COLOR = tools.Color.RGBA(.8, 0.2, 0.2, 1.0)
 PARAMETER_SOCKET_COLOR = tools.Color.RGBA(.8, 0.5, 0.2, 1.0)
+PARAM_DICT_SOCKET_COLOR = tools.Color.RGBA(0.66, 0.32, .72, 1.0)
+PARAM_LIST_SOCKET_COLOR = tools.Color.RGBA(0.61, 0.72, .32, 1.0)
 PARAM_OBJ_SOCKET_COLOR = tools.Color.RGBA(0.2, 0.5, .7, 1.0)
 PARAM_SCENE_SOCKET_COLOR = tools.Color.RGBA(0.5, 0.5, 0.6, 1.0)
 PARAM_VECTOR_SOCKET_COLOR = tools.Color.RGBA(0.4, 0.8, 0.4, 1.0)
@@ -628,6 +629,40 @@ class NLParameterSocket(bpy.types.NodeSocket, NetLogicSocketType):
 
 
 _sockets.append(NLParameterSocket)
+
+
+class NLDictSocket(bpy.types.NodeSocket, NetLogicSocketType):
+    bl_idname = "NLDictSocket"
+    bl_label = "Parameter"
+
+    def draw_color(self, context, node):
+        return PARAM_DICT_SOCKET_COLOR
+
+    def draw(self, context, layout, node, text):
+        layout.label(text=text)
+
+    def get_unlinked_value(self):
+        return "None"
+
+
+_sockets.append(NLDictSocket)
+
+
+class NLListSocket(bpy.types.NodeSocket, NetLogicSocketType):
+    bl_idname = "NLListSocket"
+    bl_label = "Parameter"
+
+    def draw_color(self, context, node):
+        return PARAM_LIST_SOCKET_COLOR
+
+    def draw(self, context, layout, node, text):
+        layout.label(text=text)
+
+    def get_unlinked_value(self):
+        return "None"
+
+
+_sockets.append(NLListSocket)
 
 
 class NLLogicBrickSocket(bpy.types.NodeSocket, NetLogicSocketType):
@@ -2162,7 +2197,7 @@ class NLGetDictKeyNode(bpy.types.Node, NLParameterNode):
 
     def init(self, context):
         NLParameterNode.init(self, context)
-        self.inputs.new(NLParameterSocket.bl_idname, "Dictionary")
+        self.inputs.new(NLDictSocket.bl_idname, "Dictionary")
         self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Key")
         self.inputs[-1].value = 'key'
         self.outputs.new(NLParameterSocket.bl_idname, "Property Value")
@@ -2187,7 +2222,7 @@ class NLGetListIndexNode(bpy.types.Node, NLParameterNode):
 
     def init(self, context):
         NLParameterNode.init(self, context)
-        self.inputs.new(NLParameterSocket.bl_idname, "List")
+        self.inputs.new(NLListSocket.bl_idname, "List")
         self.inputs.new(NLIntegerFieldSocket.bl_idname, "Index")
         self.outputs.new(NLParameterSocket.bl_idname, "Property Value")
 
@@ -2804,16 +2839,11 @@ class NLParameterPythonModuleFunction(bpy.types.Node, NLParameterNode):
 
     def init(self, context):
         NLParameterNode.init(self, context)
+        self.inputs.new(NLPseudoConditionSocket.bl_idname, "Condition")
         self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Module")
-        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Member")
-        self.inputs.new(NLParameterSocket.bl_idname, "IN0")
-        self.inputs.new(NLParameterSocket.bl_idname, "IN1")
-        self.inputs.new(NLParameterSocket.bl_idname, "IN2")
-        self.inputs.new(NLParameterSocket.bl_idname, "IN3")
-        self.outputs.new(NLParameterSocket.bl_idname, "OUT0")
-        self.outputs.new(NLParameterSocket.bl_idname, "OUT1")
-        self.outputs.new(NLParameterSocket.bl_idname, "OUT2")
-        self.outputs.new(NLParameterSocket.bl_idname, "OUT3")
+        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Function")
+        self.outputs.new(NLConditionSocket.bl_idname, "Done")
+        self.outputs.new(NLParameterSocket.bl_idname, "Returned Value")
         self.use_custom_color = True
         self.color = PYTHON_NODE_COLOR
 
@@ -2821,13 +2851,13 @@ class NLParameterPythonModuleFunction(bpy.types.Node, NLParameterNode):
         return "bgelogic.ParameterPythonModuleFunction"
 
     def get_input_sockets_field_names(self):
-        return ["module_name", "module_func", "IN0", "IN1", "IN2", "IN3"]
+        return ['condition', "module_name", "module_func"]
 
     def get_output_socket_varnames(self):
-        return ["OUT0", "OUT1", "OUT2", "OUT3"]
+        return ["OUT", "VAL"]
 
 
-#x_nodes.append(NLParameterPythonModuleFunction)
+_nodes.append(NLParameterPythonModuleFunction)
 
 
 class NLParameterBooleanValue(bpy.types.Node, NLParameterNode):
@@ -4056,7 +4086,7 @@ class NLInitEmptyDict(bpy.types.Node, NLActionNode):
         NLActionNode.init(self, context)
         self.inputs.new(NLPseudoConditionSocket.bl_idname, 'Condition')
         self.outputs.new(NLConditionSocket.bl_idname, 'Done')
-        self.outputs.new(NLParameterSocket.bl_idname, 'Dictionary')
+        self.outputs.new(NLDictSocket.bl_idname, 'Dictionary')
 
     def get_output_socket_varnames(self):
         return ["OUT", 'DICT']
@@ -4076,11 +4106,11 @@ class NLSetDictKeyValue(bpy.types.Node, NLActionNode):
     def init(self, context):
         NLActionNode.init(self, context)
         self.inputs.new(NLConditionSocket.bl_idname, 'Condition')
-        self.inputs.new(NLParameterSocket.bl_idname, 'Dictionary')
+        self.inputs.new(NLDictSocket.bl_idname, 'Dictionary')
         self.inputs.new(NLQuotedStringFieldSocket.bl_idname, 'Key')
         self.inputs.new(NLValueFieldSocket.bl_idname, 'Value')
         self.outputs.new(NLConditionSocket.bl_idname, 'Done')
-        self.outputs.new(NLParameterSocket.bl_idname, 'Dictionary')
+        self.outputs.new(NLDictSocket.bl_idname, 'Dictionary')
 
     def get_output_socket_varnames(self):
         return ["OUT", "DICT"]
@@ -4100,10 +4130,10 @@ class NLSetDictDelKey(bpy.types.Node, NLActionNode):
     def init(self, context):
         NLActionNode.init(self, context)
         self.inputs.new(NLConditionSocket.bl_idname, 'Condition')
-        self.inputs.new(NLParameterSocket.bl_idname, 'Dictionary')
+        self.inputs.new(NLDictSocket.bl_idname, 'Dictionary')
         self.inputs.new(NLQuotedStringFieldSocket.bl_idname, 'Key')
         self.outputs.new(NLConditionSocket.bl_idname, 'Done')
-        self.outputs.new(NLParameterSocket.bl_idname, 'Dictionary')
+        self.outputs.new(NLDictSocket.bl_idname, 'Dictionary')
 
     def get_output_socket_varnames(self):
         return ["OUT", "DICT"]
@@ -4124,7 +4154,7 @@ class NLInitEmptyList(bpy.types.Node, NLActionNode):
         NLActionNode.init(self, context)
         self.inputs.new(NLPseudoConditionSocket.bl_idname, 'Condition')
         self.outputs.new(NLConditionSocket.bl_idname, 'Done')
-        self.outputs.new(NLParameterSocket.bl_idname, 'List')
+        self.outputs.new(NLListSocket.bl_idname, 'List')
 
     def get_output_socket_varnames(self):
         return ["OUT", 'LIST']
@@ -4144,10 +4174,10 @@ class NLAppendListItem(bpy.types.Node, NLActionNode):
     def init(self, context):
         NLActionNode.init(self, context)
         self.inputs.new(NLConditionSocket.bl_idname, 'Condition')
-        self.inputs.new(NLParameterSocket.bl_idname, 'List')
+        self.inputs.new(NLListSocket.bl_idname, 'List')
         self.inputs.new(NLValueFieldSocket.bl_idname, 'Value')
         self.outputs.new(NLConditionSocket.bl_idname, 'Done')
-        self.outputs.new(NLParameterSocket.bl_idname, 'List')
+        self.outputs.new(NLListSocket.bl_idname, 'List')
 
     def get_output_socket_varnames(self):
         return ["OUT", "LIST"]
@@ -4168,10 +4198,10 @@ class NLRemoveListValue(bpy.types.Node, NLActionNode):
     def init(self, context):
         NLActionNode.init(self, context)
         self.inputs.new(NLConditionSocket.bl_idname, 'Condition')
-        self.inputs.new(NLParameterSocket.bl_idname, 'List')
+        self.inputs.new(NLListSocket.bl_idname, 'List')
         self.inputs.new(NLValueFieldSocket.bl_idname, 'Value')
         self.outputs.new(NLConditionSocket.bl_idname, 'Done')
-        self.outputs.new(NLParameterSocket.bl_idname, 'List')
+        self.outputs.new(NLListSocket.bl_idname, 'List')
 
     def get_output_socket_varnames(self):
         return ["OUT", "LIST"]
