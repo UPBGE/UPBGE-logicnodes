@@ -4473,6 +4473,45 @@ class AppendListItem(ActionCell):
         self.done = True
 
 
+class RemoveListValue(ActionCell):
+    def __init__(self):
+        ActionCell.__init__(self)
+        self.condition = None
+        self.list = None
+        self.val = None
+        self.new_list = None
+        self.done = None
+        self.OUT = LogicNetworkSubCell(self, self.get_done)
+        self.LIST = LogicNetworkSubCell(self, self.get_list)
+
+    def get_done(self):
+        return self.done
+
+    def get_list(self):
+        return self.new_list
+
+    def evaluate(self):
+        self.done = False
+        condition = self.get_parameter_value(self.condition)
+        if condition is LogicNetworkCell.STATUS_WAITING:
+            return
+        if not condition:
+            return
+        list_d = self.get_parameter_value(self.list)
+        if list_d is LogicNetworkCell.STATUS_WAITING:
+            return
+        val = self.get_parameter_value(self.val)
+        if val is LogicNetworkCell.STATUS_WAITING:
+            return
+        self._set_ready()
+        try:
+            list_d.remove(val)
+        except Exception:
+            print("List Remove Value Node: Item '{}' not in List!".format(val))
+        self.new_list = list_d
+        self.done = True
+
+
 class ActionSetParent(ActionCell):
     def __init__(self):
         ActionCell.__init__(self)

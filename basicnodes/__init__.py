@@ -4070,7 +4070,7 @@ _nodes.append(NLInitEmptyDict)
 
 class NLSetDictKeyValue(bpy.types.Node, NLActionNode):
     bl_idname = "NLSetDictKeyValue"
-    bl_label = "Dict: Key Value"
+    bl_label = "Dict: Add Key"
     nl_category = "Python"
 
     def init(self, context):
@@ -4158,6 +4158,30 @@ class NLAppendListItem(bpy.types.Node, NLActionNode):
 
 
 _nodes.append(NLAppendListItem)
+
+
+class NLRemoveListValue(bpy.types.Node, NLActionNode):
+    bl_idname = "NLRemoveListValue"
+    bl_label = "List: Remove Value"
+    nl_category = "Python"
+
+    def init(self, context):
+        NLActionNode.init(self, context)
+        self.inputs.new(NLConditionSocket.bl_idname, 'Condition')
+        self.inputs.new(NLParameterSocket.bl_idname, 'List')
+        self.inputs.new(NLValueFieldSocket.bl_idname, 'Value')
+        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+        self.outputs.new(NLParameterSocket.bl_idname, 'List')
+
+    def get_output_socket_varnames(self):
+        return ["OUT", "LIST"]
+
+    def get_netlogic_class_name(self): return "bgelogic.RemoveListValue"
+
+    def get_input_sockets_field_names(self): return ["condition", 'list', 'val']
+
+
+_nodes.append(NLRemoveListValue)
 
 
 class NLActionAddScene(bpy.types.Node, NLActionNode):
