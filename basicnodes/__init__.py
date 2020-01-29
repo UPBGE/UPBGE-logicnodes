@@ -4673,6 +4673,42 @@ class NLActionClearVariables(bpy.types.Node, NLActionNode):
 _nodes.append(NLActionClearVariables)
 
 
+class NLActionListVariables(bpy.types.Node, NLActionNode):
+    bl_idname = "NLActionListVariables"
+    bl_label = "List Saved Variables"
+    nl_category = "Save / Load"
+    custom_path = bpy.props.BoolProperty(update=update_tree_code)
+    path = bpy.props.StringProperty(update=update_tree_code)
+
+    def init(self, context):
+        NLActionNode.init(self, context)
+        self.inputs.new(NLConditionSocket.bl_idname, 'Condition')
+        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, 'Game Title')
+        self.inputs[-1].value = 'Your Game'
+        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+
+    def draw_buttons(self, context, layout):
+        layout.label(text='Clear In:')
+        layout.prop(self, "custom_path", toggle=True, text="Custom Path" if self.custom_path else "User/Documents")
+        if self.custom_path:
+            layout.prop(self, "path", text='Path')
+
+    def get_netlogic_class_name(self):
+        return "bgelogic.ActionListVariables"
+
+    def get_input_sockets_field_names(self):
+        return ["condition", "game_name"]
+
+    def get_nonsocket_fields(self):
+        return [("path", lambda : "'{}'".format(self.path) if self.custom_path else "''")]
+
+    def get_output_socket_varnames(self):
+        return ["OUT"]
+
+
+_nodes.append(NLActionListVariables)
+
+
 class NLActionSetCharacterJump(bpy.types.Node, NLActionNode):
     bl_idname = "NLSetActionCharacterJump"
     bl_label = "Set Max Jumps"
