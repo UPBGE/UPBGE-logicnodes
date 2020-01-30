@@ -1411,6 +1411,8 @@ class ParameterPythonModuleFunction(ParameterCell):
         self.condition = None
         self.module_name = None
         self.module_func = None
+        self.use_arg = None
+        self.arg = None
         self.val = None
         self.OUT = LogicNetworkSubCell(self, self.get_done)
         self.VAL = LogicNetworkSubCell(self, self.get_val)
@@ -1439,6 +1441,8 @@ class ParameterPythonModuleFunction(ParameterCell):
             return
         if mfun is STATUS_WAITING:
             return
+        use_arg = self.get_parameter_value(self.use_arg)
+        arg = self.get_parameter_value(self.arg)
         self._set_ready()
         if mname and (self._old_mod_name != mname):
             exec("import {}".format(mname))
@@ -1451,7 +1455,10 @@ class ParameterPythonModuleFunction(ParameterCell):
                 print("Python Module Node: Module '{}' has no function '{}'!".format(self._module, mfun))
                 return
             self._old_mod_fun = mfun
-        self.val = self._modfun()
+        if use_arg:
+            self.val = self._modfun(arg)
+        else:
+            self.val = self._modfun()
         self.done = True
 
 

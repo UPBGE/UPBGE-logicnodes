@@ -2842,6 +2842,8 @@ class NLParameterPythonModuleFunction(bpy.types.Node, NLParameterNode):
         self.inputs.new(NLPseudoConditionSocket.bl_idname, "Condition")
         self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Module")
         self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Function")
+        self.inputs.new(NLBooleanSocket.bl_idname, 'Use Argument')
+        self.inputs.new(NLListSocket.bl_idname, "Argument")
         self.outputs.new(NLConditionSocket.bl_idname, "Done")
         self.outputs.new(NLParameterSocket.bl_idname, "Returned Value")
         self.use_custom_color = True
@@ -2851,7 +2853,7 @@ class NLParameterPythonModuleFunction(bpy.types.Node, NLParameterNode):
         return "bgelogic.ParameterPythonModuleFunction"
 
     def get_input_sockets_field_names(self):
-        return ['condition', "module_name", "module_func"]
+        return ['condition', "module_name", "module_func", 'use_arg', 'arg']
 
     def get_output_socket_varnames(self):
         return ["OUT", "VAL"]
