@@ -6466,13 +6466,11 @@ class ActionTranslate(ActionCell):
         ActionCell.__init__(self)
         self.condition = None
         self.moving_object = None
-        self.dx = None
-        self.dy = None
-        self.dz = None
+        self.local = None
+        self.vect = None
         self.speed = None
         self._t = None
         self._old_values = None
-        self.local = None
 
     def evaluate(self):
         STATUS_WAITING = LogicNetworkCell.STATUS_WAITING
@@ -6483,9 +6481,10 @@ class ActionTranslate(ActionCell):
             self._set_value(False)
             return self._set_ready()
         moving_object = self.get_parameter_value(self.moving_object)
-        dx = self.get_parameter_value(self.dx)
-        dy = self.get_parameter_value(self.dy)
-        dz = self.get_parameter_value(self.dz)
+        vect = self.get_parameter_value(self.vect)
+        dx = vect.x
+        dy = vect.y
+        dz = vect.z
         speed = self.get_parameter_value(self.speed)
         local = self.get_parameter_value(self.local)
         if moving_object is STATUS_WAITING:

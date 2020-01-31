@@ -5732,15 +5732,12 @@ class NLActionTranslate(bpy.types.Node, NLActionNode):
         self.inputs.new(NLConditionSocket.bl_idname, "Condition")
         self.inputs.new(NLGameObjectSocket.bl_idname, "Object")
         self.inputs.new(NLBooleanSocket.bl_idname, "Local")
-        self.inputs.new(NLFloatFieldSocket.bl_idname, "X")
-        self.inputs.new(NLFloatFieldSocket.bl_idname, "Y")
-        self.inputs.new(NLFloatFieldSocket.bl_idname, "Z")
-        self.inputs[-1].value = True
+        self.inputs.new(NLVec3FieldSocket.bl_idname, "Vector")
         self.inputs.new(NLFloatFieldSocket.bl_idname, "Speed")
         self.inputs[-1].value = 1.0
         self.outputs.new(NLConditionSocket.bl_idname, "When Done")
     def get_input_sockets_field_names(self):
-        return ["condition", "moving_object", "dx", "dy", "dz", "local", "speed"]
+        return ["condition", "moving_object", "local", "vect", "speed"]
     def get_netlogic_class_name(self):
         return "bgelogic.ActionTranslate"
 _nodes.append(NLActionTranslate)
