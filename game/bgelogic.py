@@ -3045,7 +3045,24 @@ class ConditionMousePressed(ConditionCell):
             )
         else:
             self._set_value(mstat == bge.logic.KX_INPUT_JUST_ACTIVATED)
-    pass
+
+
+class ConditionMouseMoved(ConditionCell):
+    def __init__(self):
+        ConditionCell.__init__(self)
+        self.pulse = False
+
+    def evaluate(self):
+        self._set_ready()
+        if self.pulse:
+            typ = bge.logic.KX_INPUT_JUST_ACTIVATED
+        else:
+            typ = bge.logic.KX_INPUT_ACTIVE
+        mouse = bge.logic.mouse
+        self._set_value(
+            mouse.events[bge.events.MOUSEX] == typ or
+            mouse.events[bge.events.MOUSEY] == typ
+        )
 
 
 class ConditionMousePressedOn(ConditionCell):

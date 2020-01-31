@@ -3343,13 +3343,48 @@ class NLMousePressedCondition(bpy.types.Node, NLConditionNode):
     def draw_buttons(self, context, layout):
         layout.prop(self, "pulse", text="Pulse: ON" if self.pulse else "Pulse: OFF", toggle=True)
 
-    def get_netlogic_class_name(self): return "bgelogic.ConditionMousePressed"
-    def get_input_sockets_field_names(self): return ["mouse_button_code"]
+    def get_netlogic_class_name(self):
+        return "bgelogic.ConditionMousePressed"
+
+    def get_input_sockets_field_names(self):
+        return ["mouse_button_code"]
+
     def write_cell_fields_initialization(self, cell_varname, uids, line_writer):
         NetLogicStatementGenerator.write_cell_fields_initialization(self, cell_varname, uids, line_writer)
         line_writer.write_line("{}.{} = {}", cell_varname, "pulse", self.pulse)
-    pass
+
+
 _nodes.append(NLMousePressedCondition)
+
+
+class NLMouseMovedCondition(bpy.types.Node, NLConditionNode):
+    bl_idname = "NLMouseMovedCondition"
+    bl_label = "Mouse Moved"
+    nl_category = "Mouse"
+
+    pulse = bpy.props.BoolProperty(
+        description="ON: True until the button is released, OFF: True when pressed, then False until pressed again", default=False,
+        update=update_tree_code)
+
+    def init(self, context):
+        NLConditionNode.init(self, context)
+        self.outputs.new(NLConditionSocket.bl_idname, "If Moved")
+
+    def draw_buttons(self, context, layout):
+        layout.prop(self, "pulse", text="Pulse: ON" if self.pulse else "Pulse: OFF", toggle=True)
+
+    def get_netlogic_class_name(self):
+        return "bgelogic.ConditionMouseMoved"
+
+    def get_input_sockets_field_names(self):
+        return ["mouse_button_code"]
+
+    def write_cell_fields_initialization(self, cell_varname, uids, line_writer):
+        NetLogicStatementGenerator.write_cell_fields_initialization(self, cell_varname, uids, line_writer)
+        line_writer.write_line("{}.{} = {}", cell_varname, "pulse", self.pulse)
+
+
+_nodes.append(NLMouseMovedCondition)
 
 
 class NLMouseReleasedCondition(bpy.types.Node, NLConditionNode):
