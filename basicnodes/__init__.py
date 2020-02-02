@@ -149,6 +149,10 @@ _enum_readable_member_names = [
     ),
     ("localTransform", "Local Transform", "The local transform of the object"),
     ("localScale", "Scale", "The local scale of the object"),
+    ("localLinearVelocity", "Local Velocity", "The local velocity of the object"),
+    ("localAngularVelocity", "Local Rotational Velocity", "The local rotational velocity of the object"),
+    ("worldLinearVelocity", "World Velocity", "The local velocity of the object"),
+    ("worldAngularVelocity", "World Rotational Velocity", "The local rotational velocity of the object"),
     ("color", "Color", "The solid color of the object"),
     ("name", "Name", "The name of the object"),
     (
@@ -173,7 +177,12 @@ _enum_writable_member_names = [
         "The local orientation of the object"
     ),
     ("localTransform", "Local Transform", "The local transform of the object"),
-    ("localScale", "Scale", "The local scale of the object")
+    ("localScale", "Scale", "The local scale of the object"),
+    ("localLinearVelocity", "Local Velocity", "The local velocity of the object"),
+    ("localAngularVelocity", "Local Rotational Velocity", "The local rotational velocity of the object"),
+    ("worldLinearVelocity", "World Velocity", "The local velocity of the object"),
+    ("worldAngularVelocity", "World Rotational Velocity", "The local rotational velocity of the object"),
+    ("color", "Color", "The solid color of the object")
 ]
 
 _enum_mouse_buttons = [
@@ -1271,19 +1280,24 @@ class NLValueFieldSocket(bpy.types.NodeSocket, NetLogicSocketType):
         if self.is_linked or self.is_output:
             layout.label(text=text)
         else:
-            main = layout.split()
+            col = layout.column()
+            if text:
+                name_row = col.row()
+                name_row.label(text=text)
+            val_line = col.row()
+            val_row = val_line.split()
             if self.value_type == "BOOLEAN":
-                main.prop(self, "value_type", text="")
-                main.prop(self, "bool_editor", text="")
+                val_row.prop(self, "value_type", text="")
+                val_row.prop(self, "bool_editor", text="")
             elif self.value_type == "INTEGER":
-                main.prop(self, "value_type", text="")
-                main.prop(self, "int_editor", text="")
+                val_row.prop(self, "value_type", text="")
+                val_row.prop(self, "int_editor", text="")
             elif self.value_type == "FLOAT":
-                main.prop(self, "value_type", text="")
-                main.prop(self, "float_editor", text="")
+                val_row.prop(self, "value_type", text="")
+                val_row.prop(self, "float_editor", text="")
             elif self.value_type == "STRING":
-                main.prop(self, "value_type", text="")
-                main.prop(self, "string_editor", text="")
+                val_row.prop(self, "value_type", text="")
+                val_row.prop(self, "string_editor", text="")
 
 
 _sockets.append(NLValueFieldSocket)
@@ -2062,9 +2076,9 @@ class NLParameterValueFilter3(bpy.types.Node, NLParameterNode):
     def init(self, context):
         NLParameterNode.init(self, context)
         self.inputs.new(NLSocketFilter3.bl_idname, "Op")
-        self.inputs.new(NLValueFieldSocket.bl_idname, "A")
-        self.inputs.new(NLValueFieldSocket.bl_idname, "B")
-        self.inputs.new(NLValueFieldSocket.bl_idname, "C")
+        self.inputs.new(NLValueFieldSocket.bl_idname, "")
+        self.inputs.new(NLValueFieldSocket.bl_idname, "")
+        self.inputs.new(NLValueFieldSocket.bl_idname, "")
         self.outputs.new(NLParameterSocket.bl_idname, "Out")
 
     def get_netlogic_class_name(self):
@@ -2371,6 +2385,31 @@ class NLRunActuatorByNameNode(bpy.types.Node, NLActionNode):
 
 
 _nodes.append(NLRunActuatorByNameNode)
+
+
+class NLSetActuatorValueNode(bpy.types.Node, NLActionNode):
+    bl_idname = "NLSetActuatorValueNode"
+    bl_label = "Set Actuator Value"
+    nl_category = "Logic Bricks"
+
+    def init(self, context):
+        NLParameterNode.init(self, context)
+        self.inputs.new(NLConditionSocket.bl_idname, "Condition")
+        self.inputs.new(NLLogicBrickSocket.bl_idname, "Actuator")
+        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Field")
+        self.inputs.new(NLValueFieldSocket.bl_idname, "")
+        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+
+    def get_output_socket_varnames(self):
+        return ["OUT"]
+
+    def get_netlogic_class_name(self): return "bgelogic.SetActuatorValue"
+
+    def get_input_sockets_field_names(self):
+        return ["condition", 'actuator', 'field', 'value']
+
+
+_nodes.append(NLSetActuatorValueNode)
 
 
 class NLGetCurrentControllerNode(bpy.types.Node, NLParameterNode):
@@ -3276,7 +3315,8 @@ class NLKeyPressedCondition(bpy.types.Node, NLConditionNode):
     def write_cell_fields_initialization(self, cell_varname, uids, line_writer):
         NetLogicStatementGenerator.write_cell_fields_initialization(self, cell_varname, uids, line_writer)
         line_writer.write_line("{}.{} = {}", cell_varname, "pulse", self.pulse)
-    pass
+
+
 _nodes.append(NLKeyPressedCondition)
 
 
@@ -3284,20 +3324,34 @@ class NLKeyLoggerAction(bpy.types.Node, NLActionNode):
     bl_idname = "NLKeyLoggerAction"
     bl_label = "Key Logger"
     nl_category = "Keyboard"
+    pulse = bpy.props.BoolProperty(
+        description="ON: True until the key is released, OFF: True when pressed, then False until pressed again",
+        update=update_tree_code)
     
     def init(self, context):
         NLActionNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, "Condition")
-        self.outputs.new(NLConditionSocket.bl_idname, "Key Logged")
+        self.inputs.new(NLPseudoConditionSocket.bl_idname, "Condition")
+        self.outputs.new(NLConditionSocket.bl_idname, "Done")
         self.outputs.new(NLParameterSocket.bl_idname, "Key Code")
         self.outputs.new(NLParameterSocket.bl_idname, "Logged Char")
+
+    def draw_buttons(self, context, layout):
+        layout.prop(self, "pulse", text="Key Down" if self.pulse else "Key Tap", toggle=True)
+
     def get_netlogic_class_name(self):
         return "bgelogic.ActionKeyLogger"
+
     def get_input_sockets_field_names(self):
         return ["condition"]
+
     def get_output_socket_varnames(self):
         return ["KEY_LOGGED", "KEY_CODE", "CHARACTER"]
-    pass
+    
+    def write_cell_fields_initialization(self, cell_varname, uids, line_writer):
+        NetLogicStatementGenerator.write_cell_fields_initialization(self, cell_varname, uids, line_writer)
+        line_writer.write_line("{}.{} = {}", cell_varname, "pulse", self.pulse)
+
+
 _nodes.append(NLKeyLoggerAction)
 
 
@@ -3617,7 +3671,7 @@ class NLConditionValueTriggerNode(bpy.types.Node, NLConditionNode):
     def init(self, context):
         NLConditionNode.init(self, context)
         self.inputs.new(NLParameterSocket.bl_idname, "Value")
-        self.inputs.new(NLValueFieldSocket.bl_idname, "To")
+        self.inputs.new(NLValueFieldSocket.bl_idname, "")
         self.inputs[-1].value_type = "BOOLEAN"
         self.inputs[-1].value = "True"
         self.outputs.new(NLConditionSocket.bl_idname, "When Changed To")
@@ -3640,8 +3694,8 @@ class NLConditionLogicOperation(bpy.types.Node, NLConditionNode):
     
     def init(self, context):
         NLConditionNode.init(self, context)
-        self.inputs.new(NLValueFieldSocket.bl_idname, "A")
-        self.inputs.new(NLValueFieldSocket.bl_idname, "B")
+        self.inputs.new(NLValueFieldSocket.bl_idname, "")
+        self.inputs.new(NLValueFieldSocket.bl_idname, "")
         self.outputs.new(NLConditionSocket.bl_idname, "If True")
     def get_netlogic_class_name(self): return "bgelogic.ConditionLogicOp"
     def get_input_sockets_field_names(self): return ["param_a", "param_b"]
@@ -3802,7 +3856,7 @@ class NLSetGameObjectGamePropertyActionNode(bpy.types.Node, NLActionNode):
         self.inputs.new(NLGameObjectSocket.bl_idname, "Object")
         self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Name")
         self.inputs[-1].value = 'prop'
-        self.inputs.new(NLValueFieldSocket.bl_idname, "Value")
+        self.inputs.new(NLValueFieldSocket.bl_idname, "")
         self.outputs.new(NLConditionSocket.bl_idname, "Done")
 
     def get_netlogic_class_name(self): return "bgelogic.ActionSetGameObjectGameProperty"
@@ -3852,6 +3906,34 @@ class NLAddToGameObjectGamePropertyActionNode(bpy.types.Node, NLActionNode):
     def get_output_socket_varnames(self):
         return ['OUT']
 _nodes.append(NLAddToGameObjectGamePropertyActionNode)
+
+
+class NLValueSwitch(bpy.types.Node, NLParameterNode):
+    bl_idname = "NLValueSwitch"
+    bl_label = "Value Switch"
+    nl_category = "Values"
+
+    def init(self, context):
+        NLParameterNode.init(self, context)
+        self.inputs.new(NLPseudoConditionSocket.bl_idname, "Condition")
+        self.inputs.new(NLValueFieldSocket.bl_idname, "")
+        self.inputs[-1].value = 'A'
+        self.inputs.new(NLValueFieldSocket.bl_idname, "")
+        self.inputs[-1].value = 'B'
+        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+        self.outputs.new(NLParameterSocket.bl_idname, "A or B")
+
+    def get_netlogic_class_name(self):
+        return "bgelogic.ValueSwitch"
+
+    def get_input_sockets_field_names(self):
+        return ["condition", 'val_a', 'val_b']
+
+    def get_output_socket_varnames(self):
+        return ["OUT", 'VAL']
+
+
+_nodes.append(NLValueSwitch)
 
 
 class NLInvertBoolNode(bpy.types.Node, NLActionNode):
@@ -4137,7 +4219,7 @@ _nodes.append(NLInitEmptyDict)
 
 class NLSetDictKeyValue(bpy.types.Node, NLActionNode):
     bl_idname = "NLSetDictKeyValue"
-    bl_label = "Dict: Add Key"
+    bl_label = "Dict: Set Key"
     nl_category = "Python"
 
     def init(self, context):
@@ -4145,7 +4227,7 @@ class NLSetDictKeyValue(bpy.types.Node, NLActionNode):
         self.inputs.new(NLConditionSocket.bl_idname, 'Condition')
         self.inputs.new(NLDictSocket.bl_idname, 'Dictionary')
         self.inputs.new(NLQuotedStringFieldSocket.bl_idname, 'Key')
-        self.inputs.new(NLValueFieldSocket.bl_idname, 'Value')
+        self.inputs.new(NLValueFieldSocket.bl_idname, '')
         self.outputs.new(NLConditionSocket.bl_idname, 'Done')
         self.outputs.new(NLDictSocket.bl_idname, 'Dictionary')
 
@@ -4184,12 +4266,13 @@ _nodes.append(NLSetDictDelKey)
 
 class NLInitEmptyList(bpy.types.Node, NLActionNode):
     bl_idname = "NLInitEmptyList"
-    bl_label = "List: Init Empty"
+    bl_label = "List: Init New"
     nl_category = "Python"
 
     def init(self, context):
         NLActionNode.init(self, context)
         self.inputs.new(NLPseudoConditionSocket.bl_idname, 'Condition')
+        self.inputs.new(NLIntegerFieldSocket.bl_idname, 'Length')
         self.outputs.new(NLConditionSocket.bl_idname, 'Done')
         self.outputs.new(NLListSocket.bl_idname, 'List')
 
@@ -4197,7 +4280,7 @@ class NLInitEmptyList(bpy.types.Node, NLActionNode):
         return ["OUT", 'LIST']
 
     def get_netlogic_class_name(self): return "bgelogic.InitEmptyList"
-    def get_input_sockets_field_names(self): return ["condition"]
+    def get_input_sockets_field_names(self): return ["condition", 'length']
 
 
 _nodes.append(NLInitEmptyList)
@@ -4212,7 +4295,7 @@ class NLAppendListItem(bpy.types.Node, NLActionNode):
         NLActionNode.init(self, context)
         self.inputs.new(NLConditionSocket.bl_idname, 'Condition')
         self.inputs.new(NLListSocket.bl_idname, 'List')
-        self.inputs.new(NLValueFieldSocket.bl_idname, 'Value')
+        self.inputs.new(NLValueFieldSocket.bl_idname, '')
         self.outputs.new(NLConditionSocket.bl_idname, 'Done')
         self.outputs.new(NLListSocket.bl_idname, 'List')
 
@@ -4227,6 +4310,33 @@ class NLAppendListItem(bpy.types.Node, NLActionNode):
 _nodes.append(NLAppendListItem)
 
 
+class NLSetListIndex(bpy.types.Node, NLActionNode):
+    bl_idname = "NLSetListIndex"
+    bl_label = "List: Set Index"
+    nl_category = "Python"
+
+    def init(self, context):
+        NLActionNode.init(self, context)
+        self.inputs.new(NLConditionSocket.bl_idname, 'Condition')
+        self.inputs.new(NLListSocket.bl_idname, 'List')
+        self.inputs.new(NLIntegerFieldSocket.bl_idname, 'Index')
+        self.inputs.new(NLValueFieldSocket.bl_idname, '')
+        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+        self.outputs.new(NLListSocket.bl_idname, 'List')
+
+    def get_output_socket_varnames(self):
+        return ["OUT", "LIST"]
+
+    def get_netlogic_class_name(self):
+        return "bgelogic.SetListIndex"
+
+    def get_input_sockets_field_names(self):
+        return ["condition", 'list', 'index', 'val']
+
+
+_nodes.append(NLSetListIndex)
+
+
 class NLRemoveListValue(bpy.types.Node, NLActionNode):
     bl_idname = "NLRemoveListValue"
     bl_label = "List: Remove Value"
@@ -4236,7 +4346,7 @@ class NLRemoveListValue(bpy.types.Node, NLActionNode):
         NLActionNode.init(self, context)
         self.inputs.new(NLConditionSocket.bl_idname, 'Condition')
         self.inputs.new(NLListSocket.bl_idname, 'List')
-        self.inputs.new(NLValueFieldSocket.bl_idname, 'Value')
+        self.inputs.new(NLValueFieldSocket.bl_idname, '')
         self.outputs.new(NLConditionSocket.bl_idname, 'Done')
         self.outputs.new(NLListSocket.bl_idname, 'List')
 
@@ -4570,7 +4680,7 @@ class NLActionSaveVariable(bpy.types.Node, NLActionNode):
         self.inputs.new(NLConditionSocket.bl_idname, 'Condition')
         self.inputs.new(NLQuotedStringFieldSocket.bl_idname, 'Name')
         self.inputs[-1].value = 'var'
-        self.inputs.new(NLValueFieldSocket.bl_idname, 'Value')
+        self.inputs.new(NLValueFieldSocket.bl_idname, '')
         self.inputs.new(NLQuotedStringFieldSocket.bl_idname, 'Game Title')
         self.inputs[-1].value = 'Your Game'
         self.outputs.new(NLConditionSocket.bl_idname, 'Done')
@@ -4965,8 +5075,9 @@ class NLActionPlayActionNode(bpy.types.Node, NLActionNode):
         self.inputs.new(NLPositiveIntegerFieldSocket.bl_idname, "Layer")
         self.inputs.new(NLPositiveIntegerFieldSocket.bl_idname, "Priority")
         self.inputs.new(NLPlayActionModeSocket.bl_idname, "Play Mode")
-        self.inputs.new(NLFloatFieldSocket.bl_idname, "Layer Weight")
-        self.inputs.new(NLFloatFieldSocket.bl_idname, "Speed")
+        self.inputs.new(NLSocketAlphaFloat.bl_idname, "Layer Weight")
+        self.inputs[-1].value = 1.0
+        self.inputs.new(NLPositiveFloatSocket.bl_idname, "Speed")
         self.inputs[-1].value = 1.0
         self.inputs.new(NLFloatFieldSocket.bl_idname, "Blendin")
         self.inputs.new(NLBlendActionModeSocket.bl_idname, "Blend Mode")
@@ -5572,7 +5683,7 @@ class NLParameterGetGlobalValue(bpy.types.Node, NLParameterNode):
         NLParameterNode.init(self, context)
         self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "ID")
         self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Key")
-        self.inputs.new(NLValueFieldSocket.bl_idname, "Default")
+        self.inputs.new(NLValueFieldSocket.bl_idname, "")
         self.outputs.new(NLParameterSocket.bl_idname, "Value")
     def get_input_sockets_field_names(self):
         return ["data_id", "key", "default_value"]
@@ -5592,7 +5703,7 @@ class NLActionSetGlobalValue(bpy.types.Node, NLActionNode):
         self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "ID")
         self.inputs.new(NLBooleanSocket.bl_idname, "Persistent")
         self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Key")
-        self.inputs.new(NLValueFieldSocket.bl_idname, "Value")
+        self.inputs.new(NLValueFieldSocket.bl_idname, "")
         self.outputs.new(NLConditionSocket.bl_idname, 'Done')
 
     def get_output_socket_varnames(self):

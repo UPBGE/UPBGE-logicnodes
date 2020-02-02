@@ -1232,6 +1232,37 @@ class ActivateActuatorByName(ParameterCell):
         self.done = True
 
 
+class SetActuatorValue(ParameterCell):
+
+    def __init__(self):
+        ParameterCell.__init__(self)
+        self.condition = None
+        self.actuator = None
+        self.field = None
+        self.value = None
+        self.done = None
+        self.OUT = LogicNetworkSubCell(self, self.get_done)
+
+    def get_done(self):
+        return self.done
+
+    def evaluate(self):
+        self.done = False
+        STATUS_WAITING = LogicNetworkCell.STATUS_WAITING
+        condition = self.get_parameter_value(self.condition)
+        actuator = self.get_parameter_value(self.actuator)
+        self._set_ready()
+        if actuator is STATUS_WAITING or none_or_invalid(actuator):
+            print("Set Actuator Value Node: There is a problem with the actuator!")
+            return
+        if condition is STATUS_WAITING or not condition:
+            return
+        field = self.get_parameter_value(self.field)
+        value = self.get_parameter_value(self.value)
+        setattr(actuator, field, value)
+        self.done = True
+
+
 class GetController(ParameterCell):
 
     @classmethod
@@ -2676,7 +2707,6 @@ class ConditionKeyPressed(ConditionCell):
 
     def setup(self, network):
         self.network = network
-        pass
 
     def evaluate(self):
         keycode = self.get_parameter_value(self.key_code)
@@ -2692,7 +2722,6 @@ class ConditionKeyPressed(ConditionCell):
             )
         else:
             self._set_value(keystat == bge.logic.KX_INPUT_JUST_ACTIVATED)
-        pass
 
 
 class ConditionGamepadSticks(ConditionCell):
@@ -2814,9 +2843,10 @@ class ConditionGamepadButtons(ConditionCell):
             self.initialized = False
 
 class ActionKeyLogger(ActionCell):
-    def __init__(self):
+    def __init__(self, pulse=False):
         ActionCell.__init__(self)
         self.condition = None
+        self.pulse = pulse
         self._key_logged = None
         self._key_code = None
         self._character = None
@@ -2856,9 +2886,10 @@ class ActionKeyLogger(ActionCell):
             network.capslock_pressed
         )
         active_events = network.active_keyboard_events
+        active = bge.logic.KX_INPUT_ACTIVE if self.pulse else bge.logic.KX_INPUT_JUST_ACTIVATED
         for keycode in active_events:
             event = active_events[keycode]
-            if(event is bge.logic.KX_INPUT_JUST_ACTIVATED):
+            if(event is active):
                 # something has been pressed
                 self._character = bge.events.EventToCharacter(
                     keycode,
@@ -3511,6 +3542,37 @@ class ActionAddToGameObjectGameProperty(ActionCell):
             )
 
 
+class ValueSwitch(ActionCell):
+    def __init__(self):
+        ActionCell.__init__(self)
+        self.conditon = None
+        self.val_a = None
+        self.val_b = None
+        self.done = False
+        self.out_value = False
+        self.OUT = LogicNetworkSubCell(self, self._get_done)
+        self.VAL = LogicNetworkSubCell(self, self._get_out_value)
+
+    def _get_done(self):
+        return self.done
+
+    def _get_out_value(self):
+        return self.out_value
+
+    def evaluate(self):
+        self.done = False
+        condition = self.get_parameter_value(self.condition)
+        if condition is LogicNetworkCell.STATUS_WAITING:
+            return
+        val_a = self.get_parameter_value(self.val_a)
+        val_b = self.get_parameter_value(self.val_b)
+        self._set_ready()
+        self.out_value = (
+            val_b if condition else val_a
+        )
+        self.done = True
+
+
 class InvertBool(ActionCell):
     def __init__(self):
         ActionCell.__init__(self)
@@ -3705,7 +3767,8 @@ class ActionMouseLook(ActionCell):
                 offset.y = 0
 
         game_object_y.applyRotation((0, (offset.y), 0), True)
-        self.mouse.position = self.screen_center
+        if self.mouse.position != self.screen_center:
+            self.mouse.position = self.screen_center
         self.done = True
 
 
@@ -4413,6 +4476,7 @@ class InitEmptyList(ActionCell):
     def __init__(self):
         ActionCell.__init__(self)
         self.condition = None
+        self.length = None
         self.list = None
         self.done = None
         self.OUT = LogicNetworkSubCell(self, self.get_done)
@@ -4431,8 +4495,11 @@ class InitEmptyList(ActionCell):
             return
         if not condition:
             return
+        length = self.get_parameter_value(self.length)
+        if length is LogicNetworkCell.STATUS_WAITING:
+            return
         self._set_ready()
-        self.list = []
+        self.list = [None for x in range(length)]
         self.done = True
 
 
@@ -4468,6 +4535,46 @@ class AppendListItem(ActionCell):
             return
         self._set_ready()
         list_d.append(val)
+        self.new_list = list_d
+        self.done = True
+
+
+class SetListIndex(ActionCell):
+    def __init__(self):
+        ActionCell.__init__(self)
+        self.condition = None
+        self.list = None
+        self.index = None
+        self.val = None
+        self.new_list = None
+        self.done = None
+        self.OUT = LogicNetworkSubCell(self, self.get_done)
+        self.LIST = LogicNetworkSubCell(self, self.get_list)
+
+    def get_done(self):
+        return self.done
+
+    def get_list(self):
+        return self.new_list
+
+    def evaluate(self):
+        self.done = False
+        condition = self.get_parameter_value(self.condition)
+        if condition is LogicNetworkCell.STATUS_WAITING:
+            return
+        if not condition:
+            return
+        list_d = self.get_parameter_value(self.list)
+        if list_d is LogicNetworkCell.STATUS_WAITING:
+            return
+        index = self.get_parameter_value(self.index)
+        if index is LogicNetworkCell.STATUS_WAITING:
+            return
+        val = self.get_parameter_value(self.val)
+        if val is LogicNetworkCell.STATUS_WAITING:
+            return
+        self._set_ready()
+        list_d[index] = val
         self.new_list = list_d
         self.done = True
 
@@ -5864,7 +5971,9 @@ class ActionPlayAction(ActionCell):
         self.priority = None
         self.play_mode = None
         self.layer_weight = None
+        self.old_layer_weight = None
         self.speed = None
+        self.old_speed = None
         self.blendin = None
         self.blend_mode = None
         self._started = False
@@ -5937,8 +6046,14 @@ class ActionPlayAction(ActionCell):
             return
         if layer_weight is LogicNetworkCell.STATUS_WAITING:
             return
+        if layer_weight <= 0:
+            layer_weight = 0.0
+        elif layer_weight >= 1:
+            layer_weight = 1.0
         if speed is LogicNetworkCell.STATUS_WAITING:
             return
+        if speed <= 0:
+            speed = 0.0
         if blendin is LogicNetworkCell.STATUS_WAITING:
             return
         if blend_mode is LogicNetworkCell.STATUS_WAITING:
@@ -5965,6 +6080,21 @@ class ActionPlayAction(ActionCell):
                 self._started = False
                 self._running = True
                 is_near_end = False
+                self._frame = playing_frame
+                if layer_weight != self.old_layer_weight or speed != self.old_speed:
+                    game_object.stopAction(layer)
+                    game_object.playAction(
+                        action_name,
+                        start_frame,
+                        end_frame,
+                        layer=layer,
+                        priority=priority,
+                        blendin=blendin,
+                        play_mode=play_mode,
+                        speed=speed,
+                        layer_weight=1 - layer_weight,
+                        blend_mode=blend_mode)
+                    game_object.setActionFrame(playing_frame + speed, layer)
                 # TODO: the meaning of start-end depends
                 # also on the action mode
                 if end_frame > start_frame:  # play 0 to 100
@@ -5974,7 +6104,6 @@ class ActionPlayAction(ActionCell):
                     is_near_end = (playing_frame <= (end_frame + 0.5))
                 if is_near_end:
                     self._notify_finished(game_object, layer)
-                pass
             elif condition:  # start the animation if the condition is True
                 game_object.playAction(
                     action_name,
@@ -5985,7 +6114,7 @@ class ActionPlayAction(ActionCell):
                     blendin=blendin,
                     play_mode=play_mode,
                     speed=speed,
-                    layer_weight=layer_weight,
+                    layer_weight=1 - layer_weight,
                     blend_mode=blend_mode)
                 self._started = True
                 self._running = True
@@ -5994,6 +6123,8 @@ class ActionPlayAction(ActionCell):
                 self._finish_notified = False
             else:  # game_object is existing and valid but condition is False
                 self._reset_subvalues()
+        self.old_layer_weight = layer_weight
+        self.old_speed = speed
 
 
 class ActionStopAnimation(ActionCell):
