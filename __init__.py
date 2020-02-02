@@ -8,7 +8,7 @@ bl_info = {
     "name": "Uchronian Logic - UPBGE Logic Nodes",
     "description": "A Node System to create game logic.",
     "author": "pgi, Leopold A-C (Iza Zed)",
-    "version": (0, 8, 3),
+    "version": (0, 8, 4),
     "blender": (2, 83, 0),
     "location": "View Menu",
     "warning": "Beta",
