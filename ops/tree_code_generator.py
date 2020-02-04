@@ -142,4 +142,3 @@ class TreeCodeGenerator(object):
                 pass
         #all inputs are constant expressions or linked to resolved cells
         return True
-    pass

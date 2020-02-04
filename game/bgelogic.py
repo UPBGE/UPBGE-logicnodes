@@ -1327,12 +1327,57 @@ class GetSensor(ParameterCell):
         self._set_value(game_obj.sensors[self.sens_name].positive)
 
 
+class SensorValue(ParameterCell):
+
+    @classmethod
+    def sens(cls, sensor):
+        return sensor
+
+    @classmethod
+    def obj(cls, obj_name):
+        return obj_name
+
+    def __init__(self):
+        ParameterCell.__init__(self)
+        self.obj_name = None
+        self.sens_name = None
+        self.field = None
+        self.done = None
+        self.val = None
+        self.OUT = LogicNetworkSubCell(self, self.get_done)
+        self.VAL = LogicNetworkSubCell(self, self.get_val)
+
+    def get_done(self):
+        return self.done
+
+    def get_val(self):
+        return self.val
+
+    def evaluate(self):
+        self.done = False
+        game_obj = self.get_parameter_value(self.obj_name)
+        if none_or_invalid(game_obj):
+            print('Get Sensor Node: No Game Object selected!')
+            return
+        if none_or_invalid(self.sens_name):
+            print('Get Sensor Node: No Sensor selected!')
+            return
+        field = self.get_parameter_value(self.field)
+        if field is LogicNetworkCell.STATUS_WAITING:
+            return
+        self._set_ready()
+        #print(game_obj, self.sens_name, field)
+        #print(getattr(game_obj.sensors[self.sens_name], field))
+        self.val = getattr(game_obj.sensors[self.sens_name], field)
+        self.done = True
+
+
 class SensorPositive(ParameterCell):
 
     def __init__(self):
         ParameterCell.__init__(self)
         self.sensor = None
-        self.positive = None
+        self.done = None
 
     def evaluate(self):
         sens = self.get_parameter_value(self.sensor)
@@ -1559,6 +1604,8 @@ class ClampValue(ParameterCell):
         if value is LogicNetworkCell.STATUS_WAITING:
             return
         if range_ft is LogicNetworkCell.STATUS_WAITING:
+            return
+        if none_or_invalid(value):
             return
         self._set_ready()
         if range_ft.x == range_ft.y:
@@ -1926,6 +1973,38 @@ class ParameterVector3Split(ParameterCell):
         self._set_value(vec)
 
 
+class ParameterEulerToMatrix(ParameterCell):
+    def __init__(self):
+        ParameterCell.__init__(self)
+        self.input_e = None
+        self.matrix = mathutils.Matrix()
+        self.OUT = LogicNetworkSubCell(self, self.get_matrix)
+
+    def get_matrix(self):
+        return self.matrix
+
+    def evaluate(self):
+        self._set_ready()
+        vec = self.get_parameter_value(self.input_e)
+        self.matrix = vec.to_matrix()
+
+
+class ParameterMatrixToEuler(ParameterCell):
+    def __init__(self):
+        ParameterCell.__init__(self)
+        self.input_m = None
+        self.euler = mathutils.Euler()
+        self.OUT = LogicNetworkSubCell(self, self.get_euler)
+
+    def get_euler(self):
+        return self.euler
+
+    def evaluate(self):
+        self._set_ready()
+        vec = self.get_parameter_value(self.input_m)
+        self.matrix = vec.to_euler()
+
+
 class ParameterVector3Simple(ParameterCell):
     def __init__(self):
         ParameterCell.__init__(self)
@@ -1953,6 +2032,35 @@ class ParameterVector3Simple(ParameterCell):
         if z is not None:
             self.output_vector.z = z
         self._set_value(self.output_vector)
+
+
+class ParameterEulerSimple(ParameterCell):
+    def __init__(self):
+        ParameterCell.__init__(self)
+        self.input_x = None
+        self.input_y = None
+        self.input_z = None
+        self.output_euler = mathutils.Euler()
+        self.OUTV = LogicNetworkSubCell(self, self.get_out_v)
+
+    def get_out_x(self): return self.output_euler.x
+    def get_out_y(self): return self.output_euler.y
+    def get_out_z(self): return self.output_euler.z
+    def get_out_v(self): return self.output_euler.copy()
+    def get_normalized_vector(self): return self.output_euler.normalized()
+
+    def evaluate(self):
+        self._set_ready()
+        x = self.get_parameter_value(self.input_x)
+        y = self.get_parameter_value(self.input_y)
+        z = self.get_parameter_value(self.input_z)
+        if x is not None:
+            self.output_euler.x = x
+        if y is not None:
+            self.output_euler.y = y
+        if z is not None:
+            self.output_euler.z = z
+        self._set_value(self.output_euler)
 
 
 class ParameterVector4(ParameterCell):
@@ -2752,10 +2860,12 @@ class ConditionGamepadSticks(ConditionCell):
         index = self.get_parameter_value(self.index)
         sensitivity = self.get_parameter_value(self.sensitivity)
         threshold = self.get_parameter_value(self.threshold)
-        joystick = bge.logic.joysticks[index]
-
-        if none_or_invalid(joystick):
+        try:
+            joystick = bge.logic.joysticks[index]
+        except Exception:
             print('Gamepad Sticks Node: No Joystick at that Index!')
+            return
+        if none_or_invalid(joystick):
             return
         raw_values = joystick.axisValues
         values = []
@@ -2796,10 +2906,12 @@ class ConditionGamepadTrigger(ConditionCell):
         index = self.get_parameter_value(self.index)
         sensitivity = self.get_parameter_value(self.sensitivity)
         threshold = self.get_parameter_value(self.threshold)
-        joystick = bge.logic.joysticks[index]
-
-        if none_or_invalid(joystick):
+        try:
+            joystick = bge.logic.joysticks[index]
+        except Exception:
             print('No Joystick at that Index!')
+            return
+        if none_or_invalid(joystick):
             return
         value = joystick.axisValues[4] if axis == 0 else joystick.axisValues[5]
 
@@ -2824,10 +2936,12 @@ class ConditionGamepadButtons(ConditionCell):
     def evaluate(self):
         self._set_ready()
         index = self.get_parameter_value(self.index)
-        joystick = bge.logic.joysticks[index]
-
-        if none_or_invalid(joystick):
+        try:
+            joystick = bge.logic.joysticks[index]
+        except Exception:
             print('Gamepad Button Node: No Joystick at that Index!')
+            return
+        if none_or_invalid(joystick):
             return
 
         if self.button in joystick.activeButtons:
@@ -5847,6 +5961,76 @@ class ActionSetCharacterJump(ActionCell):
         self.done = True
 
 
+class ActionSetCharacterGravity(ActionCell):
+    def __init__(self):
+        ActionCell.__init__(self)
+        self.condition = None
+        self.game_object = None
+        self.gravity = None
+        self.done = None
+        self.OUT = LogicNetworkSubCell(self, self.get_done)
+
+    def get_done(self):
+        return self.done
+
+    def evaluate(self):
+        self.done = False
+        condition = self.get_parameter_value(self.condition)
+        if condition is LogicNetworkCell.STATUS_WAITING:
+            return
+        if not condition:
+            return
+        game_object = self.get_parameter_value(self.game_object)
+        if game_object is LogicNetworkCell.STATUS_WAITING:
+            return
+        physics = bge.constraints.getCharacter(game_object)
+        gravity = self.get_parameter_value(self.gravity)
+        self._set_ready()
+        if none_or_invalid(game_object):
+            return
+        try:
+            physics.gravity = gravity
+        except Exception as e:
+            print('Error: {} not set to Character Physics!'.format(game_object.name))
+            print('Message: ' + e)
+        self.done = True
+
+
+class ActionSetCharacterWalkDir(ActionCell):
+    def __init__(self):
+        ActionCell.__init__(self)
+        self.condition = None
+        self.game_object = None
+        self.walkDir = None
+        self.done = None
+        self.OUT = LogicNetworkSubCell(self, self.get_done)
+
+    def get_done(self):
+        return self.done
+
+    def evaluate(self):
+        self.done = False
+        condition = self.get_parameter_value(self.condition)
+        if condition is LogicNetworkCell.STATUS_WAITING:
+            return
+        if not condition:
+            return
+        game_object = self.get_parameter_value(self.game_object)
+        if game_object is LogicNetworkCell.STATUS_WAITING:
+            return
+        physics = bge.constraints.getCharacter(game_object)
+        walkDir = self.get_parameter_value(self.walkDir)
+        self._set_ready()
+        if none_or_invalid(game_object):
+            return
+        try:
+            physics.walkDirection = walkDir
+        except Exception as e:
+            print('Error: {} not set to Character Physics!'.format(game_object.name))
+            print('Message: ' + e)
+        self.done = True
+
+
 class ActionGetCharacterInfo(ActionCell):
     def __init__(self):
         ActionCell.__init__(self)
@@ -6053,7 +6237,7 @@ class ActionPlayAction(ActionCell):
         if speed is LogicNetworkCell.STATUS_WAITING:
             return
         if speed <= 0:
-            speed = 0.0
+            speed = 0.01
         if blendin is LogicNetworkCell.STATUS_WAITING:
             return
         if blend_mode is LogicNetworkCell.STATUS_WAITING:

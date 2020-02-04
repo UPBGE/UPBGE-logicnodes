@@ -2556,6 +2556,75 @@ class NLGetSensorNode(bpy.types.Node, NLParameterNode):
 _nodes.append(NLGetSensorNode)
 
 
+class NLSensorValueNode(bpy.types.Node, NLParameterNode):
+    bl_idname = "NLSensorValueNode"
+    bl_label = "Sensor Value"
+    nl_category = "Logic Bricks"
+    obj = bpy.props.PointerProperty(
+        name='Object',
+        type=bpy.types.Object,
+        update=update_tree_code
+    )
+    sensor = bpy.props.StringProperty(update=update_tree_code)
+
+    def init(self, context):
+        NLParameterNode.init(self, context)
+        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, 'Field')
+        self.outputs.new(NLConditionSocket.bl_idname, "Done")
+        self.outputs.new(NLParameterSocket.bl_idname, "Value")
+
+    def get_netlogic_class_name(self): return "bgelogic.SensorValue"
+
+    def get_input_sockets_field_names(self):
+        return ["field"]
+
+    def draw_buttons(self, context, layout):
+        col = layout.column()
+        row1 = col.row()
+        row2 = col.row()
+        row1.label(text='From Object')
+        row2.prop_search(
+            self,
+            "obj",
+            bpy.context.scene,
+            'objects',
+            icon='NONE',
+            text=''
+        )
+        if self.obj:
+            row3 = col.row()
+            row4 = col.row()
+            row3.label(text='Sensor')
+            row4.prop_search(
+                self,
+                "sensor",
+                self.obj.game,
+                'sensors',
+                icon='NONE',
+                text=''
+            )
+
+    def get_nonsocket_fields(self):
+        return [
+            (
+                "obj_name", lambda: 'bgelogic.SensorValue.obj("{}")'.format(
+                    'Object:{}'.format(self.obj.name)
+                )
+            ),
+            (
+                "sens_name", lambda: 'bgelogic.SensorValue.sens("{}")'.format(
+                    self.sensor
+                )
+            )
+        ] if self.obj else []
+
+    def get_output_socket_varnames(self):
+        return ['OUT', 'VAL']
+
+
+_nodes.append(NLSensorValueNode)
+
+
 class NLSensorPositiveNode(bpy.types.Node, NLParameterNode):
     bl_idname = "NLSensorPositiveNode"
     bl_label = "Sensor Positive"
@@ -3081,7 +3150,66 @@ class NLParameterVector3SimpleNode(bpy.types.Node, NLParameterNode):
     def get_netlogic_class_name(self): return "bgelogic.ParameterVector3Simple"
     def get_output_socket_varnames(self): return ["OUTV"]
     def get_input_sockets_field_names(self): return ["input_x", "input_y", "input_z"]
+
+
 _nodes.append(NLParameterVector3SimpleNode)
+
+
+class NLParameterEulerSimpleNode(bpy.types.Node, NLParameterNode):
+    bl_idname = "NLParameterEulerSimpleNode"
+    bl_label = "Euler"
+    nl_category = "Values"
+
+    def init(self, context):
+        NLParameterNode.init(self, context)
+        tools.register_inputs(
+            self,
+            NLFloatFieldSocket, "X",
+            NLFloatFieldSocket, "Y",
+            NLFloatFieldSocket, "Z"
+        )
+        self.outputs.new(NLParameterSocket.bl_idname, "Euler")
+
+    def get_netlogic_class_name(self): return "bgelogic.ParameterEulerSimple"
+    def get_output_socket_varnames(self): return ["OUTV"]
+    def get_input_sockets_field_names(self): return ["input_x", "input_y", "input_z"]
+_nodes.append(NLParameterEulerSimpleNode)
+
+
+class NLParameterEulerToMatrixNode(bpy.types.Node, NLParameterNode):
+    bl_idname = "NLParameterEulerToMatrixNode"
+    bl_label = "Euler To Matrix"
+    nl_category = "Math"
+
+    def init(self, context):
+        NLParameterNode.init(self, context)
+        self.inputs.new(NLParameterSocket.bl_idname, 'Euler')
+        self.outputs.new(NLParameterSocket.bl_idname, "Matrix")
+
+    def get_netlogic_class_name(self): return "bgelogic.ParameterEulerToMatrix"
+    def get_output_socket_varnames(self): return ["OUT"]
+    def get_input_sockets_field_names(self): return ["input_e"]
+
+
+_nodes.append(NLParameterEulerToMatrixNode)
+
+
+class NLParameterMatrixToEulerNode(bpy.types.Node, NLParameterNode):
+    bl_idname = "NLParameterMatrixToEulerNode"
+    bl_label = "Matrix To Euler"
+    nl_category = "Math"
+
+    def init(self, context):
+        NLParameterNode.init(self, context)
+        self.inputs.new(NLParameterSocket.bl_idname, 'Matrix')
+        self.outputs.new(NLParameterSocket.bl_idname, "Euler")
+
+    def get_netlogic_class_name(self): return "bgelogic.ParameterMatrixToEuler"
+    def get_output_socket_varnames(self): return ["OUT"]
+    def get_input_sockets_field_names(self): return ["input_m"]
+
+
+_nodes.append(NLParameterMatrixToEulerNode)
 
 
 class NLParameterVector4Node(bpy.types.Node, NLParameterNode):
@@ -4880,6 +5008,54 @@ class NLActionSetCharacterJump(bpy.types.Node, NLActionNode):
 
 
 _nodes.append(NLActionSetCharacterJump)
+
+
+class NLActionSetCharacterGravity(bpy.types.Node, NLActionNode):
+    bl_idname = "NLActionSetCharacterGravity"
+    bl_label = "Set Gravity"
+    nl_category = "Character Physics"
+
+    def init(self, context):
+        NLActionNode.init(self, context)
+        self.inputs.new(NLConditionSocket.bl_idname, "Condition")
+        self.inputs.new(NLGameObjectSocket.bl_idname, "Object")
+        self.inputs.new(NLFloatFieldSocket.bl_idname, "Gravity")
+        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+
+
+    def get_output_socket_varnames(self):
+        return ["OUT"]
+
+
+    def get_netlogic_class_name(self): return "bgelogic.ActionSetCharacterGravity"
+    def get_input_sockets_field_names(self): return ["condition", "game_object", 'gravity']
+
+
+_nodes.append(NLActionSetCharacterGravity)
+
+
+class NLActionSetCharacterWalkDir(bpy.types.Node, NLActionNode):
+    bl_idname = "NLActionSetCharacterWalkDir"
+    bl_label = "Set Walk Direction"
+    nl_category = "Character Physics"
+
+    def init(self, context):
+        NLActionNode.init(self, context)
+        self.inputs.new(NLConditionSocket.bl_idname, "Condition")
+        self.inputs.new(NLGameObjectSocket.bl_idname, "Object")
+        self.inputs.new(NLVec3FieldSocket.bl_idname, "Vector")
+        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+
+
+    def get_output_socket_varnames(self):
+        return ["OUT"]
+
+
+    def get_netlogic_class_name(self): return "bgelogic.ActionSetCharacterWalkDir"
+    def get_input_sockets_field_names(self): return ["condition", "game_object", 'walkDir']
+
+
+_nodes.append(NLActionSetCharacterWalkDir)
 
 
 class NLActionGetCharacterInfo(bpy.types.Node, NLActionNode):
