@@ -2677,7 +2677,7 @@ class NLActiveCameraParameterNode(bpy.types.Node, NLParameterNode):
 
     def init(self, context):
         NLParameterNode.init(self, context)
-        self.outputs.new(NLGameObjectSocket.bl_idname, "")
+        self.outputs.new(NLGameObjectSocket.bl_idname, "Camera")
 
     def get_netlogic_class_name(self):
         return "bgelogic.ParameterActiveCamera"
@@ -3252,7 +3252,7 @@ class NLAlwaysConditionNode(bpy.types.Node, NLConditionNode):
         self.outputs.new(NLConditionSocket.bl_idname, "Always")
 
     def draw_buttons(self, context, layout):
-        layout.prop(self, "repeat", text="Repeat: ON" if self.repeat else "Repeat: OFF", toggle=True)
+        layout.prop(self, "repeat", text="Each Frame" if self.repeat else "Once", toggle=True)
 
     def get_netlogic_class_name(self):
         return "bgelogic.ConditionAlways"
@@ -3499,7 +3499,7 @@ class NLKeyReleasedCondition(bpy.types.Node, NLConditionNode):
         self.outputs.new(NLConditionSocket.bl_idname, "If Released")
 
     def draw_buttons(self, context, layout):
-        layout.prop(self, "pulse", text="Pulse: ON" if self.pulse else "Pulse: OFF", toggle=True)
+        layout.prop(self, "pulse", text="Each Frame" if self.pulse else "Once", toggle=True)
 
     def get_netlogic_class_name(self): return "bgelogic.ConditionKeyReleased"
     def get_input_sockets_field_names(self): return ["key_code"]
@@ -3525,7 +3525,7 @@ class NLMousePressedCondition(bpy.types.Node, NLConditionNode):
         self.outputs.new(NLConditionSocket.bl_idname, "If Pressed")
 
     def draw_buttons(self, context, layout):
-        layout.prop(self, "pulse", text="Pulse: ON" if self.pulse else "Pulse: OFF", toggle=True)
+        layout.prop(self, "pulse", text="Each Frame" if self.pulse else "Once", toggle=True)
 
     def get_netlogic_class_name(self):
         return "bgelogic.ConditionMousePressed"
@@ -3555,7 +3555,7 @@ class NLMouseMovedCondition(bpy.types.Node, NLConditionNode):
         self.outputs.new(NLConditionSocket.bl_idname, "If Moved")
 
     def draw_buttons(self, context, layout):
-        layout.prop(self, "pulse", text="Pulse: ON" if self.pulse else "Pulse: OFF", toggle=True)
+        layout.prop(self, "pulse", text="Each Frame" if self.pulse else "Once", toggle=True)
 
     def get_netlogic_class_name(self):
         return "bgelogic.ConditionMouseMoved"
@@ -3586,7 +3586,7 @@ class NLMouseReleasedCondition(bpy.types.Node, NLConditionNode):
         self.outputs.new(NLConditionSocket.bl_idname, "If Released")
 
     def draw_buttons(self, context, layout):
-        layout.prop(self, "pulse", text="Pulse: ON" if self.pulse else "Pulse: OFF", toggle=True)
+        layout.prop(self, "pulse", text="Each Frame" if self.pulse else "Once", toggle=True)
 
     def get_netlogic_class_name(self): return "bgelogic.ConditionMouseReleased"
     def get_input_sockets_field_names(self): return ["mouse_button_code"]
