@@ -2558,7 +2558,7 @@ _nodes.append(NLGetSensorNode)
 
 class NLSensorValueNode(bpy.types.Node, NLParameterNode):
     bl_idname = "NLSensorValueNode"
-    bl_label = "Sensor Value"
+    bl_label = "Get Sensor Value"
     nl_category = "Logic Bricks"
     obj = bpy.props.PointerProperty(
         name='Object',
@@ -2735,6 +2735,8 @@ class NLThresholdNode(bpy.types.Node, NLParameterNode):
 
     def init(self, context):
         NLParameterNode.init(self, context)
+        self.inputs.new(NLBooleanSocket.bl_idname, "Else 0")
+        self.inputs[-1].value = True
         self.inputs.new(NLFloatFieldSocket.bl_idname, "Value")
         self.inputs.new(NLFloatFieldSocket.bl_idname, "Threshold")
         self.outputs.new(NLParameterSocket.bl_idname, "Value")
@@ -2756,7 +2758,7 @@ class NLThresholdNode(bpy.types.Node, NLParameterNode):
         return "bgelogic.Threshold"
 
     def get_input_sockets_field_names(self):
-        return ["value", "threshold"]
+        return ['else_z', "value", "threshold"]
 
 
 _nodes.append(NLThresholdNode)

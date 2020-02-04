@@ -1659,29 +1659,30 @@ class Threshold(ParameterCell):
     def __init__(self):
         ParameterCell.__init__(self)
         self.value = None
+        self.else_z = None
         self.threshold = None
         self.operator = None
 
-    def calc_threshold(self, op, v, t):
+    def calc_threshold(self, op, v, t, e):
         if op == 'GREATER':
-            return v if v > t else t
+            return v if v > t else (0 if e else t)
         if op == 'LESS':
-            return v if v < t else t
+            return v if v < t else (0 if e else t)
 
     def evaluate(self):
         v = self.get_parameter_value(self.value)
+        e = self.get_parameter_value(self.else_z)
         t = self.get_parameter_value(self.threshold)
         if v is LogicNetworkCell.STATUS_WAITING:
             return
         if t is LogicNetworkCell.STATUS_WAITING:
             return
-        value = self.calc_threshold(self.operator, v, t)
+        value = self.calc_threshold(self.operator, v, t, e)
         self._set_ready()
         if (v is None) or (t is None):
             self._set_value(None)
         else:
             self._set_value(value)
-
 
 class ParameterValueFilter3(ParameterCell):
     def __init__(self):
