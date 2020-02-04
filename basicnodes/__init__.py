@@ -2204,6 +2204,31 @@ class NLGameObjectPropertyParameterNode(bpy.types.Node, NLParameterNode):
 _nodes.append(NLGameObjectPropertyParameterNode)
 
 
+class NLGameObjectHasPropertyParameterNode(bpy.types.Node, NLParameterNode):
+    bl_idname = "NLGameObjectHasPropertyParameterNode"
+    bl_label = "Has Property"
+    nl_category = "Properties"
+
+    def init(self, context):
+        NLParameterNode.init(self, context)
+        self.inputs.new(NLGameObjectSocket.bl_idname, "Object")
+        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Name")
+        self.inputs[-1].value = 'prop'
+        self.outputs.new(NLConditionSocket.bl_idname, "If True")
+
+    def get_netlogic_class_name(self):
+        return "bgelogic.ParameterObjectHasProperty"
+
+    def get_input_sockets_field_names(self):
+        return ["game_object", "property_name"]
+
+    def get_output_socket_varnames(self):
+        return [OUTCELL]
+
+
+_nodes.append(NLGameObjectHasPropertyParameterNode)
+
+
 class NLGetDictKeyNode(bpy.types.Node, NLParameterNode):
     bl_idname = "NLGetDictKeyNode"
     bl_label = "Dict: Get Key"

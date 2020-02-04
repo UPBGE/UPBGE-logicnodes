@@ -1079,6 +1079,30 @@ class ParameterObjectProperty(ParameterCell):
             self._set_value(game_object[property_name])
 
 
+class ParameterObjectHasProperty(ParameterCell):
+    def __init__(self):
+        ParameterCell.__init__(self)
+        self.game_object = None
+        self.property_name = None
+
+    def evaluate(self):
+        game_object = self.get_parameter_value(self.game_object)
+        property_name = self.get_parameter_value(self.property_name)
+        property_default = 0
+        if game_object is LogicNetworkCell.STATUS_WAITING:
+            return
+        if property_name is LogicNetworkCell.STATUS_WAITING:
+            return
+        if property_default is LogicNetworkCell.STATUS_WAITING:
+            return
+        self._set_ready()
+        if none_or_invalid(game_object) or (not property_name) or not game_object:
+            print('Has Property Node: Object or Property Name invalid!')
+            self._set_value(property_default)
+        else:
+            self._set_value(True if property_name in game_object.getPropertyNames() else False)
+
+
 class ParameterDictionaryValue(ParameterCell):
     def __init__(self):
         ParameterCell.__init__(self)
@@ -1366,8 +1390,6 @@ class SensorValue(ParameterCell):
         if field is LogicNetworkCell.STATUS_WAITING:
             return
         self._set_ready()
-        #print(game_obj, self.sens_name, field)
-        #print(getattr(game_obj.sensors[self.sens_name], field))
         self.val = getattr(game_obj.sensors[self.sens_name], field)
         self.done = True
 
@@ -1588,7 +1610,13 @@ class ParameterObjectAttribute(ParameterCell):
         self._set_ready()
         if none_or_invalid(game_object):
             return
-        self._set_value(getattr(game_object, attribute_name))
+        if not hasattr(game_object, attribute_name):
+            print('Get Object Data Node: {} has no attribute {}!'.format(game_object, attribute_name))
+            return
+        try:
+            self._set_value(getattr(game_object, attribute_name))
+        except Exception:
+            print('Get Object Data Node: Could Not Get Value from {}!'.format(game_object))
 
 
 class ClampValue(ParameterCell):
@@ -3944,11 +3972,17 @@ class ActionSetObjectAttribute(ActionCell):
         self._set_ready()
         if none_or_invalid(game_object_value):
             return
-        setattr(
-            game_object_value,
-            value_type,
-            attribute_value_value
-        )
+        if not hasattr(game_object_value, value_type):
+            print('Set Object Data Node: {} has no attribute {}!'.format(game_object_value, value_type))
+            return
+        try:
+            setattr(
+                game_object_value,
+                value_type,
+                attribute_value_value
+            )
+        except Exception:
+            print('Set Object Data Node: Could Not Set Value for {}!'.format(game_object_value))
         self.done = True
 
 
