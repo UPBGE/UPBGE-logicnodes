@@ -7511,7 +7511,7 @@ class ActionFollowPath(ActionCell):
                 has_more = self._motion_path.advance()
                 if not has_more:
                     self._set_value(True)
-        self.done = True
+                    self.done = True
 
     def generate_path(self, start_position, path_parent, navmesh_object, loop):
         children = sorted(path_parent.children, key=lambda o: o.name)
