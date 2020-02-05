@@ -33,12 +33,13 @@ class BGEGamePropertyPanel(bpy.types.Panel):
                 bpy.ops.bgenetlogic.treecodewriter_operator()
         return enabled
 
-    def draw_tree_prop(self, prop, index, box):
+    def draw_tree_prop(self, prop, index, box, do_filter):
         row = box.row()
         name = prop.name.split('__')[-1]
         text = 'Applied Tree: {}'.format(name)
         row.label(text=text)
-        self.add_movers(index, row)
+        if not do_filter:
+            self.add_movers(index, row)
         row.operator(
                 bge_netlogic.ops.NLRemoveTreeByNameOperator.bl_idname,
                 text="",
@@ -89,7 +90,7 @@ class BGEGamePropertyPanel(bpy.types.Panel):
             column.separator()
             box = column.box()
             if prop.name.startswith('NODELOGIC__'):
-                self.draw_tree_prop(prop, index, box)
+                self.draw_tree_prop(prop, index, box, do_filter)
                 continue
             entry = box.column()
             row_title = entry.row()
@@ -120,12 +121,13 @@ class BGEGamePropertyPanel3DView(bpy.types.Panel):
     def poll(cls, context):
         return True
 
-    def draw_tree_prop(self, prop, index, box):
+    def draw_tree_prop(self, prop, index, box, do_filter):
         row = box.row()
         name = prop.name.split('__')[-1]
         text = 'Applied Tree: {}'.format(name)
         row.label(text=text)
-        self.add_movers(index, row)
+        if not do_filter:
+            self.add_movers(index, row)
         row.operator(
                 bge_netlogic.ops.NLRemoveTreeByNameOperator.bl_idname,
                 text="",
@@ -176,7 +178,7 @@ class BGEGamePropertyPanel3DView(bpy.types.Panel):
             column.separator()
             box = column.box()
             if prop.name.startswith('NODELOGIC__'):
-                self.draw_tree_prop(prop, index, box)
+                self.draw_tree_prop(prop, index, box, do_filter)
                 continue
             entry = box.column()
             row_title = entry.row()
@@ -207,12 +209,13 @@ class BGEGamePropertyPanelObject(bpy.types.Panel):
     def poll(cls, context):
         return True
 
-    def draw_tree_prop(self, prop, index, box):
+    def draw_tree_prop(self, prop, index, box, do_filter):
         row = box.row()
         name = prop.name.split('__')[-1]
         text = 'Applied Tree: {}'.format(name)
         row.label(text=text)
-        self.add_movers(index, row)
+        if not do_filter:
+            self.add_movers(index, row)
         row.operator(
                 bge_netlogic.ops.NLRemoveTreeByNameOperator.bl_idname,
                 text="",
@@ -263,7 +266,7 @@ class BGEGamePropertyPanelObject(bpy.types.Panel):
             column.separator()
             box = column.box()
             if prop.name.startswith('NODELOGIC__'):
-                self.draw_tree_prop(prop, index, box)
+                self.draw_tree_prop(prop, index, box, do_filter)
                 continue
             entry = box.column()
             row_title = entry.row()

@@ -401,7 +401,7 @@ def register():
     bpy.types.Object.bgelogic_treelist = bpy.props.CollectionProperty(
         type=NLNodeTreeReference
     )
-    bpy.types.Window.prop_filter = bpy.props.PointerProperty(
+    bpy.types.Scene.prop_filter = bpy.props.PointerProperty(
         type=ui.BGEPropFilter
     )
 
