@@ -1227,6 +1227,35 @@ class ActivateActuator(ParameterCell):
         self.done = True
 
 
+class DeactivateActuator(ParameterCell):
+
+    def __init__(self):
+        ParameterCell.__init__(self)
+        self.condition = None
+        self.actuator = None
+        self.done = None
+        self.OUT = LogicNetworkSubCell(self, self.get_done)
+
+    def get_done(self):
+        return self.done
+
+    def evaluate(self):
+        self.done = False
+        STATUS_WAITING = LogicNetworkCell.STATUS_WAITING
+        condition = self.get_parameter_value(self.condition)
+        actuator = self.get_parameter_value(self.actuator)
+        controller = bge.logic.getCurrentController()
+        self._set_ready()
+        if actuator is STATUS_WAITING or none_or_invalid(actuator):
+            print("There is a problem with the actuator in Execute Actuator Node!")
+            return
+        if none_or_invalid(condition) or condition is STATUS_WAITING or not condition:
+            controller.deactivate(actuator)
+            return
+        controller.deactivate(actuator)
+        self.done = True
+
+
 class ActivateActuatorByName(ParameterCell):
 
     def __init__(self):
@@ -1253,6 +1282,35 @@ class ActivateActuatorByName(ParameterCell):
             controller.deactivate(actuator)
             return
         controller.activate(actuator)
+        self.done = True
+
+
+class DeactivateActuatorByName(ParameterCell):
+
+    def __init__(self):
+        ParameterCell.__init__(self)
+        self.condition = None
+        self.actuator = None
+        self.done = None
+        self.OUT = LogicNetworkSubCell(self, self.get_done)
+
+    def get_done(self):
+        return self.done
+
+    def evaluate(self):
+        self.done = False
+        STATUS_WAITING = LogicNetworkCell.STATUS_WAITING
+        condition = self.get_parameter_value(self.condition)
+        controller = bge.logic.getCurrentController()
+        actuator = self.get_parameter_value(self.actuator)
+        self._set_ready()
+        if actuator is STATUS_WAITING or none_or_invalid(actuator):
+            print("There is a problem with the actuator in Execute Actuator Node!")
+            return
+        if condition is STATUS_WAITING or not condition:
+            controller.deactivate(actuator)
+            return
+        controller.deactivate(actuator)
         self.done = True
 
 

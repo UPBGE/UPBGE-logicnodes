@@ -2,12 +2,26 @@ import bpy
 import bge_netlogic
 
 
+_filter_prop_types = [
+    ("TREES", "Logic Trees", "Show only applied Logic Trees"),
+    ("FLOAT", "Float Properties", "Show only Float Properties"),
+    ("INTEGER", "Int Properties", "Show only Int Properties"),
+    ("BOOL", "Boolean Properties", "Show only Boolean Properties"),
+    ("STRING", "String Properties", "Show only String Properties"),
+    ("TIMER", "Timer Properties", "Show only Timer Properties")
+]
+
+
+class BGEPropFilter(bpy.types.PropertyGroup):
+    do_filter = bpy.props.BoolProperty()
+    filter_by = bpy.props.EnumProperty(items=_filter_prop_types)
+
+
 class BGEGamePropertyPanel(bpy.types.Panel):
     bl_label = "Object Properties"
     bl_space_type = "NODE_EDITOR"
     bl_region_type = "UI"
     bl_category = "Item"
-    name = bpy.props.StringProperty()
 
     @classmethod
     def poll(cls, context):
@@ -56,10 +70,21 @@ class BGEGamePropertyPanel(bpy.types.Panel):
             text="Add Game Property",
             icon='PLUS'
         )
+        column.prop(context.scene.prop_filter, 'do_filter', text='Filter Properties')
+        do_filter = context.scene.prop_filter.do_filter
+        if do_filter:
+            column.prop(context.scene.prop_filter, 'filter_by', text='')
         if not obj:
             return
         props = [prop for prop in obj.game.properties]
+        prop_type = context.scene.prop_filter.filter_by
         for prop in obj.game.properties:
+            if do_filter:
+                if prop_type == 'TREES':
+                    if not prop.name.startswith('NODELOGIC__'):
+                        continue
+                elif prop.type != prop_type:
+                    continue
             index = props.index(prop)
             column.separator()
             box = column.box()
@@ -70,7 +95,8 @@ class BGEGamePropertyPanel(bpy.types.Panel):
             row_title = entry.row()
             row_title.prop(prop, 'name', text='')
             row_title.prop(prop, 'show_debug', text='', icon='INFO')
-            self.add_movers(index, row_title)
+            if not do_filter:
+                self.add_movers(index, row_title)
             remove = row_title.operator(
                 bge_netlogic.ops.NLRemovePropertyOperator.bl_idname,
                 text='',
@@ -131,10 +157,21 @@ class BGEGamePropertyPanel3DView(bpy.types.Panel):
             text="Add Game Property",
             icon='PLUS'
         )
+        column.prop(context.scene.prop_filter, 'do_filter', text='Filter Properties')
+        do_filter = context.scene.prop_filter.do_filter
+        if do_filter:
+            column.prop(context.scene.prop_filter, 'filter_by', text='')
         if not obj:
             return
         props = [prop for prop in obj.game.properties]
+        prop_type = context.scene.prop_filter.filter_by
         for prop in obj.game.properties:
+            if do_filter:
+                if prop_type == 'TREES':
+                    if not prop.name.startswith('NODELOGIC__'):
+                        continue
+                elif prop.type != prop_type:
+                    continue
             index = props.index(prop)
             column.separator()
             box = column.box()
@@ -145,7 +182,8 @@ class BGEGamePropertyPanel3DView(bpy.types.Panel):
             row_title = entry.row()
             row_title.prop(prop, 'name', text='')
             row_title.prop(prop, 'show_debug', text='', icon='INFO')
-            self.add_movers(index, row_title)
+            if not do_filter:
+                self.add_movers(index, row_title)
             remove = row_title.operator(
                 bge_netlogic.ops.NLRemovePropertyOperator.bl_idname,
                 text='',
@@ -206,10 +244,21 @@ class BGEGamePropertyPanelObject(bpy.types.Panel):
             text="Add Game Property",
             icon='PLUS'
         )
+        column.prop(context.scene.prop_filter, 'do_filter', text='Filter Properties')
+        do_filter = context.scene.prop_filter.do_filter
+        if do_filter:
+            column.prop(context.scene.prop_filter, 'filter_by', text='')
         if not obj:
             return
         props = [prop for prop in obj.game.properties]
+        prop_type = context.scene.prop_filter.filter_by
         for prop in obj.game.properties:
+            if do_filter:
+                if prop_type == 'TREES':
+                    if not prop.name.startswith('NODELOGIC__'):
+                        continue
+                elif prop.type != prop_type:
+                    continue
             index = props.index(prop)
             column.separator()
             box = column.box()
@@ -220,7 +269,8 @@ class BGEGamePropertyPanelObject(bpy.types.Panel):
             row_title = entry.row()
             row_title.prop(prop, 'name', text='')
             row_title.prop(prop, 'show_debug', text='', icon='INFO')
-            self.add_movers(index, row_title)
+            if not do_filter:
+                self.add_movers(index, row_title)
             remove = row_title.operator(
                 bge_netlogic.ops.NLRemovePropertyOperator.bl_idname,
                 text='',

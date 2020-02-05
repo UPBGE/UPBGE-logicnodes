@@ -339,6 +339,7 @@ _registered_classes.extend(basicnodes._sockets)
 _registered_classes.extend(basicnodes._nodes)
 
 _registered_classes.extend([
+    ui.BGEPropFilter,
     ui.BGELogicPanel,
     ui.BGELogicTreeInfoPanel,
     ui.BGEGamePropertyPanel,
@@ -399,6 +400,9 @@ def register():
     nodeitems_utils.register_node_categories("NETLOGIC_NODES", menu_nodes)
     bpy.types.Object.bgelogic_treelist = bpy.props.CollectionProperty(
         type=NLNodeTreeReference
+    )
+    bpy.types.Window.prop_filter = bpy.props.PointerProperty(
+        type=ui.BGEPropFilter
     )
 
 

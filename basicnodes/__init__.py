@@ -2389,9 +2389,32 @@ class NLRunActuatorNode(bpy.types.Node, NLActionNode):
 _nodes.append(NLRunActuatorNode)
 
 
-class NLRunActuatorByNameNode(bpy.types.Node, NLActionNode):
-    bl_idname = "NLRunActuatorByNameNode"
-    bl_label = "Execute Actuator By Name"
+class NLDisableActuatorNode(bpy.types.Node, NLActionNode):
+    bl_idname = "NLDisableActuatorNode"
+    bl_label = "Stop Actuator"
+    nl_category = "Logic Bricks"
+
+    def init(self, context):
+        NLParameterNode.init(self, context)
+        self.inputs.new(NLConditionSocket.bl_idname, "Condition")
+        self.inputs.new(NLLogicBrickSocket.bl_idname, "Actuator")
+        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+
+    def get_output_socket_varnames(self):
+        return ["OUT"]
+
+    def get_netlogic_class_name(self): return "bgelogic.DeactivateActuator"
+
+    def get_input_sockets_field_names(self):
+        return ["condition", 'actuator']
+
+
+_nodes.append(NLDisableActuatorNode)
+
+
+class NLDisableActuatorByNameNode(bpy.types.Node, NLActionNode):
+    bl_idname = "NLDisableActuatorByNameNode"
+    bl_label = "Stop Actuator By Name"
     nl_category = "Logic Bricks"
 
     def init(self, context):
@@ -2403,13 +2426,13 @@ class NLRunActuatorByNameNode(bpy.types.Node, NLActionNode):
     def get_output_socket_varnames(self):
         return ["OUT"]
 
-    def get_netlogic_class_name(self): return "bgelogic.ActivateActuatorByName"
+    def get_netlogic_class_name(self): return "bgelogic.DeactivateActuatorByName"
 
     def get_input_sockets_field_names(self):
         return ["condition", 'actuator']
 
 
-_nodes.append(NLRunActuatorByNameNode)
+_nodes.append(NLDisableActuatorByNameNode)
 
 
 class NLSetActuatorValueNode(bpy.types.Node, NLActionNode):
