@@ -63,6 +63,14 @@ _enum_vector_math_options = [
 ]
 
 
+_enum_constraint_types = [
+    ("bge.constraints.POINTTOPOINT_CONSTRAINT", "Ball", "Allow rotation around all axis"),
+    ("bge.constraints.LINEHINGE_CONSTRAINT", "Hinge", "Work on one plane, allow rotations on one axis only"),
+    ("bge.constraints.CONETWIST_CONSTRAINT", "Cone Twist", "Allow rotations around all axis with limits for the cone and twist axis"),
+    ("bge.constraints.GENERIC_6DOF_CONSTRAINT", "Generic 6 DOF", "No constraints by default, limits can be set individually")
+]
+
+
 _enum_ik_mode_values = [
     ("None", "None", "Not set"),
     (
@@ -1940,6 +1948,30 @@ class NLVectorMathSocket(bpy.types.NodeSocket, NetLogicSocketType):
 _sockets.append(NLVectorMathSocket)
 
 
+class NLConstraintTypeSocket(bpy.types.NodeSocket, NetLogicSocketType):
+    bl_idname = "NLConstraintTypeSocket"
+    bl_label = "Constraint Type"
+    value = bpy.props.EnumProperty(
+        items=_enum_constraint_types,
+        update=update_tree_code
+    )
+
+    def draw_color(self, context, node):
+        return PARAMETER_SOCKET_COLOR
+
+    def draw(self, context, layout, node, text):
+        if self.is_linked:
+            layout.label(text=text)
+        else:
+            layout.prop(self, "value", text="")
+
+    def get_unlinked_value(self):
+        return self.value
+
+
+_sockets.append(NLConstraintTypeSocket)
+
+
 class NLSocketFilter3(bpy.types.NodeSocket, NetLogicSocketType):
     bl_idname = "NLSocketFilter3"
     bl_label = "Filter 3"
@@ -2573,7 +2605,7 @@ class NLVectorMath(bpy.types.Node, NLParameterNode):
         self.inputs.new(NLVec3FieldSocket.bl_idname, "Vector 1")
         self.inputs.new(NLVec3FieldSocket.bl_idname, "Vector 2")
         self.inputs.new(NLSocketAlphaFloat.bl_idname, "Factor")
-        self.outputs.new(NLVectorSocket.bl_idname, 'Vector')
+        self.outputs.new(NLParameterSocket.bl_idname, 'Vector')
 
     def get_netlogic_class_name(self):
         return "bgelogic.ParameterVectorMath"
@@ -5360,6 +5392,8 @@ class NLActionEndSceneNode(bpy.types.Node, NLActionNode):
 
     def get_netlogic_class_name(self): return "bgelogic.ActionEndScene"
     def get_input_sockets_field_names(self): return ["condition", "scene"]
+
+
 _nodes.append(NLActionEndSceneNode)
 
 
@@ -5377,7 +5411,6 @@ class NLActionReplaceMesh(bpy.types.Node, NLActionNode):
         self.inputs.new(NLBooleanSocket.bl_idname, "Use Physics")
         self.outputs.new(NLConditionSocket.bl_idname, 'Done')
 
-
     def get_output_socket_varnames(self):
         return ["OUT"]
 
@@ -5385,7 +5418,67 @@ class NLActionReplaceMesh(bpy.types.Node, NLActionNode):
         return "bgelogic.ActionReplaceMesh"
     def get_input_sockets_field_names(self):
         return ["condition", "target_game_object", "new_mesh_name", "use_display", "use_physics"]
+
+
 _nodes.append(NLActionReplaceMesh)
+
+
+class NLActionRemovePhysicsConstraint(bpy.types.Node, NLActionNode):
+    bl_idname = "NLActionRemovePhysicsConstraint"
+    bl_label = "Remove Physics Constraint"
+    nl_category = "Objects"
+
+    def init(self, context):
+        NLActionNode.init(self, context)
+        self.inputs.new(NLConditionSocket.bl_idname, "Condition")
+        self.inputs.new(NLGameObjectSocket.bl_idname, "Object")
+        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Name")
+        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+
+    def get_output_socket_varnames(self):
+        return ["OUT"]
+
+    def get_netlogic_class_name(self):
+        return "bgelogic.RemovePhysicsConstraint"
+
+    def get_input_sockets_field_names(self):
+        return ["condition", "object", "name"]
+
+
+_nodes.append(NLActionRemovePhysicsConstraint)
+
+
+class NLActionAddPhysicsConstraint(bpy.types.Node, NLActionNode):
+    bl_idname = "NLActionAddPhysicsConstraint"
+    bl_label = "Add Physics Constraint"
+    nl_category = "Objects"
+
+    def init(self, context):
+        NLActionNode.init(self, context)
+        self.inputs.new(NLConditionSocket.bl_idname, "Condition")
+        self.inputs.new(NLGameObjectSocket.bl_idname, "Target")
+        self.inputs.new(NLGameObjectSocket.bl_idname, "Child Object")
+        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, 'Name')
+        self.inputs.new(NLConstraintTypeSocket.bl_idname, "")
+        self.inputs.new(NLBooleanSocket.bl_idname, 'Use World Space')
+        self.inputs.new(NLVec3FieldSocket.bl_idname, 'Pivot')
+        self.inputs.new(NLBooleanSocket.bl_idname, 'Limit Axis')
+        self.inputs.new(NLVec3FieldSocket.bl_idname, 'Axis Limits')
+        self.inputs.new(NLBooleanSocket.bl_idname, 'Linked Collision')
+        self.inputs[-1].value = True
+        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+
+    def get_output_socket_varnames(self):
+        return ["OUT"]
+
+    def get_netlogic_class_name(self):
+        return "bgelogic.AddPhysicsConstraint"
+
+    def get_input_sockets_field_names(self):
+        return ["condition", "target", "child", "name", "constraint", 'use_world', "pivot", 'use_limit', "axis_limits", "linked_col"]
+
+
+_nodes.append(NLActionAddPhysicsConstraint)
 
 
 class NLSetLightEnergyAction(bpy.types.Node, NLActionNode):

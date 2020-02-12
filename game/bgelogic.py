@@ -1677,7 +1677,7 @@ class ParameterObjectAttribute(ParameterCell):
 
 
 class ClampValue(ParameterCell):
-    
+
     def __init__(self):
         ParameterCell.__init__(self)
         self.value = None
@@ -2040,15 +2040,15 @@ class ParameterVectorMath(ParameterCell):
         if op == 'normalize':
             matvec.normalize()
         elif op == 'lerp':
-            matvec.lerp(vec2, fac)
+            return matvec.lerp(vec2, fac)
         elif op == 'negate':
             matvec.negate()
         elif op == 'dot':
-            matvec.dot(vec2)
+            return matvec.dot(vec2)
         elif op == 'cross':
-            matvec.cross(vec2)
+            return matvec.cross(vec2)
         elif op == 'project':
-            matvec.project(vec2)
+            return matvec.project(vec2)
         return matvec
 
     def evaluate(self):
@@ -7086,8 +7086,9 @@ class SetLightEnergy(ActionCell):
         if lamp is STATUS_WAITING:
             return
         self._set_ready()
-        lamp.energy = energy
-        print(lamp.energy)
+        light = lamp.blenderObject.data
+        light.energy = energy
+        bge.logic.getCurrentScene().resetTaaSamples = True
         self.done = True
 
 
@@ -7124,8 +7125,9 @@ class SetLightColor(ActionCell):
         if lamp is STATUS_WAITING:
             return
         self._set_ready()
-        lamp.color = [r, g, b]
-        print(lamp.color)
+        light = lamp.blenderObject.data
+        light.color = [r, g, b]
+        bge.logic.getCurrentScene().resetTaaSamples = True
         self.done = True
 
 
@@ -7700,6 +7702,120 @@ class ActionReplaceMesh(ActionCell):
         if physics is None:
             return
         target.replaceMesh(mesh, display, physics)
+        self.done = True
+
+
+class RemovePhysicsConstraint(ActionCell):
+    def __init__(self):
+        ActionCell.__init__(self)
+        self.condition = None
+        self.object = None
+        self.name = None
+        self.done = None
+        self.OUT = LogicNetworkSubCell(self, self.get_done)
+
+    def get_done(self):
+        return self.done
+
+    def evaluate(self):
+        self.done = False
+        condition = self.get_parameter_value(self.condition)
+        if not condition:
+            return
+        obj = self.get_parameter_value(self.object)
+        if none_or_invalid(obj):
+            return
+        name = self.get_parameter_value(self.name)
+        if none_or_invalid(name):
+            return
+        self._set_ready()
+        try:
+            bge.constraints.removeConstraint(obj[name].getConstraintId())
+        except Exception:
+            print('Remove Physics Constraint Node: Constraint {} does not exist!'.format(name))
+        self.done = True
+
+
+class AddPhysicsConstraint(ActionCell):
+    def __init__(self):
+        ActionCell.__init__(self)
+        self.condition = None
+        self.target = None
+        self.child = None
+        self.name = None
+        self.constraint = None
+        self.use_world = None
+        self.pivot = None
+        self.use_limit = None
+        self.axis_limits = None
+        self.linked_col = None
+        self.done = None
+        self.OUT = LogicNetworkSubCell(self, self.get_done)
+
+    def get_done(self):
+        return self.done
+
+    def evaluate(self):
+        self.done = False
+        condition = self.get_parameter_value(self.condition)
+        if not condition:
+            return
+        target = self.get_parameter_value(self.target)
+        if none_or_invalid(target):
+            return
+        child = self.get_parameter_value(self.child)
+        if none_or_invalid(child):
+            return
+        name = self.get_parameter_value(self.name)
+        if none_or_invalid(name):
+            return
+        constraint = self.get_parameter_value(self.constraint)
+        if none_or_invalid(constraint):
+            return
+        pivot = self.get_parameter_value(self.pivot)
+        if none_or_invalid(pivot):
+            return
+        use_limit = self.get_parameter_value(self.use_limit)
+        if none_or_invalid(use_limit):
+            return
+        use_world = self.get_parameter_value(self.use_world)
+        if none_or_invalid(use_world):
+            return
+        axis_limits = self.get_parameter_value(self.axis_limits)
+        if none_or_invalid(axis_limits):
+            return
+        linked_col = self.get_parameter_value(self.linked_col)
+        if none_or_invalid(linked_col):
+            return
+        self._set_ready()
+        flag = 0 if linked_col else 128
+        if use_world:
+            pivot.x -= target.localPosition.x
+            pivot.y -= target.localPosition.y
+            pivot.z -= target.localPosition.z
+        if use_limit:
+            target[name] = bge.constraints.createConstraint(
+                target.getPhysicsId(),
+                child.getPhysicsId(),
+                constraint,
+                pivot_x=pivot.x,
+                pivot_y=pivot.y,
+                pivot_z=pivot.z,
+                axis_x=axis_limits.x,
+                axis_y=axis_limits.y,
+                axis_z=axis_limits.z,
+                flag=flag
+            )
+        else:
+            target[name] = bge.constraints.createConstraint(
+                target.getPhysicsId(),
+                child.getPhysicsId(),
+                constraint,
+                pivot_x=pivot.x,
+                pivot_y=pivot.y,
+                pivot_z=pivot.z,
+                flag=flag
+            )
         self.done = True
 
 
