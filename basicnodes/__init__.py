@@ -549,6 +549,7 @@ class NetLogicStatementGenerator(NetLogicType):
             output_socket,
             output_node.outputs
         )
+        print(output_socket_index)
         assert isinstance(output_node, NetLogicStatementGenerator)
         output_node_varname = uids.get_varname_for_node(output_node)
         output_map = output_node.get_output_socket_varnames()
