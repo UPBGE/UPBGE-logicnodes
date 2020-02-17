@@ -8,13 +8,15 @@ _filter_prop_types = [
     ("INTEGER", "Int Properties", "Show only Int Properties"),
     ("BOOL", "Boolean Properties", "Show only Boolean Properties"),
     ("STRING", "String Properties", "Show only String Properties"),
-    ("TIMER", "Timer Properties", "Show only Timer Properties")
+    ("TIMER", "Timer Properties", "Show only Timer Properties"),
+    ("NAME", 'Filter By Name', 'Search for a Property')
 ]
 
 
 class BGEPropFilter(bpy.types.PropertyGroup):
     do_filter = bpy.props.BoolProperty()
     filter_by = bpy.props.EnumProperty(items=_filter_prop_types)
+    filter_name = bpy.props.StringProperty()
 
 
 class BGEGamePropertyPanel(bpy.types.Panel):
@@ -73,23 +75,31 @@ class BGEGamePropertyPanel(bpy.types.Panel):
         )
         column.prop(context.scene.prop_filter, 'do_filter', text='Filter Properties')
         do_filter = context.scene.prop_filter.do_filter
+        prop_type = context.scene.prop_filter.filter_by
+        prop_name = context.scene.prop_filter.filter_name
         if do_filter:
             column.prop(context.scene.prop_filter, 'filter_by', text='')
+        if prop_type == 'NAME' and do_filter:
+            column.prop(context.scene.prop_filter, 'filter_name', text='')
         if not obj:
             return
         props = [prop for prop in obj.game.properties]
-        prop_type = context.scene.prop_filter.filter_by
         for prop in obj.game.properties:
+            is_tree = prop.name.startswith('NODELOGIC__')
+            has_name = prop_name in prop.name
             if do_filter:
-                if prop_type == 'TREES':
-                    if not prop.name.startswith('NODELOGIC__'):
+                if prop_type == 'NAME':
+                    if not has_name:
                         continue
-                elif prop.type != prop_type:
+                elif prop_type == 'TREES':
+                    if not is_tree:
+                        continue
+                elif prop.type != prop_type or is_tree:
                     continue
             index = props.index(prop)
             column.separator()
             box = column.box()
-            if prop.name.startswith('NODELOGIC__'):
+            if is_tree:
                 self.draw_tree_prop(prop, index, box, do_filter)
                 continue
             entry = box.column()
@@ -161,23 +171,31 @@ class BGEGamePropertyPanel3DView(bpy.types.Panel):
         )
         column.prop(context.scene.prop_filter, 'do_filter', text='Filter Properties')
         do_filter = context.scene.prop_filter.do_filter
+        prop_type = context.scene.prop_filter.filter_by
+        prop_name = context.scene.prop_filter.filter_name
         if do_filter:
             column.prop(context.scene.prop_filter, 'filter_by', text='')
+        if prop_type == 'NAME' and do_filter:
+            column.prop(context.scene.prop_filter, 'filter_name', text='')
         if not obj:
             return
         props = [prop for prop in obj.game.properties]
-        prop_type = context.scene.prop_filter.filter_by
         for prop in obj.game.properties:
+            is_tree = prop.name.startswith('NODELOGIC__')
+            has_name = prop_name in prop.name
             if do_filter:
-                if prop_type == 'TREES':
-                    if not prop.name.startswith('NODELOGIC__'):
+                if prop_type == 'NAME':
+                    if not has_name:
                         continue
-                elif prop.type != prop_type:
+                elif prop_type == 'TREES':
+                    if not is_tree:
+                        continue
+                elif prop.type != prop_type or is_tree:
                     continue
             index = props.index(prop)
             column.separator()
             box = column.box()
-            if prop.name.startswith('NODELOGIC__'):
+            if is_tree:
                 self.draw_tree_prop(prop, index, box, do_filter)
                 continue
             entry = box.column()
@@ -249,23 +267,31 @@ class BGEGamePropertyPanelObject(bpy.types.Panel):
         )
         column.prop(context.scene.prop_filter, 'do_filter', text='Filter Properties')
         do_filter = context.scene.prop_filter.do_filter
+        prop_type = context.scene.prop_filter.filter_by
+        prop_name = context.scene.prop_filter.filter_name
         if do_filter:
             column.prop(context.scene.prop_filter, 'filter_by', text='')
+        if prop_type == 'NAME' and do_filter:
+            column.prop(context.scene.prop_filter, 'filter_name', text='')
         if not obj:
             return
         props = [prop for prop in obj.game.properties]
-        prop_type = context.scene.prop_filter.filter_by
         for prop in obj.game.properties:
+            is_tree = prop.name.startswith('NODELOGIC__')
+            has_name = prop_name in prop.name
             if do_filter:
-                if prop_type == 'TREES':
-                    if not prop.name.startswith('NODELOGIC__'):
+                if prop_type == 'NAME':
+                    if not has_name:
                         continue
-                elif prop.type != prop_type:
+                elif prop_type == 'TREES':
+                    if not is_tree:
+                        continue
+                elif prop.type != prop_type or is_tree:
                     continue
             index = props.index(prop)
             column.separator()
             box = column.box()
-            if prop.name.startswith('NODELOGIC__'):
+            if is_tree:
                 self.draw_tree_prop(prop, index, box, do_filter)
                 continue
             entry = box.column()
