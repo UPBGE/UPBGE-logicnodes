@@ -39,7 +39,6 @@ def debug(*message):
         source = e[0][0]
         line = e[0][1]
         print('[{}:{}] {}'.format(source, line, text))
-    pass
 
 
 def update_current_tree_code(*ignored):
@@ -86,9 +85,22 @@ def update_tree_name(tree, old_name):
             print("Tree name change doesn't affect object {} because the tree is not applied to it".format(ob.name))
     old_module_file = utilities.py_module_file_path_for_stripped_tree_name(old_name)
     new_module_file = utilities.py_module_file_path_for_stripped_tree_name(new_name)
-    print("TODO: also rename {} to {} ?".format(old_module_file, new_module_file))
+    print("TODO: also rename {} to {}?".format(old_module_file, new_module_file))
     bpy.ops.bge_netlogic.generate_logicnetwork()
-    pass
+
+
+def _update_all_logic_tree_code():
+    now = time.time()
+    _update_queue.append(now)
+    now = time.time()
+    last_event = _update_queue[-1]
+    delta = now - last_event
+    try:
+        bpy.ops.bge_netlogic.generate_logicnetwork_all()
+    except Exception:
+        print("Unknown Error, abort generating Network code")
+        return
+
 
 def _consume_update_tree_code_queue():
     if hasattr(bpy.context.space_data, "edit_tree") and (bpy.context.space_data.edit_tree is not None):
@@ -111,12 +123,14 @@ def _consume_update_tree_code_queue():
             bpy.ops.bge_netlogic.generate_logicnetwork()
         except Exception:
             print("Context Incorrect, abort generating Network code")
-            return _consume_update_tree_code_queue()
+            return update_current_tree_code()
         return True
+
 
 def _get_this_module():
     global __name__
     return sys.modules[__name__]
+
 
 #This is called when the program needs to ensure that the user nodes have been loaded when the
 #edited file changes.
@@ -324,11 +338,10 @@ class NodeCategory(nodeitems_utils.NodeCategory):
 basicnodes = _abs_import("basicnodes", _abs_path("basicnodes", "__init__.py"))
 _registered_classes = [
     ui.BGELogicTree,
-    #ui.NLNodeGroupInput,
-    #ui.NLNodeGroupOutput,
     ops.NLSelectTreeByNameOperator,
     ops.NLRemoveTreeByNameOperator,
     ops.NLApplyLogicOperator,
+    ops.NLGenerateLogicNetworkOperatorAll,
     ops.NLGenerateLogicNetworkOperator,
     ops.NLImportProjectNodes,
     ops.NLLoadProjectNodes,

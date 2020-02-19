@@ -38,7 +38,6 @@ class WaitForKeyOperator(bpy.types.Operator):
     def __init__(self):
         self.socket = None
         self.node = None
-        pass
 
     def __del__(self):
         pass
@@ -391,11 +390,11 @@ class NLMakeGroupOperator(bpy.types.Operator):
                         print('Some linked Nodes are not added to the group! Aborting...')
                         return
             locs.append(old_node.location)
-        
+
         for old_node in new_nodes:
             parent_tree.nodes.remove(old_node)
         redir = parent_tree.nodes.new('NLActionExecuteNetwork')
-        
+
         try:
             redir.inputs[1].value = bpy.context.object
         except Exception:
@@ -422,7 +421,9 @@ class NLMakeGroupOperator(bpy.types.Operator):
         for node in tree.nodes:
             if node.select:
                 nodes_to_group.append(node)
-        self.group_make(tree.name + '_part', nodes_to_group)
+        if len(nodes_to_group) > 0:
+            self.group_make(tree.name + '_part', nodes_to_group)
+            bge_netlogic._update_all_logic_tree_code()
         return {'FINISHED'}
 
 
@@ -545,6 +546,50 @@ class NLApplyLogicOperator(bpy.types.Operator):
 class UpdateCodeMessageBox(bpy.types.Operator):
     bl_idname = "message.messagebox"
     bl_label = ""
+
+
+class NLGenerateLogicNetworkOperatorAll(bpy.types.Operator):
+    bl_idname = "bge_netlogic.generate_logicnetwork_all"
+    bl_label = "Generate LogicNetwork"
+    bl_description = "Create the code needed to execute the current logic tree"
+
+    @classmethod
+    def poll(cls, context):
+        return True
+
+    def __init__(self):
+        pass
+
+    def _create_external_text_buffer(self, context, buffer_name):
+        file_path = bpy.path.abspath("//{}".format(buffer_name))
+        return FileTextBuffer(file_path)
+
+    def _create_text_buffer(self, context, buffer_name, external=False):
+        if external is True:
+            return self._create_external_text_buffer(context, buffer_name)
+        blender_text_data_index = bpy.data.texts.find(buffer_name)
+        blender_text_data = None
+        if blender_text_data_index < 0:
+            blender_text_data = bpy.data.texts.new(name=buffer_name)
+        else:
+            blender_text_data = bpy.data.texts[blender_text_data_index]
+        return BLTextBuffer(blender_text_data)
+
+    def execute(self, context):
+        # ensure that the local "bgelogic" folder exists
+        local_bgelogic_folder = bpy.path.abspath("//bgelogic")
+        if not os.path.exists(local_bgelogic_folder):
+            try:
+                os.mkdir(local_bgelogic_folder)
+            except PermissionError:
+                print("Cannot generate the code because the blender file has \
+                    not been saved or the user has no write permission for \
+                        the containing folder.")
+                return {"FINISHED"}
+        for tree in bpy.data.node_groups:
+            if tree.bl_idname == bge_netlogic.ui.BGELogicTree.bl_idname:
+                tree_code_generator.TreeCodeGenerator().write_code_for_tree(tree)
+        return {"FINISHED"}
 
 
 class NLGenerateLogicNetworkOperator(bpy.types.Operator):
