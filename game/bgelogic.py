@@ -1722,7 +1722,7 @@ class ParameterArithmeticOp(ParameterCell):
         self.operator = None
 
     def get_vec_calc(self, vec, num):
-        return mathutils.Vector((self.operator(vec.x, num), self.operator(vec.y, num), self.operator(vec.y, num)))
+        return mathutils.Vector((self.operator(vec.x, num), self.operator(vec.y, num), self.operator(vec.z, num)))
 
     def get_vec_vec_calc(self, vec, vec2):
         return mathutils.Vector((self.operator(vec.x, vec2.x), self.operator(vec.y, vec2.y), self.operator(vec.z, vec2.z)))
@@ -4208,6 +4208,52 @@ class ActionInstalSubNetwork(ActionCell):
             tree_name,
             initial_status
         )
+        self.done = True
+
+
+class ActionExecuteNetwork(ActionCell):
+    def __init__(self):
+        ActionCell.__init__(self)
+        self.condition = None
+        self.target_object = None
+        self.tree_name = None
+        self._network = None
+        self.done = None
+        self.OUT = LogicNetworkSubCell(self, self.get_done)
+
+    def get_done(self):
+        return self.done
+
+    def setup(self, network):
+        self._network = network
+
+    def evaluate(self):
+        self.done = False
+        condition = self.get_parameter_value(self.condition)
+        if condition is LogicNetworkCell.STATUS_WAITING:
+            return
+        if not condition:
+            return
+        target_object = self.get_parameter_value(self.target_object)
+        tree_name = self.get_parameter_value(self.tree_name)
+        if target_object is LogicNetworkCell.STATUS_WAITING:
+            return
+        if tree_name is LogicNetworkCell.STATUS_WAITING:
+            return
+        self._set_ready()
+        if none_or_invalid(target_object):
+            return
+        if tree_name not in target_object:
+            self._network.install_subnetwork(
+                target_object,
+                tree_name,
+                False
+            )
+        added_network = target_object.get(tree_name)
+        if condition:
+            added_network.stopped = False
+        else:
+            added_network.stopped = True
         self.done = True
 
 

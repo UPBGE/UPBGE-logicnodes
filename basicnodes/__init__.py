@@ -568,6 +568,7 @@ class NetLogicStatementGenerator(NetLogicType):
             output_socket,
             output_node.outputs
         )
+
         print(output_socket_index)
         assert isinstance(output_node, NetLogicStatementGenerator)
         output_node_varname = uids.get_varname_for_node(output_node)
@@ -610,9 +611,6 @@ class NLPseudoConditionSocket(bpy.types.NodeSocket, NetLogicSocketType):
     bl_idname = "NLPseudoConditionSocket"
     bl_label = "Condition"
     value = bpy.props.BoolProperty(update=update_tree_code)
-    use_toggle = bpy.props.BoolProperty(default=False)
-    true_label = bpy.props.StringProperty()
-    false_label = bpy.props.StringProperty()
 
     def draw_color(self, context, node):
         return PSEUDO_COND_SOCKET_COLOR
@@ -622,22 +620,10 @@ class NLPseudoConditionSocket(bpy.types.NodeSocket, NetLogicSocketType):
             layout.label(text=text)
         else:
             label = text
-            status = self.value
+            layout.prop(self, "value", text=label)
 
-            if self.use_toggle:
-                if status:
-                    label = '{}: ON'.format(text)
-                else:
-                    label = '{}: OFF'.format(text)
-
-            if self.true_label and status:
-                label = self.true_label
-
-            if self.false_label and (not status):
-                label = self.false_label
-            layout.prop(self, "value", text=label, toggle=self.use_toggle)
-
-    def get_unlinked_value(self): return "True" if self.value else "False"
+    def get_unlinked_value(self):
+        return "True" if self.value else "False"
 
 
 _sockets.append(NLPseudoConditionSocket)
@@ -845,14 +831,14 @@ class NLSocketLogicTree(bpy.types.NodeSocket, NetLogicSocketType):
             layout.prop_search(
                 self,
                 "value",
-                bpy.context,
-                'bgelogic_treelist',
+                bpy.data,
+                'node_groups',
                 icon='OUTLINER',
                 text=''
             )
 
     def get_unlinked_value(self):
-        return "{}".format(self.value)
+        return "'{}'".format(self.value)
 
 
 _sockets.append(NLSocketLogicTree)
@@ -1374,7 +1360,7 @@ _sockets.append(NLNumericFieldSocket)
 class NLOptionalRadiansFieldSocket(bpy.types.NodeSocket, NetLogicSocketType):
     bl_idname = "NLOptionalRadiansFieldSocket"
     bl_label = "Value"
-    radians = bpy.props.StringProperty(update=update_tree_code, default="0.0")
+    value = bpy.props.StringProperty(update=update_tree_code, default="0.0")
 
     def store_radians(self, context):
         self.radians = str(float(self.float_field))
@@ -3713,12 +3699,17 @@ class NLKeyReleasedCondition(bpy.types.Node, NLConditionNode):
     def draw_buttons(self, context, layout):
         layout.prop(self, "pulse", text="Each Frame" if self.pulse else "Once", toggle=True)
 
-    def get_netlogic_class_name(self): return "bgelogic.ConditionKeyReleased"
-    def get_input_sockets_field_names(self): return ["key_code"]
+    def get_netlogic_class_name(self):
+        return "bgelogic.ConditionKeyReleased"
+
+    def get_input_sockets_field_names(self):
+        return ["key_code"]
+
     def write_cell_fields_initialization(self, cell_varname, uids, line_writer):
         NetLogicStatementGenerator.write_cell_fields_initialization(self, cell_varname, uids, line_writer)
         line_writer.write_line("{}.{} = {}", cell_varname, "pulse", self.pulse)
-    pass
+
+
 _nodes.append(NLKeyReleasedCondition)
 
 
@@ -3865,6 +3856,8 @@ class NLConditionMousePressedOn(bpy.types.Node, NLConditionNode):
         return "bgelogic.ConditionMousePressedOn"
     def get_input_sockets_field_names(self):
         return ["mouse_button", "game_object"]
+
+
 _nodes.append(NLConditionMousePressedOn)
 
 
@@ -3901,8 +3894,14 @@ class NLConditionCollisionNode(bpy.types.Node, NLConditionNode):
 
     def get_netlogic_class_name(self):
         return "bgelogic.ConditionCollision"
-    def get_input_sockets_field_names(self): return ["game_object"]
-    def get_output_socket_varnames(self): return [OUTCELL, "TARGET", "POINT", "NORMAL", "OBJECTS", "OPN_SET"]
+    
+    def get_input_sockets_field_names(self):
+        return ["game_object"]
+    
+    def get_output_socket_varnames(self):
+        return [OUTCELL, "TARGET", "POINT", "NORMAL", "OBJECTS", "OPN_SET"]
+
+
 _nodes.append(NLConditionCollisionNode)
 
 
@@ -3923,6 +3922,8 @@ class NLConditionMouseTargetingNode(bpy.types.Node, NLConditionNode):
         return "bgelogic.ConditionMouseTargeting"
     def get_input_sockets_field_names(self): return ["game_object"]
     def get_output_socket_varnames(self): return ["MOUSE_ENTERED", "MOUSE_OVER", "MOUSE_EXITED", "POINT", "NORMAL"]
+
+
 _nodes.append(NLConditionMouseTargetingNode)
 
 
@@ -3995,6 +3996,8 @@ class NLConditionOrList(bpy.types.Node, NLConditionNode):
         self.outputs.new(NLConditionSocket.bl_idname, "Or...")
     def get_netlogic_class_name(self): return "bgelogic.ConditionOrList"
     def get_input_sockets_field_names(self): return ["ca", "cb", "cc", "cd", "ce", "cf"]
+
+
 _nodes.append(NLConditionOrList)
 
 
@@ -4005,23 +4008,24 @@ class NLConditionAndList(bpy.types.Node, NLConditionNode):
     
     def init(self, context):
         NLConditionNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, "A")
+        self.inputs.new(NLPseudoConditionSocket.bl_idname, "A")
         self.inputs[-1].default_value = "True"
-        self.inputs.new(NLConditionSocket.bl_idname, "B")
+        self.inputs.new(NLPseudoConditionSocket.bl_idname, "B")
         self.inputs[-1].default_value = "True"
-        self.inputs.new(NLConditionSocket.bl_idname, "C")
+        self.inputs.new(NLPseudoConditionSocket.bl_idname, "C")
         self.inputs[-1].default_value = "True"
-        self.inputs.new(NLConditionSocket.bl_idname, "D")
+        self.inputs.new(NLPseudoConditionSocket.bl_idname, "D")
         self.inputs[-1].default_value = "True"
-        self.inputs.new(NLConditionSocket.bl_idname, "E")
+        self.inputs.new(NLPseudoConditionSocket.bl_idname, "E")
         self.inputs[-1].default_value = "True"
-        self.inputs.new(NLConditionSocket.bl_idname, "F")
+        self.inputs.new(NLPseudoConditionSocket.bl_idname, "F")
         self.inputs[-1].default_value = "True"
-        self.outputs.new(NLConditionSocket.bl_idname, "And...")
+        self.outputs.new(NLPseudoConditionSocket.bl_idname, "If All True")
     def get_netlogic_class_name(self): return "bgelogic.ConditionAndList"
     def get_input_sockets_field_names(self): return ["ca", "cb", "cc", "cd", "ce", "cf"]
-_nodes.append(NLConditionAndList)
 
+
+_nodes.append(NLConditionAndList)
 
 
 class NLConditionValueTriggerNode(bpy.types.Node, NLConditionNode):
@@ -4180,7 +4184,7 @@ class NLConditionLogicNetworkStatusNode(bpy.types.Node, NLConditionNode):
     def init(self, context):
         NLConditionNode.init(self, context)
         self.inputs.new(NLGameObjectSocket.bl_idname, "Object")
-        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Tree Name")
+        self.inputs.new(NLSocketLogicTree.bl_idname, "Tree Name")
         self.outputs.new(NLConditionSocket.bl_idname, "If Running")
         self.outputs.new(NLConditionSocket.bl_idname, "If Stopped")
     def get_netlogic_class_name(self): return "bgelogic.ConditionLNStatus"
@@ -4394,7 +4398,7 @@ _nodes.append(NLActionRayCastNode)
 #TODO: should we reset conditions that have been consumed? Like a "once" condition. I'd say no
 class NLStartLogicNetworkActionNode(bpy.types.Node, NLActionNode):
     bl_idname = "NLStartLogicNetworkActionNode"
-    bl_label = "Start Logic Network"
+    bl_label = "Start Logic Tree"
     nl_category = "Logic Tree"
 
     def init(self, context):
@@ -4402,21 +4406,26 @@ class NLStartLogicNetworkActionNode(bpy.types.Node, NLActionNode):
         tools.register_inputs(self,
             NLConditionSocket, "Condition",
             NLGameObjectSocket, "Object",
-            NLQuotedStringFieldSocket, "Tree Name")
+            NLSocketLogicTree, "Tree Name")
         self.outputs.new(NLConditionSocket.bl_idname, 'Done')
 
     def get_output_socket_varnames(self):
         return ["OUT"]
 
 
-    def get_netlogic_class_name(self): return "bgelogic.ActionStartLogicNetwork"
-    def get_input_sockets_field_names(self): return ["condition", "game_object", "logic_network_name"]
+    def get_netlogic_class_name(self):
+        return "bgelogic.ActionStartLogicNetwork"
+
+    def get_input_sockets_field_names(self):
+        return ["condition", "game_object", "logic_network_name"]
+
+
 _nodes.append(NLStartLogicNetworkActionNode)
 
 
 class NLStopLogicNetworkActionNode(bpy.types.Node, NLActionNode):
     bl_idname = "NLStopLogicNetworkActionNode"
-    bl_label = "Stop Logic Network"
+    bl_label = "Stop Logic Tree"
     nl_category = "Logic Tree"
 
     def init(self, context):
@@ -4424,7 +4433,7 @@ class NLStopLogicNetworkActionNode(bpy.types.Node, NLActionNode):
         tools.register_inputs(self,
             NLConditionSocket, "Condition",
             NLGameObjectSocket, "Object",
-            NLQuotedStringFieldSocket, "Tree Name")            
+            NLSocketLogicTree, "Tree Name")            
         self.outputs.new(NLConditionSocket.bl_idname, 'Done')
 
     def get_output_socket_varnames(self):
@@ -4749,14 +4758,14 @@ _nodes.append(NLActionAddScene)
 
 class NLActionInstallSubNetwork(bpy.types.Node, NLActionNode):
     bl_idname = "NLActionInstallSubNetwork"
-    bl_label = "Install Sub Tree"
+    bl_label = "Add Logic Tree to Object"
     nl_category = "Logic Tree"
 
     def init(self, context):
         NLActionNode.init(self, context)
         self.inputs.new(NLConditionSocket.bl_idname, "Condition")
         self.inputs.new(NLGameObjectSocket.bl_idname, "Target Object")
-        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Tree Name")
+        self.inputs.new(NLSocketLogicTree.bl_idname, "Tree Name")
         self.inputs.new(NLBooleanSocket.bl_idname, "Enabled")
         self.inputs[-1].use_toggle = True
         self.outputs.new(NLConditionSocket.bl_idname, 'Done')
@@ -4771,6 +4780,30 @@ class NLActionInstallSubNetwork(bpy.types.Node, NLActionNode):
 
 
 _nodes.append(NLActionInstallSubNetwork)
+
+
+class NLActionExecuteNetwork(bpy.types.Node, NLActionNode):
+    bl_idname = "NLActionExecuteNetwork"
+    bl_label = "Execute Logic Tree"
+    nl_category = "Logic Tree"
+
+    def init(self, context):
+        NLActionNode.init(self, context)
+        self.inputs.new(NLPseudoConditionSocket.bl_idname, "Condition")
+        self.inputs.new(NLGameObjectSocket.bl_idname, "Target Object")
+        self.inputs.new(NLSocketLogicTree.bl_idname, "Tree Name")
+        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+
+    def get_output_socket_varnames(self):
+        return ["OUT"]
+
+    def get_netlogic_class_name(self):
+        return "bgelogic.ActionExecuteNetwork"
+    def get_input_sockets_field_names(self):
+        return ["condition", "target_object", "tree_name"]
+
+
+_nodes.append(NLActionExecuteNetwork)
 
 
 class NLActionStopAnimation(bpy.types.Node, NLActionNode):

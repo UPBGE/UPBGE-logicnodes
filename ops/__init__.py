@@ -317,6 +317,115 @@ class NLRemoveTreeByNameOperator(bpy.types.Operator):
             ob.bgelogic_treelist.remove(index)
 
 
+class NLMakeGroupOperator(bpy.types.Operator):
+    bl_idname = "bge_netlogic.make_group"
+    bl_label = "Convert To New Tree"
+    bl_description = "Convert selected Nodes to a new tree. WARNING: All Nodes connected to selection must be selected too"
+    owner = bpy.props.StringProperty()
+
+    @classmethod
+    def poll(cls, context):
+        return True
+
+    def _index_of(self, item, a_iterable):
+        i = 0
+        for e in a_iterable:
+            if e == item:
+                return i
+            i += 1
+
+    def group_make(self, group_name, add_nodes):
+        node_tree = bpy.data.node_groups.new(group_name, 'BGELogicTree')
+        group_name = node_tree.name
+        attrs = [
+            'value',
+            'default_value',
+            'use_toggle',
+            'true_label',
+            'false_label',
+            'value_type',
+            'bool_editor',
+            'int_editor',
+            'float_editor',
+            'string_editor',
+            'radians',
+            'float_field',
+            'expression_field',
+            'input_type',
+            'value_x',
+            'value_y',
+            'value_z',
+            'title'
+        ]
+
+        nodes = node_tree.nodes
+#        inputnode = nodes.new('NodeGroupInput')
+#        outputnode = nodes.new('NodeGroupOutput')
+        new_nodes = {}
+        parent_tree = bpy.context.space_data.edit_tree
+        locs = []
+
+        for node in add_nodes:
+            added_node = nodes.new(node.bl_idname)
+            added_node.location = node.location
+            new_nodes[node] = added_node
+
+        for old_node in new_nodes:
+            new_node = new_nodes[old_node]
+            for socket in old_node.inputs:
+                index = self._index_of(socket, old_node.inputs)
+                for attr in dir(socket):
+                    if attr in attrs:
+                        try:
+                            setattr(new_node.inputs[index], attr, getattr(socket, attr))
+                        except Exception:
+                            print('Attribute {} not writable.'.format(attr))
+                for link in socket.links:
+                    try:
+                        output_socket = link.from_socket
+                        output_node = new_nodes[output_socket.node]
+                        outdex = self._index_of(output_socket, output_socket.node.outputs)
+                        node_tree.links.new(new_node.inputs[index], output_node.outputs[outdex])
+                    except Exception:
+                        bpy.data.node_groups.remove(node_tree)
+                        print('Some linked Nodes are not added to the group! Aborting...')
+                        return
+            locs.append(old_node.location)
+        
+        for old_node in new_nodes:
+            parent_tree.nodes.remove(old_node)
+        redir = parent_tree.nodes.new('NLActionExecuteNetwork')
+        
+        try:
+            redir.inputs[1].value = bpy.context.object
+        except Exception:
+            print('No Object was selected; Set Object in tree {} manually!'.format(parent_tree.name))
+        redir.inputs[2].value = group_name
+        redir.location = self.avg_location(locs)
+        return node_tree
+
+    def avg_location(self, locs):
+        avg_x = 0
+        avg_y = 0
+        for v in locs:
+            avg_x += v[0]
+            avg_y += v[1]
+        avg_x /= len(locs)
+        avg_y /= len(locs)
+        return (avg_x, avg_y)
+
+    def execute(self, context):
+        print('Make Group Now')
+        nodes_to_group = []
+        tree = context.space_data.edit_tree
+
+        for node in tree.nodes:
+            if node.select:
+                nodes_to_group.append(node)
+        self.group_make(tree.name + '_part', nodes_to_group)
+        return {'FINISHED'}
+
+
 class NLApplyLogicOperator(bpy.types.Operator):
     bl_idname = "bge_netlogic.apply_logic"
     bl_label = "Apply Logic"

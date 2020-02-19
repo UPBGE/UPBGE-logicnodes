@@ -21,4 +21,3 @@ class AbstractTextBuffer(object):
 
     def close(self):
         self.buffer.close()
-    pass

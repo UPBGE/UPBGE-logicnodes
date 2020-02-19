@@ -19,6 +19,11 @@ class BGEPropFilter(bpy.types.PropertyGroup):
     filter_name = bpy.props.StringProperty()
 
 
+class BGEGroupName(bpy.types.PropertyGroup):
+    name = bpy.props.StringProperty()
+    enabled = bpy.props.BoolProperty()
+
+
 class BGEGamePropertyPanel(bpy.types.Panel):
     bl_label = "Object Properties"
     bl_space_type = "NODE_EDITOR"
@@ -309,6 +314,28 @@ class BGEGamePropertyPanelObject(bpy.types.Panel):
             row_info = entry.row()
             row_info.prop(prop, 'type', text='')
             row_info.prop(prop, 'value', text='Value')
+
+
+class BGELogicTreeGroups(bpy.types.Panel):
+    bl_label = "Tree Groups"
+    bl_space_type = "NODE_EDITOR"
+    bl_region_type = "UI"
+    bl_category = "Item"
+    _current_tree = None
+
+    @classmethod
+    def poll(cls, context):
+        return True
+
+    def draw(self, context):
+        layout = self.layout
+        new_gr = layout.operator(
+            bge_netlogic.ops.NLMakeGroupOperator.bl_idname
+        )
+        #row = layout.row()
+        #name = row.prop(context.scene.group_name, 'name', text='')
+        #row.prop(context.scene.group_name, 'enabled', text='Active when Installed')
+
 
 
 class BGELogicTreeInfoPanel(bpy.types.Panel):

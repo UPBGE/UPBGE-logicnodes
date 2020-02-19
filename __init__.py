@@ -5,7 +5,7 @@ import sys
 import time
 
 bl_info = {
-    "name": "Uchronian Logic - UPBGE Logic Nodes",
+    "name": "Logic Nodes",
     "description": "A Node System to create game logic.",
     "author": "pgi, Leopold A-C (Iza Zed)",
     'description': 'Contributors: L_P',
@@ -15,6 +15,7 @@ bl_info = {
     "warning": "Beta",
     "category": "Game Engine"
 }
+
 bl_options = {
     'REGISTER',
     'UNDO'
@@ -323,6 +324,8 @@ class NodeCategory(nodeitems_utils.NodeCategory):
 basicnodes = _abs_import("basicnodes", _abs_path("basicnodes", "__init__.py"))
 _registered_classes = [
     ui.BGELogicTree,
+    #ui.NLNodeGroupInput,
+    #ui.NLNodeGroupOutput,
     ops.NLSelectTreeByNameOperator,
     ops.NLRemoveTreeByNameOperator,
     ops.NLApplyLogicOperator,
@@ -331,6 +334,7 @@ _registered_classes = [
     ops.NLLoadProjectNodes,
     ops.WaitForKeyOperator,
     ops.TreeCodeWriterOperator,
+    ops.NLMakeGroupOperator,
     ops.NLSwitchInitialNetworkStatusOperator,
     ops.NLAddPropertyOperator,
     ops.NLRemovePropertyOperator,
@@ -345,11 +349,14 @@ _registered_classes.extend(basicnodes._nodes)
 
 _registered_classes.extend([
     ui.BGEPropFilter,
+    ui.BGEGroupName,
     ui.BGELogicPanel,
     ui.BGELogicTreeInfoPanel,
     ui.BGEGamePropertyPanel,
     ui.BGEGamePropertyPanel3DView,
-    ui.BGEGamePropertyPanelObject])
+    ui.BGEGamePropertyPanelObject,
+    ui.BGELogicTreeGroups
+    ])
 
 
 def _get_key_for_class(c):
@@ -408,6 +415,9 @@ def register():
     )
     bpy.types.Scene.prop_filter = bpy.props.PointerProperty(
         type=ui.BGEPropFilter
+    )
+    bpy.types.Scene.group_name = bpy.props.PointerProperty(
+        type=ui.BGEGroupName
     )
 
 

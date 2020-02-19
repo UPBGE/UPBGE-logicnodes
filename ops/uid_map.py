@@ -11,11 +11,9 @@ class UIDMap:
         self._uid_to_node[uid] = node
         self._uid_to_varname[uid] = varname
         self._varname_to_node[varname] = node
-        pass
 
     def remove_cell_from_tree(self, cell_varname):
         self._removed_cells.append(cell_varname)
-        pass
 
     def is_removed(self, cell_varname):
         return cell_varname in self._removed_cells
@@ -34,4 +32,3 @@ class UIDMap:
 
     def _list_cell_names(self):
         return list(self._uid_to_varname.values())
-    pass
