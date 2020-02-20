@@ -317,7 +317,7 @@ class NLRemoveTreeByNameOperator(bpy.types.Operator):
 
 class NLMakeGroupOperator(bpy.types.Operator):
     bl_idname = "bge_netlogic.make_group"
-    bl_label = "Convert To New Tree"
+    bl_label = "Pack Into New Tree"
     bl_description = "Convert selected Nodes to a new tree. Will be applied to selected object. WARNING: All Nodes connected to selection must be selected too"
     owner = bpy.props.StringProperty()
 
@@ -356,7 +356,9 @@ class NLMakeGroupOperator(bpy.types.Operator):
             'title',
             'local',
             'operator',
-            'pulse'
+            'pulse',
+            'hide',
+            'label'
         ]
 
         nodes = node_tree.nodes
@@ -405,6 +407,7 @@ class NLMakeGroupOperator(bpy.types.Operator):
             print('No Object was selected; Set Object in tree {} manually!'.format(parent_tree.name))
         redir.inputs[2].value = group_name
         redir.location = self.avg_location(locs)
+        node_tree.use_fake_user = True
         return node_tree
 
     def avg_location(self, locs):
