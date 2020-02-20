@@ -434,7 +434,7 @@ class NLMakeGroupOperator(bpy.types.Operator):
 
 class NLAdd4KeyTemplateOperator(bpy.types.Operator):
     bl_idname = "bge_netlogic.add_4_key_temp"
-    bl_label = "Add 4 Key Movement"
+    bl_label = "4 Key Movement"
     bl_description = "Add 4 Key Movement (WASD with normalized vector)"
     owner = bpy.props.StringProperty()
 
@@ -508,11 +508,11 @@ class NLAdd4KeyTemplateOperator(bpy.types.Operator):
         leftward = self.add_movement_setter(tree, 'Set Left', akey, 'y', 1, nodes, ypos=-80)
         rightward = self.add_movement_setter(tree, 'Set Right', dkey, 'y', -1, nodes, ypos=-120)
 
-        reset_x = self.add_or_cond(tree, 'Reset X Axis', forward, backward, nodes)
-        reset_y = self.add_or_cond(tree, 'Reset Y Axis', leftward, rightward, nodes, ypos = -100)
+        reset_x = self.add_or_cond(tree, 'W or S Pressed', forward, backward, nodes)
+        reset_y = self.add_or_cond(tree, 'A or D Pressed', leftward, rightward, nodes, ypos = -100)
 
-        inverted_x = self.add_invert_bool(tree, 'Invert', reset_x, nodes)
-        inverted_y = self.add_invert_bool(tree, 'Invert', reset_y, nodes, ypos=-100)
+        inverted_x = self.add_invert_bool(tree, 'If Not', reset_x, nodes)
+        inverted_y = self.add_invert_bool(tree, 'If Not', reset_y, nodes, ypos=-100)
 
         self.add_movement_setter(tree, 'Cancel X Movement', inverted_x, 'x', 0, nodes, xpos=880, ypos=-20)
         self.add_movement_setter(tree, 'Cancel Y Movement', inverted_y, 'y', 0, nodes, xpos=880, ypos=-100)

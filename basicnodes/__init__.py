@@ -3177,9 +3177,6 @@ class NLParameterBooleanValue(bpy.types.Node, NLParameterNode):
     def get_netlogic_class_name(self):
         return "bgelogic.ParameterSimpleValue"
 
-    def get_output_socket_varnames(self):
-        return ["OUT"]
-
     def get_input_sockets_field_names(self):
         return ["value"]
 
@@ -3198,7 +3195,6 @@ class NLParameterFloatValue(bpy.types.Node, NLParameterNode):
         self.outputs.new(NLParameterSocket.bl_idname, "Float")
 
     def get_netlogic_class_name(self): return "bgelogic.ParameterSimpleValue"
-    def get_output_socket_varnames(self): return ["OUT"]
     def get_input_sockets_field_names(self): return ["value"]
 
 
@@ -3216,7 +3212,6 @@ class NLParameterIntValue(bpy.types.Node, NLParameterNode):
         self.outputs.new(NLParameterSocket.bl_idname, "Int")
 
     def get_netlogic_class_name(self): return "bgelogic.ParameterSimpleValue"
-    def get_output_socket_varnames(self): return ["OUT"]
     def get_input_sockets_field_names(self): return ["value"]
 
 
@@ -3234,7 +3229,6 @@ class NLParameterStringValue(bpy.types.Node, NLParameterNode):
         self.outputs.new(NLParameterSocket.bl_idname, "String")
 
     def get_netlogic_class_name(self): return "bgelogic.ParameterSimpleValue"
-    def get_output_socket_varnames(self): return ["OUT"]
     def get_input_sockets_field_names(self): return ["value"]
 
 

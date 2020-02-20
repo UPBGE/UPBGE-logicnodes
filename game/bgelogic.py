@@ -2016,14 +2016,10 @@ class ParameterSimpleValue(ParameterCell):
     def __init__(self):
         ParameterCell.__init__(self)
         self.value = None
-        self.OUT = LogicNetworkSubCell(self, self.get_value)
-
-    def get_value(self):
-        return self.value
 
     def evaluate(self):
-        self._set_ready()
         value = self.get_parameter_value(self.value)
+        self._set_ready()
         self._set_value(value)
 
 
