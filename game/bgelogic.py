@@ -4253,7 +4253,7 @@ class ActionExecuteNetwork(ActionCell):
         if condition:
             added_network.stopped = False
         else:
-            added_network.stopped = True
+            added_network.stop()
         self.done = True
 
 

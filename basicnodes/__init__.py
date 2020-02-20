@@ -5775,8 +5775,8 @@ class NLActionMousePickNode(bpy.types.Node, NLActionNode):
         self.inputs[-1].value = 100.0
         self.outputs.new(NLConditionSocket.bl_idname, "Has Result")
         self.outputs.new(NLGameObjectSocket.bl_idname, "Picked Object")
-        self.outputs.new(NLParameterSocket.bl_idname, "Picked Point")
-        self.outputs.new(NLParameterSocket.bl_idname, "Picked Normal")
+        self.outputs.new(NLVectorSocket.bl_idname, "Picked Point")
+        self.outputs.new(NLVectorSocket.bl_idname, "Picked Normal")
     def get_netlogic_class_name(self): return "bgelogic.ActionMousePick"
     def get_input_sockets_field_names(self): return ["condition", "camera", "property", "distance"]
     def get_output_socket_varnames(self): return [OUTCELL, "OUTOBJECT", "OUTPOINT", "OUTNORMAL"]
@@ -5798,8 +5798,8 @@ class NLActionCameraPickNode(bpy.types.Node, NLActionNode):
         self.inputs[-1].value = 100.0
         self.outputs.new(NLConditionSocket.bl_idname, "Has Result")
         self.outputs.new(NLGameObjectSocket.bl_idname, "Picked Object")
-        self.outputs.new(NLParameterSocket.bl_idname, "Picked Point")
-        self.outputs.new(NLParameterSocket.bl_idname, "Picked Normal")
+        self.outputs.new(NLVectorSocket.bl_idname, "Picked Point")
+        self.outputs.new(NLVectorSocket.bl_idname, "Picked Normal")
     def get_netlogic_class_name(self):
         return "bgelogic.ActionCameraPick"
     def get_input_sockets_field_names(self):
