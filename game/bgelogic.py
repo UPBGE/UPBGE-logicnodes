@@ -4232,8 +4232,6 @@ class ActionExecuteNetwork(ActionCell):
         condition = self.get_parameter_value(self.condition)
         if condition is LogicNetworkCell.STATUS_WAITING:
             return
-        if not condition:
-            return
         target_object = self.get_parameter_value(self.target_object)
         tree_name = self.get_parameter_value(self.tree_name)
         if target_object is LogicNetworkCell.STATUS_WAITING:
@@ -4251,9 +4249,12 @@ class ActionExecuteNetwork(ActionCell):
             )
         added_network = target_object.get(tree_name)
         if condition:
+            print('START')
             added_network.stopped = False
         else:
+            print('STOP')
             added_network.stop()
+            added_network.stopped = True
         self.done = True
 
 
