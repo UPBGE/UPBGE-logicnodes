@@ -4249,10 +4249,8 @@ class ActionExecuteNetwork(ActionCell):
             )
         added_network = target_object.get(tree_name)
         if condition:
-            print('START')
             added_network.stopped = False
         else:
-            print('STOP')
             added_network.stop()
             added_network.stopped = True
         self.done = True
@@ -6834,22 +6832,18 @@ class ParameterGetGlobalValue(ParameterCell):
         ParameterCell.__init__(self)
         self.data_id = None
         self.key = None
-        self.default_value = None
 
     def evaluate(self):
         STATUS_WAITING = LogicNetworkCell.STATUS_WAITING
         data_id = self.get_parameter_value(self.data_id)
         key = self.get_parameter_value(self.key)
-        default_value = self.get_parameter_value(self.default_value)
         if data_id is STATUS_WAITING:
             return
         if key is STATUS_WAITING:
             return
-        if default_value is STATUS_WAITING:
-            return
         self._set_ready()
         db = SimpleLoggingDatabase.get_or_create_shared_db(data_id)
-        self._set_value(db.get(key, default_value))
+        self._set_value(db.get(key, None))
 
 
 class ParameterConstantValue(ParameterCell):

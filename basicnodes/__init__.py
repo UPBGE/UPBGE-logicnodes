@@ -6168,15 +6168,18 @@ class NLParameterGetGlobalValue(bpy.types.Node, NLParameterNode):
 
     def init(self, context):
         NLParameterNode.init(self, context)
-        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "ID")
+        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Name")
+        self.inputs[-1].value = 'general'
         self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Key")
-        self.inputs.new(NLValueFieldSocket.bl_idname, "")
+        self.inputs[-1].value = 'var_name'
+        # self.inputs.new(NLValueFieldSocket.bl_idname, "Default Value")
         self.outputs.new(NLParameterSocket.bl_idname, "Value")
     def get_input_sockets_field_names(self):
-        return ["data_id", "key", "default_value"]
+        return ["data_id", "key"]
     def get_netlogic_class_name(self):
         return "bgelogic.ParameterGetGlobalValue"
-#_nodes.append(NLParameterGetGlobalValue)
+
+_nodes.append(NLParameterGetGlobalValue)
 
 
 class NLActionSetGlobalValue(bpy.types.Node, NLActionNode):
@@ -6186,10 +6189,12 @@ class NLActionSetGlobalValue(bpy.types.Node, NLActionNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, "Optional Condition")
-        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "ID")
+        self.inputs.new(NLPseudoConditionSocket.bl_idname, "Condition")
+        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Name")
+        self.inputs[-1].value = 'general'
         self.inputs.new(NLBooleanSocket.bl_idname, "Persistent")
         self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Key")
+        self.inputs[-1].value = 'var_name'
         self.inputs.new(NLValueFieldSocket.bl_idname, "")
         self.outputs.new(NLConditionSocket.bl_idname, 'Done')
 
@@ -6200,7 +6205,8 @@ class NLActionSetGlobalValue(bpy.types.Node, NLActionNode):
         return ["condition", "data_id", "persistent", "key", "value"]
     def get_netlogic_class_name(self):
         return "bgelogic.ActionSetGlobalValue"
-#_nodes.append(NLActionSetGlobalValue)
+
+_nodes.append(NLActionSetGlobalValue)
 
 
 class NLParameterFormattedString(bpy.types.Node, NLParameterNode):

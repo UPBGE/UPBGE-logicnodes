@@ -335,8 +335,13 @@ class BGELogicTreeGroups(bpy.types.Panel):
 
     def draw(self, context):
         layout = self.layout
-        new_gr = layout.operator(
+        layout.operator(
             bge_netlogic.ops.NLMakeGroupOperator.bl_idname
+        )
+        layout.separator()
+        layout.label(text='Node Prefabs:')
+        layout.operator(
+            bge_netlogic.ops.NLAdd4KeyTemplateOperator.bl_idname
         )
         #row = layout.row()
         #name = row.prop(context.scene.group_name, 'name', text='')
