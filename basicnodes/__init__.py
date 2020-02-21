@@ -4989,12 +4989,10 @@ class NLActionSaveGame(bpy.types.Node, NLActionNode):
         NLActionNode.init(self, context)
         self.inputs.new(NLConditionSocket.bl_idname, 'Condition')
         self.inputs.new(NLPositiveIntegerFieldSocket.bl_idname, 'Slot')
-        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, 'Game Title')
-        self.inputs[-1].value = 'Your Game'
         self.outputs.new(NLConditionSocket.bl_idname, 'Done')
 
     def draw_buttons(self, context, layout):
-        layout.prop(self, "custom_path", toggle=True, text="Custom Path" if self.custom_path else "User/Documents")
+        layout.prop(self, "custom_path", toggle=True, text="Custom Path" if self.custom_path else "File Path/Saves")
         if self.custom_path:
             layout.prop(self, "path", text='Path')
 
@@ -5002,7 +5000,7 @@ class NLActionSaveGame(bpy.types.Node, NLActionNode):
         return "bgelogic.ActionSaveGame"
 
     def get_input_sockets_field_names(self):
-        return ["condition", 'slot', "game_name"]
+        return ["condition", 'slot']
 
     def get_nonsocket_fields(self):
         return [("path", lambda : "'{}'".format(self.path) if self.custom_path else "''")]
@@ -5025,12 +5023,10 @@ class NLActionLoadGame(bpy.types.Node, NLActionNode):
         NLActionNode.init(self, context)
         self.inputs.new(NLConditionSocket.bl_idname, 'Condition')
         self.inputs.new(NLPositiveIntegerFieldSocket.bl_idname, 'Slot')
-        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, 'Game Title')
-        self.inputs[-1].value = 'Your Game'
         self.outputs.new(NLConditionSocket.bl_idname, 'Done')
 
     def draw_buttons(self, context, layout):
-        layout.prop(self, "custom_path", toggle=True, text="Custom Path" if self.custom_path else "User/Documents")
+        layout.prop(self, "custom_path", toggle=True, text="Custom Path" if self.custom_path else "File Path/Saves")
         if self.custom_path:
             layout.prop(self, "path", text='Path')
 
@@ -5038,7 +5034,7 @@ class NLActionLoadGame(bpy.types.Node, NLActionNode):
         return "bgelogic.ActionLoadGame"
 
     def get_input_sockets_field_names(self):
-        return ["condition", 'slot', "game_name"]
+        return ["condition", 'slot']
 
     def get_nonsocket_fields(self):
         return [("path", lambda : "'{}'".format(self.path) if self.custom_path else "''")]
@@ -5063,13 +5059,11 @@ class NLActionSaveVariable(bpy.types.Node, NLActionNode):
         self.inputs.new(NLQuotedStringFieldSocket.bl_idname, 'Name')
         self.inputs[-1].value = 'var'
         self.inputs.new(NLValueFieldSocket.bl_idname, '')
-        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, 'Game Title')
-        self.inputs[-1].value = 'Your Game'
         self.outputs.new(NLConditionSocket.bl_idname, 'Done')
 
     def draw_buttons(self, context, layout):
         layout.label(text='Save To:')
-        layout.prop(self, "custom_path", toggle=True, text="Custom Path" if self.custom_path else "User/Documents")
+        layout.prop(self, "custom_path", toggle=True, text="Custom Path" if self.custom_path else "File Path/Data")
         if self.custom_path:
             layout.prop(self, "path", text='Path')
 
@@ -5077,7 +5071,7 @@ class NLActionSaveVariable(bpy.types.Node, NLActionNode):
         return "bgelogic.ActionSaveVariable"
 
     def get_input_sockets_field_names(self):
-        return ["condition", 'name', 'val', "game_name"]
+        return ["condition", 'name', 'val']
 
     def get_nonsocket_fields(self):
         return [("path", lambda : "'{}'".format(self.path) if self.custom_path else "''")]
@@ -5122,14 +5116,12 @@ class NLActionLoadVariable(bpy.types.Node, NLActionNode):
         self.inputs.new(NLPseudoConditionSocket.bl_idname, 'Condition')
         self.inputs.new(NLQuotedStringFieldSocket.bl_idname, 'Name')
         self.inputs[-1].value = 'var'
-        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, 'Game Title')
-        self.inputs[-1].value = 'Your Game'
         self.outputs.new(NLConditionSocket.bl_idname, 'Done')
         self.outputs.new(NLParameterSocket.bl_idname, 'Value')
 
     def draw_buttons(self, context, layout):
         layout.label(text='Load From:')
-        layout.prop(self, "custom_path", toggle=True, text="Custom Path" if self.custom_path else "User/Documents")
+        layout.prop(self, "custom_path", toggle=True, text="Custom Path" if self.custom_path else "File Path/Data")
         if self.custom_path:
             layout.prop(self, "path", text='Path')
 
@@ -5137,7 +5129,7 @@ class NLActionLoadVariable(bpy.types.Node, NLActionNode):
         return "bgelogic.ActionLoadVariable"
 
     def get_input_sockets_field_names(self):
-        return ["condition", 'name', "game_name"]
+        return ["condition", 'name']
 
     def get_nonsocket_fields(self):
         return [("path", lambda : "'{}'".format(self.path) if self.custom_path else "''")]
@@ -5161,13 +5153,11 @@ class NLActionRemoveVariable(bpy.types.Node, NLActionNode):
         self.inputs.new(NLConditionSocket.bl_idname, 'Condition')
         self.inputs.new(NLQuotedStringFieldSocket.bl_idname, 'Name')
         self.inputs[-1].value = 'var'
-        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, 'Game Title')
-        self.inputs[-1].value = 'Your Game'
         self.outputs.new(NLConditionSocket.bl_idname, 'Done')
 
     def draw_buttons(self, context, layout):
         layout.label(text='Remove From:')
-        layout.prop(self, "custom_path", toggle=True, text="Custom Path" if self.custom_path else "User/Documents")
+        layout.prop(self, "custom_path", toggle=True, text="Custom Path" if self.custom_path else "File Path/Data")
         if self.custom_path:
             layout.prop(self, "path", text='Path')
 
@@ -5175,7 +5165,7 @@ class NLActionRemoveVariable(bpy.types.Node, NLActionNode):
         return "bgelogic.ActionRemoveVariable"
 
     def get_input_sockets_field_names(self):
-        return ["condition", 'name', "game_name"]
+        return ["condition", 'name']
 
     def get_nonsocket_fields(self):
         return [("path", lambda : "'{}'".format(self.path) if self.custom_path else "''")]
@@ -5197,13 +5187,11 @@ class NLActionClearVariables(bpy.types.Node, NLActionNode):
     def init(self, context):
         NLActionNode.init(self, context)
         self.inputs.new(NLConditionSocket.bl_idname, 'Condition')
-        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, 'Game Title')
-        self.inputs[-1].value = 'Your Game'
         self.outputs.new(NLConditionSocket.bl_idname, 'Done')
 
     def draw_buttons(self, context, layout):
         layout.label(text='Clear In:')
-        layout.prop(self, "custom_path", toggle=True, text="Custom Path" if self.custom_path else "User/Documents")
+        layout.prop(self, "custom_path", toggle=True, text="Custom Path" if self.custom_path else "File Path/Data")
         if self.custom_path:
             layout.prop(self, "path", text='Path')
 
@@ -5211,7 +5199,7 @@ class NLActionClearVariables(bpy.types.Node, NLActionNode):
         return "bgelogic.ActionClearVariables"
 
     def get_input_sockets_field_names(self):
-        return ["condition", "game_name"]
+        return ["condition"]
 
     def get_nonsocket_fields(self):
         return [("path", lambda : "'{}'".format(self.path) if self.custom_path else "''")]
@@ -5233,15 +5221,13 @@ class NLActionListVariables(bpy.types.Node, NLActionNode):
     def init(self, context):
         NLActionNode.init(self, context)
         self.inputs.new(NLPseudoConditionSocket.bl_idname, 'Condition')
-        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, 'Game Title')
-        self.inputs[-1].value = 'Your Game'
         self.inputs.new(NLBooleanSocket.bl_idname, 'Print')
         self.outputs.new(NLConditionSocket.bl_idname, 'Done')
         self.outputs.new(NLListSocket.bl_idname, 'List')
 
     def draw_buttons(self, context, layout):
         layout.label(text='List From:')
-        layout.prop(self, "custom_path", toggle=True, text="Custom Path" if self.custom_path else "User/Documents")
+        layout.prop(self, "custom_path", toggle=True, text="Custom Path" if self.custom_path else "File Path/Data")
         if self.custom_path:
             layout.prop(self, "path", text='Path')
 
@@ -5249,7 +5235,7 @@ class NLActionListVariables(bpy.types.Node, NLActionNode):
         return "bgelogic.ActionListVariables"
 
     def get_input_sockets_field_names(self):
-        return ["condition", "game_name", 'print_list']
+        return ["condition", 'print_list']
 
     def get_nonsocket_fields(self):
         return [("path", lambda : "'{}'".format(self.path) if self.custom_path else "''")]

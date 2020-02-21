@@ -1,4 +1,5 @@
 import bge
+import bpy
 import aud
 import mathutils
 import math
@@ -5668,13 +5669,20 @@ class ActionSaveGame(ActionCell):
         ActionCell.__init__(self)
         self.condition = None
         self.slot = None
-        self.game_name = None
         self.path = ''
         self.done = None
         self.OUT = LogicNetworkSubCell(self, self.get_done)
 
     def get_done(self):
         return self.done
+
+    def get_custom_path(self, path):
+        if not path.endswith('/'):
+            path = path + '/'
+        if path.startswith('./'):
+            path = path.split('./', 1)[-1]
+            return bpy.path.abspath('//' + path)
+        return path
 
     def evaluate(self):
         self.done = False
@@ -5683,18 +5691,13 @@ class ActionSaveGame(ActionCell):
             return
         if not condition:
             return
-        game_name = self.get_parameter_value(self.game_name)
-        if game_name is LogicNetworkCell.STATUS_WAITING:
-            return
         slot = self.get_parameter_value(self.slot)
         if slot is LogicNetworkCell.STATUS_WAITING:
             return
         self._set_ready()
+        cust_path = self.get_custom_path(self.path)
 
-        path = "C:/Users/{}/Documents/My Games/{}/Saves/".format(
-            getpass.getuser(),
-            game_name
-        ) if self.path == '' else self.path
+        path = bpy.path.abspath('//Saves/') if self.path == '' else cust_path
         os.makedirs(path, exist_ok=True)
 
         data = {
@@ -5742,7 +5745,6 @@ class ActionSaveGame(ActionCell):
                 )
             if cha:
                 wDir = cha.walkDirection
-                print(wDir)
 
                 objs.append(
                     {
@@ -5796,7 +5798,6 @@ class ActionLoadGame(ActionCell):
         ActionCell.__init__(self)
         self.condition = None
         self.slot = None
-        self.game_name = None
         self.path = ''
         self.done = None
         self.OUT = LogicNetworkSubCell(self, self.get_done)
@@ -5807,6 +5808,14 @@ class ActionLoadGame(ActionCell):
     def get_game_vec(self, data):
         return mathutils.Euler((data['x'], data['y'], data['z']))
 
+    def get_custom_path(self, path):
+        if not path.endswith('/'):
+            path = path + '/'
+        if path.startswith('./'):
+            path = path.split('./', 1)[-1]
+            return bpy.path.abspath('//' + path)
+        return path
+
     def evaluate(self):
         self.done = False
         condition = self.get_parameter_value(self.condition)
@@ -5814,18 +5823,13 @@ class ActionLoadGame(ActionCell):
             return
         if not condition:
             return
-        game_name = self.get_parameter_value(self.game_name)
-        if game_name is LogicNetworkCell.STATUS_WAITING:
-            return
         self._set_ready()
         slot = self.get_parameter_value(self.slot)
         if slot is LogicNetworkCell.STATUS_WAITING:
             return
+        cust_path = self.get_custom_path(self.path)
 
-        path = "C:/Users/{}/Documents/My Games/{}/Saves/".format(
-            getpass.getuser(),
-            game_name
-        ) if self.path == '' else self.path
+        path = bpy.path.abspath('//Saves/') if self.path == '' else cust_path
 
         scene = bge.logic.getCurrentScene()
 
@@ -5876,7 +5880,6 @@ class ActionSaveVariable(ActionCell):
         self.condition = None
         self.name = None
         self.val = None
-        self.game_name = None
         self.path = ''
         self.done = None
         self.OUT = LogicNetworkSubCell(self, self.get_done)
@@ -5904,15 +5907,20 @@ class ActionSaveVariable(ActionCell):
         finally:
             f.close()
 
+    def get_custom_path(self, path):
+        if not path.endswith('/'):
+            path = path + '/'
+        if path.startswith('./'):
+            path = path.split('./', 1)[-1]
+            return bpy.path.abspath('//' + path)
+        return path
+
     def evaluate(self):
         self.done = False
         condition = self.get_parameter_value(self.condition)
         if condition is LogicNetworkCell.STATUS_WAITING:
             return
         if not condition:
-            return
-        game_name = self.get_parameter_value(self.game_name)
-        if game_name is LogicNetworkCell.STATUS_WAITING:
             return
         name = self.get_parameter_value(self.name)
         if name is LogicNetworkCell.STATUS_WAITING:
@@ -5922,10 +5930,8 @@ class ActionSaveVariable(ActionCell):
             return
         self._set_ready()
 
-        path = "C:/Users/{}/Documents/My Games/{}/Data/".format(
-            getpass.getuser(),
-            game_name
-        ) if self.path == '' else self.path
+        cust_path = self.get_custom_path(self.path)
+        path = bpy.path.abspath('//Data/') if self.path == '' else cust_path
         os.makedirs(path, exist_ok=True)
 
         self.write_to_json(path, name, val)
@@ -5937,7 +5943,6 @@ class ActionLoadVariable(ActionCell):
         ActionCell.__init__(self)
         self.condition = None
         self.name = None
-        self.game_name = None
         self.path = ''
         self.var = None
         self.done = None
@@ -5964,6 +5969,14 @@ class ActionLoadVariable(ActionCell):
         except IOError:
             print('No saved variables!')
 
+    def get_custom_path(self, path):
+        if not path.endswith('/'):
+            path = path + '/'
+        if path.startswith('./'):
+            path = path.split('./', 1)[-1]
+            return bpy.path.abspath('//' + path)
+        return path
+
     def evaluate(self):
         self.done = False
         condition = self.get_parameter_value(self.condition)
@@ -5971,18 +5984,13 @@ class ActionLoadVariable(ActionCell):
             return
         if condition == False:
             return
-        game_name = self.get_parameter_value(self.game_name)
-        if game_name is LogicNetworkCell.STATUS_WAITING:
-            return
         name = self.get_parameter_value(self.name)
         if name is LogicNetworkCell.STATUS_WAITING:
             return
         self._set_ready()
+        cust_path = self.get_custom_path(self.path)
 
-        path = "C:/Users/{}/Documents/My Games/{}/Data/".format(
-            getpass.getuser(),
-            game_name
-        ) if self.path == '' else self.path
+        path = bpy.path.abspath('//Data/') if self.path == '' else cust_path
         os.makedirs(path, exist_ok=True)
 
         self.read_from_json(path, name)
@@ -5994,7 +6002,6 @@ class ActionRemoveVariable(ActionCell):
         ActionCell.__init__(self)
         self.condition = None
         self.name = None
-        self.game_name = None
         self.path = ''
         self.done = None
         self.OUT = LogicNetworkSubCell(self, self.get_done)
@@ -6015,12 +6022,17 @@ class ActionRemoveVariable(ActionCell):
             f = open(path + 'variables.json', 'w')
             json.dump(data, f, indent=2)
         except IOError:
-            print('file does not exist - creating...')
-            f = open(path + 'variables.json', 'w')
-            data = {name: val}
-            json.dump(data, f, indent=2)
+            print('file does not exist!')
         finally:
             f.close()
+
+    def get_custom_path(self, path):
+        if not path.endswith('/'):
+            path = path + '/'
+        if path.startswith('./'):
+            path = path.split('./', 1)[-1]
+            return bpy.path.abspath('//' + path)
+        return path
 
     def evaluate(self):
         self.done = False
@@ -6029,18 +6041,14 @@ class ActionRemoveVariable(ActionCell):
             return
         if not condition:
             return
-        game_name = self.get_parameter_value(self.game_name)
-        if game_name is LogicNetworkCell.STATUS_WAITING:
-            return
         name = self.get_parameter_value(self.name)
         if name is LogicNetworkCell.STATUS_WAITING:
             return
         self._set_ready()
 
-        path = "C:/Users/{}/Documents/My Games/{}/Data/".format(
-            getpass.getuser(),
-            game_name
-        ) if self.path == '' else self.path
+        cust_path = self.get_custom_path(self.path)
+
+        path = bpy.path.abspath('//Data/') if self.path == '' else cust_path
         os.makedirs(path, exist_ok=True)
 
         self.write_to_json(path, name)
@@ -6051,7 +6059,6 @@ class ActionClearVariables(ActionCell):
     def __init__(self):
         ActionCell.__init__(self)
         self.condition = None
-        self.game_name = None
         self.path = ''
         self.done = None
         self.OUT = LogicNetworkSubCell(self, self.get_done)
@@ -6073,6 +6080,14 @@ class ActionClearVariables(ActionCell):
         finally:
             f.close()
 
+    def get_custom_path(self, path):
+        if not path.endswith('/'):
+            path = path + '/'
+        if path.startswith('./'):
+            path = path.split('./', 1)[-1]
+            return bpy.path.abspath('//' + path)
+        return path
+
     def evaluate(self):
         self.done = False
         condition = self.get_parameter_value(self.condition)
@@ -6080,15 +6095,10 @@ class ActionClearVariables(ActionCell):
             return
         if not condition:
             return
-        game_name = self.get_parameter_value(self.game_name)
-        if game_name is LogicNetworkCell.STATUS_WAITING:
-            return
         self._set_ready()
+        cust_path = self.get_custom_path(self.path)
 
-        path = "C:/Users/{}/Documents/My Games/{}/Data/".format(
-            getpass.getuser(),
-            game_name
-        ) if self.path == '' else self.path
+        path = bpy.path.abspath('//Data/') if self.path == '' else cust_path
         os.makedirs(path, exist_ok=True)
 
         self.write_to_json(path)
@@ -6099,7 +6109,6 @@ class ActionListVariables(ActionCell):
     def __init__(self):
         ActionCell.__init__(self)
         self.condition = None
-        self.game_name = None
         self.print_list = None
         self.path = ''
         self.done = None
@@ -6132,6 +6141,14 @@ class ActionListVariables(ActionCell):
         finally:
             f.close()
 
+    def get_custom_path(self, path):
+        if not path.endswith('/'):
+            path = path + '/'
+        if path.startswith('./'):
+            path = path.split('./', 1)[-1]
+            return bpy.path.abspath('//' + path)
+        return path
+
     def evaluate(self):
         self.done = False
         condition = self.get_parameter_value(self.condition)
@@ -6139,19 +6156,13 @@ class ActionListVariables(ActionCell):
             return
         if not condition:
             return
-        game_name = self.get_parameter_value(self.game_name)
-        if game_name is LogicNetworkCell.STATUS_WAITING:
-            return
-
         print_list = self.get_parameter_value(self.print_list)
         if print_list is LogicNetworkCell.STATUS_WAITING:
             return
         self._set_ready()
+        cust_path = self.get_custom_path(self.path)
 
-        path = "C:/Users/{}/Documents/My Games/{}/Data/".format(
-            getpass.getuser(),
-            game_name
-        ) if self.path == '' else self.path
+        path = bpy.path.abspath('//Data/') if self.path == '' else cust_path
         os.makedirs(path, exist_ok=True)
 
         self.write_to_json(path, print_list)

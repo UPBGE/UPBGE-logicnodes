@@ -576,6 +576,8 @@ class NLAdd4KeyTemplateOperator(bpy.types.Operator):
             for socket in node.outputs:
                 if not socket.is_linked:
                     socket.hide = True
+
+        bpy.ops.transform.translate()
         return {'FINISHED'}
 
 
