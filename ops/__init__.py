@@ -567,6 +567,7 @@ class NLAdd4KeyTemplateOperator(bpy.types.Operator):
         nodes.append(apply_loc)
 
         for node in nodes:
+            node.select = True
             if node.label == 'Speed':
                 continue
             node.hide = True

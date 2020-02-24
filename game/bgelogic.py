@@ -10,7 +10,6 @@ import os
 import random
 import sys
 import operator
-import getpass
 import json
 
 
@@ -3722,6 +3721,8 @@ class ConditionCollision(ConditionCell):
 
 
 # Action Cells
+
+
 class ActionAddObject(ActionCell):
     def __init__(self):
         ActionCell.__init__(self)

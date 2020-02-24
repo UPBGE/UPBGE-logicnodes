@@ -2098,6 +2098,7 @@ class NLParameterConstantValue(bpy.types.Node, NLParameterNode):
 class NLParameterFindChildByNameNode(bpy.types.Node, NLParameterNode):
     bl_idname = "NLParameterFindChildByNameNode"
     bl_label = "Get Child By Name"
+    bl_description = "Search for a name in an object's children"
     nl_category = "Objects"
 
     def init(self, context):
@@ -4983,7 +4984,7 @@ class NLActionSaveGame(bpy.types.Node, NLActionNode):
     bl_label = "Save Game"
     nl_category = "Game"
     custom_path = bpy.props.BoolProperty(update=update_tree_code)
-    path = bpy.props.StringProperty(update=update_tree_code)
+    path = bpy.props.StringProperty(update=update_tree_code, description='Choose a Path to save the file to. Start with "./" to make it relative to the file path.')
 
     def init(self, context):
         NLActionNode.init(self, context)
@@ -4992,7 +4993,7 @@ class NLActionSaveGame(bpy.types.Node, NLActionNode):
         self.outputs.new(NLConditionSocket.bl_idname, 'Done')
 
     def draw_buttons(self, context, layout):
-        layout.prop(self, "custom_path", toggle=True, text="Custom Path" if self.custom_path else "File Path/Saves")
+        layout.prop(self, "custom_path", toggle=True, text="Custom Path" if self.custom_path else "File Path/Saves", icon='FILE_FOLDER')
         if self.custom_path:
             layout.prop(self, "path", text='Path')
 
@@ -5017,7 +5018,7 @@ class NLActionLoadGame(bpy.types.Node, NLActionNode):
     bl_label = "Load Game"
     nl_category = "Game"
     custom_path = bpy.props.BoolProperty(update=update_tree_code)
-    path = bpy.props.StringProperty(update=update_tree_code)
+    path = bpy.props.StringProperty(update=update_tree_code, description='Choose a Path to save the file to. Start with "./" to make it relative to the file path.')
 
     def init(self, context):
         NLActionNode.init(self, context)
@@ -5026,7 +5027,7 @@ class NLActionLoadGame(bpy.types.Node, NLActionNode):
         self.outputs.new(NLConditionSocket.bl_idname, 'Done')
 
     def draw_buttons(self, context, layout):
-        layout.prop(self, "custom_path", toggle=True, text="Custom Path" if self.custom_path else "File Path/Saves")
+        layout.prop(self, "custom_path", toggle=True, text="Custom Path" if self.custom_path else "File Path/Saves", icon='FILE_FOLDER')
         if self.custom_path:
             layout.prop(self, "path", text='Path')
 
@@ -5051,7 +5052,7 @@ class NLActionSaveVariable(bpy.types.Node, NLActionNode):
     bl_label = "Save Variable"
     nl_category = "Variables"
     custom_path = bpy.props.BoolProperty(update=update_tree_code)
-    path = bpy.props.StringProperty(update=update_tree_code)
+    path = bpy.props.StringProperty(update=update_tree_code, description='Choose a Path to save the file to. Start with "./" to make it relative to the file path.')
 
     def init(self, context):
         NLActionNode.init(self, context)
@@ -5063,7 +5064,7 @@ class NLActionSaveVariable(bpy.types.Node, NLActionNode):
 
     def draw_buttons(self, context, layout):
         layout.label(text='Save To:')
-        layout.prop(self, "custom_path", toggle=True, text="Custom Path" if self.custom_path else "File Path/Data")
+        layout.prop(self, "custom_path", toggle=True, text="Custom Path" if self.custom_path else "File Path/Data", icon='FILE_FOLDER')
         if self.custom_path:
             layout.prop(self, "path", text='Path')
 
@@ -5109,7 +5110,7 @@ class NLActionLoadVariable(bpy.types.Node, NLActionNode):
     bl_label = "Load Variable"
     nl_category = "Variables"
     custom_path = bpy.props.BoolProperty(update=update_tree_code)
-    path = bpy.props.StringProperty(update=update_tree_code)
+    path = bpy.props.StringProperty(update=update_tree_code, description='Choose a Path to save the file to. Start with "./" to make it relative to the file path.')
 
     def init(self, context):
         NLActionNode.init(self, context)
@@ -5121,7 +5122,7 @@ class NLActionLoadVariable(bpy.types.Node, NLActionNode):
 
     def draw_buttons(self, context, layout):
         layout.label(text='Load From:')
-        layout.prop(self, "custom_path", toggle=True, text="Custom Path" if self.custom_path else "File Path/Data")
+        layout.prop(self, "custom_path", toggle=True, text="Custom Path" if self.custom_path else "File Path/Data", icon='FILE_FOLDER')
         if self.custom_path:
             layout.prop(self, "path", text='Path')
 
@@ -5146,7 +5147,7 @@ class NLActionRemoveVariable(bpy.types.Node, NLActionNode):
     bl_label = "Remove Variable"
     nl_category = "Variables"
     custom_path = bpy.props.BoolProperty(update=update_tree_code)
-    path = bpy.props.StringProperty(update=update_tree_code)
+    path = bpy.props.StringProperty(update=update_tree_code, description='Choose a Path to save the file to. Start with "./" to make it relative to the file path.')
 
     def init(self, context):
         NLActionNode.init(self, context)
@@ -5157,7 +5158,7 @@ class NLActionRemoveVariable(bpy.types.Node, NLActionNode):
 
     def draw_buttons(self, context, layout):
         layout.label(text='Remove From:')
-        layout.prop(self, "custom_path", toggle=True, text="Custom Path" if self.custom_path else "File Path/Data")
+        layout.prop(self, "custom_path", toggle=True, text="Custom Path" if self.custom_path else "File Path/Data", icon='FILE_FOLDER')
         if self.custom_path:
             layout.prop(self, "path", text='Path')
 
@@ -5182,7 +5183,7 @@ class NLActionClearVariables(bpy.types.Node, NLActionNode):
     bl_label = "Clear Variables"
     nl_category = "Variables"
     custom_path = bpy.props.BoolProperty(update=update_tree_code)
-    path = bpy.props.StringProperty(update=update_tree_code)
+    path = bpy.props.StringProperty(update=update_tree_code, description='Choose a Path to save the file to. Start with "./" to make it relative to the file path.')
 
     def init(self, context):
         NLActionNode.init(self, context)
@@ -5191,7 +5192,7 @@ class NLActionClearVariables(bpy.types.Node, NLActionNode):
 
     def draw_buttons(self, context, layout):
         layout.label(text='Clear In:')
-        layout.prop(self, "custom_path", toggle=True, text="Custom Path" if self.custom_path else "File Path/Data")
+        layout.prop(self, "custom_path", toggle=True, text="Custom Path" if self.custom_path else "File Path/Data", icon='FILE_FOLDER')
         if self.custom_path:
             layout.prop(self, "path", text='Path')
 
@@ -5216,7 +5217,7 @@ class NLActionListVariables(bpy.types.Node, NLActionNode):
     bl_label = "List Saved Variables"
     nl_category = "Variables"
     custom_path = bpy.props.BoolProperty(update=update_tree_code)
-    path = bpy.props.StringProperty(update=update_tree_code)
+    path = bpy.props.StringProperty(update=update_tree_code, description='Choose a Path to save the file to. Start with "./" to make it relative to the file path.')
 
     def init(self, context):
         NLActionNode.init(self, context)
@@ -5227,7 +5228,7 @@ class NLActionListVariables(bpy.types.Node, NLActionNode):
 
     def draw_buttons(self, context, layout):
         layout.label(text='List From:')
-        layout.prop(self, "custom_path", toggle=True, text="Custom Path" if self.custom_path else "File Path/Data")
+        layout.prop(self, "custom_path", toggle=True, text="Custom Path" if self.custom_path else "File Path/Data", icon='FILE_FOLDER')
         if self.custom_path:
             layout.prop(self, "path", text='Path')
 
