@@ -2098,7 +2098,6 @@ class NLParameterConstantValue(bpy.types.Node, NLParameterNode):
 class NLParameterFindChildByNameNode(bpy.types.Node, NLParameterNode):
     bl_idname = "NLParameterFindChildByNameNode"
     bl_label = "Get Child By Name"
-    bl_description = "Search for a name in an object's children"
     nl_category = "Objects"
 
     def init(self, context):
