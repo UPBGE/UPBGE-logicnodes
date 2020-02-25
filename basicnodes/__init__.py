@@ -2920,10 +2920,6 @@ class NLThresholdNode(bpy.types.Node, NLParameterNode):
     bl_idname = "NLThresholdNode"
     bl_label = "Threshold"
     nl_category = "Math"
-    operator = bpy.props.EnumProperty(
-        items=_enum_greater_less,
-        update=update_tree_code
-    )
 
     def init(self, context):
         NLParameterNode.init(self, context)
@@ -2960,10 +2956,6 @@ class NLClampValueNode(bpy.types.Node, NLParameterNode):
     bl_idname = "NLClampValueNode"
     bl_label = "Clamp"
     nl_category = "Math"
-    operator = bpy.props.EnumProperty(
-        items=_enum_math_operations,
-        update=update_tree_code
-    )
 
     def init(self, context):
         NLParameterNode.init(self, context)
@@ -2979,6 +2971,28 @@ class NLClampValueNode(bpy.types.Node, NLParameterNode):
 
 
 _nodes.append(NLClampValueNode)
+
+
+class NLInterpolateValueNode(bpy.types.Node, NLParameterNode):
+    bl_idname = "NLInterpolateValueNode"
+    bl_label = "Interpolate"
+    nl_category = "Math"
+
+    def init(self, context):
+        NLParameterNode.init(self, context)
+        self.inputs.new(NLFloatFieldSocket.bl_idname, "A")
+        self.inputs.new(NLFloatFieldSocket.bl_idname, "B")
+        self.inputs.new(NLSocketAlphaFloat.bl_idname, "Factor")
+        self.outputs.new(NLParameterSocket.bl_idname, "Value")
+
+    def get_netlogic_class_name(self):
+        return "bgelogic.InterpolateValue"
+
+    def get_input_sockets_field_names(self):
+        return ["value_a", "value_b", "factor", "range"]
+
+
+_nodes.append(NLInterpolateValueNode)
 
 
 class NLParameterActionStatus(bpy.types.Node, NLParameterNode):
@@ -4161,13 +4175,11 @@ class NLConditionNotNode(bpy.types.Node, NLConditionNode):
     def init(self, context):
         NLConditionNode.init(self, context)
         self.inputs.new(NLConditionSocket.bl_idname, "Condition")
-        self.inputs.new(NLBooleanSocket.bl_idname, "Pulse")
-        self.inputs[-1].use_toggle = True
         self.outputs.new(NLConditionSocket.bl_idname, "If Not")
 
     def get_netlogic_class_name(self): return "bgelogic.ConditionNot"
     def get_input_sockets_field_names(self):
-        return ["condition", "pulse"]
+        return ["condition"]
 _nodes.append(NLConditionNotNode)
 
 class NLConditionLogicNetworkStatusNode(bpy.types.Node, NLConditionNode):

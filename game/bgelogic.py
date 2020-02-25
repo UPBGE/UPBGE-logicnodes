@@ -1703,6 +1703,34 @@ class ClampValue(ParameterCell):
         self._set_value(value)
 
 
+class InterpolateValue(ParameterCell):
+
+    def __init__(self):
+        ParameterCell.__init__(self)
+        self.value_a = None
+        self.value_b = None
+        self.factor = None
+
+    def evaluate(self):
+        value_a = self.get_parameter_value(self.value_a)
+        value_b = self.get_parameter_value(self.value_b)
+        factor = self.get_parameter_value(self.factor)
+        if value_a is LogicNetworkCell.STATUS_WAITING:
+            return
+        if value_b is LogicNetworkCell.STATUS_WAITING:
+            return
+        if factor is LogicNetworkCell.STATUS_WAITING:
+            return
+        if none_or_invalid(value_a):
+            return
+        if none_or_invalid(value_b):
+            return
+        if none_or_invalid(factor):
+            return
+        self._set_ready()
+        self._set_value((factor * value_b) + ((1-factor) * value_a))
+
+
 class ParameterArithmeticOp(ParameterCell):
     @classmethod
     def op_by_code(cls, str):
@@ -2631,22 +2659,13 @@ class ConditionNot(ConditionCell):
     def __init__(self):
         ConditionCell.__init__(self)
         self.condition = None
-        self.pulse = None
-        self._old_condition = None
 
     def evaluate(self):
         condition = self.get_parameter_value(self.condition)
-        pulse = self.get_parameter_value(self.pulse)
         if condition is LogicNetworkCell.STATUS_WAITING:
             return
-        if pulse is LogicNetworkCell.STATUS_WAITING:
-            return
         self._set_ready()
-        if (not pulse) and (condition is self._old_condition):
-            self._set_value(False)
-        else:
-            self._set_value(not condition)
-            self._old_condition = condition
+        self._set_value(not condition)
 
 
 class ConditionLNStatus(ConditionCell):
@@ -7119,6 +7138,14 @@ class SetLightEnergy(ActionCell):
     def get_done(self):
         return self.done
 
+    def set_blender_28x(self, lamp, energy):
+        light = lamp.blenderObject.data
+        light.energy = energy
+        bge.logic.getCurrentScene().resetTaaSamples = True
+
+    def set_blender_27x(self, lamp, energy):
+        lamp.energy = energy
+
     def evaluate(self):
         self.done = False
         STATUS_WAITING = LogicNetworkCell.STATUS_WAITING
@@ -7135,9 +7162,10 @@ class SetLightEnergy(ActionCell):
         if lamp is STATUS_WAITING:
             return
         self._set_ready()
-        light = lamp.blenderObject.data
-        light.energy = energy
-        bge.logic.getCurrentScene().resetTaaSamples = True
+        if bge.app.version < (2, 80, 0):
+            self.set_blender_27x(lamp, energy)
+        else:
+            self.set_blender_28x(lamp, energy)
         self.done = True
 
 
@@ -7156,10 +7184,17 @@ class SetLightColor(ActionCell):
     def get_done(self):
         return self.done
 
+    def set_blender_28x(self, lamp, color):
+        light = lamp.blenderObject.data
+        light.color = color
+        bge.logic.getCurrentScene().resetTaaSamples = True
+
+    def set_blender_27x(self, lamp, color):
+        lamp.color = color
+
     def evaluate(self):
         self.done = False
         STATUS_WAITING = LogicNetworkCell.STATUS_WAITING
-
         condition = self.get_parameter_value(self.condition)
         if condition is STATUS_WAITING:
             return
@@ -7174,9 +7209,67 @@ class SetLightColor(ActionCell):
         if lamp is STATUS_WAITING:
             return
         self._set_ready()
+        if bge.app.version < (2, 80, 0):
+            self.set_blender_27x(lamp, [r, g, b])
+        else:
+            self.set_blender_28x(lamp, [r, g, b])
+        self.done = True
+
+
+class GetLightColor(ActionCell):
+
+    def __init__(self):
+        ActionCell.__init__(self)
+        self.lamp = None
+        self.r = 0
+        self.g = 0
+        self.b = 0
+        self.R = LogicNetworkSubCell(self, self.get_r)
+        self.G = LogicNetworkSubCell(self, self.get_g)
+        self.B = LogicNetworkSubCell(self, self.get_b)
+        self.OUT = LogicNetworkSubCell(self, self.get_done)
+
+    def get_r(self):
+        return self.r
+
+    def get_g(self):
+        return self.g
+
+    def get_b(self):
+        return self.b
+
+    def get_done(self):
+        return self.done
+
+    def get_blender_28x(self, lamp, color):
         light = lamp.blenderObject.data
-        light.color = [r, g, b]
+        light.color = color
         bge.logic.getCurrentScene().resetTaaSamples = True
+
+    def get_blender_27x(self, lamp, color):
+        lamp.color = color
+
+    def evaluate(self):
+        self.done = False
+        STATUS_WAITING = LogicNetworkCell.STATUS_WAITING
+        condition = self.get_parameter_value(self.condition)
+        if condition is STATUS_WAITING:
+            return
+        if not condition:
+            self._set_value(False)
+            return self._set_ready()
+        lamp = self.get_parameter_value(self.lamp)
+        r = self.get_parameter_value(self.red)
+        g = self.get_parameter_value(self.green)
+        b = self.get_parameter_value(self.blue)
+        # frames = self.get_parameter_value(self.frames)
+        if lamp is STATUS_WAITING:
+            return
+        self._set_ready()
+        if bge.app.version < (2, 80, 0):
+            self.set_blender_27x(lamp, [r, g, b])
+        else:
+            self.set_blender_28x(lamp, [r, g, b])
         self.done = True
 
 
