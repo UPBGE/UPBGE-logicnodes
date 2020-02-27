@@ -5568,6 +5568,53 @@ class NLSetLightColorAction(bpy.types.Node, NLActionNode):
 _nodes.append(NLSetLightColorAction)
 
 
+class NLGetLightEnergyAction(bpy.types.Node, NLParameterNode):
+    bl_idname = "NLGetLightEnergyAction"
+    bl_label = "Get Light Energy"
+    nl_category = "Lights"
+
+    def init(self, context):
+        NLActionNode.init(self, context)
+        self.inputs.new(NLGameObjectSocket.bl_idname, "Light Object")
+        self.outputs.new(NLParameterSocket.bl_idname, 'Enery')
+
+
+    def get_output_socket_varnames(self):
+        return ['ENERGY']
+
+    def get_netlogic_class_name(self):
+        return "bgelogic.GetLightEnergy"
+    def get_input_sockets_field_names(self):
+        return ["lamp"]
+
+
+_nodes.append(NLGetLightEnergyAction)
+
+
+class NLGetLightColorAction(bpy.types.Node, NLParameterNode):
+    bl_idname = "NLGetLightColorAction"
+    bl_label = "Get Light Color"
+    nl_category = "Lights"
+
+    def init(self, context):
+        NLActionNode.init(self, context)
+        self.inputs.new(NLGameObjectSocket.bl_idname, "Light Object")
+        self.outputs.new(NLParameterSocket.bl_idname, 'Red')
+        self.outputs.new(NLParameterSocket.bl_idname, 'Green')
+        self.outputs.new(NLParameterSocket.bl_idname, 'Blue')
+
+    def get_output_socket_varnames(self):
+        return ['R', 'G', 'B']
+
+    def get_netlogic_class_name(self):
+        return "bgelogic.GetLightColor"
+    def get_input_sockets_field_names(self):
+        return ["lamp"]
+
+
+_nodes.append(NLGetLightColorAction)
+
+
 class NLActionPlayActionNode(bpy.types.Node, NLActionNode):
     bl_idname = "NLActionPlayActionNode"
     bl_label = "Play Animation"

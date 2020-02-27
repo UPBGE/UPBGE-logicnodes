@@ -7216,6 +7216,35 @@ class SetLightColor(ActionCell):
         self.done = True
 
 
+class GetLightEnergy(ActionCell):
+
+    def __init__(self):
+        ActionCell.__init__(self)
+        self.lamp = None
+        self.energy = 0
+        self.ENERGY = LogicNetworkSubCell(self, self.get_energy)
+
+    def get_energy(self):
+        return self.energy
+
+    def get_blender_28x(self, lamp):
+        light = lamp.blenderObject.data
+        self.energy = light.energy
+
+    def get_blender_27x(self, lamp):
+        self.energy = lamp.energy
+
+    def evaluate(self):
+        lamp = self.get_parameter_value(self.lamp)
+        if lamp is LogicNetworkCell.STATUS_WAITING:
+            return
+        self._set_ready()
+        if bge.app.version < (2, 80, 0):
+            self.get_blender_27x(lamp)
+        else:
+            self.get_blender_28x(lamp)
+
+
 class GetLightColor(ActionCell):
 
     def __init__(self):
@@ -7227,7 +7256,6 @@ class GetLightColor(ActionCell):
         self.R = LogicNetworkSubCell(self, self.get_r)
         self.G = LogicNetworkSubCell(self, self.get_g)
         self.B = LogicNetworkSubCell(self, self.get_b)
-        self.OUT = LogicNetworkSubCell(self, self.get_done)
 
     def get_r(self):
         return self.r
@@ -7238,39 +7266,26 @@ class GetLightColor(ActionCell):
     def get_b(self):
         return self.b
 
-    def get_done(self):
-        return self.done
-
-    def get_blender_28x(self, lamp, color):
+    def get_blender_28x(self, lamp):
         light = lamp.blenderObject.data
-        light.color = color
-        bge.logic.getCurrentScene().resetTaaSamples = True
+        self.r = light.color[0]
+        self.g = light.color[1]
+        self.b = light.color[2]
 
-    def get_blender_27x(self, lamp, color):
-        lamp.color = color
+    def get_blender_27x(self, lamp):
+        self.r = lamp.color[0]
+        self.g = lamp.color[1]
+        self.b = lamp.color[2]
 
     def evaluate(self):
-        self.done = False
-        STATUS_WAITING = LogicNetworkCell.STATUS_WAITING
-        condition = self.get_parameter_value(self.condition)
-        if condition is STATUS_WAITING:
-            return
-        if not condition:
-            self._set_value(False)
-            return self._set_ready()
         lamp = self.get_parameter_value(self.lamp)
-        r = self.get_parameter_value(self.red)
-        g = self.get_parameter_value(self.green)
-        b = self.get_parameter_value(self.blue)
-        # frames = self.get_parameter_value(self.frames)
-        if lamp is STATUS_WAITING:
+        if lamp is LogicNetworkCell.STATUS_WAITING:
             return
         self._set_ready()
         if bge.app.version < (2, 80, 0):
-            self.set_blender_27x(lamp, [r, g, b])
+            self.get_blender_27x(lamp)
         else:
-            self.set_blender_28x(lamp, [r, g, b])
-        self.done = True
+            self.get_blender_28x(lamp)
 
 
 # Action "Move To": an object will follow a point
