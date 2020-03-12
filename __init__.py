@@ -328,6 +328,7 @@ class NLNodeTreeReference(bpy.types.PropertyGroup):
     tree_name = bpy.props.StringProperty()
     tree_initial_status = bpy.props.BoolProperty()
 
+
 class NodeCategory(nodeitems_utils.NodeCategory):
     @classmethod
     def poll(cls, context):
