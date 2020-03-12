@@ -342,6 +342,7 @@ _registered_classes = [
     ops.NLSelectTreeByNameOperator,
     ops.NLRemoveTreeByNameOperator,
     ops.NLApplyLogicOperator,
+    ops.NLAdd4KeyTemplateOperator,
     ops.NLGenerateLogicNetworkOperatorAll,
     ops.NLGenerateLogicNetworkOperator,
     ops.NLImportProjectNodes,

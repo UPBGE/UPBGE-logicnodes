@@ -312,14 +312,13 @@ class NLRemoveTreeByNameOperator(bpy.types.Operator):
                 break
             i += 1
         if index is not None:
-            # bge_netlogic.debug("remove tree", treename, "from object", ob.name)
             ob.bgelogic_treelist.remove(index)
 
 
 class NLMakeGroupOperator(bpy.types.Operator):
     bl_idname = "bge_netlogic.make_group"
-    bl_label = "Convert To New Tree"
-    bl_description = "Convert selected Nodes to a new tree. WARNING: All Nodes connected to selection must be selected too"
+    bl_label = "Pack Into New Tree"
+    bl_description = "Convert selected Nodes to a new tree. Will be applied to selected object. WARNING: All Nodes connected to selection must be selected too"
     owner = bpy.props.StringProperty()
 
     @classmethod
@@ -354,12 +353,15 @@ class NLMakeGroupOperator(bpy.types.Operator):
             'value_x',
             'value_y',
             'value_z',
-            'title'
+            'title',
+            'local',
+            'operator',
+            'pulse',
+            'hide',
+            'label'
         ]
 
         nodes = node_tree.nodes
-#        inputnode = nodes.new('NodeGroupInput')
-#        outputnode = nodes.new('NodeGroupOutput')
         new_nodes = {}
         parent_tree = bpy.context.space_data.edit_tree
         locs = []
@@ -371,6 +373,9 @@ class NLMakeGroupOperator(bpy.types.Operator):
 
         for old_node in new_nodes:
             new_node = new_nodes[old_node]
+            for attr in dir(old_node):
+                if attr in attrs:
+                    setattr(new_node, attr, getattr(old_node, attr))
             for socket in old_node.inputs:
                 index = self._index_of(socket, old_node.inputs)
                 for attr in dir(socket):
@@ -394,6 +399,7 @@ class NLMakeGroupOperator(bpy.types.Operator):
         for old_node in new_nodes:
             parent_tree.nodes.remove(old_node)
         redir = parent_tree.nodes.new('NLActionExecuteNetwork')
+        redir.inputs[0].value = True
 
         try:
             redir.inputs[1].value = bpy.context.object
@@ -401,6 +407,7 @@ class NLMakeGroupOperator(bpy.types.Operator):
             print('No Object was selected; Set Object in tree {} manually!'.format(parent_tree.name))
         redir.inputs[2].value = group_name
         redir.location = self.avg_location(locs)
+        node_tree.use_fake_user = True
         return node_tree
 
     def avg_location(self, locs):
@@ -414,16 +421,164 @@ class NLMakeGroupOperator(bpy.types.Operator):
         return (avg_x, avg_y)
 
     def execute(self, context):
-        print('Make Group Now')
         nodes_to_group = []
         tree = context.space_data.edit_tree
 
+        if tree is None:
+            return {'FINISHED'}
         for node in tree.nodes:
             if node.select:
                 nodes_to_group.append(node)
         if len(nodes_to_group) > 0:
             self.group_make(tree.name + '_part', nodes_to_group)
             bge_netlogic._update_all_logic_tree_code()
+        return {'FINISHED'}
+
+
+class NLAdd4KeyTemplateOperator(bpy.types.Operator):
+    bl_idname = "bge_netlogic.add_4_key_temp"
+    bl_label = "4 Key Movement"
+    bl_description = "Add 4 Key Movement (WASD with normalized vector)"
+    owner = bpy.props.StringProperty()
+
+    @classmethod
+    def poll(cls, context):
+        return True
+
+    def add_key_cond(self, tree, key, ypos, nodes):
+        key_cond = tree.nodes.new('NLKeyPressedCondition')
+        key_cond.inputs[0].value = key
+        key_cond.label = key + " Key"
+        key_cond.location = (0, ypos)
+        key_cond.pulse = True
+        nodes.append(key_cond)
+        return key_cond
+
+    def add_movement_setter(self, tree, name, key, axis, value, node_list, xpos=220, ypos=0):
+        set_movement = tree.nodes.new('NLActionSetGlobalValue')
+        tree.links.new(key.outputs[0], set_movement.inputs[0])
+        set_movement.inputs[1].value = 'movement'
+        set_movement.inputs[3].value = axis
+        set_movement.inputs[4].value_type = 'INTEGER'
+        set_movement.inputs[4].int_editor = value
+        set_movement.label = name
+        set_movement.location = (xpos, ypos)
+        node_list.append(set_movement)
+        return set_movement
+
+    def add_movement_getter(self, tree, name, axis, node_list, xpos=0, ypos=-160):
+        set_movement = tree.nodes.new('NLParameterGetGlobalValue')
+        set_movement.inputs[0].value = 'movement'
+        set_movement.inputs[1].value = axis
+        set_movement.label = name
+        set_movement.location = (xpos, ypos)
+        node_list.append(set_movement)
+        return set_movement
+
+    def add_or_cond(self, tree, name, node_1, node_2, node_list, xpos=440, ypos=-20):
+        or_cond = tree.nodes.new('NLConditionOrNode')
+        tree.links.new(node_1.outputs[0], or_cond.inputs[0])
+        tree.links.new(node_2.outputs[0], or_cond.inputs[1])
+        or_cond.label = name
+        or_cond.location = (xpos, ypos)
+        node_list.append(or_cond)
+        return or_cond
+
+    def add_invert_bool(self, tree, name, from_node, node_list, xpos=660, ypos=-20):
+        invert_bool = tree.nodes.new('NLInvertBoolNode')
+        tree.links.new(from_node.outputs[0], invert_bool.inputs[0])
+        invert_bool.label = name
+        invert_bool.location = (xpos, ypos)
+        node_list.append(invert_bool)
+        return invert_bool
+
+    def execute(self, context):
+        tree = context.space_data.edit_tree
+        nodes = []
+
+        if tree is None:
+            return {'FINISHED'}
+        for node in tree.nodes:
+            node.select = False
+
+        wkey = self.add_key_cond(tree, 'W', 0, nodes)
+        skey = self.add_key_cond(tree, 'S', -40, nodes)
+        akey = self.add_key_cond(tree, 'A', -80, nodes)
+        dkey = self.add_key_cond(tree, 'D', -120, nodes)
+
+        forward = self.add_movement_setter(tree, 'Set Forward', wkey, 'x', 1, nodes)
+        backward = self.add_movement_setter(tree, 'Set Backward', skey, 'x', -1, nodes, ypos=-40)
+        leftward = self.add_movement_setter(tree, 'Set Left', akey, 'y', 1, nodes, ypos=-80)
+        rightward = self.add_movement_setter(tree, 'Set Right', dkey, 'y', -1, nodes, ypos=-120)
+
+        reset_x = self.add_or_cond(tree, 'W or S Pressed', forward, backward, nodes)
+        reset_y = self.add_or_cond(tree, 'A or D Pressed', leftward, rightward, nodes, ypos = -100)
+
+        inverted_x = self.add_invert_bool(tree, 'If Not', reset_x, nodes)
+        inverted_y = self.add_invert_bool(tree, 'If Not', reset_y, nodes, ypos=-100)
+
+        self.add_movement_setter(tree, 'Cancel X Movement', inverted_x, 'x', 0, nodes, xpos=880, ypos=-20)
+        self.add_movement_setter(tree, 'Cancel Y Movement', inverted_y, 'y', 0, nodes, xpos=880, ypos=-100)
+
+        get_x = self.add_movement_getter(tree, 'Get X', 'x', nodes)
+        get_y = self.add_movement_getter(tree, 'Get Y', 'y', nodes, ypos=-200)
+
+        assemble_vec = tree.nodes.new('NLParameterVector3SimpleNode')
+        tree.links.new(get_x.outputs[0], assemble_vec.inputs[0])
+        tree.links.new(get_y.outputs[0], assemble_vec.inputs[1])
+        assemble_vec.label = 'Build Vector'
+        assemble_vec.location = (220, -160)
+        nodes.append(assemble_vec)
+
+        calc_vec = tree.nodes.new('NLVectorMath')
+        tree.links.new(assemble_vec.outputs[0], calc_vec.inputs[1])
+        calc_vec.label = 'Normalize'
+        calc_vec.location = (440, -160)
+        nodes.append(calc_vec)
+
+        speed = tree.nodes.new('NLParameterFloatValue')
+        speed.inputs[0].value = .1
+        speed.label = 'Speed'
+        speed.location = (440, -200)
+        nodes.append(speed)
+
+        calc_speed = tree.nodes.new('NLArithmeticOpParameterNode')
+        tree.links.new(calc_vec.outputs[0], calc_speed.inputs[0])
+        tree.links.new(speed.outputs[0], calc_speed.inputs[1])
+        calc_speed.operator = 'MUL'
+        calc_speed.label = 'Calc Speed'
+        calc_speed.location = (660, -240)
+        nodes.append(calc_speed)
+
+        update = tree.nodes.new('NLOnUpdateConditionNode')
+        update.location = (660, -160)
+        nodes.append(update)
+
+        owner = tree.nodes.new('NLOwnerGameObjectParameterNode')
+        owner.location = (660, -200)
+        nodes.append(owner)
+
+        apply_loc = tree.nodes.new('NLActionApplyLocation')
+        tree.links.new(update.outputs[0], apply_loc.inputs[0])
+        tree.links.new(owner.outputs[0], apply_loc.inputs[1])
+        tree.links.new(calc_speed.outputs[0], apply_loc.inputs[2])
+        apply_loc.label = 'Move Object'
+        apply_loc.location = (880, -160)
+        nodes.append(apply_loc)
+
+        for node in nodes:
+            node.select = True
+            if node.label == 'Speed':
+                continue
+            node.hide = True
+            for socket in node.inputs:
+                if not socket.is_linked:
+                    socket.hide = True
+            for socket in node.outputs:
+                if not socket.is_linked:
+                    socket.hide = True
+
+        bpy.ops.transform.translate()
         return {'FINISHED'}
 
 

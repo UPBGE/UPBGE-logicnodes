@@ -1,4 +1,5 @@
 import bge
+import bpy
 import aud
 import mathutils
 import math
@@ -9,7 +10,6 @@ import os
 import random
 import sys
 import operator
-import getpass
 import json
 
 
@@ -1703,6 +1703,34 @@ class ClampValue(ParameterCell):
         self._set_value(value)
 
 
+class InterpolateValue(ParameterCell):
+
+    def __init__(self):
+        ParameterCell.__init__(self)
+        self.value_a = None
+        self.value_b = None
+        self.factor = None
+
+    def evaluate(self):
+        value_a = self.get_parameter_value(self.value_a)
+        value_b = self.get_parameter_value(self.value_b)
+        factor = self.get_parameter_value(self.factor)
+        if value_a is LogicNetworkCell.STATUS_WAITING:
+            return
+        if value_b is LogicNetworkCell.STATUS_WAITING:
+            return
+        if factor is LogicNetworkCell.STATUS_WAITING:
+            return
+        if none_or_invalid(value_a):
+            return
+        if none_or_invalid(value_b):
+            return
+        if none_or_invalid(factor):
+            return
+        self._set_ready()
+        self._set_value((factor * value_b) + ((1-factor) * value_a))
+
+
 class ParameterArithmeticOp(ParameterCell):
     @classmethod
     def op_by_code(cls, str):
@@ -2016,14 +2044,10 @@ class ParameterSimpleValue(ParameterCell):
     def __init__(self):
         ParameterCell.__init__(self)
         self.value = None
-        self.OUT = LogicNetworkSubCell(self, self.get_value)
-
-    def get_value(self):
-        return self.value
 
     def evaluate(self):
-        self._set_ready()
         value = self.get_parameter_value(self.value)
+        self._set_ready()
         self._set_value(value)
 
 
@@ -2635,22 +2659,13 @@ class ConditionNot(ConditionCell):
     def __init__(self):
         ConditionCell.__init__(self)
         self.condition = None
-        self.pulse = None
-        self._old_condition = None
 
     def evaluate(self):
         condition = self.get_parameter_value(self.condition)
-        pulse = self.get_parameter_value(self.pulse)
         if condition is LogicNetworkCell.STATUS_WAITING:
             return
-        if pulse is LogicNetworkCell.STATUS_WAITING:
-            return
         self._set_ready()
-        if (not pulse) and (condition is self._old_condition):
-            self._set_value(False)
-        else:
-            self._set_value(not condition)
-            self._old_condition = condition
+        self._set_value(not condition)
 
 
 class ConditionLNStatus(ConditionCell):
@@ -3725,6 +3740,8 @@ class ConditionCollision(ConditionCell):
 
 
 # Action Cells
+
+
 class ActionAddObject(ActionCell):
     def __init__(self):
         ActionCell.__init__(self)
@@ -4232,8 +4249,6 @@ class ActionExecuteNetwork(ActionCell):
         condition = self.get_parameter_value(self.condition)
         if condition is LogicNetworkCell.STATUS_WAITING:
             return
-        if not condition:
-            return
         target_object = self.get_parameter_value(self.target_object)
         tree_name = self.get_parameter_value(self.tree_name)
         if target_object is LogicNetworkCell.STATUS_WAITING:
@@ -4253,6 +4268,7 @@ class ActionExecuteNetwork(ActionCell):
         if condition:
             added_network.stopped = False
         else:
+            added_network.stop()
             added_network.stopped = True
         self.done = True
 
@@ -5673,13 +5689,20 @@ class ActionSaveGame(ActionCell):
         ActionCell.__init__(self)
         self.condition = None
         self.slot = None
-        self.game_name = None
         self.path = ''
         self.done = None
         self.OUT = LogicNetworkSubCell(self, self.get_done)
 
     def get_done(self):
         return self.done
+
+    def get_custom_path(self, path):
+        if not path.endswith('/'):
+            path = path + '/'
+        if path.startswith('./'):
+            path = path.split('./', 1)[-1]
+            return bpy.path.abspath('//' + path)
+        return path
 
     def evaluate(self):
         self.done = False
@@ -5688,18 +5711,13 @@ class ActionSaveGame(ActionCell):
             return
         if not condition:
             return
-        game_name = self.get_parameter_value(self.game_name)
-        if game_name is LogicNetworkCell.STATUS_WAITING:
-            return
         slot = self.get_parameter_value(self.slot)
         if slot is LogicNetworkCell.STATUS_WAITING:
             return
         self._set_ready()
+        cust_path = self.get_custom_path(self.path)
 
-        path = "C:/Users/{}/Documents/My Games/{}/Saves/".format(
-            getpass.getuser(),
-            game_name
-        ) if self.path == '' else self.path
+        path = bpy.path.abspath('//Saves/') if self.path == '' else cust_path
         os.makedirs(path, exist_ok=True)
 
         data = {
@@ -5747,7 +5765,6 @@ class ActionSaveGame(ActionCell):
                 )
             if cha:
                 wDir = cha.walkDirection
-                print(wDir)
 
                 objs.append(
                     {
@@ -5801,7 +5818,6 @@ class ActionLoadGame(ActionCell):
         ActionCell.__init__(self)
         self.condition = None
         self.slot = None
-        self.game_name = None
         self.path = ''
         self.done = None
         self.OUT = LogicNetworkSubCell(self, self.get_done)
@@ -5812,6 +5828,14 @@ class ActionLoadGame(ActionCell):
     def get_game_vec(self, data):
         return mathutils.Euler((data['x'], data['y'], data['z']))
 
+    def get_custom_path(self, path):
+        if not path.endswith('/'):
+            path = path + '/'
+        if path.startswith('./'):
+            path = path.split('./', 1)[-1]
+            return bpy.path.abspath('//' + path)
+        return path
+
     def evaluate(self):
         self.done = False
         condition = self.get_parameter_value(self.condition)
@@ -5819,18 +5843,13 @@ class ActionLoadGame(ActionCell):
             return
         if not condition:
             return
-        game_name = self.get_parameter_value(self.game_name)
-        if game_name is LogicNetworkCell.STATUS_WAITING:
-            return
         self._set_ready()
         slot = self.get_parameter_value(self.slot)
         if slot is LogicNetworkCell.STATUS_WAITING:
             return
+        cust_path = self.get_custom_path(self.path)
 
-        path = "C:/Users/{}/Documents/My Games/{}/Saves/".format(
-            getpass.getuser(),
-            game_name
-        ) if self.path == '' else self.path
+        path = bpy.path.abspath('//Saves/') if self.path == '' else cust_path
 
         scene = bge.logic.getCurrentScene()
 
@@ -5881,7 +5900,6 @@ class ActionSaveVariable(ActionCell):
         self.condition = None
         self.name = None
         self.val = None
-        self.game_name = None
         self.path = ''
         self.done = None
         self.OUT = LogicNetworkSubCell(self, self.get_done)
@@ -5909,15 +5927,20 @@ class ActionSaveVariable(ActionCell):
         finally:
             f.close()
 
+    def get_custom_path(self, path):
+        if not path.endswith('/'):
+            path = path + '/'
+        if path.startswith('./'):
+            path = path.split('./', 1)[-1]
+            return bpy.path.abspath('//' + path)
+        return path
+
     def evaluate(self):
         self.done = False
         condition = self.get_parameter_value(self.condition)
         if condition is LogicNetworkCell.STATUS_WAITING:
             return
         if not condition:
-            return
-        game_name = self.get_parameter_value(self.game_name)
-        if game_name is LogicNetworkCell.STATUS_WAITING:
             return
         name = self.get_parameter_value(self.name)
         if name is LogicNetworkCell.STATUS_WAITING:
@@ -5927,10 +5950,8 @@ class ActionSaveVariable(ActionCell):
             return
         self._set_ready()
 
-        path = "C:/Users/{}/Documents/My Games/{}/Data/".format(
-            getpass.getuser(),
-            game_name
-        ) if self.path == '' else self.path
+        cust_path = self.get_custom_path(self.path)
+        path = bpy.path.abspath('//Data/') if self.path == '' else cust_path
         os.makedirs(path, exist_ok=True)
 
         self.write_to_json(path, name, val)
@@ -5942,7 +5963,6 @@ class ActionLoadVariable(ActionCell):
         ActionCell.__init__(self)
         self.condition = None
         self.name = None
-        self.game_name = None
         self.path = ''
         self.var = None
         self.done = None
@@ -5969,6 +5989,14 @@ class ActionLoadVariable(ActionCell):
         except IOError:
             print('No saved variables!')
 
+    def get_custom_path(self, path):
+        if not path.endswith('/'):
+            path = path + '/'
+        if path.startswith('./'):
+            path = path.split('./', 1)[-1]
+            return bpy.path.abspath('//' + path)
+        return path
+
     def evaluate(self):
         self.done = False
         condition = self.get_parameter_value(self.condition)
@@ -5976,18 +6004,13 @@ class ActionLoadVariable(ActionCell):
             return
         if condition == False:
             return
-        game_name = self.get_parameter_value(self.game_name)
-        if game_name is LogicNetworkCell.STATUS_WAITING:
-            return
         name = self.get_parameter_value(self.name)
         if name is LogicNetworkCell.STATUS_WAITING:
             return
         self._set_ready()
+        cust_path = self.get_custom_path(self.path)
 
-        path = "C:/Users/{}/Documents/My Games/{}/Data/".format(
-            getpass.getuser(),
-            game_name
-        ) if self.path == '' else self.path
+        path = bpy.path.abspath('//Data/') if self.path == '' else cust_path
         os.makedirs(path, exist_ok=True)
 
         self.read_from_json(path, name)
@@ -5999,7 +6022,6 @@ class ActionRemoveVariable(ActionCell):
         ActionCell.__init__(self)
         self.condition = None
         self.name = None
-        self.game_name = None
         self.path = ''
         self.done = None
         self.OUT = LogicNetworkSubCell(self, self.get_done)
@@ -6020,12 +6042,17 @@ class ActionRemoveVariable(ActionCell):
             f = open(path + 'variables.json', 'w')
             json.dump(data, f, indent=2)
         except IOError:
-            print('file does not exist - creating...')
-            f = open(path + 'variables.json', 'w')
-            data = {name: val}
-            json.dump(data, f, indent=2)
+            print('file does not exist!')
         finally:
             f.close()
+
+    def get_custom_path(self, path):
+        if not path.endswith('/'):
+            path = path + '/'
+        if path.startswith('./'):
+            path = path.split('./', 1)[-1]
+            return bpy.path.abspath('//' + path)
+        return path
 
     def evaluate(self):
         self.done = False
@@ -6034,18 +6061,14 @@ class ActionRemoveVariable(ActionCell):
             return
         if not condition:
             return
-        game_name = self.get_parameter_value(self.game_name)
-        if game_name is LogicNetworkCell.STATUS_WAITING:
-            return
         name = self.get_parameter_value(self.name)
         if name is LogicNetworkCell.STATUS_WAITING:
             return
         self._set_ready()
 
-        path = "C:/Users/{}/Documents/My Games/{}/Data/".format(
-            getpass.getuser(),
-            game_name
-        ) if self.path == '' else self.path
+        cust_path = self.get_custom_path(self.path)
+
+        path = bpy.path.abspath('//Data/') if self.path == '' else cust_path
         os.makedirs(path, exist_ok=True)
 
         self.write_to_json(path, name)
@@ -6056,7 +6079,6 @@ class ActionClearVariables(ActionCell):
     def __init__(self):
         ActionCell.__init__(self)
         self.condition = None
-        self.game_name = None
         self.path = ''
         self.done = None
         self.OUT = LogicNetworkSubCell(self, self.get_done)
@@ -6078,6 +6100,14 @@ class ActionClearVariables(ActionCell):
         finally:
             f.close()
 
+    def get_custom_path(self, path):
+        if not path.endswith('/'):
+            path = path + '/'
+        if path.startswith('./'):
+            path = path.split('./', 1)[-1]
+            return bpy.path.abspath('//' + path)
+        return path
+
     def evaluate(self):
         self.done = False
         condition = self.get_parameter_value(self.condition)
@@ -6085,15 +6115,10 @@ class ActionClearVariables(ActionCell):
             return
         if not condition:
             return
-        game_name = self.get_parameter_value(self.game_name)
-        if game_name is LogicNetworkCell.STATUS_WAITING:
-            return
         self._set_ready()
+        cust_path = self.get_custom_path(self.path)
 
-        path = "C:/Users/{}/Documents/My Games/{}/Data/".format(
-            getpass.getuser(),
-            game_name
-        ) if self.path == '' else self.path
+        path = bpy.path.abspath('//Data/') if self.path == '' else cust_path
         os.makedirs(path, exist_ok=True)
 
         self.write_to_json(path)
@@ -6104,7 +6129,6 @@ class ActionListVariables(ActionCell):
     def __init__(self):
         ActionCell.__init__(self)
         self.condition = None
-        self.game_name = None
         self.print_list = None
         self.path = ''
         self.done = None
@@ -6137,6 +6161,14 @@ class ActionListVariables(ActionCell):
         finally:
             f.close()
 
+    def get_custom_path(self, path):
+        if not path.endswith('/'):
+            path = path + '/'
+        if path.startswith('./'):
+            path = path.split('./', 1)[-1]
+            return bpy.path.abspath('//' + path)
+        return path
+
     def evaluate(self):
         self.done = False
         condition = self.get_parameter_value(self.condition)
@@ -6144,19 +6176,13 @@ class ActionListVariables(ActionCell):
             return
         if not condition:
             return
-        game_name = self.get_parameter_value(self.game_name)
-        if game_name is LogicNetworkCell.STATUS_WAITING:
-            return
-
         print_list = self.get_parameter_value(self.print_list)
         if print_list is LogicNetworkCell.STATUS_WAITING:
             return
         self._set_ready()
+        cust_path = self.get_custom_path(self.path)
 
-        path = "C:/Users/{}/Documents/My Games/{}/Data/".format(
-            getpass.getuser(),
-            game_name
-        ) if self.path == '' else self.path
+        path = bpy.path.abspath('//Data/') if self.path == '' else cust_path
         os.makedirs(path, exist_ok=True)
 
         self.write_to_json(path, print_list)
@@ -6833,22 +6859,18 @@ class ParameterGetGlobalValue(ParameterCell):
         ParameterCell.__init__(self)
         self.data_id = None
         self.key = None
-        self.default_value = None
 
     def evaluate(self):
         STATUS_WAITING = LogicNetworkCell.STATUS_WAITING
         data_id = self.get_parameter_value(self.data_id)
         key = self.get_parameter_value(self.key)
-        default_value = self.get_parameter_value(self.default_value)
         if data_id is STATUS_WAITING:
             return
         if key is STATUS_WAITING:
             return
-        if default_value is STATUS_WAITING:
-            return
         self._set_ready()
         db = SimpleLoggingDatabase.get_or_create_shared_db(data_id)
-        self._set_value(db.get(key, default_value))
+        self._set_value(db.get(key, None))
 
 
 class ParameterConstantValue(ParameterCell):
@@ -7116,6 +7138,14 @@ class SetLightEnergy(ActionCell):
     def get_done(self):
         return self.done
 
+    def set_blender_28x(self, lamp, energy):
+        light = lamp.blenderObject.data
+        light.energy = energy
+        bge.logic.getCurrentScene().resetTaaSamples = True
+
+    def set_blender_27x(self, lamp, energy):
+        lamp.energy = energy
+
     def evaluate(self):
         self.done = False
         STATUS_WAITING = LogicNetworkCell.STATUS_WAITING
@@ -7132,9 +7162,10 @@ class SetLightEnergy(ActionCell):
         if lamp is STATUS_WAITING:
             return
         self._set_ready()
-        light = lamp.blenderObject.data
-        light.energy = energy
-        bge.logic.getCurrentScene().resetTaaSamples = True
+        if bge.app.version < (2, 80, 0):
+            self.set_blender_27x(lamp, energy)
+        else:
+            self.set_blender_28x(lamp, energy)
         self.done = True
 
 
@@ -7153,10 +7184,17 @@ class SetLightColor(ActionCell):
     def get_done(self):
         return self.done
 
+    def set_blender_28x(self, lamp, color):
+        light = lamp.blenderObject.data
+        light.color = color
+        bge.logic.getCurrentScene().resetTaaSamples = True
+
+    def set_blender_27x(self, lamp, color):
+        lamp.color = color
+
     def evaluate(self):
         self.done = False
         STATUS_WAITING = LogicNetworkCell.STATUS_WAITING
-
         condition = self.get_parameter_value(self.condition)
         if condition is STATUS_WAITING:
             return
@@ -7171,10 +7209,83 @@ class SetLightColor(ActionCell):
         if lamp is STATUS_WAITING:
             return
         self._set_ready()
-        light = lamp.blenderObject.data
-        light.color = [r, g, b]
-        bge.logic.getCurrentScene().resetTaaSamples = True
+        if bge.app.version < (2, 80, 0):
+            self.set_blender_27x(lamp, [r, g, b])
+        else:
+            self.set_blender_28x(lamp, [r, g, b])
         self.done = True
+
+
+class GetLightEnergy(ActionCell):
+
+    def __init__(self):
+        ActionCell.__init__(self)
+        self.lamp = None
+        self.energy = 0
+        self.ENERGY = LogicNetworkSubCell(self, self.get_energy)
+
+    def get_energy(self):
+        return self.energy
+
+    def get_blender_28x(self, lamp):
+        light = lamp.blenderObject.data
+        self.energy = light.energy
+
+    def get_blender_27x(self, lamp):
+        self.energy = lamp.energy
+
+    def evaluate(self):
+        lamp = self.get_parameter_value(self.lamp)
+        if lamp is LogicNetworkCell.STATUS_WAITING:
+            return
+        self._set_ready()
+        if bge.app.version < (2, 80, 0):
+            self.get_blender_27x(lamp)
+        else:
+            self.get_blender_28x(lamp)
+
+
+class GetLightColor(ActionCell):
+
+    def __init__(self):
+        ActionCell.__init__(self)
+        self.lamp = None
+        self.r = 0
+        self.g = 0
+        self.b = 0
+        self.R = LogicNetworkSubCell(self, self.get_r)
+        self.G = LogicNetworkSubCell(self, self.get_g)
+        self.B = LogicNetworkSubCell(self, self.get_b)
+
+    def get_r(self):
+        return self.r
+
+    def get_g(self):
+        return self.g
+
+    def get_b(self):
+        return self.b
+
+    def get_blender_28x(self, lamp):
+        light = lamp.blenderObject.data
+        self.r = light.color[0]
+        self.g = light.color[1]
+        self.b = light.color[2]
+
+    def get_blender_27x(self, lamp):
+        self.r = lamp.color[0]
+        self.g = lamp.color[1]
+        self.b = lamp.color[2]
+
+    def evaluate(self):
+        lamp = self.get_parameter_value(self.lamp)
+        if lamp is LogicNetworkCell.STATUS_WAITING:
+            return
+        self._set_ready()
+        if bge.app.version < (2, 80, 0):
+            self.get_blender_27x(lamp)
+        else:
+            self.get_blender_28x(lamp)
 
 
 # Action "Move To": an object will follow a point
