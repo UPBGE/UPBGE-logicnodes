@@ -17,7 +17,7 @@ class BGEPropFilter(bpy.types.PropertyGroup):
     do_filter = bpy.props.BoolProperty()
     filter_by = bpy.props.EnumProperty(items=_filter_prop_types)
     filter_name = bpy.props.StringProperty()
-    show_hidden = bpy.props.BooleanProperty()
+    show_hidden = bpy.props.BoolProperty()
 
 
 class BGEGroupName(bpy.types.PropertyGroup):
@@ -81,7 +81,8 @@ class BGEGamePropertyPanel(bpy.types.Panel):
         )
         options = column.row()
         options.prop(context.scene.prop_filter, 'do_filter', text='Filter Properties')
-        show_hidden = options.prop(context.scene.prop_filter, 'show_hidden', text='Show Hidden')
+        options.prop(context.scene.prop_filter, 'show_hidden', text='Show Hidden')
+        show_hidden = context.scene.prop_filter.show_hidden
         do_filter = context.scene.prop_filter.do_filter
         prop_type = context.scene.prop_filter.filter_by
         prop_name = context.scene.prop_filter.filter_name
@@ -98,12 +99,10 @@ class BGEGamePropertyPanel(bpy.types.Panel):
             is_tree = prop.name.startswith('NODELOGIC__')
             has_name = prop_name in prop.name
             if do_filter:
-                if prop_type == 'NAME':
-                    if not has_name:
-                        continue
-                elif prop_type == 'TREES':
-                    if not is_tree:
-                        continue
+                if prop_type == 'NAME' and not has_name:
+                    continue
+                elif prop_type == 'TREES' and not is_tree:
+                    continue
                 elif prop.type != prop_type or is_tree:
                     continue
             index = props.index(prop)

@@ -2608,29 +2608,31 @@ class ConditionOnce(ConditionCell):
         self.input_condition = None
         self._consumed = False
 
-    def has_status(self, status):
-        if self._consumed:
-            return status is LogicNetworkCell.STATUS_READY
-        else:
-            return ConditionCell.has_status(self, status)
+    #def has_status(self, status):
+    #    if self._consumed:
+    #        return status is LogicNetworkCell.STATUS_READY
+    #    else:
+    #        return ConditionCell.has_status(self, status)
 
-    def reset(self):
-        if self._consumed:
-            self._set_ready()
-            self._set_value(False)
-        else:
-            self._set_status(LogicNetworkCell.STATUS_WAITING)
+    #def reset(self):
+    #    if self._consumed:
+    #        self._set_ready()
+    #        self._set_value(False)
+    #    else:
+    #        self._set_status(LogicNetworkCell.STATUS_WAITING)
 
     def evaluate(self):
         input_condition = self.get_parameter_value(self.input_condition)
         if input_condition is LogicNetworkCell.STATUS_WAITING:
             return
         self._set_ready()
-        if input_condition:
+        if input_condition and self._consumed is False:
             self._consumed = True
             self._set_value(True)
             return
-        self._consumed = False
+        if not input_condition:
+            self._consumed = False
+        self._set_value(False)
 
 
 class OnNextFrame(ConditionCell):
