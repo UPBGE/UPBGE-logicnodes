@@ -10,6 +10,7 @@ PARAMETER_SOCKET_COLOR = tools.Color.RGBA(.8, 0.5, 0.2, 1.0)
 PARAM_LIST_SOCKET_COLOR = tools.Color.RGBA(0.74, .65, .48, 1.0)
 PARAM_DICT_SOCKET_COLOR = tools.Color.RGBA(0.58, 0.48, .74, 1.0)
 PARAM_OBJ_SOCKET_COLOR = tools.Color.RGBA(0.2, 0.5, .7, 1.0)
+PARAM_COLL_SOCKET_COLOR = tools.Color.RGBA(0.25, 0.35, .8, 1.0)
 PARAM_SCENE_SOCKET_COLOR = tools.Color.RGBA(0.5, 0.5, 0.6, 1.0)
 PARAM_VECTOR_SOCKET_COLOR = tools.Color.RGBA(0.4, 0.8, 0.4, 1.0)
 PARAM_SOUND_SOCKET_COLOR = tools.Color.RGBA(0.2, 0.5, 0.2, 1.0)
@@ -814,6 +815,38 @@ class NLGameObjectSocket(bpy.types.NodeSocket, NetLogicSocketType):
 
 
 _sockets.append(NLGameObjectSocket)
+
+
+class NLCollectionSocket(bpy.types.NodeSocket, NetLogicSocketType):
+    bl_idname = "NLCollectionSocket"
+    bl_label = "Collection"
+    value = bpy.props.StringProperty(update=update_tree_code)
+
+    def draw_color(self, context, node):
+        return PARAM_COLL_SOCKET_COLOR
+
+    def draw(self, context, layout, node, text):
+        if self.is_output:
+            layout.label(text=self.name)
+        elif self.is_linked:
+            layout.label(text=self.name)
+        else:
+            col = layout.column(align=False)
+            col.label(text=self.name)
+            col.prop_search(
+                self,
+                'value',
+                bpy.data,
+                'collections',
+                text=''
+            )
+
+    def get_unlinked_value(self):
+        return "'{}'".format(self.value)
+
+
+if not bpy.app.version < (2, 80, 0):
+    _sockets.append(NLCollectionSocket)
 
 
 class NLSocketLogicTree(bpy.types.NodeSocket, NetLogicSocketType):
@@ -4334,11 +4367,52 @@ class NLInvertValueNode(bpy.types.Node, NLActionNode):
         self.inputs.new(NLParameterSocket.bl_idname, "Value")
         self.outputs.new(NLParameterSocket.bl_idname, "Value")
 
-    def get_netlogic_class_name(self): return "bgelogic.InvertValue"
-    def get_input_sockets_field_names(self): return ["value"]
+    def get_netlogic_class_name(self):
+        return "bgelogic.InvertValue"
+
+    def get_input_sockets_field_names(self):
+        return ["value"]
+
     def get_output_socket_varnames(self):
         return ['OUT']
+
+
 _nodes.append(NLInvertValueNode)
+
+
+class NLCreateVehicle(bpy.types.Node, NLActionNode):
+    bl_idname = "NLCreateVehicle"
+    bl_label = "Vehicle: Create New"
+    nl_category = "Physics"
+
+    def init(self, context):
+        NLActionNode.init(self, context)
+        self.inputs.new(NLConditionSocket.bl_idname, "Condition")
+        self.inputs.new(NLGameObjectSocket.bl_idname, "Car")
+        self.inputs.new(NLCollectionSocket.bl_idname, "Steering Wheels")
+        self.inputs.new(NLCollectionSocket.bl_idname, "Fixed Wheels")
+        self.inputs.new(NLFloatFieldSocket.bl_idname, "Suspension")
+        self.inputs[-1].value = 0.06
+        self.inputs.new(NLFloatFieldSocket.bl_idname, "Stiffness")
+        self.inputs[-1].value = 50
+        self.inputs.new(NLFloatFieldSocket.bl_idname, "Damping")
+        self.inputs[-1].value = 5
+        self.inputs.new(NLFloatFieldSocket.bl_idname, "Friction")
+        self.inputs[-1].value = 2
+        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+        self.outputs.new(NLGameObjectSocket.bl_idname, 'Vehicle')
+
+    def get_output_socket_varnames(self):
+        return ["OUT", 'VEHICLE']
+
+    def get_netlogic_class_name(self):
+        return "bgelogic.ActionCreateVehicle"
+
+    def get_input_sockets_field_names(self):
+        return ["condition", "game_object", "wheels_steering", 'wheels', 'suspension', 'stiffness', 'damping', 'friction']
+
+if not bpy.app.version < (2, 80, 0):
+    _nodes.append(NLCreateVehicle)
 
 
 class NLSetObjectAttributeActionNode(bpy.types.Node, NLActionNode):

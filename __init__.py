@@ -6,9 +6,10 @@ import time
 
 bl_info = {
     "name": "Logic Nodes",
-    "description": "A Node System to create game logic.",
+    "description": (
+        "A Node System to create game logic. Contributors: L_P, Mike King"
+    ),
     "author": "pgi, Leopold A-C (Iza Zed)",
-    'description': 'Contributors: L_P',
     "version": (0, 8, 7),
     "blender": (2, 83, 0),
     "location": "View Menu",
@@ -30,7 +31,7 @@ _tree_code_writer_started = False
 
 
 def debug(*message):
-    import traceback, sys
+    import traceback
     e = traceback.extract_stack(limit=2)
     text = ""
     for m in message:
@@ -56,31 +57,47 @@ def update_tree_name(tree, old_name):
     old_name_code = utilities.strip_tree_name(old_name)
     new_name_code = utilities.strip_tree_name(new_name)
     new_pymodule_name = utilities.py_module_name_for_tree(tree)
-    old_pymodule_name = utilities.py_module_name_for_stripped_tree_name(old_name_code)
-    new_py_controller_module_string = utilities.py_controller_module_string(new_pymodule_name)
+    # old_pymodule_name = (
+    # utilities.py_module_name_for_stripped_tree_name(old_name_code))
+    new_py_controller_module_string = (
+        utilities.py_controller_module_string(new_pymodule_name)
+    )
     for ob in bpy.data.objects:
         old_status = None
         is_tree_applied_to_object = False
         for tree_item in ob.bgelogic_treelist:
             if tree_item.tree_name == old_name:
                 tree_item.tree_name = new_name
-                if old_status != None: raise RuntimeError("We have two trees with the same name in {}".format(ob.name))
+                if old_status is not None:
+                    raise RuntimeError(
+                        "We have two trees with the same name in {}".format(
+                            ob.name
+                        )
+                    )
                 old_status = tree_item.tree_initial_status
                 is_tree_applied_to_object = True
         if is_tree_applied_to_object:
-            utilities.rename_initial_status_game_object_property(ob, old_name, new_name)
+            utilities.rename_initial_status_game_object_property(
+                ob, old_name, new_name
+            )
             gs = ob.game
             for sensor in gs.sensors:
                 if old_name_code in sensor.name:
-                    sensor.name = sensor.name.replace(old_name_code, new_name_code)
+                    sensor.name = sensor.name.replace(
+                        old_name_code, new_name_code
+                    )
             for controller in gs.controllers:
                 if old_name_code in controller.name:
-                    controller.name = controller.name.replace(old_name_code, new_name_code)
+                    controller.name = controller.name.replace(
+                        old_name_code, new_name_code
+                    )
                     if isinstance(controller, bpy.types.PythonController):
                         controller.module = new_py_controller_module_string
             for actuator in gs.actuators:
                 if old_name_code in actuator.name:
-                    actuator.name = actuator.name.replace(old_name_code, new_name_code)
+                    actuator.name = actuator.name.replace(
+                        old_name_code, new_name_code
+                    )
         else:
             print("Tree name change doesn't affect object {} because the tree is not applied to it".format(ob.name))
     old_module_file = utilities.py_module_file_path_for_stripped_tree_name(old_name)
@@ -251,6 +268,7 @@ def _rel_import(module_name, rel_path):
     abs_path = os.path.join(directory, rel_path)
     return _abs_import(module_name, abs_path)
 
+
 def _abs_path(*relative_path_components):
     import os
     relative_path = os.path.sep.join(relative_path_components)
@@ -292,7 +310,6 @@ def load_nodes_from(abs_dir):
             print("loading... {}".format(mod_name))
             exec(source, locals, globals)
             #TODO: reload source to refresh intermediate compilation?
-    pass
 
 
 @bpy.app.handlers.persistent

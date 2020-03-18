@@ -4140,6 +4140,77 @@ class ActionPrint(ActionCell):
         self.done = True
 
 
+class ActionCreateVehicle(ActionCell):
+    def __init__(self):
+        ActionCell.__init__(self)
+        self.condition = None
+        self.game_object = None
+        self.wheels_steering = None
+        self.wheels = None
+        self.suspension = None
+        self.stiffness = None
+        self.damping = None
+        self.friction = None
+        self.done = None
+        self.vehicle = None
+        self.OUT = LogicNetworkSubCell(self, self.get_done)
+        self.VEHICLE = LogicNetworkSubCell(self, self.get_vehicle)
+
+    def get_done(self):
+        return self.done
+
+    def get_vehicle(self):
+        return self.vehicle
+
+    def evaluate(self):
+        self.done = False
+        condition_value = self.get_parameter_value(self.condition)
+        if condition_value is LogicNetworkCell.STATUS_WAITING:
+            return
+        if not condition_value:
+            return
+        game_object = self.get_parameter_value(self.game_object)
+        if game_object is LogicNetworkCell.STATUS_WAITING:
+            return
+        wheels_steering = self.get_parameter_value(self.wheels_steering)
+        if wheels_steering is LogicNetworkCell.STATUS_WAITING:
+            return
+        wheels = self.get_parameter_value(self.wheels)
+        if wheels is LogicNetworkCell.STATUS_WAITING:
+            return
+        suspension = self.get_parameter_value(self.suspension)
+        if suspension is LogicNetworkCell.STATUS_WAITING:
+            return
+        stiffness = self.get_parameter_value(self.stiffness)
+        if stiffness is LogicNetworkCell.STATUS_WAITING:
+            return
+        damping = self.get_parameter_value(self.damping)
+        if damping is LogicNetworkCell.STATUS_WAITING:
+            return
+        friction = self.get_parameter_value(self.friction)
+        if friction is LogicNetworkCell.STATUS_WAITING:
+            return
+        ph_id = game_object.getPhysicsId()
+        car = bge.constraints.createVehicle(ph_id)
+        down = mathutils.Vector((0, 0, -1))
+        axle_dir = mathutils.Vector((0, -1, 0))
+        wheels_steering = bpy.data.collections[wheels_steering]
+        wheels = bpy.data.collections[wheels]
+        for wheel in wheels_steering.objects:
+            wheel = check_game_object(wheel.name)
+            car.addWheel(wheel, wheel.worldPosition - game_object.worldPosition, down, axle_dir, suspension, abs(wheel.worldScale.x/2), True)
+        for wheel in wheels.objects:
+            wheel = check_game_object(wheel.name)
+            car.addWheel(wheel, wheel.worldPosition - game_object.worldPosition, down, axle_dir, suspension, abs(wheel.worldScale.x/2), False)
+        for wheel in range(car.getNumWheels()):
+            car.setSuspensionStiffness(stiffness, wheel)
+            car.setSuspensionDamping(damping, wheel)
+            car.setTyreFriction(friction, wheel)
+
+        self.vehicle = car.getConstraintId()
+        self.done = True
+
+
 class ActionSetObjectAttribute(ActionCell):
     def __init__(self, value_type='worldPosition'):
         ActionCell.__init__(self)
