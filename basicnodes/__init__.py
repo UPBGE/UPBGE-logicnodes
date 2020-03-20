@@ -2953,6 +2953,7 @@ class NLThresholdNode(bpy.types.Node, NLParameterNode):
     bl_idname = "NLThresholdNode"
     bl_label = "Threshold"
     nl_category = "Math"
+    operator = bpy.props.EnumProperty(items=_enum_greater_less, update=update_tree_code)
 
     def init(self, context):
         NLParameterNode.init(self, context)
