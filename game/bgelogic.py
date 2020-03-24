@@ -294,9 +294,9 @@ def xrot_to(
             return True
         angle_sign = (signed_angle > 0) - (signed_angle < 0)
         drot = angle_sign * speed * time_per_frame
-        eulers = rotating_object.worldOrientation.to_euler()
+        eulers = rotating_object.localOrientation.to_euler()
         eulers[0] += drot
-        rotating_object.worldOrientation = eulers
+        rotating_object.localOrientation = eulers
         return False
 
 
@@ -329,9 +329,9 @@ def yrot_to(
             return True
         angle_sign = (signed_angle > 0) - (signed_angle < 0)
         drot = angle_sign * speed * time_per_frame
-        eulers = rotating_object.worldOrientation.to_euler()
+        eulers = rotating_object.localOrientation.to_euler()
         eulers[1] += drot
-        rotating_object.worldOrientation = eulers
+        rotating_object.localOrientation = eulers
         return False
     pass
 
@@ -366,9 +366,9 @@ def zrot_to(
             return True
         angle_sign = (signed_angle > 0) - (signed_angle < 0)
         drot = angle_sign * speed * time_per_frame
-        eulers = rotating_object.worldOrientation.to_euler()
+        eulers = rotating_object.localOrientation.to_euler()
         eulers[2] += drot
-        rotating_object.worldOrientation = eulers
+        rotating_object.localOrientation = eulers
         return False
 
 
@@ -2205,6 +2205,8 @@ class ParameterEulerToMatrix(ParameterCell):
     def evaluate(self):
         self._set_ready()
         vec = self.get_parameter_value(self.input_e)
+        if isinstance(vec, mathutils.Vector):
+            vec = mathutils.Euler((vec.x, vec.y, vec.z), 'XYZ')
         self.matrix = vec.to_matrix()
 
 
@@ -2606,6 +2608,7 @@ class ConditionOnce(ConditionCell):
     def __init__(self):
         ConditionCell.__init__(self)
         self.input_condition = None
+        self.repeat = None
         self._consumed = False
 
     #def has_status(self, status):
@@ -2625,12 +2628,15 @@ class ConditionOnce(ConditionCell):
         input_condition = self.get_parameter_value(self.input_condition)
         if input_condition is LogicNetworkCell.STATUS_WAITING:
             return
+        repeat = self.get_parameter_value(self.repeat)
+        if repeat is LogicNetworkCell.STATUS_WAITING:
+            return
         self._set_ready()
         if input_condition and self._consumed is False:
             self._consumed = True
             self._set_value(True)
             return
-        if not input_condition:
+        if not input_condition and repeat:
             self._consumed = False
         self._set_value(False)
 
@@ -3750,9 +3756,19 @@ class ActionAddObject(ActionCell):
         self.name = None
         self.life = None
         self.condition = None
-        self.scene = None
+        self.done = False
+        self.obj = False
+        self.OBJ = LogicNetworkSubCell(self, self._get_obj)
+        self.OUT = LogicNetworkSubCell(self, self._get_done)
+
+    def _get_done(self):
+        return self.done
+
+    def _get_obj(self):
+        return self.obj
 
     def evaluate(self):
+        self.done = False
         condition_value = self.get_parameter_value(self.condition)
         if condition_value is LogicNetworkCell.STATUS_WAITING:
             return
@@ -3761,13 +3777,11 @@ class ActionAddObject(ActionCell):
             return
         life_value = self.get_parameter_value(self.life)
         name_value = self.get_parameter_value(self.name)
-        scene = self.get_parameter_value(self.scene)
         if life_value is LogicNetworkCell.STATUS_WAITING:
             return
         if name_value is LogicNetworkCell.STATUS_WAITING:
             return
-        if scene is LogicNetworkCell.STATUS_WAITING:
-            return
+        scene = bge.logic.getCurrentScene()
         self._set_ready()
         if none_or_invalid(scene):
             return
@@ -3776,13 +3790,14 @@ class ActionAddObject(ActionCell):
         if name_value is None:
             return
         try:
-            self._set_value(scene.addObject(name_value, None, life_value))
+            self.obj = scene.addObject(name_value, None, life_value)
         except ValueError:
             print(
                 "ActionAddObject: cannot find {}.".format(
                     name_value
                 )
             )
+        self.done = True
 
 
 class ActionSetGameObjectGameProperty(ActionCell):
@@ -3950,6 +3965,24 @@ class InvertValue(ActionCell):
         value = self.get_parameter_value(self.value)
         self._set_ready()
         self.out_value = -value
+
+
+class AbsoluteValue(ActionCell):
+    def __init__(self):
+        ActionCell.__init__(self)
+        self.value = None
+        self.out_value = False
+        self.OUT = LogicNetworkSubCell(self, self._get_out_value)
+
+    def _get_out_value(self):
+        return self.out_value
+
+    def evaluate(self):
+        if none_or_invalid(self.value):
+            return
+        value = self.get_parameter_value(self.value)
+        self._set_ready()
+        self.out_value = math.fabs(value)
 
 
 class ActionEndGame(ActionCell):
@@ -4190,6 +4223,7 @@ class ActionCreateVehicle(ActionCell):
         friction = self.get_parameter_value(self.friction)
         if friction is LogicNetworkCell.STATUS_WAITING:
             return
+        self._set_ready()
         ph_id = game_object.getPhysicsId()
         car = bge.constraints.createVehicle(ph_id)
         down = mathutils.Vector((0, 0, -1))
@@ -4206,8 +4240,62 @@ class ActionCreateVehicle(ActionCell):
             car.setSuspensionStiffness(stiffness, wheel)
             car.setSuspensionDamping(damping, wheel)
             car.setTyreFriction(friction, wheel)
+        self.vehicle = car
+        self.done = True
 
-        self.vehicle = car.getConstraintId()
+
+class VehicleApplyForce(ActionCell):
+    def __init__(self, value_type='REAR'):
+        ActionCell.__init__(self)
+        self.value_type = str(value_type)
+        self.condition = None
+        self.constraint = None
+        self.wheelcount = None
+        self.power = None
+        self.OUT = LogicNetworkSubCell(self, self.get_done)
+
+    def get_done(self):
+        return self.done
+
+    def evaluate(self):
+        self.done = False
+        print('init')
+        condition_value = self.get_parameter_value(self.condition)
+        if condition_value is LogicNetworkCell.STATUS_WAITING:
+            return
+        if not condition_value:
+            return
+        print('condition true')
+        constraint = self.get_parameter_value(self.constraint)
+        if constraint is LogicNetworkCell.STATUS_WAITING:
+            return
+        value_type = self.get_parameter_value(self.value_type)
+        if value_type is LogicNetworkCell.STATUS_WAITING:
+            return
+        print('value type valid')
+        wheelcount = self.get_parameter_value(self.wheelcount)
+        if wheelcount is LogicNetworkCell.STATUS_WAITING:
+            return
+        power = self.get_parameter_value(self.power)
+        if power is LogicNetworkCell.STATUS_WAITING:
+            return
+        if none_or_invalid(constraint):
+            print('counts as invalid')
+            return
+        print(value_type)
+        self._set_ready()
+        if value_type == 'FRONT':
+            print('Apply To Front')
+            for wheel in wheelcount:
+                constraint.applyEngineForce(power, wheel)
+        if value_type == 'REAR':
+            print('Apply To Rear')
+            for wheel in wheelcount:
+                constraint.applyEngineForce(power, -1 - wheel)
+        if value_type == 'ALL':
+            print('Apply To All')
+            for wheel in range(constraint.getNumWheels()):
+                constraint.applyEngineForce(power, wheel)
         self.done = True
 
 
@@ -4775,7 +4863,6 @@ class ActionSetActiveCamera(ActionCell):
     def __init__(self):
         ActionCell.__init__(self)
         self.condition = None
-        self.scene = None
         self.camera = None
         self.done = None
         self.OUT = LogicNetworkSubCell(self, self.get_done)
@@ -4790,17 +4877,13 @@ class ActionSetActiveCamera(ActionCell):
             return
         if not condition:
             return
-        scene = self.get_parameter_value(self.scene)
-        if scene is LogicNetworkCell.STATUS_WAITING:
-            scene = bge.logic.getCurrentScene()
         camera = self.get_parameter_value(self.camera)
         if camera is LogicNetworkCell.STATUS_WAITING:
             return
         self._set_ready()
         if none_or_invalid(camera):
             return
-        if none_or_invalid(scene):
-            scene = bge.logic.getCurrentScene()
+        scene = bge.logic.getCurrentScene()
         scene.active_camera = camera
         self.done = True
 
@@ -5793,12 +5876,12 @@ class ActionSaveGame(ActionCell):
         path = bpy.path.abspath('//Saves/') if self.path == '' else cust_path
         os.makedirs(path, exist_ok=True)
 
+        scene = bge.logic.getCurrentScene()
         data = {
             'objects': []
         }
 
         objs = data['objects']
-        scene = bge.logic.getCurrentScene()
 
         for obj in scene.objects:
             if obj.name == '__default__cam__':
@@ -5929,7 +6012,6 @@ class ActionLoadGame(ActionCell):
         try:
             with open(path + 'save' + str(slot) + '.json') as json_file:
                 data = json.load(json_file)
-
                 for obj in data['objects']:
                     if obj['name'] in scene.objects:
                         game_obj = scene.objects[obj['name']]
@@ -7248,6 +7330,7 @@ class SetLightColor(ActionCell):
         ActionCell.__init__(self)
         self.condition = None
         self.lamp = None
+        self.clamp = None
         self.red = None
         self.green = None
         self.blue = None
@@ -7265,6 +7348,11 @@ class SetLightColor(ActionCell):
     def set_blender_27x(self, lamp, color):
         lamp.color = color
 
+    def clamp_col(self, c):
+        if c > 1:
+            return 1
+        return c
+
     def evaluate(self):
         self.done = False
         STATUS_WAITING = LogicNetworkCell.STATUS_WAITING
@@ -7275,6 +7363,7 @@ class SetLightColor(ActionCell):
             self._set_value(False)
             return self._set_ready()
         lamp = self.get_parameter_value(self.lamp)
+        clamp = self.get_parameter_value(self.clamp)
         r = self.get_parameter_value(self.red)
         g = self.get_parameter_value(self.green)
         b = self.get_parameter_value(self.blue)
@@ -7282,10 +7371,13 @@ class SetLightColor(ActionCell):
         if lamp is STATUS_WAITING:
             return
         self._set_ready()
+        colors = [r, g, b]
+        if clamp:
+            colors = [self.clamp_col(c) for c in colors]
         if bge.app.version < (2, 80, 0):
-            self.set_blender_27x(lamp, [r, g, b])
+            self.set_blender_27x(lamp, colors)
         else:
-            self.set_blender_28x(lamp, [r, g, b])
+            self.set_blender_28x(lamp, colors)
         self.done = True
 
 
@@ -8255,8 +8347,10 @@ class ActionStringOp(ActionCell):
 
 
 class ParameterMathFun(ParameterCell):
+
     @classmethod
     def signum(cls, a): return (a > 0) - (a < 0)
+
     @classmethod
     def curt(cls, a):
         if a > 0:
@@ -8268,10 +8362,8 @@ class ParameterMathFun(ParameterCell):
         ParameterCell.__init__(self)
         self.a = None
         self.b = None
-        self.c = None
-        self.d = None
         self.formula = ""
-        self._previous_values = [None, None, None, None]
+        self._previous_values = [None, None]
         self._formula_globals = globals()
         self._formula_locals = {
             "exp": math.exp,
@@ -8312,23 +8404,16 @@ class ParameterMathFun(ParameterCell):
         self._set_ready()
         a = self.get_parameter_value(self.a)
         b = self.get_parameter_value(self.b)
-        c = self.get_parameter_value(self.c)
-        d = self.get_parameter_value(self.d)
         olds = self._previous_values
         do_update = (
             (a != olds[0]) or
-            (b != olds[1]) or
-            (c != olds[2]) or
-            (d != olds[3]))
+            (b != olds[1])
+        )
         if do_update:
             formula_locals = self._formula_locals
             formula_locals["a"] = a
             formula_locals["b"] = b
-            formula_locals["c"] = c
-            formula_locals["d"] = d
             out = eval(self.formula, self._formula_globals, formula_locals)
             olds[0] = a
             olds[1] = b
-            olds[2] = c
-            olds[3] = d
             self._set_value(out)
