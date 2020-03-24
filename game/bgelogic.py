@@ -4259,43 +4259,82 @@ class VehicleApplyForce(ActionCell):
 
     def evaluate(self):
         self.done = False
-        print('init')
         condition_value = self.get_parameter_value(self.condition)
         if condition_value is LogicNetworkCell.STATUS_WAITING:
             return
-        if not condition_value:
-            return
-        print('condition true')
         constraint = self.get_parameter_value(self.constraint)
         if constraint is LogicNetworkCell.STATUS_WAITING:
             return
         value_type = self.get_parameter_value(self.value_type)
         if value_type is LogicNetworkCell.STATUS_WAITING:
             return
-        print('value type valid')
         wheelcount = self.get_parameter_value(self.wheelcount)
         if wheelcount is LogicNetworkCell.STATUS_WAITING:
             return
         power = self.get_parameter_value(self.power)
         if power is LogicNetworkCell.STATUS_WAITING:
             return
+        if not condition_value:
+            power = 0
         if none_or_invalid(constraint):
-            print('counts as invalid')
             return
-        print(value_type)
         self._set_ready()
         if value_type == 'FRONT':
-            print('Apply To Front')
-            for wheel in wheelcount:
+            for wheel in range(wheelcount):
                 constraint.applyEngineForce(power, wheel)
         if value_type == 'REAR':
-            print('Apply To Rear')
-            for wheel in wheelcount:
+            for wheel in range(wheelcount):
                 constraint.applyEngineForce(power, -1 - wheel)
         if value_type == 'ALL':
-            print('Apply To All')
             for wheel in range(constraint.getNumWheels()):
                 constraint.applyEngineForce(power, wheel)
+        self.done = True
+
+
+class VehicleApplyBraking(ActionCell):
+    def __init__(self, value_type='REAR'):
+        ActionCell.__init__(self)
+        self.value_type = str(value_type)
+        self.condition = None
+        self.constraint = None
+        self.wheelcount = None
+        self.power = None
+        self.OUT = LogicNetworkSubCell(self, self.get_done)
+
+    def get_done(self):
+        return self.done
+
+    def evaluate(self):
+        self.done = False
+        condition_value = self.get_parameter_value(self.condition)
+        if condition_value is LogicNetworkCell.STATUS_WAITING:
+            return
+        constraint = self.get_parameter_value(self.constraint)
+        if constraint is LogicNetworkCell.STATUS_WAITING:
+            return
+        value_type = self.get_parameter_value(self.value_type)
+        if value_type is LogicNetworkCell.STATUS_WAITING:
+            return
+        wheelcount = self.get_parameter_value(self.wheelcount)
+        if wheelcount is LogicNetworkCell.STATUS_WAITING:
+            return
+        power = self.get_parameter_value(self.power)
+        if power is LogicNetworkCell.STATUS_WAITING:
+            return
+        if not condition_value:
+            power = 0
+        if none_or_invalid(constraint):
+            return
+        self._set_ready()
+        if value_type == 'FRONT':
+            for wheel in range(wheelcount):
+                constraint.applyBraking(power, wheel)
+        if value_type == 'REAR':
+            for wheel in range(wheelcount):
+                constraint.applyBraking(power, -1 - wheel)
+        if value_type == 'ALL':
+            for wheel in range(constraint.getNumWheels()):
+                constraint.applyBraking(power, wheel)
         self.done = True
 
 
@@ -5805,6 +5844,44 @@ class ActionApplyForce(ActionCell):
             return
         if force:
             game_object.applyForce(force, local)
+        self.done = True
+
+
+class ActionApplyImpulse(ActionCell):
+    def __init__(self):
+        ActionCell.__init__(self)
+        self.condition = None
+        self.game_object = None
+        self.point = None
+        self.impulse = None
+        self.done = None
+        self.OUT = LogicNetworkSubCell(self, self.get_done)
+
+    def get_done(self):
+        return self.done
+
+    def evaluate(self):
+        self.done = False
+        condition = self.get_parameter_value(self.condition)
+        if condition is LogicNetworkCell.STATUS_WAITING:
+            return
+        if not condition:
+            return
+        game_object = self.get_parameter_value(self.game_object)
+        if game_object is LogicNetworkCell.STATUS_WAITING:
+            return
+        point = self.get_parameter_value(self.point)
+        if point is LogicNetworkCell.STATUS_WAITING:
+            return
+        impulse = self.get_parameter_value(self.impulse)
+        if impulse is LogicNetworkCell.STATUS_WAITING:
+            return
+        local = self.local
+        self._set_ready()
+        if none_or_invalid(game_object):
+            return
+        if impulse:
+            game_object.applyImpulse(point, impulse, local)
         self.done = True
 
 

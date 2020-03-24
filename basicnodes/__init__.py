@@ -4462,7 +4462,7 @@ class NLVehicleApplyEngineForce(bpy.types.Node, NLActionNode):
         NLActionNode.init(self, context)
         self.inputs.new(NLConditionSocket.bl_idname, "Condition")
         self.inputs.new(NLParameterSocket.bl_idname, "Vehicle Constraint")
-        self.inputs.new(NLIntegerFieldSocket.bl_idname, "Wheel Count")
+        self.inputs.new(NLIntegerFieldSocket.bl_idname, "Wheels")
         self.inputs[-1].value = 2
         self.inputs.new(NLFloatFieldSocket.bl_idname, "Power")
         self.inputs[-1].value = 1
@@ -4486,6 +4486,43 @@ class NLVehicleApplyEngineForce(bpy.types.Node, NLActionNode):
 
 if not bpy.app.version < (2, 80, 0):
     _nodes.append(NLVehicleApplyEngineForce)
+
+
+class NLVehicleApplyBraking(bpy.types.Node, NLActionNode):
+    bl_idname = "NLVehicleApplyBraking"
+    bl_label = "Vehicle: Brake"
+    nl_category = "Physics"
+    value_type = bpy.props.EnumProperty(items=_enum_vehicle_axis, update=update_tree_code)
+
+    def init(self, context):
+        NLActionNode.init(self, context)
+        self.inputs.new(NLConditionSocket.bl_idname, "Condition")
+        self.inputs.new(NLParameterSocket.bl_idname, "Vehicle Constraint")
+        self.inputs.new(NLIntegerFieldSocket.bl_idname, "Wheels")
+        self.inputs[-1].value = 2
+        self.inputs.new(NLFloatFieldSocket.bl_idname, "Power")
+        self.inputs[-1].value = 1
+        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+
+    def get_output_socket_varnames(self):
+        return ["OUT"]
+
+    def draw_buttons(self, context, layout):
+        layout.prop(self, "value_type", text='')
+
+    def get_netlogic_class_name(self):
+        return "bgelogic.VehicleApplyBraking"
+
+    def get_input_sockets_field_names(self):
+        return ["condition", "constraint", "wheelcount", 'power']
+
+    def write_cell_fields_initialization(self, cell_varname, uids, line_writer):
+        NetLogicStatementGenerator.write_cell_fields_initialization(self, cell_varname, uids, line_writer)
+        line_writer.write_line("{}.{} = '{}'", cell_varname, "value_type", self.value_type)
+
+if not bpy.app.version < (2, 80, 0):
+    _nodes.append(NLVehicleApplyBraking)
+
 
 
 class NLSetObjectAttributeActionNode(bpy.types.Node, NLActionNode):
@@ -5114,6 +5151,37 @@ class NLActionApplyForce(bpy.types.Node, NLActionNode):
 
 
 _nodes.append(NLActionApplyForce)
+
+
+class NLActionApplyImpulse(bpy.types.Node, NLActionNode):
+    bl_idname = "NLActionApplyImpulse"
+    bl_label = "Apply Impulse"
+    nl_category = "Transformation"
+    local = bpy.props.BoolProperty(default=True, update=update_tree_code)
+
+    def init(self, context):
+        NLActionNode.init(self, context)
+        tools.register_inputs(
+            self,
+            NLConditionSocket, "Condition",
+            NLGameObjectSocket, "Object",
+            NLVec3FieldSocket, "Point",
+            NLVec3FieldSocket, "Impulse")
+        
+        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+
+    def get_output_socket_varnames(self):
+        return ["OUT"]
+
+    def draw_buttons(self, context, layout):
+        layout.prop(self, "local", toggle=True, text="Apply Local" if self.local else "Apply Global")
+
+    def get_netlogic_class_name(self): return "bgelogic.ActionApplyImpulse"
+    def get_input_sockets_field_names(self): return ["condition", "game_object", "point", 'impulse']
+    def get_nonsocket_fields(self): return [("local", lambda : "True" if self.local else "False")]
+
+
+_nodes.append(NLActionApplyImpulse)
 
 
 class NLActionCharacterJump(bpy.types.Node, NLActionNode):
@@ -5841,6 +5909,7 @@ class NLActionAlignAxisToVector(bpy.types.Node, NLActionNode):
         self.inputs.new(NLVec3FieldSocket.bl_idname, "Vector")
         self.inputs.new(NLSocketLocalAxis.bl_idname, "Axis")
         self.inputs.new(NLSocketAlphaFloat.bl_idname, "Factor")
+        self.inputs[-1].value = 1.0
         self.outputs.new(NLConditionSocket.bl_idname, 'Done')
 
     def get_output_socket_varnames(self):
