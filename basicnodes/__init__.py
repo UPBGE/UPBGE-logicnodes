@@ -175,10 +175,10 @@ _enum_readable_member_names = [
     ),
     ("localTransform", "Local Transform", "The local transform of the object"),
     ("localScale", "Scale", "The local scale of the object"),
-    ("localLinearVelocity", "Local Velocity", "The local velocity of the object"),
-    ("localAngularVelocity", "Local Rotational Velocity", "The local rotational velocity of the object"),
-    ("worldLinearVelocity", "World Velocity", "The local velocity of the object"),
-    ("worldAngularVelocity", "World Rotational Velocity", "The local rotational velocity of the object"),
+    ("localLinearVelocity", "Local Velocity", "The local linear velocity of the object"),
+    ("localAngularVelocity", "Local Torque", "The local rotational velocity of the object"),
+    ("worldLinearVelocity", "World Velocity", "The local linear velocity of the object"),
+    ("worldAngularVelocity", "World Torque", "The local rotational velocity of the object"),
     ("color", "Color", "The solid color of the object"),
     ("name", "Name", "The name of the object"),
     (
@@ -204,10 +204,10 @@ _enum_writable_member_names = [
     ),
     ("localTransform", "Local Transform", "The local transform of the object"),
     ("localScale", "Scale", "The local scale of the object"),
-    ("localLinearVelocity", "Local Velocity", "The local velocity of the object"),
-    ("localAngularVelocity", "Local Rotational Velocity", "The local rotational velocity of the object"),
-    ("worldLinearVelocity", "World Velocity", "The local velocity of the object"),
-    ("worldAngularVelocity", "World Rotational Velocity", "The local rotational velocity of the object"),
+    ("localLinearVelocity", "Local Velocity", "The local linear velocity of the object"),
+    ("localAngularVelocity", "Local Torque", "The local rotational velocity of the object"),
+    ("worldLinearVelocity", "World Velocity", "The local linear velocity of the object"),
+    ("worldAngularVelocity", "World Torque", "The local rotational velocity of the object"),
     ("color", "Color", "The solid color of the object")
 ]
 
@@ -3927,6 +3927,8 @@ class NLConditionMouseWheelMoved(bpy.types.Node, NLConditionNode):
         return "bgelogic.ConditionMouseScrolled"
     def get_input_sockets_field_names(self):
         return ["wheel_direction"]
+
+
 _nodes.append(NLConditionMouseWheelMoved)
 
 
@@ -3947,10 +3949,10 @@ class NLConditionCollisionNode(bpy.types.Node, NLConditionNode):
 
     def get_netlogic_class_name(self):
         return "bgelogic.ConditionCollision"
-    
+
     def get_input_sockets_field_names(self):
         return ["game_object"]
-    
+
     def get_output_socket_varnames(self):
         return [OUTCELL, "TARGET", "POINT", "NORMAL", "OBJECTS", "OPN_SET"]
 
