@@ -5837,7 +5837,7 @@ class NLActionPlayActionNode(bpy.types.Node, NLActionNode):
     def init(self, context):
         NLActionNode.init(self, context)
         self.inputs.new(NLConditionSocket.bl_idname, "Condition")
-        self.inputs.new(NLGameObjectSocket.bl_idname, "Armature")
+        self.inputs.new(NLGameObjectSocket.bl_idname, "Object / Armature")
         self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Action Name")
         self.inputs.new(NLBooleanSocket.bl_idname, "Stop When Done")
         self.inputs[-1].value = True
@@ -5864,6 +5864,8 @@ class NLActionPlayActionNode(bpy.types.Node, NLActionNode):
         "priority", "play_mode", "layer_weight", "speed", "blendin", "blend_mode"]
     def get_output_socket_varnames(self):
         return ["STARTED", "RUNNING", "FINISHED", "FRAME"]
+
+
 _nodes.append(NLActionPlayActionNode)
 
 
