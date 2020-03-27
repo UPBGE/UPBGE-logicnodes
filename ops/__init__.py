@@ -706,7 +706,7 @@ class UpdateCodeMessageBox(bpy.types.Operator):
 class NLGenerateLogicNetworkOperatorAll(bpy.types.Operator):
     bl_idname = "bge_netlogic.generate_logicnetwork_all"
     bl_label = "Generate LogicNetwork"
-    bl_description = "Create the code needed to execute the current logic tree"
+    bl_description = "Create the code needed to execute the all logic trees"
 
     @classmethod
     def poll(cls, context):

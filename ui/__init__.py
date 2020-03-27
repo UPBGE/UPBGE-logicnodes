@@ -392,6 +392,10 @@ class BGELogicTreeInfoPanel(bpy.types.Panel):
             bge_netlogic.ops.NLGenerateLogicNetworkOperator.bl_idname,
             text="Update Code"
         )
+        layout.operator(
+            bge_netlogic.ops.NLGenerateLogicNetworkOperatorAll.bl_idname,
+            text="Generate All Code"
+        )
         layout.separator()
         selected_objects = [
             ob for ob in context.scene.objects if ob.select_get()

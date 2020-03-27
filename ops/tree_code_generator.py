@@ -116,14 +116,15 @@ class TreeCodeGenerator(object):
         return uid_map._list_cell_names(), uid_map
 
     def _sort_cellvarnames(self, node_cellvar_list, uid_map):
-        #sorting is effective only in serial execution context. Because the python vm is basically a serial only
-        #machine, we force a potentially parallel network to work as a serial one. Shame on GIL.
+        # sorting is effective only in serial execution context. Because the python vm is basically a serial only
+        # machine, we force a potentially parallel network to work as a serial one. Shame on GIL.
         available_cells = list(node_cellvar_list)
         added_cells = []
         while available_cells:
             for cell_name in available_cells:
+                print(cell_name)
                 node = uid_map.get_node_for_varname(cell_name)
-                #if all the links of node are either constant or cells in added_cells, then this node can be put in the list
+                # if all the links of node are either constant or cells in added_cells, then this node can be put in the list
                 if self._test_node_links(node, added_cells, uid_map):
                     available_cells.remove(cell_name)
                     added_cells.append(cell_name)

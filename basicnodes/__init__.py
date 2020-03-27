@@ -174,7 +174,7 @@ _enum_readable_member_names = [
         "The local orientation of the object"
     ),
     ("localTransform", "Local Transform", "The local transform of the object"),
-    ("localScale", "Scale", "The local scale of the object"),
+    ("worldScale", "Scale", "The global scale of the object"),
     ("localLinearVelocity", "Local Velocity", "The local linear velocity of the object"),
     ("localAngularVelocity", "Local Torque", "The local rotational velocity of the object"),
     ("worldLinearVelocity", "World Velocity", "The local linear velocity of the object"),
@@ -203,7 +203,7 @@ _enum_writable_member_names = [
         "The local orientation of the object"
     ),
     ("localTransform", "Local Transform", "The local transform of the object"),
-    ("localScale", "Scale", "The local scale of the object"),
+    ("worldScale", "Scale", "The global scale of the object"),
     ("localLinearVelocity", "Local Velocity", "The local linear velocity of the object"),
     ("localAngularVelocity", "Local Torque", "The local rotational velocity of the object"),
     ("worldLinearVelocity", "World Velocity", "The local linear velocity of the object"),
@@ -576,7 +576,6 @@ class NetLogicStatementGenerator(NetLogicType):
             output_node.outputs
         )
 
-        print(output_socket_index)
         assert isinstance(output_node, NetLogicStatementGenerator)
         output_node_varname = uids.get_varname_for_node(output_node)
         output_map = output_node.get_output_socket_varnames()
@@ -4126,6 +4125,30 @@ class NLConditionLogicOperation(bpy.types.Node, NLConditionNode):
 _nodes.append(NLConditionLogicOperation)
 
 
+class NLConditionCompareVecs(bpy.types.Node, NLConditionNode):
+    bl_idname = "NLConditionCompareVecs"
+    bl_label = "Compare Vectors"
+    nl_category = "Math"
+    operator = bpy.props.EnumProperty(items=_enum_logic_operators, update=update_tree_code)
+
+    def draw_buttons(self, context, layout):
+        layout.prop(self, "operator", text='')
+    
+    def init(self, context):
+        NLConditionNode.init(self, context)
+        self.inputs.new(NLBooleanSocket.bl_idname, "Compare All")
+        self.inputs[-1].value = True
+        self.inputs.new(NLVec3FieldSocket.bl_idname, "Compare This")
+        self.inputs.new(NLVec3FieldSocket.bl_idname, "To This")
+        self.outputs.new(NLConditionSocket.bl_idname, "If True")
+    def get_netlogic_class_name(self): return "bgelogic.ConditionCompareVecs"
+    def get_input_sockets_field_names(self): return ['all', "param_a", "param_b"]
+    def write_cell_fields_initialization(self, cell_varname, uids, line_writer):
+        NetLogicStatementGenerator.write_cell_fields_initialization(self, cell_varname, uids, line_writer)
+        line_writer.write_line("{}.{} = {}", cell_varname, "operator", self.operator)
+_nodes.append(NLConditionCompareVecs)
+
+
 class NLConditionDistanceCheck(bpy.types.Node, NLConditionNode):
     bl_idname = "NLConditionDistanceCheck"
     bl_label = "Check Distance"
@@ -5948,6 +5971,25 @@ class NLActionTimeBarrier(bpy.types.Node, NLActionNode):
 _nodes.append(NLActionTimeBarrier)
 
 
+class NLActionTimeDelay(bpy.types.Node, NLActionNode):
+    bl_idname = "NLActionTimeDelay"
+    bl_label = "Delay"
+    nl_category = "Time"
+    def init(self, context):
+        NLActionNode.init(self, context)
+        self.inputs.new(NLConditionSocket.bl_idname, "Condition")
+        self.inputs.new(NLPositiveFloatSocket.bl_idname, "Delay Sec.")
+        self.inputs.new(NLBooleanSocket.bl_idname, "Repeat")
+        self.inputs[-1].use_toggle = True
+        self.inputs[-1].true_label = "Repeat"
+        self.inputs[-1].false_label = "Do not repeat"
+        self.inputs[-1].value = True
+        self.outputs.new(NLConditionSocket.bl_idname, "Out")
+    def get_netlogic_class_name(self): return "bgelogic.ActionTimeDelay"
+    def get_input_sockets_field_names(self): return ["condition", "delay", "repeat"]
+_nodes.append(NLActionTimeDelay)
+
+
 #When the condition is True, set to True then do the next check only after N seconds have elapsed
 class NLActionTimeFilter(bpy.types.Node, NLActionNode):
     bl_idname = "NLActionTimeFilter"
@@ -6201,9 +6243,9 @@ class NLActionSetDynamicsNode(bpy.types.Node, NLActionNode):
         NLActionNode.init(self, context)
         self.inputs.new(NLConditionSocket.bl_idname, "Condition")
         self.inputs.new(NLGameObjectSocket.bl_idname, "Object")
+        self.inputs.new(NLBooleanSocket.bl_idname, "Suspend")
         self.inputs.new(NLBooleanSocket.bl_idname, "Ghost")
         self.inputs[-1].value = False
-        self.inputs.new(NLBooleanSocket.bl_idname, "Suspend")
         self.outputs.new(NLConditionSocket.bl_idname, 'Done')
 
     def get_output_socket_varnames(self):
@@ -6212,7 +6254,7 @@ class NLActionSetDynamicsNode(bpy.types.Node, NLActionNode):
     def get_netlogic_class_name(self):
         return "bgelogic.ActionSetDynamics"
     def get_input_sockets_field_names(self):
-        return ["condition", "game_object", "ghost", "activate"]
+        return ["condition", "game_object", "activate", 'ghost']
 _nodes.append(NLActionSetDynamicsNode)
 
 

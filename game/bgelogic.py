@@ -2799,7 +2799,7 @@ class ConditionValueTrigger(ConditionCell):
 
 
 class ConditionLogicOp(ConditionCell):
-    def __init__(self, operator='ADD'):
+    def __init__(self, operator='GREATER'):
         ConditionCell.__init__(self)
         self.operator = operator
         self.param_a = None
@@ -2817,7 +2817,7 @@ class ConditionLogicOp(ConditionCell):
         if operator is STATUS_WAITING:
             return
         self._set_ready()
-        if operator > 1:  # eq and neq ar valid for None
+        if operator > 1:  # eq and neq are valid for None
             if a is None:
                 return
             if b is None:
@@ -2825,6 +2825,56 @@ class ConditionLogicOp(ConditionCell):
         if operator is None:
             return
         self._set_value(LOGIC_OPERATORS[operator](a, b))
+
+
+class ConditionCompareVecs(ConditionCell):
+    def __init__(self, operator='GREATER'):
+        ConditionCell.__init__(self)
+        self.operator = operator
+        self.all = None
+        self.param_a = None
+        self.param_b = None
+
+    def get_vec_val(self, op, a, b, all):
+        if all:
+            if (
+                LOGIC_OPERATORS[op](a.x, b.x) and
+                LOGIC_OPERATORS[op](a.y, b.y) and
+                LOGIC_OPERATORS[op](a.z, b.z)
+            ):
+                return True
+        else:
+            if (
+                LOGIC_OPERATORS[op](a.x, b.x) or
+                LOGIC_OPERATORS[op](a.y, b.y) or
+                LOGIC_OPERATORS[op](a.z, b.z)
+            ):
+                return True
+
+    def evaluate(self):
+        a = self.get_parameter_value(self.param_a)
+        b = self.get_parameter_value(self.param_b)
+        all_values = self.get_parameter_value(self.all)
+        operator = self.get_parameter_value(self.operator)
+        STATUS_WAITING = LogicNetworkCell.STATUS_WAITING
+        if a is STATUS_WAITING:
+            return
+        if b is STATUS_WAITING:
+            return
+        if all_values is STATUS_WAITING:
+            return
+        if operator is STATUS_WAITING:
+            return
+        self._set_ready()
+        if operator > 1:  # eq and neq are valid for None
+            if a is None:
+                return
+            if b is None:
+                return
+        if operator is None:
+            return
+        self._set_value(self.get_vec_val(operator, a, b, all_values))
+
 
 
 class ConditionDistanceCheck(ConditionCell):
@@ -4381,6 +4431,8 @@ class ActionSetObjectAttribute(ActionCell):
             )
         except Exception:
             print('Set Object Data Node: Could Not Set Value for {}!'.format(game_object_value))
+        if attribute_value_value == 'worldScale':
+            game_object_value.reinstancePhysicsMesh(game_object_value, game_object_value.meshes[0])
         self.done = True
 
 
@@ -5251,7 +5303,7 @@ class ActionRemoveParent(ActionCell):
             return
         if not child_object.parent:
             return
-        child_object.setParent(None)
+        child_object.removeParent()
         self.done = True
 
 
@@ -5493,22 +5545,74 @@ class ActionTimeBarrier(ActionCell):
         self._triggered_time = None
         self._triggered = False
         self._condition_true_time = 0.0
+        self._set_true = False
 
     def get_done(self):
         return self.done
 
     def evaluate(self):
+        STATUS_WAITING = LogicNetworkCell.STATUS_WAITING
+        condition = self.get_parameter_value(self.condition)
+        delay = self.get_parameter_value(self.delay)
+        repeat = self.get_parameter_value(self.repeat)
+        if repeat is STATUS_WAITING:
+            return
         if self._triggered:
+            if repeat:
+                self._set_ready()
+                self._set_value(True)
             self._set_ready()
             self._set_value(False)
             delta = self.network.timeline - self._triggered_time
             if delta < self._trigger_delay:
                 return
+        if condition is STATUS_WAITING:
+            return
+        if delay is STATUS_WAITING:
+            return
+        self._set_ready()
+        if condition is None:
+            return
+        if delay is None:
+            return
+        if repeat is None:
+            return
+        self._set_value(False)
+        if not condition:
+            self._set_true = False
+            self._condition_true_time = 0.0
+            return
+        if condition:
+            self._condition_true_time += self.network.time_per_frame
+            if self._condition_true_time >= delay:
+                self._triggered = True
+                self._trigger_delay = delay
+                self._triggered_time = self.network.timeline
+                self._set_value(True)
+
+
+class ActionTimeDelay(ActionCell):
+    def __init__(self):
+        ActionCell.__init__(self)
+        self.condition = None
+        self.delay = None
+        self.repeat = None
+        self._trigger_delay = None
+        self._triggered_time = None
+        self._triggered = False
+        self._condition_true_time = 0.0
+
+    def get_done(self):
+        return self.done
+
+    def evaluate(self):
         STATUS_WAITING = LogicNetworkCell.STATUS_WAITING
         condition = self.get_parameter_value(self.condition)
         delay = self.get_parameter_value(self.delay)
         repeat = self.get_parameter_value(self.repeat)
         if condition is STATUS_WAITING:
+            return
+        if not condition and not self._triggered:
             return
         if delay is STATUS_WAITING:
             return
@@ -5522,15 +5626,14 @@ class ActionTimeBarrier(ActionCell):
         if repeat is None:
             return
         self._set_value(False)
-        if not condition:
-            self._condition_true_time = 0.0
-            return
         if condition:
+            self._triggered = True
+        if self._triggered:
             self._condition_true_time += self.network.time_per_frame
             if self._condition_true_time >= delay:
-                self._triggered = True
                 self._trigger_delay = delay
                 self._triggered_time = self.network.timeline
+                self._triggered = False
                 self._set_value(True)
 
 
@@ -5538,8 +5641,8 @@ class ActionSetDynamics(ActionCell):
     def __init__(self):
         self.condition = None
         self.game_object = None
-        self.ghost = None
         self.activate = False
+        self.ghost = None
         self.done = None
         self.OUT = LogicNetworkSubCell(self, self.get_done)
 
@@ -5566,14 +5669,11 @@ class ActionSetDynamics(ActionCell):
         self._set_ready()
         if none_or_invalid(game_object):
             return
-        print('Here shoudl asdak haonn')
         if activate:
-            print('activate')
             game_object.suspendDynamics(ghost)
         else:
-            print('deactiv')
             game_object.restoreDynamics()
-        self.done = False
+        self.done = True
 
 
 class ActionEndObject(ActionCell):
