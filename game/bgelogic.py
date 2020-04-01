@@ -1024,6 +1024,20 @@ class ParameterParentGameObject(ParameterCell):
         self._set_value(go.parent)
 
 
+class ParameterAxisVector(ParameterCell):
+    def __init__(self):
+        ParameterCell.__init__(self)
+        self.game_object = None
+
+    def evaluate(self):
+        self._set_ready()
+        obj = self.get_parameter_value(self.game_object)
+        (translation, rotation, scale) = obj.matrix_world.decompose()
+        local_axis = mathutils.Vector((0.0, 1.0, 0.0))
+        local_axis_global_coords = rotation @ local_axis
+        self._set_value(local_axis_global_coords)
+
+
 class ParameterSwitchValue(ParameterCell):
     def __init__(self):
         ParameterCell.__init__(self)

@@ -6244,6 +6244,26 @@ class NLParameterGameObjectParent(bpy.types.Node, NLParameterNode):
 _nodes.append(NLParameterGameObjectParent)
 
 
+class NLParameterAxisVector(bpy.types.Node, NLParameterNode):
+    bl_idname = "NLParameterAxisVector"
+    bl_label = "Get Axis Vector"
+    nl_category = "Objects"
+
+    def init(self, context):
+        NLParameterNode.init(self, context)
+        self.inputs.new(NLGameObjectSocket.bl_idname, "Object")
+        self.outputs.new(NLVec3FieldSocket.bl_idname, "Vector")
+
+    def get_netlogic_class_name(self):
+        return "bgelogic.ParameterAxisVector"
+
+    def get_input_sockets_field_names(self):
+        return ["game_object"]
+
+
+_nodes.append(NLParameterAxisVector)
+
+
 class NLActionEditArmatureConstraint(bpy.types.Node, NLActionNode):
     bl_idname = "NLActionEditArmatureConstraint"
     bl_label = "Edit Armature Constraint"
