@@ -1408,6 +1408,23 @@ class GetSensor(ParameterCell):
         self._set_value(game_obj.sensors[self.sens_name].positive)
 
 
+class GetSensorByName(ParameterCell):
+
+    def __init__(self):
+        ParameterCell.__init__(self)
+        self.obj = None
+        self.name = None
+
+    def evaluate(self):
+        obj = self.get_parameter_value(self.obj)
+        name = self.get_parameter_value(self.name)
+        if name in obj.sensors:
+            self._set_ready()
+            self._set_value(obj.sensors[name].positive)
+        else:
+            print("{} has no Sensor named '{}'!".format(obj.name, name))
+
+
 class SensorValue(ParameterCell):
 
     @classmethod
@@ -5006,6 +5023,41 @@ class InitEmptyDict(ActionCell):
         self.done = True
 
 
+class InitNewDict(ActionCell):
+    def __init__(self):
+        ActionCell.__init__(self)
+        self.condition = None
+        self.dict = None
+        self.key = None
+        self.val = None
+        self.done = None
+        self.OUT = LogicNetworkSubCell(self, self.get_done)
+        self.DICT = LogicNetworkSubCell(self, self.get_dict)
+
+    def get_done(self):
+        return self.done
+
+    def get_dict(self):
+        return self.dict
+
+    def evaluate(self):
+        self.done = False
+        condition = self.get_parameter_value(self.condition)
+        if condition is LogicNetworkCell.STATUS_WAITING:
+            return
+        key = self.get_parameter_value(self.key)
+        if key is LogicNetworkCell.STATUS_WAITING:
+            return
+        value = self.get_parameter_value(self.val)
+        if value is LogicNetworkCell.STATUS_WAITING:
+            return
+        if not condition:
+            return
+        self._set_ready()
+        self.dict = {str(key): value}
+        self.done = True
+
+
 class SetDictKeyValue(ActionCell):
     def __init__(self):
         ActionCell.__init__(self)
@@ -5113,6 +5165,37 @@ class InitEmptyList(ActionCell):
             return
         self._set_ready()
         self.list = [None for x in range(length)]
+        self.done = True
+
+
+class InitNewList(ActionCell):
+    def __init__(self):
+        ActionCell.__init__(self)
+        self.condition = None
+        self.value = None
+        self.list = None
+        self.done = None
+        self.OUT = LogicNetworkSubCell(self, self.get_done)
+        self.LIST = LogicNetworkSubCell(self, self.get_list)
+
+    def get_done(self):
+        return self.done
+
+    def get_list(self):
+        return self.list
+
+    def evaluate(self):
+        self.done = False
+        condition = self.get_parameter_value(self.condition)
+        if condition is LogicNetworkCell.STATUS_WAITING:
+            return
+        if not condition:
+            return
+        value = self.get_parameter_value(self.value)
+        if value is LogicNetworkCell.STATUS_WAITING:
+            return
+        self._set_ready()
+        self.list = [value]
         self.done = True
 
 
@@ -5628,6 +5711,7 @@ class ActionTimeDelay(ActionCell):
         self._set_value(False)
         if condition:
             self._triggered = True
+            self._condition_true_time = 0.0
         if self._triggered:
             self._condition_true_time += self.network.time_per_frame
             if self._condition_true_time >= delay:

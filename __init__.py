@@ -401,31 +401,35 @@ def _get_key_for_class(c):
 _registered_classes = sorted(_registered_classes, key=_get_key_for_class)
 
 
-#Create the menu items that allow the user to add nodes to a tree
+# Create the menu items that allow the user to add nodes to a tree
+
+
 def _list_menu_nodes():
     proxy_map = {}
-    #proxy_map["Basic Uncategorized Parameters"] = []
-    #proxy_map["Basic Uncategorized Conditions"] = []
-    #proxy_map["Basic Uncategorized Actions"] = []
+
     def get_param_list(c): return proxy_map["Basic Uncategorized Parameters"]
+
     def get_cond_list(c): return proxy_map["Basic Uncategorized Conditions"]
+
     def get_act_list(c): return proxy_map["Basic Uncategorized Actions"]
-    def get_cat_list(c):
-        catname = c.nl_category
-        catlist = proxy_map.get(catname)
+
+    def get_cat_list(cat):
+        catlist = proxy_map.get(cat)
         if catlist is None:
             catlist = []
-            proxy_map[catname] = catlist
+            proxy_map[cat] = catlist
         return catlist
     for c in _registered_classes:
-        if hasattr(c, "nl_category"):
-            get_cat_list(c).append(nodeitems_utils.NodeItem(c.bl_idname))
+        if hasattr(c, "nl_category") and not hasattr(c, 'nl_subcat'):
+            get_cat_list(c.nl_category).append(nodeitems_utils.NodeItem(c.bl_idname))
         elif issubclass(c, basicnodes.NLParameterNode):
             get_param_list(c).append(nodeitems_utils.NodeItem(c.bl_idname))
         elif issubclass(c, basicnodes.NLConditionNode):
             get_cond_list(c).append(nodeitems_utils.NodeItem(c.bl_idname))
         elif issubclass(c, basicnodes.NLActionNode):
             get_act_list(c).append(nodeitems_utils.NodeItem(c.bl_idname))
+
+
     pmap_keys = list(proxy_map.keys())
     pmap_keys.sort()
     menu_nodes = []

@@ -1,5 +1,6 @@
 import re
 import bpy
+import nodeitems_utils
 import bge_netlogic
 from bge_netlogic import utilities as tools
 
@@ -2790,6 +2791,30 @@ class NLGetSensorNode(bpy.types.Node, NLParameterNode):
 _nodes.append(NLGetSensorNode)
 
 
+class NLGetSensorNameNode(bpy.types.Node, NLParameterNode):
+    bl_idname = "NLGetSensorNameNode"
+    bl_label = "Sensor Positive by Name"
+    nl_category = "Logic Bricks"
+
+    def init(self, context):
+        NLParameterNode.init(self, context)
+        self.inputs.new(NLGameObjectSocket.bl_idname, "From Object")
+        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Sensor Name")
+        self.outputs.new(NLConditionSocket.bl_idname, "If positive")
+
+    def get_input_sockets_field_names(self):
+        return ["obj", "name"]
+
+    def get_netlogic_class_name(self):
+        return "bgelogic.GetSensorByName"
+
+    def get_output_socket_varnames(self):
+        return [OUTCELL]
+
+
+_nodes.append(NLGetSensorNameNode)
+
+
 class NLSensorValueNode(bpy.types.Node, NLParameterNode):
     bl_idname = "NLSensorValueNode"
     bl_label = "Get Sensor Value"
@@ -4136,7 +4161,7 @@ class NLConditionCompareVecs(bpy.types.Node, NLConditionNode):
     
     def init(self, context):
         NLConditionNode.init(self, context)
-        self.inputs.new(NLBooleanSocket.bl_idname, "Compare All")
+        self.inputs.new(NLBooleanSocket.bl_idname, "Verify For All")
         self.inputs[-1].value = True
         self.inputs.new(NLVec3FieldSocket.bl_idname, "Compare This")
         self.inputs.new(NLVec3FieldSocket.bl_idname, "To This")
@@ -4795,6 +4820,29 @@ class NLInitEmptyDict(bpy.types.Node, NLActionNode):
 _nodes.append(NLInitEmptyDict)
 
 
+class NLInitNewDict(bpy.types.Node, NLActionNode):
+    bl_idname = "NLInitNewDict"
+    bl_label = "Dict: Init From Item"
+    nl_category = "Python"
+
+    def init(self, context):
+        NLActionNode.init(self, context)
+        self.inputs.new(NLPseudoConditionSocket.bl_idname, 'Condition')
+        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, 'Key')
+        self.inputs.new(NLValueFieldSocket.bl_idname, '')
+        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+        self.outputs.new(NLDictSocket.bl_idname, 'Dictionary')
+
+    def get_output_socket_varnames(self):
+        return ["OUT", 'DICT']
+
+    def get_netlogic_class_name(self): return "bgelogic.InitNewDict"
+    def get_input_sockets_field_names(self): return ["condition", 'key', 'val']
+
+
+_nodes.append(NLInitNewDict)
+
+
 class NLSetDictKeyValue(bpy.types.Node, NLActionNode):
     bl_idname = "NLSetDictKeyValue"
     bl_label = "Dict: Set Key"
@@ -4844,7 +4892,7 @@ _nodes.append(NLSetDictDelKey)
 
 class NLInitEmptyList(bpy.types.Node, NLActionNode):
     bl_idname = "NLInitEmptyList"
-    bl_label = "List: Init New"
+    bl_label = "List: Init Empty"
     nl_category = "Python"
 
     def init(self, context):
@@ -4862,6 +4910,28 @@ class NLInitEmptyList(bpy.types.Node, NLActionNode):
 
 
 _nodes.append(NLInitEmptyList)
+
+
+class NLInitNewList(bpy.types.Node, NLActionNode):
+    bl_idname = "NLInitNewList"
+    bl_label = "List: Init From Item"
+    nl_category = "Python"
+
+    def init(self, context):
+        NLActionNode.init(self, context)
+        self.inputs.new(NLPseudoConditionSocket.bl_idname, 'Condition')
+        self.inputs.new(NLValueFieldSocket.bl_idname, '')
+        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+        self.outputs.new(NLListSocket.bl_idname, 'List')
+
+    def get_output_socket_varnames(self):
+        return ["OUT", 'LIST']
+
+    def get_netlogic_class_name(self): return "bgelogic.InitNewList"
+    def get_input_sockets_field_names(self): return ["condition", 'value']
+
+
+_nodes.append(NLInitNewList)
 
 
 class NLAppendListItem(bpy.types.Node, NLActionNode):
