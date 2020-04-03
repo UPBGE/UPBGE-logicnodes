@@ -7,7 +7,7 @@ import time
 bl_info = {
     "name": "Logic Nodes",
     "description": (
-        "A Node System to create game logic. Contributors: L_P, Mike King"
+        "A Node System to create game logic. Contributors: L_P"
     ),
     "author": "pgi, Leopold A-C (Iza Zed)",
     "version": (0, 8, 7),
@@ -15,11 +15,6 @@ bl_info = {
     "location": "View Menu",
     "warning": "Beta",
     "category": "Game Engine"
-}
-
-bl_options = {
-    'REGISTER',
-    'UNDO'
 }
 
 _loaded_nodes = []
