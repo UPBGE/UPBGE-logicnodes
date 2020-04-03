@@ -2184,7 +2184,7 @@ class NLParameterSound(bpy.types.Node, NLParameterNode):
         return [OUTCELL, "IS_PLAYING", "CURRENT_FRAME"]
 
 
-#_nodes.append(NLParameterSound)
+# _nodes.append(NLParameterSound)
 
 
 class NLParameterValueFilter3(bpy.types.Node, NLParameterNode):
@@ -2207,7 +2207,7 @@ class NLParameterValueFilter3(bpy.types.Node, NLParameterNode):
         return ["opcode", "parama", "paramb", "paramc"]
 
 
-#_nodes.append(NLParameterValueFilter3)
+# _nodes.append(NLParameterValueFilter3)
 
 
 class NLParameterGetAttribute(bpy.types.Node, NLParameterNode):
@@ -2884,8 +2884,8 @@ class NLSensorPositiveNode(bpy.types.Node, NLParameterNode):
 
 class NLObjectAttributeParameterNode(bpy.types.Node, NLParameterNode):
     bl_idname = "NLObjectAttributeParameterNode"
-    bl_label = "Get Object Data"
-    nl_category = "Objects"
+    bl_label = "Get Position / Rotation / Scale etc."
+    nl_category = "Object Data"
 
     def init(self, context):
         NLParameterNode.init(self, context)
@@ -4552,8 +4552,8 @@ if not bpy.app.version < (2, 80, 0):
 
 class NLSetObjectAttributeActionNode(bpy.types.Node, NLActionNode):
     bl_idname = "NLSetObjectAttributeActionNode"
-    bl_label = "Set Object Data"
-    nl_category = "Objects"
+    bl_label = "Set Position / Rotation / Scale etc."
+    nl_category = "Object Data"
     value_type = bpy.props.EnumProperty(items=_enum_writable_member_names, update=update_tree_code)
 
     def init(self, context):
@@ -4697,7 +4697,7 @@ class NLActionRepeater(bpy.types.Node, NLActionNode):
 
 class NLActionSetGameObjectVisibility(bpy.types.Node, NLActionNode):
     bl_idname = "NLActionSetGameObjectVisibility"
-    bl_label = "Set Object Visibility"
+    bl_label = "Set Visibility"
     nl_category = "Objects"
 
     def init(self, context):
@@ -4752,7 +4752,9 @@ class NLActionFindObjectFromSceneNode(bpy.types.Node, NLActionNode):
     def get_input_sockets_field_names(self): return ["condition", "scene", "query"]
     def get_output_socket_varnames(self):
         return [OUTCELL]
-_nodes.append(NLActionFindObjectFromSceneNode)
+
+
+# _nodes.append(NLActionFindObjectFromSceneNode)
 
 
 class NLActionSetActiveCamera(bpy.types.Node, NLActionNode):
@@ -5663,7 +5665,7 @@ class NLActionEndSceneNode(bpy.types.Node, NLActionNode):
 class NLActionReplaceMesh(bpy.types.Node, NLActionNode):
     bl_idname = "NLActionReplaceMesh"
     bl_label = "Replace Mesh"
-    nl_category = "Objects"
+    nl_category = "Object Data"
 
     def init(self, context):
         NLActionNode.init(self, context)
@@ -6111,7 +6113,7 @@ _nodes.append(NLActionCameraPickNode)
 
 class NLActionSetParentNode(bpy.types.Node, NLActionNode):
     bl_idname = "NLActionSetParentNode"
-    bl_label = "Set Object Parent"
+    bl_label = "Set Parent"
     nl_category = "Objects"
 
     def init(self, context):
@@ -6177,7 +6179,7 @@ _nodes.append(NLParameterGameObjectParent)
 class NLParameterAxisVector(bpy.types.Node, NLParameterNode):
     bl_idname = "NLParameterAxisVector"
     bl_label = "Get Axis Vector"
-    nl_category = "Objects"
+    nl_category = "Object Data"
 
     def init(self, context):
         NLParameterNode.init(self, context)
@@ -6256,8 +6258,8 @@ _nodes.append(NLActionEditBoneNode)
 
 class NLActionSetDynamicsNode(bpy.types.Node, NLActionNode):
     bl_idname = "NLActionSetDynamicsNode"
-    bl_label = "Set Object Dynamics"
-    nl_category = "Objects"
+    bl_label = "Set Dynamics (Physics)"
+    nl_category = "Object Data"
 
     def init(self, context):
         NLActionNode.init(self, context)

@@ -396,10 +396,10 @@ class NLMakeGroupOperator(bpy.types.Operator):
                         output_node = new_nodes[output_socket.node]
                         outdex = self._index_of(output_socket, output_socket.node.outputs)
                         node_tree.links.new(new_node.inputs[index], output_node.outputs[outdex])
-                    except Exception:
+                    except Exception as e:
                         bpy.data.node_groups.remove(node_tree)
-                        print('Some linked Nodes are not added to the group! Aborting...')
-                        return
+                        self.report({"ERROR"}, "Some linked Nodes are not added to the group! Aborting...")
+                        return None
             locs.append(old_node.location)
 
         for old_node in new_nodes:
@@ -410,7 +410,7 @@ class NLMakeGroupOperator(bpy.types.Operator):
         try:
             redir.inputs[1].value = bpy.context.object
         except Exception:
-            print('No Object was selected; Set Object in tree {} manually!'.format(parent_tree.name))
+            self.report({"WARNING"}, 'No Object was selected; Set Object in tree {} manually!'.format(parent_tree.name))
         redir.inputs[2].value = group_name
         redir.location = self.avg_location(locs)
         node_tree.use_fake_user = True
@@ -746,7 +746,7 @@ class NLGenerateLogicNetworkOperatorAll(bpy.types.Operator):
             try:
                 os.mkdir(local_bgelogic_folder)
             except PermissionError:
-                print("Cannot generate the code because the blender file has \
+                self.report({"ERROR"}, "Cannot generate the code because the blender file has \
                     not been saved or the user has no write permission for \
                         the containing folder.")
                 return {"FINISHED"}
@@ -768,10 +768,7 @@ class NLGenerateLogicNetworkOperator(bpy.types.Operator):
             raise Exception(
                 "TREE TO EDIT NOT FOUND - Update Manually"
             )
-            cls.report(
-                {'ERROR'},
-                'Tree to edit not found! Press "Update Code" manually.'
-            )
+            self.report({"ERROR"}, "TREE TO EDIT NOT FOUND - Update Manually")
 
             def oops(self, context):
                 self.layout.label("Tree to edit not found - update manually!")
@@ -814,7 +811,7 @@ class NLGenerateLogicNetworkOperator(bpy.types.Operator):
             try:
                 os.mkdir(local_bgelogic_folder)
             except PermissionError:
-                print("Cannot generate the code because the blender file has \
+                self.report({"ERROR"} ,"Cannot generate the code because the blender file has \
                     not been saved or the user has no write permission for \
                         the containing folder.")
                 return {"FINISHED"}
