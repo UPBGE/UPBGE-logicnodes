@@ -1032,10 +1032,8 @@ class ParameterAxisVector(ParameterCell):
     def evaluate(self):
         self._set_ready()
         obj = self.get_parameter_value(self.game_object)
-        (translation, rotation, scale) = obj.matrix_world.decompose()
-        local_axis = mathutils.Vector((0.0, 1.0, 0.0))
-        local_axis_global_coords = rotation @ local_axis
-        self._set_value(local_axis_global_coords)
+        front_vector = LO_AXIS_TO_VECTOR[self.axis]
+        self._set_value(obj.getAxisVect(front_vector))
 
 
 class ParameterSwitchValue(ParameterCell):

@@ -6248,17 +6248,23 @@ class NLParameterAxisVector(bpy.types.Node, NLParameterNode):
     bl_idname = "NLParameterAxisVector"
     bl_label = "Get Axis Vector"
     nl_category = "Objects"
+    axis = bpy.props.EnumProperty(items=_enum_local_oriented_axis, update=update_tree_code)
 
     def init(self, context):
         NLParameterNode.init(self, context)
         self.inputs.new(NLGameObjectSocket.bl_idname, "Object")
         self.outputs.new(NLVec3FieldSocket.bl_idname, "Vector")
 
+    def draw_buttons(self, context, layout):
+        layout.prop(self, 'axis', text='')
+
     def get_netlogic_class_name(self):
         return "bgelogic.ParameterAxisVector"
 
     def get_input_sockets_field_names(self):
         return ["game_object"]
+
+    def get_nonsocket_fields(self): return [("axis", lambda : self.axis)]
 
 
 _nodes.append(NLParameterAxisVector)
