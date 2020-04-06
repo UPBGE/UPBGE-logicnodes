@@ -4717,6 +4717,8 @@ class NLActionRepeater(bpy.types.Node, NLActionNode):
                         output_uid = uids.get_varname_for_node(output_target)
                     line_writer.write_line("{}.output_cells.append({})", cell_varname, output_uid)
                     uids.remove_cell_from_tree(output_uid)
+
+
 #_nodes.append(NLActionRepeater)
 
 
@@ -4751,15 +4753,15 @@ class NLActionFindObjectNode(bpy.types.Node, NLActionNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
-        self.inputs.new(NLPseudoConditionSocket.bl_idname, "Condition")
         self.inputs.new(NLGameObjectSocket.bl_idname, "Object")
         self.outputs.new(NLGameObjectSocket.bl_idname, "Object")
 
     def get_netlogic_class_name(self): return "bgelogic.ActionFindObject"
-    def get_input_sockets_field_names(self): return ["condition", "game_object"]
+    def get_input_sockets_field_names(self): return ["game_object"]
     def get_output_socket_varnames(self):
         return [OUTCELL]
 _nodes.append(NLActionFindObjectNode)
+
 
 class NLActionFindObjectFromSceneNode(bpy.types.Node, NLActionNode):
     bl_idname = "NLActionFindObjectFromSceneNode"
@@ -5125,8 +5127,9 @@ class NLActionSetAnimationFrame(bpy.types.Node, NLActionNode):
         self.inputs.new(NLConditionSocket.bl_idname, "Condition")
         self.inputs.new(NLGameObjectSocket.bl_idname, "Object")
         self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Action Name")
-        self.inputs.new(NLPositiveIntegerFieldSocket.bl_idname, "Animation Layer")
-        self.inputs.new(NLPositiveFloatSocket.bl_idname, "Animation Frame")
+        self.inputs.new(NLPositiveIntegerFieldSocket.bl_idname, "Layer")
+        self.inputs.new(NLPositiveFloatSocket.bl_idname, "Frame")
+        self.inputs.new(NLSocketAlphaFloat.bl_idname, "Layer Weight")
         self.outputs.new(NLConditionSocket.bl_idname, 'Done')
 
 
@@ -5136,7 +5139,9 @@ class NLActionSetAnimationFrame(bpy.types.Node, NLActionNode):
     def get_netlogic_class_name(self):
         return "bgelogic.ActionSetAnimationFrame"
     def get_input_sockets_field_names(self):
-        return ["condition", "game_object", "action_name", "action_layer", "action_frame"]
+        return ["condition", "game_object", "action_name", "action_layer", "action_frame", 'layer_weight']
+
+
 _nodes.append(NLActionSetAnimationFrame)
 
 

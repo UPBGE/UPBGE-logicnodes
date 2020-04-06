@@ -4630,15 +4630,7 @@ class ActionFindObject(ActionCell):
 
     def evaluate(self):
         self._set_ready()
-        condition = self.get_parameter_value(self.condition)
         game_object = self.get_parameter_value(self.game_object)
-        if (condition is None):
-            # if no condition, early out
-            return self._set_value(game_object)
-        self._set_value(None)  # remove invalid objects, if any
-        if condition is False:  # no need to evaluate
-            return
-        # condition is either True or None
         self._set_value(game_object)
 
 
@@ -6966,7 +6958,7 @@ class ActionPlayAction(ActionCell):
                         blendin=blendin,
                         play_mode=play_mode,
                         speed=speed,
-                        layer_weight=1 - layer_weight,
+                        layer_weight= 1 - layer_weight,
                         blend_mode=blend_mode)
                     game_object.setActionFrame(playing_frame + speed, layer)
                 # TODO: the meaning of start-end depends
@@ -7044,6 +7036,7 @@ class ActionSetAnimationFrame(ActionCell):
         self.action_layer = None
         self.action_frame = None
         self.action_name = None
+        self.layer_weight = None
         self.done = None
         self.OUT = LogicNetworkSubCell(self, self.get_done)
 
@@ -7060,6 +7053,7 @@ class ActionSetAnimationFrame(ActionCell):
         action_layer = self.get_parameter_value(self.action_layer)
         action_frame = self.get_parameter_value(self.action_frame)
         action_name = self.get_parameter_value(self.action_name)
+        layer_weight = self.get_parameter_value(self.layer_weight)
         self._set_ready()
         if none_or_invalid(game_object):
             return
@@ -7067,13 +7061,17 @@ class ActionSetAnimationFrame(ActionCell):
             return
         if none_or_invalid(action_frame):
             return
+        if none_or_invalid(layer_weight):
+            return
         if not action_name:
             return
+        game_object.stopAction(action_layer)
         game_object.playAction(
             action_name,
             action_frame,
             action_frame,
-            action_layer
+            layer=action_layer,
+            layer_weight=1 - layer_weight
         )
         self.done = True
 
