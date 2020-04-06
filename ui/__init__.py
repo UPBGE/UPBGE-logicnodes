@@ -343,14 +343,11 @@ class BGELogicTreeGroups(bpy.types.Panel):
             bge_netlogic.ops.NLMakeGroupOperator.bl_idname
         )
         layout.separator()
-        layout.label(text='Node Prefabs:')
-        layout.operator(
+        prefabs = layout.box()
+        prefabs.label(text='Node Prefabs:')
+        prefabs.operator(
             bge_netlogic.ops.NLAdd4KeyTemplateOperator.bl_idname
         )
-        #row = layout.row()
-        #name = row.prop(context.scene.group_name, 'name', text='')
-        #row.prop(context.scene.group_name, 'enabled', text='Active when Installed')
-
 
 
 class BGELogicTreeInfoPanel(bpy.types.Panel):
@@ -384,15 +381,17 @@ class BGELogicTreeInfoPanel(bpy.types.Panel):
 
     def draw(self, context):
         layout = self.layout
-        layout.operator(
+        apply = layout.box()
+        apply.operator(
             bge_netlogic.ops.NLApplyLogicOperator.bl_idname,
             text="Apply To Selected"
         ).owner = "BGELogicPanel"
-        layout.operator(
+        code = layout.box()
+        code.operator(
             bge_netlogic.ops.NLGenerateLogicNetworkOperator.bl_idname,
             text="Update Code"
         )
-        layout.operator(
+        code.operator(
             bge_netlogic.ops.NLGenerateLogicNetworkOperatorAll.bl_idname,
             text="Generate All Code"
         )

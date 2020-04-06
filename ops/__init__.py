@@ -6,6 +6,7 @@ import bge_netlogic
 class TreeCodeWriterOperator(bpy.types.Operator):
     bl_idname = "bgenetlogic.treecodewriter_operator"
     bl_label = "Timed code writer"
+    bl_options = {'REGISTER', 'UNDO'}
     timer = None
 
     def modal(self, context, event):
@@ -33,6 +34,7 @@ class TreeCodeWriterOperator(bpy.types.Operator):
 class WaitForKeyOperator(bpy.types.Operator):
     bl_idname = "bge_netlogic.waitforkey"
     bl_label = "Press a Key"
+    bl_options = {'REGISTER', 'UNDO'}
     keycode = bpy.props.StringProperty()
 
     def __init__(self):
@@ -92,6 +94,7 @@ class WaitForKeyOperator(bpy.types.Operator):
 class NLImportProjectNodes(bpy.types.Operator):
     bl_idname = "bge_netlogic.import_nodes"
     bl_label = "Import Logic Nodes"
+    bl_options = {'REGISTER', 'UNDO'}
     filepath = bpy.props.StringProperty(subtype="FILE_PATH")
 
     @classmethod
@@ -198,6 +201,7 @@ def _do_load_project_nodes(context):
 class NLLoadProjectNodes(bpy.types.Operator):
     bl_idname = "bge_netlogic.load_nodes"
     bl_label = "Reload Project Nodes"
+    bl_options = {'REGISTER', 'UNDO'}
     bl_description = "Reload the custom nodes' definitions."
 
     @classmethod
@@ -249,6 +253,7 @@ class NLSelectTreeByNameOperator(bpy.types.Operator):
 class NLRemoveTreeByNameOperator(bpy.types.Operator):
     bl_idname = "bge_netlogic.remove_tree_by_name"
     bl_label = "Remove"
+    bl_options = {'REGISTER', 'UNDO'}
     bl_description = "Remove the tree from the selected objects"
     tree_name = bpy.props.StringProperty()
 
@@ -319,6 +324,7 @@ class NLMakeGroupOperator(bpy.types.Operator):
     bl_idname = "bge_netlogic.make_group"
     bl_label = "Pack Into New Tree"
     bl_description = "Convert selected Nodes to a new tree. Will be applied to selected object. WARNING: All Nodes connected to selection must be selected too"
+    bl_options = {'REGISTER', 'UNDO'}
     owner = bpy.props.StringProperty()
 
     @classmethod
@@ -390,10 +396,10 @@ class NLMakeGroupOperator(bpy.types.Operator):
                         output_node = new_nodes[output_socket.node]
                         outdex = self._index_of(output_socket, output_socket.node.outputs)
                         node_tree.links.new(new_node.inputs[index], output_node.outputs[outdex])
-                    except Exception:
+                    except Exception as e:
                         bpy.data.node_groups.remove(node_tree)
-                        print('Some linked Nodes are not added to the group! Aborting...')
-                        return
+                        self.report({"ERROR"}, "Some linked Nodes are not added to the group! Aborting...")
+                        return None
             locs.append(old_node.location)
 
         for old_node in new_nodes:
@@ -404,7 +410,7 @@ class NLMakeGroupOperator(bpy.types.Operator):
         try:
             redir.inputs[1].value = bpy.context.object
         except Exception:
-            print('No Object was selected; Set Object in tree {} manually!'.format(parent_tree.name))
+            self.report({"WARNING"}, 'No Object was selected; Set Object in tree {} manually!'.format(parent_tree.name))
         redir.inputs[2].value = group_name
         redir.location = self.avg_location(locs)
         node_tree.use_fake_user = True
@@ -439,6 +445,7 @@ class NLAdd4KeyTemplateOperator(bpy.types.Operator):
     bl_idname = "bge_netlogic.add_4_key_temp"
     bl_label = "4 Key Movement"
     bl_description = "Add 4 Key Movement (WASD with normalized vector)"
+    bl_options = {'REGISTER', 'UNDO'}
     owner = bpy.props.StringProperty()
 
     @classmethod
@@ -586,6 +593,7 @@ class NLApplyLogicOperator(bpy.types.Operator):
     bl_idname = "bge_netlogic.apply_logic"
     bl_label = "Apply Logic"
     bl_description = "Apply the current tree to the selected objects."
+    bl_options = {'REGISTER', 'UNDO'}
     owner = bpy.props.StringProperty()
 
     @classmethod
@@ -706,6 +714,7 @@ class UpdateCodeMessageBox(bpy.types.Operator):
 class NLGenerateLogicNetworkOperatorAll(bpy.types.Operator):
     bl_idname = "bge_netlogic.generate_logicnetwork_all"
     bl_label = "Generate LogicNetwork"
+    bl_options = {'REGISTER', 'UNDO'}
     bl_description = "Create the code needed to execute the all logic trees"
 
     @classmethod
@@ -737,7 +746,7 @@ class NLGenerateLogicNetworkOperatorAll(bpy.types.Operator):
             try:
                 os.mkdir(local_bgelogic_folder)
             except PermissionError:
-                print("Cannot generate the code because the blender file has \
+                self.report({"ERROR"}, "Cannot generate the code because the blender file has \
                     not been saved or the user has no write permission for \
                         the containing folder.")
                 return {"FINISHED"}
@@ -750,6 +759,7 @@ class NLGenerateLogicNetworkOperatorAll(bpy.types.Operator):
 class NLGenerateLogicNetworkOperator(bpy.types.Operator):
     bl_idname = "bge_netlogic.generate_logicnetwork"
     bl_label = "Generate LogicNetwork"
+    bl_options = {'REGISTER', 'UNDO'}
     bl_description = "Create the code needed to execute the current logic tree"
 
     @classmethod
@@ -758,10 +768,7 @@ class NLGenerateLogicNetworkOperator(bpy.types.Operator):
             raise Exception(
                 "TREE TO EDIT NOT FOUND - Update Manually"
             )
-            cls.report(
-                {'ERROR'},
-                'Tree to edit not found! Press "Update Code" manually.'
-            )
+            self.report({"ERROR"}, "TREE TO EDIT NOT FOUND - Update Manually")
 
             def oops(self, context):
                 self.layout.label("Tree to edit not found - update manually!")
@@ -804,7 +811,7 @@ class NLGenerateLogicNetworkOperator(bpy.types.Operator):
             try:
                 os.mkdir(local_bgelogic_folder)
             except PermissionError:
-                print("Cannot generate the code because the blender file has \
+                self.report({"ERROR"} ,"Cannot generate the code because the blender file has \
                     not been saved or the user has no write permission for \
                         the containing folder.")
                 return {"FINISHED"}
@@ -829,6 +836,7 @@ class NLGenerateLogicNetworkOperator(bpy.types.Operator):
 class NLAddPropertyOperator(bpy.types.Operator):
     bl_idname = "bge_netlogic.add_game_prop"
     bl_label = "Add Game Property"
+    bl_options = {'REGISTER', 'UNDO'}
     bl_description = "Adds a property available to the UPBGE"
 
     @classmethod
@@ -845,6 +853,7 @@ class NLRemovePropertyOperator(bpy.types.Operator):
     bl_idname = "bge_netlogic.remove_game_prop"
     bl_label = "Add Game Property"
     bl_description = "Remove this property"
+    bl_options = {'REGISTER', 'UNDO'}
     index = bpy.props.IntProperty()
 
     @classmethod
@@ -861,6 +870,7 @@ class NLMovePropertyOperator(bpy.types.Operator):
     bl_idname = "bge_netlogic.move_game_prop"
     bl_label = "Move Game Property"
     bl_description = "Move Game Property"
+    bl_options = {'REGISTER', 'UNDO'}
     index = bpy.props.IntProperty()
     direction = bpy.props.StringProperty()
 
@@ -892,6 +902,7 @@ class NLSwitchInitialNetworkStatusOperator(bpy.types.Operator):
     bl_label = "Enable/Disable at start"
     bl_description = "Enables of disables the logic tree at start for the \
         selected objects"
+    bl_options = {'REGISTER', 'UNDO'}
     tree_name = bpy.props.StringProperty()
     current_status = bpy.props.BoolProperty()
 
@@ -924,6 +935,7 @@ class NLPopupTemplatesOperator(bpy.types.Operator):
     bl_label = "Show Custom Node Templates"
     bl_description = "Load the template code for custom nodes \
         and cells in the text editor"
+    bl_options = {'REGISTER', 'UNDO'}
 
     @classmethod
     def poll(cls, context): return True

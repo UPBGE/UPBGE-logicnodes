@@ -10,16 +10,11 @@ bl_info = {
         "A Node System to create game logic. Contributors: L_P"
     ),
     "author": "pgi, Leopold A-C (Iza Zed)",
-    "version": (0, 8, 7),
+    "version": (0, 8, 8),
     "blender": (2, 83, 0),
     "location": "View Menu",
     "warning": "Beta",
     "category": "Game Engine"
-}
-
-bl_options = {
-    'REGISTER',
-    'UNDO'
 }
 
 _loaded_nodes = []
