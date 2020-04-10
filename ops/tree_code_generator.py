@@ -122,7 +122,6 @@ class TreeCodeGenerator(object):
         added_cells = []
         while available_cells:
             for cell_name in available_cells:
-                print(cell_name)
                 node = uid_map.get_node_for_varname(cell_name)
                 # if all the links of node are either constant or cells in added_cells, then this node can be put in the list
                 if self._test_node_links(node, added_cells, uid_map):
@@ -139,7 +138,7 @@ class TreeCodeGenerator(object):
                 if isinstance(linked_node, bpy.types.NodeReroute):
                     return True
                 linked_node_varname = uid_map.get_varname_for_node(linked_node)
-                if not (linked_node_varname in added_cell_names): return False#node is linked to a cell that has not been resolved
-                pass
-        #all inputs are constant expressions or linked to resolved cells
+                if not (linked_node_varname in added_cell_names):
+                    return False  # node is linked to a cell that has not been resolved
+        # all inputs are constant expressions or linked to resolved cells
         return True

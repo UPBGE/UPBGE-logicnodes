@@ -1092,6 +1092,39 @@ class ParameterObjectProperty(ParameterCell):
             self._set_value(game_object[property_name])
 
 
+class ParameterGetMaterialNodeValue(ParameterCell):
+    def __init__(self):
+        ActionCell.__init__(self)
+        self.game_object = None
+        self.mat_name = None
+        self.node_name = None
+        self.input_slot = None
+        self.val = False
+        self.OUT = LogicNetworkSubCell(self, self._get_val)
+
+    def _get_val(self):
+        return self.val
+
+    def evaluate(self):
+        STATUS_WAITING = LogicNetworkCell.STATUS_WAITING
+        game_object_value = self.get_parameter_value(self.game_object)
+        mat_name = self.get_parameter_value(self.mat_name)
+        node_name = self.get_parameter_value(self.node_name)
+        input_slot = self.get_parameter_value(self.input_slot)
+        if game_object_value is STATUS_WAITING:
+            return
+        if mat_name is STATUS_WAITING:
+            return
+        if node_name is STATUS_WAITING:
+            return
+        if input_slot is STATUS_WAITING:
+            return
+        if none_or_invalid(game_object_value):
+            return
+        self._set_ready()
+        self.val = game_object_value.blenderObject.material_slots[mat_name].material.node_tree.nodes[node_name].inputs[input_slot].default_value
+
+
 class ParameterObjectHasProperty(ParameterCell):
     def __init__(self):
         ParameterCell.__init__(self)
@@ -3920,6 +3953,53 @@ class ActionSetGameObjectGameProperty(ActionCell):
             game_object_value[property_name_value] = property_value_value
 
 
+class ActionSetMaterialNodeValue(ActionCell):
+    def __init__(self):
+        ActionCell.__init__(self)
+        self.condition = None
+        self.game_object = None
+        self.mat_name = None
+        self.node_name = None
+        self.input_slot = None
+        self.value = None
+        self.done = False
+        self.OUT = LogicNetworkSubCell(self, self._get_done)
+
+    def _get_done(self):
+        return self.done
+
+    def evaluate(self):
+        self.done = False
+        STATUS_WAITING = LogicNetworkCell.STATUS_WAITING
+        condition_value = self.get_parameter_value(self.condition)
+        if condition_value is STATUS_WAITING:
+            return
+        if condition_value is False:
+            self._set_ready()
+            return
+        game_object_value = self.get_parameter_value(self.game_object)
+        mat_name = self.get_parameter_value(self.mat_name)
+        node_name = self.get_parameter_value(self.node_name)
+        input_slot = self.get_parameter_value(self.input_slot)
+        value = self.get_parameter_value(self.value)
+        if game_object_value is STATUS_WAITING:
+            return
+        if mat_name is STATUS_WAITING:
+            return
+        if node_name is STATUS_WAITING:
+            return
+        if input_slot is STATUS_WAITING:
+            return
+        if value is STATUS_WAITING:
+            return
+        if none_or_invalid(game_object_value):
+            return
+        if condition_value:
+            self.done = True
+            self._set_ready()
+            game_object_value.blenderObject.material_slots[mat_name].material.node_tree.nodes[node_name].inputs[input_slot].default_value = value
+
+
 class ActionToggleGameObjectGameProperty(ActionCell):
     def __init__(self):
         ActionCell.__init__(self)
@@ -3985,6 +4065,48 @@ class ActionAddToGameObjectGameProperty(ActionCell):
             value = game_object_value[property_name_value]
             game_object_value[property_name_value] = (
                 value + property_value_value
+            )
+
+
+class ActionClampedAddToGameObjectGameProperty(ActionCell):
+    def __init__(self):
+        ActionCell.__init__(self)
+        self.condition = None
+        self.game_object = None
+        self.property_name = None
+        self.property_value = None
+        self.range = None
+
+    def evaluate(self):
+        STATUS_WAITING = LogicNetworkCell.STATUS_WAITING
+        condition_value = self.get_parameter_value(self.condition)
+        if condition_value is STATUS_WAITING:
+            return
+        if condition_value is False:
+            self._set_ready()
+            return
+        game_object_value = self.get_parameter_value(self.game_object)
+        property_name_value = self.get_parameter_value(self.property_name)
+        property_value_value = self.get_parameter_value(self.property_value)
+        val_range = self.get_parameter_value(self.range)
+        if game_object_value is STATUS_WAITING:
+            return
+        if property_name_value is STATUS_WAITING:
+            return
+        if property_value_value is STATUS_WAITING:
+            return
+        self._set_ready()
+        if none_or_invalid(game_object_value):
+            return
+        if condition_value:
+            value = game_object_value[property_name_value]
+            new_val = value + property_value_value
+            if new_val > val_range.y:
+                new_val = val_range.y
+            if new_val < val_range.x:
+                new_val = val_range.x
+            game_object_value[property_name_value] = (
+                new_val
             )
 
 

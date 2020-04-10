@@ -2345,6 +2345,30 @@ class NLGameObjectPropertyParameterNode(bpy.types.Node, NLParameterNode):
 _nodes.append(NLGameObjectPropertyParameterNode)
 
 
+class NLGetMaterialNodeValue(bpy.types.Node, NLActionNode):
+    bl_idname = "NLGetMaterialNodeValue"
+    bl_label = "Get Material Node Value"
+    nl_category = "Materials"
+
+    def init(self, context):
+        NLActionNode.init(self, context)
+        self.inputs.new(NLGameObjectSocket.bl_idname, "Object")
+        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Material Name")
+        self.inputs[-1].value = 'Material'
+        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Node Name")
+        self.inputs[-1].value = 'Node'
+        self.inputs.new(NLIntegerFieldSocket.bl_idname, "Input")
+        self.outputs.new(NLParameterSocket.bl_idname, "Value")
+
+    def get_netlogic_class_name(self): return "bgelogic.ParameterGetMaterialNodeValue"
+    def get_input_sockets_field_names(self): return ["game_object", "mat_name", 'node_name', "input_slot"]
+    def get_output_socket_varnames(self):
+        return ['OUT']
+
+
+_nodes.append(NLGetMaterialNodeValue)
+
+
 class NLGameObjectHasPropertyParameterNode(bpy.types.Node, NLParameterNode):
     bl_idname = "NLGameObjectHasPropertyParameterNode"
     bl_label = "Has Property"
@@ -4336,6 +4360,31 @@ class NLSetGameObjectGamePropertyActionNode(bpy.types.Node, NLActionNode):
 _nodes.append(NLSetGameObjectGamePropertyActionNode)
 
 
+class NLSetMaterialNodeValue(bpy.types.Node, NLActionNode):
+    bl_idname = "NLSetMaterialNodeValue"
+    bl_label = "Set Material Node Value"
+    nl_category = "Materials"
+
+    def init(self, context):
+        NLActionNode.init(self, context)
+        self.inputs.new(NLConditionSocket.bl_idname, "Condition")
+        self.inputs.new(NLGameObjectSocket.bl_idname, "Object")
+        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Material Name")
+        self.inputs[-1].value = 'Material'
+        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Node Name")
+        self.inputs[-1].value = 'Node'
+        self.inputs.new(NLIntegerFieldSocket.bl_idname, "Input")
+        self.inputs.new(NLFloatFieldSocket.bl_idname, 'Value')
+        self.outputs.new(NLConditionSocket.bl_idname, "Done")
+
+    def get_netlogic_class_name(self): return "bgelogic.ActionSetMaterialNodeValue"
+    def get_input_sockets_field_names(self): return ["condition", "game_object", "mat_name", 'node_name', "input_slot", 'value']
+    def get_output_socket_varnames(self):
+        return ['OUT']
+
+_nodes.append(NLSetMaterialNodeValue)
+
+
 class NLToggleGameObjectGamePropertyActionNode(bpy.types.Node, NLActionNode):
     bl_idname = "NLToggleGameObjectGamePropertyActionNode"
     bl_label = "Toggle Property"
@@ -4375,6 +4424,28 @@ class NLAddToGameObjectGamePropertyActionNode(bpy.types.Node, NLActionNode):
     def get_output_socket_varnames(self):
         return ['OUT']
 _nodes.append(NLAddToGameObjectGamePropertyActionNode)
+
+
+class NLClampedAddToGameObjectGamePropertyActionNode(bpy.types.Node, NLActionNode):
+    bl_idname = "NLClampedAddToGameObjectGamePropertyActionNode"
+    bl_label = "Clamped Modify Property"
+    nl_category = "Properties"
+
+    def init(self, context):
+        NLActionNode.init(self, context)
+        self.inputs.new(NLConditionSocket.bl_idname, "Condition")
+        self.inputs.new(NLGameObjectSocket.bl_idname, "Object")
+        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Name")
+        self.inputs[-1].value = 'prop'
+        self.inputs.new(NLFloatFieldSocket.bl_idname, "Value")
+        self.inputs.new(NLVec2FieldSocket.bl_idname, "Range")
+        self.outputs.new(NLConditionSocket.bl_idname, "Done")
+
+    def get_netlogic_class_name(self): return "bgelogic.ActionClampedAddToGameObjectGameProperty"
+    def get_input_sockets_field_names(self): return ["condition", "game_object", "property_name", "property_value", 'range']
+    def get_output_socket_varnames(self):
+        return ['OUT']
+_nodes.append(NLClampedAddToGameObjectGamePropertyActionNode)
 
 
 class NLValueSwitch(bpy.types.Node, NLParameterNode):
