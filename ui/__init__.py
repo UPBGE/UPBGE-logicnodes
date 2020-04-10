@@ -339,6 +339,10 @@ class BGELogicTreeGroups(bpy.types.Panel):
     bl_category = "Item"
     _current_tree = None
 
+    icons = bpy.utils.previews.new()
+    icons_directory = get_icons_directory()
+    icons.load("Icon4Keys", join(icons_directory, "Icon4Keys.png"), 'IMAGE')
+
     @classmethod
     def poll(cls, context):
         enabled = (context.space_data.tree_type == BGELogicTree.bl_idname)
@@ -357,8 +361,11 @@ class BGELogicTreeGroups(bpy.types.Panel):
         layout.separator()
         prefabs = layout.box()
         prefabs.label(text='Node Prefabs:')
-        prefabs.operator(
-            bge_netlogic.ops.NLAdd4KeyTemplateOperator.bl_idname
+        template_col = prefabs.column()
+        template_col.scale_y = 1.4
+        template_col.operator(
+            bge_netlogic.ops.NLAdd4KeyTemplateOperator.bl_idname,
+            icon_value=self.icons["Icon4Keys"].icon_id,
         )
 
 
@@ -368,7 +375,7 @@ class BGELogicTreeInfoPanel(bpy.types.Panel):
     bl_region_type = "UI"
     bl_category = "Item"
     _current_tree = None
-    
+
     icons = bpy.utils.previews.new()
     icons_directory = get_icons_directory()
     icons.load("IconApply", join(icons_directory, "IconApply.png"), 'IMAGE')
