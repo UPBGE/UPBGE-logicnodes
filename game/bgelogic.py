@@ -1032,10 +1032,8 @@ class ParameterAxisVector(ParameterCell):
     def evaluate(self):
         self._set_ready()
         obj = self.get_parameter_value(self.game_object)
-        (translation, rotation, scale) = obj.matrix_world.decompose()
-        local_axis = mathutils.Vector((0.0, 1.0, 0.0))
-        local_axis_global_coords = rotation @ local_axis
-        self._set_value(local_axis_global_coords)
+        front_vector = LO_AXIS_TO_VECTOR[self.axis]
+        self._set_value(obj.getAxisVect(front_vector))
 
 
 class ParameterSwitchValue(ParameterCell):
@@ -1422,6 +1420,23 @@ class GetSensor(ParameterCell):
             return
         self._set_ready()
         self._set_value(game_obj.sensors[self.sens_name].positive)
+
+
+class GetSensorByName(ParameterCell):
+
+    def __init__(self):
+        ParameterCell.__init__(self)
+        self.obj = None
+        self.name = None
+
+    def evaluate(self):
+        obj = self.get_parameter_value(self.obj)
+        name = self.get_parameter_value(self.name)
+        if name in obj.sensors:
+            self._set_ready()
+            self._set_value(obj.sensors[name].positive)
+        else:
+            print("{} has no Sensor named '{}'!".format(obj.name, name))
 
 
 class SensorValue(ParameterCell):
@@ -4617,15 +4632,7 @@ class ActionFindObject(ActionCell):
 
     def evaluate(self):
         self._set_ready()
-        condition = self.get_parameter_value(self.condition)
         game_object = self.get_parameter_value(self.game_object)
-        if (condition is None):
-            # if no condition, early out
-            return self._set_value(game_object)
-        self._set_value(None)  # remove invalid objects, if any
-        if condition is False:  # no need to evaluate
-            return
-        # condition is either True or None
         self._set_value(game_object)
 
 
@@ -5022,6 +5029,41 @@ class InitEmptyDict(ActionCell):
         self.done = True
 
 
+class InitNewDict(ActionCell):
+    def __init__(self):
+        ActionCell.__init__(self)
+        self.condition = None
+        self.dict = None
+        self.key = None
+        self.val = None
+        self.done = None
+        self.OUT = LogicNetworkSubCell(self, self.get_done)
+        self.DICT = LogicNetworkSubCell(self, self.get_dict)
+
+    def get_done(self):
+        return self.done
+
+    def get_dict(self):
+        return self.dict
+
+    def evaluate(self):
+        self.done = False
+        condition = self.get_parameter_value(self.condition)
+        if condition is LogicNetworkCell.STATUS_WAITING:
+            return
+        key = self.get_parameter_value(self.key)
+        if key is LogicNetworkCell.STATUS_WAITING:
+            return
+        value = self.get_parameter_value(self.val)
+        if value is LogicNetworkCell.STATUS_WAITING:
+            return
+        if not condition:
+            return
+        self._set_ready()
+        self.dict = {str(key): value}
+        self.done = True
+
+
 class SetDictKeyValue(ActionCell):
     def __init__(self):
         ActionCell.__init__(self)
@@ -5129,6 +5171,37 @@ class InitEmptyList(ActionCell):
             return
         self._set_ready()
         self.list = [None for x in range(length)]
+        self.done = True
+
+
+class InitNewList(ActionCell):
+    def __init__(self):
+        ActionCell.__init__(self)
+        self.condition = None
+        self.value = None
+        self.list = None
+        self.done = None
+        self.OUT = LogicNetworkSubCell(self, self.get_done)
+        self.LIST = LogicNetworkSubCell(self, self.get_list)
+
+    def get_done(self):
+        return self.done
+
+    def get_list(self):
+        return self.list
+
+    def evaluate(self):
+        self.done = False
+        condition = self.get_parameter_value(self.condition)
+        if condition is LogicNetworkCell.STATUS_WAITING:
+            return
+        if not condition:
+            return
+        value = self.get_parameter_value(self.value)
+        if value is LogicNetworkCell.STATUS_WAITING:
+            return
+        self._set_ready()
+        self.list = [value]
         self.done = True
 
 
@@ -5644,6 +5717,7 @@ class ActionTimeDelay(ActionCell):
         self._set_value(False)
         if condition:
             self._triggered = True
+            self._condition_true_time = 0.0
         if self._triggered:
             self._condition_true_time += self.network.time_per_frame
             if self._condition_true_time >= delay:
@@ -6886,7 +6960,7 @@ class ActionPlayAction(ActionCell):
                         blendin=blendin,
                         play_mode=play_mode,
                         speed=speed,
-                        layer_weight=1 - layer_weight,
+                        layer_weight= 1 - layer_weight,
                         blend_mode=blend_mode)
                     game_object.setActionFrame(playing_frame + speed, layer)
                 # TODO: the meaning of start-end depends
@@ -6964,6 +7038,7 @@ class ActionSetAnimationFrame(ActionCell):
         self.action_layer = None
         self.action_frame = None
         self.action_name = None
+        self.layer_weight = None
         self.done = None
         self.OUT = LogicNetworkSubCell(self, self.get_done)
 
@@ -6980,6 +7055,7 @@ class ActionSetAnimationFrame(ActionCell):
         action_layer = self.get_parameter_value(self.action_layer)
         action_frame = self.get_parameter_value(self.action_frame)
         action_name = self.get_parameter_value(self.action_name)
+        layer_weight = self.get_parameter_value(self.layer_weight)
         self._set_ready()
         if none_or_invalid(game_object):
             return
@@ -6987,13 +7063,17 @@ class ActionSetAnimationFrame(ActionCell):
             return
         if none_or_invalid(action_frame):
             return
+        if none_or_invalid(layer_weight):
+            return
         if not action_name:
             return
+        game_object.stopAction(action_layer)
         game_object.playAction(
             action_name,
             action_frame,
             action_frame,
-            action_layer
+            layer=action_layer,
+            layer_weight=1 - layer_weight
         )
         self.done = True
 
