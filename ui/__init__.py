@@ -1,5 +1,6 @@
 import bpy
 import bge_netlogic
+from os.path import join, dirname
 
 
 _filter_prop_types = [
@@ -11,6 +12,17 @@ _filter_prop_types = [
     ("TIMER", "Timer Properties", "Show only Timer Properties"),
     ("NAME", 'Filter By Name', 'Search for a Property')
 ]
+
+
+def get_icons_directory():
+
+    background = bpy.context.preferences.themes['Default'].view_3d.space.panelcolors.back
+    if background[0] < 0.4:
+        icons_directory = join(dirname(__file__), "IconsBright")
+    else:
+        icons_directory = join(dirname(__file__), "IconsDark")
+    
+    return icons_directory
 
 
 class BGEPropFilter(bpy.types.PropertyGroup):
@@ -356,6 +368,10 @@ class BGELogicTreeInfoPanel(bpy.types.Panel):
     bl_region_type = "UI"
     bl_category = "Item"
     _current_tree = None
+    
+    icons = bpy.utils.previews.new()
+    icons_directory = get_icons_directory()
+    icons.load("IconApply", join(icons_directory, "IconApply.png"), 'IMAGE')
 
     @classmethod
     def poll(cls, context):
@@ -381,9 +397,12 @@ class BGELogicTreeInfoPanel(bpy.types.Panel):
 
     def draw(self, context):
         layout = self.layout
-        apply = layout.box()
+        apply_col = layout.column()
+        apply_col.scale_y = 1.4
+        apply = apply_col.box()
         apply.operator(
             bge_netlogic.ops.NLApplyLogicOperator.bl_idname,
+            icon_value=self.icons["IconApply"].icon_id,
             text="Apply To Selected"
         ).owner = "BGELogicPanel"
         code = layout.box()

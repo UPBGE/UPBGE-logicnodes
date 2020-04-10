@@ -1088,6 +1088,8 @@ class ParameterObjectProperty(ParameterCell):
         if none_or_invalid(game_object) or (not property_name):
             print('Get Property Node: Object or Property Name invalid!')
             self._set_value(property_default)
+        if property_name not in game_object:
+            game_object[property_name] = None
         else:
             self._set_value(game_object[property_name])
 
@@ -3873,7 +3875,7 @@ class ActionSetGameObjectGameProperty(ActionCell):
         self.property_value = None
         self.done = False
         self.OUT = LogicNetworkSubCell(self, self._get_done)
-        
+
     def _get_done(self):
         return self.done
 
