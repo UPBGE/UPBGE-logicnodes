@@ -256,7 +256,10 @@ def get_network_initial_status_for_object(ob, tree_name):
 
 def set_network_initial_status_key(ob, tree_name, initial_status_value, update_object_tree_item=True):
     current_active_object = bpy.context.object
-    bpy.context.view_layer.objects.active = ob
+    if not bpy.app.version < (2, 80, 0):
+        bpy.context.view_layer.objects.active = ob
+    else:
+        bpy.context.scene.objects.active = ob
     # print("set_network_initial_status_key", ob, update_object_tree_item)
     status_key = get_key_network_initial_status_for_tree_name(tree_name)
     game_properties = ob.game.properties
@@ -280,7 +283,11 @@ def set_network_initial_status_key(ob, tree_name, initial_status_value, update_o
             if tree_item.tree_name == tree_name:
                 # print("set initial status", ob.name, tree_name, initial_status_value)
                 tree_item.tree_initial_status = initial_status_value
-    bpy.context.view_layer.objects.active = current_active_object
+    if not bpy.app.version < (2, 80, 0):
+        bpy.context.view_layer.objects.active = current_active_object
+    else:
+        bpy.context.scene.objects.active = current_active_object
+
 
 def rename_initial_status_game_object_property(ob, old_tree_name, new_tree_name):
     old_key = get_key_network_initial_status_for_tree_name(old_tree_name)
@@ -290,6 +297,7 @@ def rename_initial_status_game_object_property(ob, old_tree_name, new_tree_name)
             p.name = new_key
             return
     raise RuntimeError("I can't find the property {} in the object {} to rename {}", old_key, ob.name, new_key)
+
 
 def remove_network_initial_status_key(ob, tree_name):
     status_key = get_key_network_initial_status_for_tree_name(tree_name)

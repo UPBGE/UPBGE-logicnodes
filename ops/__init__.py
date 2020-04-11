@@ -268,12 +268,18 @@ class NLRemoveTreeByNameOperator(bpy.types.Operator):
             stripped_tree_name
         )
         py_module_name = py_module_name.split('NL')[-1]
-        for ob in [
-            x for x in context.scene.objects if x.select_get() and
+        objs = [
+            ob for ob in context.scene.objects if ob.select_get() and
             tools.object_has_treeitem_for_treename(
-                x, self.tree_name
+                ob, self.tree_name
             )
-        ]:
+        ] if not bpy.app.version < (2, 80, 0) else [
+            ob for ob in context.scene.objects if ob.select and
+            tools.object_has_treeitem_for_treename(
+                ob, self.tree_name
+            )
+        ]
+        for ob in objs:
             gs = ob.game
             controllers = [
                 c for c in gs.controllers if py_module_name in c.name
@@ -605,8 +611,12 @@ class NLApplyLogicOperator(bpy.types.Operator):
             return False
         scene = context.scene
         for ob in scene.objects:
-            if ob.select_get():
-                return True
+            if not bpy.app.version < (2, 80, 0):
+                if ob.select_get():
+                    return True
+            else:
+                if ob.select:
+                    return True
         return False
 
     def execute(self, context):
@@ -616,6 +626,8 @@ class NLApplyLogicOperator(bpy.types.Operator):
         py_module_name = bge_netlogic.utilities.py_module_name_for_tree(tree)
         selected_objects = [
             ob for ob in current_scene.objects if ob.select_get()
+        ] if not bpy.app.version < (2, 80, 0) else [
+            ob for ob in current_scene.objects if ob.select
         ]
         initial_status = bge_netlogic.utilities.compute_initial_status_of_tree(
             tree.name, selected_objects
@@ -917,6 +929,11 @@ class NLSwitchInitialNetworkStatusOperator(bpy.types.Operator):
         scene = context.scene
         updated_objects = [
             ob for ob in scene.objects if ob.select_get() and
+            bge_netlogic.utilities.object_has_treeitem_for_treename(
+                ob, tree_name
+            )
+        ] if not bpy.app.version < (2, 80, 0) else [
+            ob for ob in context.scene.objects if ob.select and
             bge_netlogic.utilities.object_has_treeitem_for_treename(
                 ob, tree_name
             )

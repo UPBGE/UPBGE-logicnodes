@@ -373,8 +373,7 @@ class BGELogicTreeGroups(bpy.types.Panel):
             )
         else:
             template_col.operator(
-                bge_netlogic.ops.NLAdd4KeyTemplateOperator.bl_idname,
-                icon_value=self.icons["Icon4Keys"].icon_id,
+                bge_netlogic.ops.NLAdd4KeyTemplateOperator.bl_idname
             )
 
 class BGELogicTreeInfoPanel(bpy.types.Panel):
@@ -441,6 +440,8 @@ class BGELogicTreeInfoPanel(bpy.types.Panel):
         layout.separator()
         selected_objects = [
             ob for ob in context.scene.objects if ob.select_get()
+        ] if not bpy.app.version < (2, 80, 0) else [
+            ob for ob in context.scene.objects if ob.select
         ]
         active_tree_items = {}
         if context.object:
