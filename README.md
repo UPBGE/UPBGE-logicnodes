@@ -1,5 +1,5 @@
 # Uchronian Logic: UPBGE Logic Nodes
-A Node-based Logic system for UPBGE 2.8+
+A Node-based Logic system for UPBGE 0.3.0+ (Blender 2.8+) and UPBGE 0.2.4+ (Blender 2.79b)
 
 ![Alt text](./header.png "Title")
 (Header by L_P)
