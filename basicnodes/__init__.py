@@ -864,6 +864,7 @@ class NLSocketLogicTree(bpy.types.NodeSocket, NetLogicSocketType):
         return PARAMETER_SOCKET_COLOR
 
     def draw(self, context, layout, node, text):
+        icon = 'OUTLINER' if not bpy.app.version < (2, 80, 0) else 'PLUS'
         if self.is_linked or self.is_output:
             layout.label(text=text)
         else:
@@ -872,7 +873,7 @@ class NLSocketLogicTree(bpy.types.NodeSocket, NetLogicSocketType):
                 "value",
                 bpy.data,
                 'node_groups',
-                icon='OUTLINER',
+                icon=icon,
                 text=''
             )
 
@@ -2365,8 +2366,8 @@ class NLGetMaterialNodeValue(bpy.types.Node, NLActionNode):
     def get_output_socket_varnames(self):
         return ['OUT']
 
-
-_nodes.append(NLGetMaterialNodeValue)
+if not bpy.app.version < (2, 80, 0):
+    _nodes.append(NLGetMaterialNodeValue)
 
 
 class NLGameObjectHasPropertyParameterNode(bpy.types.Node, NLParameterNode):
@@ -4382,7 +4383,9 @@ class NLSetMaterialNodeValue(bpy.types.Node, NLActionNode):
     def get_output_socket_varnames(self):
         return ['OUT']
 
-_nodes.append(NLSetMaterialNodeValue)
+
+if not bpy.app.version < (2, 80, 0):
+    _nodes.append(NLSetMaterialNodeValue)
 
 
 class NLToggleGameObjectGamePropertyActionNode(bpy.types.Node, NLActionNode):

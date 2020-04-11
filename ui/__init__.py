@@ -21,7 +21,7 @@ def get_icons_directory():
         icons_directory = join(dirname(__file__), "IconsBright")
     else:
         icons_directory = join(dirname(__file__), "IconsDark")
-    
+
     return icons_directory
 
 
@@ -338,10 +338,13 @@ class BGELogicTreeGroups(bpy.types.Panel):
     bl_region_type = "UI"
     bl_category = "Item"
     _current_tree = None
+    new_ver = False
 
-    icons = bpy.utils.previews.new()
-    icons_directory = get_icons_directory()
-    icons.load("Icon4Keys", join(icons_directory, "Icon4Keys.png"), 'IMAGE')
+    if not bpy.app.version < (2, 80, 0):
+        icons = bpy.utils.previews.new()
+        icons_directory = get_icons_directory()
+        icons.load("Icon4Keys", join(icons_directory, "Icon4Keys.png"), 'IMAGE')
+        new_ver = True
 
     @classmethod
     def poll(cls, context):
@@ -363,11 +366,16 @@ class BGELogicTreeGroups(bpy.types.Panel):
         prefabs.label(text='Node Prefabs:')
         template_col = prefabs.column()
         template_col.scale_y = 1.4
-        template_col.operator(
-            bge_netlogic.ops.NLAdd4KeyTemplateOperator.bl_idname,
-            icon_value=self.icons["Icon4Keys"].icon_id,
-        )
-
+        if self.new_ver:
+            template_col.operator(
+                bge_netlogic.ops.NLAdd4KeyTemplateOperator.bl_idname,
+                icon_value=self.icons["Icon4Keys"].icon_id,
+            )
+        else:
+            template_col.operator(
+                bge_netlogic.ops.NLAdd4KeyTemplateOperator.bl_idname,
+                icon_value=self.icons["Icon4Keys"].icon_id,
+            )
 
 class BGELogicTreeInfoPanel(bpy.types.Panel):
     bl_label = "Object Trees"
@@ -375,10 +383,13 @@ class BGELogicTreeInfoPanel(bpy.types.Panel):
     bl_region_type = "UI"
     bl_category = "Item"
     _current_tree = None
+    new_ver = False
 
-    icons = bpy.utils.previews.new()
-    icons_directory = get_icons_directory()
-    icons.load("IconApply", join(icons_directory, "IconApply.png"), 'IMAGE')
+    if not bpy.app.version < (2, 80, 0):
+        icons = bpy.utils.previews.new()
+        icons_directory = get_icons_directory()
+        icons.load("IconApply", join(icons_directory, "IconApply.png"), 'IMAGE')
+        new_ver = True
 
     @classmethod
     def poll(cls, context):
@@ -407,11 +418,17 @@ class BGELogicTreeInfoPanel(bpy.types.Panel):
         apply_col = layout.column()
         apply_col.scale_y = 1.4
         apply = apply_col.box()
-        apply.operator(
-            bge_netlogic.ops.NLApplyLogicOperator.bl_idname,
-            icon_value=self.icons["IconApply"].icon_id,
-            text="Apply To Selected"
-        ).owner = "BGELogicPanel"
+        if self.new_ver:
+            apply.operator(
+                bge_netlogic.ops.NLApplyLogicOperator.bl_idname,
+                icon_value=self.icons["IconApply"].icon_id,
+                text="Apply To Selected"
+            ).owner = "BGELogicPanel"
+        else:
+            apply.operator(
+                bge_netlogic.ops.NLApplyLogicOperator.bl_idname,
+                text="Apply To Selected"
+            ).owner = "BGELogicPanel"
         code = layout.box()
         code.operator(
             bge_netlogic.ops.NLGenerateLogicNetworkOperator.bl_idname,
@@ -513,7 +530,7 @@ def update_tree_code(self, context):
 class BGELogicTree(bpy.types.NodeTree):
     bl_idname = "BGELogicTree"
     bl_label = "Logic Tree Editor"
-    bl_icon = "OUTLINER"
+    bl_icon = "OUTLINER" if not bpy.app.version < (2, 80, 0) else 'PLUS'
     bl_category = "Scripting"
 
     @classmethod
