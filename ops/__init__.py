@@ -404,7 +404,7 @@ class NLMakeGroupOperator(bpy.types.Operator):
                         node_tree.links.new(new_node.inputs[index], output_node.outputs[outdex])
                     except Exception as e:
                         bpy.data.node_groups.remove(node_tree)
-                        self.report({"ERROR"}, "Some linked Nodes are not added to the group! Aborting...")
+                        self.report({"ERROR"}, "Some linked Nodes are not added to the group!")
                         return None
             locs.append(old_node.location)
 

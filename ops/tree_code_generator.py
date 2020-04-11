@@ -135,8 +135,8 @@ class TreeCodeGenerator(object):
         for input in node.inputs:
             if input.is_linked:
                 linked_node = input.links[0].from_socket.node
-                if isinstance(linked_node, bpy.types.NodeReroute):
-                    return True
+                while isinstance(linked_node, bpy.types.NodeReroute):
+                    linked_node = linked_node.inputs[0].links[0].from_socket.node
                 linked_node_varname = uid_map.get_varname_for_node(linked_node)
                 if not (linked_node_varname in added_cell_names):
                     return False  # node is linked to a cell that has not been resolved
