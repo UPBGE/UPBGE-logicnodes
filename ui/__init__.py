@@ -6,7 +6,7 @@ from os.path import join, dirname
 _filter_prop_types = [
     ("TREES", "Logic Trees", "Show only applied Logic Trees"),
     ("FLOAT", "Float Properties", "Show only Float Properties"),
-    ("INTEGER", "Int Properties", "Show only Int Properties"),
+    ("INT", "Int Properties", "Show only Int Properties"),
     ("BOOL", "Boolean Properties", "Show only Boolean Properties"),
     ("STRING", "String Properties", "Show only String Properties"),
     ("TIMER", "Timer Properties", "Show only Timer Properties"),
@@ -29,7 +29,7 @@ class BGEPropFilter(bpy.types.PropertyGroup):
     do_filter = bpy.props.BoolProperty()
     filter_by = bpy.props.EnumProperty(items=_filter_prop_types)
     filter_name = bpy.props.StringProperty()
-    show_hidden = bpy.props.BoolProperty()
+    show_hidden = bpy.props.BoolProperty(default=True)
 
 
 class BGEGroupName(bpy.types.PropertyGroup):
@@ -111,10 +111,12 @@ class BGEGamePropertyPanel(bpy.types.Panel):
             is_tree = prop.name.startswith('NODELOGIC__')
             has_name = prop_name in prop.name
             if do_filter:
-                if prop_type == 'NAME' and not has_name:
-                    continue
-                elif prop_type == 'TREES' and not is_tree:
-                    continue
+                if prop_type == 'NAME':
+                    if not has_name:
+                        continue
+                elif prop_type == 'TREES':
+                    if not is_tree:
+                        continue
                 elif prop.type != prop_type or is_tree:
                     continue
             index = props.index(prop)
@@ -127,7 +129,7 @@ class BGEGamePropertyPanel(bpy.types.Panel):
             row_title = entry.row()
             row_title.prop(prop, 'name', text='')
             row_title.prop(prop, 'show_debug', text='', icon='INFO')
-            if not do_filter:
+            if not do_filter and show_hidden:
                 self.add_movers(index, row_title)
             remove = row_title.operator(
                 bge_netlogic.ops.NLRemovePropertyOperator.bl_idname,
