@@ -135,7 +135,7 @@ def _consume_update_tree_code_queue():
             bpy.ops.bge_netlogic.generate_logicnetwork()
         except Exception:
             print("Context Incorrect, abort generating Network code")
-            return update_current_tree_code()
+            # return update_current_tree_code()
         return True
 
 
@@ -364,11 +364,13 @@ _registered_classes = [
     ops.NLMakeGroupOperator,
     ops.NLSwitchInitialNetworkStatusOperator,
     ops.NLAddPropertyOperator,
+    ops.NLAddComponentOperator,
     ops.NLRemovePropertyOperator,
     ops.NLMovePropertyOperator,
     ops.NLLoadSoundOperator,
     ops.NLPopupTemplatesOperator,
-    NLNodeTreeReference]
+    NLNodeTreeReference
+]
 
 _registered_classes.extend(basicnodes._sockets)
 
@@ -380,10 +382,11 @@ _registered_classes.extend([
     ui.BGELogicPanel,
     ui.BGELogicTreeInfoPanel,
     ui.BGEGamePropertyPanel,
+    # ui.BGEGameComponentPanel,
     ui.BGEGamePropertyPanel3DView,
     ui.BGEGamePropertyPanelObject,
     ui.BGELogicTreeGroups
-    ])
+])
 
 
 def _get_key_for_class(c):

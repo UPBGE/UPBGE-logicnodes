@@ -4,23 +4,28 @@ import bge_netlogic
 from bge_netlogic.ops.file_text_buffer import FileTextBuffer
 from bge_netlogic.ops.uid_map import UIDMap
 
+
 class TreeCodeGenerator(object):
+
     def get_netlogic_module_for_node(self, node):
         try:
             netlogic_class = node.get_netlogic_class_name()
             lastdot = netlogic_class.rfind(".")
-            if lastdot < 0: return None#assuming basicnodes
+            if lastdot < 0:
+                return None  # assuming basicnodes
             return netlogic_class[0:lastdot]
         except AttributeError:
-            print("Not a netlogic node", node)
+            if not (
+                isinstance(node, bpy.types.NodeReroute)
+            ):
+                print("Not a netlogic node", node)
             return None
-        pass
 
     def list_user_modules_needed_by_tree(self, tree):
         result = set()
         for node in tree.nodes:
             module_name = self.get_netlogic_module_for_node(node)
-            if module_name is not None:#if none assume is one in bgelogic.py
+            if module_name is not None:  # if none assume is one in bgelogic.py
                 if module_name != "bgelogic":
                     result.add(module_name)
         return result
@@ -93,7 +98,10 @@ class TreeCodeGenerator(object):
             if not (
                 isinstance(node, bge_netlogic.basicnodes.NetLogicStatementGenerator)
             ):
-                print("Skipping TreeNode of type {} because it is not an instance of NetLogicStatementGenerator".format(node.__class__.__name__))
+                if not (
+                    isinstance(node, bpy.types.NodeReroute)
+                ):
+                    print("Skipping TreeNode of type {} because it is not an instance of NetLogicStatementGenerator".format(node.__class__.__name__))
                 continue
             if isinstance(node, bge_netlogic.basicnodes.NLActionNode):
                 prefix = "ACT"

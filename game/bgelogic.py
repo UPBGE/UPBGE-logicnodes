@@ -1084,8 +1084,8 @@ class ParameterObjectProperty(ParameterCell):
             return
         self._set_ready()
         if none_or_invalid(game_object) or (not property_name):
-            print('Get Property Node: Object or Property Name invalid!')
             self._set_value(property_default)
+            return
         if property_name not in game_object:
             game_object[property_name] = None
         else:
@@ -1468,6 +1468,25 @@ class GetSensorByName(ParameterCell):
         if name in obj.sensors:
             self._set_ready()
             self._set_value(obj.sensors[name].positive)
+        else:
+            print("{} has no Sensor named '{}'!".format(obj.name, name))
+
+
+class GetSensorValueByName(ParameterCell):
+
+    def __init__(self):
+        ParameterCell.__init__(self)
+        self.obj = None
+        self.name = None
+        self.field = None
+
+    def evaluate(self):
+        obj = self.get_parameter_value(self.obj)
+        name = self.get_parameter_value(self.name)
+        field = self.get_parameter_value(self.field)
+        if name in obj.sensors:
+            self._set_ready()
+            self._set_value(getattr(obj.sensors[name], field))
         else:
             print("{} has no Sensor named '{}'!".format(obj.name, name))
 
@@ -2582,10 +2601,8 @@ class ParameterSound(ParameterCell):
             return
         self._set_ready()
         if file_path != self._loaded_path:
-            #self.set_value(self.file_path)
             self._file_path_value = file_path
             self.dispose_loaded_audio()
-            # print(self.load_audio(file_path))
             self.load_audio(file_path)
 
 
@@ -3072,6 +3089,20 @@ class ConditionNone(ConditionCell):
         self._set_value(value is None)
         pass
     pass
+
+
+class ConditionValueValid(ConditionCell):
+    def __init__(self):
+        ConditionCell.__init__(self)
+        self.checked_value = None
+
+    def evaluate(self):
+        self._set_ready()
+        value = self.get_parameter_value(self.checked_value)
+        if value is not None and value is not LogicNetworkCell.STATUS_WAITING:
+            self._set_value(True)
+            return
+        self._set_value(False)
 
 
 class ConditionOr(ConditionCell):
@@ -3998,6 +4029,7 @@ class ActionSetMaterialNodeValue(ActionCell):
             self.done = True
             self._set_ready()
             game_object_value.blenderObject.material_slots[mat_name].material.node_tree.nodes[node_name].inputs[input_slot].default_value = value
+            bge.logic.getCurrentScene().resetTaaSamples = True
 
 
 class ActionToggleGameObjectGameProperty(ActionCell):

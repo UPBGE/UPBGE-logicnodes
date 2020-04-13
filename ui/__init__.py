@@ -37,6 +37,33 @@ class BGEGroupName(bpy.types.PropertyGroup):
     enabled = bpy.props.BoolProperty()
 
 
+class BGEGameComponentPanel(bpy.types.Panel):
+    bl_label = "Components"
+    bl_space_type = "NODE_EDITOR"
+    bl_region_type = "UI"
+    bl_category = "Item"
+    # module = bpy.StringProperty()
+
+    @classmethod
+    def poll(cls, context):
+        enabled = (context.space_data.tree_type == BGELogicTree.bl_idname)
+        if enabled and (context.space_data.edit_tree is not None):
+            bge_netlogic._consume_update_tree_code_queue()
+            if not bge_netlogic._tree_code_writer_started:
+                bge_netlogic._tree_code_writer_started = True
+                bpy.ops.bgenetlogic.treecodewriter_operator()
+        return enabled
+
+    def draw(self, context):
+        layout = self.layout
+        column = layout.column()
+        column.operator(
+            bge_netlogic.ops.NLAddComponentOperator.bl_idname,
+            text="Add Component",
+            icon='PLUS'
+        )
+
+
 class BGEGamePropertyPanel(bpy.types.Panel):
     bl_label = "Object Properties"
     bl_space_type = "NODE_EDITOR"
@@ -343,10 +370,13 @@ class BGELogicTreeGroups(bpy.types.Panel):
     new_ver = False
 
     if not bpy.app.version < (2, 80, 0):
-        icons = bpy.utils.previews.new()
-        icons_directory = get_icons_directory()
-        icons.load("Icon4Keys", join(icons_directory, "Icon4Keys.png"), 'IMAGE')
-        new_ver = True
+        try:
+            icons = bpy.utils.previews.new()
+            icons_directory = get_icons_directory()
+            icons.load("Icon4Keys", join(icons_directory, "Icon4Keys.png"), 'IMAGE')
+            new_ver = True
+        except Exception:
+            print('Icon can not be set, using clean Buttons.')
 
     @classmethod
     def poll(cls, context):
@@ -387,10 +417,13 @@ class BGELogicTreeInfoPanel(bpy.types.Panel):
     new_ver = False
 
     if not bpy.app.version < (2, 80, 0):
-        icons = bpy.utils.previews.new()
-        icons_directory = get_icons_directory()
-        icons.load("IconApply", join(icons_directory, "IconApply.png"), 'IMAGE')
-        new_ver = True
+        try:
+            icons = bpy.utils.previews.new()
+            icons_directory = get_icons_directory()
+            icons.load("IconApply", join(icons_directory, "IconApply.png"), 'IMAGE')
+            new_ver = True
+        except Exception:
+            print('Icon can not be set, using clean Buttons.')
 
     @classmethod
     def poll(cls, context):

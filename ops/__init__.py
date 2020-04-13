@@ -861,6 +861,22 @@ class NLAddPropertyOperator(bpy.types.Operator):
         return {'FINISHED'}
 
 
+class NLAddComponentOperator(bpy.types.Operator):
+    bl_idname = "bge_netlogic.add_component"
+    bl_label = "Add Component"
+    bl_options = {'REGISTER', 'UNDO'}
+    bl_description = "Add a python Component to the selected object."
+
+    @classmethod
+    def poll(cls, context):
+        return True
+
+    def execute(self, context):
+        bpy.ops.logic.add_python_component()
+        bge_netlogic.update_current_tree_code()
+        return {'FINISHED'}
+
+
 class NLRemovePropertyOperator(bpy.types.Operator):
     bl_idname = "bge_netlogic.remove_game_prop"
     bl_label = "Add Game Property"

@@ -1299,18 +1299,17 @@ _sockets.append(NLSceneSocket)
 class NLValueFieldSocket(bpy.types.NodeSocket, NetLogicSocketType):
     bl_idname = "NLValueFieldSocket"
     bl_label = "Value"
+    value = bpy.props.StringProperty(update=update_tree_code)
 
     def on_type_changed(self, context):
-        tp = self.value_type
-        if tp == "BOOL":
-            self.value = "True" if (self.bool_editor == "True") else "False"
+        if self.value_type == "BOOLEAN":
+            self.value = str(self.bool_editor)
         update_tree_code(self, context)
-        pass
+
     value_type = bpy.props.EnumProperty(
         items=_enum_field_value_types,
-        update=update_tree_code
+        update=on_type_changed
     )
-    value = bpy.props.StringProperty(update=update_tree_code)
 
     def store_boolean_value(self, context):
         self.value = str(self.bool_editor)
@@ -1336,7 +1335,8 @@ class NLValueFieldSocket(bpy.types.NodeSocket, NetLogicSocketType):
     def draw_color(self, context, node):
         return PARAMETER_SOCKET_COLOR
 
-    def get_unlinked_value(self): return socket_field(self)
+    def get_unlinked_value(self):
+        return socket_field(self)
 
     def draw(self, context, layout, node, text):
         if self.is_linked or self.is_output:
@@ -2315,8 +2315,6 @@ class NLCurrentSceneNode(bpy.types.Node, NLParameterNode):
     def get_netlogic_class_name(self):
         return "bgelogic.ParameterCurrentScene"
 
-    pass
-
 
 _nodes.append(NLCurrentSceneNode)
 
@@ -2838,6 +2836,31 @@ class NLGetSensorNameNode(bpy.types.Node, NLParameterNode):
 
 
 _nodes.append(NLGetSensorNameNode)
+
+
+class NLGetSensorValueNameNode(bpy.types.Node, NLParameterNode):
+    bl_idname = "NLGetSensorValueNameNode"
+    bl_label = "Get Sensor Value by Name"
+    nl_category = "Logic Bricks"
+
+    def init(self, context):
+        NLParameterNode.init(self, context)
+        self.inputs.new(NLGameObjectSocket.bl_idname, "From Object")
+        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Sensor Name")
+        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Field")
+        self.outputs.new(NLParameterSocket.bl_idname, "Value")
+
+    def get_input_sockets_field_names(self):
+        return ["obj", "name", 'field']
+
+    def get_netlogic_class_name(self):
+        return "bgelogic.GetSensorValueByName"
+
+    def get_output_socket_varnames(self):
+        return [OUTCELL]
+
+
+_nodes.append(NLGetSensorValueNameNode)
 
 
 class NLSensorValueNode(bpy.types.Node, NLParameterNode):
@@ -4285,6 +4308,22 @@ class NLConditionNoneNode(bpy.types.Node, NLConditionNode):
     def get_netlogic_class_name(self): return "bgelogic.ConditionNone"
     def get_input_sockets_field_names(self): return ["checked_value"]
 _nodes.append(NLConditionNoneNode)
+
+
+class NLConditionValueValidNode(bpy.types.Node, NLConditionNode):
+    bl_idname = "NLConditionValueValidNode"
+    bl_label ="Value Valid"
+    nl_category = "Values"
+    
+    def init(self, context):
+        NLConditionNode.init(self, context)
+        self.inputs.new(NLParameterSocket.bl_idname, "Value")
+        self.outputs.new(NLConditionSocket.bl_idname, "If Valid")
+    def get_netlogic_class_name(self): return "bgelogic.ConditionValueValid"
+    def get_input_sockets_field_names(self): return ["checked_value"]
+
+
+_nodes.append(NLConditionValueValidNode)
 
 
 class NLConditionNotNode(bpy.types.Node, NLConditionNode):
