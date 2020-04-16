@@ -878,7 +878,10 @@ class NLSocketLogicTree(bpy.types.NodeSocket, NetLogicSocketType):
             )
 
     def get_unlinked_value(self):
-        return "'{}'".format(self.value)
+        tree_name = None
+        if ' F ' in self.value:
+            tree_name = self.value.split(' F ')[-1]
+        return "'{}'".format(tree_name)
 
 
 _sockets.append(NLSocketLogicTree)
@@ -2346,7 +2349,7 @@ _nodes.append(NLGameObjectPropertyParameterNode)
 
 class NLGetMaterialNodeValue(bpy.types.Node, NLActionNode):
     bl_idname = "NLGetMaterialNodeValue"
-    bl_label = "Get Material Node Value"
+    bl_label = "Get Node Input Value"
     nl_category = "Materials"
 
     def init(self, context):
@@ -2366,6 +2369,30 @@ class NLGetMaterialNodeValue(bpy.types.Node, NLActionNode):
 
 if not bpy.app.version < (2, 80, 0):
     _nodes.append(NLGetMaterialNodeValue)
+
+
+class NLGetMaterialNodeOutputValue(bpy.types.Node, NLActionNode):
+    bl_idname = "NLGetMaterialNodeOutputValue"
+    bl_label = "Get Node Output Value"
+    nl_category = "Materials"
+
+    def init(self, context):
+        NLActionNode.init(self, context)
+        self.inputs.new(NLGameObjectSocket.bl_idname, "Object")
+        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Material Name")
+        self.inputs[-1].value = 'Material'
+        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Node Name")
+        self.inputs[-1].value = 'Node'
+        self.inputs.new(NLIntegerFieldSocket.bl_idname, "Output")
+        self.outputs.new(NLParameterSocket.bl_idname, "Value")
+
+    def get_netlogic_class_name(self): return "bgelogic.ParameterGetMaterialNodeOutputValue"
+    def get_input_sockets_field_names(self): return ["game_object", "mat_name", 'node_name', "output_slot"]
+    def get_output_socket_varnames(self):
+        return ['OUT']
+
+if not bpy.app.version < (2, 80, 0):
+    _nodes.append(NLGetMaterialNodeOutputValue)
 
 
 class NLGameObjectHasPropertyParameterNode(bpy.types.Node, NLParameterNode):
@@ -3430,6 +3457,8 @@ class NLParameterVector2SplitNode(bpy.types.Node, NLParameterNode):
     def get_netlogic_class_name(self): return "bgelogic.ParameterVector2Split"
     def get_output_socket_varnames(self): return ["OUTX", "OUTY"]
     def get_input_sockets_field_names(self): return ["input_v"]
+
+
 _nodes.append(NLParameterVector2SplitNode)
 
 
@@ -3451,7 +3480,30 @@ class NLParameterVector3SplitNode(bpy.types.Node, NLParameterNode):
     def get_netlogic_class_name(self): return "bgelogic.ParameterVector3Split"
     def get_output_socket_varnames(self): return ["OUTX", "OUTY", 'OUTZ']
     def get_input_sockets_field_names(self): return ["input_v"]
+
+
 _nodes.append(NLParameterVector3SplitNode)
+
+
+class NLParameterAbsVector3Node(bpy.types.Node, NLParameterNode):
+    bl_idname = "NLParameterAbsVector3Node"
+    bl_label = "Absolute Vector"
+    nl_category = "Math"
+
+    def init(self, context):
+        NLParameterNode.init(self, context)
+        tools.register_inputs(
+            self,
+            NLVec3FieldSocket, 'Vector'
+        )
+        self.outputs.new(NLVec3FieldSocket.bl_idname, "Vector")
+
+    def get_netlogic_class_name(self): return "bgelogic.ParameterAbsVector3"
+    def get_output_socket_varnames(self): return ["OUTV"]
+    def get_input_sockets_field_names(self): return ["input_v"]
+
+
+_nodes.append(NLParameterAbsVector3Node)
 
 
 class NLParameterVector3SimpleNode(bpy.types.Node, NLParameterNode):
@@ -4402,7 +4454,7 @@ _nodes.append(NLSetGameObjectGamePropertyActionNode)
 
 class NLSetMaterialNodeValue(bpy.types.Node, NLActionNode):
     bl_idname = "NLSetMaterialNodeValue"
-    bl_label = "Set Material Node Value"
+    bl_label = "Set Node Input Value"
     nl_category = "Materials"
 
     def init(self, context):

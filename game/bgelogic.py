@@ -1125,6 +1125,39 @@ class ParameterGetMaterialNodeValue(ParameterCell):
         self.val = game_object_value.blenderObject.material_slots[mat_name].material.node_tree.nodes[node_name].inputs[input_slot].default_value
 
 
+class ParameterGetMaterialNodeOutputValue(ParameterCell):
+    def __init__(self):
+        ActionCell.__init__(self)
+        self.game_object = None
+        self.mat_name = None
+        self.node_name = None
+        self.output_slot = None
+        self.val = False
+        self.OUT = LogicNetworkSubCell(self, self._get_val)
+
+    def _get_val(self):
+        return self.val
+
+    def evaluate(self):
+        STATUS_WAITING = LogicNetworkCell.STATUS_WAITING
+        game_object_value = self.get_parameter_value(self.game_object)
+        mat_name = self.get_parameter_value(self.mat_name)
+        node_name = self.get_parameter_value(self.node_name)
+        output_slot = self.get_parameter_value(self.output_slot)
+        if game_object_value is STATUS_WAITING:
+            return
+        if mat_name is STATUS_WAITING:
+            return
+        if node_name is STATUS_WAITING:
+            return
+        if output_slot is STATUS_WAITING:
+            return
+        if none_or_invalid(game_object_value):
+            return
+        self._set_ready()
+        self.val = game_object_value.blenderObject.material_slots[mat_name].material.node_tree.nodes[node_name].outputs[output_slot].default_value
+
+
 class ParameterObjectHasProperty(ParameterCell):
     def __init__(self):
         ParameterCell.__init__(self)
@@ -2275,6 +2308,29 @@ class ParameterVector3Split(ParameterCell):
         self._set_value(vec)
 
 
+class ParameterAbsVector3(ParameterCell):
+    def __init__(self):
+        ParameterCell.__init__(self)
+        self.input_v = None
+        self.output_v = mathutils.Vector()
+        self.OUTV = LogicNetworkSubCell(self, self.get_out_v)
+
+    def get_out_v(self): return self.output_v
+
+    def evaluate(self):
+        self._set_ready()
+        vec = self.get_parameter_value(self.input_v)
+        vec.x = abs(vec.x)
+        vec.y = abs(vec.y)
+        try:
+            vec.z = abs(vec.z)
+        except Exception:
+            pass
+        if vec is not None:
+            self.output_v = vec
+        self._set_value(vec)
+
+
 class ParameterEulerToMatrix(ParameterCell):
     def __init__(self):
         ParameterCell.__init__(self)
@@ -2727,20 +2783,21 @@ class OnNextFrame(ConditionCell):
     def __init__(self):
         ConditionCell.__init__(self)
         self.input_condition = None
-        self._activated = 'resting'
+        self._activated = 0
 
     def evaluate(self):
         input_condition = self.get_parameter_value(self.input_condition)
         if input_condition is LogicNetworkCell.STATUS_WAITING:
             return
         self._set_ready()
-        if self._activated == 'queued':
+        if self._activated == 1:
             self._set_value(True)
-            self._activated = 'resting'
+            if not input_condition:
+                self._activated = 0
         elif input_condition:
             self._set_value(False)
-            self._activated = 'queued'
-        elif self._activated == 'resting':
+            self._activated = 1
+        elif self._activated == 0:
             self._set_value(False)
 
 
