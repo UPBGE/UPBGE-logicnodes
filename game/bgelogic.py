@@ -1,5 +1,4 @@
 import bge
-import bpy
 import aud
 import mathutils
 import math
@@ -12,6 +11,8 @@ import sys
 import operator
 import json
 
+if bge.app.version < (2, 80, 0):
+    import bpy
 
 # Persistent maps
 
@@ -1123,6 +1124,81 @@ class ParameterGetMaterialNodeValue(ParameterCell):
             return
         self._set_ready()
         self.val = game_object_value.blenderObject.material_slots[mat_name].material.node_tree.nodes[node_name].inputs[input_slot].default_value
+
+
+class ParameterGetMaterialNode(ParameterCell):
+    def __init__(self):
+        ActionCell.__init__(self)
+        self.game_object = None
+        self.mat_name = None
+        self.node_name = None
+        self.val = False
+        self.OUT = LogicNetworkSubCell(self, self._get_val)
+
+    def _get_val(self):
+        return self.val
+
+    def evaluate(self):
+        STATUS_WAITING = LogicNetworkCell.STATUS_WAITING
+        game_object_value = self.get_parameter_value(self.game_object)
+        mat_name = self.get_parameter_value(self.mat_name)
+        node_name = self.get_parameter_value(self.node_name)
+        if game_object_value is STATUS_WAITING:
+            return
+        if mat_name is STATUS_WAITING:
+            return
+        if node_name is STATUS_WAITING:
+            return
+        if none_or_invalid(game_object_value):
+            return
+        self._set_ready()
+        self.val = game_object_value.blenderObject.material_slots[mat_name].material.node_tree.nodes[node_name]
+
+
+class ParameterGetMaterialNodeIndex(ParameterCell):
+    def __init__(self):
+        ActionCell.__init__(self)
+        self.node = None
+        self.input_slot = None
+        self.val = False
+        self.OUT = LogicNetworkSubCell(self, self._get_val)
+
+    def _get_val(self):
+        return self.val
+
+    def evaluate(self):
+        STATUS_WAITING = LogicNetworkCell.STATUS_WAITING
+        node = self.get_parameter_value(self.node)
+        if node is STATUS_WAITING:
+            return
+        input_slot = self.get_parameter_value(self.input_slot)
+        if input_slot is STATUS_WAITING:
+            return
+        if none_or_invalid(node):
+            return
+        self._set_ready()
+        self.val = node.inputs[input_slot]
+
+
+class ParameterGetMaterialInputValue(ParameterCell):
+    def __init__(self):
+        ActionCell.__init__(self)
+        self.input = None
+        self.val = False
+        self.OUT = LogicNetworkSubCell(self, self._get_val)
+
+    def _get_val(self):
+        return self.val
+
+    def evaluate(self):
+        STATUS_WAITING = LogicNetworkCell.STATUS_WAITING
+        input_val = self.get_parameter_value(self.input)
+        if input_val is STATUS_WAITING:
+            return
+        if none_or_invalid(input_val):
+            return
+        self._set_ready()
+        self.val = input_val.default_value
 
 
 class ParameterGetMaterialNodeOutputValue(ParameterCell):
@@ -2692,6 +2768,11 @@ class ParameterFindChildByName(ParameterCell):
 
         if (child is None) or (child == ""):
             return
+
+        if parent is LogicNetworkCell.STATUS_WAITING:
+            return
+        if child is LogicNetworkCell.STATUS_WAITING:
+            return
         elif not none_or_invalid(parent):
             # find from parent
             self._set_value(_name_query(parent.childrenRecursive, child))
@@ -4089,6 +4170,40 @@ class ActionSetMaterialNodeValue(ActionCell):
             bge.logic.getCurrentScene().resetTaaSamples = True
 
 
+class ActionSetMaterialNodeInputValue(ActionCell):
+    def __init__(self):
+        ActionCell.__init__(self)
+        self.condition = None
+        self.input_slot = None
+        self.value = None
+        self.done = False
+        self.OUT = LogicNetworkSubCell(self, self._get_done)
+
+    def _get_done(self):
+        return self.done
+
+    def evaluate(self):
+        self.done = False
+        STATUS_WAITING = LogicNetworkCell.STATUS_WAITING
+        condition_value = self.get_parameter_value(self.condition)
+        if condition_value is STATUS_WAITING:
+            return
+        if condition_value is False:
+            self._set_ready()
+            return
+        input_slot = self.get_parameter_value(self.input_slot)
+        value = self.get_parameter_value(self.value)
+        if input_slot is STATUS_WAITING:
+            return
+        if value is STATUS_WAITING:
+            return
+        if condition_value:
+            self.done = True
+            self._set_ready()
+            input_slot.default_value = value
+            bge.logic.getCurrentScene().resetTaaSamples = True
+
+
 class ActionToggleGameObjectGameProperty(ActionCell):
     def __init__(self):
         ActionCell.__init__(self)
@@ -4785,6 +4900,7 @@ class ActionExecuteNetwork(ActionCell):
         else:
             added_network.stop()
             added_network.stopped = True
+            return
         self.done = True
 
 

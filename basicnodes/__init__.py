@@ -2367,8 +2367,74 @@ class NLGetMaterialNodeValue(bpy.types.Node, NLActionNode):
     def get_output_socket_varnames(self):
         return ['OUT']
 
+
 if not bpy.app.version < (2, 80, 0):
     _nodes.append(NLGetMaterialNodeValue)
+
+
+class NLGetMaterialNode(bpy.types.Node, NLActionNode):
+    bl_idname = "NLGetMaterialNode"
+    bl_label = "Get Node"
+    nl_category = "Materials"
+
+    def init(self, context):
+        NLActionNode.init(self, context)
+        self.inputs.new(NLGameObjectSocket.bl_idname, "Object")
+        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Material Name")
+        self.inputs[-1].value = 'Material'
+        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Node Name")
+        self.inputs[-1].value = 'Node'
+        self.outputs.new(NLParameterSocket.bl_idname, "Node")
+
+    def get_netlogic_class_name(self): return "bgelogic.ParameterGetMaterialNode"
+    def get_input_sockets_field_names(self): return ["game_object", "mat_name", 'node_name']
+    def get_output_socket_varnames(self):
+        return ['OUT']
+
+
+if not bpy.app.version < (2, 80, 0):
+    _nodes.append(NLGetMaterialNode)
+
+
+class NLGetMaterialNodeInput(bpy.types.Node, NLActionNode):
+    bl_idname = "NLGetMaterialNodeInput"
+    bl_label = "Get Input"
+    nl_category = "Materials"
+
+    def init(self, context):
+        NLActionNode.init(self, context)
+        self.inputs.new(NLParameterSocket.bl_idname, "Material Node")
+        self.inputs.new(NLIntegerFieldSocket.bl_idname, "Input")
+        self.outputs.new(NLParameterSocket.bl_idname, "Input")
+
+    def get_netlogic_class_name(self): return "bgelogic.ParameterGetMaterialNodeIndex"
+    def get_input_sockets_field_names(self): return ["node", 'input_slot']
+    def get_output_socket_varnames(self):
+        return ['OUT']
+
+
+if not bpy.app.version < (2, 80, 0):
+    _nodes.append(NLGetMaterialNodeInput)
+
+
+class NLGetMaterialNodeInputValue(bpy.types.Node, NLActionNode):
+    bl_idname = "NLGetMaterialNodeInputValue"
+    bl_label = "Get Input Value"
+    nl_category = "Materials"
+
+    def init(self, context):
+        NLActionNode.init(self, context)
+        self.inputs.new(NLParameterSocket.bl_idname, "Input")
+        self.outputs.new(NLParameterSocket.bl_idname, "Input")
+
+    def get_netlogic_class_name(self): return "bgelogic.ParameterGetMaterialInputValue"
+    def get_input_sockets_field_names(self): return ['input']
+    def get_output_socket_varnames(self):
+        return ['OUT']
+
+
+if not bpy.app.version < (2, 80, 0):
+    _nodes.append(NLGetMaterialNodeInputValue)
 
 
 class NLGetMaterialNodeOutputValue(bpy.types.Node, NLActionNode):
@@ -2391,8 +2457,8 @@ class NLGetMaterialNodeOutputValue(bpy.types.Node, NLActionNode):
     def get_output_socket_varnames(self):
         return ['OUT']
 
-if not bpy.app.version < (2, 80, 0):
-    _nodes.append(NLGetMaterialNodeOutputValue)
+#if not bpy.app.version < (2, 80, 0):
+#    _nodes.append(NLGetMaterialNodeOutputValue)
 
 
 class NLGameObjectHasPropertyParameterNode(bpy.types.Node, NLParameterNode):
@@ -4477,6 +4543,28 @@ class NLSetMaterialNodeValue(bpy.types.Node, NLActionNode):
 
 if not bpy.app.version < (2, 80, 0):
     _nodes.append(NLSetMaterialNodeValue)
+
+
+class NLSetMaterialNodeInputValue(bpy.types.Node, NLActionNode):
+    bl_idname = "NLSetMaterialNodeInputValue"
+    bl_label = "Set Node Input Value"
+    nl_category = "Materials"
+
+    def init(self, context):
+        NLActionNode.init(self, context)
+        self.inputs.new(NLConditionSocket.bl_idname, "Condition")
+        self.inputs.new(NLParameterSocket.bl_idname, "Input")
+        self.inputs.new(NLFloatFieldSocket.bl_idname, 'Value')
+        self.outputs.new(NLConditionSocket.bl_idname, "Done")
+
+    def get_netlogic_class_name(self): return "bgelogic.ActionSetMaterialNodeInputValue"
+    def get_input_sockets_field_names(self): return ['condition', "input_slot", 'value']
+    def get_output_socket_varnames(self):
+        return ['OUT']
+
+
+if not bpy.app.version < (2, 80, 0):
+    _nodes.append(NLSetMaterialNodeInputValue)
 
 
 class NLToggleGameObjectGamePropertyActionNode(bpy.types.Node, NLActionNode):
