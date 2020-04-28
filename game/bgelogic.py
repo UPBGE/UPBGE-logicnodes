@@ -893,7 +893,7 @@ class LogicNetwork(LogicNetworkCell):
             if cell.has_status(LogicNetworkCell.STATUS_WAITING):
                 cells.append(cell)
         # update the sound system
-        #self.audio_system.update(self)
+        # self.audio_system.update(self)
         # pulse subnetworks
         for network in self.sub_networks:
             if network._owner.invalid:
@@ -1123,7 +1123,16 @@ class ParameterGetMaterialNodeValue(ParameterCell):
         if none_or_invalid(game_object_value):
             return
         self._set_ready()
-        self.val = game_object_value.blenderObject.material_slots[mat_name].material.node_tree.nodes[node_name].inputs[input_slot].default_value
+        self.val = (
+            game_object_value
+            .blenderObject
+            .material_slots[mat_name]
+            .material
+            .node_tree
+            .nodes[node_name]
+            .inputs[input_slot]
+            .default_value
+        )
 
 
 class ParameterGetMaterialNode(ParameterCell):
@@ -1152,7 +1161,14 @@ class ParameterGetMaterialNode(ParameterCell):
         if none_or_invalid(game_object_value):
             return
         self._set_ready()
-        self.val = game_object_value.blenderObject.material_slots[mat_name].material.node_tree.nodes[node_name]
+        self.val = (
+            game_object_value
+            .blenderObject
+            .material_slots[mat_name]
+            .material
+            .node_tree
+            .nodes[node_name]
+        )
 
 
 class ParameterGetMaterialNodeIndex(ParameterCell):
@@ -1231,7 +1247,16 @@ class ParameterGetMaterialNodeOutputValue(ParameterCell):
         if none_or_invalid(game_object_value):
             return
         self._set_ready()
-        self.val = game_object_value.blenderObject.material_slots[mat_name].material.node_tree.nodes[node_name].outputs[output_slot].default_value
+        self.val = (
+            game_object_value
+            .blenderObject
+            .material_slots[mat_name]
+            .material
+            .node_tree
+            .nodes[node_name]
+            .outputs[output_slot]
+            .default_value
+        )
 
 
 class ParameterObjectHasProperty(ParameterCell):
@@ -1251,11 +1276,18 @@ class ParameterObjectHasProperty(ParameterCell):
         if property_default is LogicNetworkCell.STATUS_WAITING:
             return
         self._set_ready()
-        if none_or_invalid(game_object) or (not property_name) or not game_object:
+        if (
+            none_or_invalid(game_object) or
+            not property_name or
+            not game_object
+        ):
             print('Has Property Node: Object or Property Name invalid!')
             self._set_value(property_default)
         else:
-            self._set_value(True if property_name in game_object.getPropertyNames() else False)
+            self._set_value(
+                True if property_name in game_object.getPropertyNames()
+                else False
+            )
 
 
 class ParameterDictionaryValue(ParameterCell):
@@ -1347,7 +1379,8 @@ class GetActuatorByName(ParameterCell):
         if none_or_invalid(act_name):
             return
         if act_name not in cont.actuators:
-            print('Get Actuator By Name Node: Actuator not conneted or does not exist!')
+            print('Get Actuator By Name Node: \
+                Actuator not conneted or does not exist!')
             return
         self._set_ready()
         self._set_value(bge.logic.getCurrentController().actuators[act_name])
@@ -1373,9 +1406,14 @@ class ActivateActuator(ParameterCell):
         controller = bge.logic.getCurrentController()
         self._set_ready()
         if actuator is STATUS_WAITING or none_or_invalid(actuator):
-            print("There is a problem with the actuator in Execute Actuator Node!")
+            print("There is a problem with the actuator \
+                in Execute Actuator Node!")
             return
-        if none_or_invalid(condition) or condition is STATUS_WAITING or not condition:
+        if (
+            none_or_invalid(condition) or
+            condition is STATUS_WAITING or
+            not condition
+        ):
             controller.deactivate(actuator)
             return
         controller.activate(actuator)
@@ -1402,9 +1440,14 @@ class DeactivateActuator(ParameterCell):
         controller = bge.logic.getCurrentController()
         self._set_ready()
         if actuator is STATUS_WAITING or none_or_invalid(actuator):
-            print("There is a problem with the actuator in Execute Actuator Node!")
+            print("There is a problem with the actuator in \
+                Execute Actuator Node!")
             return
-        if none_or_invalid(condition) or condition is STATUS_WAITING or not condition:
+        if (
+            none_or_invalid(condition) or
+            condition is STATUS_WAITING or
+            not condition
+        ):
             controller.deactivate(actuator)
             return
         controller.deactivate(actuator)
@@ -1431,7 +1474,8 @@ class ActivateActuatorByName(ParameterCell):
         actuator = self.get_parameter_value(self.actuator)
         self._set_ready()
         if actuator is STATUS_WAITING or none_or_invalid(actuator):
-            print("There is a problem with the actuator in Execute Actuator Node!")
+            print("There is a problem with the actuator in \
+                Execute Actuator Node!")
             return
         if condition is STATUS_WAITING or not condition:
             controller.deactivate(actuator)
@@ -1460,7 +1504,8 @@ class DeactivateActuatorByName(ParameterCell):
         actuator = self.get_parameter_value(self.actuator)
         self._set_ready()
         if actuator is STATUS_WAITING or none_or_invalid(actuator):
-            print("There is a problem with the actuator in Execute Actuator Node!")
+            print("There is a problem with the actuator in \
+                Execute Actuator Node!")
             return
         if condition is STATUS_WAITING or not condition:
             controller.deactivate(actuator)
@@ -1490,7 +1535,8 @@ class SetActuatorValue(ParameterCell):
         actuator = self.get_parameter_value(self.actuator)
         self._set_ready()
         if actuator is STATUS_WAITING or none_or_invalid(actuator):
-            print("Set Actuator Value Node: There is a problem with the actuator!")
+            print("Set Actuator Value Node: There is a problem with \
+                the actuator!")
             return
         if condition is STATUS_WAITING or not condition:
             return
@@ -1658,23 +1704,6 @@ class SensorPositive(ParameterCell):
         self._set_value(sens.positive)
 
 
-class ActuatorValues(ParameterCell):
-
-    def __init__(self):
-        ParameterCell.__init__(self)
-        self.actuator = None
-
-    def evaluate(self):
-        actuator = self.get_parameter_value(self.actuator)
-        if none_or_invalid(actuator):
-            return
-        self._set_ready()
-        #if isinstance(actuator, bpy.types.VisibilityActuator):
-        #    self._set_value(True)
-        #    return
-        #self._set_value(False)
-
-
 class ParameterActiveCamera(ParameterCell):
     def __init__(self):
         ParameterCell.__init__(self)
@@ -1799,7 +1828,10 @@ class ParameterPythonModuleFunction(ParameterCell):
             try:
                 self._modfun = getattr(self._module, mfun)
             except Exception:
-                print("Python Module Node: Module '{}' has no function '{}'!".format(self._module, mfun))
+                print(
+                    "Python Module Node: Module '{}' has no function '{}'!"
+                    .format(self._module, mfun)
+                )
                 return
             self._old_mod_fun = mfun
         if use_arg:
@@ -1860,12 +1892,18 @@ class ParameterObjectAttribute(ParameterCell):
         if none_or_invalid(game_object):
             return
         if not hasattr(game_object, attribute_name):
-            print('Get Object Data Node: {} has no attribute {}!'.format(game_object, attribute_name))
+            print(
+                'Get Object Data Node: {} has no attribute {}!'
+                .format(game_object, attribute_name)
+            )
             return
         try:
             self._set_value(getattr(game_object, attribute_name))
         except Exception:
-            print('Get Object Data Node: Could Not Get Value from {}!'.format(game_object))
+            print(
+                'Get Object Data Node: Could Not Get Value from {}!'
+                .format(game_object)
+            )
 
 
 class ClampValue(ParameterCell):
@@ -1942,10 +1980,22 @@ class ParameterArithmeticOp(ParameterCell):
         self.operator = None
 
     def get_vec_calc(self, vec, num):
-        return mathutils.Vector((self.operator(vec.x, num), self.operator(vec.y, num), self.operator(vec.z, num)))
+        return mathutils.Vector(
+            (
+                self.operator(vec.x, num),
+                self.operator(vec.y, num),
+                self.operator(vec.z, num)
+            )
+        )
 
     def get_vec_vec_calc(self, vec, vec2):
-        return mathutils.Vector((self.operator(vec.x, vec2.x), self.operator(vec.y, vec2.y), self.operator(vec.z, vec2.z)))
+        return mathutils.Vector(
+            (
+                self.operator(vec.x, vec2.x),
+                self.operator(vec.y, vec2.y),
+                self.operator(vec.z, vec2.z)
+            )
+        )
 
     def evaluate(self):
         a = self.get_parameter_value(self.operand_a)
@@ -1958,14 +2008,18 @@ class ParameterArithmeticOp(ParameterCell):
         if (a is None) or (b is None):
             self._set_value(None)
         else:
-            if isinstance(a, mathutils.Vector) and isinstance(b, mathutils.Vector):
+            if (
+                isinstance(a, mathutils.Vector) and
+                isinstance(b, mathutils.Vector)
+            ):
                 self._set_value(self.get_vec_vec_calc(a, b))
                 return
             elif isinstance(a, mathutils.Vector):
                 self._set_value(self.get_vec_calc(a, b))
                 return
             elif isinstance(b, mathutils.Vector):
-                print('Math Node: Only Second Argument is Vector! Either both or only first can be Vector!')
+                print('Math Node: Only Second Argument is Vector! \
+                    Either both or only first can be Vector!')
                 return
             self._set_value(self.operator(a, b))
 
@@ -2829,19 +2883,6 @@ class ConditionOnce(ConditionCell):
         self.repeat = None
         self._consumed = False
 
-    #def has_status(self, status):
-    #    if self._consumed:
-    #        return status is LogicNetworkCell.STATUS_READY
-    #    else:
-    #        return ConditionCell.has_status(self, status)
-
-    #def reset(self):
-    #    if self._consumed:
-    #        self._set_ready()
-    #        self._set_value(False)
-    #    else:
-    #        self._set_status(LogicNetworkCell.STATUS_WAITING)
-
     def evaluate(self):
         input_condition = self.get_parameter_value(self.input_condition)
         if input_condition is LogicNetworkCell.STATUS_WAITING:
@@ -3093,7 +3134,6 @@ class ConditionCompareVecs(ConditionCell):
         if operator is None:
             return
         self._set_value(self.get_vec_val(operator, a, b, all_values))
-
 
 
 class ConditionDistanceCheck(ConditionCell):
@@ -3417,7 +3457,7 @@ class ConditionGamepadTrigger(ConditionCell):
         self.threshold = None
         self._value = None
         self.VAL = LogicNetworkSubCell(self, self.get_value)
-        
+
     def get_x_axis(self):
         return self._value
 
@@ -3479,6 +3519,7 @@ class ConditionGamepadButtons(ConditionCell):
             self._button_value = False
             self.initialized = False
 
+
 class ActionKeyLogger(ActionCell):
     def __init__(self, pulse=False):
         ActionCell.__init__(self)
@@ -3523,7 +3564,10 @@ class ActionKeyLogger(ActionCell):
             network.capslock_pressed
         )
         active_events = network.active_keyboard_events
-        active = bge.logic.KX_INPUT_ACTIVE if self.pulse else bge.logic.KX_INPUT_JUST_ACTIVATED
+        active = (
+            bge.logic.KX_INPUT_ACTIVE if self.pulse
+            else bge.logic.KX_INPUT_JUST_ACTIVATED
+        )
         for keycode in active_events:
             event = active_events[keycode]
             if(event is active):
@@ -4166,7 +4210,16 @@ class ActionSetMaterialNodeValue(ActionCell):
         if condition_value:
             self.done = True
             self._set_ready()
-            game_object_value.blenderObject.material_slots[mat_name].material.node_tree.nodes[node_name].inputs[input_slot].default_value = value
+            (
+                game_object_value
+                .blenderObject
+                .material_slots[mat_name]
+                .material
+                .node_tree
+                .nodes[node_name]
+                .inputs[input_slot]
+                .default_value
+            ) = value
             bge.logic.getCurrentScene().resetTaaSamples = True
 
 
@@ -4660,10 +4713,26 @@ class ActionCreateVehicle(ActionCell):
         wheels = bpy.data.collections[wheels]
         for wheel in wheels_steering.objects:
             wheel = check_game_object(wheel.name)
-            car.addWheel(wheel, wheel.worldPosition - game_object.worldPosition, down, axle_dir, suspension, abs(wheel.worldScale.x/2), True)
+            car.addWheel(
+                wheel,
+                wheel.worldPosition - game_object.worldPosition,
+                down,
+                axle_dir,
+                suspension,
+                abs(wheel.worldScale.x/2),
+                True
+            )
         for wheel in wheels.objects:
             wheel = check_game_object(wheel.name)
-            car.addWheel(wheel, wheel.worldPosition - game_object.worldPosition, down, axle_dir, suspension, abs(wheel.worldScale.x/2), False)
+            car.addWheel(
+                wheel,
+                wheel.worldPosition - game_object.worldPosition,
+                down,
+                axle_dir,
+                suspension,
+                abs(wheel.worldScale.x/2),
+                False
+            )
         for wheel in range(car.getNumWheels()):
             car.setSuspensionStiffness(stiffness, wheel)
             car.setSuspensionDamping(damping, wheel)
@@ -4799,7 +4868,10 @@ class ActionSetObjectAttribute(ActionCell):
         if none_or_invalid(game_object_value):
             return
         if not hasattr(game_object_value, value_type):
-            print('Set Object Data Node: {} has no attribute {}!'.format(game_object_value, value_type))
+            print(
+                'Set Object Data Node: {} has no attribute {}!'
+                .format(game_object_value, value_type)
+            )
             return
         try:
             setattr(
@@ -4808,9 +4880,15 @@ class ActionSetObjectAttribute(ActionCell):
                 attribute_value_value
             )
         except Exception:
-            print('Set Object Data Node: Could Not Set Value for {}!'.format(game_object_value))
+            print(
+                'Set Object Data Node: Could Not Set Value for {}!'
+                .format(game_object_value)
+            )
         if attribute_value_value == 'worldScale':
-            game_object_value.reinstancePhysicsMesh(game_object_value, game_object_value.meshes[0])
+            game_object_value.reinstancePhysicsMesh(
+                game_object_value,
+                game_object_value.meshes[0]
+            )
         self.done = True
 
 
@@ -6451,7 +6529,10 @@ class ActionCharacterJump(ActionCell):
         try:
             physics.jump()
         except Exception:
-            print('Error: {} not set to Character Physics!'.format(game_object.name))
+            print(
+                'Error: {} not set to Character Physics!'
+                .format(game_object.name)
+            )
         self.done = True
 
 
@@ -6488,7 +6569,10 @@ class ActionSaveGame(ActionCell):
         self._set_ready()
         cust_path = self.get_custom_path(self.path)
 
-        path = bge.logic.expandPath('//Saves/') if self.path == '' else cust_path
+        path = (
+            bge.logic.expandPath('//Saves/') if self.path == ''
+            else cust_path
+        )
         os.makedirs(path, exist_ok=True)
 
         scene = bge.logic.getCurrentScene()
@@ -6525,10 +6609,26 @@ class ActionSaveGame(ActionCell):
                         'name': obj.name,
                         'type': 'dynamic',
                         'data': {
-                            'worldPosition': {'x': loc.x, 'y': loc.y, 'z': loc.z},
-                            'worldOrientation': {'x': rot.x, 'y': rot.y, 'z': rot.z},
-                            'worldLinearVelocity': {'x': lin_vel.x, 'y': lin_vel.y, 'z': lin_vel.z},
-                            'worldAngularVelocity': {'x': ang_vel.x, 'y': ang_vel.y, 'z': ang_vel.z},
+                            'worldPosition': {
+                                'x': loc.x,
+                                'y': loc.y,
+                                'z': loc.z
+                            },
+                            'worldOrientation': {
+                                'x': rot.x,
+                                'y': rot.y,
+                                'z': rot.z
+                            },
+                            'worldLinearVelocity': {
+                                'x': lin_vel.x,
+                                'y': lin_vel.y,
+                                'z': lin_vel.z
+                            },
+                            'worldAngularVelocity': {
+                                'x': ang_vel.x,
+                                'y': ang_vel.y,
+                                'z': ang_vel.z
+                            },
                             'worldScale': {'x': sca.x, 'y': sca.y, 'z': sca.z},
                             'props': prop_list
                         }
@@ -6542,10 +6642,22 @@ class ActionSaveGame(ActionCell):
                         'name': obj.name,
                         'type': 'character',
                         'data': {
-                            'worldPosition': {'x': loc.x, 'y': loc.y, 'z': loc.z},
-                            'worldOrientation': {'x': rot.x, 'y': rot.y, 'z': rot.z},
+                            'worldPosition': {
+                                'x': loc.x,
+                                'y': loc.y,
+                                'z': loc.z
+                            },
+                            'worldOrientation': {
+                                'x': rot.x,
+                                'y': rot.y,
+                                'z': rot.z
+                            },
                             'worldScale': {'x': sca.x, 'y': sca.y, 'z': sca.z},
-                            'walkDirection': {'x': wDir.x, 'y': wDir.y, 'z': wDir.z},
+                            'walkDirection': {
+                                'x': wDir.x,
+                                'y': wDir.y,
+                                'z': wDir.z
+                            },
                             'props': prop_list
                         }
                     }
@@ -6558,8 +6670,16 @@ class ActionSaveGame(ActionCell):
                         'name': obj.name,
                         'type': 'light',
                         'data': {
-                            'worldPosition': {'x': loc.x, 'y': loc.y, 'z': loc.z},
-                            'worldOrientation': {'x': rot.x, 'y': rot.y, 'z': rot.z},
+                            'worldPosition': {
+                                'x': loc.x,
+                                'y': loc.y,
+                                'z': loc.z
+                            },
+                            'worldOrientation': {
+                                'x': rot.x,
+                                'y': rot.y,
+                                'z': rot.z
+                            },
                             'worldScale': {'x': sca.x, 'y': sca.y, 'z': sca.z},
                             'energy': obj.energy,
                             'props': prop_list
@@ -6572,8 +6692,16 @@ class ActionSaveGame(ActionCell):
                         'name': obj.name,
                         'type': 'static',
                         'data': {
-                            'worldPosition': {'x': loc.x, 'y': loc.y, 'z': loc.z},
-                            'worldOrientation': {'x': rot.x, 'y': rot.y, 'z': rot.z},
+                            'worldPosition': {
+                                'x': loc.x,
+                                'y': loc.y,
+                                'z': loc.z
+                            },
+                            'worldOrientation': {
+                                'x': rot.x,
+                                'y': rot.y,
+                                'z': rot.z
+                            },
                             'worldScale': {'x': sca.x, 'y': sca.y, 'z': sca.z},
                             'props': prop_list
                         }
@@ -6623,7 +6751,10 @@ class ActionLoadGame(ActionCell):
             return
         cust_path = self.get_custom_path(self.path)
 
-        path = bge.logic.expandPath('//Saves/') if self.path == '' else cust_path
+        path = (
+            bge.logic.expandPath('//Saves/') if self.path == ''
+            else cust_path
+        )
 
         scene = bge.logic.getCurrentScene()
 
@@ -6634,7 +6765,10 @@ class ActionLoadGame(ActionCell):
                     if obj['name'] in scene.objects:
                         game_obj = scene.objects[obj['name']]
                     else:
-                        print('Could not load Object {}: Not in active Scene!'.format(obj['name']))
+                        print(
+                            'Could not load Object {}: Not in active Scene!'
+                            .format(obj['name'])
+                        )
                         continue
 
                     wPos = self.get_game_vec(obj['data']['worldPosition'])
@@ -6646,8 +6780,12 @@ class ActionLoadGame(ActionCell):
                     game_obj.worldScale = wSca
 
                     if obj['type'] == 'dynamic':
-                        linVel = self.get_game_vec(obj['data']['worldLinearVelocity'])
-                        angVel = self.get_game_vec(obj['data']['worldAngularVelocity'])
+                        linVel = self.get_game_vec(
+                            obj['data']['worldLinearVelocity']
+                        )
+                        angVel = self.get_game_vec(
+                            obj['data']['worldAngularVelocity']
+                        )
                         game_obj.worldLinearVelocity = linVel
                         game_obj.worldAngularVelocity = angVel
 
@@ -6657,12 +6795,19 @@ class ActionLoadGame(ActionCell):
 
                     if obj['type'] == 'character':
                         wDir = self.get_game_vec(obj['data']['walkDirection'])
-                        bge.constraints.getCharacter(game_obj).walkDirection = wDir
+                        (
+                            bge.constraints
+                            .getCharacter(game_obj)
+                            .walkDirection
+                        ) = wDir
 
                     for prop in obj['data']['props']:
                         game_obj[prop['name']] = prop['value']
         except Exception:
-            print('Load Game Node: Could Not Find Saved Game on Slot {}!'.format(slot))
+            print(
+                'Load Game Node: Could Not Find Saved Game on Slot {}!'
+                .format(slot)
+            )
 
         self.done = True
 
@@ -6775,7 +6920,7 @@ class ActionLoadVariable(ActionCell):
         condition = self.get_parameter_value(self.condition)
         if condition is LogicNetworkCell.STATUS_WAITING:
             return
-        if condition == False:
+        if condition is False:
             return
         name = self.get_parameter_value(self.name)
         if name is LogicNetworkCell.STATUS_WAITING:
@@ -6810,7 +6955,10 @@ class ActionRemoveVariable(ActionCell):
             try:
                 del data[name]
             except Exception:
-                print('Error: Could not remove {} from variables!'.format(name))
+                print(
+                    'Error: Could not remove {} from variables!'
+                    .format(name)
+                )
             f.close()
             f = open(path + 'variables.json', 'w')
             json.dump(data, f, indent=2)
@@ -6992,7 +7140,10 @@ class ActionSetCharacterJump(ActionCell):
         try:
             physics.maxJumps = max_jumps
         except Exception:
-            print('Error: {} not set to Character Physics!'.format(game_object.name))
+            print(
+                'Error: {} not set to Character Physics!'
+                .format(game_object.name)
+            )
         self.done = True
 
 
@@ -7026,7 +7177,10 @@ class ActionSetCharacterGravity(ActionCell):
         try:
             physics.gravity = gravity
         except Exception as e:
-            print('Error: {} not set to Character Physics!'.format(game_object.name))
+            print(
+                'Error: {} not set to Character Physics!'
+                .format(game_object.name)
+            )
             print('Message: ' + e)
         self.done = True
 
@@ -7061,7 +7215,10 @@ class ActionSetCharacterWalkDir(ActionCell):
         try:
             physics.walkDirection = walkDir
         except Exception as e:
-            print('Error: {} not set to Character Physics!'.format(game_object.name))
+            print(
+                'Error: {} not set to Character Physics!'
+                .format(game_object.name)
+            )
             print('Message: ' + e)
         self.done = True
 
@@ -7111,7 +7268,10 @@ class ActionGetCharacterInfo(ActionCell):
             self.gravity = physics.gravity
             self.on_ground = physics.onGround
         except Exception:
-            print('Error: {} not set to Character Physics!'.format(game_object.name))
+            print(
+                'Error: {} not set to Character Physics!'
+                .format(game_object.name)
+            )
 
 
 class ActionApplyTorque(ActionCell):
@@ -7239,7 +7399,6 @@ class ActionPlayAction(ActionCell):
             return
         game_object = self.get_parameter_value(self.game_object)
         action_name = self.get_parameter_value(self.action_name)
-        stop = self.get_parameter_value(self.stop)
         start_frame = self.get_parameter_value(self.start_frame)
         end_frame = self.get_parameter_value(self.end_frame)
         layer = self.get_parameter_value(self.layer)
@@ -7300,7 +7459,10 @@ class ActionPlayAction(ActionCell):
                 self._running = True
                 is_near_end = False
                 self._frame = playing_frame
-                if layer_weight != self.old_layer_weight or speed != self.old_speed:
+                if (
+                    layer_weight != self.old_layer_weight or
+                    speed != self.old_speed
+                ):
                     game_object.stopAction(layer)
                     game_object.playAction(
                         action_name,
@@ -7311,7 +7473,7 @@ class ActionPlayAction(ActionCell):
                         blendin=blendin,
                         play_mode=play_mode,
                         speed=speed,
-                        layer_weight= 1 - layer_weight,
+                        layer_weight=1 - layer_weight,
                         blend_mode=blend_mode)
                     game_object.setActionFrame(playing_frame + speed, layer)
                 # TODO: the meaning of start-end depends
@@ -7479,8 +7641,8 @@ class ActionStartSound(ActionCell):
         self.sound = None
         self.loop_count = None
         self.location = None
-        #self.orientation = None
-        #self.velocity = None
+        # self.orientation = None
+        # self.velocity = None
         self.pitch = None
         self.volume = None
         self.attenuation = None
@@ -7498,10 +7660,10 @@ class ActionStartSound(ActionCell):
             return
         sound = self.get_parameter_value(self.sound)
         location = self.get_parameter_value(self.location)
-        #orientation = self.get_parameter_value(self.orientation)
+        # orientation = self.get_parameter_value(self.orientation)
         orientation = mathutils.Euler((0, 0, 0), 'XYZ')
         velocity = mathutils.Vector((0, 0, 0))
-        #velocity = self.get_parameter_value(self.velocity)
+        # velocity = self.get_parameter_value(self.velocity)
         pitch = self.get_parameter_value(self.pitch)
         loop_count = self.get_parameter_value(self.loop_count)
         volume = self.get_parameter_value(self.volume)
@@ -8678,7 +8840,10 @@ class RemovePhysicsConstraint(ActionCell):
         try:
             bge.constraints.removeConstraint(obj[name].getConstraintId())
         except Exception:
-            print('Remove Physics Constraint Node: Constraint {} does not exist!'.format(name))
+            print(
+                'Remove Physics Constraint Node: Constraint {} does not exist!'
+                .format(name)
+            )
         self.done = True
 
 

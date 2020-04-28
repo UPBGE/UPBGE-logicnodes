@@ -78,7 +78,8 @@ _enum_constraint_types = [
     (
         "bge.constraints.CONETWIST_CONSTRAINT",
         "Cone Twist",
-        "Allow rotations around all axis with limits for the cone and twist axis"
+        "Allow rotations around all axis with limits for the cone \
+            and twist axis"
     ),
     (
         "bge.constraints.GENERIC_6DOF_CONSTRAINT",
@@ -191,10 +192,26 @@ _enum_readable_member_names = [
     ),
     ("localTransform", "Local Transform", "The local transform of the object"),
     ("worldScale", "Scale", "The global scale of the object"),
-    ("localLinearVelocity", "Local Velocity", "The local linear velocity of the object"),
-    ("localAngularVelocity", "Local Torque", "The local rotational velocity of the object"),
-    ("worldLinearVelocity", "World Velocity", "The local linear velocity of the object"),
-    ("worldAngularVelocity", "World Torque", "The local rotational velocity of the object"),
+    (
+        "localLinearVelocity",
+        "Local Velocity",
+        "The local linear velocity of the object"
+    ),
+    (
+        "localAngularVelocity",
+        "Local Torque",
+        "The local rotational velocity of the object"
+    ),
+    (
+        "worldLinearVelocity",
+        "World Velocity",
+        "The local linear velocity of the object"
+    ),
+    (
+        "worldAngularVelocity",
+        "World Torque",
+        "The local rotational velocity of the object"
+    ),
     ("color", "Color", "The solid color of the object"),
     ("name", "Name", "The name of the object"),
     (
@@ -220,10 +237,26 @@ _enum_writable_member_names = [
     ),
     ("localTransform", "Local Transform", "The local transform of the object"),
     ("worldScale", "Scale", "The global scale of the object"),
-    ("localLinearVelocity", "Local Velocity", "The local linear velocity of the object"),
-    ("localAngularVelocity", "Local Torque", "The local rotational velocity of the object"),
-    ("worldLinearVelocity", "World Velocity", "The local linear velocity of the object"),
-    ("worldAngularVelocity", "World Torque", "The local rotational velocity of the object"),
+    (
+        "localLinearVelocity",
+        "Local Velocity",
+        "The local linear velocity of the object"
+    ),
+    (
+        "localAngularVelocity",
+        "Local Torque",
+        "The local rotational velocity of the object"
+    ),
+    (
+        "worldLinearVelocity",
+        "World Velocity",
+        "The local linear velocity of the object"
+    ),
+    (
+        "worldAngularVelocity",
+        "World Torque",
+        "The local rotational velocity of the object"
+    ),
     ("color", "Color", "The solid color of the object")
 ]
 
