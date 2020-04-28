@@ -26,15 +26,15 @@ def get_icons_directory():
 
 
 class BGEPropFilter(bpy.types.PropertyGroup):
-    do_filter = bpy.props.BoolProperty()
-    filter_by = bpy.props.EnumProperty(items=_filter_prop_types)
-    filter_name = bpy.props.StringProperty()
-    show_hidden = bpy.props.BoolProperty(default=True)
+    do_filter: bpy.props.BoolProperty()
+    filter_by: bpy.props.EnumProperty(items=_filter_prop_types)
+    filter_name: bpy.props.StringProperty()
+    show_hidden: bpy.props.BoolProperty(default=True)
 
 
 class BGEGroupName(bpy.types.PropertyGroup):
-    name = bpy.props.StringProperty()
-    enabled = bpy.props.BoolProperty()
+    name: bpy.props.StringProperty()
+    enabled: bpy.props.BoolProperty()
 
 
 class BGEGameComponentPanel(bpy.types.Panel):
@@ -64,7 +64,7 @@ class BGEGameComponentPanel(bpy.types.Panel):
         )
 
 
-class BGEGamePropertyPanel(bpy.types.Panel):
+class BGE_PT_GamePropertyPanel(bpy.types.Panel):
     bl_label = "Object Properties"
     bl_space_type = "NODE_EDITOR"
     bl_region_type = "UI"
@@ -169,13 +169,12 @@ class BGEGamePropertyPanel(bpy.types.Panel):
             row_info.prop(prop, 'value', text='Value')
 
 
-class BGEGamePropertyPanel3DView(bpy.types.Panel):
-    bl_idname = "PropertiesPanel3D"
+class BGE_PT_GamePropertyPanel3DView(bpy.types.Panel):
     bl_label = "Object Properties"
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
     bl_category = "Item"
-    name = bpy.props.StringProperty()
+    name: bpy.props.StringProperty()
 
     @classmethod
     def poll(cls, context):
@@ -265,13 +264,12 @@ class BGEGamePropertyPanel3DView(bpy.types.Panel):
             row_info.prop(prop, 'value', text='Value')
 
 
-class BGEGamePropertyPanelObject(bpy.types.Panel):
-    bl_idname = "PropertiesPanelProperties"
+class BGE_PT_PropertiesPanelObject(bpy.types.Panel):
     bl_label = "Game Properties"
     bl_space_type = "PROPERTIES"
     bl_region_type = "WINDOW"
     bl_context = "object"
-    name = bpy.props.StringProperty()
+    name: bpy.props.StringProperty()
 
     @classmethod
     def poll(cls, context):
@@ -361,7 +359,7 @@ class BGEGamePropertyPanelObject(bpy.types.Panel):
             row_info.prop(prop, 'value', text='Value')
 
 
-class BGELogicTreeGroups(bpy.types.Panel):
+class BGE_PT_LogicTreeGroups(bpy.types.Panel):
     bl_label = "Tree Groups"
     bl_space_type = "NODE_EDITOR"
     bl_region_type = "UI"
@@ -408,7 +406,8 @@ class BGELogicTreeGroups(bpy.types.Panel):
                 bge_netlogic.ops.NLAdd4KeyTemplateOperator.bl_idname
             )
 
-class BGELogicTreeInfoPanel(bpy.types.Panel):
+
+class BGE_PT_LogicTreeInfoPanel(bpy.types.Panel):
     bl_label = "Object Trees"
     bl_space_type = "NODE_EDITOR"
     bl_region_type = "UI"
@@ -457,12 +456,12 @@ class BGELogicTreeInfoPanel(bpy.types.Panel):
                 bge_netlogic.ops.NLApplyLogicOperator.bl_idname,
                 icon_value=self.icons["IconApply"].icon_id,
                 text="Apply To Selected"
-            ).owner = "BGELogicPanel"
+            ).owner = "BGE_PT_LogicPanel"
         else:
             apply.operator(
                 bge_netlogic.ops.NLApplyLogicOperator.bl_idname,
                 text="Apply To Selected"
-            ).owner = "BGELogicPanel"
+            ).owner = "BGE_PT_LogicPanel"
         code = layout.box()
         code.operator(
             bge_netlogic.ops.NLGenerateLogicNetworkOperator.bl_idname,
@@ -526,7 +525,7 @@ class BGELogicTreeInfoPanel(bpy.types.Panel):
             ).tree_name = name
 
 
-class BGELogicPanel(bpy.types.Panel):
+class BGE_PT_LogicPanel(bpy.types.Panel):
     bl_label = "Custom Nodes"
     bl_space_type = "NODE_EDITOR"
     bl_region_type = "UI"
