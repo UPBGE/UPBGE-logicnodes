@@ -11,7 +11,7 @@ import sys
 import operator
 import json
 
-if bge.app.version < (2, 80, 0):
+if not bge.app.version < (2, 80, 0):
     import bpy
 
 # Persistent maps
