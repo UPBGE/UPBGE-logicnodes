@@ -337,8 +337,8 @@ utilities = _abs_import("utilities", _abs_path("utilities", "__init__.py"))
 
 
 class NLNodeTreeReference(bpy.types.PropertyGroup):
-    tree_name = bpy.props.StringProperty()
-    tree_initial_status = bpy.props.BoolProperty()
+    tree_name: bpy.props.StringProperty()
+    tree_initial_status: bpy.props.BoolProperty()
 
 
 class NodeCategory(nodeitems_utils.NodeCategory):
@@ -379,13 +379,13 @@ _registered_classes.extend(basicnodes._nodes)
 _registered_classes.extend([
     ui.BGEPropFilter,
     ui.BGEGroupName,
-    ui.BGELogicPanel,
-    ui.BGELogicTreeInfoPanel,
-    ui.BGEGamePropertyPanel,
+    ui.BGE_PT_LogicPanel,
+    ui.BGE_PT_LogicTreeInfoPanel,
+    ui.BGE_PT_GamePropertyPanel,
     # ui.BGEGameComponentPanel,
-    ui.BGEGamePropertyPanel3DView,
-    ui.BGEGamePropertyPanelObject,
-    ui.BGELogicTreeGroups
+    ui.BGE_PT_GamePropertyPanel3DView,
+    ui.BGE_PT_PropertiesPanelObject,
+    ui.BGE_PT_LogicTreeGroups
 ])
 
 
@@ -426,7 +426,6 @@ def _list_menu_nodes():
             get_cond_list(c).append(nodeitems_utils.NodeItem(c.bl_idname))
         elif issubclass(c, basicnodes.NLActionNode):
             get_act_list(c).append(nodeitems_utils.NodeItem(c.bl_idname))
-
 
     pmap_keys = list(proxy_map.keys())
     pmap_keys.sort()

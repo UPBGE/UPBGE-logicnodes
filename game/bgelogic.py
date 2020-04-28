@@ -6488,7 +6488,7 @@ class ActionSaveGame(ActionCell):
         self._set_ready()
         cust_path = self.get_custom_path(self.path)
 
-        path = bpy.path.abspath('//Saves/') if self.path == '' else cust_path
+        path = bge.logic.expandPath('//Saves/') if self.path == '' else cust_path
         os.makedirs(path, exist_ok=True)
 
         scene = bge.logic.getCurrentScene()
@@ -6551,6 +6551,8 @@ class ActionSaveGame(ActionCell):
                     }
                 )
             elif isinstance(obj, bge.types.KX_LightObject):
+                if bge.app.version >= (2, 80, 0):
+                    continue
                 objs.append(
                     {
                         'name': obj.name,
@@ -6577,6 +6579,7 @@ class ActionSaveGame(ActionCell):
                         }
                     }
                 )
+            data['globalDict'] = bge.logic.globalDict
 
         with open(path + 'save' + str(slot) + ".json", "w") as file:
             json.dump(data, file, indent=2)
@@ -6620,7 +6623,7 @@ class ActionLoadGame(ActionCell):
             return
         cust_path = self.get_custom_path(self.path)
 
-        path = bpy.path.abspath('//Saves/') if self.path == '' else cust_path
+        path = bge.logic.expandPath('//Saves/') if self.path == '' else cust_path
 
         scene = bge.logic.getCurrentScene()
 

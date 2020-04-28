@@ -35,7 +35,7 @@ class WaitForKeyOperator(bpy.types.Operator):
     bl_idname = "bge_netlogic.waitforkey"
     bl_label = "Press a Key"
     bl_options = {'REGISTER', 'UNDO'}
-    keycode = bpy.props.StringProperty()
+    keycode: bpy.props.StringProperty()
 
     def __init__(self):
         self.socket = None
@@ -95,7 +95,7 @@ class NLImportProjectNodes(bpy.types.Operator):
     bl_idname = "bge_netlogic.import_nodes"
     bl_label = "Import Logic Nodes"
     bl_options = {'REGISTER', 'UNDO'}
-    filepath = bpy.props.StringProperty(subtype="FILE_PATH")
+    filepath: bpy.props.StringProperty(subtype="FILE_PATH")
 
     @classmethod
     def poll(cls, context):
@@ -227,7 +227,7 @@ class NLSelectTreeByNameOperator(bpy.types.Operator):
     bl_idname = "bge_netlogic.select_tree_by_name"
     bl_label = "Edit"
     bl_description = "Edit"
-    tree_name = bpy.props.StringProperty()
+    tree_name: bpy.props.StringProperty()
 
     @classmethod
     def poll(cls, context):
@@ -255,7 +255,7 @@ class NLRemoveTreeByNameOperator(bpy.types.Operator):
     bl_label = "Remove"
     bl_options = {'REGISTER', 'UNDO'}
     bl_description = "Remove the tree from the selected objects"
-    tree_name = bpy.props.StringProperty()
+    tree_name: bpy.props.StringProperty()
 
     @classmethod
     def poll(cls, context):
@@ -331,7 +331,7 @@ class NLMakeGroupOperator(bpy.types.Operator):
     bl_label = "Pack Into New Tree"
     bl_description = "Convert selected Nodes to a new tree. Will be applied to selected object. WARNING: All Nodes connected to selection must be selected too"
     bl_options = {'REGISTER', 'UNDO'}
-    owner = bpy.props.StringProperty()
+    owner: bpy.props.StringProperty()
 
     @classmethod
     def poll(cls, context):
@@ -452,7 +452,7 @@ class NLAdd4KeyTemplateOperator(bpy.types.Operator):
     bl_label = "4 Key Movement"
     bl_description = "Add 4 Key Movement (WASD with normalized vector)"
     bl_options = {'REGISTER', 'UNDO'}
-    owner = bpy.props.StringProperty()
+    owner: bpy.props.StringProperty()
 
     @classmethod
     def poll(cls, context):
@@ -600,7 +600,7 @@ class NLApplyLogicOperator(bpy.types.Operator):
     bl_label = "Apply Logic"
     bl_description = "Apply the current tree to the selected objects."
     bl_options = {'REGISTER', 'UNDO'}
-    owner = bpy.props.StringProperty()
+    owner: bpy.props.StringProperty()
 
     @classmethod
     def poll(cls, context):
@@ -882,7 +882,7 @@ class NLRemovePropertyOperator(bpy.types.Operator):
     bl_label = "Add Game Property"
     bl_description = "Remove this property"
     bl_options = {'REGISTER', 'UNDO'}
-    index = bpy.props.IntProperty()
+    index: bpy.props.IntProperty()
 
     @classmethod
     def poll(cls, context):
@@ -899,8 +899,8 @@ class NLMovePropertyOperator(bpy.types.Operator):
     bl_label = "Move Game Property"
     bl_description = "Move Game Property"
     bl_options = {'REGISTER', 'UNDO'}
-    index = bpy.props.IntProperty()
-    direction = bpy.props.StringProperty()
+    index: bpy.props.IntProperty()
+    direction: bpy.props.StringProperty()
 
     @classmethod
     def poll(cls, context):
@@ -931,8 +931,8 @@ class NLSwitchInitialNetworkStatusOperator(bpy.types.Operator):
     bl_description = "Enables of disables the logic tree at start for the \
         selected objects"
     bl_options = {'REGISTER', 'UNDO'}
-    tree_name = bpy.props.StringProperty()
-    current_status = bpy.props.BoolProperty()
+    tree_name: bpy.props.StringProperty()
+    current_status: bpy.props.BoolProperty()
 
     @classmethod
     def poll(cls, context):
