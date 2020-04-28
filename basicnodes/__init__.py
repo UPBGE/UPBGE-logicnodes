@@ -4547,7 +4547,7 @@ if not bpy.app.version < (2, 80, 0):
 
 class NLSetMaterialNodeInputValue(bpy.types.Node, NLActionNode):
     bl_idname = "NLSetMaterialNodeInputValue"
-    bl_label = "Set Node Input Value"
+    bl_label = "Set Input Value"
     nl_category = "Materials"
 
     def init(self, context):
