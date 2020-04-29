@@ -7,7 +7,7 @@ import time
 bl_info = {
     "name": "Logic Nodes",
     "description": (
-        "A Node System to create game logic. Contributors: L_P"
+        "A Node System to create game logic. Contributors: L_P, Mike King"
     ),
     "author": "pgi, Leopold A-C (Iza Zed)",
     "version": (0, 8, 8),

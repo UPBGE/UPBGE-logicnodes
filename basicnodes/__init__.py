@@ -1304,6 +1304,28 @@ class NLQuotedStringFieldSocket(bpy.types.NodeSocket, NetLogicSocketType):
 _sockets.append(NLQuotedStringFieldSocket)
 
 
+class NLFilePathSocket(bpy.types.NodeSocket, NetLogicSocketType):
+    bl_idname = "NLFilePathSocket"
+    bl_label = "String"
+    value: bpy.props.StringProperty(subtype='FILE_PATH', update=update_tree_code)
+
+    def draw_color(self, context, node):
+        return PARAMETER_SOCKET_COLOR
+
+    def draw(self, context, layout, node, text):
+        if self.is_linked or self.is_output:
+            layout.label(text=text)
+        else:
+            col = layout.column()
+            col.label(text=text)
+            col.prop(self, "value", text='')
+
+    def get_unlinked_value(self): return '"{}"'.format(self.value)
+
+
+_sockets.append(NLFilePathSocket)
+
+
 class NLIntegerFieldSocket(bpy.types.NodeSocket, NetLogicSocketType):
     bl_idname = "NLIntegerFieldSocket"
     bl_label = "Integer"
@@ -5629,7 +5651,11 @@ class NLActionSaveGame(bpy.types.Node, NLActionNode):
     bl_label = "Save Game"
     nl_category = "Game"
     custom_path: bpy.props.BoolProperty(update=update_tree_code)
-    path: bpy.props.StringProperty(update=update_tree_code, description='Choose a Path to save the file to. Start with "./" to make it relative to the file path.')
+    path: bpy.props.StringProperty(
+        subtype='FILE_PATH',
+        update=update_tree_code,
+        description='Choose a Path to save the file to. Start with "./" to make it relative to the file path.'
+    )
 
     def init(self, context):
         NLActionNode.init(self, context)
@@ -5640,7 +5666,7 @@ class NLActionSaveGame(bpy.types.Node, NLActionNode):
     def draw_buttons(self, context, layout):
         layout.prop(self, "custom_path", toggle=True, text="Custom Path" if self.custom_path else "File Path/Saves", icon='FILE_FOLDER')
         if self.custom_path:
-            layout.prop(self, "path", text='Path')
+            layout.prop(self, "path", text='')
 
     def get_netlogic_class_name(self):
         return "bgelogic.ActionSaveGame"
@@ -5663,7 +5689,11 @@ class NLActionLoadGame(bpy.types.Node, NLActionNode):
     bl_label = "Load Game"
     nl_category = "Game"
     custom_path: bpy.props.BoolProperty(update=update_tree_code)
-    path: bpy.props.StringProperty(update=update_tree_code, description='Choose a Path to save the file to. Start with "./" to make it relative to the file path.')
+    path: bpy.props.StringProperty(
+        subtype='FILE_PATH',
+        update=update_tree_code,
+        description='Choose a Path to save the file to. Start with "./" to make it relative to the file path.'
+    )
 
     def init(self, context):
         NLActionNode.init(self, context)
@@ -5674,7 +5704,7 @@ class NLActionLoadGame(bpy.types.Node, NLActionNode):
     def draw_buttons(self, context, layout):
         layout.prop(self, "custom_path", toggle=True, text="Custom Path" if self.custom_path else "File Path/Saves", icon='FILE_FOLDER')
         if self.custom_path:
-            layout.prop(self, "path", text='Path')
+            layout.prop(self, "path", text='')
 
     def get_netlogic_class_name(self):
         return "bgelogic.ActionLoadGame"
@@ -5697,7 +5727,11 @@ class NLActionSaveVariable(bpy.types.Node, NLActionNode):
     bl_label = "Save Variable"
     nl_category = "Variables"
     custom_path: bpy.props.BoolProperty(update=update_tree_code)
-    path: bpy.props.StringProperty(update=update_tree_code, description='Choose a Path to save the file to. Start with "./" to make it relative to the file path.')
+    path: bpy.props.StringProperty(
+        subtype='FILE_PATH',
+        update=update_tree_code,
+        description='Choose a Path to save the file to. Start with "./" to make it relative to the file path.'
+    )
 
     def init(self, context):
         NLActionNode.init(self, context)
@@ -5711,7 +5745,7 @@ class NLActionSaveVariable(bpy.types.Node, NLActionNode):
         layout.label(text='Save To:')
         layout.prop(self, "custom_path", toggle=True, text="Custom Path" if self.custom_path else "File Path/Data", icon='FILE_FOLDER')
         if self.custom_path:
-            layout.prop(self, "path", text='Path')
+            layout.prop(self, "path", text='')
 
     def get_netlogic_class_name(self):
         return "bgelogic.ActionSaveVariable"
@@ -5755,7 +5789,11 @@ class NLActionLoadVariable(bpy.types.Node, NLActionNode):
     bl_label = "Load Variable"
     nl_category = "Variables"
     custom_path: bpy.props.BoolProperty(update=update_tree_code)
-    path: bpy.props.StringProperty(update=update_tree_code, description='Choose a Path to save the file to. Start with "./" to make it relative to the file path.')
+    path: bpy.props.StringProperty(
+        subtype='FILE_PATH',
+        update=update_tree_code,
+        description='Choose a Path to save the file to. Start with "./" to make it relative to the file path.'
+    )
 
     def init(self, context):
         NLActionNode.init(self, context)
@@ -5769,7 +5807,7 @@ class NLActionLoadVariable(bpy.types.Node, NLActionNode):
         layout.label(text='Load From:')
         layout.prop(self, "custom_path", toggle=True, text="Custom Path" if self.custom_path else "File Path/Data", icon='FILE_FOLDER')
         if self.custom_path:
-            layout.prop(self, "path", text='Path')
+            layout.prop(self, "path", text='')
 
     def get_netlogic_class_name(self):
         return "bgelogic.ActionLoadVariable"
@@ -5792,7 +5830,11 @@ class NLActionRemoveVariable(bpy.types.Node, NLActionNode):
     bl_label = "Remove Variable"
     nl_category = "Variables"
     custom_path: bpy.props.BoolProperty(update=update_tree_code)
-    path: bpy.props.StringProperty(update=update_tree_code, description='Choose a Path to save the file to. Start with "./" to make it relative to the file path.')
+    path: bpy.props.StringProperty(
+        subtype='FILE_PATH',
+        update=update_tree_code,
+        description='Choose a Path to save the file to. Start with "./" to make it relative to the file path.'
+    )
 
     def init(self, context):
         NLActionNode.init(self, context)
@@ -5805,7 +5847,7 @@ class NLActionRemoveVariable(bpy.types.Node, NLActionNode):
         layout.label(text='Remove From:')
         layout.prop(self, "custom_path", toggle=True, text="Custom Path" if self.custom_path else "File Path/Data", icon='FILE_FOLDER')
         if self.custom_path:
-            layout.prop(self, "path", text='Path')
+            layout.prop(self, "path", text='')
 
     def get_netlogic_class_name(self):
         return "bgelogic.ActionRemoveVariable"
@@ -5828,7 +5870,11 @@ class NLActionClearVariables(bpy.types.Node, NLActionNode):
     bl_label = "Clear Variables"
     nl_category = "Variables"
     custom_path: bpy.props.BoolProperty(update=update_tree_code)
-    path: bpy.props.StringProperty(update=update_tree_code, description='Choose a Path to save the file to. Start with "./" to make it relative to the file path.')
+    path: bpy.props.StringProperty(
+        subtype='FILE_PATH',
+        update=update_tree_code,
+        description='Choose a Path to save the file to. Start with "./" to make it relative to the file path.'
+    )
 
     def init(self, context):
         NLActionNode.init(self, context)
@@ -5839,7 +5885,7 @@ class NLActionClearVariables(bpy.types.Node, NLActionNode):
         layout.label(text='Clear In:')
         layout.prop(self, "custom_path", toggle=True, text="Custom Path" if self.custom_path else "File Path/Data", icon='FILE_FOLDER')
         if self.custom_path:
-            layout.prop(self, "path", text='Path')
+            layout.prop(self, "path", text='')
 
     def get_netlogic_class_name(self):
         return "bgelogic.ActionClearVariables"
@@ -5862,7 +5908,11 @@ class NLActionListVariables(bpy.types.Node, NLActionNode):
     bl_label = "List Saved Variables"
     nl_category = "Variables"
     custom_path: bpy.props.BoolProperty(update=update_tree_code)
-    path: bpy.props.StringProperty(update=update_tree_code, description='Choose a Path to save the file to. Start with "./" to make it relative to the file path.')
+    path: bpy.props.StringProperty(
+        subtype='FILE_PATH',
+        update=update_tree_code,
+        description='Choose a Path to save the file to. Start with "./" to make it relative to the file path.'
+    )
 
     def init(self, context):
         NLActionNode.init(self, context)
@@ -5875,7 +5925,7 @@ class NLActionListVariables(bpy.types.Node, NLActionNode):
         layout.label(text='List From:')
         layout.prop(self, "custom_path", toggle=True, text="Custom Path" if self.custom_path else "File Path/Data", icon='FILE_FOLDER')
         if self.custom_path:
-            layout.prop(self, "path", text='Path')
+            layout.prop(self, "path", text='')
 
     def get_netlogic_class_name(self):
         return "bgelogic.ActionListVariables"
@@ -6298,7 +6348,7 @@ class NLActionLibLoadNode(bpy.types.Node, NLActionNode):
     def init(self, context):
         NLActionNode.init(self, context)
         self.inputs.new(NLConditionSocket.bl_idname, "Condition")
-        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Path")
+        self.inputs.new(NLFilePathSocket.bl_idname, "Path")
         self.outputs.new(NLConditionSocket.bl_idname, "When Loaded")
     def get_netlogic_class_name(self): return "bgelogic.ActionLibLoad"
     def get_input_sockets_field_names(self): return ["condition", "path"]
@@ -6313,7 +6363,7 @@ class NLActionLibFreeNode(bpy.types.Node, NLActionNode):
     def init(self, context):
         NLActionNode.init(self, context)
         self.inputs.new(NLConditionSocket.bl_idname, "Condition")
-        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Path")
+        self.inputs.new(NLFilePathSocket.bl_idname, "Path")
         self.outputs.new(NLConditionSocket.bl_idname, "When Unloaded")
     def get_netlogic_class_name(self): return "bgelogic.ActionLibFree"
     def get_input_sockets_field_names(self): return ["condition", "path"]
@@ -6872,7 +6922,7 @@ class NLActionStartGame(bpy.types.Node, NLActionNode):
     def init(self, context):
         NLActionNode.init(self, context)
         self.inputs.new(NLConditionSocket.bl_idname, "Condition")
-        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "File name")
+        self.inputs.new(NLFilePathSocket.bl_idname, "File name")
         self.outputs.new(NLConditionSocket.bl_idname, 'Done')
 
     def get_output_socket_varnames(self):
