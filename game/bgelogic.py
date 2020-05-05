@@ -6551,7 +6551,9 @@ class ActionSaveGame(ActionCell):
     def get_custom_path(self, path):
         if not path.endswith('/'):
             path = path + '/'
-        if path.startswith('./'):
+        if path.startswith('//'):
+            return bpy.path.abspath(path)
+        elif path.startswith('./'):
             path = path.split('./', 1)[-1]
             return bpy.path.abspath('//' + path)
         return path

@@ -1307,7 +1307,10 @@ _sockets.append(NLQuotedStringFieldSocket)
 class NLFilePathSocket(bpy.types.NodeSocket, NetLogicSocketType):
     bl_idname = "NLFilePathSocket"
     bl_label = "String"
-    value: bpy.props.StringProperty(subtype='FILE_PATH', update=update_tree_code)
+    value: bpy.props.StringProperty(
+        subtype='FILE_PATH',
+        update=update_tree_code
+    )
 
     def draw_color(self, context, node):
         return PARAMETER_SOCKET_COLOR
@@ -1320,7 +1323,11 @@ class NLFilePathSocket(bpy.types.NodeSocket, NetLogicSocketType):
             col.label(text=text)
             col.prop(self, "value", text='')
 
-    def get_unlinked_value(self): return '"{}"'.format(self.value)
+    def get_unlinked_value(self):
+        if self.value.endswith('\\'):
+            print('Removed BackSlash')
+            self.value = self.value[:-1]
+        return '"{}"'.format(self.value)
 
 
 _sockets.append(NLFilePathSocket)
@@ -5675,7 +5682,8 @@ class NLActionSaveGame(bpy.types.Node, NLActionNode):
         return ["condition", 'slot']
 
     def get_nonsocket_fields(self):
-        return [("path", lambda : "'{}'".format(self.path) if self.custom_path else "''")]
+        path = ("path", lambda : "'{}'".format(self.path) if self.custom_path else "''")
+        return [path]
 
     def get_output_socket_varnames(self):
         return ["OUT"]

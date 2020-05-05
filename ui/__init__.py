@@ -374,7 +374,7 @@ class BGE_PT_LogicTreeGroups(bpy.types.Panel):
             icons.load("Icon4Keys", join(icons_directory, "Icon4Keys.png"), 'IMAGE')
             new_ver = True
         except Exception:
-            print('Icon can not be set, using clean Buttons.')
+            print('Icon can not be set, using original Buttons.')
 
     @classmethod
     def poll(cls, context):
@@ -389,7 +389,8 @@ class BGE_PT_LogicTreeGroups(bpy.types.Panel):
     def draw(self, context):
         layout = self.layout
         layout.operator(
-            bge_netlogic.ops.NLMakeGroupOperator.bl_idname
+            bge_netlogic.ops.NLMakeGroupOperator.bl_idname,
+            icon='IMPORT'
         )
         layout.separator()
         prefabs = layout.box()
@@ -403,7 +404,8 @@ class BGE_PT_LogicTreeGroups(bpy.types.Panel):
             )
         else:
             template_col.operator(
-                bge_netlogic.ops.NLAdd4KeyTemplateOperator.bl_idname
+                bge_netlogic.ops.NLAdd4KeyTemplateOperator.bl_idname,
+                icon='LAYER_ACTIVE'
             )
 
 
@@ -422,7 +424,7 @@ class BGE_PT_LogicTreeInfoPanel(bpy.types.Panel):
             icons.load("IconApply", join(icons_directory, "IconApply.png"), 'IMAGE')
             new_ver = True
         except Exception:
-            print('Icon can not be set, using clean Buttons.')
+            print('Icon can not be set, using original Buttons.')
 
     @classmethod
     def poll(cls, context):
@@ -460,16 +462,19 @@ class BGE_PT_LogicTreeInfoPanel(bpy.types.Panel):
         else:
             apply.operator(
                 bge_netlogic.ops.NLApplyLogicOperator.bl_idname,
-                text="Apply To Selected"
+                text="Apply To Selected",
+                icon='PREFERENCES'
             ).owner = "BGE_PT_LogicPanel"
         code = layout.box()
         code.operator(
             bge_netlogic.ops.NLGenerateLogicNetworkOperator.bl_idname,
-            text="Update Code"
+            text="Update Code",
+            icon='FILE_SCRIPT'
         )
         code.operator(
             bge_netlogic.ops.NLGenerateLogicNetworkOperatorAll.bl_idname,
-            text="Generate All Code"
+            text="Generate All Code",
+            icon='SCRIPTPLUGINS'
         )
         layout.separator()
         selected_objects = [
