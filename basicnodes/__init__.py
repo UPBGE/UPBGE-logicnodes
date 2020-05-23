@@ -834,10 +834,8 @@ class NLParameterNode(NLAbstractNode):
 class NLGameObjectSocket(bpy.types.NodeSocket, NetLogicSocketType):
     bl_idname = "NLGameObjectSocket"
     bl_label = "Object"
-    description: bpy.props.StringProperty(default='Undocumented Socket')
     value: bpy.props.PointerProperty(
         name='Object',
-        description='Select an Object. If using the tree on instanced objects, plug in relative objects (parent, owner et.)',
         type=bpy.types.Object,
         update=update_tree_code
     )
@@ -865,7 +863,6 @@ class NLGameObjectSocket(bpy.types.NodeSocket, NetLogicSocketType):
     def get_unlinked_value(self):
         if isinstance(self.value, bpy.types.Object):
             return '"Object:{}"'.format(self.value.name)
-        return "{}".format(self.value)
 
 
 _sockets.append(NLGameObjectSocket)
@@ -1027,7 +1024,9 @@ class NLSocketLogicOperator(bpy.types.NodeSocket, NetLogicSocketType):
         else:
             layout.prop(self, "value", text=text)
 
-    def get_unlinked_value(self): return "{}".format(self.value)
+    def get_unlinked_value(self):
+        self.value.replace('\\', '\\\\')
+        return "{}".format(self.value)
 
 
 _sockets.append(NLSocketLogicOperator)
@@ -1324,6 +1323,7 @@ class NLFilePathSocket(bpy.types.NodeSocket, NetLogicSocketType):
             col.prop(self, "value", text='')
 
     def get_unlinked_value(self):
+        self.value.replace('\\', '/')
         if self.value.endswith('\\'):
             print('Removed BackSlash')
             self.value = self.value[:-1]
@@ -6228,6 +6228,35 @@ class NLSetLightEnergyAction(bpy.types.Node, NLActionNode):
 _nodes.append(NLSetLightEnergyAction)
 
 
+class NLSetLightShadowAction(bpy.types.Node, NLActionNode):
+    bl_idname = "NLSetLightShadowAction"
+    bl_label = "Set Light Shadow"
+    nl_category = "Lights"
+
+    def init(self, context):
+        NLActionNode.init(self, context)
+        tools.register_inputs(#TODO change into self.inputs.new...
+            self,
+            NLConditionSocket, "Condition",
+            NLGameObjectSocket, "Light Object",
+            NLBooleanSocket, "Use Shadow"
+        )
+        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+
+    def get_output_socket_varnames(self):
+        return ["OUT"]
+
+    def get_netlogic_class_name(self):
+        return "bgelogic.SetLightShadow"
+    def get_input_sockets_field_names(self):
+        return [
+            "condition",
+            "lamp",
+            "use_shadow"
+        ]
+_nodes.append(NLSetLightShadowAction)
+
+
 class NLSetLightColorAction(bpy.types.Node, NLActionNode):
     bl_idname = "NLSetLightColorAction"
     bl_label = "Set Light Color"
@@ -6358,8 +6387,13 @@ class NLActionLibLoadNode(bpy.types.Node, NLActionNode):
         self.inputs.new(NLConditionSocket.bl_idname, "Condition")
         self.inputs.new(NLFilePathSocket.bl_idname, "Path")
         self.outputs.new(NLConditionSocket.bl_idname, "When Loaded")
-    def get_netlogic_class_name(self): return "bgelogic.ActionLibLoad"
-    def get_input_sockets_field_names(self): return ["condition", "path"]
+    def get_netlogic_class_name(self):
+        return "bgelogic.ActionLibLoad"
+
+    def get_input_sockets_field_names(self):
+        return ["condition", "path"]
+
+
 _nodes.append(NLActionLibLoadNode)
 
 

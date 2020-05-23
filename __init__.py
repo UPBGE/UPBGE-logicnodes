@@ -10,7 +10,7 @@ bl_info = {
         "A Node System to create game logic. Contributors: L_P, Mike King"
     ),
     "author": "pgi, Leopold A-C (Iza Zed)",
-    "version": (0, 8, 8),
+    "version": (0, 8, 9),
     "blender": (2, 83, 0),
     "location": "View Menu",
     "warning": "Beta",
@@ -321,6 +321,8 @@ def request_tree_code_writer_start(dummy):
         if node_tree.bl_idname == ui.BGELogicTree.bl_idname:
             print("writing tree script for ", node_tree.name)
             generator.write_code_for_tree(node_tree)
+
+
 bpy.app.handlers.load_post.append(refresh_custom_nodes)
 bpy.app.handlers.load_post.append(request_tree_code_writer_start)
 bpy.app.handlers.save_post.append(refresh_custom_nodes)
@@ -438,6 +440,7 @@ def _list_menu_nodes():
 
 # blender add-on registration callback
 def register():
+    print(bpy.app.version)
     for cls in _registered_classes:
         print("Registering... {}".format(cls.__name__))
         bpy.utils.register_class(cls)

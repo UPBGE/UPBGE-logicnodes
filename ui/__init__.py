@@ -388,13 +388,16 @@ class BGE_PT_LogicTreeGroups(bpy.types.Panel):
 
     def draw(self, context):
         layout = self.layout
-        layout.operator(
+        pack_new = layout.row()
+        pack_new.scale_y = 1.4
+        pack_new.operator(
             bge_netlogic.ops.NLMakeGroupOperator.bl_idname,
             icon='IMPORT'
         )
         layout.separator()
         prefabs = layout.box()
-        prefabs.label(text='Node Prefabs:')
+        title = prefabs.box()
+        title.label(text='Node Prefabs:')
         template_col = prefabs.column()
         template_col.scale_y = 1.4
         if self.new_ver:

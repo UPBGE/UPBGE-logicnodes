@@ -17,6 +17,16 @@ if not bge.app.version < (2, 80, 0):
 # Persistent maps
 
 
+USE_DEBUG = False
+
+
+def debug(value):
+    if not USE_DEBUG:
+        return
+    else:
+        print(value)
+
+
 class SimpleLoggingDatabase(object):
     class LineBuffer(object):
         def __init__(self, buffer=[]):
@@ -1281,7 +1291,7 @@ class ParameterObjectHasProperty(ParameterCell):
             not property_name or
             not game_object
         ):
-            print('Has Property Node: Object or Property Name invalid!')
+            debug('Has Property Node: Object or Property Name invalid!')
             self._set_value(property_default)
         else:
             self._set_value(
@@ -1311,7 +1321,8 @@ class ParameterDictionaryValue(ParameterCell):
             try:
                 self._set_value(dictionary[key])
             except Exception:
-                print("Dict Get Value Node: Key '{}' Not In Dict!".format(key))
+                debug("Dict Get Value Node: Key '{}' Not In Dict!".format(key))
+                return
 
 
 class ParameterListIndex(ParameterCell):
@@ -1329,13 +1340,14 @@ class ParameterListIndex(ParameterCell):
             return
         self._set_ready()
         if none_or_invalid(list_d):
-            print('List Index Node: Invalid List!')
+            debug('List Index Node: Invalid List!')
             self._set_value(None)
         else:
             try:
                 self._set_value(list_d[index])
             except Exception:
-                print('List Index Node: Index Out Of Range!')
+                return
+                debug('List Index Node: Index Out Of Range!')
 
 
 class GetActuator(ParameterCell):
@@ -1379,7 +1391,7 @@ class GetActuatorByName(ParameterCell):
         if none_or_invalid(act_name):
             return
         if act_name not in cont.actuators:
-            print('Get Actuator By Name Node: \
+            debug('Get Actuator By Name Node: \
                 Actuator not conneted or does not exist!')
             return
         self._set_ready()
@@ -1406,7 +1418,7 @@ class ActivateActuator(ParameterCell):
         controller = bge.logic.getCurrentController()
         self._set_ready()
         if actuator is STATUS_WAITING or none_or_invalid(actuator):
-            print("There is a problem with the actuator \
+            debug("There is a problem with the actuator \
                 in Execute Actuator Node!")
             return
         if (
@@ -1440,7 +1452,7 @@ class DeactivateActuator(ParameterCell):
         controller = bge.logic.getCurrentController()
         self._set_ready()
         if actuator is STATUS_WAITING or none_or_invalid(actuator):
-            print("There is a problem with the actuator in \
+            debug("There is a problem with the actuator in \
                 Execute Actuator Node!")
             return
         if (
@@ -1474,7 +1486,7 @@ class ActivateActuatorByName(ParameterCell):
         actuator = self.get_parameter_value(self.actuator)
         self._set_ready()
         if actuator is STATUS_WAITING or none_or_invalid(actuator):
-            print("There is a problem with the actuator in \
+            debug("There is a problem with the actuator in \
                 Execute Actuator Node!")
             return
         if condition is STATUS_WAITING or not condition:
@@ -1504,7 +1516,7 @@ class DeactivateActuatorByName(ParameterCell):
         actuator = self.get_parameter_value(self.actuator)
         self._set_ready()
         if actuator is STATUS_WAITING or none_or_invalid(actuator):
-            print("There is a problem with the actuator in \
+            debug("There is a problem with the actuator in \
                 Execute Actuator Node!")
             return
         if condition is STATUS_WAITING or not condition:
@@ -1535,8 +1547,8 @@ class SetActuatorValue(ParameterCell):
         actuator = self.get_parameter_value(self.actuator)
         self._set_ready()
         if actuator is STATUS_WAITING or none_or_invalid(actuator):
-            print("Set Actuator Value Node: There is a problem with \
-                the actuator!")
+            debug("Set Actuator Value Node: There is a problem with \
+               the actuator!")
             return
         if condition is STATUS_WAITING or not condition:
             return
@@ -1564,10 +1576,10 @@ class GetController(ParameterCell):
     def evaluate(self):
         game_obj = self.get_parameter_value(self.obj_name)
         if none_or_invalid(game_obj):
-            print('Get Controller Node: No Game Object selected!')
+            debug('Get Controller Node: No Game Object selected!')
             return
         if none_or_invalid(self.cont_name):
-            print('Get Controller Node: No Controller selected!')
+            debug('Get Controller Node: No Controller selected!')
             return
         self._set_ready()
         self._set_value(game_obj.controllers[self.cont_name])
@@ -1601,10 +1613,10 @@ class GetSensor(ParameterCell):
     def evaluate(self):
         game_obj = self.get_parameter_value(self.obj_name)
         if none_or_invalid(game_obj):
-            print('Get Sensor Node: No Game Object selected!')
+            debug('Get Sensor Node: No Game Object selected!')
             return
         if none_or_invalid(self.sens_name):
-            print('Get Sensor Node: No Sensor selected!')
+            debug('Get Sensor Node: No Sensor selected!')
             return
         self._set_ready()
         self._set_value(game_obj.sensors[self.sens_name].positive)
@@ -1624,7 +1636,8 @@ class GetSensorByName(ParameterCell):
             self._set_ready()
             self._set_value(obj.sensors[name].positive)
         else:
-            print("{} has no Sensor named '{}'!".format(obj.name, name))
+            debug("{} has no Sensor named '{}'!".format(obj.name, name))
+            return
 
 
 class GetSensorValueByName(ParameterCell):
@@ -1643,7 +1656,7 @@ class GetSensorValueByName(ParameterCell):
             self._set_ready()
             self._set_value(getattr(obj.sensors[name], field))
         else:
-            print("{} has no Sensor named '{}'!".format(obj.name, name))
+            debug("{} has no Sensor named '{}'!".format(obj.name, name))
 
 
 class SensorValue(ParameterCell):
@@ -1676,10 +1689,10 @@ class SensorValue(ParameterCell):
         self.done = False
         game_obj = self.get_parameter_value(self.obj_name)
         if none_or_invalid(game_obj):
-            print('Get Sensor Node: No Game Object selected!')
+            debug('Get Sensor Node: No Game Object selected!')
             return
         if none_or_invalid(self.sens_name):
-            print('Get Sensor Node: No Sensor selected!')
+            debug('Get Sensor Node: No Sensor selected!')
             return
         field = self.get_parameter_value(self.field)
         if field is LogicNetworkCell.STATUS_WAITING:
@@ -1712,7 +1725,7 @@ class ParameterActiveCamera(ParameterCell):
         scene = bge.logic.getCurrentScene()
         self._set_ready()
         if none_or_invalid(scene):
-            print('Active Camera Node: Invalid Scene!')
+            debug('Active Camera Node: Invalid Scene!')
             self._set_value(None)
         else:
             self._set_value(scene.active_camera)
@@ -1828,7 +1841,7 @@ class ParameterPythonModuleFunction(ParameterCell):
             try:
                 self._modfun = getattr(self._module, mfun)
             except Exception:
-                print(
+                debug(
                     "Python Module Node: Module '{}' has no function '{}'!"
                     .format(self._module, mfun)
                 )
@@ -1892,7 +1905,7 @@ class ParameterObjectAttribute(ParameterCell):
         if none_or_invalid(game_object):
             return
         if not hasattr(game_object, attribute_name):
-            print(
+            debug(
                 'Get Object Data Node: {} has no attribute {}!'
                 .format(game_object, attribute_name)
             )
@@ -1900,10 +1913,11 @@ class ParameterObjectAttribute(ParameterCell):
         try:
             self._set_value(getattr(game_object, attribute_name))
         except Exception:
-            print(
+            debug(
                 'Get Object Data Node: Could Not Get Value from {}!'
                 .format(game_object)
             )
+            return
 
 
 class ClampValue(ParameterCell):
@@ -2018,7 +2032,7 @@ class ParameterArithmeticOp(ParameterCell):
                 self._set_value(self.get_vec_calc(a, b))
                 return
             elif isinstance(b, mathutils.Vector):
-                print('Math Node: Only Second Argument is Vector! \
+                debug('Math Node: Only Second Argument is Vector! \
                     Either both or only first can be Vector!')
                 return
             self._set_value(self.operator(a, b))
@@ -2127,7 +2141,7 @@ class SetObInstanceAttr(ParameterCell):
         if attr is STATUS_WAITING:
             return
         self._set_ready()
-        self._set_value(setattr(instance, attr, value))
+        setattr(instance, attr, value)
 
 
 class NormalizeVector(ParameterCell):
@@ -3418,7 +3432,8 @@ class ConditionGamepadSticks(ConditionCell):
         self._set_ready()
         axis = self.get_parameter_value(self.axis)
         if none_or_invalid(axis):
-            print('Gamepad Sticks Node: Invalid Controller Stick!')
+            debug('Gamepad Sticks Node: Invalid Controller Stick!')
+            return
         inverted = self.get_parameter_value(self.inverted)
         index = self.get_parameter_value(self.index)
         sensitivity = self.get_parameter_value(self.sensitivity)
@@ -3426,7 +3441,7 @@ class ConditionGamepadSticks(ConditionCell):
         try:
             joystick = bge.logic.joysticks[index]
         except Exception:
-            print('Gamepad Sticks Node: No Joystick at that Index!')
+            debug('Gamepad Sticks Node: No Joystick at that Index!')
             return
         if none_or_invalid(joystick):
             return
@@ -3465,14 +3480,15 @@ class ConditionGamepadTrigger(ConditionCell):
         self._set_ready()
         axis = self.get_parameter_value(self.axis)
         if none_or_invalid(axis):
-            print('Gamepad Trigger Node: Invalid Controller Trigger!')
+            debug('Gamepad Trigger Node: Invalid Controller Trigger!')
+            return
         index = self.get_parameter_value(self.index)
         sensitivity = self.get_parameter_value(self.sensitivity)
         threshold = self.get_parameter_value(self.threshold)
         try:
             joystick = bge.logic.joysticks[index]
         except Exception:
-            print('No Joystick at that Index!')
+            debug('No Joystick at that Index!')
             return
         if none_or_invalid(joystick):
             return
@@ -3502,7 +3518,7 @@ class ConditionGamepadButtons(ConditionCell):
         try:
             joystick = bge.logic.joysticks[index]
         except Exception:
-            print('Gamepad Button Node: No Joystick at that Index!')
+            debug('Gamepad Button Node: No Joystick at that Index!')
             return
         if none_or_invalid(joystick):
             return
@@ -4119,11 +4135,12 @@ class ActionAddObject(ActionCell):
         try:
             self.obj = scene.addObject(name_value, None, life_value)
         except ValueError:
-            print(
+            debug(
                 "ActionAddObject: cannot find {}.".format(
                     name_value
                 )
             )
+            return
         self.done = True
 
 
@@ -4474,6 +4491,8 @@ class ActionEndGame(ActionCell):
     def evaluate(self):
         self._set_ready()
         condition = self.get_parameter_value(self.condition)
+        if condition is LogicNetworkCell.STATUS_WAITING:
+            return
         if condition:
             bge.logic.endGame()
 
@@ -4582,10 +4601,10 @@ class ActionMouseLook(ActionCell):
         self._set_ready()
 
         if none_or_invalid(game_object_x):
-            print('MouseLook Node: Invalid Main Object!')
+            debug('MouseLook Node: Invalid Main Object!')
             return
         if none_or_invalid(game_object_y):
-            print('MouseLook Node: Invalid Head Object!')
+            debug('MouseLook Node: Invalid Head Object!')
             return
 
         mouse_position = mathutils.Vector(self.mouse.position)
@@ -4868,7 +4887,7 @@ class ActionSetObjectAttribute(ActionCell):
         if none_or_invalid(game_object_value):
             return
         if not hasattr(game_object_value, value_type):
-            print(
+            debug(
                 'Set Object Data Node: {} has no attribute {}!'
                 .format(game_object_value, value_type)
             )
@@ -4880,10 +4899,11 @@ class ActionSetObjectAttribute(ActionCell):
                 attribute_value_value
             )
         except Exception:
-            print(
+            debug(
                 'Set Object Data Node: Could Not Set Value for {}!'
                 .format(game_object_value)
             )
+            return
         if attribute_value_value == 'worldScale':
             game_object_value.reinstancePhysicsMesh(
                 game_object_value,
@@ -5564,7 +5584,8 @@ class SetDictDelKey(ActionCell):
         try:
             del dictionary[key]
         except Exception:
-            print("Dict Delete Key Node: Key '{}' not in Dict!".format(key))
+            debug("Dict Delete Key Node: Key '{}' not in Dict!".format(key))
+            return
         self.new_dict = dictionary
         self.done = True
 
@@ -5741,7 +5762,8 @@ class RemoveListValue(ActionCell):
         try:
             list_d.remove(val)
         except Exception:
-            print("List Remove Value Node: Item '{}' not in List!".format(val))
+            debug("List Remove Value Node: Item '{}' not in List!".format(val))
+            return
         self.new_list = list_d
         self.done = True
 
@@ -6529,10 +6551,11 @@ class ActionCharacterJump(ActionCell):
         try:
             physics.jump()
         except Exception:
-            print(
+            debug(
                 'Error: {} not set to Character Physics!'
                 .format(game_object.name)
             )
+            return
         self.done = True
 
 
@@ -6767,7 +6790,7 @@ class ActionLoadGame(ActionCell):
                     if obj['name'] in scene.objects:
                         game_obj = scene.objects[obj['name']]
                     else:
-                        print(
+                        debug(
                             'Could not load Object {}: Not in active Scene!'
                             .format(obj['name'])
                         )
@@ -6806,7 +6829,7 @@ class ActionLoadGame(ActionCell):
                     for prop in obj['data']['props']:
                         game_obj[prop['name']] = prop['value']
         except Exception:
-            print(
+            debug(
                 'Load Game Node: Could Not Find Saved Game on Slot {}!'
                 .format(slot)
             )
@@ -6837,7 +6860,7 @@ class ActionSaveVariable(ActionCell):
             f = open(path + 'variables.json', 'w')
             json.dump(data, f, indent=2)
         except IOError:
-            print('file does not exist - creating...')
+            debug('file does not exist - creating...')
             f = open(path + 'variables.json', 'w')
             try:
                 data = {name: val}
@@ -6903,11 +6926,11 @@ class ActionLoadVariable(ActionCell):
             try:
                 self.var = data[name]
             except Exception:
-                print('Error: {} not saved in variables!'.format(name))
+                debug('Error: {} not saved in variables!'.format(name))
                 return
             f.close()
         except IOError:
-            print('No saved variables!')
+            debug('No saved variables!')
 
     def get_custom_path(self, path):
         if not path.endswith('/'):
@@ -6957,7 +6980,7 @@ class ActionRemoveVariable(ActionCell):
             try:
                 del data[name]
             except Exception:
-                print(
+                debug(
                     'Error: Could not remove {} from variables!'
                     .format(name)
                 )
@@ -6965,7 +6988,7 @@ class ActionRemoveVariable(ActionCell):
             f = open(path + 'variables.json', 'w')
             json.dump(data, f, indent=2)
         except IOError:
-            print('file does not exist!')
+            debug('file does not exist!')
         finally:
             f.close()
 
@@ -7016,7 +7039,7 @@ class ActionClearVariables(ActionCell):
             f = open(path + 'variables.json', 'w')
             json.dump(data, f, indent=2)
         except IOError:
-            print('file does not exist - creating...')
+            debug('file does not exist - creating...')
             f = open(path + 'variables.json', 'w')
             data = {}
             json.dump(data, f, indent=2)
@@ -7071,7 +7094,7 @@ class ActionListVariables(ActionCell):
             f = open(path + 'variables.json', 'r')
             data = json.load(f)
             if len(data) == 0:
-                print('There are no saved variables')
+                debug('There are no saved variables')
                 return
             li = []
             for x in data:
@@ -7080,7 +7103,7 @@ class ActionListVariables(ActionCell):
                 li.append(x)
             self.list = li
         except IOError:
-            print('There are no saved variables')
+            debug('There are no saved variables')
         finally:
             f.close()
 
@@ -7142,7 +7165,7 @@ class ActionSetCharacterJump(ActionCell):
         try:
             physics.maxJumps = max_jumps
         except Exception:
-            print(
+            debug(
                 'Error: {} not set to Character Physics!'
                 .format(game_object.name)
             )
@@ -7179,11 +7202,11 @@ class ActionSetCharacterGravity(ActionCell):
         try:
             physics.gravity = gravity
         except Exception as e:
-            print(
+            debug(
                 'Error: {} not set to Character Physics!'
                 .format(game_object.name)
             )
-            print('Message: ' + e)
+            debug('Message: ' + e)
         self.done = True
 
 
@@ -7217,11 +7240,11 @@ class ActionSetCharacterWalkDir(ActionCell):
         try:
             physics.walkDirection = walkDir
         except Exception as e:
-            print(
+            debug(
                 'Error: {} not set to Character Physics!'
                 .format(game_object.name)
             )
-            print('Message: ' + e)
+            debug('Message: ' + e)
         self.done = True
 
 
@@ -7270,7 +7293,7 @@ class ActionGetCharacterInfo(ActionCell):
             self.gravity = physics.gravity
             self.on_ground = physics.onGround
         except Exception:
-            print(
+            debug(
                 'Error: {} not set to Character Physics!'
                 .format(game_object.name)
             )
@@ -7440,7 +7463,7 @@ class ActionPlayAction(ActionCell):
             return
         self._set_ready()
         if none_or_invalid(game_object):  # can't play
-            print("Play Action Node: Invalid Game Object!")
+            debug("Play Action Node: Invalid Game Object!")
             self._reset_subvalues()
         else:
             # Condition might be false and the animation running
@@ -7483,7 +7506,7 @@ class ActionPlayAction(ActionCell):
                 if end_frame > start_frame:  # play 0 to 100
                     is_near_end = (playing_frame >= (end_frame - 0.5))
                 else:  # play 100 to 0
-                    print(playing_frame, end_frame)
+                    debug(playing_frame, end_frame)
                     is_near_end = (playing_frame <= (end_frame + 0.5))
                 if is_near_end:
                     self._notify_finished(game_object, layer)
@@ -7932,13 +7955,13 @@ class ActionRandomInt(ActionCell):
         min_value = self.get_parameter_value(self.min_value)
         max_value = self.get_parameter_value(self.max_value)
         if none_or_invalid(min_value):
-            print('Random Int Node: Min Value not set correctly!')
+            debug('Random Int Node: Min Value not set correctly!')
             return
         if none_or_invalid(max_value):
-            print('Random Int Node: Max Value not set correctly!')
+            debug('Random Int Node: Max Value not set correctly!')
             return
         if min_value > max_value:
-            print('Random Int Node: Min Value bigger than Max Value!')
+            debug('Random Int Node: Min Value bigger than Max Value!')
             return
         self._set_ready()
         if min_value == max_value:
@@ -7962,13 +7985,13 @@ class ActionRandomFloat(ActionCell):
         min_value = self.get_parameter_value(self.min_value)
         max_value = self.get_parameter_value(self.max_value)
         if none_or_invalid(min_value):
-            print('Random Float Node: Min Value not set correctly!')
+            debug('Random Float Node: Min Value not set correctly!')
             return
         if none_or_invalid(max_value):
-            print('Random Float Node: Max Value not set correctly!')
+            debug('Random Float Node: Max Value not set correctly!')
             return
         if min_value > max_value:
-            print('Random Float Node: Min Value bigger than Max Value!')
+            debug('Random Float Node: Min Value bigger than Max Value!')
             return
         self._set_ready()
         if min_value == max_value:
@@ -8109,6 +8132,50 @@ class SetLightEnergy(ActionCell):
             self.set_blender_27x(lamp, energy)
         else:
             self.set_blender_28x(lamp, energy)
+        self.done = True
+
+
+class SetLightShadow(ActionCell):
+
+    def __init__(self):
+        ActionCell.__init__(self)
+        self.condition = None
+        self.lamp = None
+        self.use_shadow = None
+        self.done = None
+        self.OUT = LogicNetworkSubCell(self, self.get_done)
+
+    def get_done(self):
+        return self.done
+
+    def set_blender_28x(self, lamp, use_shadow):
+        light = lamp.blenderObject.data
+        light.use_shadow = use_shadow
+        bge.logic.getCurrentScene().resetTaaSamples = True
+
+    def set_blender_27x(self, lamp, use_shadow):
+        lamp.use_shadow = use_shadow
+
+    def evaluate(self):
+        self.done = False
+        STATUS_WAITING = LogicNetworkCell.STATUS_WAITING
+
+        condition = self.get_parameter_value(self.condition)
+        if condition is STATUS_WAITING:
+            return
+        if not condition:
+            self._set_value(False)
+            return self._set_ready()
+        lamp = self.get_parameter_value(self.lamp)
+        use_shadow = self.get_parameter_value(self.use_shadow)
+        # frames = self.get_parameter_value(self.frames)
+        if lamp is STATUS_WAITING:
+            return
+        self._set_ready()
+        if bge.app.version < (2, 80, 0):
+            self.set_blender_27x(lamp, use_shadow)
+        else:
+            self.set_blender_28x(lamp, use_shadow)
         self.done = True
 
 
@@ -8842,7 +8909,7 @@ class RemovePhysicsConstraint(ActionCell):
         try:
             bge.constraints.removeConstraint(obj[name].getConstraintId())
         except Exception:
-            print(
+            debug(
                 'Remove Physics Constraint Node: Constraint {} does not exist!'
                 .format(name)
             )
