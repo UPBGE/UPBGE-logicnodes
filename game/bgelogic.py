@@ -2505,8 +2505,8 @@ class ParameterMatrixToEuler(ParameterCell):
 
     def evaluate(self):
         self._set_ready()
-        vec = self.get_parameter_value(self.input_m)
-        self.matrix = vec.to_euler()
+        matrix = self.get_parameter_value(self.input_m)
+        self.euler = matrix.to_euler()
 
 
 class ParameterVector3Simple(ParameterCell):
