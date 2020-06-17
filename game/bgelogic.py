@@ -570,7 +570,6 @@ class LogicNetworkCell(StatefulValueProducer):
         self._value = None
         self._children = []
         self.network = None
-        pass
 
 #    def create_subcell(self, get_value_call):
 #        cell = LogicNetworkSubCell()
@@ -736,7 +735,7 @@ class LogicNetwork(LogicNetworkCell):
         self.audio_system = AudioSystem()
         self.sub_networks = []  # a list of networks updated by this network
         self.capslock_pressed = False
-        pass
+        self.evaluated_cells = 0
 
     def ray_cast(
         self,
@@ -889,6 +888,7 @@ class LogicNetwork(LogicNetworkCell):
             else:
                 done_cells.append(cell)
             cell.evaluate()
+            self.evaluated_cells += 1
             if not cell.has_status(LogicNetworkCell.STATUS_READY):
                 cells.append(cell)
             loop_index += 1
@@ -2122,6 +2122,15 @@ class GetObInstanceAttr(ParameterCell):
             return
         self._set_ready()
         self._set_value(getattr(instance, attr))
+
+
+class GetTimeScale(ParameterCell):
+    def __init__(self):
+        ParameterCell.__init__(self)
+
+    def evaluate(self):
+        self._set_ready()
+        self._set_value(bge.logic.getTimeScale())
 
 
 class SetObInstanceAttr(ParameterCell):
@@ -5448,6 +5457,38 @@ class ActionSetActiveCamera(ActionCell):
         self.done = True
 
 
+class ActionSetCameraFov(ActionCell):
+    def __init__(self):
+        ActionCell.__init__(self)
+        self.condition = None
+        self.camera = None
+        self.fov = None
+        self.done = None
+        self.OUT = LogicNetworkSubCell(self, self.get_done)
+
+    def get_done(self):
+        return self.done
+
+    def evaluate(self):
+        self.done = False
+        condition = self.get_parameter_value(self.condition)
+        if condition is LogicNetworkCell.STATUS_WAITING:
+            return
+        if not condition:
+            return
+        camera = self.get_parameter_value(self.camera)
+        if camera is LogicNetworkCell.STATUS_WAITING:
+            return
+        fov = self.get_parameter_value(self.fov)
+        if fov is LogicNetworkCell.STATUS_WAITING:
+            return
+        self._set_ready()
+        if none_or_invalid(camera):
+            return
+        camera.fov = fov
+        self.done = True
+
+
 class InitEmptyDict(ActionCell):
     def __init__(self):
         ActionCell.__init__(self)
@@ -5844,6 +5885,78 @@ class ActionRemoveParent(ActionCell):
         self.done = True
 
 
+class ActionPerformanceProfile(ActionCell):
+
+    def __init__(self):
+        ActionCell.__init__(self)
+        self.condition = None
+        self.network = None
+        self.print_profile = False
+        self.check_evaluated_cells = False
+        self.check_average_cells_per_sec = False
+        self.check_cells_per_tick = False
+        self.done = None
+        self.data = ''
+        self.OUT = LogicNetworkSubCell(self, self.get_done)
+        self.DATA = LogicNetworkSubCell(self, self.get_data)
+
+    def get_done(self):
+        return self.done
+
+    def get_data(self):
+        return self.data
+
+    def setup(self, network):
+        self.network = network
+
+    def evaluate(self):
+        self.done = False
+        self.data = '----------------------------------Start Profile\n'
+        STATUS_WAITING = LogicNetworkCell.STATUS_WAITING
+        condition = self.get_parameter_value(self.condition)
+        if condition is STATUS_WAITING:
+            return
+        if not condition:
+            return
+        print_profile = self.get_parameter_value(
+            self.print_profile
+        )
+        if print_profile is STATUS_WAITING:
+            return
+        check_evaluated_cells = self.get_parameter_value(
+            self.check_evaluated_cells
+        )
+        if check_evaluated_cells is STATUS_WAITING:
+            return
+        check_average_cells_per_sec = self.get_parameter_value(
+            self.check_average_cells_per_sec
+        )
+        if check_average_cells_per_sec is STATUS_WAITING:
+            return
+        check_cells_per_tick = self.get_parameter_value(
+            self.check_cells_per_tick
+        )
+        if check_average_cells_per_sec is STATUS_WAITING:
+            return
+        self._set_ready()
+        if check_evaluated_cells:
+            self.data += 'Evaluated Nodes:\t{}\n'.format(
+                self.network.evaluated_cells
+            )
+        if check_average_cells_per_sec:
+            self.data += 'Nodes per Sec (avg):\t{}\n'.format(
+                self.network.evaluated_cells / self.network.timeline
+            )
+        if check_cells_per_tick:
+            self.data += 'Nodes per Tick:\t{}\n'.format(
+                len(self.network._cells) - 1
+            )
+        self.data += '----------------------------------End Profile'
+        if print_profile:
+            print(self.data)
+        self.done = True
+
+
 class ActionEditArmatureConstraint(ActionCell):
     def __init__(self):
         ActionCell.__init__(self)
@@ -6230,16 +6343,68 @@ class ActionEndObject(ActionCell):
         self.done = False
         condition = self.get_parameter_value(self.condition)
         game_object = self.get_parameter_value(self.game_object)
-        if condition is LogicNetworkCell.STATUS_WAITING:
+        if condition is LogicNetworkCell.STATUS_WAITING or not condition:
             return
         if game_object is LogicNetworkCell.STATUS_WAITING:
             return
         self._set_ready()
-        if not condition:
-            return
         if none_or_invalid(game_object):
             return
         game_object.endObject()
+        self.done = True
+
+
+class ActionSetTimeScale(ActionCell):
+    def __init__(self):
+        ActionCell.__init__(self)
+        self.condition = None
+        self.scene = None
+        self.timescale = None
+        self.done = None
+        self.OUT = LogicNetworkSubCell(self, self.get_done)
+
+    def get_done(self):
+        return self.done
+
+    def evaluate(self):
+        self.done = False
+        condition = self.get_parameter_value(self.condition)
+        if condition is LogicNetworkCell.STATUS_WAITING or not condition:
+            return
+        timescale = self.get_parameter_value(self.timescale)
+        if timescale is LogicNetworkCell.STATUS_WAITING:
+            return
+        self._set_ready()
+        if none_or_invalid(timescale):
+            return
+        bge.logic.setTimeScale(timescale)
+        self.done = True
+
+
+class ActionSetGravity(ActionCell):
+    def __init__(self):
+        ActionCell.__init__(self)
+        self.condition = None
+        self.scene = None
+        self.gravity = None
+        self.done = None
+        self.OUT = LogicNetworkSubCell(self, self.get_done)
+
+    def get_done(self):
+        return self.done
+
+    def evaluate(self):
+        self.done = False
+        condition = self.get_parameter_value(self.condition)
+        if condition is LogicNetworkCell.STATUS_WAITING or not condition:
+            return
+        gravity = self.get_parameter_value(self.gravity)
+        if gravity is LogicNetworkCell.STATUS_WAITING:
+            return
+        self._set_ready()
+        if none_or_invalid(gravity):
+            return
+        bge.logic.setGravity(gravity)
         self.done = True
 
 

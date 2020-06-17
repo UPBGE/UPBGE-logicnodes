@@ -931,7 +931,7 @@ class NLSocketLogicTree(bpy.types.NodeSocket, NetLogicSocketType):
             )
 
     def get_unlinked_value(self):
-        tree_name = None
+        tree_name = self.value
         if ' F ' in self.value:
             tree_name = self.value.split(' F ')[-1]
         return "'{}'".format(tree_name)
@@ -2329,10 +2329,26 @@ class NLParameterGetAttribute(bpy.types.Node, NLParameterNode):
 _nodes.append(NLParameterGetAttribute)
 
 
+class NLParameterGetTimeScale(bpy.types.Node, NLParameterNode):
+    bl_idname = "NLParameterGetTimeScale"
+    bl_label = "Get Timescale"
+    nl_category = "Scene"
+
+    def init(self, context):
+        NLParameterNode.init(self, context)
+        self.outputs.new(NLParameterSocket.bl_idname, "Timescale")
+
+    def get_netlogic_class_name(self):
+        return "bgelogic.GetTimeScale"
+
+
+_nodes.append(NLParameterGetTimeScale)
+
+
 class NLParameterScreenPosition(bpy.types.Node, NLParameterNode):
     bl_idname = "NLParameterScreenPosition"
     bl_label = "Screen Position"
-    nl_category = "Scene"
+    nl_category = "Camera"
 
     def init(self, context):
         NLParameterNode.init(self, context)
@@ -2357,7 +2373,7 @@ _nodes.append(NLParameterScreenPosition)
 class NLParameterWorldPosition(bpy.types.Node, NLParameterNode):
     bl_idname = "NLParameterWorldPosition"
     bl_label = "World Position"
-    nl_category = "Scene"
+    nl_category = "Camera"
 
     def init(self, context):
         NLParameterNode.init(self, context)
@@ -2412,7 +2428,7 @@ class NLCurrentSceneNode(bpy.types.Node, NLParameterNode):
         return "bgelogic.ParameterCurrentScene"
 
 
-_nodes.append(NLCurrentSceneNode)
+#_nodes.append(NLCurrentSceneNode)
 
 
 class NLGameObjectPropertyParameterNode(bpy.types.Node, NLParameterNode):
@@ -3166,7 +3182,7 @@ _nodes.append(NLObjectAttributeParameterNode)
 class NLActiveCameraParameterNode(bpy.types.Node, NLParameterNode):
     bl_idname = "NLActiveCameraParameterNode"
     bl_label = "Active Camera"
-    nl_category = "Scene"
+    nl_category = "Camera"
 
     def init(self, context):
         NLParameterNode.init(self, context)
@@ -5134,7 +5150,7 @@ class NLActionFindObjectFromSceneNode(bpy.types.Node, NLActionNode):
 class NLActionSetActiveCamera(bpy.types.Node, NLActionNode):
     bl_idname = "NLActionSetActiveCamera"
     bl_label = "Set Camera"
-    nl_category = "Scene"
+    nl_category = "Camera"
 
     def init(self, context):
         NLActionNode.init(self, context)
@@ -5148,6 +5164,28 @@ class NLActionSetActiveCamera(bpy.types.Node, NLActionNode):
     def get_netlogic_class_name(self): return "bgelogic.ActionSetActiveCamera"
     def get_input_sockets_field_names(self): return ["condition", "camera"]
 _nodes.append(NLActionSetActiveCamera)
+
+
+class NLActionSetCameraFov(bpy.types.Node, NLActionNode):
+    bl_idname = "NLActionSetCameraFov"
+    bl_label = "Set Camera"
+    nl_category = "Camera"
+
+    def init(self, context):
+        NLActionNode.init(self, context)
+        self.inputs.new(NLConditionSocket.bl_idname, 'Condition')
+        self.inputs.new(NLGameObjectSocket.bl_idname, 'Camera')
+        self.inputs.new(NLFloatFieldSocket.bl_idname, 'FOV')
+        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+
+    def get_output_socket_varnames(self):
+        return ["OUT"]
+
+    def get_netlogic_class_name(self): return "bgelogic.ActionSetActiveCamera"
+    def get_input_sockets_field_names(self): return ["condition", "camera", 'fov']
+
+
+_nodes.append(NLActionSetCameraFov)
 
 
 class NLInitEmptyDict(bpy.types.Node, NLActionNode):
@@ -5388,7 +5426,7 @@ class NLActionAddScene(bpy.types.Node, NLActionNode):
     def get_nonsocket_fields(self): return [("overlay", lambda : self.overlay)]
     def draw_buttons(self, context, layout):
         layout.prop(self, "overlay", text="")
-_nodes.append(NLActionAddScene)
+#_nodes.append(NLActionAddScene)
 
 
 class NLActionInstallSubNetwork(bpy.types.Node, NLActionNode):
@@ -6092,6 +6130,45 @@ class NLActionEndObjectNode(bpy.types.Node, NLActionNode):
 _nodes.append(NLActionEndObjectNode)
 
 
+class NLActionSetTimeScale(bpy.types.Node, NLActionNode):
+    bl_idname = "NLActionSetTimeScale"
+    bl_label = "Set Timescale"
+    nl_category = "Scene"
+
+    def init(self, context):
+        NLActionNode.init(self, context)
+        self.inputs.new(NLConditionSocket.bl_idname, "Condition")
+        self.inputs.new(NLPositiveFloatSocket.bl_idname, "Timescale")
+        self.inputs[-1].value = 1
+        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+
+    def get_output_socket_varnames(self):
+        return ["OUT"]
+
+    def get_netlogic_class_name(self): return "bgelogic.ActionSetTimeScale"
+    def get_input_sockets_field_names(self): return ["condition", "timescale"]
+_nodes.append(NLActionSetTimeScale)
+
+
+class NLActionSetGravity(bpy.types.Node, NLActionNode):
+    bl_idname = "NLActionSetGravity"
+    bl_label = "Set Gravity"
+    nl_category = "Scene"
+
+    def init(self, context):
+        NLActionNode.init(self, context)
+        self.inputs.new(NLConditionSocket.bl_idname, "Condition")
+        self.inputs.new(NLVec3FieldSocket.bl_idname, "Gravity")
+        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+
+    def get_output_socket_varnames(self):
+        return ["OUT"]
+
+    def get_netlogic_class_name(self): return "bgelogic.ActionSetGravity"
+    def get_input_sockets_field_names(self): return ["condition", "gravity"]
+_nodes.append(NLActionSetGravity)
+
+
 class NLActionEndSceneNode(bpy.types.Node, NLActionNode):
     bl_idname = "NLActionEndSceneNode"
     bl_label = "Remove Scene"
@@ -6641,7 +6718,43 @@ class NLActionRemoveParentNode(bpy.types.Node, NLActionNode):
         return "bgelogic.ActionRemoveParent"
     def get_input_sockets_field_names(self):
         return ["condition", "child_object"]
+
+
 _nodes.append(NLActionRemoveParentNode)
+
+
+class NLActionGetPerformanceProfileNode(bpy.types.Node, NLActionNode):
+    bl_idname = "NLActionGetPerformanceProfileNode"
+    bl_label = "Get Profile"
+    nl_category = "Utilities"
+
+    def init(self, context):
+        NLActionNode.init(self, context)
+        self.inputs.new(NLPseudoConditionSocket.bl_idname, "Condition")
+        self.inputs.new(NLBooleanSocket.bl_idname, "Print Profile")
+        self.inputs.new(NLBooleanSocket.bl_idname, "Evaluated Nodes")
+        self.inputs.new(NLBooleanSocket.bl_idname, "Nodes per Second")
+        self.inputs.new(NLBooleanSocket.bl_idname, "Nodes per Tick")
+        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+        self.outputs.new(NLParameterSocket.bl_idname, 'Profile')
+
+    def get_output_socket_varnames(self):
+        return ["OUT", "DATA"]
+
+    def get_netlogic_class_name(self):
+        return "bgelogic.ActionPerformanceProfile"
+
+    def get_input_sockets_field_names(self):
+        return [
+            "condition",
+            "print_profile",
+            "check_evaluated_cells",
+            'check_average_cells_per_sec',
+            'check_cells_per_tick'
+        ]
+
+
+_nodes.append(NLActionGetPerformanceProfileNode)
 
 
 class NLParameterGameObjectParent(bpy.types.Node, NLParameterNode):
@@ -6785,7 +6898,7 @@ class NLActionFindSceneNode(bpy.types.Node, NLActionNode):
 
     def get_netlogic_class_name(self): return "bgelogic.ActionFindScene"
     def get_input_sockets_field_names(self): return ["condition", "query"]
-_nodes.append(NLActionFindSceneNode)
+#_nodes.append(NLActionFindSceneNode)
 
 
 class NLActionSetMousePosition(bpy.types.Node, NLActionNode):
@@ -7317,7 +7430,7 @@ class NLActionSetCurrentScene(bpy.types.Node, NLActionNode):
         return ["condition", "scene_name"]
 
 
-_nodes.append(NLActionSetCurrentScene)
+#_nodes.append(NLActionSetCurrentScene)
 
 
 class NLActionStringOp(bpy.types.Node, NLActionNode):
