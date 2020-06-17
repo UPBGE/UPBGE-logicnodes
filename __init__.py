@@ -343,11 +343,26 @@ class NLNodeTreeReference(bpy.types.PropertyGroup):
     tree_initial_status: bpy.props.BoolProperty()
 
 
+class NLAddonSettings(bpy.types.PropertyGroup):
+    use_custom_node_color: bpy.props.BoolProperty()
+
+
 class NodeCategory(nodeitems_utils.NodeCategory):
     @classmethod
     def poll(cls, context):
         enabled = (context.space_data.tree_type == ui.BGELogicTree.bl_idname)
         return enabled
+
+
+class LogicNodesAddonPreferences(bpy.types.AddonPreferences):
+    bl_idname = __name__
+
+    def draw(self, context):
+        layout = self.layout
+        col = layout.column()
+        col_2 = layout.column()
+        use_color_row = col.row()
+        use_color_row.prop(context.scene.logic_node_settings, 'use_custom_node_color', text="Use Dark Node Color")
 
 
 basicnodes = _abs_import("basicnodes", _abs_path("basicnodes", "__init__.py"))
@@ -379,6 +394,8 @@ _registered_classes.extend(basicnodes._sockets)
 _registered_classes.extend(basicnodes._nodes)
 
 _registered_classes.extend([
+    NLAddonSettings,
+    LogicNodesAddonPreferences,
     ui.BGEPropFilter,
     ui.BGEGroupName,
     ui.BGE_PT_LogicPanel,
@@ -454,6 +471,9 @@ def register():
     )
     bpy.types.Scene.group_name = bpy.props.PointerProperty(
         type=ui.BGEGroupName
+    )
+    bpy.types.Scene.logic_node_settings = bpy.props.PointerProperty(
+        type=NLAddonSettings
     )
 
 

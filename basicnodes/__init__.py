@@ -809,25 +809,25 @@ class NLAbstractNode(NetLogicStatementGenerator):
 
 class NLConditionNode(NLAbstractNode):
     def init(self, context):
-        #self.use_custom_color = True
+        self.use_custom_color = bpy.context.scene.logic_node_settings.use_custom_node_color
         self.color = CONDITION_NODE_COLOR
 
 
 class NLActionNode(NLAbstractNode):
     def init(self, context):
-        #self.use_custom_color = True
+        self.use_custom_color = bpy.context.scene.logic_node_settings.use_custom_node_color
         self.color = ACTION_NODE_COLOR
 
 
 class NLActuatorNode(NLAbstractNode):
     def init(self, context):
-        #self.use_custom_color = True
+        self.use_custom_color = bpy.context.scene.logic_node_settings.use_custom_node_color
         self.color = ACTION_NODE_COLOR
 
 
 class NLParameterNode(NLAbstractNode):
     def init(self, context):
-        #self.use_custom_color = True
+        self.use_custom_color = bpy.context.scene.logic_node_settings.use_custom_node_color
         self.color = PARAMETER_NODE_COLOR
 
 
