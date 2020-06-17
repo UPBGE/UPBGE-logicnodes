@@ -6832,6 +6832,31 @@ class NLActionEditArmatureConstraint(bpy.types.Node, NLActionNode):
 _nodes.append(NLActionEditArmatureConstraint)
 
 
+class NLActionSetBonePos(bpy.types.Node, NLActionNode):
+    bl_idname = "NLActionSetBonePos"
+    bl_label = "Set Bone Position"
+    nl_category = "Armature / Rig"
+
+    def init(self, context):
+        NLActionNode.init(self, context)
+        self.inputs.new(NLConditionSocket.bl_idname, "Condition")
+        self.inputs.new(NLGameObjectSocket.bl_idname, "Armature")
+        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Bone Name")
+        self.inputs.new(NLVec3FieldSocket.bl_idname, "Set Pos")
+        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+
+    def get_output_socket_varnames(self):
+        return ["OUT"]
+
+    def get_netlogic_class_name(self):
+        return "bgelogic.ActionSetBonePos"
+    def get_input_sockets_field_names(self):
+        return ["condition", "armature", "bone_name", "set_translation"]
+
+
+_nodes.append(NLActionSetBonePos)
+
+
 class NLActionEditBoneNode(bpy.types.Node, NLActionNode):
     bl_idname = "NLActionEditBoneNode"
     bl_label = "Edit Armature Bone"

@@ -7,7 +7,7 @@ import time
 bl_info = {
     "name": "Logic Nodes",
     "description": (
-        "A Node System to create game logic. Contributors: L_P, Mike King"
+        "A Node System to create game logic."
     ),
     "author": "pgi, Leopold A-C (Iza Zed)",
     "version": (0, 9, 0),
@@ -345,6 +345,7 @@ class NLNodeTreeReference(bpy.types.PropertyGroup):
 
 class NLAddonSettings(bpy.types.PropertyGroup):
     use_custom_node_color: bpy.props.BoolProperty()
+    use_node_debug: bpy.props.BoolProperty()
 
 
 class NodeCategory(nodeitems_utils.NodeCategory):
@@ -362,7 +363,10 @@ class LogicNodesAddonPreferences(bpy.types.AddonPreferences):
         col = layout.column()
         col_2 = layout.column()
         use_color_row = col.row()
-        use_color_row.prop(context.scene.logic_node_settings, 'use_custom_node_color', text="Use Dark Node Color")
+        use_color_row.prop(context.scene.logic_node_settings, 'use_custom_node_color', text="Dark Node Color")
+        use_color_row.prop(context.scene.logic_node_settings, 'use_node_debug', text="Debug Mode (Print Errors to Console)")
+        contrib_row = col.row()
+        contrib_row.label(text='Contributors: L_P, Mike King')
 
 
 basicnodes = _abs_import("basicnodes", _abs_path("basicnodes", "__init__.py"))

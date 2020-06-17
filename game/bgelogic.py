@@ -16,12 +16,8 @@ if not bge.app.version < (2, 80, 0):
 
 # Persistent maps
 
-
-USE_DEBUG = False
-
-
 def debug(value):
-    if not USE_DEBUG:
+    if not bpy.context.scene.logic_node_settings.use_node_debug:
         return
     else:
         print(value)
@@ -6145,6 +6141,57 @@ class ActionEditBone(ActionCell):
             bone_channel.scale = bone_channel.scale + vec
         if rotate is not None:
             self._rotate(bone_channel, rotate)
+        armature.update()
+        self.done = True
+
+
+class ActionSetBonePos(ActionCell):
+    def __init__(self):
+        ActionCell.__init__(self)
+        self.condition = None
+        self.armature = None
+        self.bone_name = None
+        self.set_translation = None
+        self._eulers = mathutils.Euler((0, 0, 0), "XYZ")
+        self._vector = mathutils.Vector((0, 0, 0))
+        self.done = None
+        self.OUT = LogicNetworkSubCell(self, self.get_done)
+
+    def get_done(self):
+        return self.done
+
+    def evaluate(self):
+        self.done = False
+        condition = self.get_parameter_value(self.condition)
+        if condition is LogicNetworkCell.STATUS_WAITING:
+            return
+        if not condition:
+            debug('Set Bone Node: Condition not met!')
+            return
+        armature = self.get_parameter_value(self.armature)
+        bone_name = self.get_parameter_value(self.bone_name)
+        set_translation = self.get_parameter_value(self.set_translation)
+        if armature is LogicNetworkCell.STATUS_WAITING:
+            return
+            debug('Set Bone Node: Armature socket waiting!')
+        if bone_name is LogicNetworkCell.STATUS_WAITING:
+            return
+            debug('Set Bone Node: Bone Name not found!')
+        if set_translation is LogicNetworkCell.STATUS_WAITING:
+            debug('Set Bone Node: Position given not valid!')
+            return
+        self._set_ready()
+        if none_or_invalid(armature):
+            debug('Set Bone Node: Armature not valid!')
+            return
+        if not bone_name:
+            return
+        # TODO cache the bone index
+        bone_channel = armature.channels[bone_name]
+        if set_translation is not None:
+            bone_channel.location = set_translation
+        else:
+            debug('Set Bone Node: Position is None!')
         armature.update()
         self.done = True
 
