@@ -11,12 +11,17 @@ import sys
 import operator
 import json
 
-if not bge.app.version < (2, 80, 0):
+TOO_OLD = bge.app.version < (2, 80, 0)
+
+if not TOO_OLD:
     import bpy
+
 
 # Persistent maps
 
 def debug(value):
+    if TOO_OLD:
+        return
     if not bpy.context.scene.logic_node_settings.use_node_debug:
         return
     else:
@@ -6900,7 +6905,7 @@ class ActionSaveGame(ActionCell):
                     }
                 )
             elif isinstance(obj, bge.types.KX_LightObject):
-                if bge.app.version >= (2, 80, 0):
+                if not TOO_OLD:
                     continue
                 objs.append(
                     {
@@ -8340,7 +8345,7 @@ class SetLightEnergy(ActionCell):
         if lamp is STATUS_WAITING:
             return
         self._set_ready()
-        if bge.app.version < (2, 80, 0):
+        if TOO_OLD:
             self.set_blender_27x(lamp, energy)
         else:
             self.set_blender_28x(lamp, energy)
@@ -8384,7 +8389,7 @@ class SetLightShadow(ActionCell):
         if lamp is STATUS_WAITING:
             return
         self._set_ready()
-        if bge.app.version < (2, 80, 0):
+        if TOO_OLD:
             self.set_blender_27x(lamp, use_shadow)
         else:
             self.set_blender_28x(lamp, use_shadow)
@@ -8441,7 +8446,7 @@ class SetLightColor(ActionCell):
         colors = [r, g, b]
         if clamp:
             colors = [self.clamp_col(c) for c in colors]
-        if bge.app.version < (2, 80, 0):
+        if TOO_OLD:
             self.set_blender_27x(lamp, colors)
         else:
             self.set_blender_28x(lamp, colors)
@@ -8471,7 +8476,7 @@ class GetLightEnergy(ActionCell):
         if lamp is LogicNetworkCell.STATUS_WAITING:
             return
         self._set_ready()
-        if bge.app.version < (2, 80, 0):
+        if TOO_OLD:
             self.get_blender_27x(lamp)
         else:
             self.get_blender_28x(lamp)
@@ -8514,7 +8519,7 @@ class GetLightColor(ActionCell):
         if lamp is LogicNetworkCell.STATUS_WAITING:
             return
         self._set_ready()
-        if bge.app.version < (2, 80, 0):
+        if TOO_OLD:
             self.get_blender_27x(lamp)
         else:
             self.get_blender_28x(lamp)

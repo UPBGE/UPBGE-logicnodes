@@ -338,13 +338,22 @@ ops.uid_map = _abs_import("uid_map", _abs_path("ops", "uid_map.py"))
 utilities = _abs_import("utilities", _abs_path("utilities", "__init__.py"))
 
 
+def update_node_colors(self, context):
+    for tree in bpy.data.node_groups:
+        if isinstance(tree, ui.BGELogicTree):
+            for node in tree.nodes:
+                if isinstance(node, bpy.types.NodeFrame):
+                    continue
+                node.use_custom_color = bpy.context.scene.logic_node_settings.use_custom_node_color
+
+
 class NLNodeTreeReference(bpy.types.PropertyGroup):
     tree_name: bpy.props.StringProperty()
     tree_initial_status: bpy.props.BoolProperty()
 
 
 class NLAddonSettings(bpy.types.PropertyGroup):
-    use_custom_node_color: bpy.props.BoolProperty()
+    use_custom_node_color: bpy.props.BoolProperty(update=update_node_colors)
     use_node_debug: bpy.props.BoolProperty()
 
 
