@@ -5168,7 +5168,7 @@ _nodes.append(NLActionSetActiveCamera)
 
 class NLActionSetCameraFov(bpy.types.Node, NLActionNode):
     bl_idname = "NLActionSetCameraFov"
-    bl_label = "Set Camera"
+    bl_label = "Set FOV"
     nl_category = "Camera"
 
     def init(self, context):
@@ -5181,7 +5181,7 @@ class NLActionSetCameraFov(bpy.types.Node, NLActionNode):
     def get_output_socket_varnames(self):
         return ["OUT"]
 
-    def get_netlogic_class_name(self): return "bgelogic.ActionSetActiveCamera"
+    def get_netlogic_class_name(self): return "bgelogic.ActionSetCameraFov"
     def get_input_sockets_field_names(self): return ["condition", "camera", 'fov']
 
 
