@@ -25,3 +25,9 @@ How to use:
 1. In the Editor Selection, go to "Logic Tree Editor".
 2. Create a new logic tree just as you would create a Material in the material editor.
 3. Select an object in the 3D-Viewport, then click on "apply logic to selected object" in the Logic Tree Editor.
+
+# If you want to support this project
+
+head over to https://www.patreon.com/iza_zed_upbge_toolkits
+
+Thanks to all who use and support this!

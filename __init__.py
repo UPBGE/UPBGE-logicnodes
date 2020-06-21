@@ -353,7 +353,9 @@ class NLNodeTreeReference(bpy.types.PropertyGroup):
 
 
 class NLAddonSettings(bpy.types.PropertyGroup):
-    use_custom_node_color: bpy.props.BoolProperty(update=update_node_colors)
+    use_custom_node_color: bpy.props.BoolProperty(
+        update=update_node_colors
+    )
     use_node_debug: bpy.props.BoolProperty()
 
 
@@ -374,6 +376,9 @@ class LogicNodesAddonPreferences(bpy.types.AddonPreferences):
         use_color_row = col.row()
         use_color_row.prop(context.scene.logic_node_settings, 'use_custom_node_color', text="Dark Node Color")
         use_color_row.prop(context.scene.logic_node_settings, 'use_node_debug', text="Debug Mode (Print Errors to Console)")
+        link_row = col.row()
+        link_row.operator("bge_netlogic.github", icon="URL")
+        link_row.operator("bge_netlogic.donate", icon="URL")
         contrib_row = col.row()
         contrib_row.label(text='Contributors: L_P, Mike King')
 
@@ -399,6 +404,8 @@ _registered_classes = [
     ops.NLMovePropertyOperator,
     ops.NLLoadSoundOperator,
     ops.NLPopupTemplatesOperator,
+    ops.NLAddonPatreonButton,
+    ops.NLAddonGithubButton,
     NLNodeTreeReference
 ]
 

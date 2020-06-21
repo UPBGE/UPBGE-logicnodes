@@ -1,6 +1,7 @@
 import os
 import bpy
 import bge_netlogic
+import webbrowser
 
 
 class TreeCodeWriterOperator(bpy.types.Operator):
@@ -1001,3 +1002,23 @@ class NLPopupTemplatesOperator(bpy.types.Operator):
             return result
         else:
             return bpy.data.texts[index]
+
+
+class NLAddonPatreonButton(bpy.types.Operator):
+    bl_idname = "bge_netlogic.donate"
+    bl_label = "Patreon"
+    bl_description = "Please consider supporting this Add-On"
+
+    def execute(self, context):
+        webbrowser.open('https://www.patreon.com/iza_zed_upbge_toolkits')
+        return {"FINISHED"}
+
+
+class NLAddonGithubButton(bpy.types.Operator):
+    bl_idname = "bge_netlogic.github"
+    bl_label = "GitHub"
+    bl_description = "Get involved with development"
+
+    def execute(self, context):
+        webbrowser.open('https://github.com/IzaZed/Uchronian-Logic-UPBGE-Logic-Nodes')
+        return {"FINISHED"}
