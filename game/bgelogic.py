@@ -5511,6 +5511,32 @@ class ActionSetResolution(ActionCell):
         self.done = True
 
 
+class ActionSetFullscreen(ActionCell):
+    def __init__(self):
+        ActionCell.__init__(self)
+        self.condition = None
+        self.use_fullscreen = None
+        self.done = None
+        self.OUT = LogicNetworkSubCell(self, self.get_done)
+
+    def get_done(self):
+        return self.done
+
+    def evaluate(self):
+        self.done = False
+        condition = self.get_parameter_value(self.condition)
+        if condition is LogicNetworkCell.STATUS_WAITING:
+            return
+        if not condition:
+            return
+        use_fullscreen = self.get_parameter_value(self.use_fullscreen)
+        if use_fullscreen is LogicNetworkCell.STATUS_WAITING or not use_fullscreen:
+            return
+        self._set_ready()
+        bge.render.setFullscreen(use_fullscreen)
+        self.done = True
+
+
 class InitEmptyDict(ActionCell):
     def __init__(self):
         ActionCell.__init__(self)

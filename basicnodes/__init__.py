@@ -5213,6 +5213,27 @@ class NLActionSetResolution(bpy.types.Node, NLActionNode):
 _nodes.append(NLActionSetResolution)
 
 
+class NLActionSetFullscreen(bpy.types.Node, NLActionNode):
+    bl_idname = "NLActionSetFullscreen"
+    bl_label = "Set Fullscreen"
+    nl_category = "Window"
+
+    def init(self, context):
+        NLActionNode.init(self, context)
+        self.inputs.new(NLConditionSocket.bl_idname, 'Condition')
+        self.inputs.new(NLBooleanSocket.bl_idname, 'Fullscreen')
+        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+
+    def get_output_socket_varnames(self):
+        return ["OUT"]
+
+    def get_netlogic_class_name(self): return "bgelogic.ActionSetFullscreen"
+    def get_input_sockets_field_names(self): return ["condition", "use_fullscreen"]
+
+
+_nodes.append(NLActionSetFullscreen)
+
+
 class NLInitEmptyDict(bpy.types.Node, NLActionNode):
     bl_idname = "NLInitEmptyDict"
     bl_label = "Dict: Init Empty"
