@@ -38,7 +38,7 @@ class TreeCodeGenerator(object):
         buffer_name = bge_netlogic.utilities.py_module_filename_for_tree(tree)
         print("Updating tree code...", buffer_name)
         line_writer = self.create_text_file("bgelogic/"+buffer_name)
-        line_writer.write_line("#MACHINE GENERATED")
+        line_writer.write_line("# MACHINE GENERATED")
         line_writer.write_line("import bge")
         line_writer.write_line("import mathutils")
         line_writer.write_line("import bgelogic")
@@ -52,7 +52,8 @@ class TreeCodeGenerator(object):
         line_writer.write_line("network = bgelogic.LogicNetwork()")
         cell_var_names, uid_map = self._write_tree(tree, line_writer)
         for varname in self._sort_cellvarnames(cell_var_names, uid_map):
-            if not uid_map.is_removed(varname): line_writer.write_line("network.add_cell({})", varname)
+            if not uid_map.is_removed(varname):
+                line_writer.write_line("network.add_cell({})", varname)
         line_writer.write_line('owner["{}"] = network', tree.name)
         line_writer.write_line("network._owner = owner")
         line_writer.write_line("network.setup()")
@@ -84,7 +85,7 @@ class TreeCodeGenerator(object):
             bgelogic_source_code = f.read()
         assert (bgelogic_source_code is not None)
         bgelogic_output_writer = self.create_text_file("bgelogic/__init__.py")
-        bgelogic_output_writer.write_line("#MACHINE GENERATED")
+        bgelogic_output_writer.write_line("# MACHINE GENERATED")
         bgelogic_output_writer.write_line(bgelogic_source_code)
         bgelogic_output_writer.close()
         pass
@@ -135,8 +136,6 @@ class TreeCodeGenerator(object):
                 if self._test_node_links(node, added_cells, uid_map):
                     available_cells.remove(cell_name)
                     added_cells.append(cell_name)
-                else:
-                    pass
         return added_cells
 
     def _test_node_links(self, node, added_cell_names, uid_map):

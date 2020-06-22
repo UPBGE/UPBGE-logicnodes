@@ -1006,8 +1006,8 @@ class NLPopupTemplatesOperator(bpy.types.Operator):
 
 class NLAddonPatreonButton(bpy.types.Operator):
     bl_idname = "bge_netlogic.donate"
-    bl_label = "Patreon"
-    bl_description = "Please consider supporting this Add-On"
+    bl_label = "Become a Patreon"
+    bl_description = "Consider supporting this Add-On"
 
     def execute(self, context):
         webbrowser.open('https://www.patreon.com/iza_zed_upbge_toolkits')
@@ -1020,5 +1020,5 @@ class NLAddonGithubButton(bpy.types.Operator):
     bl_description = "Get involved with development"
 
     def execute(self, context):
-        webbrowser.open('https://github.com/IzaZed/Uchronian-Logic-UPBGE-Logic-Nodes')
+        webbrowser.open('https://github.com/IzaZed/Uchronian-Logic-UPBGE-Logic-Nodes/issues')
         return {"FINISHED"}

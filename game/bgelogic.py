@@ -661,6 +661,7 @@ class LogicNetworkSubCell(StatefulValueProducer):
 
 
 class ParameterCell(LogicNetworkCell):
+
     def __init__(self):
         LogicNetworkCell.__init__(self)
 
@@ -668,7 +669,6 @@ class ParameterCell(LogicNetworkCell):
 class ActionCell(LogicNetworkCell):
     def __init__(self):
         LogicNetworkCell.__init__(self)
-    pass
 
 
 class ConditionCell(LogicNetworkCell):
@@ -852,17 +852,17 @@ class LogicNetwork(LogicNetworkCell):
         mpos_delta[1] = curr_mpos[1] - last_mpos[1]
         last_mpos[:] = curr_mpos
         # store mouse and keyboard events to be used by cells
-        self.keyboard_events = self.keyboard.events.copy()
-        self.active_keyboard_events = self.keyboard.active_events.copy()
+        self.keyboard_events = self.keyboard.inputs.copy()
+        self.active_keyboard_events = self.keyboard.activeInputs.copy()
         caps_lock_event = self.keyboard_events[bge.events.CAPSLOCKKEY]
-        if(caps_lock_event == bge.logic.KX_INPUT_JUST_RELEASED):
+        if(caps_lock_event.released):
             self.capslock_pressed = not self.capslock_pressed
-        me = self.mouse.events
+        me = self.mouse.inputs
         self.mouse_wheel_delta = 0
-        if(me[bge.events.WHEELUPMOUSE] == bge.logic.KX_INPUT_JUST_ACTIVATED):
+        if(me[bge.events.WHEELUPMOUSE].activated):
             self.mouse_wheel_delta = 1
         elif(
-            me[bge.events.WHEELDOWNMOUSE] == bge.logic.KX_INPUT_JUST_ACTIVATED
+            me[bge.events.WHEELDOWNMOUSE].activated
         ):
             self.mouse_wheel_delta = -1
         self.mouse_events = me
@@ -1965,12 +1965,6 @@ class InterpolateValue(ParameterCell):
         if value_b is LogicNetworkCell.STATUS_WAITING:
             return
         if factor is LogicNetworkCell.STATUS_WAITING:
-            return
-        if none_or_invalid(value_a):
-            return
-        if none_or_invalid(value_b):
-            return
-        if none_or_invalid(factor):
             return
         self._set_ready()
         self._set_value((factor * value_b) + ((1-factor) * value_a))
@@ -3405,18 +3399,18 @@ class ConditionKeyPressed(ConditionCell):
 
     def evaluate(self):
         keycode = self.get_parameter_value(self.key_code)
-        # keycode = bge.events.KKEY
         if keycode is LogicNetworkCell.STATUS_WAITING:
             return
         self._set_ready()
         keystat = self.network.keyboard_events[keycode]
         if self.pulse:
             self._set_value(
-                keystat == bge.logic.KX_INPUT_JUST_ACTIVATED or
-                keystat == bge.logic.KX_INPUT_ACTIVE
+                (
+                    keystat.active or keystat.activated
+                )
             )
         else:
-            self._set_value(keystat == bge.logic.KX_INPUT_JUST_ACTIVATED)
+            self._set_value(keystat.activated)
 
 
 class ConditionGamepadSticks(ConditionCell):
@@ -3580,31 +3574,28 @@ class ActionKeyLogger(ActionCell):
             return
         network = self.network
         keyboard_status = network.keyboard_events
-        left_shift_status = keyboard_status[bge.events.LEFTSHIFTKEY]
-        right_shift_status = keyboard_status[bge.events.RIGHTSHIFTKEY]
+        left_shift_status = keyboard_status[bge.events.LEFTSHIFTKEY].active
+        right_shift_status = keyboard_status[bge.events.RIGHTSHIFTKEY].active
         shift_down = (
-            (left_shift_status == bge.logic.KX_INPUT_JUST_ACTIVATED) or
-            (left_shift_status == bge.logic.KX_INPUT_ACTIVE) or
-            (right_shift_status == bge.logic.KX_INPUT_JUST_ACTIVATED) or
-            (right_shift_status == bge.logic.KX_INPUT_ACTIVE) or
+            left_shift_status or
+            right_shift_status or
             network.capslock_pressed
         )
         active_events = network.active_keyboard_events
         active = (
-            bge.logic.KX_INPUT_ACTIVE if self.pulse
-            else bge.logic.KX_INPUT_JUST_ACTIVATED
+            'active' if self.pulse
+            else 'activated'
         )
         for keycode in active_events:
             event = active_events[keycode]
-            if(event is active):
+            if getattr(event, active):
                 # something has been pressed
                 self._character = bge.events.EventToCharacter(
-                    keycode,
+                    event.type,
                     shift_down
                 )
                 self._key_code = keycode
                 self._key_logged = True
-                return
 
 
 class ConditionMouseTargeting(ConditionCell):
@@ -3756,11 +3747,11 @@ class ConditionKeyReleased(ConditionCell):
         keystat = self.network.keyboard_events[keycode]
         if self.pulse:
             self._set_value(
-                keystat == bge.logic.KX_INPUT_JUST_RELEASED or
-                keystat == bge.logic.KX_INPUT_NONE
+                keystat.released or
+                keystat.inactive
             )
         else:
-            self._set_value(keystat == bge.logic.KX_INPUT_JUST_RELEASED)
+            self._set_value(keystat.released)
     pass
 
 
@@ -3778,11 +3769,11 @@ class ConditionMousePressed(ConditionCell):
         mstat = self.network.mouse_events[mouse_button]
         if self.pulse:
             self._set_value(
-                mstat == bge.logic.KX_INPUT_JUST_ACTIVATED or
-                mstat == bge.logic.KX_INPUT_ACTIVE
+                mstat.active or
+                mstat.activated
             )
         else:
-            self._set_value(mstat == bge.logic.KX_INPUT_JUST_ACTIVATED)
+            self._set_value(mstat.activated)
 
 
 class ConditionMouseMoved(ConditionCell):
@@ -3793,13 +3784,13 @@ class ConditionMouseMoved(ConditionCell):
     def evaluate(self):
         self._set_ready()
         if self.pulse:
-            typ = bge.logic.KX_INPUT_JUST_ACTIVATED
+            active = 'active'
         else:
-            typ = bge.logic.KX_INPUT_ACTIVE
+            active = 'activated'
         mouse = bge.logic.mouse
         self._set_value(
-            mouse.events[bge.events.MOUSEX] == typ or
-            mouse.events[bge.events.MOUSEY] == typ
+            getattr(mouse.events[bge.events.MOUSEX], active) or
+            getattr(mouse.events[bge.events.MOUSEY], active)
         )
 
 
@@ -3823,7 +3814,7 @@ class ConditionMousePressedOn(ConditionCell):
         if none_or_invalid(game_object):
             return
         mstat = self.network.mouse_events[mouse_button]
-        if not mstat == bge.logic.KX_INPUT_JUST_ACTIVATED:
+        if not mstat.activated:
             self._set_value(False)
             return
         mpos = bge.logic.mouse.position
@@ -3971,11 +3962,11 @@ class ConditionMouseReleased(ConditionCell):
         mstat = self.network.mouse_events[mouse_button]
         if self.pulse:
             self._set_value(
-                mstat == bge.logic.KX_INPUT_JUST_RELEASED or
-                mstat == bge.logic.KX_INPUT_NONE
+                mstat.released or
+                mstat.inactive
             )
         else:
-            self._set_value(mstat == bge.logic.KX_INPUT_JUST_RELEASED)
+            self._set_value(mstat.released)
     pass
 
 
@@ -5487,6 +5478,36 @@ class ActionSetCameraFov(ActionCell):
         if none_or_invalid(camera):
             return
         camera.fov = fov
+        self.done = True
+
+
+class ActionSetResolution(ActionCell):
+    def __init__(self):
+        ActionCell.__init__(self)
+        self.condition = None
+        self.x_res = None
+        self.y_res = None
+        self.done = None
+        self.OUT = LogicNetworkSubCell(self, self.get_done)
+
+    def get_done(self):
+        return self.done
+
+    def evaluate(self):
+        self.done = False
+        condition = self.get_parameter_value(self.condition)
+        if condition is LogicNetworkCell.STATUS_WAITING:
+            return
+        if not condition:
+            return
+        x_res = self.get_parameter_value(self.x_res)
+        if x_res is LogicNetworkCell.STATUS_WAITING or not x_res:
+            return
+        y_res = self.get_parameter_value(self.y_res)
+        if y_res is LogicNetworkCell.STATUS_WAITING or not y_res:
+            return
+        self._set_ready()
+        bge.render.setWindowSize(x_res, y_res)
         self.done = True
 
 

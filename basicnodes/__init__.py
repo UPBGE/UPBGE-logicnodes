@@ -829,6 +829,7 @@ class NLParameterNode(NLAbstractNode):
     def init(self, context):
         self.use_custom_color = bpy.context.scene.logic_node_settings.use_custom_node_color
         self.color = PARAMETER_NODE_COLOR
+        self.master_nodes = []
 
 
 class NLGameObjectSocket(bpy.types.NodeSocket, NetLogicSocketType):
@@ -2381,7 +2382,7 @@ class NLParameterWorldPosition(bpy.types.Node, NLParameterNode):
         self.inputs.new(NLFloatFieldSocket.bl_idname, "Screen X")
         self.inputs.new(NLFloatFieldSocket.bl_idname, "Screen Y")
         self.inputs.new(NLFloatFieldSocket.bl_idname, "Depth")
-        self.outputs.new(NLParameterSocket.bl_idname, "Vec3 World Position")
+        self.outputs.new(NLParameterSocket.bl_idname, "World Position")
 
     def get_netlogic_class_name(self):
         return "bgelogic.ParameterWorldPosition"
@@ -4026,7 +4027,7 @@ class NLKeyLoggerAction(bpy.types.Node, NLActionNode):
 
     def get_output_socket_varnames(self):
         return ["KEY_LOGGED", "KEY_CODE", "CHARACTER"]
-    
+
     def write_cell_fields_initialization(self, cell_varname, uids, line_writer):
         NetLogicStatementGenerator.write_cell_fields_initialization(self, cell_varname, uids, line_writer)
         line_writer.write_line("{}.{} = {}", cell_varname, "pulse", self.pulse)
@@ -5186,6 +5187,30 @@ class NLActionSetCameraFov(bpy.types.Node, NLActionNode):
 
 
 _nodes.append(NLActionSetCameraFov)
+
+
+class NLActionSetResolution(bpy.types.Node, NLActionNode):
+    bl_idname = "NLActionSetResolution"
+    bl_label = "Set Resolution"
+    nl_category = "Window"
+
+    def init(self, context):
+        NLActionNode.init(self, context)
+        self.inputs.new(NLConditionSocket.bl_idname, 'Condition')
+        self.inputs.new(NLIntegerFieldSocket.bl_idname, 'X')
+        self.inputs[-1].value = 1920
+        self.inputs.new(NLIntegerFieldSocket.bl_idname, 'Y')
+        self.inputs[-1].value = 1080
+        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+
+    def get_output_socket_varnames(self):
+        return ["OUT"]
+
+    def get_netlogic_class_name(self): return "bgelogic.ActionSetResolution"
+    def get_input_sockets_field_names(self): return ["condition", "x_res", 'y_res']
+
+
+_nodes.append(NLActionSetResolution)
 
 
 class NLInitEmptyDict(bpy.types.Node, NLActionNode):

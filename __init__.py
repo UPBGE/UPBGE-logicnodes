@@ -372,10 +372,18 @@ class LogicNodesAddonPreferences(bpy.types.AddonPreferences):
     def draw(self, context):
         layout = self.layout
         col = layout.column()
-        col_2 = layout.column()
         use_color_row = col.row()
-        use_color_row.prop(context.scene.logic_node_settings, 'use_custom_node_color', text="Dark Node Color")
-        use_color_row.prop(context.scene.logic_node_settings, 'use_node_debug', text="Debug Mode (Print Errors to Console)")
+        use_color_row.prop(
+            context.scene.logic_node_settings,
+            'use_custom_node_color',
+            text="Dark Node Color"
+        )
+        use_color_row.prop(
+            context.scene.logic_node_settings,
+            'use_node_debug',
+            text="Debug Mode (Print Errors to Console)"
+        )
+        col.separator()
         link_row = col.row()
         link_row.operator("bge_netlogic.github", icon="URL")
         link_row.operator("bge_netlogic.donate", icon="URL")
