@@ -5530,10 +5530,80 @@ class ActionSetFullscreen(ActionCell):
         if not condition:
             return
         use_fullscreen = self.get_parameter_value(self.use_fullscreen)
-        if use_fullscreen is LogicNetworkCell.STATUS_WAITING or not use_fullscreen:
+        if use_fullscreen is LogicNetworkCell.STATUS_WAITING:
             return
         self._set_ready()
         bge.render.setFullScreen(use_fullscreen)
+        self.done = True
+
+
+class GetVSync(ActionCell):
+    def __init__(self):
+        ActionCell.__init__(self)
+
+    def evaluate(self):
+        self._set_ready()
+        self._set_value(bge.render.getVsync())
+
+
+class GetFullscreen(ActionCell):
+    def __init__(self):
+        ActionCell.__init__(self)
+
+    def evaluate(self):
+        self._set_ready()
+        self._set_value(bge.render.getFullScreen())
+
+
+class GetResolution(ActionCell):
+    def __init__(self):
+        ActionCell.__init__(self)
+        self.width = None
+        self.height = None
+        self.res = None
+        self.WIDTH = LogicNetworkSubCell(self, self.get_width)
+        self.HEIGHT = LogicNetworkSubCell(self, self.get_height)
+        self.RES = LogicNetworkSubCell(self, self.get_res)
+
+    def get_width(self):
+        return self.width
+
+    def get_height(self):
+        return self.height
+
+    def get_res(self):
+        return self.res
+
+    def evaluate(self):
+        self._set_ready()
+        self.width = bge.render.getWindowWidth()
+        self.height = bge.render.getWindowHeight()
+        self.res = mathutils.Vector((self.width, self.height))
+
+
+class ActionSetVSync(ActionCell):
+    def __init__(self):
+        ActionCell.__init__(self)
+        self.condition = None
+        self.vsync_mode = None
+        self.done = None
+        self.OUT = LogicNetworkSubCell(self, self.get_done)
+
+    def get_done(self):
+        return self.done
+
+    def evaluate(self):
+        self.done = False
+        condition = self.get_parameter_value(self.condition)
+        if condition is LogicNetworkCell.STATUS_WAITING:
+            return
+        if not condition:
+            return
+        vsync_mode = self.get_parameter_value(self.vsync_mode)
+        if vsync_mode is LogicNetworkCell.STATUS_WAITING:
+            return
+        self._set_ready()
+        bge.render.setVsync(vsync_mode)
         self.done = True
 
 

@@ -261,9 +261,15 @@ _enum_writable_member_names = [
 ]
 
 _enum_mouse_buttons = [
-    ("bge.events.LEFTMOUSE", "Left Button", "Left Button of the mouse"),
-    ("bge.events.MIDDLEMOUSE", "Middle Button", "Middle Button of the mouse"),
-    ("bge.events.RIGHTMOUSE", "Right Button", "Right Button of the mouse")
+    ("bge.events.LEFTMOUSE", "Left Button", "Left Mouse Button"),
+    ("bge.events.MIDDLEMOUSE", "Middle Button", "Middle Mouse Button"),
+    ("bge.events.RIGHTMOUSE", "Right Button", "Right Mouse Button")
+]
+
+_enum_vsync_modes = [
+    ("bge.render.VSYNC_OFF", "Off", "Disable Vsync"),
+    ("bge.render.VSYNC_ON", "On", "Enable Vsync"),
+    ("bge.render.VSYNC_ADAPTIVE", "Adaptive", "Enable adaptive Vsync (if supported)")
 ]
 
 _enum_string_ops = [
@@ -1657,6 +1663,29 @@ class NLMouseButtonSocket(bpy.types.NodeSocket, NetLogicSocketType):
 _sockets.append(NLMouseButtonSocket)
 
 
+class NLVSyncSocket(bpy.types.NodeSocket, NetLogicSocketType):
+    bl_idname = "NLVSyncSocket"
+    bl_label = "Vsync"
+    value: bpy.props.EnumProperty(
+        items=_enum_vsync_modes, default="bge.render.VSYNC_OFF",
+        update=update_tree_code)
+
+    def draw_color(self, context, node):
+        return PARAMETER_SOCKET_COLOR
+
+    def get_unlinked_value(self):
+        return self.value
+
+    def draw(self, context, layout, node, text):
+        if self.is_linked or self.is_output:
+            layout.label(text=text)
+        else:
+            layout.prop(self, "value", text="")
+
+
+_sockets.append(NLVSyncSocket)
+
+
 class NLPlayActionModeSocket(bpy.types.NodeSocket, NetLogicSocketType):
     bl_idname = "NLPlayActionModeSocket"
     bl_label = "Play Mode"
@@ -2430,6 +2459,59 @@ class NLCurrentSceneNode(bpy.types.Node, NLParameterNode):
 
 
 #_nodes.append(NLCurrentSceneNode)
+
+
+class NLGetVsyncNode(bpy.types.Node, NLParameterNode):
+    bl_idname = "NLGetVsyncNode"
+    bl_label = "Get VSync"
+    nl_category = "Window"
+
+    def init(self, context):
+        NLParameterNode.init(self, context)
+        self.outputs.new(NLParameterSocket.bl_idname, "Mode")
+
+    def get_netlogic_class_name(self):
+        return "bgelogic.GetVSync"
+
+
+_nodes.append(NLGetVsyncNode)
+
+
+class NLGetFullscreen(bpy.types.Node, NLParameterNode):
+    bl_idname = "NLGetFullscreen"
+    bl_label = "Get Fullscreen"
+    nl_category = "Window"
+
+    def init(self, context):
+        NLParameterNode.init(self, context)
+        self.outputs.new(NLParameterSocket.bl_idname, "Fullscreen")
+
+    def get_netlogic_class_name(self):
+        return "bgelogic.GetFullscreen"
+
+
+_nodes.append(NLGetFullscreen)
+
+
+class NLGetResolution(bpy.types.Node, NLParameterNode):
+    bl_idname = "NLGetResolution"
+    bl_label = "Get Resolution"
+    nl_category = "Window"
+
+    def init(self, context):
+        NLParameterNode.init(self, context)
+        self.outputs.new(NLParameterSocket.bl_idname, "Width")
+        self.outputs.new(NLParameterSocket.bl_idname, "Height")
+        self.outputs.new(NLVec2FieldSocket.bl_idname, "Resolution")
+
+    def get_netlogic_class_name(self):
+        return "bgelogic.GetResolution"
+
+    def get_output_socket_varnames(self):
+        return ['WIDTH', 'HEIGHT', 'RES']
+
+
+_nodes.append(NLGetResolution)
 
 
 class NLGameObjectPropertyParameterNode(bpy.types.Node, NLParameterNode):
@@ -5232,6 +5314,27 @@ class NLActionSetFullscreen(bpy.types.Node, NLActionNode):
 
 
 _nodes.append(NLActionSetFullscreen)
+
+
+class NLActionSetVSync(bpy.types.Node, NLActionNode):
+    bl_idname = "NLActionSetVSync"
+    bl_label = "Set VSync"
+    nl_category = "Window"
+
+    def init(self, context):
+        NLActionNode.init(self, context)
+        self.inputs.new(NLConditionSocket.bl_idname, 'Condition')
+        self.inputs.new(NLVSyncSocket.bl_idname, 'Vsync')
+        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+
+    def get_output_socket_varnames(self):
+        return ["OUT"]
+
+    def get_netlogic_class_name(self): return "bgelogic.ActionSetVSync"
+    def get_input_sockets_field_names(self): return ["condition", "vsync_mode"]
+
+
+_nodes.append(NLActionSetVSync)
 
 
 class NLInitEmptyDict(bpy.types.Node, NLActionNode):
