@@ -5533,7 +5533,7 @@ class ActionSetFullscreen(ActionCell):
         if use_fullscreen is LogicNetworkCell.STATUS_WAITING or not use_fullscreen:
             return
         self._set_ready()
-        bge.render.setFullscreen(use_fullscreen)
+        bge.render.setFullScreen(use_fullscreen)
         self.done = True
 
 
