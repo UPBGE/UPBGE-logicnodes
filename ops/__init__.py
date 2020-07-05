@@ -1014,6 +1014,24 @@ class NLAddonPatreonButton(bpy.types.Operator):
         return {"FINISHED"}
 
 
+class NLBGEDocsButton(bpy.types.Operator):
+    bl_idname = "bge_netlogic.bge_docs"
+    bl_label = "Blender Game Engine Documentation"
+
+    def execute(self, context):
+        webbrowser.open('https://docs.blender.org/api/2.79/')
+        return {"FINISHED"}
+
+
+class NLUPBGEDocsButton(bpy.types.Operator):
+    bl_idname = "bge_netlogic.upbge_docs"
+    bl_label = "UPBGE Documentation"
+
+    def execute(self, context):
+        webbrowser.open('https://upbge-docs.readthedocs.io/en/latest/')
+        return {"FINISHED"}
+
+
 class NLAddonGithubButton(bpy.types.Operator):
     bl_idname = "bge_netlogic.github"
     bl_label = "GitHub"

@@ -875,6 +875,43 @@ class NLGameObjectSocket(bpy.types.NodeSocket, NetLogicSocketType):
 _sockets.append(NLGameObjectSocket)
 
 
+class NLGameObjectNameSocket(bpy.types.NodeSocket, NetLogicSocketType):
+    bl_idname = "NLGameObjectNameSocket"
+    bl_label = "Object"
+    value: bpy.props.PointerProperty(
+        name='Object',
+        type=bpy.types.Object,
+        update=update_tree_code
+    )
+
+    def draw_color(self, context, node):
+        return PARAM_OBJ_SOCKET_COLOR
+
+    def draw(self, context, layout, node, text):
+        if self.is_output:
+            layout.label(text=self.name)
+        elif self.is_linked:
+            layout.label(text=self.name)
+        else:
+            col = layout.column(align=False)
+            col.label(text=self.name)
+            col.prop_search(
+                self,
+                'value',
+                bpy.context.scene,
+                'objects',
+                icon='NONE',
+                text=''
+            )
+
+    def get_unlinked_value(self):
+        if isinstance(self.value, bpy.types.Object):
+            return '"{}"'.format(self.value.name)
+
+
+_sockets.append(NLGameObjectNameSocket)
+
+
 class NLCollectionSocket(bpy.types.NodeSocket, NetLogicSocketType):
     bl_idname = "NLCollectionSocket"
     bl_label = "Collection"
@@ -4677,15 +4714,18 @@ class NLAddObjectActionNode(bpy.types.Node, NLActionNode):
     def init(self, context):
         NLActionNode.init(self, context)
         self.inputs.new(NLConditionSocket.bl_idname, "Condition")
-        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Name")
+        self.inputs.new(NLGameObjectNameSocket.bl_idname, "Object to Add")
+        self.inputs.new(NLGameObjectSocket.bl_idname, "Copy Data From (Optional)")
         self.inputs.new(NLPositiveIntegerFieldSocket.bl_idname, "Life")
         self.outputs.new(NLConditionSocket.bl_idname, "Done")
         self.outputs.new(NLGameObjectSocket.bl_idname, "Added Object")
 
     def get_netlogic_class_name(self): return "bgelogic.ActionAddObject"
-    def get_input_sockets_field_names(self): return ["condition", "name", "life"]
+    def get_input_sockets_field_names(self): return ["condition", "name", 'reference', "life"]
     def get_output_socket_varnames(self):
         return ['OUT', 'OBJ']
+
+
 _nodes.append(NLAddObjectActionNode)
 
 
@@ -5707,7 +5747,7 @@ class NLActionApplyValue(bpy.types.Node, NLActionNode):
 
 class NLActionApplyLocation(bpy.types.Node, NLActionNode):
     bl_idname = "NLActionApplyLocation"
-    bl_label = "Apply Location"
+    bl_label = "Apply Movement"
     nl_category = "Transformation"
     local: bpy.props.BoolProperty(default=True, update=update_tree_code)
 

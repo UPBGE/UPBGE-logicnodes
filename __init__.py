@@ -414,6 +414,8 @@ _registered_classes = [
     ops.NLPopupTemplatesOperator,
     ops.NLAddonPatreonButton,
     ops.NLAddonGithubButton,
+    ops.NLBGEDocsButton,
+    ops.NLUPBGEDocsButton,
     NLNodeTreeReference
 ]
 
@@ -429,6 +431,7 @@ _registered_classes.extend([
     ui.BGE_PT_LogicPanel,
     ui.BGE_PT_LogicTreeInfoPanel,
     ui.BGE_PT_GamePropertyPanel,
+    ui.BGE_PT_HelpPanel,
     # ui.BGEGameComponentPanel,
     ui.BGE_PT_GamePropertyPanel3DView,
     ui.BGE_PT_PropertiesPanelObject,

@@ -4097,9 +4097,10 @@ class ConditionCollision(ConditionCell):
 class ActionAddObject(ActionCell):
     def __init__(self):
         ActionCell.__init__(self)
-        self.name = None
-        self.life = None
         self.condition = None
+        self.name = None
+        self.reference = None
+        self.life = None
         self.done = False
         self.obj = False
         self.OBJ = LogicNetworkSubCell(self, self._get_obj)
@@ -4117,16 +4118,18 @@ class ActionAddObject(ActionCell):
         if condition_value is LogicNetworkCell.STATUS_WAITING:
             return
         if not condition_value:
-            self._set_ready()
             return
         life_value = self.get_parameter_value(self.life)
         name_value = self.get_parameter_value(self.name)
+        self._set_ready()
         if life_value is LogicNetworkCell.STATUS_WAITING:
+            return
+        reference_value = self.get_parameter_value(self.reference)
+        if reference_value is LogicNetworkCell.STATUS_WAITING:
             return
         if name_value is LogicNetworkCell.STATUS_WAITING:
             return
         scene = bge.logic.getCurrentScene()
-        self._set_ready()
         if none_or_invalid(scene):
             return
         if life_value is None:
@@ -4134,7 +4137,7 @@ class ActionAddObject(ActionCell):
         if name_value is None:
             return
         try:
-            self.obj = scene.addObject(name_value, None, life_value)
+            self.obj = scene.addObject(name_value, reference_value, life_value)
         except ValueError:
             debug(
                 "ActionAddObject: cannot find {}.".format(

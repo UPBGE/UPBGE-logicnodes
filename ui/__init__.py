@@ -552,6 +552,7 @@ class BGE_PT_LogicPanel(bpy.types.Panel):
 
     def draw(self, context):
         layout = self.layout
+        layout.scale_y = 1.4
         layout.operator(
             bge_netlogic.ops.NLPopupTemplatesOperator.bl_idname,
             text="Custom Nodes Templates..."
@@ -563,6 +564,38 @@ class BGE_PT_LogicPanel(bpy.types.Panel):
         layout.operator(
             bge_netlogic.ops.NLLoadProjectNodes.bl_idname,
             text="Refresh Imported Nodes"
+        )
+
+
+class BGE_PT_HelpPanel(bpy.types.Panel):
+    bl_label = "Help & Documentation"
+    bl_space_type = "NODE_EDITOR"
+    bl_region_type = "UI"
+    bl_category = "Help & Documentation"
+    _current_tree = None
+
+    @classmethod
+    def poll(cls, context):
+        enabled = (context.space_data.tree_type == BGELogicTree.bl_idname)
+        if enabled and (context.space_data.edit_tree is not None):
+            bge_netlogic._consume_update_tree_code_queue()
+            if not bge_netlogic._tree_code_writer_started:
+                bge_netlogic._tree_code_writer_started = True
+                bpy.ops.bgenetlogic.treecodewriter_operator()
+        return enabled
+
+    def draw(self, context):
+        layout = self.layout
+        layout.scale_y = 1.4
+        layout.operator(
+            bge_netlogic.ops.NLBGEDocsButton.bl_idname,
+            text="Blender Game Engine",
+            icon='MENU_PANEL'
+        )
+        layout.operator(
+            bge_netlogic.ops.NLUPBGEDocsButton.bl_idname,
+            text="UPBGE",
+            icon='MENU_PANEL'
         )
 
 
