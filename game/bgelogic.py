@@ -3452,6 +3452,8 @@ class ConditionGamepadSticks(ConditionCell):
             joystick = bge.logic.joysticks[index]
         else:
             debug('Gamepad Sticks Node: No Joystick at that Index!')
+            self._x_axis_values = 0
+            self._y_axis_values = 0
             return
         if none_or_invalid(joystick):
             return
@@ -3499,6 +3501,8 @@ class ConditionGamepadTrigger(ConditionCell):
             joystick = bge.logic.joysticks[index]
         else:
             debug('Gamepad Trigger Node: No Joystick at that Index!')
+            self._x_axis_values = 0
+            self._y_axis_values = 0
             return
         if none_or_invalid(joystick):
             return
@@ -3529,6 +3533,8 @@ class ConditionGamepadButtons(ConditionCell):
             joystick = bge.logic.joysticks[index]
         else:
             debug('Gamepad Button Node: No Joystick at that Index!')
+            self._x_axis_values = 0
+            self._y_axis_values = 0
             return
         if none_or_invalid(joystick):
             return
@@ -4450,9 +4456,11 @@ class InvertBool(ActionCell):
         return self.out_value
 
     def evaluate(self):
-        if none_or_invalid(self.value):
-            return
         value = self.get_parameter_value(self.value)
+        if none_or_invalid(value):
+            debug('Inver Bool Node: Value invalid, defaulting to "False"')
+            self.out_value = False
+            return
         self._set_ready()
         self.out_value = not value
 
@@ -4468,9 +4476,11 @@ class InvertValue(ActionCell):
         return self.out_value
 
     def evaluate(self):
-        if none_or_invalid(self.value):
-            return
         value = self.get_parameter_value(self.value)
+        if none_or_invalid(value):
+            debug('Inver Value Node: Value invalid, defaulting to 0')
+            self.out_value = 0
+            return
         self._set_ready()
         self.out_value = -value
 
