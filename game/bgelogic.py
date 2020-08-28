@@ -1319,9 +1319,9 @@ class ParameterDictionaryValue(ParameterCell):
             return
             self._set_value(None)
         else:
-            try:
+            if key in dictionary:
                 self._set_value(dictionary[key])
-            except Exception:
+            else:
                 debug("Dict Get Value Node: Key '{}' Not In Dict!".format(key))
                 return
 
@@ -1344,11 +1344,11 @@ class ParameterListIndex(ParameterCell):
             debug('List Index Node: Invalid List!')
             self._set_value(None)
         else:
-            try:
+            if index in list_d:
                 self._set_value(list_d[index])
-            except Exception:
-                return
+            else:
                 debug('List Index Node: Index Out Of Range!')
+                return
 
 
 class GetActuator(ParameterCell):
@@ -1839,14 +1839,7 @@ class ParameterPythonModuleFunction(ParameterCell):
             self._old_mod_name = mname
             self._module = eval(mname)
         if self._old_mod_fun != mfun:
-            try:
-                self._modfun = getattr(self._module, mfun)
-            except Exception:
-                debug(
-                    "Python Module Node: Module '{}' has no function '{}'!"
-                    .format(self._module, mfun)
-                )
-                return
+            self._modfun = getattr(self._module, mfun)
             self._old_mod_fun = mfun
         if use_arg:
             self.val = self._modfun(arg)
@@ -1870,10 +1863,7 @@ class ParameterTime(ParameterCell):
         return self.network.time_per_frame
 
     def get_fps(self):
-        try:
-            fps = (1 / self.network.time_per_frame)
-        except Exception:
-            fps = 0
+        fps = (1 / self.network.time_per_frame)
         return fps
 
     def get_timeline(self):
@@ -1911,15 +1901,7 @@ class ParameterObjectAttribute(ParameterCell):
                 .format(game_object, attribute_name)
             )
             return
-        try:
-            self._set_value(getattr(game_object, attribute_name))
-        except Exception:
-            debug(
-                'Get Object Data Node: Could Not Get Value from {}!'
-                .format(game_object)
-            )
-            return
-
+        self._set_value(getattr(game_object, attribute_name))
 
 class ClampValue(ParameterCell):
 
@@ -2061,6 +2043,33 @@ class Threshold(ParameterCell):
         if t is LogicNetworkCell.STATUS_WAITING:
             return
         value = self.calc_threshold(self.operator, v, t, e)
+        self._set_ready()
+        if (v is None) or (t is None):
+            self._set_value(None)
+        else:
+            self._set_value(value)
+
+
+class RangedThreshold(ParameterCell):
+
+    @classmethod
+    def op_by_code(cls, op):
+        return op
+
+    def __init__(self):
+        ParameterCell.__init__(self)
+        self.value = None
+        self.threshold = None
+        self.operator = None
+
+    def evaluate(self):
+        v = self.get_parameter_value(self.value)
+        t = self.get_parameter_value(self.threshold)
+        if v is LogicNetworkCell.STATUS_WAITING:
+            return
+        if t is LogicNetworkCell.STATUS_WAITING:
+            return
+        value = v if (v < t.x or v > t.y) else 0
         self._set_ready()
         if (v is None) or (t is None):
             self._set_value(None)
@@ -2470,10 +2479,7 @@ class ParameterAbsVector3(ParameterCell):
         vec = self.get_parameter_value(self.input_v)
         vec.x = abs(vec.x)
         vec.y = abs(vec.y)
-        try:
-            vec.z = abs(vec.z)
-        except Exception:
-            pass
+        vec.z = abs(vec.z)
         if vec is not None:
             self.output_v = vec
         self._set_value(vec)
@@ -3065,7 +3071,7 @@ class ConditionValueTrigger(ConditionCell):
         if self._last_value is LogicNetworkCell.NO_VALUE:
             self._last_value = monitored_value
             self._set_value(False)
-            pass
+            return
         else:
             value_changed = (monitored_value != self._last_value)
             is_trigger = (monitored_value == trigger_value)
@@ -3442,9 +3448,9 @@ class ConditionGamepadSticks(ConditionCell):
         index = self.get_parameter_value(self.index)
         sensitivity = self.get_parameter_value(self.sensitivity)
         threshold = self.get_parameter_value(self.threshold)
-        try:
+        if bge.logic.joysticks[index]:
             joystick = bge.logic.joysticks[index]
-        except Exception:
+        else:
             debug('Gamepad Sticks Node: No Joystick at that Index!')
             return
         if none_or_invalid(joystick):
@@ -3489,10 +3495,10 @@ class ConditionGamepadTrigger(ConditionCell):
         index = self.get_parameter_value(self.index)
         sensitivity = self.get_parameter_value(self.sensitivity)
         threshold = self.get_parameter_value(self.threshold)
-        try:
+        if bge.logic.joysticks[index]:
             joystick = bge.logic.joysticks[index]
-        except Exception:
-            debug('No Joystick at that Index!')
+        else:
+            debug('Gamepad Trigger Node: No Joystick at that Index!')
             return
         if none_or_invalid(joystick):
             return
@@ -3519,9 +3525,9 @@ class ConditionGamepadButtons(ConditionCell):
     def evaluate(self):
         self._set_ready()
         index = self.get_parameter_value(self.index)
-        try:
+        if bge.logic.joysticks[index]:
             joystick = bge.logic.joysticks[index]
-        except Exception:
+        else:
             debug('Gamepad Button Node: No Joystick at that Index!')
             return
         if none_or_invalid(joystick):
@@ -4677,6 +4683,29 @@ class ActionPrint(ActionCell):
         self.done = True
 
 
+class ActionResetTaaSamples(ActionCell):
+
+    def __init__(self):
+        ActionCell.__init__(self)
+        self.condition = None
+        self.done = None
+        self.OUT = LogicNetworkSubCell(self, self.get_done)
+
+    def get_done(self):
+        return self.done
+
+    def evaluate(self):
+        self.done = False
+        condition = self.get_parameter_value(self.condition)
+        if condition is LogicNetworkCell.STATUS_WAITING:
+            return
+        if not condition:
+            return
+        self._set_ready()
+        bge.logic.getCurrentScene().resetTaaSamples = True
+        self.done = True
+
+
 class ActionCreateVehicle(ActionCell):
     def __init__(self):
         ActionCell.__init__(self)
@@ -4896,18 +4925,17 @@ class ActionSetObjectAttribute(ActionCell):
                 .format(game_object_value, value_type)
             )
             return
-        try:
-            setattr(
-                game_object_value,
-                value_type,
-                attribute_value_value
-            )
-        except Exception:
-            debug(
-                'Set Object Data Node: Could Not Set Value for {}!'
-                .format(game_object_value)
-            )
-            return
+        setattr(
+            game_object_value,
+            value_type,
+            attribute_value_value
+        )
+        # except Exception:
+        #     debug(
+        #         'Set Object Data Node: Could Not Set Value for {}!'
+        #         .format(game_object_value)
+        #     )
+        #     return
         if attribute_value_value == 'worldScale':
             game_object_value.reinstancePhysicsMesh(
                 game_object_value,
@@ -5743,9 +5771,9 @@ class SetDictDelKey(ActionCell):
         if key is LogicNetworkCell.STATUS_WAITING:
             return
         self._set_ready()
-        try:
+        if key in dictionary:
             del dictionary[key]
-        except Exception:
+        else:
             debug("Dict Delete Key Node: Key '{}' not in Dict!".format(key))
             return
         self.new_dict = dictionary
@@ -5921,9 +5949,9 @@ class RemoveListValue(ActionCell):
         if val is LogicNetworkCell.STATUS_WAITING:
             return
         self._set_ready()
-        try:
+        if val in list_d:
             list_d.remove(val)
-        except Exception:
+        else:
             debug("List Remove Value Node: Item '{}' not in List!".format(val))
             return
         self.new_list = list_d
@@ -6953,6 +6981,8 @@ class ActionSaveGame(ActionCell):
             for prop in props:
                 if prop != 'NodeTree':
                     if isinstance(obj[prop], LogicNetwork):
+                        continue
+                    if isinstance(obj[prop], mathutils.Vector):
                         continue
                     prop_set = {}
                     prop_set['name'] = prop
@@ -8162,6 +8192,7 @@ class ParameterGetGlobalValue(ParameterCell):
         ParameterCell.__init__(self)
         self.data_id = None
         self.key = None
+        self.default = None
 
     def evaluate(self):
         STATUS_WAITING = LogicNetworkCell.STATUS_WAITING
@@ -8171,9 +8202,12 @@ class ParameterGetGlobalValue(ParameterCell):
             return
         if key is STATUS_WAITING:
             return
+        default = self.get_parameter_value(self.default)
+        if default is STATUS_WAITING:
+            return
         self._set_ready()
         db = SimpleLoggingDatabase.get_or_create_shared_db(data_id)
-        self._set_value(db.get(key, None))
+        self._set_value(db.get(key, default))
 
 
 class ParameterConstantValue(ParameterCell):
@@ -9367,6 +9401,11 @@ class ActionAlignAxisToVector(ActionCell):
             return
         if factor is None:
             return
+        if axis > 2:
+            matvec = vector.copy()
+            matvec.negate()
+            vector = matvec
+            axis -= 3
         game_object.alignAxisToVect(vector, axis, factor)
         self.done = True
 

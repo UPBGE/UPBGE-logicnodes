@@ -3390,6 +3390,27 @@ class NLThresholdNode(bpy.types.Node, NLParameterNode):
 _nodes.append(NLThresholdNode)
 
 
+class NLRangedThresholdNode(bpy.types.Node, NLParameterNode):
+    bl_idname = "NLRangedThresholdNode"
+    bl_label = "Ranged Threshold"
+    nl_category = "Math"
+
+    def init(self, context):
+        NLParameterNode.init(self, context)
+        self.inputs.new(NLFloatFieldSocket.bl_idname, "Value")
+        self.inputs.new(NLVec2FieldSocket.bl_idname, "Threshold")
+        self.outputs.new(NLParameterSocket.bl_idname, "Value")
+
+    def get_netlogic_class_name(self):
+        return "bgelogic.RangedThreshold"
+
+    def get_input_sockets_field_names(self):
+        return ["value", "threshold"]
+
+
+_nodes.append(NLRangedThresholdNode)
+
+
 class NLClampValueNode(bpy.types.Node, NLParameterNode):
     bl_idname = "NLClampValueNode"
     bl_label = "Clamp"
@@ -6688,7 +6709,7 @@ class NLActionAlignAxisToVector(bpy.types.Node, NLActionNode):
         self.inputs.new(NLConditionSocket.bl_idname, "Condition")
         self.inputs.new(NLGameObjectSocket.bl_idname, "Object")
         self.inputs.new(NLVec3FieldSocket.bl_idname, "Vector")
-        self.inputs.new(NLSocketLocalAxis.bl_idname, "Axis")
+        self.inputs.new(NLSocketOrientedLocalAxis.bl_idname, "Axis")
         self.inputs.new(NLSocketAlphaFloat.bl_idname, "Factor")
         self.inputs[-1].value = 1.0
         self.outputs.new(NLConditionSocket.bl_idname, 'Done')
@@ -6813,6 +6834,27 @@ class NLActionPrint(bpy.types.Node, NLActionNode):
     def get_input_sockets_field_names(self):
         return ["condition", "value"]
 _nodes.append(NLActionPrint)
+
+
+class NLActionResetTaaSamples(bpy.types.Node, NLActionNode):
+    bl_idname = "NLActionResetTaaSamples"
+    bl_label = "Reset TAA Samples"
+    nl_category = "Window"
+    
+    def init(self, context):
+        NLActionNode.init(self, context)
+        self.inputs.new(NLPseudoConditionSocket.bl_idname, "Condition")
+        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+
+    def get_output_socket_varnames(self):
+        return ["OUT"]
+
+    def get_netlogic_class_name(self):
+        return "bgelogic.ActionResetTaaSamples"
+
+    def get_input_sockets_field_names(self):
+        return ["condition"]
+_nodes.append(NLActionResetTaaSamples)
 
 
 class NLActionMousePickNode(bpy.types.Node, NLActionNode):
@@ -7313,12 +7355,13 @@ class NLParameterGetGlobalValue(bpy.types.Node, NLParameterNode):
         self.inputs[-1].value = 'general'
         self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Key")
         self.inputs[-1].value = 'var_name'
-        # self.inputs.new(NLValueFieldSocket.bl_idname, "Default Value")
+        self.inputs.new(NLValueFieldSocket.bl_idname, "Default Value")
         self.outputs.new(NLParameterSocket.bl_idname, "Value")
     def get_input_sockets_field_names(self):
-        return ["data_id", "key"]
+        return ["data_id", "key", 'default']
     def get_netlogic_class_name(self):
         return "bgelogic.ParameterGetGlobalValue"
+
 
 _nodes.append(NLParameterGetGlobalValue)
 
