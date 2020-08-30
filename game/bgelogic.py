@@ -20,6 +20,8 @@ if not TOO_OLD:
 # Persistent maps
 
 def debug(value):
+    if bpy.context.scene.game_settings.show_fullscreen:
+        return
     if TOO_OLD:
         return
     if not bpy.context.scene.logic_node_settings.use_node_debug:
@@ -4834,7 +4836,9 @@ class VehicleApplyForce(ActionCell):
         if power is LogicNetworkCell.STATUS_WAITING:
             return
         if not condition_value:
-            power = 0
+            for wheel in range(constraint.getNumWheels()):
+                constraint.applyEngineForce(0, wheel)
+            return
         if none_or_invalid(constraint):
             return
         self._set_ready()
@@ -4843,7 +4847,8 @@ class VehicleApplyForce(ActionCell):
                 constraint.applyEngineForce(power, wheel)
         if value_type == 'REAR':
             for wheel in range(wheelcount):
-                constraint.applyEngineForce(power, -1 - wheel)
+                wheel = constraint.getNumWheels() - wheel - 1
+                constraint.applyEngineForce(power, wheel)
         if value_type == 'ALL':
             for wheel in range(constraint.getNumWheels()):
                 constraint.applyEngineForce(power, wheel)
@@ -4881,7 +4886,9 @@ class VehicleApplyBraking(ActionCell):
         if power is LogicNetworkCell.STATUS_WAITING:
             return
         if not condition_value:
-            power = 0
+            for wheel in range(constraint.getNumWheels()):
+                constraint.applyBraking(0, wheel)
+            return
         if none_or_invalid(constraint):
             return
         self._set_ready()
@@ -4890,10 +4897,150 @@ class VehicleApplyBraking(ActionCell):
                 constraint.applyBraking(power, wheel)
         if value_type == 'REAR':
             for wheel in range(wheelcount):
-                constraint.applyBraking(power, -1 - wheel)
+                wheel = constraint.getNumWheels() - wheel - 1
+                constraint.applyBraking(power, wheel)
         if value_type == 'ALL':
             for wheel in range(constraint.getNumWheels()):
                 constraint.applyBraking(power, wheel)
+        self.done = True
+
+
+class VehicleApplySteering(ActionCell):
+    def __init__(self, value_type='REAR'):
+        ActionCell.__init__(self)
+        self.value_type = str(value_type)
+        self.condition = None
+        self.constraint = None
+        self.wheelcount = None
+        self.power = None
+        self.OUT = LogicNetworkSubCell(self, self.get_done)
+
+    def get_done(self):
+        return self.done
+
+    def evaluate(self):
+        self.done = False
+        condition_value = self.get_parameter_value(self.condition)
+        if condition_value is LogicNetworkCell.STATUS_WAITING:
+            return
+        if not condition_value:
+            return
+        constraint = self.get_parameter_value(self.constraint)
+        if constraint is LogicNetworkCell.STATUS_WAITING:
+            return
+        value_type = self.get_parameter_value(self.value_type)
+        if value_type is LogicNetworkCell.STATUS_WAITING:
+            return
+        wheelcount = self.get_parameter_value(self.wheelcount)
+        if wheelcount is LogicNetworkCell.STATUS_WAITING:
+            return
+        power = self.get_parameter_value(self.power)
+        if power is LogicNetworkCell.STATUS_WAITING:
+            return
+        if none_or_invalid(constraint):
+            return
+        self._set_ready()
+        if value_type == 'FRONT':
+            for wheel in range(wheelcount):
+                constraint.setSteeringValue(power, wheel)
+        if value_type == 'REAR':
+            for wheel in range(wheelcount):
+                wheel = constraint.getNumWheels() - wheel - 1
+                constraint.setSteeringValue(power, wheel)
+        if value_type == 'ALL':
+            for wheel in range(constraint.getNumWheels()):
+                constraint.setSteeringValue(power, wheel)
+        self.done = True
+
+
+class VehicleSetAttributes(ActionCell):
+    def __init__(self, value_type='REAR'):
+        ActionCell.__init__(self)
+        self.value_type = str(value_type)
+        self.condition = None
+        self.constraint = None
+        self.wheelcount = None
+        self.set_suspension_compression = False
+        self.suspension_compression = False
+        self.set_suspension_damping = False
+        self.suspension_damping = False
+        self.set_suspension_stiffness = False
+        self.suspension_stiffness = False
+        self.set_tyre_friction = False
+        self.tyre_friction = False
+        self.OUT = LogicNetworkSubCell(self, self.get_done)
+
+    def get_done(self):
+        return self.done
+
+    def set_attributes(self, car, wheel, attrs, values):
+        if attrs[0] is True:
+            car.setSuspensionCompression(values[0], wheel)
+        if attrs[1] is True:
+            car.setSuspensionDamping(values[1], wheel)
+        if attrs[2] is True:
+            car.setSuspensionDamping(values[2], wheel)
+        if attrs[3] is True:
+            car.setTyreFriction(values[3], wheel)
+
+    def evaluate(self):
+        self.done = False
+        condition_value = self.get_parameter_value(self.condition)
+        if condition_value is LogicNetworkCell.STATUS_WAITING:
+            return
+        if not condition_value:
+            return
+        constraint = self.get_parameter_value(self.constraint)
+        if constraint is LogicNetworkCell.STATUS_WAITING:
+            return
+        value_type = self.get_parameter_value(self.value_type)
+        if value_type is LogicNetworkCell.STATUS_WAITING:
+            return
+        wheelcount = self.get_parameter_value(self.wheelcount)
+        if wheelcount is LogicNetworkCell.STATUS_WAITING:
+            return
+        attrs_to_set = [
+            self.get_parameter_value(self.set_suspension_compression),
+            self.get_parameter_value(self.set_suspension_damping),
+            self.get_parameter_value(self.set_suspension_stiffness),
+            self.get_parameter_value(self.set_tyre_friction)
+        ]
+        values_to_set = [
+            self.get_parameter_value(self.suspension_compression),
+            self.get_parameter_value(self.suspension_damping),
+            self.get_parameter_value(self.suspension_stiffness),
+            self.get_parameter_value(self.tyre_friction)
+        ]
+        if none_or_invalid(constraint):
+            return
+        self._set_ready()
+        print(attrs_to_set)
+        print(values_to_set)
+        if value_type == 'FRONT':
+            for wheel in range(wheelcount):
+                self.set_attributes(
+                    constraint,
+                    wheel,
+                    attrs_to_set,
+                    values_to_set
+                )
+        if value_type == 'REAR':
+            for wheel in range(wheelcount):
+                wheel = constraint.getNumWheels() - wheel - 1
+                self.set_attributes(
+                    constraint,
+                    wheel,
+                    attrs_to_set,
+                    values_to_set
+                )
+        if value_type == 'ALL':
+            for wheel in range(constraint.getNumWheels()):
+                self.set_attributes(
+                    constraint,
+                    wheel,
+                    attrs_to_set,
+                    values_to_set
+                )
         self.done = True
 
 

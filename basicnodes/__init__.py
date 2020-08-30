@@ -4976,8 +4976,8 @@ _nodes.append(NLAbsoluteValue)
 
 class NLCreateVehicle(bpy.types.Node, NLActionNode):
     bl_idname = "NLCreateVehicle"
-    bl_label = "Vehicle: Create New"
-    nl_category = "Physics"
+    bl_label = "Create New"
+    nl_category = "Vehicle"
 
     def init(self, context):
         NLActionNode.init(self, context)
@@ -5011,15 +5011,15 @@ if not bpy.app.version < (2, 80, 0):
 
 class NLVehicleApplyEngineForce(bpy.types.Node, NLActionNode):
     bl_idname = "NLVehicleApplyEngineForce"
-    bl_label = "Vehicle: Apply Engine Force"
-    nl_category = "Physics"
+    bl_label = "Apply Engine Force"
+    nl_category = "Vehicle"
     value_type: bpy.props.EnumProperty(items=_enum_vehicle_axis, update=update_tree_code)
 
     def init(self, context):
         NLActionNode.init(self, context)
         self.inputs.new(NLConditionSocket.bl_idname, "Condition")
         self.inputs.new(NLParameterSocket.bl_idname, "Vehicle Constraint")
-        self.inputs.new(NLIntegerFieldSocket.bl_idname, "Wheels")
+        self.inputs.new(NLPositiveIntegerFieldSocket.bl_idname, "Wheels")
         self.inputs[-1].value = 2
         self.inputs.new(NLFloatFieldSocket.bl_idname, "Power")
         self.inputs[-1].value = 1
@@ -5047,15 +5047,15 @@ if not bpy.app.version < (2, 80, 0):
 
 class NLVehicleApplyBraking(bpy.types.Node, NLActionNode):
     bl_idname = "NLVehicleApplyBraking"
-    bl_label = "Vehicle: Brake"
-    nl_category = "Physics"
+    bl_label = "Brake"
+    nl_category = "Vehicle"
     value_type: bpy.props.EnumProperty(items=_enum_vehicle_axis, update=update_tree_code)
 
     def init(self, context):
         NLActionNode.init(self, context)
         self.inputs.new(NLConditionSocket.bl_idname, "Condition")
         self.inputs.new(NLParameterSocket.bl_idname, "Vehicle Constraint")
-        self.inputs.new(NLIntegerFieldSocket.bl_idname, "Wheels")
+        self.inputs.new(NLPositiveIntegerFieldSocket.bl_idname, "Wheels")
         self.inputs[-1].value = 2
         self.inputs.new(NLFloatFieldSocket.bl_idname, "Power")
         self.inputs[-1].value = 1
@@ -5080,6 +5080,94 @@ class NLVehicleApplyBraking(bpy.types.Node, NLActionNode):
 if not bpy.app.version < (2, 80, 0):
     _nodes.append(NLVehicleApplyBraking)
 
+
+class NLVehicleApplySteering(bpy.types.Node, NLActionNode):
+    bl_idname = "NLVehicleApplySteering"
+    bl_label = "Steer"
+    nl_category = "Vehicle"
+    value_type: bpy.props.EnumProperty(items=_enum_vehicle_axis, update=update_tree_code)
+
+    def init(self, context):
+        NLActionNode.init(self, context)
+        self.inputs.new(NLConditionSocket.bl_idname, "Condition")
+        self.inputs.new(NLParameterSocket.bl_idname, "Vehicle Constraint")
+        self.inputs.new(NLPositiveIntegerFieldSocket.bl_idname, "Wheels")
+        self.inputs[-1].value = 2
+        self.inputs.new(NLFloatFieldSocket.bl_idname, "Steer")
+        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+
+    def get_output_socket_varnames(self):
+        return ["OUT"]
+
+    def draw_buttons(self, context, layout):
+        layout.prop(self, "value_type", text='')
+
+    def get_netlogic_class_name(self):
+        return "bgelogic.VehicleApplySteering"
+
+    def get_input_sockets_field_names(self):
+        return ["condition", "constraint", "wheelcount", 'power']
+
+    def write_cell_fields_initialization(self, cell_varname, uids, line_writer):
+        NetLogicStatementGenerator.write_cell_fields_initialization(self, cell_varname, uids, line_writer)
+        line_writer.write_line("{}.{} = '{}'", cell_varname, "value_type", self.value_type)
+
+if not bpy.app.version < (2, 80, 0):
+    _nodes.append(NLVehicleApplySteering)
+
+
+class NLVehicleSetAttributes(bpy.types.Node, NLActionNode):
+    bl_idname = "NLVehicleSetAttributes"
+    bl_label = "Set Attributes"
+    nl_category = "Vehicle"
+    value_type: bpy.props.EnumProperty(items=_enum_vehicle_axis, update=update_tree_code)
+
+    def init(self, context):
+        NLActionNode.init(self, context)
+        self.inputs.new(NLConditionSocket.bl_idname, "Condition")
+        self.inputs.new(NLParameterSocket.bl_idname, "Vehicle Constraint")
+        self.inputs.new(NLPositiveIntegerFieldSocket.bl_idname, "Wheels")
+        self.inputs[-1].value = 2
+        self.inputs.new(NLBooleanSocket.bl_idname, "Compression")
+        self.inputs.new(NLFloatFieldSocket.bl_idname, "")
+        self.inputs.new(NLBooleanSocket.bl_idname, "Damping")
+        self.inputs.new(NLFloatFieldSocket.bl_idname, "")
+        self.inputs.new(NLBooleanSocket.bl_idname, "Stiffness")
+        self.inputs.new(NLFloatFieldSocket.bl_idname, "")
+        self.inputs.new(NLBooleanSocket.bl_idname, "Friction")
+        self.inputs.new(NLFloatFieldSocket.bl_idname, "")
+        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+
+    def get_output_socket_varnames(self):
+        return ["OUT"]
+
+    def draw_buttons(self, context, layout):
+        layout.prop(self, "value_type", text='')
+
+    def get_netlogic_class_name(self):
+        return "bgelogic.VehicleSetAttributes"
+
+    def get_input_sockets_field_names(self):
+        return [
+            "condition",
+            "constraint",
+            "wheelcount",
+            'set_suspension_compression',
+            'suspension_compression',
+            'set_suspension_damping',
+            'suspension_damping',
+            'set_suspension_stiffness',
+            'suspension_stiffness',
+            'set_tyre_friction',
+            'tyre_friction'
+        ]
+
+    def write_cell_fields_initialization(self, cell_varname, uids, line_writer):
+        NetLogicStatementGenerator.write_cell_fields_initialization(self, cell_varname, uids, line_writer)
+        line_writer.write_line("{}.{} = '{}'", cell_varname, "value_type", self.value_type)
+
+if not bpy.app.version < (2, 80, 0):
+    _nodes.append(NLVehicleSetAttributes)
 
 
 class NLSetObjectAttributeActionNode(bpy.types.Node, NLActionNode):
@@ -5883,8 +5971,8 @@ _nodes.append(NLActionApplyImpulse)
 
 class NLActionCharacterJump(bpy.types.Node, NLActionNode):
     bl_idname = "NLActionCharacterJump"
-    bl_label = "Character: Jump"
-    nl_category = "Physics"
+    bl_label = "Jump"
+    nl_category = "Character"
 
     def init(self, context):
         NLActionNode.init(self, context)
@@ -6201,8 +6289,8 @@ _nodes.append(NLActionListVariables)
 
 class NLActionSetCharacterJump(bpy.types.Node, NLActionNode):
     bl_idname = "NLSetActionCharacterJump"
-    bl_label = "Character: Set Max Jumps"
-    nl_category = "Physics"
+    bl_label = "Set Max Jumps"
+    nl_category = "Character"
 
     def init(self, context):
         NLActionNode.init(self, context)
@@ -6225,8 +6313,8 @@ _nodes.append(NLActionSetCharacterJump)
 
 class NLActionSetCharacterGravity(bpy.types.Node, NLActionNode):
     bl_idname = "NLActionSetCharacterGravity"
-    bl_label = "Character: Set Gravity"
-    nl_category = "Physics"
+    bl_label = "Set Gravity"
+    nl_category = "Character"
 
     def init(self, context):
         NLActionNode.init(self, context)
@@ -6247,8 +6335,8 @@ _nodes.append(NLActionSetCharacterGravity)
 
 class NLActionSetCharacterWalkDir(bpy.types.Node, NLActionNode):
     bl_idname = "NLActionSetCharacterWalkDir"
-    bl_label = "Character: Set Walk Direction"
-    nl_category = "Physics"
+    bl_label = "Set Walk Direction"
+    nl_category = "Character"
 
     def init(self, context):
         NLActionNode.init(self, context)
@@ -6271,8 +6359,8 @@ _nodes.append(NLActionSetCharacterWalkDir)
 
 class NLActionGetCharacterInfo(bpy.types.Node, NLActionNode):
     bl_idname = "NLActionGetCharacterInfo"
-    bl_label = "Character: Get Physics Info"
-    nl_category = "Physics"
+    bl_label = "Get Physics Info"
+    nl_category = "Character"
 
     def init(self, context):
         NLActionNode.init(self, context)
