@@ -3,6 +3,7 @@ import bpy
 import bge_netlogic
 from bge_netlogic import utilities as tools
 
+TOO_OLD = bpy.app.version < (2, 80, 0)
 
 CONDITION_SOCKET_COLOR = tools.Color.RGBA(.8, 0.2, 0.2, 1.0)
 PSEUDO_COND_SOCKET_COLOR = tools.Color.RGBA(.8, 0.2, 0.2, 1.0)
@@ -944,7 +945,7 @@ class NLCollectionSocket(bpy.types.NodeSocket, NetLogicSocketType):
         return "'{}'".format(self.value)
 
 
-if not bpy.app.version < (2, 80, 0):
+if not TOO_OLD:
     _sockets.append(NLCollectionSocket)
 
 
@@ -961,7 +962,7 @@ class NLSocketLogicTree(bpy.types.NodeSocket, NetLogicSocketType):
         return PARAMETER_SOCKET_COLOR
 
     def draw(self, context, layout, node, text):
-        icon = 'OUTLINER' if not bpy.app.version < (2, 80, 0) else 'PLUS'
+        icon = 'OUTLINER' if not TOO_OLD else 'PLUS'
         if self.is_linked or self.is_output:
             layout.label(text=text)
         else:
@@ -2597,7 +2598,7 @@ class NLGetMaterialNodeValue(bpy.types.Node, NLActionNode):
         return ['OUT']
 
 
-if not bpy.app.version < (2, 80, 0):
+if not TOO_OLD:
     _nodes.append(NLGetMaterialNodeValue)
 
 
@@ -2621,7 +2622,7 @@ class NLGetMaterialNode(bpy.types.Node, NLActionNode):
         return ['OUT']
 
 
-if not bpy.app.version < (2, 80, 0):
+if not TOO_OLD:
     _nodes.append(NLGetMaterialNode)
 
 
@@ -2642,7 +2643,7 @@ class NLGetMaterialNodeInput(bpy.types.Node, NLActionNode):
         return ['OUT']
 
 
-if not bpy.app.version < (2, 80, 0):
+if not TOO_OLD:
     _nodes.append(NLGetMaterialNodeInput)
 
 
@@ -2662,7 +2663,7 @@ class NLGetMaterialNodeInputValue(bpy.types.Node, NLActionNode):
         return ['OUT']
 
 
-if not bpy.app.version < (2, 80, 0):
+if not TOO_OLD:
     _nodes.append(NLGetMaterialNodeInputValue)
 
 
@@ -4477,19 +4478,13 @@ class NLConditionOrList(bpy.types.Node, NLConditionNode):
     
     def init(self, context):
         NLConditionNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, "A")
-        self.inputs[-1].default_value = "False"
-        self.inputs.new(NLConditionSocket.bl_idname, "B")
-        self.inputs[-1].default_value = "False"
-        self.inputs.new(NLConditionSocket.bl_idname, "C")
-        self.inputs[-1].default_value = "False"
-        self.inputs.new(NLConditionSocket.bl_idname, "D")
-        self.inputs[-1].default_value = "False"
-        self.inputs.new(NLConditionSocket.bl_idname, "E")
-        self.inputs[-1].default_value = "False"
-        self.inputs.new(NLConditionSocket.bl_idname, "F")
-        self.inputs[-1].default_value = "False"
-        self.outputs.new(NLConditionSocket.bl_idname, "Or...")
+        self.inputs.new(NLPseudoConditionSocket.bl_idname, "A")
+        self.inputs.new(NLPseudoConditionSocket.bl_idname, "B")
+        self.inputs.new(NLPseudoConditionSocket.bl_idname, "C")
+        self.inputs.new(NLPseudoConditionSocket.bl_idname, "D")
+        self.inputs.new(NLPseudoConditionSocket.bl_idname, "E")
+        self.inputs.new(NLPseudoConditionSocket.bl_idname, "F")
+        self.outputs.new(NLPseudoConditionSocket.bl_idname, "Or...")
     def get_netlogic_class_name(self): return "bgelogic.ConditionOrList"
     def get_input_sockets_field_names(self): return ["ca", "cb", "cc", "cd", "ce", "cf"]
 
@@ -4795,7 +4790,7 @@ class NLSetMaterialNodeValue(bpy.types.Node, NLActionNode):
         return ['OUT']
 
 
-if not bpy.app.version < (2, 80, 0):
+if not TOO_OLD:
     _nodes.append(NLSetMaterialNodeValue)
 
 
@@ -4817,7 +4812,7 @@ class NLSetMaterialNodeInputValue(bpy.types.Node, NLActionNode):
         return ['OUT']
 
 
-if not bpy.app.version < (2, 80, 0):
+if not TOO_OLD:
     _nodes.append(NLSetMaterialNodeInputValue)
 
 
@@ -5005,7 +5000,7 @@ class NLCreateVehicle(bpy.types.Node, NLActionNode):
     def get_input_sockets_field_names(self):
         return ["condition", "game_object", "wheels_steering", 'wheels', 'suspension', 'stiffness', 'damping', 'friction']
 
-if not bpy.app.version < (2, 80, 0):
+if not TOO_OLD:
     _nodes.append(NLCreateVehicle)
 
 
@@ -5041,7 +5036,7 @@ class NLVehicleApplyEngineForce(bpy.types.Node, NLActionNode):
         NetLogicStatementGenerator.write_cell_fields_initialization(self, cell_varname, uids, line_writer)
         line_writer.write_line("{}.{} = '{}'", cell_varname, "value_type", self.value_type)
 
-if not bpy.app.version < (2, 80, 0):
+if not TOO_OLD:
     _nodes.append(NLVehicleApplyEngineForce)
 
 
@@ -5077,7 +5072,7 @@ class NLVehicleApplyBraking(bpy.types.Node, NLActionNode):
         NetLogicStatementGenerator.write_cell_fields_initialization(self, cell_varname, uids, line_writer)
         line_writer.write_line("{}.{} = '{}'", cell_varname, "value_type", self.value_type)
 
-if not bpy.app.version < (2, 80, 0):
+if not TOO_OLD:
     _nodes.append(NLVehicleApplyBraking)
 
 
@@ -5112,7 +5107,7 @@ class NLVehicleApplySteering(bpy.types.Node, NLActionNode):
         NetLogicStatementGenerator.write_cell_fields_initialization(self, cell_varname, uids, line_writer)
         line_writer.write_line("{}.{} = '{}'", cell_varname, "value_type", self.value_type)
 
-if not bpy.app.version < (2, 80, 0):
+if not TOO_OLD:
     _nodes.append(NLVehicleApplySteering)
 
 
@@ -5128,11 +5123,11 @@ class NLVehicleSetAttributes(bpy.types.Node, NLActionNode):
         self.inputs.new(NLParameterSocket.bl_idname, "Vehicle Constraint")
         self.inputs.new(NLPositiveIntegerFieldSocket.bl_idname, "Wheels")
         self.inputs[-1].value = 2
-        self.inputs.new(NLBooleanSocket.bl_idname, "Compression")
-        self.inputs.new(NLFloatFieldSocket.bl_idname, "")
-        self.inputs.new(NLBooleanSocket.bl_idname, "Damping")
+        self.inputs.new(NLBooleanSocket.bl_idname, "Suspension")
         self.inputs.new(NLFloatFieldSocket.bl_idname, "")
         self.inputs.new(NLBooleanSocket.bl_idname, "Stiffness")
+        self.inputs.new(NLFloatFieldSocket.bl_idname, "")
+        self.inputs.new(NLBooleanSocket.bl_idname, "Damping")
         self.inputs.new(NLFloatFieldSocket.bl_idname, "")
         self.inputs.new(NLBooleanSocket.bl_idname, "Friction")
         self.inputs.new(NLFloatFieldSocket.bl_idname, "")
@@ -5154,10 +5149,10 @@ class NLVehicleSetAttributes(bpy.types.Node, NLActionNode):
             "wheelcount",
             'set_suspension_compression',
             'suspension_compression',
-            'set_suspension_damping',
-            'suspension_damping',
             'set_suspension_stiffness',
             'suspension_stiffness',
+            'set_suspension_damping',
+            'suspension_damping',
             'set_tyre_friction',
             'tyre_friction'
         ]
@@ -5166,7 +5161,7 @@ class NLVehicleSetAttributes(bpy.types.Node, NLActionNode):
         NetLogicStatementGenerator.write_cell_fields_initialization(self, cell_varname, uids, line_writer)
         line_writer.write_line("{}.{} = '{}'", cell_varname, "value_type", self.value_type)
 
-if not bpy.app.version < (2, 80, 0):
+if not TOO_OLD:
     _nodes.append(NLVehicleSetAttributes)
 
 
@@ -5320,7 +5315,7 @@ class NLActionRepeater(bpy.types.Node, NLActionNode):
 class NLActionSetGameObjectVisibility(bpy.types.Node, NLActionNode):
     bl_idname = "NLActionSetGameObjectVisibility"
     bl_label = "Set Visibility"
-    nl_category = "Objects"
+    nl_category = "Object Data"
 
     def init(self, context):
         NLActionNode.init(self, context)
@@ -6517,7 +6512,7 @@ _nodes.append(NLActionReplaceMesh)
 class NLActionRemovePhysicsConstraint(bpy.types.Node, NLActionNode):
     bl_idname = "NLActionRemovePhysicsConstraint"
     bl_label = "Remove Physics Constraint"
-    nl_category = "Objects"
+    nl_category = "Object Data"
 
     def init(self, context):
         NLActionNode.init(self, context)
@@ -6542,7 +6537,7 @@ _nodes.append(NLActionRemovePhysicsConstraint)
 class NLActionAddPhysicsConstraint(bpy.types.Node, NLActionNode):
     bl_idname = "NLActionAddPhysicsConstraint"
     bl_label = "Add Physics Constraint"
-    nl_category = "Objects"
+    nl_category = "Object Data"
 
     def init(self, context):
         NLActionNode.init(self, context)
@@ -6573,6 +6568,165 @@ class NLActionAddPhysicsConstraint(bpy.types.Node, NLActionNode):
 _nodes.append(NLActionAddPhysicsConstraint)
 
 
+class NLSetGammaAction(bpy.types.Node, NLActionNode):
+    bl_idname = "NLSetGammaAction"
+    bl_label = "Set Gamma"
+    nl_category = "Visuals"
+
+    def init(self, context):
+        NLActionNode.init(self, context)
+        self.inputs.new(NLConditionSocket.bl_idname, 'Condition')
+        self.inputs.new(NLPositiveFloatSocket.bl_idname, 'Gamma')
+        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+
+    def get_output_socket_varnames(self):
+        return ["OUT"]
+
+    def get_netlogic_class_name(self):
+        return "bgelogic.SetGamma"
+    def get_input_sockets_field_names(self):
+        return [
+            "condition",
+            "value"
+        ]
+if not TOO_OLD:
+    _nodes.append(NLSetGammaAction)
+
+
+class NLSetExposureAction(bpy.types.Node, NLActionNode):
+    bl_idname = "NLSetExposureAction"
+    bl_label = "Set Exposure"
+    nl_category = "Visuals"
+
+    def init(self, context):
+        NLActionNode.init(self, context)
+        self.inputs.new(NLConditionSocket.bl_idname, 'Condition')
+        self.inputs.new(NLPositiveFloatSocket.bl_idname, 'Exposure')
+        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+
+    def get_output_socket_varnames(self):
+        return ["OUT"]
+
+    def get_netlogic_class_name(self):
+        return "bgelogic.SetExposure"
+    def get_input_sockets_field_names(self):
+        return [
+            "condition",
+            "value"
+        ]
+
+if not TOO_OLD:
+    _nodes.append(NLSetExposureAction)
+
+
+class NLSetEeveeBloom(bpy.types.Node, NLActionNode):
+    bl_idname = "NLSetEeveeBloom"
+    bl_label = "Set Bloom"
+    nl_category = "Visuals"
+
+    def init(self, context):
+        NLActionNode.init(self, context)
+        self.inputs.new(NLConditionSocket.bl_idname, 'Condition')
+        self.inputs.new(NLBooleanSocket.bl_idname, 'Use Bloom')
+        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+
+    def get_output_socket_varnames(self):
+        return ["OUT"]
+
+    def get_netlogic_class_name(self):
+        return "bgelogic.SetEeveeBloom"
+    def get_input_sockets_field_names(self):
+        return [
+            "condition",
+            "value"
+        ]
+
+
+if not TOO_OLD:
+    _nodes.append(NLSetEeveeBloom)
+
+
+class NLSetEeveeSSR(bpy.types.Node, NLActionNode):
+    bl_idname = "NLSetEeveeSSR"
+    bl_label = "Set SSR"
+    nl_category = "Visuals"
+
+    def init(self, context):
+        NLActionNode.init(self, context)
+        self.inputs.new(NLConditionSocket.bl_idname, 'Condition')
+        self.inputs.new(NLBooleanSocket.bl_idname, 'Use SSR')
+        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+
+    def get_output_socket_varnames(self):
+        return ["OUT"]
+
+    def get_netlogic_class_name(self):
+        return "bgelogic.SetEeveeSSR"
+    def get_input_sockets_field_names(self):
+        return [
+            "condition",
+            "value"
+        ]
+
+
+if not TOO_OLD:
+    _nodes.append(NLSetEeveeSSR)
+
+
+class NLSetEeveeVolumetrics(bpy.types.Node, NLActionNode):
+    bl_idname = "NLSetEeveeVolumetrics"
+    bl_label = "Set Volumetric Light"
+    nl_category = "Visuals"
+
+    def init(self, context):
+        NLActionNode.init(self, context)
+        self.inputs.new(NLConditionSocket.bl_idname, 'Condition')
+        self.inputs.new(NLBooleanSocket.bl_idname, 'Volumetrics')
+        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+
+    def get_output_socket_varnames(self):
+        return ["OUT"]
+
+    def get_netlogic_class_name(self):
+        return "bgelogic.SetEeveeVolumetrics"
+    def get_input_sockets_field_names(self):
+        return [
+            "condition",
+            "value"
+        ]
+
+
+if not TOO_OLD:
+    _nodes.append(NLSetEeveeVolumetrics)
+
+
+class NLSetEeveeVolumetricShadows(bpy.types.Node, NLActionNode):
+    bl_idname = "NLSetEeveeVolumetricShadows"
+    bl_label = "Set Volumetric Light"
+    nl_category = "Visuals"
+
+    def init(self, context):
+        NLActionNode.init(self, context)
+        self.inputs.new(NLConditionSocket.bl_idname, 'Condition')
+        self.inputs.new(NLBooleanSocket.bl_idname, 'Vol. Shadows')
+        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+
+    def get_output_socket_varnames(self):
+        return ["OUT"]
+
+    def get_netlogic_class_name(self):
+        return "bgelogic.SetEeveeVolumetricShadows"
+    def get_input_sockets_field_names(self):
+        return [
+            "condition",
+            "value"
+        ]
+
+
+if not TOO_OLD:
+    _nodes.append(NLSetEeveeVolumetricShadows)
+
+
 class NLSetLightEnergyAction(bpy.types.Node, NLActionNode):
     bl_idname = "NLSetLightEnergyAction"
     bl_label = "Set Light Energy"
@@ -6600,6 +6754,8 @@ class NLSetLightEnergyAction(bpy.types.Node, NLActionNode):
             "lamp",
             "energy"
         ]
+
+
 _nodes.append(NLSetLightEnergyAction)
 
 
@@ -6996,7 +7152,7 @@ _nodes.append(NLActionCameraPickNode)
 class NLActionSetParentNode(bpy.types.Node, NLActionNode):
     bl_idname = "NLActionSetParentNode"
     bl_label = "Set Parent"
-    nl_category = "Objects"
+    nl_category = "Object Data"
 
     def init(self, context):
         NLActionNode.init(self, context)

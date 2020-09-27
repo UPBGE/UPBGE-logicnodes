@@ -3312,16 +3312,16 @@ class ConditionValueValid(ConditionCell):
 class ConditionOr(ConditionCell):
     def __init__(self):
         ConditionCell.__init__(self)
-        self.condition_a = None
-        self.condition_b = None
+        self.condition_a = True
+        self.condition_b = True
 
     def evaluate(self):
         ca = self.get_parameter_value(self.condition_a)
         cb = self.get_parameter_value(self.condition_b)
         if ca is LogicNetworkCell.STATUS_WAITING:
-            return
+            ca = False
         if cb is LogicNetworkCell.STATUS_WAITING:
-            return
+            cb = False
         self._set_ready()
         self._set_value(ca or cb)
 
@@ -3345,17 +3345,17 @@ class ConditionOrList(ConditionCell):
         ce = self.get_parameter_value(self.ce)
         cf = self.get_parameter_value(self.cf)
         if ca is STATUS_WAITING:
-            return
+            ca = False
         if cb is STATUS_WAITING:
-            return
+            cb = False
         if cc is STATUS_WAITING:
-            return
+            cc = False
         if cd is STATUS_WAITING:
-            return
+            cd = False
         if ce is STATUS_WAITING:
-            return
+            ce = False
         if cf is STATUS_WAITING:
-            return
+            cf = False
         self._set_ready()
         self._set_value(ca or cb or cc or cd or ce or cf)
 
@@ -3797,15 +3797,19 @@ class ConditionMouseMoved(ConditionCell):
 
     def evaluate(self):
         self._set_ready()
+        mstat = self.network.mouse_events
         if self.pulse:
-            active = 'active'
+            self._set_value(
+                mstat[bge.events.MOUSEX].active or
+                mstat[bge.events.MOUSEX].activated or
+                mstat[bge.events.MOUSEY].active or
+                mstat[bge.events.MOUSEY].activated
+            )
         else:
-            active = 'activated'
-        mouse = bge.logic.mouse
-        self._set_value(
-            getattr(mouse.events[bge.events.MOUSEX], active) or
-            getattr(mouse.events[bge.events.MOUSEY], active)
-        )
+            self._set_value(
+                mstat[bge.events.MOUSEX].activated or
+                mstat[bge.events.MOUSEY].activated
+            )
 
 
 class ConditionMousePressedOn(ConditionCell):
@@ -4962,10 +4966,10 @@ class VehicleSetAttributes(ActionCell):
         self.wheelcount = None
         self.set_suspension_compression = False
         self.suspension_compression = False
-        self.set_suspension_damping = False
-        self.suspension_damping = False
         self.set_suspension_stiffness = False
         self.suspension_stiffness = False
+        self.set_suspension_damping = False
+        self.suspension_damping = False
         self.set_tyre_friction = False
         self.tyre_friction = False
         self.OUT = LogicNetworkSubCell(self, self.get_done)
@@ -4977,7 +4981,7 @@ class VehicleSetAttributes(ActionCell):
         if attrs[0] is True:
             car.setSuspensionCompression(values[0], wheel)
         if attrs[1] is True:
-            car.setSuspensionDamping(values[1], wheel)
+            car.setSuspensionStiffness(values[1], wheel)
         if attrs[2] is True:
             car.setSuspensionDamping(values[2], wheel)
         if attrs[3] is True:
@@ -5001,21 +5005,19 @@ class VehicleSetAttributes(ActionCell):
             return
         attrs_to_set = [
             self.get_parameter_value(self.set_suspension_compression),
-            self.get_parameter_value(self.set_suspension_damping),
             self.get_parameter_value(self.set_suspension_stiffness),
+            self.get_parameter_value(self.set_suspension_damping),
             self.get_parameter_value(self.set_tyre_friction)
         ]
         values_to_set = [
             self.get_parameter_value(self.suspension_compression),
-            self.get_parameter_value(self.suspension_damping),
             self.get_parameter_value(self.suspension_stiffness),
+            self.get_parameter_value(self.suspension_damping),
             self.get_parameter_value(self.tyre_friction)
         ]
         if none_or_invalid(constraint):
             return
         self._set_ready()
-        print(attrs_to_set)
-        print(values_to_set)
         if value_type == 'FRONT':
             for wheel in range(wheelcount):
                 self.set_attributes(
@@ -8619,6 +8621,192 @@ class ActionTranslate(ActionCell):
             self._set_value(False)
 
 
+class SetGamma(ActionCell):
+
+    def __init__(self):
+        ActionCell.__init__(self)
+        self.condition = None
+        self.value = None
+        self.done = None
+        self.OUT = LogicNetworkSubCell(self, self.get_done)
+
+    def get_done(self):
+        return self.done
+
+    def evaluate(self):
+        self.done = False
+        STATUS_WAITING = LogicNetworkCell.STATUS_WAITING
+        condition = self.get_parameter_value(self.condition)
+        if condition is STATUS_WAITING:
+            return
+        if not condition:
+            self._set_value(False)
+            return self._set_ready()
+        value = self.get_parameter_value(self.value)
+        if value is STATUS_WAITING:
+            return
+        if none_or_invalid(value):
+            return
+        self._set_ready()
+        bpy.data.scenes[bge.logic.getCurrentScene().name].view_settings.gamma = value
+        self.done = True
+
+
+class SetExposure(ActionCell):
+
+    def __init__(self):
+        ActionCell.__init__(self)
+        self.condition = None
+        self.value = None
+        self.done = None
+        self.OUT = LogicNetworkSubCell(self, self.get_done)
+
+    def get_done(self):
+        return self.done
+
+    def evaluate(self):
+        self.done = False
+        STATUS_WAITING = LogicNetworkCell.STATUS_WAITING
+        condition = self.get_parameter_value(self.condition)
+        if condition is STATUS_WAITING:
+            return
+        if not condition:
+            self._set_value(False)
+            return self._set_ready()
+        value = self.get_parameter_value(self.value)
+        if value is STATUS_WAITING:
+            return
+        if none_or_invalid(value):
+            return
+        self._set_ready()
+        bpy.data.scenes[bge.logic.getCurrentScene().name].view_settings.exposure = value
+        self.done = True
+
+
+class SetEeveeBloom(ActionCell):
+
+    def __init__(self):
+        ActionCell.__init__(self)
+        self.condition = None
+        self.value = None
+        self.done = None
+        self.OUT = LogicNetworkSubCell(self, self.get_done)
+
+    def get_done(self):
+        return self.done
+
+    def evaluate(self):
+        self.done = False
+        STATUS_WAITING = LogicNetworkCell.STATUS_WAITING
+        condition = self.get_parameter_value(self.condition)
+        if condition is STATUS_WAITING:
+            return
+        if not condition:
+            self._set_value(False)
+            return self._set_ready()
+        value = self.get_parameter_value(self.value)
+        if value is STATUS_WAITING:
+            return
+        if none_or_invalid(value):
+            return
+        self._set_ready()
+        bpy.data.scenes[bge.logic.getCurrentScene().name].eevee.use_bloom = value
+        self.done = True
+
+
+class SetEeveeSSR(ActionCell):
+
+    def __init__(self):
+        ActionCell.__init__(self)
+        self.condition = None
+        self.value = None
+        self.done = None
+        self.OUT = LogicNetworkSubCell(self, self.get_done)
+
+    def get_done(self):
+        return self.done
+
+    def evaluate(self):
+        self.done = False
+        STATUS_WAITING = LogicNetworkCell.STATUS_WAITING
+        condition = self.get_parameter_value(self.condition)
+        if condition is STATUS_WAITING:
+            return
+        if not condition:
+            self._set_value(False)
+            return self._set_ready()
+        value = self.get_parameter_value(self.value)
+        if value is STATUS_WAITING:
+            return
+        if none_or_invalid(value):
+            return
+        self._set_ready()
+        bpy.data.scenes[bge.logic.getCurrentScene().name].eevee.use_ssr = value
+        self.done = True
+
+
+class SetEeveeVolumetrics(ActionCell):
+
+    def __init__(self):
+        ActionCell.__init__(self)
+        self.condition = None
+        self.value = None
+        self.done = None
+        self.OUT = LogicNetworkSubCell(self, self.get_done)
+
+    def get_done(self):
+        return self.done
+
+    def evaluate(self):
+        self.done = False
+        STATUS_WAITING = LogicNetworkCell.STATUS_WAITING
+        condition = self.get_parameter_value(self.condition)
+        if condition is STATUS_WAITING:
+            return
+        if not condition:
+            self._set_value(False)
+            return self._set_ready()
+        value = self.get_parameter_value(self.value)
+        if value is STATUS_WAITING:
+            return
+        if none_or_invalid(value):
+            return
+        self._set_ready()
+        bpy.data.scenes[bge.logic.getCurrentScene().name].eevee.use_volumetric_lights = value
+        self.done = True
+
+
+class SetEeveeVolumetricShadows(ActionCell):
+
+    def __init__(self):
+        ActionCell.__init__(self)
+        self.condition = None
+        self.value = None
+        self.done = None
+        self.OUT = LogicNetworkSubCell(self, self.get_done)
+
+    def get_done(self):
+        return self.done
+
+    def evaluate(self):
+        self.done = False
+        STATUS_WAITING = LogicNetworkCell.STATUS_WAITING
+        condition = self.get_parameter_value(self.condition)
+        if condition is STATUS_WAITING:
+            return
+        if not condition:
+            self._set_value(False)
+            return self._set_ready()
+        value = self.get_parameter_value(self.value)
+        if value is STATUS_WAITING:
+            return
+        if none_or_invalid(value):
+            return
+        self._set_ready()
+        bpy.data.scenes[bge.logic.getCurrentScene().name].eevee.use_volumetric_shadows = value
+        self.done = True
+
+
 class SetLightEnergy(ActionCell):
 
     def __init__(self):
@@ -8652,7 +8840,6 @@ class SetLightEnergy(ActionCell):
             return self._set_ready()
         lamp = self.get_parameter_value(self.lamp)
         energy = self.get_parameter_value(self.energy)
-        # frames = self.get_parameter_value(self.frames)
         if lamp is STATUS_WAITING:
             return
         self._set_ready()
@@ -8696,7 +8883,6 @@ class SetLightShadow(ActionCell):
             return self._set_ready()
         lamp = self.get_parameter_value(self.lamp)
         use_shadow = self.get_parameter_value(self.use_shadow)
-        # frames = self.get_parameter_value(self.frames)
         if lamp is STATUS_WAITING:
             return
         self._set_ready()
@@ -8750,7 +8936,6 @@ class SetLightColor(ActionCell):
         r = self.get_parameter_value(self.red)
         g = self.get_parameter_value(self.green)
         b = self.get_parameter_value(self.blue)
-        # frames = self.get_parameter_value(self.frames)
         if lamp is STATUS_WAITING:
             return
         self._set_ready()
