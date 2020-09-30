@@ -6696,7 +6696,7 @@ if not TOO_OLD:
 
 class NLSetEeveeVolumetricShadows(bpy.types.Node, NLActionNode):
     bl_idname = "NLSetEeveeVolumetricShadows"
-    bl_label = "Set Volumetric Light"
+    bl_label = "Set Volumetric Shadows"
     nl_category = "Visuals"
 
     def init(self, context):

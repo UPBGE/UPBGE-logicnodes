@@ -1032,6 +1032,15 @@ class NLUPBGEDocsButton(bpy.types.Operator):
         return {"FINISHED"}
 
 
+class NLDocsButton(bpy.types.Operator):
+    bl_idname = "bge_netlogic.nl_docs"
+    bl_label = "Logic Nodes Documentation"
+
+    def execute(self, context):
+        webbrowser.open('https://github.com/IzaZed/Uchronian-Logic-UPBGE-Logic-Nodes/wiki')
+        return {"FINISHED"}
+
+
 class NLAddonGithubButton(bpy.types.Operator):
     bl_idname = "bge_netlogic.github"
     bl_label = "GitHub"

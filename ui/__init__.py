@@ -597,6 +597,11 @@ class BGE_PT_HelpPanel(bpy.types.Panel):
             text="UPBGE",
             icon='MENU_PANEL'
         )
+        layout.operator(
+            bge_netlogic.ops.NLDocsButton.bl_idname,
+            text="Logic Nodes",
+            icon='OUTLINER'
+        )
 
 
 def update_tree_code(self, context):

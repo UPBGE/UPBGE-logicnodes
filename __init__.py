@@ -416,6 +416,7 @@ _registered_classes = [
     ops.NLAddonGithubButton,
     ops.NLBGEDocsButton,
     ops.NLUPBGEDocsButton,
+    ops.NLDocsButton,
     NLNodeTreeReference
 ]
 
