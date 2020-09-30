@@ -2126,6 +2126,15 @@ class GetObInstanceAttr(ParameterCell):
             return
         if attr is STATUS_WAITING:
             return
+        if not hasattr(instance, attr):
+            debug(
+                'Get Object Attribute Node: Object has no attr "{}"'.format(
+                    attr
+                )
+            )
+            self._set_ready()
+            self._set_value(None)
+            return
         self._set_ready()
         self._set_value(getattr(instance, attr))
 
@@ -2825,7 +2834,6 @@ class ParameterFindChildByName(ParameterCell):
         self.child = None
         self.parent = None
         self.CHILD = LogicNetworkSubCell(self, self.get_child)
-        self.PARENT = LogicNetworkSubCell(self, self.get_parent)
 
     def get_child(self):
         parent = self.get_parameter_value(self.from_parent)
@@ -2835,9 +2843,6 @@ class ParameterFindChildByName(ParameterCell):
                 return x
             else:
                 return
-
-    def get_parent(self):
-        return self._value.parent
 
     def evaluate(self):
         self._set_ready()
@@ -5495,9 +5500,14 @@ class ActionMousePick(ActionCell):
         self.OUTNORMAL = LogicNetworkSubCell(self, self.get_out_normal)
         self.OUTPOINT = LogicNetworkSubCell(self, self.get_out_point)
 
-    def get_out_object(self): return self._out_object
-    def get_out_normal(self): return self._out_normal
-    def get_out_point(self): return self._out_point
+    def get_out_object(self):
+        return self._out_object
+
+    def get_out_normal(self):
+        return self._out_normal
+
+    def get_out_point(self):
+        return self._out_point
 
     def evaluate(self):
         condition = self.get_parameter_value(self.condition)

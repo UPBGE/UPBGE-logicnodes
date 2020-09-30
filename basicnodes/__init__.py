@@ -1244,11 +1244,6 @@ class NLSocketOptionalPositiveFloat(bpy.types.NodeSocket, NetLogicSocketType):
 
         update_tree_code(self, context)
 
-    #value_type: bpy.props.EnumProperty(
-    #    update=update_value,
-    #    items=_enum_optional_positive_float_value_types
-    #)
-
     float_editor: bpy.props.FloatProperty(
         min=0.0,
         update=update_value
@@ -2313,7 +2308,6 @@ class NLParameterFindChildByNameNode(bpy.types.Node, NLParameterNode):
         self.inputs.new(NLGameObjectSocket.bl_idname, "Parent")
         self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Name")
         self.outputs.new(NLGameObjectSocket.bl_idname, "Child")
-        self.outputs.new(NLGameObjectSocket.bl_idname, "Parent")
 
     def get_netlogic_class_name(self):
         return "bgelogic.ParameterFindChildByName"
@@ -2322,7 +2316,7 @@ class NLParameterFindChildByNameNode(bpy.types.Node, NLParameterNode):
         return ["from_parent", "child"]
 
     def get_output_socket_varnames(self):
-        return [OUTCELL, "PARENT"]
+        return [OUTCELL]
 
 
 _nodes.append(NLParameterFindChildByNameNode)
