@@ -10,7 +10,7 @@ bl_info = {
         "A Node System to create game logic."
     ),
     "author": "pgi, Leopold A-C (Iza Zed)",
-    "version": (0, 9, 0),
+    "version": (0, 9, 1),
     "blender": (2, 83, 0),
     "location": "View Menu",
     "warning": "Beta",
@@ -309,7 +309,7 @@ def load_nodes_from(abs_dir):
 
 @bpy.app.handlers.persistent
 def refresh_custom_nodes(dummy):
-     setup_user_nodes()
+    setup_user_nodes()
 
 @bpy.app.handlers.persistent
 def request_tree_code_writer_start(dummy):

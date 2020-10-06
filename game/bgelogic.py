@@ -682,6 +682,7 @@ class AudioSystem(object):
     def __init__(self):
         self.device = None
         self.factories = {}
+        self.listener = bge.logic.getCurrentScene().active_camera
 
     def get_or_create_audio_factory(self, fpath):
         if self.device is None:
@@ -706,7 +707,7 @@ class AudioSystem(object):
             return  # do not update if no sound has been installed
         # update the listener data
         scene = network._owner.scene
-        listener = scene.active_camera
+        self.listener = listener = scene.active_camera
         device.listener_location = listener.worldPosition
         device.listener_orientation = listener.worldOrientation.to_quaternion()
         device.listener_velocity = self.compute_listener_velocity(listener)
@@ -7496,6 +7497,61 @@ class ActionLoadVariable(ActionCell):
         self.done = True
 
 
+class ActionLoadVariables(ActionCell):
+    def __init__(self):
+        ActionCell.__init__(self)
+        self.condition = None
+        self.path = ''
+        self.var = None
+        self.done = None
+        self.OUT = LogicNetworkSubCell(self, self.get_done)
+        self.VAR = LogicNetworkSubCell(self, self.get_var)
+
+    def get_done(self):
+        return self.done
+
+    def get_var(self):
+        return self.var
+
+    def read_from_json(self, path):
+        self.done = False
+        try:
+            f = open(path + 'variables.json', 'r')
+            data = json.load(f)
+            try:
+                self.var = data
+            except Exception:
+                debug('Could not fetch variable dictionary.')
+                return
+            f.close()
+        except IOError:
+            debug('No saved variables!')
+
+    def get_custom_path(self, path):
+        if not path.endswith('/'):
+            path = path + '/'
+        if path.startswith('./'):
+            path = path.split('./', 1)[-1]
+            return bpy.path.abspath('//' + path)
+        return path
+
+    def evaluate(self):
+        self.done = False
+        condition = self.get_parameter_value(self.condition)
+        if condition is LogicNetworkCell.STATUS_WAITING:
+            return
+        if condition is False:
+            return
+        self._set_ready()
+        cust_path = self.get_custom_path(self.path)
+
+        path = bpy.path.abspath('//Data/') if self.path == '' else cust_path
+        os.makedirs(path, exist_ok=True)
+
+        self.read_from_json(path)
+        self.done = True
+
+
 class ActionRemoveVariable(ActionCell):
     def __init__(self):
         ActionCell.__init__(self)
@@ -8195,24 +8251,59 @@ class ActionFindScene(ActionCell):
         self.done = True
 
 
-class ActionStartSound(ActionCell):
+class ActionStart3DSound(ActionCell):
     def __init__(self):
         ActionCell.__init__(self)
         self.condition = None
         self.sound = None
         self.loop_count = None
         self.location = None
-        # self.orientation = None
-        # self.velocity = None
         self.pitch = None
         self.volume = None
         self.attenuation = None
         self.distance_ref = None
         self.distance_max = None
-        self._euler = mathutils.Euler((0, 0, 0), "XYZ")
         self._prev_loop_count = None
+        self.done = None
+        self._handle = None
+        self._cam_prev = {}
+        self.DONE = LogicNetworkSubCell(self, self.get_done)
+        self.HANDLE = LogicNetworkSubCell(self, self.get_handle)
+
+    def get_handle(self):
+        return self._handle
+
+    def get_done(self):
+        return self.done
+
+    def get_local_location(self, loc, c):
+        cpos = c.worldPosition
+        cori = c.worldOrientation.to_euler()
+        self._cam_prev = {
+            'pos': cpos,
+            'ori': cori
+        }
+
+        # return mathutils.Vector((
+        #     -cpos.x * cori.x,
+        #     -cpos.y * cori.y,
+        #     -cpos.z * cori.z,
+        # ))
+
+        return loc
 
     def evaluate(self):
+        self.done = False
+        c = self.network.audio_system.listener
+        location = self.get_parameter_value(self.location)
+        if self._cam_prev:
+            if (
+                c.worldPosition != self._cam_prev['pos'] or
+                c.worldOrientation.to_euler != self._cam_prev['ori']
+            ):
+                if self._handle:
+                    self._handle.location = self.get_local_location(location, c)
+                return
         condition = self.get_parameter_value(self.condition)
         if condition is LogicNetworkCell.STATUS_WAITING:
             return
@@ -8220,11 +8311,6 @@ class ActionStartSound(ActionCell):
             self._set_ready()
             return
         sound = self.get_parameter_value(self.sound)
-        location = self.get_parameter_value(self.location)
-        # orientation = self.get_parameter_value(self.orientation)
-        orientation = mathutils.Euler((0, 0, 0), 'XYZ')
-        velocity = mathutils.Vector((0, 0, 0))
-        # velocity = self.get_parameter_value(self.velocity)
         pitch = self.get_parameter_value(self.pitch)
         loop_count = self.get_parameter_value(self.loop_count)
         volume = self.get_parameter_value(self.volume)
@@ -8232,30 +8318,28 @@ class ActionStartSound(ActionCell):
         distance_ref = self.get_parameter_value(self.distance_ref)
         distance_max = self.get_parameter_value(self.distance_max)
         self._set_ready()
-        if sound is None:
+
+        if none_or_invalid(sound):
             return
-        if orientation is not None:
-            if hasattr(orientation, "to_quaternion"):
-                orientation = orientation.to_quaternion()
-            else:  # assume xyz tuple
-                euler = self._euler
-                euler[:] = orientation
-                orientation = euler.to_quaternion()
-        if loop_count != self._prev_loop_count:
-            self._prev_loop_count = loop_count
+        if not hasattr(bpy.types.Scene, 'aud_devices'):
+            bpy.types.Scene.aud_devices = devs = {
+                'default3D': aud.Device(),
+                'defaultMusic': aud.Device()
+            }
         else:
-            loop_count = None
-        sound.play(
-            location,
-            orientation,
-            velocity,
-            pitch,
-            volume,
-            loop_count,
-            attenuation,
-            distance_ref,
-            distance_max
-        )
+            devs = bpy.types.Scene.aud_devices
+        soundpath = bge.logic.expandPath(sound)
+        soundfile = aud.Sound.file(soundpath)
+        handle = self._handle = devs['default3D'].play(soundfile)
+        handle.location = self.get_local_location(location, c)
+        # handle.location = location
+        handle.pitch = pitch
+        handle.loop_count = loop_count - 1
+        handle.volume = volume
+        handle.attenuation = attenuation
+        handle.distance_reference = distance_ref
+        handle.distance_maximum = distance_max
+        self.done = True
 
 
 class ActionUpdateSound(ActionCell):
@@ -8332,6 +8416,26 @@ class ActionStopSound(ActionCell):
         if sound is None:
             return
         sound.stop()
+
+
+class ActionStopAllSounds(ActionCell):
+    def __init__(self):
+        ActionCell.__init__(self)
+        self.condition = None
+
+    def evaluate(self):
+        condition = self.get_parameter_value(self.condition)
+        if condition is LogicNetworkCell.STATUS_WAITING:
+            return
+        if not condition:
+            self._set_ready()
+            return
+        if not hasattr(bpy.types.Scene, 'aud_devices'):
+            debug('No Audio Devices to close.')
+            return
+        self._set_ready()
+        for dev in bpy.types.Scene.aud_devices:
+            bpy.types.Scene.aud_devices[dev].stopAll()
 
 
 class ActionPauseSound(ActionCell):

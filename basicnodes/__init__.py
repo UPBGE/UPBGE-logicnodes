@@ -160,18 +160,18 @@ _enum_mouse_motion = [
 _enum_loop_count_values = [
     (
         "ONCE",
-        "No repeat",
+        "Play",
         "Play once when condition is TRUE, then wait for \
             the condition to become TRUE again to play it again."
     ),
     (
         "INFINITE",
-        "Infinite",
+        "Loop",
         "When condition is TRUE, start repeating the sound until stopped."
     ),
     (
         "CUSTOM",
-        "N times...",
+        "Times",
         "When the condition it TRUE, play the sound N times"
     )
 ]
@@ -414,6 +414,18 @@ _enum_blend_mode_values = [
 ]
 
 OUTCELL = "__standard_logic_cell_value__"
+
+
+def stop_all_sounds(a, b):
+    if not hasattr(bpy.types.Scene, 'aud_devices'):
+        return
+    for dev in bpy.types.Scene.aud_devices:
+        bpy.types.Scene.aud_devices[dev].stopAll()
+    delattr(bpy.types.Scene, 'aud_devices')
+
+
+bpy.app.handlers.game_post.clear()
+bpy.app.handlers.game_post.append(stop_all_sounds)
 
 
 def parse_field_value(value_type, value):
@@ -1230,6 +1242,29 @@ class NLPositiveFloatSocket(bpy.types.NodeSocket, NetLogicSocketType):
 _sockets.append(NLPositiveFloatSocket)
 
 
+class NLPosFloatFormatSocket(bpy.types.NodeSocket, NetLogicSocketType):
+    bl_idname = "NLPosFloatFormatSocket"
+    bl_label = "Positive Float"
+    value: bpy.props.FloatProperty(min=0.0, update=update_tree_code)
+
+    def draw_color(self, context, node):
+        return PARAMETER_SOCKET_COLOR
+
+    def draw(self, context, layout, node, text):
+        if self.is_linked or self.is_output:
+            layout.label(text=text)
+        else:
+            col = layout.column()
+            col.label(text=text)
+            col.prop(self, "value", text='')
+
+    def get_unlinked_value(self):
+        return '{}'.format(self.value)
+
+
+_sockets.append(NLPosFloatFormatSocket)
+
+
 class NLSocketOptionalPositiveFloat(bpy.types.NodeSocket, NetLogicSocketType):
     bl_idname = "NLSocketOptionalPositiveFloat"
     bl_label = "Positive Float"
@@ -1365,7 +1400,6 @@ class NLFilePathSocket(bpy.types.NodeSocket, NetLogicSocketType):
     def get_unlinked_value(self):
         self.value.replace('\\', '/')
         if self.value.endswith('\\'):
-            print('Removed BackSlash')
             self.value = self.value[:-1]
         return '"{}"'.format(self.value)
 
@@ -6007,8 +6041,11 @@ class NLActionSaveGame(bpy.types.Node, NLActionNode):
         return ["condition", 'slot']
 
     def get_nonsocket_fields(self):
-        path = ("path", lambda : "'{}'".format(self.path) if self.custom_path else "''")
-        return [path]
+        s_path = self.path
+        if s_path.endswith('\\'):
+            s_path = s_path[:-1]
+        path_formatted = s_path.replace('\\', '/')
+        return [("path", lambda : "'{}'".format(path_formatted) if self.custom_path else "''")]
 
     def get_output_socket_varnames(self):
         return ["OUT"]
@@ -6046,7 +6083,11 @@ class NLActionLoadGame(bpy.types.Node, NLActionNode):
         return ["condition", 'slot']
 
     def get_nonsocket_fields(self):
-        return [("path", lambda : "'{}'".format(self.path) if self.custom_path else "''")]
+        s_path = self.path
+        if s_path.endswith('\\'):
+            s_path = s_path[:-1]
+        path_formatted = s_path.replace('\\', '/')
+        return [("path", lambda : "'{}'".format(path_formatted) if self.custom_path else "''")]
 
     def get_output_socket_varnames(self):
         return ["OUT"]
@@ -6087,7 +6128,11 @@ class NLActionSaveVariable(bpy.types.Node, NLActionNode):
         return ["condition", 'name', 'val']
 
     def get_nonsocket_fields(self):
-        return [("path", lambda : "'{}'".format(self.path) if self.custom_path else "''")]
+        s_path = self.path
+        if s_path.endswith('\\'):
+            s_path = s_path[:-1]
+        path_formatted = s_path.replace('\\', '/')
+        return [("path", lambda : "'{}'".format(path_formatted) if self.custom_path else "''")]
 
     def get_output_socket_varnames(self):
         return ["OUT"]
@@ -6149,13 +6194,60 @@ class NLActionLoadVariable(bpy.types.Node, NLActionNode):
         return ["condition", 'name']
 
     def get_nonsocket_fields(self):
-        return [("path", lambda : "'{}'".format(self.path) if self.custom_path else "''")]
+        s_path = self.path
+        if s_path.endswith('\\'):
+            s_path = s_path[:-1]
+        path_formatted = s_path.replace('\\', '/')
+        return [("path", lambda : "'{}'".format(path_formatted) if self.custom_path else "''")]
 
     def get_output_socket_varnames(self):
         return ["OUT", "VAR"]
 
 
 _nodes.append(NLActionLoadVariable)
+
+
+class NLActionLoadVariables(bpy.types.Node, NLActionNode):
+    bl_idname = "NLActionLoadVariables"
+    bl_label = "Load Variable Dict"
+    nl_category = "Variables"
+    custom_path: bpy.props.BoolProperty(update=update_tree_code)
+    path: bpy.props.StringProperty(
+        subtype='FILE_PATH',
+        update=update_tree_code,
+        description='Choose a Path to save the file to. Start with "./" to make it relative to the file path.'
+    )
+
+    def init(self, context):
+        NLActionNode.init(self, context)
+        self.inputs.new(NLPseudoConditionSocket.bl_idname, 'Condition')
+        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+        self.outputs.new(NLParameterSocket.bl_idname, 'Variables')
+
+    def draw_buttons(self, context, layout):
+        layout.label(text='Load From:')
+        layout.prop(self, "custom_path", toggle=True, text="Custom Path" if self.custom_path else "File Path/Data", icon='FILE_FOLDER')
+        if self.custom_path:
+            layout.prop(self, "path", text='')
+
+    def get_netlogic_class_name(self):
+        return "bgelogic.ActionLoadVariables"
+
+    def get_input_sockets_field_names(self):
+        return ["condition", 'name']
+
+    def get_nonsocket_fields(self):
+        s_path = self.path
+        if s_path.endswith('\\'):
+            s_path = s_path[:-1]
+        path_formatted = s_path.replace('\\', '/')
+        return [("path", lambda : "'{}'".format(path_formatted) if self.custom_path else "''")]
+
+    def get_output_socket_varnames(self):
+        return ["OUT", "VAR"]
+
+
+_nodes.append(NLActionLoadVariables)
 
 
 class NLActionRemoveVariable(bpy.types.Node, NLActionNode):
@@ -6189,7 +6281,11 @@ class NLActionRemoveVariable(bpy.types.Node, NLActionNode):
         return ["condition", 'name']
 
     def get_nonsocket_fields(self):
-        return [("path", lambda : "'{}'".format(self.path) if self.custom_path else "''")]
+        s_path = self.path
+        if s_path.endswith('\\'):
+            s_path = s_path[:-1]
+        path_formatted = s_path.replace('\\', '/')
+        return [("path", lambda : "'{}'".format(path_formatted) if self.custom_path else "''")]
 
     def get_output_socket_varnames(self):
         return ["OUT"]
@@ -6227,7 +6323,11 @@ class NLActionClearVariables(bpy.types.Node, NLActionNode):
         return ["condition"]
 
     def get_nonsocket_fields(self):
-        return [("path", lambda : "'{}'".format(self.path) if self.custom_path else "''")]
+        s_path = self.path
+        if s_path.endswith('\\'):
+            s_path = s_path[:-1]
+        path_formatted = s_path.replace('\\', '/')
+        return [("path", lambda : "'{}'".format(path_formatted) if self.custom_path else "''")]
 
     def get_output_socket_varnames(self):
         return ["OUT"]
@@ -6267,7 +6367,11 @@ class NLActionListVariables(bpy.types.Node, NLActionNode):
         return ["condition", 'print_list']
 
     def get_nonsocket_fields(self):
-        return [("path", lambda : "'{}'".format(self.path) if self.custom_path else "''")]
+        s_path = self.path
+        if s_path.endswith('\\'):
+            s_path = s_path[:-1]
+        path_formatted = s_path.replace('\\', '/')
+        return [("path", lambda : "'{}'".format(path_formatted) if self.custom_path else "''")]
 
     def get_output_socket_varnames(self):
         return ["OUT", 'LIST']
@@ -7440,39 +7544,63 @@ class NLActionSetMouseCursorVisibility(bpy.types.Node, NLActionNode):
 _nodes.append(NLActionSetMouseCursorVisibility)
 
 
-class NLActionStartSound(bpy.types.Node, NLActionNode):
-    bl_idname = "NLActionStartSound"
-    bl_label = "Start Sound"
+class NLActionStart3DSound(bpy.types.Node, NLActionNode):
+    bl_idname = "NLActionStart3DSound"
+    bl_label = "3D Sound"
     nl_category = "Sound"
 
     def init(self, context):
         NLActionNode.init(self, context)
         self.inputs.new(NLConditionSocket.bl_idname, "Condition")
-        self.inputs.new(NLSocketSound.bl_idname, "Sound")
-        self.inputs.new(NLSocketLoopCount.bl_idname, "Loop Count")
-        self.inputs.new(NLVec3FieldSocket.bl_idname, "XYZ Pos")
-        #self.inputs.new(NLSocketOptionalOrientation.bl_idname, "Orientation")
-        #self.inputs.new(NLSocketVectorField.bl_idname, "XYZ Vel")
+        self.inputs.new(NLFilePathSocket.bl_idname, "Sound File")
+        self.inputs.new(NLSocketLoopCount.bl_idname, "")
         self.inputs.new(NLFloatFieldSocket.bl_idname, "Pitch")
         self.inputs.new(NLPositiveFloatSocket.bl_idname, "Volume")
         self.inputs[-1].value = 1.0
-        self.inputs.new(NLPositiveFloatSocket.bl_idname, "Attenuation")
+        self.inputs.new(NLVec3FieldSocket.bl_idname, "Position")
+        self.inputs.new(NLPosFloatFormatSocket.bl_idname, "Attenuation")
         self.inputs[-1].value = 1.0
-        self.inputs.new(NLPositiveFloatSocket.bl_idname, "Distance Ref")
+        self.inputs.new(NLPosFloatFormatSocket.bl_idname, "Reference Distance")
         self.inputs[-1].value = 1.0
-        self.inputs.new(NLPositiveFloatSocket.bl_idname, "Distance Max")
+        self.inputs.new(NLPosFloatFormatSocket.bl_idname, "Maximum Distance")
         self.inputs[-1].value = 1000.0
         self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+        self.outputs.new(NLParameterSocket.bl_idname, 'Sound')
 
     def get_output_socket_varnames(self):
-        return ["OUT"]
+        return ["DONE", "HANDLE"]
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ActionStartSound"
+        return "bgelogic.ActionStart3DSound"
     def get_input_sockets_field_names(self):
-        return ["condition", "sound", "loop_count", "location",
-                "pitch", "volume", "attenuation", "distance_ref", "distance_max"]
-#_nodes.append(NLActionStartSound)
+        return [
+            "condition",
+            "sound",
+            "loop_count",
+            "pitch",
+            "volume",
+            "location",
+            "attenuation",
+            "distance_ref",
+            "distance_max"
+        ]
+_nodes.append(NLActionStart3DSound)
+
+
+class NLActionStopAllSounds(bpy.types.Node, NLActionNode):
+    bl_idname = "NLActionStopAllSounds"
+    bl_label = "Stop All Sounds"
+    nl_category = "Sound"
+
+    def init(self, context):
+        NLActionNode.init(self, context)
+        self.inputs.new(NLConditionSocket.bl_idname, "Condition")
+    def get_netlogic_class_name(self):
+        return "bgelogic.ActionStopAllSounds"
+    def get_input_sockets_field_names(self):
+        return ["condition"]
+
+_nodes.append(NLActionStopAllSounds)
 
 
 class NLActionStopSound(bpy.types.Node, NLActionNode):
