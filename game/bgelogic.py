@@ -2404,13 +2404,13 @@ class ParameterVector(ParameterCell):
         z = self.get_parameter_value(self.input_z)
         v = self.get_parameter_value(self.input_vector)
         # TODO: zero vector if v is None?
-        if v is not None:
+        if not none_or_invalid(v):
             self.output_vector[:] = v
-        if x is not None:
+        if not none_or_invalid(x):
             self.output_vector.x = x
-        if y is not None:
+        if not none_or_invalid(y):
             self.output_vector.y = y
-        if z is not None:
+        if not none_or_invalid(z):
             self.output_vector.z = z
         self._set_value(self.output_vector)
 
@@ -2430,9 +2430,9 @@ class ParameterVector2Simple(ParameterCell):
         self._set_ready()
         x = self.get_parameter_value(self.input_x)
         y = self.get_parameter_value(self.input_y)
-        if x is not None:
+        if not none_or_invalid(x):
             self.output_vector.x = x
-        if y is not None:
+        if not none_or_invalid(y):
             self.output_vector.y = y
         self._set_value(self.output_vector)
 
@@ -2551,11 +2551,11 @@ class ParameterVector3Simple(ParameterCell):
         x = self.get_parameter_value(self.input_x)
         y = self.get_parameter_value(self.input_y)
         z = self.get_parameter_value(self.input_z)
-        if x is not None:
+        if not none_or_invalid(x):
             self.output_vector.x = x
-        if y is not None:
+        if not none_or_invalid(y):
             self.output_vector.y = y
-        if z is not None:
+        if not none_or_invalid(z):
             self.output_vector.z = z
         self._set_value(self.output_vector)
 
