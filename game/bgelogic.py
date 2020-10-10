@@ -461,7 +461,7 @@ def project_vector3(v, xi, yi):
 
 
 def none_or_invalid(ref):
-    if ref is None or ref == '':
+    if ref is None or ref == '' or ref is LogicNetworkCell.STATUS_WAITING:
         return True
     if not hasattr(ref, "invalid"):
         return False
@@ -9697,7 +9697,7 @@ class ActionReplaceMesh(ActionCell):
         mesh = self.get_parameter_value(self.new_mesh_name)
         display = self.get_parameter_value(self.use_display)
         physics = self.get_parameter_value(self.use_physics)
-        if target is None or target.invalid:
+        if none_or_invalid(target):
             return
         if mesh is None:
             return
@@ -9849,7 +9849,7 @@ class ActionAlignAxisToVector(ActionCell):
         vector = self.get_parameter_value(self.vector)
         axis = self.get_parameter_value(self.axis)
         factor = self.get_parameter_value(self.factor)
-        if (game_object is None) or (game_object.invalid):
+        if none_or_invalid(game_object):
             return
         if vector is None:
             return
