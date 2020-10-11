@@ -4400,36 +4400,29 @@ class ActionClampedAddToGameObjectGameProperty(ActionCell):
 
     def evaluate(self):
         self.done = False
-        STATUS_WAITING = LogicNetworkCell.STATUS_WAITING
-        condition_value = self.get_parameter_value(self.condition)
-        if condition_value is STATUS_WAITING:
+        condition = self.get_parameter_value(self.condition)
+        if none_or_invalid(condition) or not condition:
             return
-        if condition_value is False:
-            self._set_ready()
-            return
-        game_object_value = self.get_parameter_value(self.game_object)
-        property_name_value = self.get_parameter_value(self.property_name)
-        property_value_value = self.get_parameter_value(self.property_value)
+        game_object = self.get_parameter_value(self.game_object)
+        property_name = self.get_parameter_value(self.property_name)
+        property_value = self.get_parameter_value(self.property_value)
         val_range = self.get_parameter_value(self.range)
-        if game_object_value is STATUS_WAITING:
+        if none_or_invalid(game_object):
             return
-        if property_name_value is STATUS_WAITING:
+        if none_or_invalid(property_name):
             return
-        if property_value_value is STATUS_WAITING:
+        if none_or_invalid(property_value):
             return
         self._set_ready()
-        if none_or_invalid(game_object_value):
-            return
-        if condition_value:
-            value = game_object_value[property_name_value]
-            new_val = value + property_value_value
-            if new_val > val_range.y:
-                new_val = val_range.y
-            if new_val < val_range.x:
-                new_val = val_range.x
-            game_object_value[property_name_value] = (
-                new_val
-            )
+        value = game_object[property_name]
+        new_val = value + property_value
+        if new_val > val_range.y:
+            new_val = val_range.y
+        if new_val < val_range.x:
+            new_val = val_range.x
+        game_object[property_name] = (
+            new_val
+        )
         self.done = True
 
 

@@ -989,7 +989,9 @@ class NLSocketLogicTree(bpy.types.NodeSocket, NetLogicSocketType):
 
     def get_unlinked_value(self):
         tree_name = self.value
-        if ' F ' in self.value:
+        if self.value.startswith('F '):
+            tree_name = self.value.split('F ')[-1]
+        elif ' F ' in self.value:
             tree_name = self.value.split(' F ')[-1]
         return "'{}'".format(tree_name)
 
