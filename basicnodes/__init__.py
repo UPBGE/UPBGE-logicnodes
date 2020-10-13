@@ -954,7 +954,12 @@ class NLCollectionSocket(bpy.types.NodeSocket, NetLogicSocketType):
             )
 
     def get_unlinked_value(self):
-        return "'{}'".format(self.value)
+        col_name = self.value
+        if col_name.startswith('F '):
+            col_name = col_name.split('F ')[-1]
+        elif ' F ' in col_name:
+            col_name = col_name.split(' F ')[-1]
+        return "'{}'".format(col_name)
 
 
 if not TOO_OLD:
@@ -5030,8 +5035,41 @@ class NLCreateVehicle(bpy.types.Node, NLActionNode):
     def get_input_sockets_field_names(self):
         return ["condition", "game_object", "wheels_steering", 'wheels', 'suspension', 'stiffness', 'damping', 'friction']
 
+#if not TOO_OLD:
+#    _nodes.append(NLCreateVehicle)
+
+
+class NLCreateVehicleFromParent(bpy.types.Node, NLActionNode):
+    bl_idname = "NLCreateVehicleFromParent"
+    bl_label = "Create New"
+    nl_category = "Vehicle"
+
+    def init(self, context):
+        NLActionNode.init(self, context)
+        self.inputs.new(NLConditionSocket.bl_idname, "Condition")
+        self.inputs.new(NLGameObjectSocket.bl_idname, "Car")
+        self.inputs.new(NLFloatFieldSocket.bl_idname, "Suspension")
+        self.inputs[-1].value = 0.06
+        self.inputs.new(NLFloatFieldSocket.bl_idname, "Stiffness")
+        self.inputs[-1].value = 50
+        self.inputs.new(NLFloatFieldSocket.bl_idname, "Damping")
+        self.inputs[-1].value = 5
+        self.inputs.new(NLFloatFieldSocket.bl_idname, "Friction")
+        self.inputs[-1].value = 2
+        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+        self.outputs.new(NLParameterSocket.bl_idname, 'Vehicle Constraint')
+
+    def get_output_socket_varnames(self):
+        return ["OUT", 'VEHICLE']
+
+    def get_netlogic_class_name(self):
+        return "bgelogic.ActionCreateVehicleFromParent"
+
+    def get_input_sockets_field_names(self):
+        return ["condition", "game_object", 'suspension', 'stiffness', 'damping', 'friction']
+
 if not TOO_OLD:
-    _nodes.append(NLCreateVehicle)
+    _nodes.append(NLCreateVehicleFromParent)
 
 
 class NLVehicleApplyEngineForce(bpy.types.Node, NLActionNode):
