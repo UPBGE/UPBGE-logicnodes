@@ -5041,7 +5041,7 @@ class NLCreateVehicle(bpy.types.Node, NLActionNode):
 
 class NLCreateVehicleFromParent(bpy.types.Node, NLActionNode):
     bl_idname = "NLCreateVehicleFromParent"
-    bl_label = "Create New"
+    bl_label = "Create New Vehicle"
     nl_category = "Vehicle"
 
     def init(self, context):
