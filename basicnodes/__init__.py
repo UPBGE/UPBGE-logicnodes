@@ -2894,7 +2894,7 @@ class NLRunActuatorNode(bpy.types.Node, NLActionNode):
     nl_category = "Logic Bricks"
 
     def init(self, context):
-        NLParameterNode.init(self, context)
+        NLActionNode.init(self, context)
         self.inputs.new(NLConditionSocket.bl_idname, "Condition")
         self.inputs.new(NLLogicBrickSocket.bl_idname, "Actuator")
         self.outputs.new(NLConditionSocket.bl_idname, 'Done')
@@ -2940,7 +2940,7 @@ class NLRunActuatorByNameNode(bpy.types.Node, NLActionNode):
     nl_category = "Logic Bricks"
 
     def init(self, context):
-        NLParameterNode.init(self, context)
+        NLActionNode.init(self, context)
         self.inputs.new(NLConditionSocket.bl_idname, "Condition")
         self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Actuator")
         self.outputs.new(NLConditionSocket.bl_idname, 'Done')
@@ -2963,7 +2963,7 @@ class NLDisableActuatorByNameNode(bpy.types.Node, NLActionNode):
     nl_category = "Logic Bricks"
 
     def init(self, context):
-        NLParameterNode.init(self, context)
+        NLActionNode.init(self, context)
         self.inputs.new(NLConditionSocket.bl_idname, "Condition")
         self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Actuator")
         self.outputs.new(NLConditionSocket.bl_idname, 'Done')
@@ -2986,7 +2986,7 @@ class NLSetActuatorValueNode(bpy.types.Node, NLActionNode):
     nl_category = "Logic Bricks"
 
     def init(self, context):
-        NLParameterNode.init(self, context)
+        NLActionNode.init(self, context)
         self.inputs.new(NLConditionSocket.bl_idname, "Condition")
         self.inputs.new(NLLogicBrickSocket.bl_idname, "Actuator")
         self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Field")
@@ -4040,7 +4040,7 @@ class NLGamepadSticksCondition(bpy.types.Node, NLParameterNode):
     )
 
     def init(self, context):
-        NLConditionNode.init(self, context)
+        NLParameterNode.init(self, context)
         self.inputs.new(NLBooleanSocket.bl_idname, 'Inverted')
         self.inputs.new(NLPositiveIntegerFieldSocket.bl_idname, 'Index')
         self.inputs.new(NLFloatFieldSocket.bl_idname, 'Sensitivity')
@@ -4080,7 +4080,7 @@ class NLGamepadTriggerCondition(bpy.types.Node, NLParameterNode):
     )
 
     def init(self, context):
-        NLConditionNode.init(self, context)
+        NLParameterNode.init(self, context)
         self.inputs.new(NLPositiveIntegerFieldSocket.bl_idname, 'Index')
         self.inputs.new(NLFloatFieldSocket.bl_idname, 'Sensitivity')
         self.inputs[-1].value = 1
@@ -5041,7 +5041,7 @@ class NLCreateVehicle(bpy.types.Node, NLActionNode):
 
 class NLCreateVehicleFromParent(bpy.types.Node, NLActionNode):
     bl_idname = "NLCreateVehicleFromParent"
-    bl_label = "Create New"
+    bl_label = "Create New Vehicle"
     nl_category = "Vehicle"
 
     def init(self, context):
@@ -6230,7 +6230,7 @@ class NLParameterSetAttribute(bpy.types.Node, NLActionNode):
     nl_category = "Python"
 
     def init(self, context):
-        NLParameterNode.init(self, context)
+        NLActionNode.init(self, context)
         self.inputs.new(NLPythonSocket.bl_idname, "Object Instance")
         self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Attribute")
         self.inputs.new(NLValueFieldSocket.bl_idname, "")
@@ -7002,8 +7002,8 @@ class NLSetLightColorAction(bpy.types.Node, NLActionNode):
 _nodes.append(NLSetLightColorAction)
 
 
-class NLGetLightEnergyAction(bpy.types.Node, NLParameterNode):
-    bl_idname = "NLGetLightEnergyAction"
+class NLGetLightEnergy(bpy.types.Node, NLParameterNode):
+    bl_idname = "NLGetLightEnergy"
     bl_label = "Get Light Energy"
     nl_category = "Lights"
 
@@ -7022,7 +7022,7 @@ class NLGetLightEnergyAction(bpy.types.Node, NLParameterNode):
         return ["lamp"]
 
 
-_nodes.append(NLGetLightEnergyAction)
+_nodes.append(NLGetLightEnergy)
 
 
 class NLGetLightColorAction(bpy.types.Node, NLParameterNode):
@@ -7031,7 +7031,7 @@ class NLGetLightColorAction(bpy.types.Node, NLParameterNode):
     nl_category = "Lights"
 
     def init(self, context):
-        NLActionNode.init(self, context)
+        NLParameterNode.init(self, context)
         self.inputs.new(NLGameObjectSocket.bl_idname, "Light Object")
         self.outputs.new(NLParameterSocket.bl_idname, 'Red')
         self.outputs.new(NLParameterSocket.bl_idname, 'Green')
