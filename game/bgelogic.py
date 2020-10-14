@@ -7510,6 +7510,57 @@ class ActionSaveVariable(ActionCell):
         self.done = True
 
 
+class ActionSaveVariables(ActionCell):
+    def __init__(self):
+        ActionCell.__init__(self)
+        self.condition = None
+        self.val = None
+        self.path = ''
+        self.done = None
+        self.OUT = LogicNetworkSubCell(self, self.get_done)
+
+    def get_done(self):
+        return self.done
+
+    def write_to_json(self, path, val):
+        path = path + 'variables.json'
+        if os.path.isfile(path):
+            f = open(path, 'w')
+            json.dump(val, f, indent=2)
+        else:
+            debug('file does not exist - creating...')
+            f = open(path, 'w')
+            json.dump(val, f, indent=2)
+        f.close()
+
+    def get_custom_path(self, path):
+        if not path.endswith('/'):
+            path = path + '/'
+        if path.startswith('./'):
+            path = path.split('./', 1)[-1]
+            return bpy.path.abspath('//' + path)
+        return path
+
+    def evaluate(self):
+        self.done = False
+        condition = self.get_parameter_value(self.condition)
+        if condition is LogicNetworkCell.STATUS_WAITING:
+            return
+        if not condition:
+            return
+        val = self.get_parameter_value(self.val)
+        if val is LogicNetworkCell.STATUS_WAITING:
+            return
+        self._set_ready()
+
+        cust_path = self.get_custom_path(self.path)
+        path = bpy.path.abspath('//Data/') if self.path == '' else cust_path
+        os.makedirs(path, exist_ok=True)
+
+        self.write_to_json(path, val)
+        self.done = True
+
+
 class ActionLoadVariable(ActionCell):
     def __init__(self):
         ActionCell.__init__(self)
@@ -7587,17 +7638,14 @@ class ActionLoadVariables(ActionCell):
 
     def read_from_json(self, path):
         self.done = False
-        try:
-            f = open(path + 'variables.json', 'r')
-            data = json.load(f)
-            try:
-                self.var = data
-            except Exception:
-                debug('Could not fetch variable dictionary.')
-                return
-            f.close()
-        except IOError:
-            debug('No saved variables!')
+        path = path + 'variables.json'
+        if not os.path.isfile(path):
+            debug('No Saved Variables!')
+            return
+        f = open(path, 'r')
+        data = json.load(f)
+        self.var = data
+        f.close()
 
     def get_custom_path(self, path):
         if not path.endswith('/'):

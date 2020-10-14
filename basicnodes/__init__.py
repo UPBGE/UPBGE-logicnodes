@@ -6181,6 +6181,49 @@ class NLActionSaveVariable(bpy.types.Node, NLActionNode):
 _nodes.append(NLActionSaveVariable)
 
 
+class NLActionSaveVariables(bpy.types.Node, NLActionNode):
+    bl_idname = "NLActionSaveVariables"
+    bl_label = "Save Variable Dict"
+    nl_category = "Variables"
+    custom_path: bpy.props.BoolProperty(update=update_tree_code)
+    path: bpy.props.StringProperty(
+        subtype='FILE_PATH',
+        update=update_tree_code,
+        description='Choose a Path to save the file to. Start with "./" to make it relative to the file path.'
+    )
+
+    def init(self, context):
+        NLActionNode.init(self, context)
+        self.inputs.new(NLConditionSocket.bl_idname, 'Condition')
+        self.inputs.new(NLDictSocket.bl_idname, 'Variables')
+        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+
+    def draw_buttons(self, context, layout):
+        layout.label(text='Save To:')
+        layout.prop(self, "custom_path", toggle=True, text="Custom Path" if self.custom_path else "File Path/Data", icon='FILE_FOLDER')
+        if self.custom_path:
+            layout.prop(self, "path", text='')
+
+    def get_netlogic_class_name(self):
+        return "bgelogic.ActionSaveVariables"
+
+    def get_input_sockets_field_names(self):
+        return ["condition", 'val']
+
+    def get_nonsocket_fields(self):
+        s_path = self.path
+        if s_path.endswith('\\'):
+            s_path = s_path[:-1]
+        path_formatted = s_path.replace('\\', '/')
+        return [("path", lambda : "'{}'".format(path_formatted) if self.custom_path else "''")]
+
+    def get_output_socket_varnames(self):
+        return ["OUT"]
+
+
+_nodes.append(NLActionSaveVariables)
+
+
 class NLParameterSetAttribute(bpy.types.Node, NLActionNode):
     bl_idname = "NLParameterSetAttribute"
     bl_label = "Set Object Attribute"
@@ -6262,7 +6305,7 @@ class NLActionLoadVariables(bpy.types.Node, NLActionNode):
         NLActionNode.init(self, context)
         self.inputs.new(NLPseudoConditionSocket.bl_idname, 'Condition')
         self.outputs.new(NLConditionSocket.bl_idname, 'Done')
-        self.outputs.new(NLParameterSocket.bl_idname, 'Variables')
+        self.outputs.new(NLDictSocket.bl_idname, 'Variables')
 
     def draw_buttons(self, context, layout):
         layout.label(text='Load From:')
