@@ -4640,31 +4640,31 @@ class ActionMouseLook(ActionCell):
         offset *= sensitivity
 
         if use_cap_z:
-            objectRotation = game_object_x.worldOrientation.to_euler()
+            objectRotation = game_object_x.localOrientation.to_euler()
 
             if objectRotation.z + offset.x > uppercapX:
                 offset.x = 0
                 objectRotation.z = uppercapX
-                game_object_x.worldOrientation = objectRotation.to_matrix()
+                game_object_x.localOrientation = objectRotation.to_matrix()
 
             if objectRotation.z + offset.x < lowercapX:
                 offset.x = 0
                 objectRotation.z = lowercapX
-                game_object_x.worldOrientation = objectRotation.to_matrix()
+                game_object_x.localOrientation = objectRotation.to_matrix()
 
         game_object_x.applyRotation((0, 0, offset.x), False)
 
         if use_cap_y:
-            objectRotation = game_object_y.worldOrientation.to_euler()
+            objectRotation = game_object_y.localOrientation.to_euler()
 
             if objectRotation.y + offset.y > uppercapY:
                 objectRotation.y = uppercapY
-                game_object_y.worldOrientation = objectRotation.to_matrix()
+                game_object_y.localOrientation = objectRotation.to_matrix()
                 offset.y = 0
 
             if objectRotation.y + offset.y < lowercapY:
                 objectRotation.y = lowercapY
-                game_object_y.worldOrientation = objectRotation.to_matrix()
+                game_object_y.localOrientation = objectRotation.to_matrix()
                 offset.y = 0
 
         game_object_y.applyRotation((0, (offset.y), 0), True)
