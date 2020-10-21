@@ -1400,7 +1400,8 @@ class NLFilePathSocket(bpy.types.NodeSocket, NetLogicSocketType):
             layout.label(text=text)
         else:
             col = layout.column()
-            col.label(text=text)
+            if text:
+                col.label(text=text)
             col.prop(self, "value", text='')
 
     def get_unlinked_value(self):
@@ -3691,6 +3692,26 @@ class NLParameterBooleanValue(bpy.types.Node, NLParameterNode):
 
 
 _nodes.append(NLParameterBooleanValue)
+
+
+class NLParameterFileValue(bpy.types.Node, NLParameterNode):
+    bl_idname = "NLParameterFileValue"
+    bl_label = "File Path"
+    nl_category = "Values"
+
+    def init(self, context):
+        NLParameterNode.init(self, context)
+        self.inputs.new(NLFilePathSocket.bl_idname, "")
+        self.outputs.new(NLParameterSocket.bl_idname, "Path")
+
+    def get_netlogic_class_name(self):
+        return "bgelogic.ParameterSimpleValue"
+
+    def get_input_sockets_field_names(self):
+        return ["value"]
+
+
+_nodes.append(NLParameterFileValue)
 
 
 class NLParameterFloatValue(bpy.types.Node, NLParameterNode):
@@ -7644,12 +7665,8 @@ class NLActionStart3DSound(bpy.types.Node, NLActionNode):
         self.inputs.new(NLFloatFieldSocket.bl_idname, "Pitch")
         self.inputs.new(NLPositiveFloatSocket.bl_idname, "Volume")
         self.inputs[-1].value = 1.0
-        self.inputs.new(NLPosFloatFormatSocket.bl_idname, "Attenuation")
-        self.inputs[-1].value = 1.0
-        self.inputs.new(NLPosFloatFormatSocket.bl_idname, "Reference Distance")
-        self.inputs[-1].value = 1.0
         self.inputs.new(NLPosFloatFormatSocket.bl_idname, "Maximum Distance")
-        self.inputs[-1].value = 1000.0
+        self.inputs[-1].value = 500.0
         self.outputs.new(NLConditionSocket.bl_idname, 'Done')
         self.outputs.new(NLParameterSocket.bl_idname, 'Sound')
 
@@ -7666,11 +7683,61 @@ class NLActionStart3DSound(bpy.types.Node, NLActionNode):
             "loop_count",
             "pitch",
             "volume",
-            "attenuation",
-            "distance_ref",
             "distance_max"
         ]
 _nodes.append(NLActionStart3DSound)
+
+
+class NLActionStart3DSoundAdv(bpy.types.Node, NLActionNode):
+    bl_idname = "NLActionStart3DSoundAdv"
+    bl_label = "3D Sound (Advanced)"
+    nl_category = "Sound"
+
+    def init(self, context):
+        NLActionNode.init(self, context)
+        self.inputs.new(NLConditionSocket.bl_idname, "Condition")
+        self.inputs.new(NLGameObjectSocket.bl_idname, "Speaker")
+        self.inputs.new(NLFilePathSocket.bl_idname, "Sound File")
+        self.inputs.new(NLSocketLoopCount.bl_idname, "Mode")
+        self.inputs.new(NLFloatFieldSocket.bl_idname, "Pitch")
+        self.inputs.new(NLPositiveFloatSocket.bl_idname, "Volume")
+        self.inputs[-1].value = 1.0
+        self.inputs.new(NLPosFloatFormatSocket.bl_idname, "Attenuation")
+        self.inputs[-1].value = 1.0
+        self.inputs.new(NLPosFloatFormatSocket.bl_idname, "Reference Distance")
+        self.inputs[-1].value = 1.0
+        self.inputs.new(NLPosFloatFormatSocket.bl_idname, "Maximum Distance")
+        self.inputs[-1].value = 1000.0
+        self.inputs.new(NLPosFloatFormatSocket.bl_idname, "Cone Inner Angle")
+        self.inputs[-1].value = 360
+        self.inputs.new(NLPosFloatFormatSocket.bl_idname, "Cone Outer Angle")
+        self.inputs[-1].value = 360
+        self.inputs.new(NLPosFloatFormatSocket.bl_idname, "Cone Outer Volume")
+        self.inputs[-1].value = 0.0
+        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+        self.outputs.new(NLParameterSocket.bl_idname, 'Sound')
+
+    def get_output_socket_varnames(self):
+        return ["DONE", "HANDLE"]
+
+    def get_netlogic_class_name(self):
+        return "bgelogic.ActionStart3DSoundAdv"
+    def get_input_sockets_field_names(self):
+        return [
+            "condition",
+            "speaker",
+            "sound",
+            "loop_count",
+            "pitch",
+            "volume",
+            "attenuation",
+            "distance_ref",
+            "distance_max",
+            "cone_inner_angle",
+            "cone_outer_angle",
+            "cone_outer_volume"
+        ]
+_nodes.append(NLActionStart3DSoundAdv)
 
 
 class NLActionStopAllSounds(bpy.types.Node, NLActionNode):

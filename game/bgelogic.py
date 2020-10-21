@@ -8388,8 +8388,6 @@ class ActionStart3DSound(ActionCell):
         self.loop_count = None
         self.pitch = None
         self.volume = None
-        self.attenuation = None
-        self.distance_ref = None
         self.distance_max = None
         self._prev_loop_count = None
         self.done = None
@@ -8412,6 +8410,83 @@ class ActionStart3DSound(ActionCell):
             if handle.status:
                 handle.location = speaker.worldPosition
                 handle.velocity = speaker.worldLinearVelocity
+                handle.orientation = speaker.worldOrientation.to_quaternion()
+                return
+            elif handle in audio_system.active_sounds:
+                audio_system.active_sounds.remove(handle)
+                return
+        condition = self.get_parameter_value(self.condition)
+        if condition is LogicNetworkCell.STATUS_WAITING:
+            return
+        if not condition:
+            self._set_ready()
+            return
+        sound = self.get_parameter_value(self.sound)
+        pitch = self.get_parameter_value(self.pitch)
+        loop_count = self.get_parameter_value(self.loop_count)
+        volume = self.get_parameter_value(self.volume)
+        distance_max = self.get_parameter_value(self.distance_max)
+        self._set_ready()
+
+        if none_or_invalid(sound):
+            return
+        if not hasattr(bpy.types.Scene, 'aud_devices'):
+            debug('No Audio Devices initialized!')
+            return
+        else:
+            devs = bpy.types.Scene.aud_devices
+        soundpath = logic.expandPath(sound)
+        soundfile = aud.Sound.file(soundpath)
+        handle = self._handle = devs['default3D'].play(soundfile)
+        handle.relative = False
+        handle.location = speaker.worldPosition
+        handle.velocity = speaker.worldLinearVelocity
+        handle.orientation = speaker.worldOrientation.to_quaternion()
+        handle.pitch = pitch
+        handle.loop_count = loop_count
+        handle.volume = volume
+        handle.distance_maximum = distance_max
+        audio_system.active_sounds.append(handle)
+        self.done = True
+
+
+class ActionStart3DSoundAdv(ActionCell):
+    def __init__(self):
+        ActionCell.__init__(self)
+        self.condition = None
+        self.sound = None
+        self.speaker = None
+        self.loop_count = None
+        self.pitch = None
+        self.volume = None
+        self.attenuation = None
+        self.distance_ref = None
+        self.distance_max = None
+        self.cone_inner_angle = None
+        self.cone_outer_angle = None
+        self.cone_outer_volume = None
+        self._prev_loop_count = None
+        self.done = None
+        self._handle = None
+        self.DONE = LogicNetworkSubCell(self, self.get_done)
+        self.HANDLE = LogicNetworkSubCell(self, self.get_handle)
+
+    def get_handle(self):
+        return self._handle
+
+    def get_done(self):
+        return self.done
+
+    def evaluate(self):
+        self.done = False
+        audio_system = self.network.audio_system
+        speaker = self.get_parameter_value(self.speaker)
+        handle = self._handle
+        if handle:
+            if handle.status:
+                handle.location = speaker.worldPosition
+                handle.velocity = speaker.worldLinearVelocity
+                handle.orientation = speaker.worldOrientation.to_quaternion()
                 return
             elif handle in audio_system.active_sounds:
                 audio_system.active_sounds.remove(handle)
@@ -8429,6 +8504,9 @@ class ActionStart3DSound(ActionCell):
         attenuation = self.get_parameter_value(self.attenuation)
         distance_ref = self.get_parameter_value(self.distance_ref)
         distance_max = self.get_parameter_value(self.distance_max)
+        cone_inner_angle = self.get_parameter_value(self.cone_inner_angle)
+        cone_outer_angle = self.get_parameter_value(self.cone_outer_angle)
+        cone_outer_volume = self.get_parameter_value(self.cone_outer_volume)
         self._set_ready()
 
         if none_or_invalid(sound):
@@ -8444,12 +8522,16 @@ class ActionStart3DSound(ActionCell):
         handle.relative = False
         handle.location = speaker.worldPosition
         handle.velocity = speaker.worldLinearVelocity
+        handle.orientation = speaker.worldOrientation.to_quaternion()
         handle.pitch = pitch
         handle.loop_count = loop_count
         handle.volume = volume
         handle.attenuation = attenuation
         handle.distance_reference = distance_ref
         handle.distance_maximum = distance_max
+        handle.cone_angle_inner = cone_inner_angle
+        handle.cone_angle_outer = cone_outer_angle
+        handle.cone_volume_outer = cone_outer_volume
         audio_system.active_sounds.append(handle)
         self.done = True
 
