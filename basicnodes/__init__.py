@@ -5058,9 +5058,10 @@ class NLCreateVehicleFromParent(bpy.types.Node, NLActionNode):
         self.inputs[-1].value = 2
         self.outputs.new(NLConditionSocket.bl_idname, 'Done')
         self.outputs.new(NLParameterSocket.bl_idname, 'Vehicle Constraint')
+        self.outputs.new(NLListSocket.bl_idname, 'Wheels')
 
     def get_output_socket_varnames(self):
-        return ["OUT", 'VEHICLE']
+        return ["OUT", 'VEHICLE', 'WHEELS']
 
     def get_netlogic_class_name(self):
         return "bgelogic.ActionCreateVehicleFromParent"

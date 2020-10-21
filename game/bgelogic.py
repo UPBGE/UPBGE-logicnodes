@@ -4587,6 +4587,7 @@ class ActionMouseLook(ActionCell):
         self.cap_y = None
         self.done = None
         self.OUT = LogicNetworkSubCell(self, self.get_done)
+        self.use_local_head = False
 
     def get_done(self):
         return self.done
@@ -4601,6 +4602,8 @@ class ActionMouseLook(ActionCell):
         game_object_y = self.get_parameter_value(self.game_object_y)
         if none_or_invalid(game_object_y):
             game_object_y = self.get_x_obj()
+        else:
+            self.use_local_head = True
         return game_object_y
 
     def evaluate(self):
@@ -4652,7 +4655,7 @@ class ActionMouseLook(ActionCell):
                 objectRotation.z = lowercapX
                 game_object_x.localOrientation = objectRotation.to_matrix()
 
-        game_object_x.applyRotation((0, 0, offset.x), False)
+        game_object_x.applyRotation((0, 0, offset.x), self.use_local_head)
 
         if use_cap_y:
             objectRotation = game_object_y.localOrientation.to_euler()
@@ -4734,14 +4737,19 @@ class ActionCreateVehicle(ActionCell):
         self.friction = None
         self.done = None
         self.vehicle = None
+        self.wheels = None
         self.OUT = LogicNetworkSubCell(self, self.get_done)
         self.VEHICLE = LogicNetworkSubCell(self, self.get_vehicle)
+        self.WHEELS = LogicNetworkSubCell(self, self.get_wheels)
 
     def get_done(self):
         return self.done
 
     def get_vehicle(self):
         return self.vehicle
+
+    def get_wheels(self):
+        return self.wheels
 
     def evaluate(self):
         self.done = False
@@ -4778,6 +4786,7 @@ class ActionCreateVehicle(ActionCell):
         axle_dir = mathutils.Vector((0, -1, 0))
         wheels_steering = bpy.data.collections[wheels_steering]
         wheels = bpy.data.collections[wheels]
+
         for wheel in wheels_steering.objects:
             wheel = check_game_object(wheel.name)
             car.addWheel(
@@ -4819,14 +4828,19 @@ class ActionCreateVehicleFromParent(ActionCell):
         self.friction = None
         self.done = None
         self.vehicle = None
+        self.wheels = None
         self.OUT = LogicNetworkSubCell(self, self.get_done)
         self.VEHICLE = LogicNetworkSubCell(self, self.get_vehicle)
+        self.WHEELS = LogicNetworkSubCell(self, self.get_wheels)
 
     def get_done(self):
         return self.done
 
     def get_vehicle(self):
         return self.vehicle
+
+    def get_wheels(self):
+        return self.wheels
 
     def evaluate(self):
         self.done = False
@@ -4854,7 +4868,8 @@ class ActionCreateVehicleFromParent(ActionCell):
         ph_id = game_object.getPhysicsId()
         car = bge.constraints.createVehicle(ph_id)
         down = mathutils.Vector((0, 0, -1))
-        axle_dir = mathutils.Vector((0, -1, 0))
+        axle_dir = game_object.getAxisVect(mathutils.Vector((0, -1, 0)))
+        wheels = []
         cs = sorted(game_object.children, key=lambda c: c.name)
         for c in cs:
             if 'FWheel' in c.name:
@@ -4868,6 +4883,7 @@ class ActionCreateVehicleFromParent(ActionCell):
                     abs(c.worldScale.x/2),
                     True
                 )
+                wheels.append(c)
             elif 'RWheel' in c.name:
                 c.removeParent()
                 car.addWheel(
@@ -4879,11 +4895,13 @@ class ActionCreateVehicleFromParent(ActionCell):
                     abs(c.worldScale.x/2),
                     False
                 )
+                wheels.append(c)
         for wheel in range(car.getNumWheels()):
             car.setSuspensionStiffness(stiffness, wheel)
             car.setSuspensionDamping(damping, wheel)
             car.setTyreFriction(friction, wheel)
         self.vehicle = car
+        self.wheels = wheels
         self.done = True
 
 
