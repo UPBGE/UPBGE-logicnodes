@@ -1227,6 +1227,36 @@ class NLBooleanSocket(bpy.types.NodeSocket, NetLogicSocketType):
 _sockets.append(NLBooleanSocket)
 
 
+class NLXYZSocket(bpy.types.NodeSocket, NetLogicSocketType):
+    bl_idname = "NLXYZSocket"
+    bl_label = "Boolean"
+    x: bpy.props.BoolProperty(update=update_tree_code)
+    y: bpy.props.BoolProperty(update=update_tree_code)
+    z: bpy.props.BoolProperty(update=update_tree_code)
+
+    def draw_color(self, context, node):
+        return PARAMETER_SOCKET_COLOR
+
+    def draw(self, context, layout, node, text):
+        if self.is_linked or self.is_output:
+            layout.label(text=text)
+        else:
+            row = layout.row()
+            row.prop(self, 'x', text="X")
+            row.prop(self, 'y', text="Y")
+            row.prop(self, 'z', text="Z")
+
+    def get_unlinked_value(self):
+        return {
+            'x': self.x,
+            'y': self.y,
+            'z': self.z
+        }
+
+
+_sockets.append(NLXYZSocket)
+
+
 class NLPositiveFloatSocket(bpy.types.NodeSocket, NetLogicSocketType):
     bl_idname = "NLPositiveFloatSocket"
     bl_label = "Positive Float"
@@ -5265,6 +5295,7 @@ class NLSetObjectAttributeActionNode(bpy.types.Node, NLActionNode):
     def init(self, context):
         NLActionNode.init(self, context)
         self.inputs.new(NLConditionSocket.bl_idname, "Condition")
+        self.inputs.new(NLXYZSocket.bl_idname, "")
         self.inputs.new(NLGameObjectSocket.bl_idname, "Object")
         self.inputs.new(NLVec3FieldSocket.bl_idname, "Value")
         self.outputs.new(NLConditionSocket.bl_idname, 'Done')
@@ -5280,7 +5311,7 @@ class NLSetObjectAttributeActionNode(bpy.types.Node, NLActionNode):
         return "bgelogic.ActionSetObjectAttribute"
     
     def get_input_sockets_field_names(self):
-        return ["condition", "game_object", "attribute_value"]
+        return ["condition", "xyz", "game_object", "attribute_value"]
     
     def write_cell_fields_initialization(self, cell_varname, uids, line_writer):
         NetLogicStatementGenerator.write_cell_fields_initialization(self, cell_varname, uids, line_writer)

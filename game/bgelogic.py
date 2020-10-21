@@ -689,7 +689,18 @@ class AudioSystem(object):
         }
         self.device3D = self.devices['default3D']
         self.device = self.devices['default']
-        self.device3D.distance_model = aud.DISTANCE_MODEL_INVERSE
+        self.device3D.distance_model = self.get_distance_model(bpy.context.scene.audio_distance_model)
+
+    def get_distance_model(self, name):
+        return {
+            'INVERSE': aud.DISTANCE_MODEL_INVERSE,
+            'INVERSE_CLAMPED': aud.DISTANCE_MODEL_INVERSE_CLAMPED,
+            'EXPONENT': aud.DISTANCE_MODEL_EXPONENT,
+            'EXPONENT_CLAMPED': aud.DISTANCE_MODEL_EXPONENT_CLAMPED,
+            'LINEAR': aud.DISTANCE_MODEL_LINEAR,
+            'LINEAR_CLAMPED': aud.DISTANCE_MODEL_LINEAR_CLAMPED,
+            'NONE': aud.DISTANCE_MODEL_INVALID
+        }[name]
 
     def update(self, network):
         device = self.device3D
@@ -5137,6 +5148,7 @@ class ActionSetObjectAttribute(ActionCell):
         ActionCell.__init__(self)
         self.value_type = str(value_type)
         self.condition = None
+        self.xyz = None
         self.game_object = None
         self.attribute_value = None
         self.done = None
@@ -5151,6 +5163,11 @@ class ActionSetObjectAttribute(ActionCell):
         if condition_value is LogicNetworkCell.STATUS_WAITING:
             return
         if not condition_value:
+            return
+        xyz = self.get_parameter_value(self.xyz)
+        if xyz is LogicNetworkCell.STATUS_WAITING:
+            return
+        if not xyz:
             return
         game_object_value = self.get_parameter_value(self.game_object)
         if game_object_value is LogicNetworkCell.STATUS_WAITING:
@@ -5170,17 +5187,17 @@ class ActionSetObjectAttribute(ActionCell):
                 .format(game_object_value, value_type)
             )
             return
+        data = getattr(game_object_value, value_type)
+        if 'Orientation' in value_type:
+            data = data.to_euler()
+        for axis in xyz:
+            if not xyz[axis]:
+                setattr(attribute_value_value, axis, getattr(data, axis))
         setattr(
             game_object_value,
             value_type,
             attribute_value_value
         )
-        # except Exception:
-        #     debug(
-        #         'Set Object Data Node: Could Not Set Value for {}!'
-        #         .format(game_object_value)
-        #     )
-        #     return
         if attribute_value_value == 'worldScale':
             game_object_value.reinstancePhysicsMesh(
                 game_object_value,
