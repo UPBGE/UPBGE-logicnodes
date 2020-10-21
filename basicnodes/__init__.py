@@ -7740,6 +7740,38 @@ class NLActionStart3DSoundAdv(bpy.types.Node, NLActionNode):
 _nodes.append(NLActionStart3DSoundAdv)
 
 
+class NLActionStartSound(bpy.types.Node, NLActionNode):
+    bl_idname = "NLActionStartSound"
+    bl_label = "Sound"
+    nl_category = "Sound"
+
+    def init(self, context):
+        NLActionNode.init(self, context)
+        self.inputs.new(NLConditionSocket.bl_idname, "Condition")
+        self.inputs.new(NLFilePathSocket.bl_idname, "Sound File")
+        self.inputs.new(NLSocketLoopCount.bl_idname, "Mode")
+        self.inputs.new(NLFloatFieldSocket.bl_idname, "Pitch")
+        self.inputs.new(NLPositiveFloatSocket.bl_idname, "Volume")
+        self.inputs[-1].value = 1.0
+        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+        self.outputs.new(NLParameterSocket.bl_idname, 'Sound')
+
+    def get_output_socket_varnames(self):
+        return ["DONE", "HANDLE"]
+
+    def get_netlogic_class_name(self):
+        return "bgelogic.ActionStartSound"
+    def get_input_sockets_field_names(self):
+        return [
+            "condition",
+            "sound",
+            "loop_count",
+            "pitch",
+            "volume"
+        ]
+_nodes.append(NLActionStartSound)
+
+
 class NLActionStopAllSounds(bpy.types.Node, NLActionNode):
     bl_idname = "NLActionStopAllSounds"
     bl_label = "Stop All Sounds"

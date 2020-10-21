@@ -8536,6 +8536,64 @@ class ActionStart3DSoundAdv(ActionCell):
         self.done = True
 
 
+class ActionStartSound(ActionCell):
+    def __init__(self):
+        ActionCell.__init__(self)
+        self.condition = None
+        self.sound = None
+        self.loop_count = None
+        self.pitch = None
+        self.volume = None
+        self._prev_loop_count = None
+        self.done = None
+        self._handle = None
+        self.DONE = LogicNetworkSubCell(self, self.get_done)
+        self.HANDLE = LogicNetworkSubCell(self, self.get_handle)
+
+    def get_handle(self):
+        return self._handle
+
+    def get_done(self):
+        return self.done
+
+    def evaluate(self):
+        self.done = False
+        audio_system = self.network.audio_system
+        handle = self._handle
+        if handle:
+            if not handle.status and handle in audio_system.active_sounds:
+                audio_system.active_sounds.remove(handle)
+                return
+        condition = self.get_parameter_value(self.condition)
+        if condition is LogicNetworkCell.STATUS_WAITING:
+            return
+        if not condition:
+            self._set_ready()
+            return
+        sound = self.get_parameter_value(self.sound)
+        pitch = self.get_parameter_value(self.pitch)
+        loop_count = self.get_parameter_value(self.loop_count)
+        volume = self.get_parameter_value(self.volume)
+        self._set_ready()
+
+        if none_or_invalid(sound):
+            return
+        if not hasattr(bpy.types.Scene, 'aud_devices'):
+            debug('No Audio Devices initialized!')
+            return
+        else:
+            devs = bpy.types.Scene.aud_devices
+        soundpath = logic.expandPath(sound)
+        soundfile = aud.Sound.file(soundpath)
+        handle = self._handle = devs['default'].play(soundfile)
+        handle.relative = True
+        handle.pitch = pitch
+        handle.loop_count = loop_count
+        handle.volume = volume
+        audio_system.active_sounds.append(handle)
+        self.done = True
+
+
 class ActionUpdateSound(ActionCell):
     def __init__(self):
         ActionCell.__init__(self)
