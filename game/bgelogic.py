@@ -1,3 +1,4 @@
+from bge import logic
 import bge
 import aud
 import mathutils
@@ -60,7 +61,7 @@ class SimpleLoggingDatabase(object):
             raise NotImplementedError()
 
     serializers = {}
-    storage_dir = bge.logic.expandPath("//bgelogic/storage")
+    storage_dir = logic.expandPath("//bgelogic/storage")
     shared_dbs = {}
 
     @classmethod
@@ -470,7 +471,7 @@ def none_or_invalid(ref):
 
 def check_game_object(query, scene=None):
     if not scene:
-        scene = bge.logic.getCurrentScene()
+        scene = logic.getCurrentScene()
     else:
         scene = scene
     if (query is None) or (query == ""):
@@ -518,7 +519,7 @@ _loaded_userlogic_files = {}
 
 
 def load_user_logic(module_name):
-    full_path = bge.logic.expandPath(
+    full_path = logic.expandPath(
         "//bgelogic/cells/{}.py".format(module_name)
     )
     loaded_value = _loaded_userlogic_files.get(full_path)
@@ -680,38 +681,27 @@ class ConditionCell(LogicNetworkCell):
 
 class AudioSystem(object):
     def __init__(self):
-        self.device = None
-        self.factories = {}
-        self.listener = bge.logic.getCurrentScene().active_camera
-
-    def get_or_create_audio_factory(self, fpath):
-        if self.device is None:
-            self.device = aud.Device()
-        fac = self.factories.get(fpath, None)
-        fpath = bge.logic.expandPath(fpath)
-        if fac is None:
-            fac = aud.Sound.file(fpath)
-        return fac
-
-    def create_sound_handle(self, fpath):
-        factory = self.get_or_create_audio_factory(fpath)
-        handle = self.device.play(factory)
-        return handle
-
-    def compute_listener_velocity(self, listener):
-        return (0, 0, 0)
+        self.active_sounds = []
+        self.listener = logic.getCurrentScene().active_camera
+        bpy.types.Scene.aud_devices = self.devices = {
+            'default3D': aud.Device(),
+            'default': aud.Device()
+        }
+        self.device3D = self.devices['default3D']
+        self.device = self.devices['default']
+        self.device3D.distance_model = aud.DISTANCE_MODEL_INVERSE
 
     def update(self, network):
-        device = self.device
-        if not device:
+        device = self.device3D
+        c = logic.getCurrentScene().active_camera
+        self.listener = c
+        if not self.active_sounds:
+            debug('No Active Sounds!')
             return  # do not update if no sound has been installed
         # update the listener data
-        scene = network._owner.scene
-        self.listener = listener = scene.active_camera
-        device.listener_location = listener.worldPosition
-        device.listener_orientation = listener.worldOrientation.to_quaternion()
-        device.listener_velocity = self.compute_listener_velocity(listener)
-        pass
+        device.listener_location = c.worldPosition
+        device.listener_orientation = c.worldOrientation.to_quaternion()
+        # device.listener_velocity = self.compute_listener_velocity(c)
 
 
 class LogicNetwork(LogicNetworkCell):
@@ -732,7 +722,7 @@ class LogicNetwork(LogicNetworkCell):
         self._time_then = None
         self.time_per_frame = 0.0
         self._last_mouse_position = [
-            bge.logic.mouse.position[0], bge.logic.mouse.position[1]
+            logic.mouse.position[0], logic.mouse.position[1]
         ]
         self.mouse_motion_delta = [0.0, 0.0]
         self.mouse_wheel_delta = 0
@@ -807,7 +797,7 @@ class LogicNetwork(LogicNetworkCell):
         for cell in self._cells:
             cell.network = self
             cell.setup(self)
-        self._last_mouse_position[:] = bge.logic.mouse.position
+        self._last_mouse_position[:] = logic.mouse.position
 
     def is_running(self):
         return not self.stopped
@@ -845,8 +835,8 @@ class LogicNetwork(LogicNetworkCell):
         if self._owner.invalid:
             print("Network Owner removed from game. Shutting down the network")
             return True
-        self.keyboard = bge.logic.keyboard
-        self.mouse = bge.logic.mouse
+        self.keyboard = logic.keyboard
+        self.mouse = logic.mouse
         # compute mouse translation since last frame (or initialization)
         curr_mpos = self.mouse.position
         last_mpos = self._last_mouse_position
@@ -907,7 +897,7 @@ class LogicNetwork(LogicNetworkCell):
             if cell.has_status(LogicNetworkCell.STATUS_WAITING):
                 cells.append(cell)
         # update the sound system
-        # self.audio_system.update(self)
+        self.audio_system.update(self)
         # pulse subnetworks
         for network in self.sub_networks:
             if network._owner.invalid:
@@ -1004,7 +994,7 @@ class ParameterBoneStatus(ParameterCell):
             self._prev_bone = bone_name
             self._channel = armature.channels[bone_name]
             channel = self._channel
-        if channel.rotation_mode is bge.logic.ROT_MODE_QUAT:
+        if channel.rotation_mode is logic.ROT_MODE_QUAT:
             self._rot[:] = (
                 mathutils.Quaternion(channel.rotation_quaternion).to_euler()
             )
@@ -1020,7 +1010,7 @@ class ParameterCurrentScene(ParameterCell):
         self._set_ready()
 
     def get_value(self):
-        return bge.logic.getCurrentScene()
+        return logic.getCurrentScene()
 
     def reset(self): pass
     def evaluate(self): pass
@@ -1391,7 +1381,7 @@ class GetActuatorByName(ParameterCell):
         act_name = self.get_parameter_value(self.act_name)
         # if none_or_invalid(game_obj):
         #     return
-        cont = bge.logic.getCurrentController()
+        cont = logic.getCurrentController()
         if none_or_invalid(act_name):
             return
         if act_name not in cont.actuators:
@@ -1399,7 +1389,7 @@ class GetActuatorByName(ParameterCell):
                 Actuator not conneted or does not exist!')
             return
         self._set_ready()
-        self._set_value(bge.logic.getCurrentController().actuators[act_name])
+        self._set_value(logic.getCurrentController().actuators[act_name])
 
 
 class ActivateActuator(ParameterCell):
@@ -1419,7 +1409,7 @@ class ActivateActuator(ParameterCell):
         STATUS_WAITING = LogicNetworkCell.STATUS_WAITING
         condition = self.get_parameter_value(self.condition)
         actuator = self.get_parameter_value(self.actuator)
-        controller = bge.logic.getCurrentController()
+        controller = logic.getCurrentController()
         self._set_ready()
         if actuator is STATUS_WAITING or none_or_invalid(actuator):
             debug("There is a problem with the actuator \
@@ -1453,7 +1443,7 @@ class DeactivateActuator(ParameterCell):
         STATUS_WAITING = LogicNetworkCell.STATUS_WAITING
         condition = self.get_parameter_value(self.condition)
         actuator = self.get_parameter_value(self.actuator)
-        controller = bge.logic.getCurrentController()
+        controller = logic.getCurrentController()
         self._set_ready()
         if actuator is STATUS_WAITING or none_or_invalid(actuator):
             debug("There is a problem with the actuator in \
@@ -1486,7 +1476,7 @@ class ActivateActuatorByName(ParameterCell):
         self.done = False
         STATUS_WAITING = LogicNetworkCell.STATUS_WAITING
         condition = self.get_parameter_value(self.condition)
-        controller = bge.logic.getCurrentController()
+        controller = logic.getCurrentController()
         actuator = self.get_parameter_value(self.actuator)
         self._set_ready()
         if actuator is STATUS_WAITING or none_or_invalid(actuator):
@@ -1516,7 +1506,7 @@ class DeactivateActuatorByName(ParameterCell):
         self.done = False
         STATUS_WAITING = LogicNetworkCell.STATUS_WAITING
         condition = self.get_parameter_value(self.condition)
-        controller = bge.logic.getCurrentController()
+        controller = logic.getCurrentController()
         actuator = self.get_parameter_value(self.actuator)
         self._set_ready()
         if actuator is STATUS_WAITING or none_or_invalid(actuator):
@@ -1596,7 +1586,7 @@ class GetCurrentControllerLB(ParameterCell):
 
     def evaluate(self):
         self._set_ready()
-        self._set_value(bge.logic.getCurrentController())
+        self._set_value(logic.getCurrentController())
 
 
 class GetSensor(ParameterCell):
@@ -1726,7 +1716,7 @@ class ParameterActiveCamera(ParameterCell):
         ParameterCell.__init__(self)
 
     def evaluate(self):
-        scene = bge.logic.getCurrentScene()
+        scene = logic.getCurrentScene()
         self._set_ready()
         if none_or_invalid(scene):
             debug('Active Camera Node: Invalid Scene!')
@@ -2146,7 +2136,7 @@ class GetTimeScale(ParameterCell):
 
     def evaluate(self):
         self._set_ready()
-        self._set_value(bge.logic.getTimeScale())
+        self._set_value(logic.getTimeScale())
 
 
 class SetObInstanceAttr(ParameterCell):
@@ -3456,8 +3446,8 @@ class ConditionGamepadSticks(ConditionCell):
         index = self.get_parameter_value(self.index)
         sensitivity = self.get_parameter_value(self.sensitivity)
         threshold = self.get_parameter_value(self.threshold)
-        if bge.logic.joysticks[index]:
-            joystick = bge.logic.joysticks[index]
+        if logic.joysticks[index]:
+            joystick = logic.joysticks[index]
         else:
             debug('Gamepad Sticks Node: No Joystick at that Index!')
             self._x_axis_values = 0
@@ -3505,8 +3495,8 @@ class ConditionGamepadTrigger(ConditionCell):
         index = self.get_parameter_value(self.index)
         sensitivity = self.get_parameter_value(self.sensitivity)
         threshold = self.get_parameter_value(self.threshold)
-        if bge.logic.joysticks[index]:
-            joystick = bge.logic.joysticks[index]
+        if logic.joysticks[index]:
+            joystick = logic.joysticks[index]
         else:
             debug('Gamepad Trigger Node: No Joystick at that Index!')
             self._x_axis_values = 0
@@ -3537,8 +3527,8 @@ class ConditionGamepadButtons(ConditionCell):
     def evaluate(self):
         self._set_ready()
         index = self.get_parameter_value(self.index)
-        if bge.logic.joysticks[index]:
-            joystick = bge.logic.joysticks[index]
+        if logic.joysticks[index]:
+            joystick = logic.joysticks[index]
         else:
             debug('Gamepad Button Node: No Joystick at that Index!')
             self._x_axis_values = 0
@@ -3664,7 +3654,7 @@ class ConditionMouseTargeting(ConditionCell):
         scene = game_object.scene
         camera = scene.active_camera
         distance = 2.0 * camera.getDistanceTo(game_object)
-        mouse = bge.logic.mouse
+        mouse = logic.mouse
         mouse_position = mouse.position
         vec = 10.0 * camera.getScreenVect(*mouse_position)
         ray_target = camera.worldPosition - vec
@@ -3841,8 +3831,8 @@ class ConditionMousePressedOn(ConditionCell):
         if not mstat.activated:
             self._set_value(False)
             return
-        mpos = bge.logic.mouse.position
-        camera = bge.logic.getCurrentScene().active_camera
+        mpos = logic.mouse.position
+        camera = logic.getCurrentScene().active_camera
         vec = 10 * camera.getScreenVect(*mpos)
         ray_target = camera.worldPosition - vec
         distance = camera.getDistanceTo(game_object) * 2.0
@@ -4153,7 +4143,7 @@ class ActionAddObject(ActionCell):
             return
         if name_value is LogicNetworkCell.STATUS_WAITING:
             return
-        scene = bge.logic.getCurrentScene()
+        scene = logic.getCurrentScene()
         if none_or_invalid(scene):
             return
         if life_value is None:
@@ -4265,7 +4255,7 @@ class ActionSetMaterialNodeValue(ActionCell):
                 .inputs[input_slot]
                 .default_value
             ) = value
-            bge.logic.getCurrentScene().resetTaaSamples = True
+            logic.getCurrentScene().resetTaaSamples = True
 
 
 class ActionSetMaterialNodeInputValue(ActionCell):
@@ -4299,7 +4289,7 @@ class ActionSetMaterialNodeInputValue(ActionCell):
             self.done = True
             self._set_ready()
             input_slot.default_value = value
-            bge.logic.getCurrentScene().resetTaaSamples = True
+            logic.getCurrentScene().resetTaaSamples = True
 
 
 class ActionToggleGameObjectGameProperty(ActionCell):
@@ -4519,7 +4509,7 @@ class ActionEndGame(ActionCell):
         if condition is LogicNetworkCell.STATUS_WAITING:
             return
         if condition:
-            bge.logic.endGame()
+            logic.endGame()
 
 
 class ActionStartGame(ActionCell):
@@ -4539,7 +4529,7 @@ class ActionStartGame(ActionCell):
         condition = self.get_parameter_value(self.condition)
         file_name = self.get_parameter_value(self.file_name)
         if condition:
-            bge.logic.startGame(file_name)
+            logic.startGame(file_name)
         self.done = True
 
 
@@ -4559,7 +4549,7 @@ class ActionRestartGame(ActionCell):
         self._set_ready()
         condition = self.get_parameter_value(self.condition)
         if condition:
-            bge.logic.restartGame()
+            logic.restartGame()
         self.done = True
 
 
@@ -4572,7 +4562,7 @@ class ActionMouseLook(ActionCell):
         y/bge.render.getWindowHeight()
     )
     center = mathutils.Vector(screen_center)
-    mouse = bge.logic.mouse
+    mouse = logic.mouse
 
     def __init__(self):
         ActionCell.__init__(self)
@@ -4720,7 +4710,7 @@ class ActionResetTaaSamples(ActionCell):
         if not condition:
             return
         self._set_ready()
-        bge.logic.getCurrentScene().resetTaaSamples = True
+        logic.getCurrentScene().resetTaaSamples = True
         self.done = True
 
 
@@ -5413,9 +5403,9 @@ class ActionLibLoad(ActionCell):
         self._set_ready()
         if condition:
             if path.startswith("//"):
-                path = bge.logic.expandPath(path)
-            if path not in bge.logic.LibList():
-                bge.logic.LibLoad(path, "Scene", load_actions=True)
+                path = logic.expandPath(path)
+            if path not in logic.LibList():
+                logic.LibLoad(path, "Scene", load_actions=True)
             self._set_value(True)
         else:
             self._set_value(False)
@@ -5570,8 +5560,8 @@ class ActionLibFree(ActionCell):
             self._set_value(False)
             return
         if path.startswith("//"):
-            path = bge.logic.expandPath(path)
-        bge.logic.LibFree(path)
+            path = logic.expandPath(path)
+        logic.LibFree(path)
         self._set_value(True)
 
 
@@ -5622,7 +5612,7 @@ class ActionMousePick(ActionCell):
             return
         if none_or_invalid(camera):
             return
-        mpos = bge.logic.mouse.position
+        mpos = logic.mouse.position
         vec = 10 * camera.getScreenVect(*mpos)
         ray_target = camera.worldPosition - vec
         target, point, normal = self.network.ray_cast(
@@ -5735,7 +5725,7 @@ class ActionSetActiveCamera(ActionCell):
         self._set_ready()
         if none_or_invalid(camera):
             return
-        scene = bge.logic.getCurrentScene()
+        scene = logic.getCurrentScene()
         scene.active_camera = camera
         self.done = True
 
@@ -6478,21 +6468,21 @@ class ActionEditBone(ActionCell):
     def _convert_orientation(self, ch, xyzrot):
         eulers = self._eulers
         eulers[:] = xyzrot
-        if ch.rotation_mode is bge.logic.ROT_MODE_QUAT:
+        if ch.rotation_mode is logic.ROT_MODE_QUAT:
             return eulers.to_quaternion()
         else:
             return xyzrot
 
     def _set_orientation(self, ch, rot):
         orientation = self._convert_orientation(ch, rot)
-        if ch.rotation_mode is bge.logic.ROT_MODE_QUAT:
+        if ch.rotation_mode is logic.ROT_MODE_QUAT:
             ch.rotation_quaternion = orientation
         else:
             ch.rotation_euler = orientation
 
     def _rotate(self, ch, xyzrot):
         orientation = self._convert_orientation(ch, xyzrot)
-        if ch.rotation_mode is bge.logic.ROT_MODE_QUAT:
+        if ch.rotation_mode is logic.ROT_MODE_QUAT:
             ch.rotation_quaternion = (
                 mathutils.Quaternion(ch.rotation_quaternion) * orientation
             )
@@ -6837,7 +6827,7 @@ class ActionSetTimeScale(ActionCell):
         self._set_ready()
         if none_or_invalid(timescale):
             return
-        bge.logic.setTimeScale(timescale)
+        logic.setTimeScale(timescale)
         self.done = True
 
 
@@ -6864,7 +6854,7 @@ class ActionSetGravity(ActionCell):
         self._set_ready()
         if none_or_invalid(gravity):
             return
-        bge.logic.setGravity(gravity)
+        logic.setGravity(gravity)
         self.done = True
 
 
@@ -6952,7 +6942,7 @@ class ActionSetMouseCursorVisibility(ActionCell):
         if visibility_status is LogicNetworkCell.STATUS_WAITING:
             return
         self._set_ready()
-        bge.logic.mouse.visible = visibility_status
+        logic.mouse.visible = visibility_status
         self.done = True
 
 
@@ -7220,12 +7210,12 @@ class ActionSaveGame(ActionCell):
         cust_path = self.get_custom_path(self.path)
 
         path = (
-            bge.logic.expandPath('//Saves/') if self.path == ''
+            logic.expandPath('//Saves/') if self.path == ''
             else cust_path
         )
         os.makedirs(path, exist_ok=True)
 
-        scene = bge.logic.getCurrentScene()
+        scene = logic.getCurrentScene()
         data = {
             'objects': []
         }
@@ -7359,7 +7349,7 @@ class ActionSaveGame(ActionCell):
                         }
                     }
                 )
-            data['globalDict'] = bge.logic.globalDict
+            data['globalDict'] = logic.globalDict
 
         with open(path + 'save' + str(slot) + ".json", "w") as file:
             json.dump(data, file, indent=2)
@@ -7404,11 +7394,11 @@ class ActionLoadGame(ActionCell):
         cust_path = self.get_custom_path(self.path)
 
         path = (
-            bge.logic.expandPath('//Saves/') if self.path == ''
+            logic.expandPath('//Saves/') if self.path == ''
             else cust_path
         )
 
-        scene = bge.logic.getCurrentScene()
+        scene = logic.getCurrentScene()
 
         try:
             with open(path + 'save' + str(slot) + '.json') as json_file:
@@ -8086,9 +8076,9 @@ class ActionAddScene(ActionCell):
             return
         self._set_ready()
         if self.overlay is None:
-            bge.logic.addScene(scene_name)
+            logic.addScene(scene_name)
         else:
-            bge.logic.addScene(scene_name, self.overlay)
+            logic.addScene(scene_name, self.overlay)
         self.done = True
 
 
@@ -8382,9 +8372,9 @@ class ActionFindScene(ActionCell):
             return
         self._set_ready()
         if self.condition is None:
-            scene = _name_query(bge.logic.getSceneList(), query)
+            scene = _name_query(logic.getSceneList(), query)
             self._set_value(scene)
-        scene = _name_query(bge.logic.getSceneList(), query)
+        scene = _name_query(logic.getSceneList(), query)
         self._set_value(scene)
         self.done = True
 
@@ -8394,8 +8384,8 @@ class ActionStart3DSound(ActionCell):
         ActionCell.__init__(self)
         self.condition = None
         self.sound = None
+        self.speaker = None
         self.loop_count = None
-        self.location = None
         self.pitch = None
         self.volume = None
         self.attenuation = None
@@ -8404,7 +8394,6 @@ class ActionStart3DSound(ActionCell):
         self._prev_loop_count = None
         self.done = None
         self._handle = None
-        self._cam_prev = {}
         self.DONE = LogicNetworkSubCell(self, self.get_done)
         self.HANDLE = LogicNetworkSubCell(self, self.get_handle)
 
@@ -8414,33 +8403,18 @@ class ActionStart3DSound(ActionCell):
     def get_done(self):
         return self.done
 
-    def get_local_location(self, loc, c):
-        cpos = c.worldPosition
-        cori = c.worldOrientation.to_euler()
-        self._cam_prev = {
-            'pos': cpos,
-            'ori': cori
-        }
-
-        # return mathutils.Vector((
-        #     -cpos.x * cori.x,
-        #     -cpos.y * cori.y,
-        #     -cpos.z * cori.z,
-        # ))
-
-        return loc
-
     def evaluate(self):
         self.done = False
-        c = self.network.audio_system.listener
-        location = self.get_parameter_value(self.location)
-        if self._cam_prev:
-            if (
-                c.worldPosition != self._cam_prev['pos'] or
-                c.worldOrientation.to_euler != self._cam_prev['ori']
-            ):
-                if self._handle:
-                    self._handle.location = self.get_local_location(location, c)
+        audio_system = self.network.audio_system
+        speaker = self.get_parameter_value(self.speaker)
+        handle = self._handle
+        if handle:
+            if handle.status:
+                handle.location = speaker.worldPosition
+                handle.velocity = speaker.worldLinearVelocity
+                return
+            elif handle in audio_system.active_sounds:
+                audio_system.active_sounds.remove(handle)
                 return
         condition = self.get_parameter_value(self.condition)
         if condition is LogicNetworkCell.STATUS_WAITING:
@@ -8460,23 +8434,23 @@ class ActionStart3DSound(ActionCell):
         if none_or_invalid(sound):
             return
         if not hasattr(bpy.types.Scene, 'aud_devices'):
-            bpy.types.Scene.aud_devices = devs = {
-                'default3D': aud.Device(),
-                'defaultMusic': aud.Device()
-            }
+            debug('No Audio Devices initialized!')
+            return
         else:
             devs = bpy.types.Scene.aud_devices
-        soundpath = bge.logic.expandPath(sound)
+        soundpath = logic.expandPath(sound)
         soundfile = aud.Sound.file(soundpath)
         handle = self._handle = devs['default3D'].play(soundfile)
-        handle.location = self.get_local_location(location, c)
-        # handle.location = location
+        handle.relative = False
+        handle.location = speaker.worldPosition
+        handle.velocity = speaker.worldLinearVelocity
         handle.pitch = pitch
-        handle.loop_count = loop_count - 1
+        handle.loop_count = loop_count
         handle.volume = volume
         handle.attenuation = attenuation
         handle.distance_reference = distance_ref
         handle.distance_maximum = distance_max
+        audio_system.active_sounds.append(handle)
         self.done = True
 
 
@@ -8900,7 +8874,7 @@ class SetGamma(ActionCell):
         if none_or_invalid(value):
             return
         self._set_ready()
-        bpy.data.scenes[bge.logic.getCurrentScene().name].view_settings.gamma = value
+        bpy.data.scenes[logic.getCurrentScene().name].view_settings.gamma = value
         self.done = True
 
 
@@ -8931,7 +8905,7 @@ class SetExposure(ActionCell):
         if none_or_invalid(value):
             return
         self._set_ready()
-        bpy.data.scenes[bge.logic.getCurrentScene().name].view_settings.exposure = value
+        bpy.data.scenes[logic.getCurrentScene().name].view_settings.exposure = value
         self.done = True
 
 
@@ -8962,7 +8936,7 @@ class SetEeveeBloom(ActionCell):
         if none_or_invalid(value):
             return
         self._set_ready()
-        bpy.data.scenes[bge.logic.getCurrentScene().name].eevee.use_bloom = value
+        bpy.data.scenes[logic.getCurrentScene().name].eevee.use_bloom = value
         self.done = True
 
 
@@ -8993,7 +8967,7 @@ class SetEeveeSSR(ActionCell):
         if none_or_invalid(value):
             return
         self._set_ready()
-        bpy.data.scenes[bge.logic.getCurrentScene().name].eevee.use_ssr = value
+        bpy.data.scenes[logic.getCurrentScene().name].eevee.use_ssr = value
         self.done = True
 
 
@@ -9024,7 +8998,7 @@ class SetEeveeVolumetrics(ActionCell):
         if none_or_invalid(value):
             return
         self._set_ready()
-        bpy.data.scenes[bge.logic.getCurrentScene().name].eevee.use_volumetric_lights = value
+        bpy.data.scenes[logic.getCurrentScene().name].eevee.use_volumetric_lights = value
         self.done = True
 
 
@@ -9055,7 +9029,7 @@ class SetEeveeVolumetricShadows(ActionCell):
         if none_or_invalid(value):
             return
         self._set_ready()
-        bpy.data.scenes[bge.logic.getCurrentScene().name].eevee.use_volumetric_shadows = value
+        bpy.data.scenes[logic.getCurrentScene().name].eevee.use_volumetric_shadows = value
         self.done = True
 
 
@@ -9075,7 +9049,7 @@ class SetLightEnergy(ActionCell):
     def set_blender_28x(self, lamp, energy):
         light = lamp.blenderObject.data
         light.energy = energy
-        bge.logic.getCurrentScene().resetTaaSamples = True
+        logic.getCurrentScene().resetTaaSamples = True
 
     def set_blender_27x(self, lamp, energy):
         lamp.energy = energy
@@ -9118,7 +9092,7 @@ class SetLightShadow(ActionCell):
     def set_blender_28x(self, lamp, use_shadow):
         light = lamp.blenderObject.data
         light.use_shadow = use_shadow
-        bge.logic.getCurrentScene().resetTaaSamples = True
+        logic.getCurrentScene().resetTaaSamples = True
 
     def set_blender_27x(self, lamp, use_shadow):
         lamp.use_shadow = use_shadow
@@ -9164,7 +9138,7 @@ class SetLightColor(ActionCell):
     def set_blender_28x(self, lamp, color):
         light = lamp.blenderObject.data
         light.color = color
-        bge.logic.getCurrentScene().resetTaaSamples = True
+        logic.getCurrentScene().resetTaaSamples = True
 
     def set_blender_27x(self, lamp, color):
         lamp.color = color
@@ -10086,10 +10060,10 @@ class ActionSetCurrentScene(ActionCell):
         scene_name = self.get_parameter_value(self.scene_name)
         if scene_name is None:
             return
-        current_scene = bge.logic.getCurrentScene()
+        current_scene = logic.getCurrentScene()
         current_scene_name = current_scene.name
         if current_scene_name != scene_name:
-            bge.logic.addScene(scene_name)
+            logic.addScene(scene_name)
             current_scene.end()
         self.done = True
 

@@ -1,6 +1,7 @@
 import re
 import bpy
 import bge_netlogic
+import os
 from bge_netlogic import utilities as tools
 
 TOO_OLD = bpy.app.version < (2, 80, 0)
@@ -421,11 +422,8 @@ def stop_all_sounds(a, b):
         return
     for dev in bpy.types.Scene.aud_devices:
         bpy.types.Scene.aud_devices[dev].stopAll()
+    print('Closing all sound devices...')
     delattr(bpy.types.Scene, 'aud_devices')
-
-
-bpy.app.handlers.game_post.clear()
-bpy.app.handlers.game_post.append(stop_all_sounds)
 
 
 def parse_field_value(value_type, value):
@@ -493,6 +491,8 @@ def parse_field_value(value_type, value):
 
 
 def update_tree_code(self, context):
+    bpy.app.handlers.game_post.clear()
+    bpy.app.handlers.game_post.append(stop_all_sounds)
     bge_netlogic.update_current_tree_code()
 
 
@@ -1154,8 +1154,7 @@ class NLSocketLoopCount(bpy.types.NodeSocket, NetLogicSocketType):
         elif current_type == "ONCE":
             self.value = "1"
         elif current_type == "CUSTOM":
-            self.value = '{}'.format(self.integer_editor)
-        pass
+            self.value = '{}'.format(int(self.integer_editor) - 1)
     value_type: bpy.props.EnumProperty(
         items=_enum_loop_count_values,
         update=update_value
@@ -1179,7 +1178,7 @@ class NLSocketLoopCount(bpy.types.NodeSocket, NetLogicSocketType):
                 layout.label(text=text)
                 layout.prop(self, "value_type", text="")
             else:
-                layout.prop(self, "integer_editor", text=text)
+                layout.prop(self, "integer_editor", text="")
                 layout.prop(self, "value_type", text="")
 
     def get_unlinked_value(self):
@@ -1405,10 +1404,11 @@ class NLFilePathSocket(bpy.types.NodeSocket, NetLogicSocketType):
             col.prop(self, "value", text='')
 
     def get_unlinked_value(self):
-        self.value.replace('\\', '/')
-        if self.value.endswith('\\'):
-            self.value = self.value[:-1]
-        return '"{}"'.format(self.value)
+        path = str(self.value)
+        path = path.replace('\\', '/')
+        if path.endswith('\\'):
+            path = path[:-1]
+        return '"{}"'.format(path)
 
 
 _sockets.append(NLFilePathSocket)
@@ -7638,12 +7638,12 @@ class NLActionStart3DSound(bpy.types.Node, NLActionNode):
     def init(self, context):
         NLActionNode.init(self, context)
         self.inputs.new(NLConditionSocket.bl_idname, "Condition")
+        self.inputs.new(NLGameObjectSocket.bl_idname, "Speaker")
         self.inputs.new(NLFilePathSocket.bl_idname, "Sound File")
-        self.inputs.new(NLSocketLoopCount.bl_idname, "")
+        self.inputs.new(NLSocketLoopCount.bl_idname, "Mode")
         self.inputs.new(NLFloatFieldSocket.bl_idname, "Pitch")
         self.inputs.new(NLPositiveFloatSocket.bl_idname, "Volume")
         self.inputs[-1].value = 1.0
-        self.inputs.new(NLVec3FieldSocket.bl_idname, "Position")
         self.inputs.new(NLPosFloatFormatSocket.bl_idname, "Attenuation")
         self.inputs[-1].value = 1.0
         self.inputs.new(NLPosFloatFormatSocket.bl_idname, "Reference Distance")
@@ -7661,11 +7661,11 @@ class NLActionStart3DSound(bpy.types.Node, NLActionNode):
     def get_input_sockets_field_names(self):
         return [
             "condition",
+            "speaker",
             "sound",
             "loop_count",
             "pitch",
             "volume",
-            "location",
             "attenuation",
             "distance_ref",
             "distance_max"
