@@ -2754,7 +2754,7 @@ _nodes.append(NLGameObjectHasPropertyParameterNode)
 
 class NLGetDictKeyNode(bpy.types.Node, NLParameterNode):
     bl_idname = "NLGetDictKeyNode"
-    bl_label = "Dict: Get Key"
+    bl_label = "- DICT: Get Key"
     nl_category = "Python"
 
     def init(self, context):
@@ -2779,7 +2779,7 @@ _nodes.append(NLGetDictKeyNode)
 
 class NLGetListIndexNode(bpy.types.Node, NLParameterNode):
     bl_idname = "NLGetListIndexNode"
-    bl_label = "List: Get Index"
+    bl_label = "- LIST: Get Index"
     nl_category = "Python"
 
     def init(self, context):
@@ -5574,7 +5574,7 @@ _nodes.append(NLActionSetVSync)
 
 class NLInitEmptyDict(bpy.types.Node, NLActionNode):
     bl_idname = "NLInitEmptyDict"
-    bl_label = "Dict: Init Empty"
+    bl_label = "- DICT: Init Empty"
     nl_category = "Python"
 
     def init(self, context):
@@ -5595,7 +5595,7 @@ _nodes.append(NLInitEmptyDict)
 
 class NLInitNewDict(bpy.types.Node, NLActionNode):
     bl_idname = "NLInitNewDict"
-    bl_label = "Dict: Init From Item"
+    bl_label = "- DICT: Init From Item"
     nl_category = "Python"
 
     def init(self, context):
@@ -5618,7 +5618,7 @@ _nodes.append(NLInitNewDict)
 
 class NLSetDictKeyValue(bpy.types.Node, NLActionNode):
     bl_idname = "NLSetDictKeyValue"
-    bl_label = "Dict: Set Key"
+    bl_label = "- DICT: Set Key"
     nl_category = "Python"
 
     def init(self, context):
@@ -5642,7 +5642,7 @@ _nodes.append(NLSetDictKeyValue)
 
 class NLSetDictDelKey(bpy.types.Node, NLActionNode):
     bl_idname = "NLSetDictDelKey"
-    bl_label = "Dict: Remove Key"
+    bl_label = "- DICT: Remove Key"
     nl_category = "Python"
 
     def init(self, context):
@@ -5665,7 +5665,7 @@ _nodes.append(NLSetDictDelKey)
 
 class NLInitEmptyList(bpy.types.Node, NLActionNode):
     bl_idname = "NLInitEmptyList"
-    bl_label = "List: Init Empty"
+    bl_label = "- LIST: Init Empty"
     nl_category = "Python"
 
     def init(self, context):
@@ -5687,7 +5687,7 @@ _nodes.append(NLInitEmptyList)
 
 class NLInitNewList(bpy.types.Node, NLActionNode):
     bl_idname = "NLInitNewList"
-    bl_label = "List: Init From Item"
+    bl_label = "- LIST: Init From Item"
     nl_category = "Python"
 
     def init(self, context):
@@ -5709,7 +5709,7 @@ _nodes.append(NLInitNewList)
 
 class NLAppendListItem(bpy.types.Node, NLActionNode):
     bl_idname = "NLAppendListItem"
-    bl_label = "List: Append"
+    bl_label = "- LIST: Append"
     nl_category = "Python"
 
     def init(self, context):
@@ -5733,7 +5733,7 @@ _nodes.append(NLAppendListItem)
 
 class NLSetListIndex(bpy.types.Node, NLActionNode):
     bl_idname = "NLSetListIndex"
-    bl_label = "List: Set Index"
+    bl_label = "- LIST: Set Index"
     nl_category = "Python"
 
     def init(self, context):
@@ -5760,7 +5760,7 @@ _nodes.append(NLSetListIndex)
 
 class NLRemoveListValue(bpy.types.Node, NLActionNode):
     bl_idname = "NLRemoveListValue"
-    bl_label = "List: Remove Value"
+    bl_label = "- LIST: Remove Value"
     nl_category = "Python"
 
     def init(self, context):
@@ -7796,12 +7796,13 @@ class NLActionStopSound(bpy.types.Node, NLActionNode):
     def init(self, context):
         NLActionNode.init(self, context)
         self.inputs.new(NLConditionSocket.bl_idname, "Condition")
-        self.inputs.new(NLSocketSound.bl_idname, "Sound")
+        self.inputs.new(NLParameterSocket.bl_idname, "Sound")
     def get_netlogic_class_name(self):
         return "bgelogic.ActionStopSound"
     def get_input_sockets_field_names(self):
         return ["condition", "sound"]
-#_nodes.append(NLActionStopSound)
+
+_nodes.append(NLActionStopSound)
 
 
 class NLActionPauseSound(bpy.types.Node, NLActionNode):
@@ -7812,38 +7813,13 @@ class NLActionPauseSound(bpy.types.Node, NLActionNode):
     def init(self, context):
         NLActionNode.init(self, context)
         self.inputs.new(NLConditionSocket.bl_idname, "Condition")
-        self.inputs.new(NLSocketSound.bl_idname, "Sound")
+        self.inputs.new(NLParameterSocket.bl_idname, "Sound")
     def get_netlogic_class_name(self):
         return "bgelogic.ActionPauseSound"
     def get_input_sockets_field_names(self):
         return ["condition", "sound"]
-#_nodes.append(NLActionPauseSound)
 
-
-class NLActionUpdateSound(bpy.types.Node, NLActionNode):
-    bl_idname = "NLActionUpdateSound"
-    bl_label = "Update Sound"
-    nl_category = "Sound"
-
-    def init(self, context):
-        NLActionNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, "Condition")
-        self.inputs.new(NLSocketSound.bl_idname, "Sound")
-        self.inputs.new(NLSocketVectorField.bl_idname, "XYZ Pos")
-        #self.inputs.new(NLSocketOptionalOrientation.bl_idname, "Orientation")
-        #self.inputs.new(NLSocketVectorField.bl_idname, "XYZ Vel")
-        self.inputs.new(NLSocketOptionalPositiveFloat.bl_idname, "Pitch")
-        self.inputs.new(NLSocketOptionalPositiveFloat.bl_idname, "Volume")
-        self.inputs.new(NLSocketOptionalPositiveFloat.bl_idname, "Attenuation")
-        self.inputs.new(NLSocketOptionalPositiveFloat.bl_idname, "Distance Ref")
-        self.inputs.new(NLSocketOptionalPositiveFloat.bl_idname, "Distance Max")
-    def get_netlogic_class_name(self):
-        return "bgelogic.ActionUpdateSound"
-    def get_input_sockets_field_names(self):
-        return ["condition", "sound", "location", "orientation",
-                "velocity", "pitch", "volume", "attenuation",
-                "distance_ref", "distance_max"]
-#_nodes.append(NLActionUpdateSound)
+_nodes.append(NLActionPauseSound)
 
 
 class NLActionEndGame(bpy.types.Node, NLActionNode):

@@ -8594,60 +8594,6 @@ class ActionStartSound(ActionCell):
         self.done = True
 
 
-class ActionUpdateSound(ActionCell):
-    def __init__(self):
-        ActionCell.__init__(self)
-        self.condition = None
-        self.sound = None
-        self.location = None
-        self.orientation = None
-        self.velocity = None
-        self.pitch = None
-        self.volume = None
-        self.attenuation = None
-        self.distance_ref = None
-        self.distance_max = None
-        self._euler = mathutils.Euler((0, 0, 0), "XYZ")
-
-    def evaluate(self):
-        condition = self.get_parameter_value(self.condition)
-        if condition is LogicNetworkCell.STATUS_WAITING:
-            return
-        if not condition:
-            self._set_ready()
-            return
-        sound = self.get_parameter_value(self.sound)
-        location = self.get_parameter_value(self.location)
-        orientation = self.get_parameter_value(self.orientation)
-        velocity = self.get_parameter_value(self.velocity)
-        pitch = self.get_parameter_value(self.pitch)
-        volume = self.get_parameter_value(self.volume)
-        attenuation = self.get_parameter_value(self.attenuation)
-        distance_ref = self.get_parameter_value(self.distance_ref)
-        distance_max = self.get_parameter_value(self.distance_max)
-        self._set_ready()
-        if sound is None:
-            return
-        if orientation is not None:
-            if hasattr(orientation, "to_quaternion"):
-                orientation = orientation.to_quaternion()
-            else:  # assume xyz tuple
-                euler = self._euler
-                euler[:] = orientation
-                orientation = euler.to_quaternion()
-        sound.update(
-            location,
-            orientation,
-            velocity,
-            pitch,
-            volume,
-            None,
-            attenuation,
-            distance_ref,
-            distance_max
-        )
-
-
 class ActionStopSound(ActionCell):
     def __init__(self):
         ActionCell.__init__(self)
@@ -8668,7 +8614,6 @@ class ActionStopSound(ActionCell):
         if sound is None:
             return
         sound.stop()
-
 
 class ActionStopAllSounds(ActionCell):
     def __init__(self):
