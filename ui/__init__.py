@@ -590,12 +590,12 @@ class BGE_PT_HelpPanel(bpy.types.Panel):
         layout.operator(
             bge_netlogic.ops.NLBGEDocsButton.bl_idname,
             text="Blender Game Engine",
-            icon='MENU_PANEL'
+            icon='FILE_BLEND'
         )
         layout.operator(
             bge_netlogic.ops.NLUPBGEDocsButton.bl_idname,
             text="UPBGE",
-            icon='MENU_PANEL'
+            icon='BLENDER'
         )
         layout.operator(
             bge_netlogic.ops.NLDocsButton.bl_idname,

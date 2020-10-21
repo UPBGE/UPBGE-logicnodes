@@ -4715,6 +4715,7 @@ class NLConditionLogicNetworkStatusNode(bpy.types.Node, NLConditionNode):
     def get_output_socket_varnames(self): return ["IFRUNNING", "IFSTOPPED"]
 _nodes.append(NLConditionLogicNetworkStatusNode)
 
+
 #Actions
 class NLAddObjectActionNode(bpy.types.Node, NLActionNode):
     bl_idname = "NLAddObjectActionNode"
@@ -7055,6 +7056,7 @@ _nodes.append(NLActionMouseLookNode)
 class NLActionPrint(bpy.types.Node, NLActionNode):
     bl_idname = "NLActionPrint"
     bl_label = "Print"
+    bl_icon = 'CONSOLE'
     nl_category = "Utilities"
     
     def init(self, context):
