@@ -461,7 +461,7 @@ def project_vector3(v, xi, yi):
 
 
 def none_or_invalid(ref):
-    if ref is None or ref == '':
+    if ref is None or ref == '' or ref is LogicNetworkCell.STATUS_WAITING:
         return True
     if not hasattr(ref, "invalid"):
         return False
@@ -682,6 +682,7 @@ class AudioSystem(object):
     def __init__(self):
         self.device = None
         self.factories = {}
+        self.listener = bge.logic.getCurrentScene().active_camera
 
     def get_or_create_audio_factory(self, fpath):
         if self.device is None:
@@ -706,7 +707,7 @@ class AudioSystem(object):
             return  # do not update if no sound has been installed
         # update the listener data
         scene = network._owner.scene
-        listener = scene.active_camera
+        self.listener = listener = scene.active_camera
         device.listener_location = listener.worldPosition
         device.listener_orientation = listener.worldOrientation.to_quaternion()
         device.listener_velocity = self.compute_listener_velocity(listener)
@@ -2403,13 +2404,13 @@ class ParameterVector(ParameterCell):
         z = self.get_parameter_value(self.input_z)
         v = self.get_parameter_value(self.input_vector)
         # TODO: zero vector if v is None?
-        if v is not None:
+        if not none_or_invalid(v):
             self.output_vector[:] = v
-        if x is not None:
+        if not none_or_invalid(x):
             self.output_vector.x = x
-        if y is not None:
+        if not none_or_invalid(y):
             self.output_vector.y = y
-        if z is not None:
+        if not none_or_invalid(z):
             self.output_vector.z = z
         self._set_value(self.output_vector)
 
@@ -2429,9 +2430,9 @@ class ParameterVector2Simple(ParameterCell):
         self._set_ready()
         x = self.get_parameter_value(self.input_x)
         y = self.get_parameter_value(self.input_y)
-        if x is not None:
+        if not none_or_invalid(x):
             self.output_vector.x = x
-        if y is not None:
+        if not none_or_invalid(y):
             self.output_vector.y = y
         self._set_value(self.output_vector)
 
@@ -2550,11 +2551,11 @@ class ParameterVector3Simple(ParameterCell):
         x = self.get_parameter_value(self.input_x)
         y = self.get_parameter_value(self.input_y)
         z = self.get_parameter_value(self.input_z)
-        if x is not None:
+        if not none_or_invalid(x):
             self.output_vector.x = x
-        if y is not None:
+        if not none_or_invalid(y):
             self.output_vector.y = y
-        if z is not None:
+        if not none_or_invalid(z):
             self.output_vector.z = z
         self._set_value(self.output_vector)
 
@@ -4399,36 +4400,29 @@ class ActionClampedAddToGameObjectGameProperty(ActionCell):
 
     def evaluate(self):
         self.done = False
-        STATUS_WAITING = LogicNetworkCell.STATUS_WAITING
-        condition_value = self.get_parameter_value(self.condition)
-        if condition_value is STATUS_WAITING:
+        condition = self.get_parameter_value(self.condition)
+        if none_or_invalid(condition) or not condition:
             return
-        if condition_value is False:
-            self._set_ready()
-            return
-        game_object_value = self.get_parameter_value(self.game_object)
-        property_name_value = self.get_parameter_value(self.property_name)
-        property_value_value = self.get_parameter_value(self.property_value)
+        game_object = self.get_parameter_value(self.game_object)
+        property_name = self.get_parameter_value(self.property_name)
+        property_value = self.get_parameter_value(self.property_value)
         val_range = self.get_parameter_value(self.range)
-        if game_object_value is STATUS_WAITING:
+        if none_or_invalid(game_object):
             return
-        if property_name_value is STATUS_WAITING:
+        if none_or_invalid(property_name):
             return
-        if property_value_value is STATUS_WAITING:
+        if none_or_invalid(property_value):
             return
         self._set_ready()
-        if none_or_invalid(game_object_value):
-            return
-        if condition_value:
-            value = game_object_value[property_name_value]
-            new_val = value + property_value_value
-            if new_val > val_range.y:
-                new_val = val_range.y
-            if new_val < val_range.x:
-                new_val = val_range.x
-            game_object_value[property_name_value] = (
-                new_val
-            )
+        value = game_object[property_name]
+        new_val = value + property_value
+        if new_val > val_range.y:
+            new_val = val_range.y
+        if new_val < val_range.x:
+            new_val = val_range.x
+        game_object[property_name] = (
+            new_val
+        )
         self.done = True
 
 
@@ -4593,6 +4587,7 @@ class ActionMouseLook(ActionCell):
         self.cap_y = None
         self.done = None
         self.OUT = LogicNetworkSubCell(self, self.get_done)
+        self.use_local_head = False
 
     def get_done(self):
         return self.done
@@ -4607,6 +4602,8 @@ class ActionMouseLook(ActionCell):
         game_object_y = self.get_parameter_value(self.game_object_y)
         if none_or_invalid(game_object_y):
             game_object_y = self.get_x_obj()
+        else:
+            self.use_local_head = True
         return game_object_y
 
     def evaluate(self):
@@ -4646,31 +4643,31 @@ class ActionMouseLook(ActionCell):
         offset *= sensitivity
 
         if use_cap_z:
-            objectRotation = game_object_x.worldOrientation.to_euler()
+            objectRotation = game_object_x.localOrientation.to_euler()
 
             if objectRotation.z + offset.x > uppercapX:
                 offset.x = 0
                 objectRotation.z = uppercapX
-                game_object_x.worldOrientation = objectRotation.to_matrix()
+                game_object_x.localOrientation = objectRotation.to_matrix()
 
             if objectRotation.z + offset.x < lowercapX:
                 offset.x = 0
                 objectRotation.z = lowercapX
-                game_object_x.worldOrientation = objectRotation.to_matrix()
+                game_object_x.localOrientation = objectRotation.to_matrix()
 
-        game_object_x.applyRotation((0, 0, offset.x), False)
+        game_object_x.applyRotation((0, 0, offset.x), self.use_local_head)
 
         if use_cap_y:
-            objectRotation = game_object_y.worldOrientation.to_euler()
+            objectRotation = game_object_y.localOrientation.to_euler()
 
             if objectRotation.y + offset.y > uppercapY:
                 objectRotation.y = uppercapY
-                game_object_y.worldOrientation = objectRotation.to_matrix()
+                game_object_y.localOrientation = objectRotation.to_matrix()
                 offset.y = 0
 
             if objectRotation.y + offset.y < lowercapY:
                 objectRotation.y = lowercapY
-                game_object_y.worldOrientation = objectRotation.to_matrix()
+                game_object_y.localOrientation = objectRotation.to_matrix()
                 offset.y = 0
 
         game_object_y.applyRotation((0, (offset.y), 0), True)
@@ -4740,14 +4737,19 @@ class ActionCreateVehicle(ActionCell):
         self.friction = None
         self.done = None
         self.vehicle = None
+        self.wheels = None
         self.OUT = LogicNetworkSubCell(self, self.get_done)
         self.VEHICLE = LogicNetworkSubCell(self, self.get_vehicle)
+        self.WHEELS = LogicNetworkSubCell(self, self.get_wheels)
 
     def get_done(self):
         return self.done
 
     def get_vehicle(self):
         return self.vehicle
+
+    def get_wheels(self):
+        return self.wheels
 
     def evaluate(self):
         self.done = False
@@ -4784,6 +4786,7 @@ class ActionCreateVehicle(ActionCell):
         axle_dir = mathutils.Vector((0, -1, 0))
         wheels_steering = bpy.data.collections[wheels_steering]
         wheels = bpy.data.collections[wheels]
+
         for wheel in wheels_steering.objects:
             wheel = check_game_object(wheel.name)
             car.addWheel(
@@ -4811,6 +4814,94 @@ class ActionCreateVehicle(ActionCell):
             car.setSuspensionDamping(damping, wheel)
             car.setTyreFriction(friction, wheel)
         self.vehicle = car
+        self.done = True
+
+
+class ActionCreateVehicleFromParent(ActionCell):
+    def __init__(self):
+        ActionCell.__init__(self)
+        self.condition = None
+        self.game_object = None
+        self.suspension = None
+        self.stiffness = None
+        self.damping = None
+        self.friction = None
+        self.done = None
+        self.vehicle = None
+        self.wheels = None
+        self.OUT = LogicNetworkSubCell(self, self.get_done)
+        self.VEHICLE = LogicNetworkSubCell(self, self.get_vehicle)
+        self.WHEELS = LogicNetworkSubCell(self, self.get_wheels)
+
+    def get_done(self):
+        return self.done
+
+    def get_vehicle(self):
+        return self.vehicle
+
+    def get_wheels(self):
+        return self.wheels
+
+    def evaluate(self):
+        self.done = False
+        condition_value = self.get_parameter_value(self.condition)
+        if condition_value is LogicNetworkCell.STATUS_WAITING:
+            return
+        if not condition_value:
+            return
+        game_object = self.get_parameter_value(self.game_object)
+        if game_object is LogicNetworkCell.STATUS_WAITING:
+            return
+        suspension = self.get_parameter_value(self.suspension)
+        if suspension is LogicNetworkCell.STATUS_WAITING:
+            return
+        stiffness = self.get_parameter_value(self.stiffness)
+        if stiffness is LogicNetworkCell.STATUS_WAITING:
+            return
+        damping = self.get_parameter_value(self.damping)
+        if damping is LogicNetworkCell.STATUS_WAITING:
+            return
+        friction = self.get_parameter_value(self.friction)
+        if friction is LogicNetworkCell.STATUS_WAITING:
+            return
+        self._set_ready()
+        ph_id = game_object.getPhysicsId()
+        car = bge.constraints.createVehicle(ph_id)
+        down = mathutils.Vector((0, 0, -1))
+        axle_dir = game_object.getAxisVect(mathutils.Vector((0, -1, 0)))
+        wheels = []
+        cs = sorted(game_object.children, key=lambda c: c.name)
+        for c in cs:
+            if 'FWheel' in c.name:
+                c.removeParent()
+                car.addWheel(
+                    c,
+                    c.worldPosition - game_object.worldPosition,
+                    down,
+                    axle_dir,
+                    suspension,
+                    abs(c.worldScale.x/2),
+                    True
+                )
+                wheels.append(c)
+            elif 'RWheel' in c.name:
+                c.removeParent()
+                car.addWheel(
+                    c,
+                    c.worldPosition - game_object.worldPosition,
+                    down,
+                    axle_dir,
+                    suspension,
+                    abs(c.worldScale.x/2),
+                    False
+                )
+                wheels.append(c)
+        for wheel in range(car.getNumWheels()):
+            car.setSuspensionStiffness(stiffness, wheel)
+            car.setSuspensionDamping(damping, wheel)
+            car.setTyreFriction(friction, wheel)
+        self.vehicle = car
+        self.wheels = wheels
         self.done = True
 
 
@@ -7437,6 +7528,57 @@ class ActionSaveVariable(ActionCell):
         self.done = True
 
 
+class ActionSaveVariables(ActionCell):
+    def __init__(self):
+        ActionCell.__init__(self)
+        self.condition = None
+        self.val = None
+        self.path = ''
+        self.done = None
+        self.OUT = LogicNetworkSubCell(self, self.get_done)
+
+    def get_done(self):
+        return self.done
+
+    def write_to_json(self, path, val):
+        path = path + 'variables.json'
+        if os.path.isfile(path):
+            f = open(path, 'w')
+            json.dump(val, f, indent=2)
+        else:
+            debug('file does not exist - creating...')
+            f = open(path, 'w')
+            json.dump(val, f, indent=2)
+        f.close()
+
+    def get_custom_path(self, path):
+        if not path.endswith('/'):
+            path = path + '/'
+        if path.startswith('./'):
+            path = path.split('./', 1)[-1]
+            return bpy.path.abspath('//' + path)
+        return path
+
+    def evaluate(self):
+        self.done = False
+        condition = self.get_parameter_value(self.condition)
+        if condition is LogicNetworkCell.STATUS_WAITING:
+            return
+        if not condition:
+            return
+        val = self.get_parameter_value(self.val)
+        if val is LogicNetworkCell.STATUS_WAITING:
+            return
+        self._set_ready()
+
+        cust_path = self.get_custom_path(self.path)
+        path = bpy.path.abspath('//Data/') if self.path == '' else cust_path
+        os.makedirs(path, exist_ok=True)
+
+        self.write_to_json(path, val)
+        self.done = True
+
+
 class ActionLoadVariable(ActionCell):
     def __init__(self):
         ActionCell.__init__(self)
@@ -7493,6 +7635,58 @@ class ActionLoadVariable(ActionCell):
         os.makedirs(path, exist_ok=True)
 
         self.read_from_json(path, name)
+        self.done = True
+
+
+class ActionLoadVariables(ActionCell):
+    def __init__(self):
+        ActionCell.__init__(self)
+        self.condition = None
+        self.path = ''
+        self.var = None
+        self.done = None
+        self.OUT = LogicNetworkSubCell(self, self.get_done)
+        self.VAR = LogicNetworkSubCell(self, self.get_var)
+
+    def get_done(self):
+        return self.done
+
+    def get_var(self):
+        return self.var
+
+    def read_from_json(self, path):
+        self.done = False
+        path = path + 'variables.json'
+        if not os.path.isfile(path):
+            debug('No Saved Variables!')
+            return
+        f = open(path, 'r')
+        data = json.load(f)
+        self.var = data
+        f.close()
+
+    def get_custom_path(self, path):
+        if not path.endswith('/'):
+            path = path + '/'
+        if path.startswith('./'):
+            path = path.split('./', 1)[-1]
+            return bpy.path.abspath('//' + path)
+        return path
+
+    def evaluate(self):
+        self.done = False
+        condition = self.get_parameter_value(self.condition)
+        if condition is LogicNetworkCell.STATUS_WAITING:
+            return
+        if condition is False:
+            return
+        self._set_ready()
+        cust_path = self.get_custom_path(self.path)
+
+        path = bpy.path.abspath('//Data/') if self.path == '' else cust_path
+        os.makedirs(path, exist_ok=True)
+
+        self.read_from_json(path)
         self.done = True
 
 
@@ -8195,24 +8389,59 @@ class ActionFindScene(ActionCell):
         self.done = True
 
 
-class ActionStartSound(ActionCell):
+class ActionStart3DSound(ActionCell):
     def __init__(self):
         ActionCell.__init__(self)
         self.condition = None
         self.sound = None
         self.loop_count = None
         self.location = None
-        # self.orientation = None
-        # self.velocity = None
         self.pitch = None
         self.volume = None
         self.attenuation = None
         self.distance_ref = None
         self.distance_max = None
-        self._euler = mathutils.Euler((0, 0, 0), "XYZ")
         self._prev_loop_count = None
+        self.done = None
+        self._handle = None
+        self._cam_prev = {}
+        self.DONE = LogicNetworkSubCell(self, self.get_done)
+        self.HANDLE = LogicNetworkSubCell(self, self.get_handle)
+
+    def get_handle(self):
+        return self._handle
+
+    def get_done(self):
+        return self.done
+
+    def get_local_location(self, loc, c):
+        cpos = c.worldPosition
+        cori = c.worldOrientation.to_euler()
+        self._cam_prev = {
+            'pos': cpos,
+            'ori': cori
+        }
+
+        # return mathutils.Vector((
+        #     -cpos.x * cori.x,
+        #     -cpos.y * cori.y,
+        #     -cpos.z * cori.z,
+        # ))
+
+        return loc
 
     def evaluate(self):
+        self.done = False
+        c = self.network.audio_system.listener
+        location = self.get_parameter_value(self.location)
+        if self._cam_prev:
+            if (
+                c.worldPosition != self._cam_prev['pos'] or
+                c.worldOrientation.to_euler != self._cam_prev['ori']
+            ):
+                if self._handle:
+                    self._handle.location = self.get_local_location(location, c)
+                return
         condition = self.get_parameter_value(self.condition)
         if condition is LogicNetworkCell.STATUS_WAITING:
             return
@@ -8220,11 +8449,6 @@ class ActionStartSound(ActionCell):
             self._set_ready()
             return
         sound = self.get_parameter_value(self.sound)
-        location = self.get_parameter_value(self.location)
-        # orientation = self.get_parameter_value(self.orientation)
-        orientation = mathutils.Euler((0, 0, 0), 'XYZ')
-        velocity = mathutils.Vector((0, 0, 0))
-        # velocity = self.get_parameter_value(self.velocity)
         pitch = self.get_parameter_value(self.pitch)
         loop_count = self.get_parameter_value(self.loop_count)
         volume = self.get_parameter_value(self.volume)
@@ -8232,30 +8456,28 @@ class ActionStartSound(ActionCell):
         distance_ref = self.get_parameter_value(self.distance_ref)
         distance_max = self.get_parameter_value(self.distance_max)
         self._set_ready()
-        if sound is None:
+
+        if none_or_invalid(sound):
             return
-        if orientation is not None:
-            if hasattr(orientation, "to_quaternion"):
-                orientation = orientation.to_quaternion()
-            else:  # assume xyz tuple
-                euler = self._euler
-                euler[:] = orientation
-                orientation = euler.to_quaternion()
-        if loop_count != self._prev_loop_count:
-            self._prev_loop_count = loop_count
+        if not hasattr(bpy.types.Scene, 'aud_devices'):
+            bpy.types.Scene.aud_devices = devs = {
+                'default3D': aud.Device(),
+                'defaultMusic': aud.Device()
+            }
         else:
-            loop_count = None
-        sound.play(
-            location,
-            orientation,
-            velocity,
-            pitch,
-            volume,
-            loop_count,
-            attenuation,
-            distance_ref,
-            distance_max
-        )
+            devs = bpy.types.Scene.aud_devices
+        soundpath = bge.logic.expandPath(sound)
+        soundfile = aud.Sound.file(soundpath)
+        handle = self._handle = devs['default3D'].play(soundfile)
+        handle.location = self.get_local_location(location, c)
+        # handle.location = location
+        handle.pitch = pitch
+        handle.loop_count = loop_count - 1
+        handle.volume = volume
+        handle.attenuation = attenuation
+        handle.distance_reference = distance_ref
+        handle.distance_maximum = distance_max
+        self.done = True
 
 
 class ActionUpdateSound(ActionCell):
@@ -8332,6 +8554,26 @@ class ActionStopSound(ActionCell):
         if sound is None:
             return
         sound.stop()
+
+
+class ActionStopAllSounds(ActionCell):
+    def __init__(self):
+        ActionCell.__init__(self)
+        self.condition = None
+
+    def evaluate(self):
+        condition = self.get_parameter_value(self.condition)
+        if condition is LogicNetworkCell.STATUS_WAITING:
+            return
+        if not condition:
+            self._set_ready()
+            return
+        if not hasattr(bpy.types.Scene, 'aud_devices'):
+            debug('No Audio Devices to close.')
+            return
+        self._set_ready()
+        for dev in bpy.types.Scene.aud_devices:
+            bpy.types.Scene.aud_devices[dev].stopAll()
 
 
 class ActionPauseSound(ActionCell):
@@ -9593,7 +9835,7 @@ class ActionReplaceMesh(ActionCell):
         mesh = self.get_parameter_value(self.new_mesh_name)
         display = self.get_parameter_value(self.use_display)
         physics = self.get_parameter_value(self.use_physics)
-        if target is None or target.invalid:
+        if none_or_invalid(target):
             return
         if mesh is None:
             return
@@ -9745,7 +9987,7 @@ class ActionAlignAxisToVector(ActionCell):
         vector = self.get_parameter_value(self.vector)
         axis = self.get_parameter_value(self.axis)
         factor = self.get_parameter_value(self.factor)
-        if (game_object is None) or (game_object.invalid):
+        if none_or_invalid(game_object):
             return
         if vector is None:
             return
