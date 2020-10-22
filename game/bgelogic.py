@@ -461,6 +461,17 @@ def project_vector3(v, xi, yi):
     return mathutils.Vector((v[xi], v[yi]))
 
 
+def stop_all_sounds(a, b):
+    if not hasattr(bpy.types.Scene, 'aud_devices'):
+        return
+    closed_devs = ''
+    for dev in bpy.types.Scene.aud_devices:
+        bpy.types.Scene.aud_devices[dev].stopAll()
+        closed_devs += ' {},'.format(dev)
+    debug('[Logic Nodes] Closing Sound Devices:{}'.format(closed_devs[:-1]))
+    delattr(bpy.types.Scene, 'aud_devices')
+
+
 def none_or_invalid(ref):
     if ref is None or ref == '' or ref is LogicNetworkCell.STATUS_WAITING:
         return True
@@ -683,13 +694,20 @@ class AudioSystem(object):
     def __init__(self):
         self.active_sounds = []
         self.listener = logic.getCurrentScene().active_camera
-        bpy.types.Scene.aud_devices = self.devices = {
-            'default3D': aud.Device(),
-            'default': aud.Device()
-        }
+        debug('[Logic Nodes] Opening Sound Devices: default3D, default')
+        if not hasattr(bpy.types.Scene, 'aud_devices'):
+            bpy.types.Scene.aud_devices = self.devices = {
+                'default3D': aud.Device(),
+                'default': aud.Device()
+            }
+        else:
+            self.devices = bpy.types.Scene.aud_devices
         self.device3D = self.devices['default3D']
         self.device = self.devices['default']
         self.device3D.distance_model = self.get_distance_model(bpy.context.scene.audio_distance_model)
+
+        bpy.app.handlers.game_post.clear()
+        bpy.app.handlers.game_post.append(stop_all_sounds)
 
     def get_distance_model(self, name):
         return {
@@ -700,14 +718,13 @@ class AudioSystem(object):
             'LINEAR': aud.DISTANCE_MODEL_LINEAR,
             'LINEAR_CLAMPED': aud.DISTANCE_MODEL_LINEAR_CLAMPED,
             'NONE': aud.DISTANCE_MODEL_INVALID
-        }[name]
+        }.get(name, aud.DISTANCE_MODEL_INVERSE_CLAMPED)
 
     def update(self, network):
         device = self.device3D
         c = logic.getCurrentScene().active_camera
         self.listener = c
         if not self.active_sounds:
-            debug('No Active Sounds!')
             return  # do not update if no sound has been installed
         # update the listener data
         device.listener_location = c.worldPosition

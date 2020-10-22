@@ -417,15 +417,6 @@ _enum_blend_mode_values = [
 OUTCELL = "__standard_logic_cell_value__"
 
 
-def stop_all_sounds(a, b):
-    if not hasattr(bpy.types.Scene, 'aud_devices'):
-        return
-    for dev in bpy.types.Scene.aud_devices:
-        bpy.types.Scene.aud_devices[dev].stopAll()
-    print('Closing all sound devices...')
-    delattr(bpy.types.Scene, 'aud_devices')
-
-
 def parse_field_value(value_type, value):
     t = value_type
     v = value
@@ -491,8 +482,6 @@ def parse_field_value(value_type, value):
 
 
 def update_tree_code(self, context):
-    bpy.app.handlers.game_post.clear()
-    bpy.app.handlers.game_post.append(stop_all_sounds)
     bge_netlogic.update_current_tree_code()
 
 
