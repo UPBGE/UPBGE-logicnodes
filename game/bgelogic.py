@@ -705,6 +705,8 @@ class AudioSystem(object):
         self.device3D = self.devices['default3D']
         self.device = self.devices['default']
         self.device3D.distance_model = self.get_distance_model(bpy.context.scene.audio_distance_model)
+        self.device3D.speed_of_sound = bpy.context.scene.audio_doppler_speed
+        self.device3D.doppler_factor = bpy.context.scene.audio_doppler_factor
 
         bpy.app.handlers.game_post.clear()
         bpy.app.handlers.game_post.append(stop_all_sounds)
@@ -3146,20 +3148,14 @@ class ConditionCompareVecs(ConditionCell):
         self.param_b = None
 
     def get_vec_val(self, op, a, b, all):
-        if all:
-            if (
-                LOGIC_OPERATORS[op](a.x, b.x) and
-                LOGIC_OPERATORS[op](a.y, b.y) and
-                LOGIC_OPERATORS[op](a.z, b.z)
-            ):
-                return True
-        else:
-            if (
-                LOGIC_OPERATORS[op](a.x, b.x) or
-                LOGIC_OPERATORS[op](a.y, b.y) or
-                LOGIC_OPERATORS[op](a.z, b.z)
-            ):
-                return True
+        if all['x'] and not LOGIC_OPERATORS[op](a.x, b.x):
+                return False
+        if all['y'] and not LOGIC_OPERATORS[op](a.y, b.y):
+                return False
+        if all['z'] and not LOGIC_OPERATORS[op](a.z, b.z):
+                return False
+        
+        return True
 
     def evaluate(self):
         a = self.get_parameter_value(self.param_a)

@@ -179,87 +179,87 @@ _enum_loop_count_values = [
 
 
 _enum_readable_member_names = [
-    ("worldPosition", "World Position", "The World Position of the object"),
-    (
-        "worldOrientation",
-        "World Orientation",
-        "The World Orientation of the object"
-    ),
-    ("worldTransform", "World Transform", "The World Transform of the object"),
-    ("localPosition", "Local Position", "The local position of the object"),
-    (
-        "localOrientation",
-        "Local Orientation",
-        "The local orientation of the object"
-    ),
-    ("localTransform", "Local Transform", "The local transform of the object"),
-    ("worldScale", "Scale", "The global scale of the object"),
-    (
-        "localLinearVelocity",
-        "Local Velocity",
-        "The local linear velocity of the object"
-    ),
-    (
-        "localAngularVelocity",
-        "Local Torque",
-        "The local rotational velocity of the object"
-    ),
-    (
-        "worldLinearVelocity",
-        "World Velocity",
-        "The local linear velocity of the object"
-    ),
-    (
-        "worldAngularVelocity",
-        "World Torque",
-        "The local rotational velocity of the object"
-    ),
-    ("color", "Color", "The solid color of the object"),
     ("name", "Name", "The name of the object"),
+    ("color", "Color", "The solid color of the object"),
     (
         "visible",
         "Visibility",
         "True if the object is set to visible, False if it is set of invisible"
-    )
-]
-
-_enum_writable_member_names = [
-    ("worldPosition", "World Position", "The World Position of the object"),
+    ),
+    ("worldPosition", "Position (Global)", "The World Position of the object"),
+    ("localPosition", "Position (Local)", "The local position of the object"),
     (
         "worldOrientation",
-        "World Orientation",
+        "Rotation (Global)",
         "The World Orientation of the object"
     ),
-    ("worldTransform", "World Transform", "The World Transform of the object"),
-    ("localPosition", "Local Position", "The local position of the object"),
     (
         "localOrientation",
-        "Local Orientation",
+        "Rotation (Local)",
         "The local orientation of the object"
-    ),
-    ("localTransform", "Local Transform", "The local transform of the object"),
-    ("worldScale", "Scale", "The global scale of the object"),
-    (
-        "localLinearVelocity",
-        "Local Velocity",
-        "The local linear velocity of the object"
-    ),
-    (
-        "localAngularVelocity",
-        "Local Torque",
-        "The local rotational velocity of the object"
     ),
     (
         "worldLinearVelocity",
-        "World Velocity",
+        "Velocity (Global)",
+        "The local linear velocity of the object"
+    ),
+    (
+        "localLinearVelocity",
+        "Velocity (Local)",
         "The local linear velocity of the object"
     ),
     (
         "worldAngularVelocity",
-        "World Torque",
+        "Torque (Global)",
         "The local rotational velocity of the object"
     ),
-    ("color", "Color", "The solid color of the object")
+    (
+        "localAngularVelocity",
+        "Torque (Local)",
+        "The local rotational velocity of the object"
+    ),
+    ("worldTransform", "Transform (Global)", "The World Transform of the object"),
+    ("localTransform", "Transform (Local)", "The local transform of the object"),
+    ("worldScale", "Scale", "The global scale of the object")
+]
+
+_enum_writable_member_names = [
+    ("color", "Color", "The solid color of the object"),
+    ("worldPosition", "Position (Global)", "The World Position of the object"),
+    ("localPosition", "Position (Local)", "The local position of the object"),
+    (
+        "worldOrientation",
+        "Rotation (Global)",
+        "The World Orientation of the object"
+    ),
+    (
+        "localOrientation",
+        "Rotation (Local)",
+        "The local orientation of the object"
+    ),
+    (
+        "worldLinearVelocity",
+        "Velocity (Global)",
+        "The local linear velocity of the object"
+    ),
+    (
+        "localLinearVelocity",
+        "Velocity (Local)",
+        "The local linear velocity of the object"
+    ),
+    (
+        "worldAngularVelocity",
+        "Torque (Global)",
+        "The local rotational velocity of the object"
+    ),
+    (
+        "localAngularVelocity",
+        "Torque (Local)",
+        "The local rotational velocity of the object"
+    ),
+    ("worldTransform", "Transform (Global)", "The World Transform of the object"),
+    ("localTransform", "Transform (Local)", "The local transform of the object"),
+    ("worldScale", "Scale", "The global scale of the object")
 ]
 
 _enum_mouse_buttons = [
@@ -1219,9 +1219,9 @@ _sockets.append(NLBooleanSocket)
 class NLXYZSocket(bpy.types.NodeSocket, NetLogicSocketType):
     bl_idname = "NLXYZSocket"
     bl_label = "Boolean"
-    x: bpy.props.BoolProperty(update=update_tree_code)
-    y: bpy.props.BoolProperty(update=update_tree_code)
-    z: bpy.props.BoolProperty(update=update_tree_code)
+    x: bpy.props.BoolProperty(update=update_tree_code, default=True)
+    y: bpy.props.BoolProperty(update=update_tree_code, default=True)
+    z: bpy.props.BoolProperty(update=update_tree_code, default=True)
 
     def draw_color(self, context, node):
         return PARAMETER_SOCKET_COLOR
@@ -1647,7 +1647,7 @@ _sockets.append(NLOptionalRadiansFieldSocket)
 class NLSocketReadableMemberName(bpy.types.NodeSocket, NetLogicSocketType):
     bl_idname = "NLSocketReadableMemberName"
     bl_label = "Att. Name"
-    value: bpy.props.StringProperty(update=update_tree_code)
+    value: bpy.props.StringProperty(update=update_tree_code, default='worldPosition')
 
     def _set_value(self, context):
         t = self.value_type
@@ -4648,8 +4648,7 @@ class NLConditionCompareVecs(bpy.types.Node, NLConditionNode):
     
     def init(self, context):
         NLConditionNode.init(self, context)
-        self.inputs.new(NLBooleanSocket.bl_idname, "Verify For All")
-        self.inputs[-1].value = True
+        self.inputs.new(NLXYZSocket.bl_idname, "")
         self.inputs.new(NLVec3FieldSocket.bl_idname, "Compare This")
         self.inputs.new(NLVec3FieldSocket.bl_idname, "To This")
         self.outputs.new(NLConditionSocket.bl_idname, "If True")
@@ -5279,7 +5278,7 @@ class NLSetObjectAttributeActionNode(bpy.types.Node, NLActionNode):
     bl_idname = "NLSetObjectAttributeActionNode"
     bl_label = "Set Position / Rotation / Scale etc."
     nl_category = "Object Data"
-    value_type: bpy.props.EnumProperty(items=_enum_writable_member_names, update=update_tree_code)
+    value_type: bpy.props.EnumProperty(items=_enum_writable_member_names, update=update_tree_code, default='worldPosition')
 
     def init(self, context):
         NLActionNode.init(self, context)
