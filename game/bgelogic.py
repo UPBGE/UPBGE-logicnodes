@@ -724,6 +724,7 @@ class AudioSystem(object):
 
     def update(self, network):
         device = self.device3D
+        print(self.devices)
         c = logic.getCurrentScene().active_camera
         self.listener = c
         if not self.active_sounds:
@@ -4914,7 +4915,7 @@ class ActionCreateVehicleFromParent(ActionCell):
             car.setSuspensionStiffness(stiffness, wheel)
             car.setSuspensionDamping(damping, wheel)
             car.setTyreFriction(friction, wheel)
-        self.vehicle = car
+        self.vehicle = game_object['vehicle_constraint'] = car
         self.wheels = wheels
         self.done = True
 
@@ -8486,6 +8487,7 @@ class ActionStart3DSoundAdv(ActionCell):
         self.condition = None
         self.sound = None
         self.speaker = None
+        self.device = None
         self.loop_count = None
         self.pitch = None
         self.volume = None
@@ -8528,6 +8530,7 @@ class ActionStart3DSoundAdv(ActionCell):
             self._set_ready()
             return
         sound = self.get_parameter_value(self.sound)
+        device = self.get_parameter_value(self.device)
         pitch = self.get_parameter_value(self.pitch)
         loop_count = self.get_parameter_value(self.loop_count)
         volume = self.get_parameter_value(self.volume)
@@ -8548,7 +8551,9 @@ class ActionStart3DSoundAdv(ActionCell):
             devs = bpy.types.Scene.aud_devices
         soundpath = logic.expandPath(sound)
         soundfile = aud.Sound.file(soundpath)
-        handle = self._handle = devs['default3D'].play(soundfile)
+        if device not in devs:
+            devs[device] = aud.Device()
+        handle = self._handle = devs[device].play(soundfile)
         handle.relative = False
         handle.location = speaker.worldPosition
         handle.velocity = speaker.worldLinearVelocity

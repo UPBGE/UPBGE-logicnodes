@@ -7717,6 +7717,8 @@ class NLActionStart3DSoundAdv(bpy.types.Node, NLActionNode):
         self.inputs.new(NLConditionSocket.bl_idname, "Condition")
         self.inputs.new(NLGameObjectSocket.bl_idname, "Speaker")
         self.inputs.new(NLFilePathSocket.bl_idname, "Sound File")
+        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Device")
+        self.inputs[-1].value = 'default3D'
         self.inputs.new(NLSocketLoopCount.bl_idname, "Mode")
         self.inputs.new(NLFloatFieldSocket.bl_idname, "Pitch")
         self.inputs.new(NLPositiveFloatSocket.bl_idname, "Volume")
@@ -7746,6 +7748,7 @@ class NLActionStart3DSoundAdv(bpy.types.Node, NLActionNode):
             "condition",
             "speaker",
             "sound",
+            "device",
             "loop_count",
             "pitch",
             "volume",
