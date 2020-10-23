@@ -66,6 +66,17 @@ _enum_vector_math_options = [
 ]
 
 
+_enum_distance_models = {
+    ('INVERSE', 'Inverse', ''),
+    ('INVERSE_CLAMPED', 'Inverse Clamped', ''),
+    ('EXPONENT', 'Exponent', ''),
+    ('EXPONENT_CLAMPED', 'Exponent Clamped', ''),
+    ('LINEAR', 'Linear', ''),
+    ('LINEAR_CLAMPED', 'Linear Clamped', ''),
+    ('NONE', 'None', "Don't use a distance model")
+}
+
+
 _enum_constraint_types = [
     (
         "bge.constraints.POINTTOPOINT_CONSTRAINT",
@@ -2169,6 +2180,32 @@ class NLSocketMouseWheelDirection(bpy.types.NodeSocket, NetLogicSocketType):
 
 
 _sockets.append(NLSocketMouseWheelDirection)
+
+
+class NLSocketDistanceModels(bpy.types.NodeSocket, NetLogicSocketType):
+    bl_idname = "NLSocketDistanceModels"
+    bl_label = "Distance Model"
+    value: bpy.props.EnumProperty(
+        items=_enum_distance_models,
+        update=update_tree_code
+    )
+
+    def draw_color(self, context, node):
+        return PARAMETER_SOCKET_COLOR
+
+    def draw(self, context, layout, node, text):
+        if self.is_linked:
+            layout.label(text=text)
+        else:
+            col = layout.column()
+            col.label(text=text)
+            col.prop(self, "value", text="")
+
+    def get_unlinked_value(self):
+        return '"{}"'.format(self.value)
+
+
+_sockets.append(NLSocketDistanceModels)
 
 
 class NLVectorMathSocket(bpy.types.NodeSocket, NetLogicSocketType):
@@ -7668,6 +7705,39 @@ class NLActionSetMouseCursorVisibility(bpy.types.Node, NLActionNode):
     def get_input_sockets_field_names(self):
         return ["condition", "visibility_status"]
 _nodes.append(NLActionSetMouseCursorVisibility)
+
+
+class NLActionAddSoundDevice(bpy.types.Node, NLActionNode):
+    bl_idname = "NLActionAddSoundDevice"
+    bl_label = "New Sound Device"
+    nl_category = "Sound"
+
+    def init(self, context):
+        NLActionNode.init(self, context)
+        self.inputs.new(NLConditionSocket.bl_idname, "Condition")
+        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Name")
+        self.inputs[-1].value = 'custom'
+        self.inputs.new(NLSocketDistanceModels.bl_idname, "Distance Model")
+        self.inputs.new(NLPositiveFloatSocket.bl_idname, "Volume")
+        self.inputs.new(NLPosFloatFormatSocket.bl_idname, "Doppler Factor")
+        self.inputs.new(NLPosFloatFormatSocket.bl_idname, "Speed of Sound")
+        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+
+    def get_output_socket_varnames(self):
+        return ["DONE"]
+
+    def get_netlogic_class_name(self):
+        return "bgelogic.ActionAddSoundDevice"
+    def get_input_sockets_field_names(self):
+        return [
+            "condition",
+            "name",
+            "distance_model",
+            "volume",
+            "doppler_fac",
+            "sound_speed"
+        ]
+_nodes.append(NLActionAddSoundDevice)
 
 
 class NLActionStart3DSound(bpy.types.Node, NLActionNode):

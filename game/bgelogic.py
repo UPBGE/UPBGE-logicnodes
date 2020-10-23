@@ -13,6 +13,16 @@ import operator
 import json
 
 TOO_OLD = bge.app.version < (2, 80, 0)
+DISTANCE_MODELS = {
+    'INVERSE': aud.DISTANCE_MODEL_INVERSE,
+    'INVERSE_CLAMPED': aud.DISTANCE_MODEL_INVERSE_CLAMPED,
+    'EXPONENT': aud.DISTANCE_MODEL_EXPONENT,
+    'EXPONENT_CLAMPED': aud.DISTANCE_MODEL_EXPONENT_CLAMPED,
+    'LINEAR': aud.DISTANCE_MODEL_LINEAR,
+    'LINEAR_CLAMPED': aud.DISTANCE_MODEL_LINEAR_CLAMPED,
+    'NONE': aud.DISTANCE_MODEL_INVALID
+}
+
 
 if not TOO_OLD:
     import bpy
@@ -712,19 +722,10 @@ class AudioSystem(object):
         bpy.app.handlers.game_post.append(stop_all_sounds)
 
     def get_distance_model(self, name):
-        return {
-            'INVERSE': aud.DISTANCE_MODEL_INVERSE,
-            'INVERSE_CLAMPED': aud.DISTANCE_MODEL_INVERSE_CLAMPED,
-            'EXPONENT': aud.DISTANCE_MODEL_EXPONENT,
-            'EXPONENT_CLAMPED': aud.DISTANCE_MODEL_EXPONENT_CLAMPED,
-            'LINEAR': aud.DISTANCE_MODEL_LINEAR,
-            'LINEAR_CLAMPED': aud.DISTANCE_MODEL_LINEAR_CLAMPED,
-            'NONE': aud.DISTANCE_MODEL_INVALID
-        }.get(name, aud.DISTANCE_MODEL_INVERSE_CLAMPED)
+        return DISTANCE_MODELS.get(name, aud.DISTANCE_MODEL_INVERSE_CLAMPED)
 
     def update(self, network):
         device = self.device3D
-        print(self.devices)
         c = logic.getCurrentScene().active_camera
         self.listener = c
         if not self.active_sounds:
@@ -4941,6 +4942,8 @@ class VehicleApplyForce(ActionCell):
         constraint = self.get_parameter_value(self.constraint)
         if constraint is LogicNetworkCell.STATUS_WAITING:
             return
+        if none_or_invalid(constraint):
+            return
         value_type = self.get_parameter_value(self.value_type)
         if value_type is LogicNetworkCell.STATUS_WAITING:
             return
@@ -8410,6 +8413,48 @@ class ActionFindScene(ActionCell):
         self.done = True
 
 
+class ActionAddSoundDevice(ActionCell):
+    def __init__(self):
+        ActionCell.__init__(self)
+        self.condition = None
+        self.name = None
+        self.distance_model = None
+        self.volume = None
+        self.doppler_fac = None
+        self.sound_speed = None
+        self.done = None
+        self.DONE = LogicNetworkSubCell(self, self.get_done)
+
+    def get_done(self):
+        return self.done
+
+    def evaluate(self):
+        self.done = False
+        condition = self.get_parameter_value(self.condition)
+        if not condition or condition is LogicNetworkCell.STATUS_WAITING:
+            return
+        if not hasattr(bpy.types.Scene, 'aud_devices'):
+            debug('No Audio Devices initialized!')
+            return
+        else:
+            devs = bpy.types.Scene.aud_devices
+        name = self.get_parameter_value(self.name)
+        distance_model = self.get_parameter_value(self.distance_model)
+        doppler_fac = self.get_parameter_value(self.doppler_fac)
+        sound_speed = self.get_parameter_value(self.sound_speed)
+        self._set_ready()
+
+        device = aud.Device()
+        device.distance_model = DISTANCE_MODELS.get(
+            distance_model, aud.DISTANCE_MODEL_INVALID
+        )
+        device.doppler_factor = doppler_fac
+        device.speed_of_sound = sound_speed
+        if name not in devs:
+            devs[name] = aud.Device()
+        self.done = True
+
+
 class ActionStart3DSound(ActionCell):
     def __init__(self):
         ActionCell.__init__(self)
@@ -8420,7 +8465,6 @@ class ActionStart3DSound(ActionCell):
         self.pitch = None
         self.volume = None
         self.distance_max = None
-        self._prev_loop_count = None
         self.done = None
         self._handle = None
         self.DONE = LogicNetworkSubCell(self, self.get_done)
@@ -8497,7 +8541,6 @@ class ActionStart3DSoundAdv(ActionCell):
         self.cone_inner_angle = None
         self.cone_outer_angle = None
         self.cone_outer_volume = None
-        self._prev_loop_count = None
         self.done = None
         self._handle = None
         self.DONE = LogicNetworkSubCell(self, self.get_done)
@@ -8579,7 +8622,6 @@ class ActionStartSound(ActionCell):
         self.loop_count = None
         self.pitch = None
         self.volume = None
-        self._prev_loop_count = None
         self.done = None
         self._handle = None
         self.DONE = LogicNetworkSubCell(self, self.get_done)
