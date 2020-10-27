@@ -4796,6 +4796,9 @@ class ActionCreateVehicle(ActionCell):
         if friction is LogicNetworkCell.STATUS_WAITING:
             return
         self._set_ready()
+        orig_ori = game_object.worldOrientation
+        print(game_object)
+        game_object.worldOrientation = mathutils.Euler((0, 0, 0), 'XYZ').to_matrix()
         ph_id = game_object.getPhysicsId()
         car = bge.constraints.createVehicle(ph_id)
         down = mathutils.Vector((0, 0, -1))
@@ -4830,6 +4833,7 @@ class ActionCreateVehicle(ActionCell):
             car.setSuspensionDamping(damping, wheel)
             car.setTyreFriction(friction, wheel)
         self.vehicle = car
+        game_object.worldOrientation = orig_ori
         self.done = True
 
 
@@ -4881,6 +4885,8 @@ class ActionCreateVehicleFromParent(ActionCell):
         if friction is LogicNetworkCell.STATUS_WAITING:
             return
         self._set_ready()
+        orig_ori = game_object.localOrientation.copy()
+        game_object.localOrientation = mathutils.Euler((0, 0, 0), 'XYZ')
         ph_id = game_object.getPhysicsId()
         car = bge.constraints.createVehicle(ph_id)
         down = mathutils.Vector((0, 0, -1))
@@ -4916,6 +4922,7 @@ class ActionCreateVehicleFromParent(ActionCell):
             car.setSuspensionStiffness(stiffness, wheel)
             car.setSuspensionDamping(damping, wheel)
             car.setTyreFriction(friction, wheel)
+        game_object.localOrientation = orig_ori
         self.vehicle = game_object['vehicle_constraint'] = car
         self.wheels = wheels
         self.done = True
@@ -4928,6 +4935,7 @@ class VehicleApplyForce(ActionCell):
         self.condition = None
         self.constraint = None
         self.wheelcount = None
+        self._reset = False
         self.power = None
         self.OUT = LogicNetworkSubCell(self, self.get_done)
 
@@ -4954,11 +4962,14 @@ class VehicleApplyForce(ActionCell):
         if power is LogicNetworkCell.STATUS_WAITING:
             return
         if not condition_value:
-            for wheel in range(constraint.getNumWheels()):
-                constraint.applyEngineForce(0, wheel)
+            if self._reset:
+                for wheel in range(constraint.getNumWheels()):
+                    constraint.applyEngineForce(0, wheel)
+                self._reset = False
             return
         if none_or_invalid(constraint):
             return
+        self._reset = True
         self._set_ready()
         if value_type == 'FRONT':
             for wheel in range(wheelcount):
