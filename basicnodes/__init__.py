@@ -1257,6 +1257,34 @@ class NLXYZSocket(bpy.types.NodeSocket, NetLogicSocketType):
 _sockets.append(NLXYZSocket)
 
 
+class NLInvertedXYSocket(bpy.types.NodeSocket, NetLogicSocketType):
+    bl_idname = "NLInvertedXYSocket"
+    bl_label = "Boolean"
+    x: bpy.props.BoolProperty(update=update_tree_code)
+    y: bpy.props.BoolProperty(update=update_tree_code)
+
+    def draw_color(self, context, node):
+        return PARAMETER_SOCKET_COLOR
+
+    def draw(self, context, layout, node, text):
+        if self.is_linked or self.is_output:
+            layout.label(text=text)
+        else:
+            row = layout.row()
+            row.label(text='Inverted:')
+            row.prop(self, 'x', text="X")
+            row.prop(self, 'y', text="Y")
+
+    def get_unlinked_value(self):
+        return {
+            'x': self.x,
+            'y': self.y
+        }
+
+
+_sockets.append(NLInvertedXYSocket)
+
+
 class NLPositiveFloatSocket(bpy.types.NodeSocket, NetLogicSocketType):
     bl_idname = "NLPositiveFloatSocket"
     bl_label = "Positive Float"
@@ -7298,13 +7326,14 @@ class NLActionMouseLookNode(bpy.types.Node, NLActionNode):
         self.inputs.new(NLConditionSocket.bl_idname, "Condition")
         self.inputs.new(NLGameObjectSocket.bl_idname, "Main Object")
         self.inputs.new(NLGameObjectSocket.bl_idname, "Head (Optional)")
-        self.inputs.new(NLBooleanSocket.bl_idname, "Inverted")
+        self.inputs.new(NLInvertedXYSocket.bl_idname, "")
         self.inputs.new(NLFloatFieldSocket.bl_idname, "Sensitivity")
         self.inputs[-1].value = 1.0
         self.inputs.new(NLBooleanSocket.bl_idname, "Cap Left / Right")
         self.inputs.new(NLVec2PositiveFieldSocket.bl_idname, "")
         self.inputs.new(NLBooleanSocket.bl_idname, "Cap Up / Down")
         self.inputs.new(NLVec2PositiveFieldSocket.bl_idname, "")
+        self.inputs.new(NLSocketAlphaFloat.bl_idname, "Smoothing")
         self.outputs.new(NLConditionSocket.bl_idname, 'Done')
 
     def get_output_socket_varnames(self):
@@ -7314,7 +7343,7 @@ class NLActionMouseLookNode(bpy.types.Node, NLActionNode):
         return "bgelogic.ActionMouseLook"
 
     def get_input_sockets_field_names(self):
-        return ["condition", "game_object_x", "game_object_y", "inverted", "sensitivity", "use_cap_z", "cap_z", "use_cap_y", "cap_y"]
+        return ["condition", "game_object_x", "game_object_y", "inverted", "sensitivity", "use_cap_z", "cap_z", "use_cap_y", "cap_y", 'smooth']
 _nodes.append(NLActionMouseLookNode)
 
 

@@ -4179,15 +4179,7 @@ class ActionAddObject(ActionCell):
             return
         if name_value is None:
             return
-        try:
-            self.obj = scene.addObject(name_value, reference_value, life_value)
-        except ValueError:
-            debug(
-                "ActionAddObject: cannot find {}.".format(
-                    name_value
-                )
-            )
-            return
+        self.obj = scene.addObject(name_value, reference_value, life_value)
         self.done = True
 
 
@@ -4604,12 +4596,18 @@ class ActionMouseLook(ActionCell):
         self.cap_z = None
         self.use_cap_z = None
         self.cap_y = None
+        self.smooth = None
+        self._x = 0
+        self._y = 0
         self.done = None
         self.OUT = LogicNetworkSubCell(self, self.get_done)
         self.use_local_head = False
 
     def get_done(self):
         return self.done
+
+    def interpolate(self, a, b, fac):
+        return (fac * b) + ((1-fac) * a)
 
     def get_x_obj(self):
         game_object_x = self.get_parameter_value(self.game_object_x)
@@ -4645,6 +4643,7 @@ class ActionMouseLook(ActionCell):
         lowercapY = -cap_y.x * caps * 2
         uppercapY = cap_y.y * caps * 2
         inverted = self.get_parameter_value(self.inverted)
+        smooth = 1 - (self.get_parameter_value(self.smooth) * .99)
         self._set_ready()
 
         if none_or_invalid(game_object_x):
@@ -4657,9 +4656,14 @@ class ActionMouseLook(ActionCell):
         mouse_position = mathutils.Vector(self.mouse.position)
         offset = (mouse_position - self.center) * -0.002
 
-        if inverted is False:
+        if inverted.get('y', False) is False:
             offset.y = -offset.y
+        if inverted.get('x', False) is True:
+            offset.x = -offset.x
         offset *= sensitivity
+
+        self._x = offset.x = self.interpolate(self._x, offset.x, smooth)
+        self._y = offset.y = self.interpolate(self._y, offset.y, smooth)
 
         if use_cap_z:
             objectRotation = game_object_x.localOrientation.to_euler()
@@ -4800,7 +4804,6 @@ class ActionCreateVehicle(ActionCell):
             return
         self._set_ready()
         orig_ori = game_object.worldOrientation
-        print(game_object)
         game_object.worldOrientation = mathutils.Euler((0, 0, 0), 'XYZ').to_matrix()
         ph_id = game_object.getPhysicsId()
         car = bge.constraints.createVehicle(ph_id)
