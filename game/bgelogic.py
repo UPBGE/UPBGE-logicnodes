@@ -714,7 +714,10 @@ class AudioSystem(object):
             self.devices = bpy.types.Scene.aud_devices
         self.device3D = self.devices['default3D']
         self.device = self.devices['default']
-        self.device3D.distance_model = self.get_distance_model(bpy.context.scene.audio_distance_model)
+        self.device.distance_model = aud.DISTANCE_MODEL_INVALID
+        self.device3D.distance_model = self.get_distance_model(
+            bpy.context.scene.audio_distance_model
+        )
         self.device3D.speed_of_sound = bpy.context.scene.audio_doppler_speed
         self.device3D.doppler_factor = bpy.context.scene.audio_doppler_factor
 
@@ -4176,15 +4179,7 @@ class ActionAddObject(ActionCell):
             return
         if name_value is None:
             return
-        try:
-            self.obj = scene.addObject(name_value, reference_value, life_value)
-        except ValueError:
-            debug(
-                "ActionAddObject: cannot find {}.".format(
-                    name_value
-                )
-            )
-            return
+        self.obj = scene.addObject(name_value, reference_value, life_value)
         self.done = True
 
 
@@ -4601,12 +4596,18 @@ class ActionMouseLook(ActionCell):
         self.cap_z = None
         self.use_cap_z = None
         self.cap_y = None
+        self.smooth = None
+        self._x = 0
+        self._y = 0
         self.done = None
         self.OUT = LogicNetworkSubCell(self, self.get_done)
         self.use_local_head = False
 
     def get_done(self):
         return self.done
+
+    def interpolate(self, a, b, fac):
+        return (fac * b) + ((1-fac) * a)
 
     def get_x_obj(self):
         game_object_x = self.get_parameter_value(self.game_object_x)
@@ -4642,6 +4643,7 @@ class ActionMouseLook(ActionCell):
         lowercapY = -cap_y.x * caps * 2
         uppercapY = cap_y.y * caps * 2
         inverted = self.get_parameter_value(self.inverted)
+        smooth = 1 - (self.get_parameter_value(self.smooth) * .99)
         self._set_ready()
 
         if none_or_invalid(game_object_x):
@@ -4654,9 +4656,14 @@ class ActionMouseLook(ActionCell):
         mouse_position = mathutils.Vector(self.mouse.position)
         offset = (mouse_position - self.center) * -0.002
 
-        if inverted is False:
+        if inverted.get('y', False) is False:
             offset.y = -offset.y
+        if inverted.get('x', False) is True:
+            offset.x = -offset.x
         offset *= sensitivity
+
+        self._x = offset.x = self.interpolate(self._x, offset.x, smooth)
+        self._y = offset.y = self.interpolate(self._y, offset.y, smooth)
 
         if use_cap_z:
             objectRotation = game_object_x.localOrientation.to_euler()
@@ -4796,6 +4803,8 @@ class ActionCreateVehicle(ActionCell):
         if friction is LogicNetworkCell.STATUS_WAITING:
             return
         self._set_ready()
+        orig_ori = game_object.worldOrientation
+        game_object.worldOrientation = mathutils.Euler((0, 0, 0), 'XYZ').to_matrix()
         ph_id = game_object.getPhysicsId()
         car = bge.constraints.createVehicle(ph_id)
         down = mathutils.Vector((0, 0, -1))
@@ -4830,6 +4839,7 @@ class ActionCreateVehicle(ActionCell):
             car.setSuspensionDamping(damping, wheel)
             car.setTyreFriction(friction, wheel)
         self.vehicle = car
+        game_object.worldOrientation = orig_ori
         self.done = True
 
 
@@ -4881,6 +4891,8 @@ class ActionCreateVehicleFromParent(ActionCell):
         if friction is LogicNetworkCell.STATUS_WAITING:
             return
         self._set_ready()
+        orig_ori = game_object.localOrientation.copy()
+        game_object.localOrientation = mathutils.Euler((0, 0, 0), 'XYZ')
         ph_id = game_object.getPhysicsId()
         car = bge.constraints.createVehicle(ph_id)
         down = mathutils.Vector((0, 0, -1))
@@ -4916,6 +4928,7 @@ class ActionCreateVehicleFromParent(ActionCell):
             car.setSuspensionStiffness(stiffness, wheel)
             car.setSuspensionDamping(damping, wheel)
             car.setTyreFriction(friction, wheel)
+        game_object.localOrientation = orig_ori
         self.vehicle = game_object['vehicle_constraint'] = car
         self.wheels = wheels
         self.done = True
@@ -4928,6 +4941,7 @@ class VehicleApplyForce(ActionCell):
         self.condition = None
         self.constraint = None
         self.wheelcount = None
+        self._reset = False
         self.power = None
         self.OUT = LogicNetworkSubCell(self, self.get_done)
 
@@ -4954,11 +4968,14 @@ class VehicleApplyForce(ActionCell):
         if power is LogicNetworkCell.STATUS_WAITING:
             return
         if not condition_value:
-            for wheel in range(constraint.getNumWheels()):
-                constraint.applyEngineForce(0, wheel)
+            if self._reset:
+                for wheel in range(constraint.getNumWheels()):
+                    constraint.applyEngineForce(0, wheel)
+                self._reset = False
             return
         if none_or_invalid(constraint):
             return
+        self._reset = True
         self._set_ready()
         if value_type == 'FRONT':
             for wheel in range(wheelcount):
