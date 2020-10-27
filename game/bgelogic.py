@@ -714,7 +714,10 @@ class AudioSystem(object):
             self.devices = bpy.types.Scene.aud_devices
         self.device3D = self.devices['default3D']
         self.device = self.devices['default']
-        self.device3D.distance_model = self.get_distance_model(bpy.context.scene.audio_distance_model)
+        self.device.distance_model = aud.DISTANCE_MODEL_INVALID
+        self.device3D.distance_model = self.get_distance_model(
+            bpy.context.scene.audio_distance_model
+        )
         self.device3D.speed_of_sound = bpy.context.scene.audio_doppler_speed
         self.device3D.doppler_factor = bpy.context.scene.audio_doppler_factor
 
