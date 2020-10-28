@@ -9571,35 +9571,18 @@ class ActionRotateTo(ActionCell):
 
     def evaluate(self):
         self._set_value(False)
-        STATUS_WAITING = LogicNetworkCell.STATUS_WAITING
         condition = self.get_parameter_value(self.condition)
-        if condition is STATUS_WAITING:
+        if is_invalid(condition):
             return
-        if not condition:
-            return self._set_ready()
         moving_object = self.get_parameter_value(self.moving_object)
         target_point = self.get_parameter_value(self.target_point)
+        if hasattr(target_point, 'worldPosition'):
+            target_point = target_point.worldPosition
         rot_axis = self.get_parameter_value(self.rot_axis)
         front_axis = self.get_parameter_value(self.front_axis)
-        if moving_object is STATUS_WAITING:
-            return
-        if target_point is STATUS_WAITING:
-            return
-        if rot_axis is STATUS_WAITING:
-            return
-        if front_axis is STATUS_WAITING:
+        if is_waiting(moving_object, target_point, rot_axis, front_axis):
             return
         self._set_ready()
-        if not condition:
-            return
-        if none_or_invalid(moving_object):
-            return
-        if none_or_invalid(target_point):
-            return
-        if rot_axis is None:
-            return
-        if front_axis is None:
-            return
         if rot_axis == 0:
             self._set_value(
                 xrot_to(

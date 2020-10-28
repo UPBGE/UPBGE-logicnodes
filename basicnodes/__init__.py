@@ -6115,16 +6115,14 @@ class NLActionApplyImpulse(bpy.types.Node, NLActionNode):
     bl_idname = "NLActionApplyImpulse"
     bl_label = "Apply Impulse"
     nl_category = "Transformation"
-    local: bpy.props.BoolProperty(default=True, update=update_tree_code)
+    local: bpy.props.BoolProperty(default=False, update=update_tree_code)
 
     def init(self, context):
         NLActionNode.init(self, context)
-        tools.register_inputs(
-            self,
-            NLConditionSocket, "Condition",
-            NLGameObjectSocket, "Object",
-            NLVec3FieldSocket, "Point",
-            NLVec3FieldSocket, "Impulse")
+        self.inputs.new(NLConditionSocket.bl_idname, 'Condition')
+        self.inputs.new(GameObjectSocket.bl_idname, 'Object')
+        self.inputs.new(NLVec3FieldSocket.bl_idname, 'Point')
+        self.inputs.new(NLVec3FieldSocket.bl_idname, 'Direction')
         
         self.outputs.new(NLConditionSocket.bl_idname, 'Done')
 
