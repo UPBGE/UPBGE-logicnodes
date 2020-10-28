@@ -3742,8 +3742,6 @@ class NLParameterPythonModuleFunction(bpy.types.Node, NLActionNode):
         self.inputs.new(NLListSocket.bl_idname, "Argument")
         self.outputs.new(NLConditionSocket.bl_idname, "Done")
         self.outputs.new(NLParameterSocket.bl_idname, "Returned Value")
-        self.use_custom_color = True
-        self.color = PYTHON_NODE_COLOR
 
     def get_netlogic_class_name(self):
         return "bgelogic.ParameterPythonModuleFunction"
@@ -5771,13 +5769,18 @@ _nodes.append(NLInitEmptyList)
 
 class NLInitNewList(bpy.types.Node, NLActionNode):
     bl_idname = "NLInitNewList"
-    bl_label = "- LIST: Init From Item"
+    bl_label = "- LIST: From Items"
     nl_category = "Python"
 
     def init(self, context):
         NLActionNode.init(self, context)
         self.inputs.new(NLPseudoConditionSocket.bl_idname, 'Condition')
-        self.inputs.new(NLValueFieldSocket.bl_idname, '')
+        self.inputs.new(NLParameterSocket.bl_idname, 'Item 1')
+        self.inputs.new(NLParameterSocket.bl_idname, 'Item 2')
+        self.inputs.new(NLParameterSocket.bl_idname, 'Item 3')
+        self.inputs.new(NLParameterSocket.bl_idname, 'Item 4')
+        self.inputs.new(NLParameterSocket.bl_idname, 'Item 5')
+        self.inputs.new(NLParameterSocket.bl_idname, 'Item 6')
         self.outputs.new(NLConditionSocket.bl_idname, 'Done')
         self.outputs.new(NLListSocket.bl_idname, 'List')
 
@@ -5785,7 +5788,7 @@ class NLInitNewList(bpy.types.Node, NLActionNode):
         return ["OUT", 'LIST']
 
     def get_netlogic_class_name(self): return "bgelogic.InitNewList"
-    def get_input_sockets_field_names(self): return ["condition", 'value']
+    def get_input_sockets_field_names(self): return ["condition", 'value', 'value2', 'value3', 'value4', 'value5', 'value6',]
 
 
 _nodes.append(NLInitNewList)

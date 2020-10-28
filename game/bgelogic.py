@@ -30,17 +30,6 @@ if not TOO_OLD:
 
 # Persistent maps
 
-def debug(value):
-    if bpy.context.scene.game_settings.show_fullscreen:
-        return
-    if TOO_OLD:
-        return
-    if not bpy.context.scene.logic_node_settings.use_node_debug:
-        return
-    else:
-        print(value)
-
-
 class SimpleLoggingDatabase(object):
     class LineBuffer(object):
         def __init__(self, buffer=[]):
@@ -288,6 +277,35 @@ def compute_distance(parama, paramb):
     va = mathutils.Vector(parama)
     vb = mathutils.Vector(paramb)
     return (va - vb).length
+
+
+def debug(value):
+    if bpy.context.scene.game_settings.show_fullscreen:
+        return
+    if TOO_OLD:
+        return
+    if not bpy.context.scene.logic_node_settings.use_node_debug:
+        return
+    else:
+        print(value)
+
+
+def is_waiting(*args):
+    if LogicNetworkCell.STATUS_WAITING in args:
+        debug('IsWaiting')
+        return True
+    return False
+
+
+def is_invalid(*args):
+    if (
+        LogicNetworkCell.STATUS_WAITING in args or
+        None in args or
+        False in args
+    ):
+        debug('IsInvalid')
+        return True
+    return False
 
 
 def xrot_to(
@@ -6117,6 +6135,11 @@ class InitNewList(ActionCell):
         ActionCell.__init__(self)
         self.condition = None
         self.value = None
+        self.value2 = None
+        self.value3 = None
+        self.value4 = None
+        self.value5 = None
+        self.value6 = None
         self.list = None
         self.done = None
         self.OUT = LogicNetworkSubCell(self, self.get_done)
@@ -6136,10 +6159,18 @@ class InitNewList(ActionCell):
         if not condition:
             return
         value = self.get_parameter_value(self.value)
-        if value is LogicNetworkCell.STATUS_WAITING:
-            return
+        value2 = self.get_parameter_value(self.value2)
+        value3 = self.get_parameter_value(self.value3)
+        value4 = self.get_parameter_value(self.value4)
+        value5 = self.get_parameter_value(self.value5)
+        value6 = self.get_parameter_value(self.value6)
+        values = [value, value2, value3, value4, value5, value6]
+        self.list = []
+        for val in values:
+            if not is_waiting(val) and not none_or_invalid(val):
+                self.list.append(val)
+
         self._set_ready()
-        self.list = [value]
         self.done = True
 
 
@@ -7132,22 +7163,15 @@ class ActionApplyForce(ActionCell):
     def evaluate(self):
         self.done = False
         condition = self.get_parameter_value(self.condition)
-        if condition is LogicNetworkCell.STATUS_WAITING:
-            return
-        if not condition:
+        if is_invalid(condition):
             return
         game_object = self.get_parameter_value(self.game_object)
-        if game_object is LogicNetworkCell.STATUS_WAITING:
-            return
         force = self.get_parameter_value(self.force)
         local = self.local
-        if force is LogicNetworkCell.STATUS_WAITING:
+        if is_waiting(game_object, force):
             return
         self._set_ready()
-        if none_or_invalid(game_object):
-            return
-        if force:
-            game_object.applyForce(force, local)
+        game_object.applyForce(force, local)
         self.done = True
 
 
@@ -7167,23 +7191,17 @@ class ActionApplyImpulse(ActionCell):
     def evaluate(self):
         self.done = False
         condition = self.get_parameter_value(self.condition)
-        if condition is LogicNetworkCell.STATUS_WAITING:
-            return
-        if not condition:
+        if is_invalid(condition):
             return
         game_object = self.get_parameter_value(self.game_object)
-        if game_object is LogicNetworkCell.STATUS_WAITING:
-            return
         point = self.get_parameter_value(self.point)
-        if point is LogicNetworkCell.STATUS_WAITING:
-            return
         impulse = self.get_parameter_value(self.impulse)
-        if impulse is LogicNetworkCell.STATUS_WAITING:
-            return
         local = self.local
-        self._set_ready()
-        if none_or_invalid(game_object):
+        if hasattr(point, 'worldPosition'):
+            point = point.worldPosition
+        if is_waiting(game_object, point, impulse):
             return
+        self._set_ready()
         if impulse:
             game_object.applyImpulse(point, impulse, local)
         self.done = True
@@ -9441,36 +9459,24 @@ class ActionMoveTo(ActionCell):
 
     def evaluate(self):  # the actual execution of this cell
         condition = self.get_parameter_value(self.condition)
-        STATUS_WAITING = LogicNetworkCell.STATUS_WAITING
-        if condition is STATUS_WAITING:
-            return self._set_value(False)
-        if not condition:
-            self._set_value(False)
-            return self._set_ready()
+        if is_invalid(condition):
+            return
         moving_object = self.get_parameter_value(self.moving_object)
         destination_point = self.get_parameter_value(self.destination_point)
         speed = self.get_parameter_value(self.speed)
         distance = self.get_parameter_value(self.distance)
         dynamic = self.get_parameter_value(self.dynamic)
-        if moving_object is STATUS_WAITING:
-            return
-        if destination_point is STATUS_WAITING:
-            return
-        if speed is STATUS_WAITING:
-            return
-        if distance is STATUS_WAITING:
-            return
-        if dynamic is STATUS_WAITING:
+        if hasattr(destination_point, 'worldPosition'):
+            destination_point = destination_point.worldPosition
+        if is_waiting(
+            moving_object,
+            destination_point,
+            speed,
+            distance,
+            dynamic
+        ):
             return
         self._set_ready()
-        if none_or_invalid(moving_object):
-            return self._set_value(False)
-        if none_or_invalid(destination_point):
-            return self._set_value(False)
-        if speed is None:
-            return self._set_value(False)
-        if distance is None:
-            return self._set_value(False)
         self._set_value(move_to(
             moving_object,
             destination_point,
