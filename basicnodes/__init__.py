@@ -3560,8 +3560,8 @@ class NLInterpolateValueNode(bpy.types.Node, NLParameterNode):
 
     def init(self, context):
         NLParameterNode.init(self, context)
-        self.inputs.new(NLFloatFieldSocket.bl_idname, "A")
-        self.inputs.new(NLFloatFieldSocket.bl_idname, "B")
+        self.inputs.new(NLFloatFieldSocket.bl_idname, "From")
+        self.inputs.new(NLFloatFieldSocket.bl_idname, "To")
         self.inputs.new(NLSocketAlphaFloat.bl_idname, "Factor")
         self.outputs.new(NLParameterSocket.bl_idname, "Value")
 
@@ -5178,7 +5178,7 @@ if not TOO_OLD:
 
 class NLVehicleApplyEngineForce(bpy.types.Node, NLActionNode):
     bl_idname = "NLVehicleApplyEngineForce"
-    bl_label = "Apply Engine Force"
+    bl_label = "Accelerate"
     nl_category = "Vehicle"
     value_type: bpy.props.EnumProperty(items=_enum_vehicle_axis, update=update_tree_code)
 
@@ -6120,7 +6120,7 @@ class NLActionApplyImpulse(bpy.types.Node, NLActionNode):
     def init(self, context):
         NLActionNode.init(self, context)
         self.inputs.new(NLConditionSocket.bl_idname, 'Condition')
-        self.inputs.new(GameObjectSocket.bl_idname, 'Object')
+        self.inputs.new(NLGameObjectSocket.bl_idname, 'Object')
         self.inputs.new(NLVec3FieldSocket.bl_idname, 'Point')
         self.inputs.new(NLVec3FieldSocket.bl_idname, 'Direction')
         
@@ -7443,7 +7443,7 @@ _nodes.append(NLActionCameraPickNode)
 class NLActionSetParentNode(bpy.types.Node, NLActionNode):
     bl_idname = "NLActionSetParentNode"
     bl_label = "Set Parent"
-    nl_category = "Object Data"
+    nl_category = "Objects"
 
     def init(self, context):
         NLActionNode.init(self, context)
@@ -7468,7 +7468,7 @@ _nodes.append(NLActionSetParentNode)
 
 class NLActionRemoveParentNode(bpy.types.Node, NLActionNode):
     bl_idname = "NLActionRemoveParentNode"
-    bl_label = "Detach Object from Parent"
+    bl_label = "Remove Parent"
     nl_category = "Objects"
 
     def init(self, context):

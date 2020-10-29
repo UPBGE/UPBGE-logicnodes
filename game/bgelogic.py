@@ -1949,6 +1949,7 @@ class ParameterObjectAttribute(ParameterCell):
             return
         self._set_value(getattr(game_object, attribute_name))
 
+
 class ClampValue(ParameterCell):
 
     def __init__(self):
@@ -5211,49 +5212,40 @@ class ActionSetObjectAttribute(ActionCell):
 
     def evaluate(self):
         self.done = False
-        condition_value = self.get_parameter_value(self.condition)
-        if condition_value is LogicNetworkCell.STATUS_WAITING:
-            return
-        if not condition_value:
+        condition = self.get_parameter_value(self.condition)
+        if is_invalid(condition):
             return
         xyz = self.get_parameter_value(self.xyz)
-        if xyz is LogicNetworkCell.STATUS_WAITING:
+        game_object = self.get_parameter_value(self.game_object)
+        attribute = self.get_parameter_value(self.value_type)
+        value = self.get_parameter_value(self.attribute_value)
+        if is_waiting(xyz, game_object, attribute, value):
             return
-        if not xyz:
-            return
-        game_object_value = self.get_parameter_value(self.game_object)
-        if game_object_value is LogicNetworkCell.STATUS_WAITING:
-            return
-        value_type = self.get_parameter_value(self.value_type)
-        if value_type is LogicNetworkCell.STATUS_WAITING:
-            return
-        attribute_value_value = self.get_parameter_value(self.attribute_value)
-        if attribute_value_value is LogicNetworkCell.STATUS_WAITING:
-            return
+
+        if hasattr(value, attribute):
+            value = getattr(value, attribute).copy()
         self._set_ready()
-        if none_or_invalid(game_object_value):
-            return
-        if not hasattr(game_object_value, value_type):
+        if not hasattr(game_object, attribute):
             debug(
                 'Set Object Data Node: {} has no attribute {}!'
-                .format(game_object_value, value_type)
+                .format(game_object, attribute)
             )
             return
-        data = getattr(game_object_value, value_type)
-        if 'Orientation' in value_type:
+        data = getattr(game_object, attribute)
+        if 'Orientation' in attribute:
             data = data.to_euler()
         for axis in xyz:
             if not xyz[axis]:
-                setattr(attribute_value_value, axis, getattr(data, axis))
+                setattr(value, axis, getattr(data, axis))
         setattr(
-            game_object_value,
-            value_type,
-            attribute_value_value
+            game_object,
+            attribute,
+            value
         )
-        if attribute_value_value == 'worldScale':
-            game_object_value.reinstancePhysicsMesh(
-                game_object_value,
-                game_object_value.meshes[0]
+        if value == 'worldScale':
+            game_object.reinstancePhysicsMesh(
+                game_object,
+                game_object.meshes[0]
             )
         self.done = True
 
