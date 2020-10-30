@@ -149,7 +149,7 @@ class SimpleLoggingDatabase(object):
         self.data = {}
         log_size = SimpleLoggingDatabase.read(self.fname, self.data)
         if log_size > (5 * len(self.data)):
-            print("Compressing sld {}".format(file_name))
+            debug("Compressing sld {}".format(file_name))
             SimpleLoggingDatabase.compress(self.fname, self.data)
 
     def get(self, key, default_value):
@@ -292,7 +292,6 @@ def debug(value):
 
 def is_waiting(*args):
     if LogicNetworkCell.STATUS_WAITING in args:
-        debug('IsWaiting')
         return True
     return False
 
@@ -303,7 +302,6 @@ def is_invalid(*args):
         None in args or
         False in args
     ):
-        debug('IsInvalid')
         return True
     return False
 
@@ -722,8 +720,8 @@ class AudioSystem(object):
     def __init__(self):
         self.active_sounds = []
         self.listener = logic.getCurrentScene().active_camera
-        debug('[Logic Nodes] Opening Sound Devices: default3D, default')
         if not hasattr(bpy.types.Scene, 'aud_devices'):
+            debug('[Logic Nodes] Opening Sound Devices: default3D, default')
             bpy.types.Scene.aud_devices = self.devices = {
                 'default3D': aud.Device(),
                 'default': aud.Device()
@@ -886,7 +884,7 @@ class LogicNetwork(LogicNetworkCell):
         self.timeline += dtime
         self.time_per_frame = dtime
         if self._owner.invalid:
-            print("Network Owner removed from game. Shutting down the network")
+            debug("Network Owner removed from game. Shutting down the network")
             return True
         self.keyboard = logic.keyboard
         self.mouse = logic.mouse
@@ -919,14 +917,14 @@ class LogicNetwork(LogicNetworkCell):
         done_cells = []
         while cells:
             if loop_index == self._max_blocking_loop_count:
-                print(
+                debug(
                     "Network found a blocking condition" +
                     " (due to unconnected or non responsive cell)"
                 )
-                print("Cells awaiting evaluation: ")
+                debug("Cells awaiting evaluation: ")
                 for c in cells:
-                    print(c)
-                print("Stopping network...")
+                    debug(c)
+                debug("Stopping network...")
                 self.stop()
                 return
             cell = cells.popleft()
@@ -941,8 +939,8 @@ class LogicNetwork(LogicNetworkCell):
             loop_index += 1
         done_cells = []
         if(loop_index > max_loop_count):
-            print(
-                "Wrong sorting alghorythm..itm..ymthf..ssss",
+            debug(
+                "Wrong sorting alghorithm!",
                 loop_index,
                 max_loop_count)
         for cell in self._cells:
@@ -967,13 +965,13 @@ class LogicNetwork(LogicNetworkCell):
             [c for c in node_tree_name if c in valid_characters]
         )
         if stripped_name in owner_object:
-            print("Network {} already installed for {}".format(
+            debug("Network {} already installed for {}".format(
                     stripped_name, owner_object.name
                 ))
             if(initial_status is True):
                 owner_object[node_tree_name].stopped = False
         else:
-            print("Installing sub network...")
+            debug("Installing sub network...")
             initial_status_key = 'NODELOGIC__{}'.format(node_tree_name)
             owner_object[initial_status_key] = initial_status
             module_name = 'bgelogic.NL{}'.format(stripped_name)
@@ -995,9 +993,11 @@ class ParamOwnerObject(ParameterCell):
         self._set_status(LogicNetworkCell.STATUS_READY)
         self._set_value(network.get_owner())
 
-    def reset(self): pass
+    def reset(self):
+        pass
 
-    def evaluate(self): pass
+    def evaluate(self):
+        pass
 
 
 class ParameterBoneStatus(ParameterCell):
@@ -2960,6 +2960,8 @@ class ConditionOnce(ConditionCell):
         self._consumed = False
 
     def evaluate(self):
+        if self.network.stopped:
+            self._consumed = False
         input_condition = self.get_parameter_value(self.input_condition)
         if input_condition is LogicNetworkCell.STATUS_WAITING:
             return
@@ -8511,8 +8513,13 @@ class ActionStart3DSound(ActionCell):
         if handle:
             if handle.status:
                 handle.location = speaker.worldPosition
-                handle.velocity = speaker.worldLinearVelocity
                 handle.orientation = speaker.worldOrientation.to_quaternion()
+                if hasattr(speaker, 'worldLinearVelocity'):
+                    handle.velocity = getattr(
+                        speaker,
+                        'worldLinearVelocity',
+                        mathutils.Vector((0, 0, 0))
+                    )
                 return
             elif handle in audio_system.active_sounds:
                 audio_system.active_sounds.remove(handle)
@@ -8542,7 +8549,12 @@ class ActionStart3DSound(ActionCell):
         handle = self._handle = devs['default3D'].play(soundfile)
         handle.relative = False
         handle.location = speaker.worldPosition
-        handle.velocity = speaker.worldLinearVelocity
+        if hasattr(speaker, 'worldLinearVelocity'):
+            handle.velocity = getattr(
+                speaker,
+                'worldLinearVelocity',
+                mathutils.Vector((0, 0, 0))
+            )
         handle.orientation = speaker.worldOrientation.to_quaternion()
         handle.pitch = pitch
         handle.loop_count = loop_count
@@ -8587,8 +8599,13 @@ class ActionStart3DSoundAdv(ActionCell):
         if handle:
             if handle.status:
                 handle.location = speaker.worldPosition
-                handle.velocity = speaker.worldLinearVelocity
                 handle.orientation = speaker.worldOrientation.to_quaternion()
+                if hasattr(speaker, 'worldLinearVelocity'):
+                    handle.velocity = getattr(
+                        speaker,
+                        'worldLinearVelocity',
+                        mathutils.Vector((0, 0, 0))
+                    )
                 return
             elif handle in audio_system.active_sounds:
                 audio_system.active_sounds.remove(handle)
@@ -8626,7 +8643,12 @@ class ActionStart3DSoundAdv(ActionCell):
         handle = self._handle = devs[device].play(soundfile)
         handle.relative = False
         handle.location = speaker.worldPosition
-        handle.velocity = speaker.worldLinearVelocity
+        if hasattr(speaker, 'worldLinearVelocity'):
+            handle.velocity = getattr(
+                speaker,
+                'worldLinearVelocity',
+                mathutils.Vector((0, 0, 0))
+            )
         handle.orientation = speaker.worldOrientation.to_quaternion()
         handle.pitch = pitch
         handle.loop_count = loop_count

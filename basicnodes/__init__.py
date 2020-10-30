@@ -3739,7 +3739,7 @@ class NLParameterPythonModuleFunction(bpy.types.Node, NLActionNode):
         self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Module")
         self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Function")
         self.inputs.new(NLBooleanSocket.bl_idname, 'Use Argument')
-        self.inputs.new(NLListSocket.bl_idname, "Argument")
+        self.inputs.new(NLValueFieldSocket.bl_idname, "Argument")
         self.outputs.new(NLConditionSocket.bl_idname, "Done")
         self.outputs.new(NLParameterSocket.bl_idname, "Returned Value")
 
