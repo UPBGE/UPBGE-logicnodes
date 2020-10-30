@@ -4971,24 +4971,16 @@ class VehicleApplyForce(ActionCell):
 
     def evaluate(self):
         self.done = False
-        condition_value = self.get_parameter_value(self.condition)
-        if condition_value is LogicNetworkCell.STATUS_WAITING:
-            return
+        condition = self.get_parameter_value(self.condition)
         constraint = self.get_parameter_value(self.constraint)
-        if constraint is LogicNetworkCell.STATUS_WAITING:
+        if is_invalid(condition, constraint):
             return
-        if none_or_invalid(constraint):
-            return
-        value_type = self.get_parameter_value(self.value_type)
-        if value_type is LogicNetworkCell.STATUS_WAITING:
-            return
+        value = self.get_parameter_value(self.value_type)
         wheelcount = self.get_parameter_value(self.wheelcount)
-        if wheelcount is LogicNetworkCell.STATUS_WAITING:
-            return
         power = self.get_parameter_value(self.power)
-        if power is LogicNetworkCell.STATUS_WAITING:
+        if is_waiting(value, wheelcount, power):
             return
-        if not condition_value:
+        if not condition:
             if self._reset:
                 for wheel in range(constraint.getNumWheels()):
                     constraint.applyEngineForce(0, wheel)
@@ -4998,14 +4990,14 @@ class VehicleApplyForce(ActionCell):
             return
         self._reset = True
         self._set_ready()
-        if value_type == 'FRONT':
+        if value == 'FRONT':
             for wheel in range(wheelcount):
                 constraint.applyEngineForce(power, wheel)
-        if value_type == 'REAR':
+        if value == 'REAR':
             for wheel in range(wheelcount):
                 wheel = constraint.getNumWheels() - wheel - 1
                 constraint.applyEngineForce(power, wheel)
-        if value_type == 'ALL':
+        if value == 'ALL':
             for wheel in range(constraint.getNumWheels()):
                 constraint.applyEngineForce(power, wheel)
         self.done = True
@@ -5018,6 +5010,7 @@ class VehicleApplyBraking(ActionCell):
         self.condition = None
         self.constraint = None
         self.wheelcount = None
+        self._reset = False
         self.power = None
         self.OUT = LogicNetworkSubCell(self, self.get_done)
 
@@ -5042,8 +5035,10 @@ class VehicleApplyBraking(ActionCell):
         if power is LogicNetworkCell.STATUS_WAITING:
             return
         if not condition_value:
-            for wheel in range(constraint.getNumWheels()):
-                constraint.applyBraking(0, wheel)
+            if self._reset:
+                for wheel in range(constraint.getNumWheels()):
+                    constraint.applyBraking(0, wheel)
+                self._reset = False
             return
         if none_or_invalid(constraint):
             return
@@ -6127,7 +6122,6 @@ class InitEmptyList(ActionCell):
 class InitNewList(ActionCell):
     def __init__(self):
         ActionCell.__init__(self)
-        self.condition = None
         self.value = None
         self.value2 = None
         self.value3 = None
@@ -6135,23 +6129,12 @@ class InitNewList(ActionCell):
         self.value5 = None
         self.value6 = None
         self.list = None
-        self.done = None
-        self.OUT = LogicNetworkSubCell(self, self.get_done)
         self.LIST = LogicNetworkSubCell(self, self.get_list)
-
-    def get_done(self):
-        return self.done
 
     def get_list(self):
         return self.list
 
     def evaluate(self):
-        self.done = False
-        condition = self.get_parameter_value(self.condition)
-        if condition is LogicNetworkCell.STATUS_WAITING:
-            return
-        if not condition:
-            return
         value = self.get_parameter_value(self.value)
         value2 = self.get_parameter_value(self.value2)
         value3 = self.get_parameter_value(self.value3)
@@ -6160,12 +6143,10 @@ class InitNewList(ActionCell):
         value6 = self.get_parameter_value(self.value6)
         values = [value, value2, value3, value4, value5, value6]
         self.list = []
+        self._set_ready()
         for val in values:
             if not is_waiting(val) and not none_or_invalid(val):
                 self.list.append(val)
-
-        self._set_ready()
-        self.done = True
 
 
 class AppendListItem(ActionCell):

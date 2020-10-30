@@ -501,7 +501,7 @@ def register():
     bpy.types.Scene.prop_filter = bpy.props.PointerProperty(
         type=ui.BGEPropFilter
     )
-    bpy.types.Scene.group_name = bpy.props.PointerProperty(
+    bpy.types.Scene.nl_group_name = bpy.props.PointerProperty(
         type=ui.BGEGroupName
     )
     bpy.types.Scene.logic_node_settings = bpy.props.PointerProperty(

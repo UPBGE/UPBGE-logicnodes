@@ -443,7 +443,7 @@ class NLMakeGroupOperator(bpy.types.Operator):
             if node.select:
                 nodes_to_group.append(node)
         if len(nodes_to_group) > 0:
-            self.group_make(tree.name + '_part', nodes_to_group)
+            self.group_make(bpy.context.scene.nl_group_name.name, nodes_to_group)
             bge_netlogic._update_all_logic_tree_code()
         return {'FINISHED'}
 

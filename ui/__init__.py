@@ -33,7 +33,7 @@ class BGEPropFilter(bpy.types.PropertyGroup):
 
 
 class BGEGroupName(bpy.types.PropertyGroup):
-    name: bpy.props.StringProperty()
+    name: bpy.props.StringProperty(default='NewTree')
     enabled: bpy.props.BoolProperty()
 
 
@@ -388,12 +388,14 @@ class BGE_PT_LogicTreeGroups(bpy.types.Panel):
 
     def draw(self, context):
         layout = self.layout
-        pack_new = layout.row()
+        pack_new = layout.column()
         pack_new.scale_y = 1.4
         pack_new.operator(
             bge_netlogic.ops.NLMakeGroupOperator.bl_idname,
             icon='IMPORT'
         )
+        layout.prop(bpy.context.scene.nl_group_name, 'name', text='Name')
+
         layout.separator()
         prefabs = layout.box()
         title = prefabs.box()

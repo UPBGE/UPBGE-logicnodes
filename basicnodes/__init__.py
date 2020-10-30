@@ -5774,21 +5774,19 @@ class NLInitNewList(bpy.types.Node, NLActionNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
-        self.inputs.new(NLPseudoConditionSocket.bl_idname, 'Condition')
         self.inputs.new(NLParameterSocket.bl_idname, 'Item 1')
         self.inputs.new(NLParameterSocket.bl_idname, 'Item 2')
         self.inputs.new(NLParameterSocket.bl_idname, 'Item 3')
         self.inputs.new(NLParameterSocket.bl_idname, 'Item 4')
         self.inputs.new(NLParameterSocket.bl_idname, 'Item 5')
         self.inputs.new(NLParameterSocket.bl_idname, 'Item 6')
-        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
         self.outputs.new(NLListSocket.bl_idname, 'List')
 
     def get_output_socket_varnames(self):
-        return ["OUT", 'LIST']
+        return ['LIST']
 
     def get_netlogic_class_name(self): return "bgelogic.InitNewList"
-    def get_input_sockets_field_names(self): return ["condition", 'value', 'value2', 'value3', 'value4', 'value5', 'value6',]
+    def get_input_sockets_field_names(self): return ['value', 'value2', 'value3', 'value4', 'value5', 'value6',]
 
 
 _nodes.append(NLInitNewList)
