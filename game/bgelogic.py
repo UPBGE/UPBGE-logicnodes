@@ -2109,6 +2109,12 @@ class RangedThreshold(ParameterCell):
         self.threshold = None
         self.operator = None
 
+    def calc_threshold(self, op, v, t):
+        if op == 'GREATER':
+            return v if (v < t.x or v > t.y) else 0
+        if op == 'LESS':
+            return v if (t.x < v < t.y) else 0
+
     def evaluate(self):
         v = self.get_parameter_value(self.value)
         t = self.get_parameter_value(self.threshold)
@@ -2116,7 +2122,7 @@ class RangedThreshold(ParameterCell):
             return
         if t is LogicNetworkCell.STATUS_WAITING:
             return
-        value = v if (v < t.x or v > t.y) else 0
+        value = self.calc_threshold(self.operator, v, t)
         self._set_ready()
         if (v is None) or (t is None):
             self._set_value(None)

@@ -3515,12 +3515,26 @@ class NLRangedThresholdNode(bpy.types.Node, NLParameterNode):
     bl_idname = "NLRangedThresholdNode"
     bl_label = "Ranged Threshold"
     nl_category = "Math"
+    operator: bpy.props.EnumProperty(items=_enum_greater_less, update=update_tree_code)
 
     def init(self, context):
         NLParameterNode.init(self, context)
         self.inputs.new(NLFloatFieldSocket.bl_idname, "Value")
         self.inputs.new(NLVec2FieldSocket.bl_idname, "Threshold")
         self.outputs.new(NLParameterSocket.bl_idname, "Value")
+
+    def draw_buttons(self, context, layout):
+        layout.prop(self, "operator", text="")
+
+    def get_nonsocket_fields(self):
+        return [
+                (
+                    "operator", lambda:
+                    'bgelogic.RangedThreshold.op_by_code("{}")'.format(
+                        self.operator
+                    )
+                )
+            ]
 
     def get_netlogic_class_name(self):
         return "bgelogic.RangedThreshold"
