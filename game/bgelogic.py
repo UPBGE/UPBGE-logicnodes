@@ -2978,6 +2978,36 @@ class ConditionOnce(ConditionCell):
         self._set_value(False)
 
 
+class ObjectPropertyOperator(ConditionCell):
+    def __init__(self, operator='EQUAL'):
+        ActionCell.__init__(self)
+        self.game_object = None
+        self.property_name = None
+        self.operator = operator
+        self.compare_value = None
+        self.val = 0
+        self.VAL = LogicNetworkSubCell(self, self.get_val)
+
+    def get_val(self):
+        return self.val
+
+    def evaluate(self):
+        game_object = self.get_parameter_value(self.game_object)
+        property_name = self.get_parameter_value(self.property_name)
+        compare_value = self.get_parameter_value(self.compare_value)
+        operator = self.get_parameter_value(self.operator)
+        if is_waiting(game_object, property_name, operator, compare_value):
+            return
+        self._set_ready()
+        value = self.val = game_object[property_name]
+        if operator > 1:  # eq and neq are valid for None
+            if is_invalid(value, compare_value):
+                return
+        if operator is None:
+            return
+        self._set_value(LOGIC_OPERATORS[operator](value, compare_value))
+
+
 class OnNextFrame(ConditionCell):
 
     def __init__(self):
@@ -4389,30 +4419,50 @@ class ActionAddToGameObjectGameProperty(ActionCell):
 
     def evaluate(self):
         self.done = False
-        STATUS_WAITING = LogicNetworkCell.STATUS_WAITING
-        condition_value = self.get_parameter_value(self.condition)
-        if condition_value is STATUS_WAITING:
+        condition = self.get_parameter_value(self.condition)
+        if is_invalid(condition):
             return
-        if condition_value is False:
-            self._set_ready()
-            return
-        game_object_value = self.get_parameter_value(self.game_object)
-        property_name_value = self.get_parameter_value(self.property_name)
-        property_value_value = self.get_parameter_value(self.property_value)
-        if game_object_value is STATUS_WAITING:
-            return
-        if property_name_value is STATUS_WAITING:
-            return
-        if property_value_value is STATUS_WAITING:
+        game_object = self.get_parameter_value(self.game_object)
+        property_name = self.get_parameter_value(self.property_name)
+        property_value = self.get_parameter_value(self.property_value)
+        if is_waiting(game_object, property_name, property_value):
             return
         self._set_ready()
-        if none_or_invalid(game_object_value):
+        if none_or_invalid(game_object):
             return
-        if condition_value:
-            value = game_object_value[property_name_value]
-            game_object_value[property_name_value] = (
-                value + property_value_value
-            )
+        value = game_object[property_name]
+        game_object[property_name] = (
+            value + property_value
+        )
+        self.done = True
+
+
+class CopyPropertyFromObject(ActionCell):
+    def __init__(self):
+        ActionCell.__init__(self)
+        self.condition = None
+        self.from_object = None
+        self.to_object = None
+        self.property_name = None
+        self.done = False
+        self.OUT = LogicNetworkSubCell(self, self._get_done)
+
+    def _get_done(self):
+        return self.done
+
+    def evaluate(self):
+        self.done = False
+        condition = self.get_parameter_value(self.condition)
+        if is_invalid(condition):
+            return
+        from_object = self.get_parameter_value(self.from_object)
+        to_object = self.get_parameter_value(self.to_object)
+        property_name = self.get_parameter_value(self.property_name)
+
+        self._set_ready()
+        val = from_object.get(property_name)
+        if val is not None:
+            to_object[property_name] = val
         self.done = True
 
 
@@ -4891,25 +4941,17 @@ class ActionCreateVehicleFromParent(ActionCell):
 
     def evaluate(self):
         self.done = False
-        condition_value = self.get_parameter_value(self.condition)
-        if condition_value is LogicNetworkCell.STATUS_WAITING:
-            return
-        if not condition_value:
+        if is_invalid(self.get_parameter_value(self.condition)):
+            if game_object.get('vehicle_constraint'):
+                self._set_ready()
+                self.vehicle = game_object['vehicle_constraint']
             return
         game_object = self.get_parameter_value(self.game_object)
-        if game_object is LogicNetworkCell.STATUS_WAITING:
-            return
         suspension = self.get_parameter_value(self.suspension)
-        if suspension is LogicNetworkCell.STATUS_WAITING:
-            return
         stiffness = self.get_parameter_value(self.stiffness)
-        if stiffness is LogicNetworkCell.STATUS_WAITING:
-            return
         damping = self.get_parameter_value(self.damping)
-        if damping is LogicNetworkCell.STATUS_WAITING:
-            return
         friction = self.get_parameter_value(self.friction)
-        if friction is LogicNetworkCell.STATUS_WAITING:
+        if is_waiting(game_object, suspension, stiffness, damping, friction):
             return
         self._set_ready()
         orig_ori = game_object.localOrientation.copy()
@@ -8501,6 +8543,8 @@ class ActionStart3DSound(ActionCell):
                         'worldLinearVelocity',
                         mathutils.Vector((0, 0, 0))
                     )
+                self._set_ready()
+                self._handle = handle
                 return
             elif handle in audio_system.active_sounds:
                 audio_system.active_sounds.remove(handle)
@@ -8587,6 +8631,8 @@ class ActionStart3DSoundAdv(ActionCell):
                         'worldLinearVelocity',
                         mathutils.Vector((0, 0, 0))
                     )
+                self._set_ready()
+                self._handle = handle
                 return
             elif handle in audio_system.active_sounds:
                 audio_system.active_sounds.remove(handle)

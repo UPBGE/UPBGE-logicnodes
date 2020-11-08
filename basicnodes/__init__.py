@@ -4455,6 +4455,44 @@ class NLConditionOnceNode(bpy.types.Node, NLConditionNode):
 _nodes.append(NLConditionOnceNode)
 
 
+class NLObjectPropertyOperator(bpy.types.Node, NLConditionNode):
+    bl_idname = "NLObjectPropertyOperator"
+    bl_label = "Evaluate Property"
+    nl_category = "Properties"
+    operator: bpy.props.EnumProperty(items=_enum_logic_operators, update=update_tree_code)
+
+    def draw_buttons(self, context, layout):
+        layout.prop(self, "operator", text='')
+
+    def write_cell_fields_initialization(self, cell_varname, uids, line_writer):
+        NetLogicStatementGenerator.write_cell_fields_initialization(self, cell_varname, uids, line_writer)
+        line_writer.write_line("{}.{} = {}", cell_varname, "operator", self.operator)
+
+    def init(self, context):
+        NLConditionNode.init(self, context)
+        self.inputs.new(NLGameObjectSocket.bl_idname, 'Object')
+        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, 'Name')
+        self.inputs[-1].value = 'prop'
+        self.inputs.new(NLValueFieldSocket.bl_idname, '')
+        self.outputs.new(NLConditionSocket.bl_idname, 'If True')
+        self.outputs.new(NLParameterSocket.bl_idname, 'Value')
+
+    def get_netlogic_class_name(self): return "bgelogic.ObjectPropertyOperator"
+
+    def get_input_sockets_field_names(self):
+        return [
+            "game_object",
+            "property_name",
+            "compare_value"
+        ]
+
+    def get_output_socket_varnames(self):
+        return [OUTCELL, "VAL"]
+
+
+_nodes.append(NLObjectPropertyOperator)
+
+
 class NLConditionNextFrameNode(bpy.types.Node, NLConditionNode):
     bl_idname = "NLConditionNextFrameNode"
     bl_label = "On Next Frame"
@@ -4988,11 +5026,51 @@ class NLAddToGameObjectGamePropertyActionNode(bpy.types.Node, NLActionNode):
         self.inputs.new(NLFloatFieldSocket.bl_idname, "Value")
         self.outputs.new(NLConditionSocket.bl_idname, "Done")
 
-    def get_netlogic_class_name(self): return "bgelogic.ActionAddToGameObjectGameProperty"
-    def get_input_sockets_field_names(self): return ["condition", "game_object", "property_name", "property_value"]
+    def get_netlogic_class_name(self):
+        return "bgelogic.ActionAddToGameObjectGameProperty"
+
+    def get_input_sockets_field_names(self):
+        return [
+            "condition",
+            "game_object",
+            "property_name",
+            "property_value"
+        ]
     def get_output_socket_varnames(self):
         return ['OUT']
+
+
 _nodes.append(NLAddToGameObjectGamePropertyActionNode)
+
+
+class NLCopyPropertyFromObject(bpy.types.Node, NLActionNode):
+    bl_idname = "NLCopyPropertyFromObject"
+    bl_label = "Copy From Object"
+    nl_category = "Properties"
+
+    def init(self, context):
+        NLActionNode.init(self, context)
+        self.inputs.new(NLConditionSocket.bl_idname, "Condition")
+        self.inputs.new(NLGameObjectSocket.bl_idname, "Copy From")
+        self.inputs.new(NLGameObjectSocket.bl_idname, "To")
+        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Name")
+        self.inputs[-1].value = 'prop'
+        self.outputs.new(NLConditionSocket.bl_idname, "Done")
+
+    def get_netlogic_class_name(self):
+        return "bgelogic.CopyPropertyFromObject"
+    def get_input_sockets_field_names(self):
+        return [
+            "condition",
+            "from_object",
+            "to_object",
+            "property_name"
+        ]
+    def get_output_socket_varnames(self):
+        return ['OUT']
+
+
+_nodes.append(NLCopyPropertyFromObject)
 
 
 class NLClampedAddToGameObjectGamePropertyActionNode(bpy.types.Node, NLActionNode):

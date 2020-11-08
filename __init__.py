@@ -10,7 +10,7 @@ bl_info = {
         "A Node System to create game logic."
     ),
     "author": "pgi, Leopold A-C (Iza Zed)",
-    "version": (0, 9, 2),
+    "version": (0, 9, 3),
     "blender": (2, 91, 0),
     "location": "View Menu",
     "warning": "Beta",
