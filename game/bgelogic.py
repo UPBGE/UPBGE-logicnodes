@@ -8717,6 +8717,9 @@ class ActionStartSound(ActionCell):
             if not handle.status and handle in audio_system.active_sounds:
                 audio_system.active_sounds.remove(handle)
                 return
+            self._set_ready()
+            self._handle = handle
+            return
         condition = self.get_parameter_value(self.condition)
         if condition is LogicNetworkCell.STATUS_WAITING:
             return
