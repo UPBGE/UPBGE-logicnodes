@@ -707,11 +707,12 @@ class NLApplyLogicOperator(bpy.types.Operator):
             )
             controller = game_settings.controllers[-1]
             controller.show_expanded = False
-            bpy.ops.logic.controller_add(
-                type="LOGIC_OR",
-                object=obj.name,
-                name=disp_name + '_OR'
-            )
+            if 'NL_OR' not in game_settings.controllers:
+                bpy.ops.logic.controller_add(
+                    type="LOGIC_OR",
+                    object=obj.name,
+                    name='NL_OR'
+                )
             game_settings.controllers[-1].show_expanded = False
         controller.name = controller_name
         controller.type = "PYTHON"
