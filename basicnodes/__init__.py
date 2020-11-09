@@ -4325,7 +4325,7 @@ _nodes.append(NLGamepadButtonsCondition)
 
 class NLKeyPressedCondition(bpy.types.Node, NLConditionNode):
     bl_idname = "NLKeyPressedCondition"
-    bl_label = "Key Pressed"
+    bl_label = "Key Down"
     nl_category = "Input"
     nl_subcat = 'Keyboard'
     pulse: bpy.props.BoolProperty(
@@ -4352,7 +4352,7 @@ _nodes.append(NLKeyPressedCondition)
 
 class NLKeyLoggerAction(bpy.types.Node, NLActionNode):
     bl_idname = "NLKeyLoggerAction"
-    bl_label = "Key Logger"
+    bl_label = "Logger"
     nl_category = "Input"
     nl_subcat = 'Keyboard'
     pulse: bpy.props.BoolProperty(
@@ -4388,7 +4388,7 @@ _nodes.append(NLKeyLoggerAction)
 
 class NLKeyReleasedCondition(bpy.types.Node, NLConditionNode):
     bl_idname = "NLKeyReleasedCondition"
-    bl_label = "Key Released"
+    bl_label = "Key Up"
     nl_category = "Input"
     nl_subcat = 'Keyboard'
     pulse: bpy.props.BoolProperty(
@@ -4419,7 +4419,7 @@ _nodes.append(NLKeyReleasedCondition)
 
 class NLMousePressedCondition(bpy.types.Node, NLConditionNode):
     bl_idname = "NLMousePressedCondition"
-    bl_label = "Mouse Pressed"
+    bl_label = "Mouse Button"
     nl_category = "Input"
     nl_subcat = 'Mouse'
 
@@ -4482,7 +4482,7 @@ _nodes.append(NLMouseMovedCondition)
 
 class NLMouseReleasedCondition(bpy.types.Node, NLConditionNode):
     bl_idname = "NLMouseReleasedCondition"
-    bl_label = "Mouse Released"
+    bl_label = "Button Released"
     nl_category = "Input"
     nl_subcat = 'Mouse'
 
@@ -4591,7 +4591,7 @@ _nodes.append(NLConditionNextFrameNode)
 
 class NLConditionMousePressedOn(bpy.types.Node, NLConditionNode):
     bl_idname = "NLConditionMousePressedOn"
-    bl_label = "Mouse Pressed On"
+    bl_label = "Mouse Button Over"
     nl_category = "Input"
     nl_subcat = 'Mouse'
 
@@ -4611,7 +4611,7 @@ _nodes.append(NLConditionMousePressedOn)
 
 class NLConditionMouseWheelMoved(bpy.types.Node, NLConditionNode):
     bl_idname = "NLConditionMouseWheelMoved"
-    bl_label = "Mouse Wheel Moved"
+    bl_label = "Mouse Wheel"
     nl_category = "Input"
     nl_subcat = 'Mouse'
 
@@ -7899,7 +7899,7 @@ class NLActionFindSceneNode(bpy.types.Node, NLActionNode):
 
 class NLActionSetMousePosition(bpy.types.Node, NLActionNode):
     bl_idname = "NLActionSetMousePosition"
-    bl_label = "Set Mouse Position"
+    bl_label = "Set Position"
     nl_category = "Input"
     nl_subcat = 'Mouse'
 
@@ -7924,7 +7924,7 @@ _nodes.append(NLActionSetMousePosition)
 
 class NLActionSetMouseCursorVisibility(bpy.types.Node, NLActionNode):
     bl_idname = "NLActionSetMouseCursorVisibility"
-    bl_label = "Set Mouse Cursor Visibility"
+    bl_label = "Cursor Visibility"
     nl_category = "Input"
     nl_subcat = 'Mouse'
 
@@ -8332,7 +8332,7 @@ _nodes.append(NLParameterDistance)
 
 class NLParameterKeyboardKeyCode(bpy.types.Node, NLParameterNode):
     bl_idname = "NLParameterKeyboardKeyCode"
-    bl_label = "Keyboard Key Code"
+    bl_label = "Key Code"
     nl_category = "Input"
     nl_subcat = 'Keyboard'
     value: bpy.props.StringProperty(update=update_tree_code)

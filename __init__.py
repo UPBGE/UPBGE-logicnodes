@@ -502,7 +502,6 @@ def _list_menu_nodes():
                 cats[c.nl_category][c.nl_subcat] = []
             cats[c.nl_category][c.nl_subcat].append(nodeitems_utils.NodeItem(c.bl_idname))
 
-    print(cats)
     menu_nodes = []
     for cat, subcats in cats.items():
         for subcat, items in subcats.items():
@@ -530,8 +529,7 @@ def _list_menu_nodes():
 
     pmap_keys = list(proxy_map.keys())
     del pmap_keys[-1]
-    # pmap_keys.sort()
-    print(pmap_keys)
+    pmap_keys.sort()
     for name in pmap_keys:
         itemlist = proxy_map[name]
         menu_nodes.append(NodeCategory(name, name, items=itemlist))

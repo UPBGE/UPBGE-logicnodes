@@ -66,30 +66,30 @@ _cat_icons = {
 _main_menues = [
     'Events',
     'Game',
-    'Scene',
     'Input',
+    'Scene',
     'Animation',
+    'Lights',
     'Materials',
     'Objects',
-    'Lights',
     'Sound',
+    'Logic',
     'Math',
+    'Python',
     'Ray Casts',
     'Time',
-    'Logic',
-    'Python',
+    'Physics',
     'Values',
     'Variables',
-    'Physics',
     'Visuals',
     'Window',
     'Utilities'
 ]
 
 _cat_separators = [
-    'Input',
+    'Scene',
     'Sound',
-    'Physics'
+    'Window'
 ]
 
 
