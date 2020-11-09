@@ -2536,7 +2536,8 @@ _nodes.append(NLParameterGetTimeScale)
 class NLParameterScreenPosition(bpy.types.Node, NLParameterNode):
     bl_idname = "NLParameterScreenPosition"
     bl_label = "Screen Position"
-    nl_category = "Camera"
+    nl_category = "Scene"
+    nl_subcat = 'Camera'
 
     def init(self, context):
         NLParameterNode.init(self, context)
@@ -2561,7 +2562,8 @@ _nodes.append(NLParameterScreenPosition)
 class NLParameterWorldPosition(bpy.types.Node, NLParameterNode):
     bl_idname = "NLParameterWorldPosition"
     bl_label = "World Position"
-    nl_category = "Camera"
+    nl_category = "Scene"
+    nl_subcat = 'Camera'
 
     def init(self, context):
         NLParameterNode.init(self, context)
@@ -2596,8 +2598,6 @@ class NLOwnerGameObjectParameterNode(bpy.types.Node, NLParameterNode):
 
     def get_netlogic_class_name(self):
         return "bgelogic.ParamOwnerObject"
-
-    pass
 
 
 _nodes.append(NLOwnerGameObjectParameterNode)
@@ -2675,7 +2675,8 @@ _nodes.append(NLGetResolution)
 class NLGameObjectPropertyParameterNode(bpy.types.Node, NLParameterNode):
     bl_idname = "NLGameObjectPropertyParameterNode"
     bl_label = "Get Property"
-    nl_category = "Properties"
+    nl_category = 'Objects'
+    nl_subcat = 'Properties'
 
     def init(self, context):
         NLParameterNode.init(self, context)
@@ -2712,8 +2713,12 @@ class NLGetMaterialNodeValue(bpy.types.Node, NLActionNode):
         self.inputs.new(NLIntegerFieldSocket.bl_idname, "Input")
         self.outputs.new(NLParameterSocket.bl_idname, "Value")
 
-    def get_netlogic_class_name(self): return "bgelogic.ParameterGetMaterialNodeValue"
-    def get_input_sockets_field_names(self): return ["game_object", "mat_name", 'node_name', "input_slot"]
+    def get_netlogic_class_name(self):
+        return "bgelogic.ParameterGetMaterialNodeValue"
+
+    def get_input_sockets_field_names(self):
+        return ["game_object", "mat_name", 'node_name', "input_slot"]
+
     def get_output_socket_varnames(self):
         return ['OUT']
 
@@ -2814,7 +2819,8 @@ class NLGetMaterialNodeOutputValue(bpy.types.Node, NLActionNode):
 class NLGameObjectHasPropertyParameterNode(bpy.types.Node, NLParameterNode):
     bl_idname = "NLGameObjectHasPropertyParameterNode"
     bl_label = "Has Property"
-    nl_category = "Properties"
+    nl_category = "Objects"
+    nl_subcat = 'Properties'
 
     def init(self, context):
         NLParameterNode.init(self, context)
@@ -2838,8 +2844,9 @@ _nodes.append(NLGameObjectHasPropertyParameterNode)
 
 class NLGetDictKeyNode(bpy.types.Node, NLParameterNode):
     bl_idname = "NLGetDictKeyNode"
-    bl_label = "- DICT: Get Key"
+    bl_label = 'Get Key'
     nl_category = "Python"
+    nl_subcat = 'Dictionary'
 
     def init(self, context):
         NLParameterNode.init(self, context)
@@ -2863,8 +2870,9 @@ _nodes.append(NLGetDictKeyNode)
 
 class NLGetListIndexNode(bpy.types.Node, NLParameterNode):
     bl_idname = "NLGetListIndexNode"
-    bl_label = "- LIST: Get Index"
+    bl_label = "Get Index"
     nl_category = "Python"
+    nl_subcat = 'List'
 
     def init(self, context):
         NLParameterNode.init(self, context)
@@ -2888,7 +2896,8 @@ _nodes.append(NLGetListIndexNode)
 class NLGetActuatorNode(bpy.types.Node, NLParameterNode):
     bl_idname = "NLGetActuatorNode"
     bl_label = "Get Actuator"
-    nl_category = "Logic Bricks"
+    nl_category = "Logic"
+    nl_subcat = 'Bricks'
     obj: bpy.props.PointerProperty(
         name='Object',
         type=bpy.types.Object,
@@ -2952,11 +2961,11 @@ _nodes.append(NLGetActuatorNode)
 class NLGetActuatorNameNode(bpy.types.Node, NLParameterNode):
     bl_idname = "NLGetActuatorNameNode"
     bl_label = "Get Actuator By Name"
-    nl_category = "Logic Bricks"
+    nl_category = "Logic"
+    nl_subcat = 'Bricks'
 
     def init(self, context):
         NLParameterNode.init(self, context)
-        # self.inputs.new(NLGameObjectSocket.bl_idname, "Object")
         self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Actuator Name")
         self.outputs.new(NLLogicBrickSocket.bl_idname, "Actuator")
 
@@ -2976,7 +2985,8 @@ _nodes.append(NLGetActuatorNameNode)
 class NLRunActuatorNode(bpy.types.Node, NLActionNode):
     bl_idname = "NLRunActuatorNode"
     bl_label = "Execute Actuator"
-    nl_category = "Logic Bricks"
+    nl_category = "Logic"
+    nl_subcat = 'Bricks'
 
     def init(self, context):
         NLActionNode.init(self, context)
@@ -2999,7 +3009,8 @@ _nodes.append(NLRunActuatorNode)
 class NLDisableActuatorNode(bpy.types.Node, NLActionNode):
     bl_idname = "NLDisableActuatorNode"
     bl_label = "Stop Actuator"
-    nl_category = "Logic Bricks"
+    nl_category = "Logic"
+    nl_subcat = 'Bricks'
 
     def init(self, context):
         NLParameterNode.init(self, context)
@@ -3022,7 +3033,8 @@ _nodes.append(NLDisableActuatorNode)
 class NLRunActuatorByNameNode(bpy.types.Node, NLActionNode):
     bl_idname = "NLRunActuatorByNameNode"
     bl_label = "Execute Actuator By Name"
-    nl_category = "Logic Bricks"
+    nl_category = "Logic"
+    nl_subcat = 'Bricks'
 
     def init(self, context):
         NLActionNode.init(self, context)
@@ -3045,7 +3057,8 @@ _nodes.append(NLRunActuatorByNameNode)
 class NLDisableActuatorByNameNode(bpy.types.Node, NLActionNode):
     bl_idname = "NLDisableActuatorByNameNode"
     bl_label = "Stop Actuator By Name"
-    nl_category = "Logic Bricks"
+    nl_category = "Logic"
+    nl_subcat = 'Bricks'
 
     def init(self, context):
         NLActionNode.init(self, context)
@@ -3068,7 +3081,8 @@ _nodes.append(NLDisableActuatorByNameNode)
 class NLSetActuatorValueNode(bpy.types.Node, NLActionNode):
     bl_idname = "NLSetActuatorValueNode"
     bl_label = "Set Actuator Value"
-    nl_category = "Logic Bricks"
+    nl_category = "Logic"
+    nl_subcat = 'Bricks'
 
     def init(self, context):
         NLActionNode.init(self, context)
@@ -3094,6 +3108,7 @@ class NLVectorMath(bpy.types.Node, NLParameterNode):
     bl_idname = "NLVectorMath"
     bl_label = "Vector Math"
     nl_category = "Math"
+    nl_subcat = 'Vector Math'
 
     def init(self, context):
         NLParameterNode.init(self, context)
@@ -3116,7 +3131,8 @@ _nodes.append(NLVectorMath)
 class NLGetCurrentControllerNode(bpy.types.Node, NLParameterNode):
     bl_idname = "NLGetCurrentControllerNode"
     bl_label = "Get Tree Controller"
-    nl_category = "Logic Bricks"
+    nl_category = "Logic"
+    nl_subcat = 'Bricks'
 
     def init(self, context):
         NLParameterNode.init(self, context)
@@ -3134,7 +3150,8 @@ class NLGetCurrentControllerNode(bpy.types.Node, NLParameterNode):
 class NLGetControllerNode(bpy.types.Node, NLParameterNode):
     bl_idname = "NLGetControllerNode"
     bl_label = "Get Controller"
-    nl_category = "Logic Bricks"
+    nl_category = "Logic"
+    nl_subcat = 'Bricks'
     obj: bpy.props.PointerProperty(
         name='Object',
         type=bpy.types.Object,
@@ -3196,7 +3213,8 @@ class NLGetControllerNode(bpy.types.Node, NLParameterNode):
 class NLGetSensorNode(bpy.types.Node, NLParameterNode):
     bl_idname = "NLGetSensorNode"
     bl_label = "Sensor Positive"
-    nl_category = "Logic Bricks"
+    nl_category = "Logic"
+    nl_subcat = 'Bricks'
     obj: bpy.props.PointerProperty(
         name='Object',
         type=bpy.types.Object,
@@ -3208,7 +3226,8 @@ class NLGetSensorNode(bpy.types.Node, NLParameterNode):
         NLParameterNode.init(self, context)
         self.outputs.new(NLConditionSocket.bl_idname, "If positive")
 
-    def get_netlogic_class_name(self): return "bgelogic.GetSensor"
+    def get_netlogic_class_name(self):
+        return "bgelogic.GetSensor"
 
     def draw_buttons(self, context, layout):
         col = layout.column()
@@ -3260,7 +3279,8 @@ _nodes.append(NLGetSensorNode)
 class NLGetSensorNameNode(bpy.types.Node, NLParameterNode):
     bl_idname = "NLGetSensorNameNode"
     bl_label = "Sensor Positive by Name"
-    nl_category = "Logic Bricks"
+    nl_category = "Logic"
+    nl_subcat = 'Bricks'
 
     def init(self, context):
         NLParameterNode.init(self, context)
@@ -3284,7 +3304,8 @@ _nodes.append(NLGetSensorNameNode)
 class NLGetSensorValueNameNode(bpy.types.Node, NLParameterNode):
     bl_idname = "NLGetSensorValueNameNode"
     bl_label = "Get Sensor Value by Name"
-    nl_category = "Logic Bricks"
+    nl_category = "Logic"
+    nl_subcat = 'Bricks'
 
     def init(self, context):
         NLParameterNode.init(self, context)
@@ -3309,7 +3330,8 @@ _nodes.append(NLGetSensorValueNameNode)
 class NLSensorValueNode(bpy.types.Node, NLParameterNode):
     bl_idname = "NLSensorValueNode"
     bl_label = "Get Sensor Value"
-    nl_category = "Logic Bricks"
+    nl_category = 'Logic'
+    nl_subcat = 'Bricks'
     obj: bpy.props.PointerProperty(
         name='Object',
         type=bpy.types.Object,
@@ -3378,7 +3400,8 @@ _nodes.append(NLSensorValueNode)
 class NLSensorPositiveNode(bpy.types.Node, NLParameterNode):
     bl_idname = "NLSensorPositiveNode"
     bl_label = "Sensor Positive"
-    nl_category = "Logic Bricks"
+    nl_category = "Logic"
+    nl_subcat = 'Bricks'
     nl_description = "Checks if a Sensor is positive."
 
     def init(self, context):
@@ -3401,7 +3424,8 @@ class NLSensorPositiveNode(bpy.types.Node, NLParameterNode):
 class NLObjectAttributeParameterNode(bpy.types.Node, NLParameterNode):
     bl_idname = "NLObjectAttributeParameterNode"
     bl_label = "Get Position / Rotation / Scale etc."
-    nl_category = "Object Data"
+    nl_category = "Objects"
+    nl_subcat = 'Data'
 
     def init(self, context):
         NLParameterNode.init(self, context)
@@ -3423,7 +3447,8 @@ _nodes.append(NLObjectAttributeParameterNode)
 class NLActiveCameraParameterNode(bpy.types.Node, NLParameterNode):
     bl_idname = "NLActiveCameraParameterNode"
     bl_label = "Active Camera"
-    nl_category = "Camera"
+    nl_category = "Scene"
+    nl_subcat = 'Camera'
 
     def init(self, context):
         NLParameterNode.init(self, context)
@@ -3643,7 +3668,7 @@ _nodes.append(NLParameterSwitchValue)
 class NLParameterTimeNode(bpy.types.Node, NLParameterNode):
     bl_idname = "NLParameterTimeNode"
     bl_label = "Time Data"
-    nl_category = "Time"
+    nl_category = 'Time'
 
     def init(self, context):
         NLParameterNode.init(self, context)
@@ -3664,7 +3689,8 @@ _nodes.append(NLParameterTimeNode)
 class NLMouseDataParameter(bpy.types.Node, NLParameterNode):
     bl_idname = "NLMouseDataParameter"
     bl_label = "Mouse Data"
-    nl_category = "Mouse"
+    nl_category = "Input"
+    nl_subcat = 'Mouse'
 
     def init(self, context):
         NLParameterNode.init(self, context)
@@ -3719,7 +3745,8 @@ _nodes.append(NLParameterOrientationNode)
 class NLParameterBoneStatus(bpy.types.Node, NLParameterNode):
     bl_idname = "NLParameterBoneStatus"
     bl_label = "Armature Bone Status"
-    nl_category = "Armature / Rig"
+    nl_category = 'Animation'
+    nl_subcat = 'Armature / Rig'
 
     def init(self, context):
         NLParameterNode.init(self, context)
@@ -3774,6 +3801,7 @@ class NLParameterBooleanValue(bpy.types.Node, NLParameterNode):
     bl_idname = "NLParameterBooleanValue"
     bl_label = "Boolean"
     nl_category = "Values"
+    nl_subcat = 'Simple'
 
     def init(self, context):
         NLParameterNode.init(self, context)
@@ -3814,6 +3842,7 @@ class NLParameterFloatValue(bpy.types.Node, NLParameterNode):
     bl_idname = "NLParameterFloatValue"
     bl_label = "Float"
     nl_category = "Values"
+    nl_subcat = 'Simple'
 
     def init(self, context):
         NLParameterNode.init(self, context)
@@ -3831,6 +3860,7 @@ class NLParameterIntValue(bpy.types.Node, NLParameterNode):
     bl_idname = "NLParameterIntValue"
     bl_label = "Integer"
     nl_category = "Values"
+    nl_subcat = 'Simple'
 
     def init(self, context):
         NLParameterNode.init(self, context)
@@ -3848,6 +3878,7 @@ class NLParameterStringValue(bpy.types.Node, NLParameterNode):
     bl_idname = "NLParameterStringValue"
     bl_label = "String"
     nl_category = "Values"
+    nl_subcat = 'Simple'
 
     def init(self, context):
         NLParameterNode.init(self, context)
@@ -3881,9 +3912,15 @@ class NLParameterVector3Node(bpy.types.Node, NLParameterNode):
         self.outputs.new(NLParameterSocket.bl_idname, "Z")
         self.outputs.new(NLParameterSocket.bl_idname, "Normalized Vec")
 
-    def get_netlogic_class_name(self): return "bgelogic.ParameterVector"
-    def get_output_socket_varnames(self): return ["OUTV", "OUTX", "OUTY", "OUTZ", "NORMVEC"]
-    def get_input_sockets_field_names(self): return ["input_vector", "input_x", "input_y", "input_z"]
+    def get_netlogic_class_name(self):
+        return "bgelogic.ParameterVector"
+
+    def get_output_socket_varnames(self):
+        return ["OUTV", "OUTX", "OUTY", "OUTZ", "NORMVEC"]
+
+    def get_input_sockets_field_names(self):
+        return ["input_vector", "input_x", "input_y", "input_z"]
+
 #_nodes.append(NLParameterVector3Node)
 
 
@@ -3891,6 +3928,7 @@ class NLParameterVector2SimpleNode(bpy.types.Node, NLParameterNode):
     bl_idname = "NLParameterVector2SimpleNode"
     bl_label = "Vector 2"
     nl_category = "Values"
+    nl_subcat = 'Vectors'
 
     def init(self, context):
         NLParameterNode.init(self, context)
@@ -3901,9 +3939,14 @@ class NLParameterVector2SimpleNode(bpy.types.Node, NLParameterNode):
         )
         self.outputs.new(NLVectorSocket.bl_idname, "Vector")
 
-    def get_netlogic_class_name(self): return "bgelogic.ParameterVector2Simple"
-    def get_output_socket_varnames(self): return ["OUTV"]
-    def get_input_sockets_field_names(self): return ["input_x", "input_y"]
+    def get_netlogic_class_name(self):
+        return "bgelogic.ParameterVector2Simple"
+
+    def get_output_socket_varnames(self):
+        return ["OUTV"]
+
+    def get_input_sockets_field_names(self):
+        return ["input_x", "input_y"]
 
 
 _nodes.append(NLParameterVector2SimpleNode)
@@ -3913,6 +3956,7 @@ class NLParameterVector2SplitNode(bpy.types.Node, NLParameterNode):
     bl_idname = "NLParameterVector2SplitNode"
     bl_label = "Separate XY"
     nl_category = "Values"
+    nl_subcat = 'Vectors'
 
     def init(self, context):
         NLParameterNode.init(self, context)
@@ -3935,6 +3979,7 @@ class NLParameterVector3SplitNode(bpy.types.Node, NLParameterNode):
     bl_idname = "NLParameterVector3SplitNode"
     bl_label = "Separate XYZ"
     nl_category = "Values"
+    nl_subcat = 'Vectors'
 
     def init(self, context):
         NLParameterNode.init(self, context)
@@ -3958,6 +4003,7 @@ class NLParameterAbsVector3Node(bpy.types.Node, NLParameterNode):
     bl_idname = "NLParameterAbsVector3Node"
     bl_label = "Absolute Vector"
     nl_category = "Math"
+    nl_subcat = 'Vector Math'
 
     def init(self, context):
         NLParameterNode.init(self, context)
@@ -3979,6 +4025,7 @@ class NLParameterVector3SimpleNode(bpy.types.Node, NLParameterNode):
     bl_idname = "NLParameterVector3SimpleNode"
     bl_label = "Vector 3"
     nl_category = "Values"
+    nl_subcat = 'Vectors'
 
     def init(self, context):
         NLParameterNode.init(self, context)
@@ -4002,6 +4049,7 @@ class NLParameterEulerSimpleNode(bpy.types.Node, NLParameterNode):
     bl_idname = "NLParameterEulerSimpleNode"
     bl_label = "Euler"
     nl_category = "Values"
+    nl_subcat = 'Vectors'
 
     def init(self, context):
         NLParameterNode.init(self, context)
@@ -4023,6 +4071,7 @@ class NLParameterEulerToMatrixNode(bpy.types.Node, NLParameterNode):
     bl_idname = "NLParameterEulerToMatrixNode"
     bl_label = "Euler/Vector To Matrix"
     nl_category = "Math"
+    nl_subcat = 'Vector Math'
 
     def init(self, context):
         NLParameterNode.init(self, context)
@@ -4041,6 +4090,7 @@ class NLParameterMatrixToEulerNode(bpy.types.Node, NLParameterNode):
     bl_idname = "NLParameterMatrixToEulerNode"
     bl_label = "Matrix To Euler"
     nl_category = "Math"
+    nl_subcat = 'Vector Math'
 
     def init(self, context):
         NLParameterNode.init(self, context)
@@ -4059,7 +4109,8 @@ class NLParameterVector4Node(bpy.types.Node, NLParameterNode):
     bl_idname = "NLParameterVector4Node"
     bl_label = "Vector 4"
     nl_category = "Values"
-    
+    nl_subcat = 'Vectors'
+
     def init(self, context):
         NLParameterNode.init(self, context)
         self.inputs.new(NLParameterSocket.bl_idname, "Vector (3/4)")
@@ -4103,7 +4154,8 @@ class NLAlwaysConditionNode(bpy.types.Node, NLConditionNode):
         line_writer.write_line("{}.{} = {}", cell_varname, "repeat", self.repeat)
         pass
     pass
-_nodes.append(NLAlwaysConditionNode)
+
+#_nodes.append(NLAlwaysConditionNode)
 
 
 class NLOnInitConditionNode(bpy.types.Node, NLConditionNode):
@@ -4149,7 +4201,8 @@ _nodes.append(NLOnUpdateConditionNode)
 class NLGamepadSticksCondition(bpy.types.Node, NLParameterNode):
     bl_idname = "NLGamepadSticksCondition"
     bl_label = "Gamepad Sticks"
-    nl_category = "Gamepad"
+    nl_category = "Input"
+    nl_subcat = 'Gamepad'
     axis: bpy.props.EnumProperty(
         items=_enum_controller_stick_operators,
         description="Gamepad Sticks",
@@ -4189,7 +4242,8 @@ _nodes.append(NLGamepadSticksCondition)
 class NLGamepadTriggerCondition(bpy.types.Node, NLParameterNode):
     bl_idname = "NLGamepadTriggerCondition"
     bl_label = "Gamepad Trigger"
-    nl_category = "Gamepad"
+    nl_category = "Input"
+    nl_subcat = 'Gamepad'
     axis: bpy.props.EnumProperty(
         items=_enum_controller_trigger_operators,
         description="Left or Right Trigger",
@@ -4228,7 +4282,8 @@ _nodes.append(NLGamepadTriggerCondition)
 class NLGamepadButtonsCondition(bpy.types.Node, NLConditionNode):
     bl_idname = "NLGamepadButtonsCondition"
     bl_label = "Gamepad Button"
-    nl_category = "Gamepad"
+    nl_category = "Input"
+    nl_subcat = 'Gamepad'
     button: bpy.props.EnumProperty(
         name='Gamepad Buttons',
         items=_enum_controller_buttons_operators,
@@ -4271,7 +4326,8 @@ _nodes.append(NLGamepadButtonsCondition)
 class NLKeyPressedCondition(bpy.types.Node, NLConditionNode):
     bl_idname = "NLKeyPressedCondition"
     bl_label = "Key Pressed"
-    nl_category = "Keyboard"
+    nl_category = "Input"
+    nl_subcat = 'Keyboard'
     pulse: bpy.props.BoolProperty(
         description="ON: True until the key is released, OFF: True when pressed, then False until pressed again",
         update=update_tree_code)
@@ -4297,11 +4353,12 @@ _nodes.append(NLKeyPressedCondition)
 class NLKeyLoggerAction(bpy.types.Node, NLActionNode):
     bl_idname = "NLKeyLoggerAction"
     bl_label = "Key Logger"
-    nl_category = "Keyboard"
+    nl_category = "Input"
+    nl_subcat = 'Keyboard'
     pulse: bpy.props.BoolProperty(
         description="ON: True until the key is released, OFF: True when pressed, then False until pressed again",
         update=update_tree_code)
-    
+
     def init(self, context):
         NLActionNode.init(self, context)
         self.inputs.new(NLPseudoConditionSocket.bl_idname, "Condition")
@@ -4332,7 +4389,8 @@ _nodes.append(NLKeyLoggerAction)
 class NLKeyReleasedCondition(bpy.types.Node, NLConditionNode):
     bl_idname = "NLKeyReleasedCondition"
     bl_label = "Key Released"
-    nl_category = "Keyboard"
+    nl_category = "Input"
+    nl_subcat = 'Keyboard'
     pulse: bpy.props.BoolProperty(
         description="ON: True until the key is released, OFF: True when pressed, then False until pressed again", default=True,
         update=update_tree_code)
@@ -4362,7 +4420,8 @@ _nodes.append(NLKeyReleasedCondition)
 class NLMousePressedCondition(bpy.types.Node, NLConditionNode):
     bl_idname = "NLMousePressedCondition"
     bl_label = "Mouse Pressed"
-    nl_category = "Mouse"
+    nl_category = "Input"
+    nl_subcat = 'Mouse'
 
     pulse: bpy.props.BoolProperty(
         description="ON: True until the button is released, OFF: True when pressed, then False until pressed again", default=False,
@@ -4393,7 +4452,8 @@ _nodes.append(NLMousePressedCondition)
 class NLMouseMovedCondition(bpy.types.Node, NLConditionNode):
     bl_idname = "NLMouseMovedCondition"
     bl_label = "Mouse Moved"
-    nl_category = "Mouse"
+    nl_category = "Input"
+    nl_subcat = 'Mouse'
 
     pulse: bpy.props.BoolProperty(
         description="ON: True until the button is released, OFF: True when pressed, then False until pressed again", default=False,
@@ -4423,7 +4483,8 @@ _nodes.append(NLMouseMovedCondition)
 class NLMouseReleasedCondition(bpy.types.Node, NLConditionNode):
     bl_idname = "NLMouseReleasedCondition"
     bl_label = "Mouse Released"
-    nl_category = "Mouse"
+    nl_category = "Input"
+    nl_subcat = 'Mouse'
 
     pulse: bpy.props.BoolProperty(
         description="ON: True until the button is released, OFF: True when pressed, then False until pressed again", default=False,
@@ -4472,7 +4533,8 @@ _nodes.append(NLConditionOnceNode)
 class NLObjectPropertyOperator(bpy.types.Node, NLConditionNode):
     bl_idname = "NLObjectPropertyOperator"
     bl_label = "Evaluate Property"
-    nl_category = "Properties"
+    nl_category = "Objects"
+    nl_subcat = 'Properties'
     operator: bpy.props.EnumProperty(items=_enum_logic_operators, update=update_tree_code)
 
     def draw_buttons(self, context, layout):
@@ -4530,7 +4592,8 @@ _nodes.append(NLConditionNextFrameNode)
 class NLConditionMousePressedOn(bpy.types.Node, NLConditionNode):
     bl_idname = "NLConditionMousePressedOn"
     bl_label = "Mouse Pressed On"
-    nl_category = "Mouse"
+    nl_category = "Input"
+    nl_subcat = 'Mouse'
 
     def init(self, context):
         NLConditionNode.init(self, context)
@@ -4549,7 +4612,8 @@ _nodes.append(NLConditionMousePressedOn)
 class NLConditionMouseWheelMoved(bpy.types.Node, NLConditionNode):
     bl_idname = "NLConditionMouseWheelMoved"
     bl_label = "Mouse Wheel Moved"
-    nl_category = "Mouse"
+    nl_category = "Input"
+    nl_subcat = 'Mouse'
 
     def init(self, context):
         NLConditionNode.init(self, context)
@@ -4589,13 +4653,14 @@ class NLConditionCollisionNode(bpy.types.Node, NLConditionNode):
         return [OUTCELL, "TARGET", "POINT", "NORMAL", "OBJECTS", "OPN_SET"]
 
 
-_nodes.append(NLConditionCollisionNode)
+#_nodes.append(NLConditionCollisionNode)
 
 
 class NLConditionMouseTargetingNode(bpy.types.Node, NLConditionNode):
     bl_idname = "NLConditionMouseTargetingNode"
     bl_label = "Mouse Over"
-    nl_category = "Mouse"
+    nl_category = "Input"
+    nl_subcat = 'Mouse'
 
     def init(self, context):
         NLConditionNode.init(self, context)
@@ -4756,6 +4821,7 @@ class NLConditionCompareVecs(bpy.types.Node, NLConditionNode):
     bl_idname = "NLConditionCompareVecs"
     bl_label = "Compare Vectors"
     nl_category = "Math"
+    nl_subcat = 'Vector Math'
     operator: bpy.props.EnumProperty(items=_enum_logic_operators, update=update_tree_code)
 
     def draw_buttons(self, context, layout):
@@ -4821,7 +4887,7 @@ _nodes.append(NLConditionValueChanged)
 class NLConditionTimeElapsed(bpy.types.Node, NLConditionNode):
     bl_idname = "NLConditionTimeElapsed"
     bl_label = "Timer"
-    nl_category = "Time"
+    nl_category = 'Time'
 
     def init(self, context):
         NLConditionNode.init(self, context)
@@ -4897,7 +4963,8 @@ _nodes.append(NLConditionNotNode)
 class NLConditionLogicNetworkStatusNode(bpy.types.Node, NLConditionNode):
     bl_idname = "NLConditionLogitNetworkStatusNode"
     bl_label = "Logic Network Status"
-    nl_category = "Logic Tree"
+    nl_category = "Logic"
+    nl_subcat = 'Trees'
 
     def init(self, context):
         NLConditionNode.init(self, context)
@@ -4938,7 +5005,8 @@ _nodes.append(NLAddObjectActionNode)
 class NLSetGameObjectGamePropertyActionNode(bpy.types.Node, NLActionNode):
     bl_idname = "NLSetGameObjectGamePropertyActionNode"
     bl_label = "Set Property"
-    nl_category = "Properties"
+    nl_category = "Objects"
+    nl_subcat = 'Properties'
 
     def init(self, context):
         NLActionNode.init(self, context)
@@ -5009,7 +5077,8 @@ if not TOO_OLD:
 class NLToggleGameObjectGamePropertyActionNode(bpy.types.Node, NLActionNode):
     bl_idname = "NLToggleGameObjectGamePropertyActionNode"
     bl_label = "Toggle Property"
-    nl_category = "Properties"
+    nl_category = "Objects"
+    nl_subcat = 'Properties'
 
     def init(self, context):
         NLActionNode.init(self, context)
@@ -5029,7 +5098,8 @@ _nodes.append(NLToggleGameObjectGamePropertyActionNode)
 class NLAddToGameObjectGamePropertyActionNode(bpy.types.Node, NLActionNode):
     bl_idname = "NLAddToGameObjectGamePropertyActionNode"
     bl_label = "Add To Property"
-    nl_category = "Properties"
+    nl_category = "Objects"
+    nl_subcat = 'Properties'
 
     def init(self, context):
         NLActionNode.init(self, context)
@@ -5060,7 +5130,8 @@ _nodes.append(NLAddToGameObjectGamePropertyActionNode)
 class NLCopyPropertyFromObject(bpy.types.Node, NLActionNode):
     bl_idname = "NLCopyPropertyFromObject"
     bl_label = "Copy From Object"
-    nl_category = "Properties"
+    nl_category = "Objects"
+    nl_subcat = 'Properties'
 
     def init(self, context):
         NLActionNode.init(self, context)
@@ -5090,7 +5161,8 @@ _nodes.append(NLCopyPropertyFromObject)
 class NLClampedAddToGameObjectGamePropertyActionNode(bpy.types.Node, NLActionNode):
     bl_idname = "NLClampedAddToGameObjectGamePropertyActionNode"
     bl_label = "Clamped Modify Property"
-    nl_category = "Properties"
+    nl_category = "Objects"
+    nl_subcat = 'Properties'
 
     def init(self, context):
         NLActionNode.init(self, context)
@@ -5202,7 +5274,8 @@ _nodes.append(NLAbsoluteValue)
 class NLCreateVehicle(bpy.types.Node, NLActionNode):
     bl_idname = "NLCreateVehicle"
     bl_label = "Create New"
-    nl_category = "Vehicle"
+    nl_category = "Physics"
+    nl_subcat = 'Vehicle'
 
     def init(self, context):
         NLActionNode.init(self, context)
@@ -5237,7 +5310,8 @@ class NLCreateVehicle(bpy.types.Node, NLActionNode):
 class NLCreateVehicleFromParent(bpy.types.Node, NLActionNode):
     bl_idname = "NLCreateVehicleFromParent"
     bl_label = "Create New Vehicle"
-    nl_category = "Vehicle"
+    nl_category = "Physics"
+    nl_subcat = 'Vehicle'
 
     def init(self, context):
         NLActionNode.init(self, context)
@@ -5271,7 +5345,8 @@ if not TOO_OLD:
 class NLVehicleApplyEngineForce(bpy.types.Node, NLActionNode):
     bl_idname = "NLVehicleApplyEngineForce"
     bl_label = "Accelerate"
-    nl_category = "Vehicle"
+    nl_category = "Physics"
+    nl_subcat = 'Vehicle'
     value_type: bpy.props.EnumProperty(items=_enum_vehicle_axis, update=update_tree_code)
 
     def init(self, context):
@@ -5307,7 +5382,8 @@ if not TOO_OLD:
 class NLVehicleApplyBraking(bpy.types.Node, NLActionNode):
     bl_idname = "NLVehicleApplyBraking"
     bl_label = "Brake"
-    nl_category = "Vehicle"
+    nl_category = "Physics"
+    nl_subcat = 'Vehicle'
     value_type: bpy.props.EnumProperty(items=_enum_vehicle_axis, update=update_tree_code)
 
     def init(self, context):
@@ -5343,7 +5419,8 @@ if not TOO_OLD:
 class NLVehicleApplySteering(bpy.types.Node, NLActionNode):
     bl_idname = "NLVehicleApplySteering"
     bl_label = "Steer"
-    nl_category = "Vehicle"
+    nl_category = "Physics"
+    nl_subcat = 'Vehicle'
     value_type: bpy.props.EnumProperty(items=_enum_vehicle_axis, update=update_tree_code)
 
     def init(self, context):
@@ -5378,7 +5455,8 @@ if not TOO_OLD:
 class NLVehicleSetAttributes(bpy.types.Node, NLActionNode):
     bl_idname = "NLVehicleSetAttributes"
     bl_label = "Set Attributes"
-    nl_category = "Vehicle"
+    nl_category = "Physics"
+    nl_subcat = 'Vehicle'
     value_type: bpy.props.EnumProperty(items=_enum_vehicle_axis, update=update_tree_code)
 
     def init(self, context):
@@ -5432,7 +5510,8 @@ if not TOO_OLD:
 class NLSetObjectAttributeActionNode(bpy.types.Node, NLActionNode):
     bl_idname = "NLSetObjectAttributeActionNode"
     bl_label = "Set Position / Rotation / Scale etc."
-    nl_category = "Object Data"
+    nl_category = "Objects"
+    nl_subcat = 'Data'
     value_type: bpy.props.EnumProperty(items=_enum_writable_member_names, update=update_tree_code, default='worldPosition')
 
     def init(self, context):
@@ -5494,7 +5573,8 @@ _nodes.append(NLActionRayCastNode)
 class NLStartLogicNetworkActionNode(bpy.types.Node, NLActionNode):
     bl_idname = "NLStartLogicNetworkActionNode"
     bl_label = "Start Logic Tree"
-    nl_category = "Logic Tree"
+    nl_category = "Logic"
+    nl_subcat = 'Trees'
 
     def init(self, context):
         NLActionNode.init(self, context)
@@ -5521,7 +5601,8 @@ _nodes.append(NLStartLogicNetworkActionNode)
 class NLStopLogicNetworkActionNode(bpy.types.Node, NLActionNode):
     bl_idname = "NLStopLogicNetworkActionNode"
     bl_label = "Stop Logic Tree"
-    nl_category = "Logic Tree"
+    nl_category = "Logic"
+    nl_subcat = 'Trees'
 
     def init(self, context):
         NLActionNode.init(self, context)
@@ -5580,7 +5661,8 @@ class NLActionRepeater(bpy.types.Node, NLActionNode):
 class NLActionSetGameObjectVisibility(bpy.types.Node, NLActionNode):
     bl_idname = "NLActionSetGameObjectVisibility"
     bl_label = "Set Visibility"
-    nl_category = "Object Data"
+    nl_category = "Objects"
+    nl_subcat = 'Data'
 
     def init(self, context):
         NLActionNode.init(self, context)
@@ -5642,7 +5724,8 @@ class NLActionFindObjectFromSceneNode(bpy.types.Node, NLActionNode):
 class NLActionSetActiveCamera(bpy.types.Node, NLActionNode):
     bl_idname = "NLActionSetActiveCamera"
     bl_label = "Set Camera"
-    nl_category = "Camera"
+    nl_category = "Scene"
+    nl_subcat = 'Camera'
 
     def init(self, context):
         NLActionNode.init(self, context)
@@ -5661,7 +5744,8 @@ _nodes.append(NLActionSetActiveCamera)
 class NLActionSetCameraFov(bpy.types.Node, NLActionNode):
     bl_idname = "NLActionSetCameraFov"
     bl_label = "Set FOV"
-    nl_category = "Camera"
+    nl_category = "Scene"
+    nl_subcat = 'Camera'
 
     def init(self, context):
         NLActionNode.init(self, context)
@@ -5748,8 +5832,9 @@ _nodes.append(NLActionSetVSync)
 
 class NLInitEmptyDict(bpy.types.Node, NLActionNode):
     bl_idname = "NLInitEmptyDict"
-    bl_label = "- DICT: Init Empty"
+    bl_label = "Init Empty"
     nl_category = "Python"
+    nl_subcat = 'Dictionary'
 
     def init(self, context):
         NLActionNode.init(self, context)
@@ -5769,8 +5854,9 @@ _nodes.append(NLInitEmptyDict)
 
 class NLInitNewDict(bpy.types.Node, NLActionNode):
     bl_idname = "NLInitNewDict"
-    bl_label = "- DICT: Init From Item"
+    bl_label = "Init From Item"
     nl_category = "Python"
+    nl_subcat = 'Dictionary'
 
     def init(self, context):
         NLActionNode.init(self, context)
@@ -5792,8 +5878,9 @@ _nodes.append(NLInitNewDict)
 
 class NLSetDictKeyValue(bpy.types.Node, NLActionNode):
     bl_idname = "NLSetDictKeyValue"
-    bl_label = "- DICT: Set Key"
+    bl_label = "Set Key"
     nl_category = "Python"
+    nl_subcat = 'Dictionary'
 
     def init(self, context):
         NLActionNode.init(self, context)
@@ -5816,8 +5903,9 @@ _nodes.append(NLSetDictKeyValue)
 
 class NLSetDictDelKey(bpy.types.Node, NLActionNode):
     bl_idname = "NLSetDictDelKey"
-    bl_label = "- DICT: Remove Key"
+    bl_label = "Remove Key"
     nl_category = "Python"
+    nl_subcat = 'Dictionary'
 
     def init(self, context):
         NLActionNode.init(self, context)
@@ -5839,8 +5927,9 @@ _nodes.append(NLSetDictDelKey)
 
 class NLInitEmptyList(bpy.types.Node, NLActionNode):
     bl_idname = "NLInitEmptyList"
-    bl_label = "- LIST: Init Empty"
+    bl_label = "Init Empty"
     nl_category = "Python"
+    nl_subcat = 'List'
 
     def init(self, context):
         NLActionNode.init(self, context)
@@ -5861,8 +5950,9 @@ _nodes.append(NLInitEmptyList)
 
 class NLInitNewList(bpy.types.Node, NLActionNode):
     bl_idname = "NLInitNewList"
-    bl_label = "- LIST: From Items"
+    bl_label = "From Items"
     nl_category = "Python"
+    nl_subcat = 'List'
 
     def init(self, context):
         NLActionNode.init(self, context)
@@ -5886,8 +5976,9 @@ _nodes.append(NLInitNewList)
 
 class NLAppendListItem(bpy.types.Node, NLActionNode):
     bl_idname = "NLAppendListItem"
-    bl_label = "- LIST: Append"
+    bl_label = "Append"
     nl_category = "Python"
+    nl_subcat = 'List'
 
     def init(self, context):
         NLActionNode.init(self, context)
@@ -5910,8 +6001,9 @@ _nodes.append(NLAppendListItem)
 
 class NLSetListIndex(bpy.types.Node, NLActionNode):
     bl_idname = "NLSetListIndex"
-    bl_label = "- LIST: Set Index"
+    bl_label = "Set Index"
     nl_category = "Python"
+    nl_subcat = 'List'
 
     def init(self, context):
         NLActionNode.init(self, context)
@@ -5937,8 +6029,9 @@ _nodes.append(NLSetListIndex)
 
 class NLRemoveListValue(bpy.types.Node, NLActionNode):
     bl_idname = "NLRemoveListValue"
-    bl_label = "- LIST: Remove Value"
+    bl_label = "Remove Value"
     nl_category = "Python"
+    nl_subcat = 'List'
 
     def init(self, context):
         NLActionNode.init(self, context)
@@ -5993,7 +6086,8 @@ class NLActionAddScene(bpy.types.Node, NLActionNode):
 class NLActionInstallSubNetwork(bpy.types.Node, NLActionNode):
     bl_idname = "NLActionInstallSubNetwork"
     bl_label = "Add Logic Tree to Object"
-    nl_category = "Logic Tree"
+    nl_category = "Logic"
+    nl_subcat = 'Trees'
 
     def init(self, context):
         NLActionNode.init(self, context)
@@ -6019,7 +6113,8 @@ _nodes.append(NLActionInstallSubNetwork)
 class NLActionExecuteNetwork(bpy.types.Node, NLActionNode):
     bl_idname = "NLActionExecuteNetwork"
     bl_label = "Execute Logic Tree"
-    nl_category = "Logic Tree"
+    nl_category = "Logic"
+    nl_subcat = 'Trees'
 
     def init(self, context):
         NLActionNode.init(self, context)
@@ -6094,7 +6189,8 @@ _nodes.append(NLActionSetAnimationFrame)
 class NLActionApplyValue(bpy.types.Node, NLActionNode):
     bl_idname = "NLActionApplyValue"
     bl_label = "Apply Motion/Rotation/Force/Torque to Object"
-    nl_category = "Transformation"
+    nl_category = "Objects"
+    nl_subcat = 'Transformation'
     local: bpy.props.BoolProperty(default=True, update=update_tree_code)
 
     def init(self, context):
@@ -6120,7 +6216,8 @@ class NLActionApplyValue(bpy.types.Node, NLActionNode):
 class NLActionApplyLocation(bpy.types.Node, NLActionNode):
     bl_idname = "NLActionApplyLocation"
     bl_label = "Apply Movement"
-    nl_category = "Transformation"
+    nl_category = "Objects"
+    nl_subcat = 'Transformation'
     local: bpy.props.BoolProperty(default=True, update=update_tree_code)
 
     def init(self, context):
@@ -6147,7 +6244,8 @@ _nodes.append(NLActionApplyLocation)
 class NLActionApplyRotation(bpy.types.Node, NLActionNode):
     bl_idname = "NLActionApplyRotation"
     bl_label = "Apply Rotation"
-    nl_category = "Transformation"
+    nl_category = "Objects"
+    nl_subcat = 'Transformation'
     local: bpy.props.BoolProperty(default=True, update=update_tree_code)
 
     def init(self, context):
@@ -6174,7 +6272,8 @@ _nodes.append(NLActionApplyRotation)
 class NLActionApplyForce(bpy.types.Node, NLActionNode):
     bl_idname = "NLActionApplyForce"
     bl_label = "Apply Force"
-    nl_category = "Transformation"
+    nl_category = "Objects"
+    nl_subcat = 'Transformation'
     local: bpy.props.BoolProperty(default=True, update=update_tree_code)
 
     def init(self, context):
@@ -6204,7 +6303,8 @@ _nodes.append(NLActionApplyForce)
 class NLActionApplyImpulse(bpy.types.Node, NLActionNode):
     bl_idname = "NLActionApplyImpulse"
     bl_label = "Apply Impulse"
-    nl_category = "Transformation"
+    nl_category = "Objects"
+    nl_subcat = 'Transformation'
     local: bpy.props.BoolProperty(default=False, update=update_tree_code)
 
     def init(self, context):
@@ -6233,7 +6333,8 @@ _nodes.append(NLActionApplyImpulse)
 class NLActionCharacterJump(bpy.types.Node, NLActionNode):
     bl_idname = "NLActionCharacterJump"
     bl_label = "Jump"
-    nl_category = "Character"
+    nl_category = "Physics"
+    nl_subcat = 'Character'
 
     def init(self, context):
         NLActionNode.init(self, context)
@@ -6664,7 +6765,8 @@ _nodes.append(NLActionListVariables)
 class NLActionSetCharacterJump(bpy.types.Node, NLActionNode):
     bl_idname = "NLSetActionCharacterJump"
     bl_label = "Set Max Jumps"
-    nl_category = "Character"
+    nl_category = "Physics"
+    nl_subcat = 'Character'
 
     def init(self, context):
         NLActionNode.init(self, context)
@@ -6688,7 +6790,8 @@ _nodes.append(NLActionSetCharacterJump)
 class NLActionSetCharacterGravity(bpy.types.Node, NLActionNode):
     bl_idname = "NLActionSetCharacterGravity"
     bl_label = "Set Gravity"
-    nl_category = "Character"
+    nl_category = "Physics"
+    nl_subcat = 'Character'
 
     def init(self, context):
         NLActionNode.init(self, context)
@@ -6710,7 +6813,8 @@ _nodes.append(NLActionSetCharacterGravity)
 class NLActionSetCharacterWalkDir(bpy.types.Node, NLActionNode):
     bl_idname = "NLActionSetCharacterWalkDir"
     bl_label = "Set Walk Direction"
-    nl_category = "Character"
+    nl_category = "Physics"
+    nl_subcat = 'Character'
 
     def init(self, context):
         NLActionNode.init(self, context)
@@ -6734,7 +6838,8 @@ _nodes.append(NLActionSetCharacterWalkDir)
 class NLActionGetCharacterInfo(bpy.types.Node, NLActionNode):
     bl_idname = "NLActionGetCharacterInfo"
     bl_label = "Get Physics Info"
-    nl_category = "Character"
+    nl_category = "Physics"
+    nl_subcat = 'Character'
 
     def init(self, context):
         NLActionNode.init(self, context)
@@ -6757,7 +6862,8 @@ _nodes.append(NLActionGetCharacterInfo)
 class NLActionApplyTorque(bpy.types.Node, NLActionNode):
     bl_idname = "NLActionApplyTorque"
     bl_label = "Apply Torque"
-    nl_category = "Transformation"
+    nl_category = "Objects"
+    nl_subcat = 'Transformation'
     local: bpy.props.BoolProperty(default=True, update=update_tree_code)
 
     def init(self, context):
@@ -6865,7 +6971,8 @@ class NLActionEndSceneNode(bpy.types.Node, NLActionNode):
 class NLActionReplaceMesh(bpy.types.Node, NLActionNode):
     bl_idname = "NLActionReplaceMesh"
     bl_label = "Replace Mesh"
-    nl_category = "Object Data"
+    nl_category = "Objects"
+    nl_subcat = 'Data'
 
     def init(self, context):
         NLActionNode.init(self, context)
@@ -6891,7 +6998,7 @@ _nodes.append(NLActionReplaceMesh)
 class NLActionRemovePhysicsConstraint(bpy.types.Node, NLActionNode):
     bl_idname = "NLActionRemovePhysicsConstraint"
     bl_label = "Remove Physics Constraint"
-    nl_category = "Object Data"
+    nl_category = "Objects"
 
     def init(self, context):
         NLActionNode.init(self, context)
@@ -6916,7 +7023,7 @@ _nodes.append(NLActionRemovePhysicsConstraint)
 class NLActionAddPhysicsConstraint(bpy.types.Node, NLActionNode):
     bl_idname = "NLActionAddPhysicsConstraint"
     bl_label = "Add Physics Constraint"
-    nl_category = "Object Data"
+    nl_category = "Objects"
 
     def init(self, context):
         NLActionNode.init(self, context)
@@ -7325,7 +7432,8 @@ _nodes.append(NLActionLibFreeNode)
 class NLActionAlignAxisToVector(bpy.types.Node, NLActionNode):
     bl_idname = "NLActionAlignAxisToVector"
     bl_label = "Align Axis to Vector"
-    nl_category = "Transformation"
+    nl_category = "Objects"
+    nl_subcat = 'Transformation'
 
     def init(self, context):
         NLActionNode.init(self, context)
@@ -7353,7 +7461,8 @@ _nodes.append(NLActionAlignAxisToVector)
 class NLActionTimeBarrier(bpy.types.Node, NLActionNode):
     bl_idname = "NLActionTimeBarrier"
     bl_label = "Time Barrier"
-    nl_category = "Time"
+    nl_category = 'Time'
+
     def init(self, context):
         NLActionNode.init(self, context)
         self.inputs.new(NLConditionSocket.bl_idname, "Condition")
@@ -7410,7 +7519,8 @@ _nodes.append(NLActionTimeFilter)
 class NLActionMouseLookNode(bpy.types.Node, NLActionNode):
     bl_idname = "NLActionMouseLookNode"
     bl_label = "Mouse Look"
-    nl_category = "Mouse"
+    nl_category = "Input"
+    nl_subcat = 'Mouse'
     
     def init(self, context):
         NLActionNode.init(self, context)
@@ -7634,7 +7744,8 @@ _nodes.append(NLParameterGameObjectParent)
 class NLParameterAxisVector(bpy.types.Node, NLParameterNode):
     bl_idname = "NLParameterAxisVector"
     bl_label = "Get Axis Vector"
-    nl_category = "Object Data"
+    nl_category = "Objects"
+    nl_subcat = 'Data'
     axis: bpy.props.EnumProperty(items=_enum_local_oriented_axis, update=update_tree_code)
 
     def init(self, context):
@@ -7660,7 +7771,8 @@ _nodes.append(NLParameterAxisVector)
 class NLActionEditArmatureConstraint(bpy.types.Node, NLActionNode):
     bl_idname = "NLActionEditArmatureConstraint"
     bl_label = "Edit Armature Constraint"
-    nl_category = "Armature / Rig"
+    nl_category = "Animation"
+    nl_subcat = 'Armature / Rig'
 
     def init(self, context):
         NLActionNode.init(self, context)
@@ -7691,7 +7803,8 @@ _nodes.append(NLActionEditArmatureConstraint)
 class NLActionSetBonePos(bpy.types.Node, NLActionNode):
     bl_idname = "NLActionSetBonePos"
     bl_label = "Set Bone Position"
-    nl_category = "Armature / Rig"
+    nl_category = 'Animation'
+    nl_subcat = 'Armature / Rig'
 
     def init(self, context):
         NLActionNode.init(self, context)
@@ -7716,7 +7829,8 @@ _nodes.append(NLActionSetBonePos)
 class NLActionEditBoneNode(bpy.types.Node, NLActionNode):
     bl_idname = "NLActionEditBoneNode"
     bl_label = "Edit Armature Bone"
-    nl_category = "Armature / Rig"
+    nl_category = 'Animation'
+    nl_subcat = 'Armature / Rig'
 
     def init(self, context):
         NLActionNode.init(self, context)
@@ -7745,7 +7859,8 @@ _nodes.append(NLActionEditBoneNode)
 class NLActionSetDynamicsNode(bpy.types.Node, NLActionNode):
     bl_idname = "NLActionSetDynamicsNode"
     bl_label = "Set Dynamics (Physics)"
-    nl_category = "Object Data"
+    nl_category = "Objects"
+    nl_subcat = 'Data'
 
     def init(self, context):
         NLActionNode.init(self, context)
@@ -7785,7 +7900,8 @@ class NLActionFindSceneNode(bpy.types.Node, NLActionNode):
 class NLActionSetMousePosition(bpy.types.Node, NLActionNode):
     bl_idname = "NLActionSetMousePosition"
     bl_label = "Set Mouse Position"
-    nl_category = "Mouse"
+    nl_category = "Input"
+    nl_subcat = 'Mouse'
 
     def init(self, context):
         NLActionNode.init(self, context)
@@ -7809,7 +7925,8 @@ _nodes.append(NLActionSetMousePosition)
 class NLActionSetMouseCursorVisibility(bpy.types.Node, NLActionNode):
     bl_idname = "NLActionSetMouseCursorVisibility"
     bl_label = "Set Mouse Cursor Visibility"
-    nl_category = "Mouse"
+    nl_category = "Input"
+    nl_subcat = 'Mouse'
 
     def init(self, context):
         NLActionNode.init(self, context)
@@ -8087,6 +8204,7 @@ class NLParameterGetGlobalValue(bpy.types.Node, NLParameterNode):
     bl_idname = "NLParameterGetGlobalValue"
     bl_label = "Get Global Value"
     nl_category = "Values"
+    nl_subcat = 'Global'
 
     def init(self, context):
         NLParameterNode.init(self, context)
@@ -8109,6 +8227,7 @@ class NLActionSetGlobalValue(bpy.types.Node, NLActionNode):
     bl_idname = "NLActionSetGlobalValue"
     bl_label = "Set Global Value"
     nl_category = "Values"
+    nl_subcat = 'Global'
 
     def init(self, context):
         NLActionNode.init(self, context)
@@ -8159,6 +8278,7 @@ class NLActionRandomInteger(bpy.types.Node, NLActionNode):
     bl_idname = "NLActionRandomInteger"
     bl_label = "Random Integer"
     nl_category = "Values"
+    nl_subcat = 'Random'
 
     def init(self, context):
         NLActionNode.init(self, context)
@@ -8178,6 +8298,7 @@ class NLActionRandomFloat(bpy.types.Node, NLActionNode):
     bl_idname = "NLActionRandomFloat"
     bl_label = "Random Float"
     nl_category = "Values"
+    nl_subcat = 'Random'
 
     def init(self, context):
         NLActionNode.init(self, context)
@@ -8212,7 +8333,8 @@ _nodes.append(NLParameterDistance)
 class NLParameterKeyboardKeyCode(bpy.types.Node, NLParameterNode):
     bl_idname = "NLParameterKeyboardKeyCode"
     bl_label = "Keyboard Key Code"
-    nl_category = "Keyboard"
+    nl_category = "Input"
+    nl_subcat = 'Keyboard'
     value: bpy.props.StringProperty(update=update_tree_code)
     def init(self, context):
         NLParameterNode.init(self, context)
@@ -8228,7 +8350,8 @@ _nodes.append(NLParameterKeyboardKeyCode)
 class NLActionMoveTo(bpy.types.Node, NLActionNode):
     bl_idname = "NLActionMoveTo"
     bl_label = "Move To"
-    nl_category = "Transformation"
+    nl_category = "Objects"
+    nl_subcat = 'Transformation'
 
     def init(self, context):
         NLActionNode.init(self, context)
@@ -8253,7 +8376,9 @@ _nodes.append(NLActionMoveTo)
 class NLActionTranslate(bpy.types.Node, NLActionNode):
     bl_idname = "NLActionTranslate"
     bl_label = "Translate"
-    nl_category = "Transformation"
+    nl_category = "Objects"
+    nl_subcat = 'Transformation'
+
     def init(self, context):
         NLActionNode.init(self, context)
         self.inputs.new(NLConditionSocket.bl_idname, "Condition")
@@ -8272,7 +8397,8 @@ _nodes.append(NLActionTranslate)
 class NLActionTrackTo(bpy.types.Node, NLActionNode):
     bl_idname = "NLActionTrackTo"
     bl_label = "Track To"
-    nl_category = "Transformation"
+    nl_category = "Objects"
+    nl_subcat = 'Transformation'
 
     def init(self, context):
         NLActionNode.init(self, context)
@@ -8294,7 +8420,8 @@ class NLActionTrackTo(bpy.types.Node, NLActionNode):
 class NLActionRotateTo(bpy.types.Node, NLActionNode):
     bl_idname = "NLActionRotateTo"
     bl_label = "Rotate To"
-    nl_category = "Transformation"
+    nl_category = "Objects"
+    nl_subcat = 'Transformation'
 
     def init(self, context):
         NLActionNode.init(self, context)
@@ -8316,7 +8443,8 @@ _nodes.append(NLActionRotateTo)
 class NLActionNavigate(bpy.types.Node, NLActionNode):
     bl_idname = "NLActionNavigate"
     bl_label = "Move To with Navmesh"
-    nl_category = "Transformation"
+    nl_category = "Objects"
+    nl_subcat = 'Transformation'
 
     def init(self, context):
         NLActionNode.init(self, context)
@@ -8349,7 +8477,8 @@ _nodes.append(NLActionNavigate)
 class NLActionFollowPath(bpy.types.Node, NLActionNode):
     bl_idname = "NLActionFollowPath"
     bl_label = "Follow Path"
-    nl_category = "Transformation"
+    nl_category = "Objects"
+    nl_subcat = 'Transformation'
 
     def init(self, context):
         NLActionNode.init(self, context)
@@ -8403,7 +8532,8 @@ class NLActionUpdateBitmapFontQuads(bpy.types.Node, NLActionNode):
         return "bgelogic.ActionUpdateBitmapFontQuads"
     def get_input_sockets_field_names(self):
         return ["condition", "game_object", "grid_size", "text"]
-_nodes.append(NLActionUpdateBitmapFontQuads)
+
+# _nodes.append(NLActionUpdateBitmapFontQuads)
 
 
 class NLActionSetCurrentScene(bpy.types.Node, NLActionNode):
