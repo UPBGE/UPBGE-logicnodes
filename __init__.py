@@ -1,5 +1,6 @@
 import bpy
-import nodeitems_utils
+# import nodeitems_utils
+from bge_netlogic import nodeutils as nodeitems_utils
 import os
 import sys
 import time
@@ -10,7 +11,7 @@ bl_info = {
         "A Node System to create game logic."
     ),
     "author": "pgi, Leopold A-C (Iza Zed)",
-    "version": (0, 9, 3),
+    "version": (0, 9, 4),
     "blender": (2, 91, 0),
     "location": "View Menu",
     "warning": "Beta",
@@ -359,11 +360,31 @@ class NLAddonSettings(bpy.types.PropertyGroup):
     use_node_debug: bpy.props.BoolProperty()
 
 
-class NodeCategory(nodeitems_utils.NodeCategory):
+class NodeCategory():
+
+    def __init__(self, identifier, name, description="", items=None):
+        self.identifier = identifier
+        self.name = name
+        self.description = description
+
+        if items is None:
+            self.items = lambda context: []
+        elif callable(items):
+            self.items = items
+        else:
+            def items_gen(context):
+                for item in items:
+                    if item.poll is None or item.poll(context):
+                        yield item
+            self.items = items_gen
+
     @classmethod
     def poll(cls, context):
         enabled = (context.space_data.tree_type == ui.BGELogicTree.bl_idname)
         return enabled
+
+    def draw(self, item, layout, context):
+        layout.menu("NODE_MT_category_%s" % self.identifier, icon=nodeitems_utils._cat_icons.get(self.identifier, 'X'))
 
 
 class LogicNodesAddonPreferences(bpy.types.AddonPreferences):
@@ -456,11 +477,14 @@ _registered_classes = sorted(_registered_classes, key=_get_key_for_class)
 def _list_menu_nodes():
     proxy_map = {}
 
-    def get_param_list(c): return proxy_map["Basic Uncategorized Parameters"]
+    def get_param_list(c):
+        return proxy_map["Basic Uncategorized Parameters"]
 
-    def get_cond_list(c): return proxy_map["Basic Uncategorized Conditions"]
+    def get_cond_list(c):
+        return proxy_map["Basic Uncategorized Conditions"]
 
-    def get_act_list(c): return proxy_map["Basic Uncategorized Actions"]
+    def get_act_list(c):
+        return proxy_map["Basic Uncategorized Actions"]
 
     def get_cat_list(cat):
         catlist = proxy_map.get(cat)
@@ -468,9 +492,35 @@ def _list_menu_nodes():
             catlist = []
             proxy_map[cat] = catlist
         return catlist
+
+    cats = {}
+    for c in _registered_classes:
+        if hasattr(c, 'nl_subcat'):
+            if not cats.get(c.nl_category):
+                cats[c.nl_category] = {}
+            if not cats.get(c.nl_category).get(c.nl_subcat):
+                cats[c.nl_category][c.nl_subcat] = []
+            cats[c.nl_category][c.nl_subcat].append(nodeitems_utils.NodeItem(c.bl_idname))
+
+    print(cats)
+    menu_nodes = []
+    for cat, subcats in cats.items():
+        for subcat, items in subcats.items():
+            new_subcat = NodeCategory(subcat, subcat, items=items)
+            menu_nodes.append(new_subcat)
+            get_cat_list(cat).append(new_subcat)
+
+    def get_node_item(node):
+        if hasattr(node, 'bl_icon'):
+            return nodeitems_utils.NodeItem(node.bl_idname, icon=node.bl_icon)
+        else:
+            return nodeitems_utils.NodeItem(node.bl_idname)
+
     for c in _registered_classes:
         if hasattr(c, "nl_category") and not hasattr(c, 'nl_subcat'):
-            get_cat_list(c.nl_category).append(nodeitems_utils.NodeItem(c.bl_idname))
+            get_cat_list(c.nl_category).append(get_node_item(c))
+        elif hasattr(c, 'nl_subcat'):
+            continue
         elif issubclass(c, basicnodes.NLParameterNode):
             get_param_list(c).append(nodeitems_utils.NodeItem(c.bl_idname))
         elif issubclass(c, basicnodes.NLConditionNode):
@@ -479,8 +529,9 @@ def _list_menu_nodes():
             get_act_list(c).append(nodeitems_utils.NodeItem(c.bl_idname))
 
     pmap_keys = list(proxy_map.keys())
-    pmap_keys.sort()
-    menu_nodes = []
+    del pmap_keys[-1]
+    # pmap_keys.sort()
+    print(pmap_keys)
     for name in pmap_keys:
         itemlist = proxy_map[name]
         menu_nodes.append(NodeCategory(name, name, items=itemlist))
