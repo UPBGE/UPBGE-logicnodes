@@ -59,7 +59,7 @@ _cat_icons = {
     'Values': 'RADIOBUT_OFF',
     'Variables': 'FILE',
     'Vehicle': 'AUTO',
-    'Visuals': 'RESTRICT_RENDER_ON',
+    'Visuals': 'HIDE_OFF',
     'Window': 'SCENE',
 }
 
@@ -68,6 +68,7 @@ _main_menues = [
     'Game',
     'Input',
     'Scene',
+    'Values',
     'Animation',
     'Lights',
     'Materials',
@@ -75,20 +76,19 @@ _main_menues = [
     'Sound',
     'Logic',
     'Math',
+    'Physics',
     'Python',
     'Ray Casts',
     'Time',
-    'Physics',
-    'Values',
     'Variables',
-    'Visuals',
     'Window',
     'Utilities'
 ]
 
 _cat_separators = [
-    'Scene',
+    'Values',
     'Sound',
+    'Time',
     'Window'
 ]
 

@@ -7057,7 +7057,8 @@ _nodes.append(NLActionAddPhysicsConstraint)
 class NLSetGammaAction(bpy.types.Node, NLActionNode):
     bl_idname = "NLSetGammaAction"
     bl_label = "Set Gamma"
-    nl_category = "Visuals"
+    nl_category = "Window"
+    nl_subcat = 'Visuals'
 
     def init(self, context):
         NLActionNode.init(self, context)
@@ -7082,7 +7083,8 @@ if not TOO_OLD:
 class NLSetExposureAction(bpy.types.Node, NLActionNode):
     bl_idname = "NLSetExposureAction"
     bl_label = "Set Exposure"
-    nl_category = "Visuals"
+    nl_category = "Window"
+    nl_subcat = 'Visuals'
 
     def init(self, context):
         NLActionNode.init(self, context)
@@ -7108,7 +7110,8 @@ if not TOO_OLD:
 class NLSetEeveeBloom(bpy.types.Node, NLActionNode):
     bl_idname = "NLSetEeveeBloom"
     bl_label = "Set Bloom"
-    nl_category = "Visuals"
+    nl_category = "Window"
+    nl_subcat = 'Visuals'
 
     def init(self, context):
         NLActionNode.init(self, context)
@@ -7135,7 +7138,8 @@ if not TOO_OLD:
 class NLSetEeveeSSR(bpy.types.Node, NLActionNode):
     bl_idname = "NLSetEeveeSSR"
     bl_label = "Set SSR"
-    nl_category = "Visuals"
+    nl_category = "Window"
+    nl_subcat = 'Visuals'
 
     def init(self, context):
         NLActionNode.init(self, context)
@@ -7162,7 +7166,8 @@ if not TOO_OLD:
 class NLSetEeveeVolumetrics(bpy.types.Node, NLActionNode):
     bl_idname = "NLSetEeveeVolumetrics"
     bl_label = "Set Volumetric Light"
-    nl_category = "Visuals"
+    nl_category = "Window"
+    nl_subcat = 'Visuals'
 
     def init(self, context):
         NLActionNode.init(self, context)
@@ -7189,7 +7194,8 @@ if not TOO_OLD:
 class NLSetEeveeVolumetricShadows(bpy.types.Node, NLActionNode):
     bl_idname = "NLSetEeveeVolumetricShadows"
     bl_label = "Set Volumetric Shadows"
-    nl_category = "Visuals"
+    nl_category = "Window"
+    nl_subcat = 'Visuals'
 
     def init(self, context):
         NLActionNode.init(self, context)
