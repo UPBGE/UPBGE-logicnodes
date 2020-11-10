@@ -859,6 +859,10 @@ class NLGameObjectSocket(bpy.types.NodeSocket, NetLogicSocketType):
         type=bpy.types.Object,
         update=update_tree_code
     )
+    use_owner: bpy.props.BoolProperty(
+        update=update_tree_code,
+        description='Use Owner'
+    )
 
     def draw_color(self, context, node):
         return PARAM_OBJ_SOCKET_COLOR
@@ -869,18 +873,27 @@ class NLGameObjectSocket(bpy.types.NodeSocket, NetLogicSocketType):
         elif self.is_linked:
             layout.label(text=self.name)
         else:
-            col = layout.column(align=False)
-            col.label(text=self.name)
-            col.prop_search(
-                self,
-                'value',
-                bpy.context.scene,
-                'objects',
-                icon='NONE',
-                text=''
-            )
+            if not self.use_owner:
+                col = layout.column(align=False)
+                row = col.row()
+                row.label(text=self.name)
+                row.prop(self, 'use_owner', icon='USER', text='')
+                col.prop_search(
+                    self,
+                    'value',
+                    bpy.context.scene,
+                    'objects',
+                    icon='NONE',
+                    text=''
+                )
+            else:
+                row = layout.row()
+                row.label(text=self.name)
+                row.prop(self, 'use_owner', icon='USER', text='')
 
     def get_unlinked_value(self):
+        if self.use_owner:
+            return '"Object:USE_OWNER"'
         if isinstance(self.value, bpy.types.Object):
             return '"Object:{}"'.format(self.value.name)
 
@@ -3688,7 +3701,7 @@ _nodes.append(NLParameterTimeNode)
 
 class NLMouseDataParameter(bpy.types.Node, NLParameterNode):
     bl_idname = "NLMouseDataParameter"
-    bl_label = "Mouse Data"
+    bl_label = "Status"
     nl_category = "Input"
     nl_subcat = 'Mouse'
 
@@ -4419,7 +4432,7 @@ _nodes.append(NLKeyReleasedCondition)
 
 class NLMousePressedCondition(bpy.types.Node, NLConditionNode):
     bl_idname = "NLMousePressedCondition"
-    bl_label = "Mouse Button"
+    bl_label = "Button"
     nl_category = "Input"
     nl_subcat = 'Mouse'
 
@@ -4451,7 +4464,7 @@ _nodes.append(NLMousePressedCondition)
 
 class NLMouseMovedCondition(bpy.types.Node, NLConditionNode):
     bl_idname = "NLMouseMovedCondition"
-    bl_label = "Mouse Moved"
+    bl_label = "Moved"
     nl_category = "Input"
     nl_subcat = 'Mouse'
 
@@ -4482,7 +4495,8 @@ _nodes.append(NLMouseMovedCondition)
 
 class NLMouseReleasedCondition(bpy.types.Node, NLConditionNode):
     bl_idname = "NLMouseReleasedCondition"
-    bl_label = "Button Released"
+    bl_label = "Button Up"
+    bl_icon = 'MOUSE_LMB'
     nl_category = "Input"
     nl_subcat = 'Mouse'
 
@@ -4591,7 +4605,7 @@ _nodes.append(NLConditionNextFrameNode)
 
 class NLConditionMousePressedOn(bpy.types.Node, NLConditionNode):
     bl_idname = "NLConditionMousePressedOn"
-    bl_label = "Mouse Button Over"
+    bl_label = "Button Over"
     nl_category = "Input"
     nl_subcat = 'Mouse'
 
@@ -4611,7 +4625,7 @@ _nodes.append(NLConditionMousePressedOn)
 
 class NLConditionMouseWheelMoved(bpy.types.Node, NLConditionNode):
     bl_idname = "NLConditionMouseWheelMoved"
-    bl_label = "Mouse Wheel"
+    bl_label = "Wheel"
     nl_category = "Input"
     nl_subcat = 'Mouse'
 
@@ -4658,7 +4672,7 @@ class NLConditionCollisionNode(bpy.types.Node, NLConditionNode):
 
 class NLConditionMouseTargetingNode(bpy.types.Node, NLConditionNode):
     bl_idname = "NLConditionMouseTargetingNode"
-    bl_label = "Mouse Over"
+    bl_label = "Over"
     nl_category = "Input"
     nl_subcat = 'Mouse'
 
@@ -7283,6 +7297,7 @@ _nodes.append(NLSetLightShadowAction)
 class NLSetLightColorAction(bpy.types.Node, NLActionNode):
     bl_idname = "NLSetLightColorAction"
     bl_label = "Set Light Color"
+    bl_icon = 'COLOR'
     nl_category = "Lights"
 
     def init(self, context):
@@ -7487,6 +7502,7 @@ _nodes.append(NLActionTimeBarrier)
 class NLActionTimeDelay(bpy.types.Node, NLActionNode):
     bl_idname = "NLActionTimeDelay"
     bl_label = "Delay"
+    bl_icon = 'PREVIEW_RANGE'
     nl_category = "Time"
     def init(self, context):
         NLActionNode.init(self, context)
@@ -7507,6 +7523,7 @@ _nodes.append(NLActionTimeDelay)
 class NLActionTimeFilter(bpy.types.Node, NLActionNode):
     bl_idname = "NLActionTimeFilter"
     bl_label = "Time Filter"
+    bl_icon = 'TEMP'
     nl_category = "Time"
     def init(self, context):
         NLActionNode.init(self, context)
@@ -7524,7 +7541,8 @@ _nodes.append(NLActionTimeFilter)
 
 class NLActionMouseLookNode(bpy.types.Node, NLActionNode):
     bl_idname = "NLActionMouseLookNode"
-    bl_label = "Mouse Look"
+    bl_label = "Look"
+    bl_icon = 'CAMERA_DATA'
     nl_category = "Input"
     nl_subcat = 'Mouse'
     
@@ -7551,6 +7569,8 @@ class NLActionMouseLookNode(bpy.types.Node, NLActionNode):
 
     def get_input_sockets_field_names(self):
         return ["condition", "game_object_x", "game_object_y", "inverted", "sensitivity", "use_cap_z", "cap_z", "use_cap_y", "cap_y", 'smooth']
+
+
 _nodes.append(NLActionMouseLookNode)
 
 
@@ -7580,6 +7600,7 @@ _nodes.append(NLActionPrint)
 class NLActionResetTaaSamples(bpy.types.Node, NLActionNode):
     bl_idname = "NLActionResetTaaSamples"
     bl_label = "Reset TAA Samples"
+    bl_icon = 'FILE_REFRESH'
     nl_category = "Window"
     
     def init(self, context):
@@ -7601,6 +7622,7 @@ _nodes.append(NLActionResetTaaSamples)
 class NLActionMousePickNode(bpy.types.Node, NLActionNode):
     bl_idname = "NLActionMousePickNode"
     bl_label = "Mouse Ray"
+    bl_icon = 'RESTRICT_SELECT_OFF'
     nl_category = "Ray Casts"
 
     def init(self, context):
@@ -7623,6 +7645,7 @@ _nodes.append(NLActionMousePickNode)
 class NLActionCameraPickNode(bpy.types.Node, NLActionNode):
     bl_idname = "NLActionCameraPickNode"
     bl_label = "Camera Ray"
+    bl_icon = 'CAMERA_DATA'
     nl_category = "Ray Casts"
 
     def init(self, context):
@@ -7649,6 +7672,7 @@ _nodes.append(NLActionCameraPickNode)
 class NLActionSetParentNode(bpy.types.Node, NLActionNode):
     bl_idname = "NLActionSetParentNode"
     bl_label = "Set Parent"
+    bl_icon = 'COMMUNITY'
     nl_category = "Objects"
 
     def init(self, context):
@@ -7675,6 +7699,7 @@ _nodes.append(NLActionSetParentNode)
 class NLActionRemoveParentNode(bpy.types.Node, NLActionNode):
     bl_idname = "NLActionRemoveParentNode"
     bl_label = "Remove Parent"
+    bl_icon = 'X'
     nl_category = "Objects"
 
     def init(self, context):
@@ -7698,6 +7723,7 @@ _nodes.append(NLActionRemoveParentNode)
 class NLActionGetPerformanceProfileNode(bpy.types.Node, NLActionNode):
     bl_idname = "NLActionGetPerformanceProfileNode"
     bl_label = "Get Profile"
+    bl_icon = 'TEXT'
     nl_category = "Utilities"
 
     def init(self, context):
@@ -7732,6 +7758,7 @@ _nodes.append(NLActionGetPerformanceProfileNode)
 class NLParameterGameObjectParent(bpy.types.Node, NLParameterNode):
     bl_idname = "NLParameterGameObjectParent"
     bl_label = "Get Parent"
+    bl_icon = 'COMMUNITY'
     nl_category = "Objects"
 
     def init(self, context):
@@ -7750,6 +7777,7 @@ _nodes.append(NLParameterGameObjectParent)
 class NLParameterAxisVector(bpy.types.Node, NLParameterNode):
     bl_idname = "NLParameterAxisVector"
     bl_label = "Get Axis Vector"
+    bl_icon = 'EMPTY_ARROWS'
     nl_category = "Objects"
     nl_subcat = 'Data'
     axis: bpy.props.EnumProperty(items=_enum_local_oriented_axis, update=update_tree_code)
@@ -7777,6 +7805,7 @@ _nodes.append(NLParameterAxisVector)
 class NLActionEditArmatureConstraint(bpy.types.Node, NLActionNode):
     bl_idname = "NLActionEditArmatureConstraint"
     bl_label = "Edit Armature Constraint"
+    bl_icon = 'CONSTRAINT_BONE'
     nl_category = "Animation"
     nl_subcat = 'Armature / Rig'
 
@@ -7809,6 +7838,7 @@ _nodes.append(NLActionEditArmatureConstraint)
 class NLActionSetBonePos(bpy.types.Node, NLActionNode):
     bl_idname = "NLActionSetBonePos"
     bl_label = "Set Bone Position"
+    bl_icon = 'BONE_DATA'
     nl_category = 'Animation'
     nl_subcat = 'Armature / Rig'
 
@@ -7835,6 +7865,7 @@ _nodes.append(NLActionSetBonePos)
 class NLActionEditBoneNode(bpy.types.Node, NLActionNode):
     bl_idname = "NLActionEditBoneNode"
     bl_label = "Edit Armature Bone"
+    bl_icon = 'BONE_DATA'
     nl_category = 'Animation'
     nl_subcat = 'Armature / Rig'
 
@@ -7865,6 +7896,7 @@ _nodes.append(NLActionEditBoneNode)
 class NLActionSetDynamicsNode(bpy.types.Node, NLActionNode):
     bl_idname = "NLActionSetDynamicsNode"
     bl_label = "Set Dynamics (Physics)"
+    bl_icon = 'FORCE_LENNARDJONES'
     nl_category = "Objects"
     nl_subcat = 'Data'
 
@@ -7887,25 +7919,10 @@ class NLActionSetDynamicsNode(bpy.types.Node, NLActionNode):
 _nodes.append(NLActionSetDynamicsNode)
 
 
-class NLActionFindSceneNode(bpy.types.Node, NLActionNode):
-    bl_idname = "NLActionFindSceneNode"
-    bl_label = "Find Scene"
-    nl_category = "Scene"
-
-    def init(self, context):
-        NLActionNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, "Optional Condition")
-        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Query")
-        self.outputs.new(NLSceneSocket.bl_idname, "Scene")
-
-    def get_netlogic_class_name(self): return "bgelogic.ActionFindScene"
-    def get_input_sockets_field_names(self): return ["condition", "query"]
-#_nodes.append(NLActionFindSceneNode)
-
-
 class NLActionSetMousePosition(bpy.types.Node, NLActionNode):
     bl_idname = "NLActionSetMousePosition"
     bl_label = "Set Position"
+    bl_icon = 'RESTRICT_SELECT_OFF'
     nl_category = "Input"
     nl_subcat = 'Mouse'
 
@@ -7931,6 +7948,7 @@ _nodes.append(NLActionSetMousePosition)
 class NLActionSetMouseCursorVisibility(bpy.types.Node, NLActionNode):
     bl_idname = "NLActionSetMouseCursorVisibility"
     bl_label = "Cursor Visibility"
+    bl_icon = 'VIS_SEL_10'
     nl_category = "Input"
     nl_subcat = 'Mouse'
 
@@ -7953,6 +7971,7 @@ _nodes.append(NLActionSetMouseCursorVisibility)
 class NLActionAddSoundDevice(bpy.types.Node, NLActionNode):
     bl_idname = "NLActionAddSoundDevice"
     bl_label = "New Sound Device"
+    bl_icon = 'MUTE_IPO_OFF'
     nl_category = "Sound"
 
     def init(self, context):
@@ -7986,6 +8005,7 @@ _nodes.append(NLActionAddSoundDevice)
 class NLActionStart3DSound(bpy.types.Node, NLActionNode):
     bl_idname = "NLActionStart3DSound"
     bl_label = "3D Sound"
+    bl_icon = 'MUTE_IPO_ON'
     nl_category = "Sound"
 
     def init(self, context):
@@ -8023,6 +8043,7 @@ _nodes.append(NLActionStart3DSound)
 class NLActionStart3DSoundAdv(bpy.types.Node, NLActionNode):
     bl_idname = "NLActionStart3DSoundAdv"
     bl_label = "3D Sound (Advanced)"
+    bl_icon = 'MUTE_IPO_ON'
     nl_category = "Sound"
 
     def init(self, context):
@@ -8077,7 +8098,8 @@ _nodes.append(NLActionStart3DSoundAdv)
 
 class NLActionStartSound(bpy.types.Node, NLActionNode):
     bl_idname = "NLActionStartSound"
-    bl_label = "Sound"
+    bl_label = "2D Sound"
+    bl_icon = 'FILE_SOUND'
     nl_category = "Sound"
 
     def init(self, context):
@@ -8110,6 +8132,7 @@ _nodes.append(NLActionStartSound)
 class NLActionStopAllSounds(bpy.types.Node, NLActionNode):
     bl_idname = "NLActionStopAllSounds"
     bl_label = "Stop All Sounds"
+    bl_icon = 'CANCEL'
     nl_category = "Sound"
 
     def init(self, context):
@@ -8126,6 +8149,7 @@ _nodes.append(NLActionStopAllSounds)
 class NLActionStopSound(bpy.types.Node, NLActionNode):
     bl_idname = "NLActionStopSound"
     bl_label = "Stop Sound"
+    bl_icon = 'SNAP_FACE'
     nl_category = "Sound"
 
     def init(self, context):
@@ -8143,14 +8167,17 @@ _nodes.append(NLActionStopSound)
 class NLActionPauseSound(bpy.types.Node, NLActionNode):
     bl_idname = "NLActionPauseSound"
     bl_label = "Pause Sound"
+    bl_icon = 'PAUSE'
     nl_category = "Sound"
 
     def init(self, context):
         NLActionNode.init(self, context)
         self.inputs.new(NLConditionSocket.bl_idname, "Condition")
         self.inputs.new(NLParameterSocket.bl_idname, "Sound")
+
     def get_netlogic_class_name(self):
         return "bgelogic.ActionPauseSound"
+
     def get_input_sockets_field_names(self):
         return ["condition", "sound"]
 
@@ -8160,14 +8187,20 @@ _nodes.append(NLActionPauseSound)
 class NLActionEndGame(bpy.types.Node, NLActionNode):
     bl_idname = "NLActionEndGame"
     bl_label = "End Game"
+    bl_icon = 'SCREEN_BACK'
     nl_category = "Game"
+
     def init(self, context):
         NLActionNode.init(self, context)
         self.inputs.new(NLConditionSocket.bl_idname, "Condition")
+
     def get_netlogic_class_name(self):
         return "bgelogic.ActionEndGame"
+
     def get_input_sockets_field_names(self):
         return ["condition"]
+
+
 _nodes.append(NLActionEndGame)
 
 

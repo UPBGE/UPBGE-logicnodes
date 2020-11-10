@@ -53,7 +53,7 @@ _cat_icons = {
     'Ray Casts': 'TRACKING_FORWARDS_SINGLE',
     'Scene': 'SCENE_DATA',
     'Sound': 'OUTLINER_DATA_SPEAKER',
-    'Time': 'PREVIEW_RANGE',
+    'Time': 'TIME',
     'Transformation': 'VIEW3D',
     'Utilities': 'PLUGIN',
     'Values': 'RADIOBUT_OFF',
@@ -95,7 +95,8 @@ _cat_separators = [
 
 class NodeCategory(nodeitems_utils.NodeCategory):
 
-    def draw(self, item, layout, context):
+    @staticmethod
+    def draw(self, layout, context):
 
         layout.menu("NODE_MT_category_%s" % self.identifier)
 

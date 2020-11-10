@@ -493,6 +493,12 @@ def _list_menu_nodes():
             proxy_map[cat] = catlist
         return catlist
 
+    def get_node_item(node):
+        if hasattr(node, 'bl_icon'):
+            return nodeitems_utils.NodeItem(node.bl_idname, icon=node.bl_icon)
+        else:
+            return nodeitems_utils.NodeItem(node.bl_idname)
+
     cats = {}
     for c in _registered_classes:
         if hasattr(c, 'nl_subcat'):
@@ -500,7 +506,7 @@ def _list_menu_nodes():
                 cats[c.nl_category] = {}
             if not cats.get(c.nl_category).get(c.nl_subcat):
                 cats[c.nl_category][c.nl_subcat] = []
-            cats[c.nl_category][c.nl_subcat].append(nodeitems_utils.NodeItem(c.bl_idname))
+            cats[c.nl_category][c.nl_subcat].append(get_node_item(c))
 
     menu_nodes = []
     for cat, subcats in cats.items():
@@ -508,12 +514,6 @@ def _list_menu_nodes():
             new_subcat = NodeCategory(subcat, subcat, items=items)
             menu_nodes.append(new_subcat)
             get_cat_list(cat).append(new_subcat)
-
-    def get_node_item(node):
-        if hasattr(node, 'bl_icon'):
-            return nodeitems_utils.NodeItem(node.bl_idname, icon=node.bl_icon)
-        else:
-            return nodeitems_utils.NodeItem(node.bl_idname)
 
     for c in _registered_classes:
         if hasattr(c, "nl_category") and not hasattr(c, 'nl_subcat'):

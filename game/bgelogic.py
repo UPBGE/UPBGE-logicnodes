@@ -292,6 +292,7 @@ def debug(value):
 
 def is_waiting(*args):
     if LogicNetworkCell.STATUS_WAITING in args:
+        debug("Something's waiting...")
         return True
     return False
 
@@ -649,6 +650,8 @@ class LogicNetworkCell(StatefulValueProducer):
 
     def get_parameter_value(self, param, scene=None):
         if str(param).startswith('Object:'):
+            if 'USE_OWNER' in str(param):
+                return self.network._owner
             return check_game_object(param.split(':')[-1], scene)
         if isinstance(param, StatefulValueProducer):
             if param.has_status(LogicNetworkCell.STATUS_READY):
