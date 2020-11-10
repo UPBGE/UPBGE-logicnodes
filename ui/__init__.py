@@ -180,6 +180,7 @@ class BGE_PT_GamePropertyPanel3DView(bpy.types.Panel):
     def poll(cls, context):
         return True
 
+
     def draw_tree_prop(self, prop, index, box, do_filter):
         row = box.row()
         name = prop.name.split('__')[-1]
@@ -218,7 +219,10 @@ class BGE_PT_GamePropertyPanel3DView(bpy.types.Panel):
             text="Add Game Property",
             icon='PLUS'
         )
-        column.prop(context.scene.prop_filter, 'do_filter', text='Filter Properties')
+        options = column.row()
+        options.prop(context.scene.prop_filter, 'do_filter', text='Filter Properties')
+        options.prop(context.scene.prop_filter, 'show_hidden', text='Show Hidden')
+        show_hidden = context.scene.prop_filter.show_hidden
         do_filter = context.scene.prop_filter.do_filter
         prop_type = context.scene.prop_filter.filter_by
         prop_name = context.scene.prop_filter.filter_name
@@ -230,6 +234,8 @@ class BGE_PT_GamePropertyPanel3DView(bpy.types.Panel):
             return
         props = [prop for prop in obj.game.properties]
         for prop in obj.game.properties:
+            if not show_hidden and prop.name.startswith('_'):
+                continue
             is_tree = prop.name.startswith('NODELOGIC__')
             has_name = prop_name in prop.name
             if do_filter:
@@ -251,7 +257,7 @@ class BGE_PT_GamePropertyPanel3DView(bpy.types.Panel):
             row_title = entry.row()
             row_title.prop(prop, 'name', text='')
             row_title.prop(prop, 'show_debug', text='', icon='INFO')
-            if not do_filter:
+            if not do_filter and show_hidden:
                 self.add_movers(index, row_title)
             remove = row_title.operator(
                 bge_netlogic.ops.NLRemovePropertyOperator.bl_idname,
@@ -275,6 +281,7 @@ class BGE_PT_PropertiesPanelObject(bpy.types.Panel):
     def poll(cls, context):
         return True
 
+
     def draw_tree_prop(self, prop, index, box, do_filter):
         row = box.row()
         name = prop.name.split('__')[-1]
@@ -313,7 +320,10 @@ class BGE_PT_PropertiesPanelObject(bpy.types.Panel):
             text="Add Game Property",
             icon='PLUS'
         )
-        column.prop(context.scene.prop_filter, 'do_filter', text='Filter Properties')
+        options = column.row()
+        options.prop(context.scene.prop_filter, 'do_filter', text='Filter Properties')
+        options.prop(context.scene.prop_filter, 'show_hidden', text='Show Hidden')
+        show_hidden = context.scene.prop_filter.show_hidden
         do_filter = context.scene.prop_filter.do_filter
         prop_type = context.scene.prop_filter.filter_by
         prop_name = context.scene.prop_filter.filter_name
@@ -325,6 +335,8 @@ class BGE_PT_PropertiesPanelObject(bpy.types.Panel):
             return
         props = [prop for prop in obj.game.properties]
         for prop in obj.game.properties:
+            if not show_hidden and prop.name.startswith('_'):
+                continue
             is_tree = prop.name.startswith('NODELOGIC__')
             has_name = prop_name in prop.name
             if do_filter:
@@ -346,7 +358,7 @@ class BGE_PT_PropertiesPanelObject(bpy.types.Panel):
             row_title = entry.row()
             row_title.prop(prop, 'name', text='')
             row_title.prop(prop, 'show_debug', text='', icon='INFO')
-            if not do_filter:
+            if not do_filter and show_hidden:
                 self.add_movers(index, row_title)
             remove = row_title.operator(
                 bge_netlogic.ops.NLRemovePropertyOperator.bl_idname,
