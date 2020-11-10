@@ -528,7 +528,6 @@ def _list_menu_nodes():
             get_act_list(c).append(nodeitems_utils.NodeItem(c.bl_idname))
 
     pmap_keys = list(proxy_map.keys())
-    del pmap_keys[-1]
     pmap_keys.sort()
     for name in pmap_keys:
         itemlist = proxy_map[name]

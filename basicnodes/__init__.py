@@ -893,9 +893,9 @@ class NLGameObjectSocket(bpy.types.NodeSocket, NetLogicSocketType):
 
     def get_unlinked_value(self):
         if self.use_owner:
-            return '"Object:USE_OWNER"'
+            return '"NLO:U_O"'
         if isinstance(self.value, bpy.types.Object):
-            return '"Object:{}"'.format(self.value.name)
+            return '"NLO:{}"'.format(self.value.name)
 
 
 _sockets.append(NLGameObjectSocket)
@@ -4149,7 +4149,7 @@ class NLAlwaysConditionNode(bpy.types.Node, NLConditionNode):
     bl_idname = "NLAlwaysConditionNode"
     bl_label = "Always"
     nl_category = "Events"
-    
+
     repeat: bpy.props.BoolProperty(update=update_tree_code)
 
     def init(self, context):

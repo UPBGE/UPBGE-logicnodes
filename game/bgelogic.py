@@ -649,9 +649,9 @@ class LogicNetworkCell(StatefulValueProducer):
         return status == self._status
 
     def get_parameter_value(self, param, scene=None):
-        if str(param).startswith('Object:'):
-            if 'USE_OWNER' in str(param):
-                return self.network._owner
+        if str(param) == 'NLO:U_O':
+            return self.network._owner
+        elif str(param).startswith('NLO:'):
             return check_game_object(param.split(':')[-1], scene)
         if isinstance(param, StatefulValueProducer):
             if param.has_status(LogicNetworkCell.STATUS_READY):
