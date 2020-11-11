@@ -60,7 +60,7 @@ _cat_icons = {
     'Variables': 'FILE',
     'Vehicle': 'AUTO',
     'Visuals': 'HIDE_OFF',
-    'Window': 'SCENE',
+    'Render': 'SCENE',
 }
 
 _main_menues = [
@@ -81,7 +81,7 @@ _main_menues = [
     'Ray Casts',
     'Time',
     'Variables',
-    'Window',
+    'Render',
     'Utilities'
 ]
 
@@ -89,7 +89,7 @@ _cat_separators = [
     'Values',
     'Sound',
     'Time',
-    'Window'
+    'Render'
 ]
 
 

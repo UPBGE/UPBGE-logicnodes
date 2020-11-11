@@ -648,11 +648,15 @@ class LogicNetworkCell(StatefulValueProducer):
     def has_status(self, status):
         return status == self._status
 
-    def get_parameter_value(self, param, scene=None):
+    def get_game_object(self, param, scene=None):
         if str(param) == 'NLO:U_O':
             return self.network._owner
-        elif str(param).startswith('NLO:'):
+        else:
             return check_game_object(param.split(':')[-1], scene)
+
+    def get_parameter_value(self, param, scene=None):
+        if str(param).startswith('NLO:'):
+            return self.get_game_object(param, scene)
         if isinstance(param, StatefulValueProducer):
             if param.has_status(LogicNetworkCell.STATUS_READY):
                 return param.get_value()
@@ -686,7 +690,8 @@ class LogicNetworkCell(StatefulValueProducer):
     def _always_ready(self, status):
         return status is LogicNetworkCell.STATUS_READY
 
-    def _skip_evaluate(self): return
+    def _skip_evaluate(self):
+        return
 
     def deactivate(self):
         self.has_status = self._always_ready
@@ -2968,9 +2973,11 @@ class ConditionOnce(ConditionCell):
         self.repeat = None
         self._consumed = False
 
+    def stop(self):
+        print('stopping...')
+        self._consumed = False
+
     def evaluate(self):
-        if self.network.stopped:
-            self._consumed = False
         input_condition = self.get_parameter_value(self.input_condition)
         if input_condition is LogicNetworkCell.STATUS_WAITING:
             return
@@ -3063,8 +3070,11 @@ class ConditionLNStatus(ConditionCell):
         self.IFRUNNING = LogicNetworkSubCell(self, self.get_running)
         self.IFSTOPPED = LogicNetworkSubCell(self, self.get_stopped)
 
-    def get_running(self): return self._running
-    def get_stopped(self): return self._stopped
+    def get_running(self):
+        return self._running
+
+    def get_stopped(self):
+        return self._stopped
 
     def evaluate(self):
         game_object = self.get_parameter_value(self.game_object)
@@ -3133,16 +3143,14 @@ class ConditionValueChanged(ConditionCell):
         curr = self.get_parameter_value(self.current_value)
         if curr is LogicNetworkCell.STATUS_WAITING:
             return
-        self._current_value = curr
         self._set_ready()
         if self.initialize:
+            self.initialize = False
             self._previous_value = curr
             self._set_value(False)
-            self.initialize = False
-        else:
-            changed = self._previous_value != curr
-            if changed:
-                self._set_value(changed)
+        elif self._previous_value != curr:
+            self._current_value = curr
+            self._set_value(True)
 
 
 class ConditionValueTrigger(ConditionCell):

@@ -2635,7 +2635,7 @@ class NLCurrentSceneNode(bpy.types.Node, NLParameterNode):
 class NLGetVsyncNode(bpy.types.Node, NLParameterNode):
     bl_idname = "NLGetVsyncNode"
     bl_label = "Get VSync"
-    nl_category = "Window"
+    nl_category = 'Render'
 
     def init(self, context):
         NLParameterNode.init(self, context)
@@ -2651,7 +2651,7 @@ _nodes.append(NLGetVsyncNode)
 class NLGetFullscreen(bpy.types.Node, NLParameterNode):
     bl_idname = "NLGetFullscreen"
     bl_label = "Get Fullscreen"
-    nl_category = "Window"
+    nl_category = 'Render'
 
     def init(self, context):
         NLParameterNode.init(self, context)
@@ -2667,7 +2667,7 @@ _nodes.append(NLGetFullscreen)
 class NLGetResolution(bpy.types.Node, NLParameterNode):
     bl_idname = "NLGetResolution"
     bl_label = "Get Resolution"
-    nl_category = "Window"
+    nl_category = 'Render'
 
     def init(self, context):
         NLParameterNode.init(self, context)
@@ -4136,11 +4136,20 @@ class NLParameterVector4Node(bpy.types.Node, NLParameterNode):
         self.outputs.new(NLParameterSocket.bl_idname, "Y")
         self.outputs.new(NLParameterSocket.bl_idname, "Z")
         self.outputs.new(NLParameterSocket.bl_idname, "W")
+
     def draw_buttons(self, context, layout):
         pass
-    def get_netlogic_class_name(self): return "bgelogic.ParameterVector4"
-    def get_output_socket_varnames(self): return ["OUTV", "OUTX","OUTY","OUTZ","OUTVEC"]
-    def get_input_sockets_field_names(self): return ["in_vec", "in_x", "in_y", "in_z", "in_w"]
+
+    def get_netlogic_class_name(self):
+        return "bgelogic.ParameterVector4"
+
+    def get_output_socket_varnames(self):
+        return ["OUTV", "OUTX","OUTY","OUTZ","OUTVEC"]
+
+    def get_input_sockets_field_names(self):
+        return ["in_vec", "in_x", "in_y", "in_z", "in_w"]
+
+
 #_nodes.append(NLParameterVector4Node)
 
 
@@ -5781,7 +5790,7 @@ _nodes.append(NLActionSetCameraFov)
 class NLActionSetResolution(bpy.types.Node, NLActionNode):
     bl_idname = "NLActionSetResolution"
     bl_label = "Set Resolution"
-    nl_category = "Window"
+    nl_category = 'Render'
 
     def init(self, context):
         NLActionNode.init(self, context)
@@ -5805,7 +5814,7 @@ _nodes.append(NLActionSetResolution)
 class NLActionSetFullscreen(bpy.types.Node, NLActionNode):
     bl_idname = "NLActionSetFullscreen"
     bl_label = "Set Fullscreen"
-    nl_category = "Window"
+    nl_category = 'Render'
 
     def init(self, context):
         NLActionNode.init(self, context)
@@ -5826,7 +5835,7 @@ _nodes.append(NLActionSetFullscreen)
 class NLActionSetVSync(bpy.types.Node, NLActionNode):
     bl_idname = "NLActionSetVSync"
     bl_label = "Set VSync"
-    nl_category = "Window"
+    nl_category = 'Render'
 
     def init(self, context):
         NLActionNode.init(self, context)
@@ -7011,8 +7020,8 @@ _nodes.append(NLActionReplaceMesh)
 
 class NLActionRemovePhysicsConstraint(bpy.types.Node, NLActionNode):
     bl_idname = "NLActionRemovePhysicsConstraint"
-    bl_label = "Remove Physics Constraint"
-    nl_category = "Objects"
+    bl_label = "Remove Constraint"
+    nl_category = "Physics"
 
     def init(self, context):
         NLActionNode.init(self, context)
@@ -7036,7 +7045,7 @@ _nodes.append(NLActionRemovePhysicsConstraint)
 
 class NLActionAddPhysicsConstraint(bpy.types.Node, NLActionNode):
     bl_idname = "NLActionAddPhysicsConstraint"
-    bl_label = "Add Physics Constraint"
+    bl_label = "Add Constraint"
     nl_category = "Objects"
 
     def init(self, context):
@@ -7071,7 +7080,7 @@ _nodes.append(NLActionAddPhysicsConstraint)
 class NLSetGammaAction(bpy.types.Node, NLActionNode):
     bl_idname = "NLSetGammaAction"
     bl_label = "Set Gamma"
-    nl_category = "Window"
+    nl_category = 'Render'
     nl_subcat = 'Visuals'
 
     def init(self, context):
@@ -7097,7 +7106,7 @@ if not TOO_OLD:
 class NLSetExposureAction(bpy.types.Node, NLActionNode):
     bl_idname = "NLSetExposureAction"
     bl_label = "Set Exposure"
-    nl_category = "Window"
+    nl_category = 'Render'
     nl_subcat = 'Visuals'
 
     def init(self, context):
@@ -7124,7 +7133,7 @@ if not TOO_OLD:
 class NLSetEeveeBloom(bpy.types.Node, NLActionNode):
     bl_idname = "NLSetEeveeBloom"
     bl_label = "Set Bloom"
-    nl_category = "Window"
+    nl_category = 'Render'
     nl_subcat = 'Visuals'
 
     def init(self, context):
@@ -7152,7 +7161,7 @@ if not TOO_OLD:
 class NLSetEeveeSSR(bpy.types.Node, NLActionNode):
     bl_idname = "NLSetEeveeSSR"
     bl_label = "Set SSR"
-    nl_category = "Window"
+    nl_category = 'Render'
     nl_subcat = 'Visuals'
 
     def init(self, context):
@@ -7180,7 +7189,7 @@ if not TOO_OLD:
 class NLSetEeveeVolumetrics(bpy.types.Node, NLActionNode):
     bl_idname = "NLSetEeveeVolumetrics"
     bl_label = "Set Volumetric Light"
-    nl_category = "Window"
+    nl_category = 'Render'
     nl_subcat = 'Visuals'
 
     def init(self, context):
@@ -7208,7 +7217,7 @@ if not TOO_OLD:
 class NLSetEeveeVolumetricShadows(bpy.types.Node, NLActionNode):
     bl_idname = "NLSetEeveeVolumetricShadows"
     bl_label = "Set Volumetric Shadows"
-    nl_category = "Window"
+    nl_category = 'Render'
     nl_subcat = 'Visuals'
 
     def init(self, context):
@@ -7601,7 +7610,7 @@ class NLActionResetTaaSamples(bpy.types.Node, NLActionNode):
     bl_idname = "NLActionResetTaaSamples"
     bl_label = "Reset TAA Samples"
     bl_icon = 'FILE_REFRESH'
-    nl_category = "Window"
+    nl_category = 'Render'
     
     def init(self, context):
         NLActionNode.init(self, context)
