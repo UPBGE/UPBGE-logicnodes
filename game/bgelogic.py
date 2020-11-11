@@ -1460,6 +1460,7 @@ class GetActuatorValue(ParameterCell):
         self.actuator = None
         self.field = None
 
+
     def evaluate(self):
         actuator = self.get_parameter_value(self.actuator)
         field = self.get_parameter_value(self.field)
