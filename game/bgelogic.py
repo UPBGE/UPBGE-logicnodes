@@ -4164,18 +4164,18 @@ class ConditionCollision(ConditionCell):
         ConditionCell.__init__(self)
         self.game_object = None
         self._set_value("False")
+        self.pulse = False
         self._target = None
         self._point = None
         self._normal = None
         self._collision_triggered = False
+        self._consumed = False
         self._last_monitored_object = None
         self._objects = []
-        self._opn_set = []
         self.TARGET = LogicNetworkSubCell(self, self.get_target)
         self.POINT = LogicNetworkSubCell(self, self.get_point)
         self.NORMAL = LogicNetworkSubCell(self, self.get_normal)
         self.OBJECTS = LogicNetworkSubCell(self, self.get_objects)
-        self.OPN_SET = LogicNetworkSubCell(self, self.get_opn_set)
 
     def get_point(self):
         return self._point
@@ -4189,22 +4189,17 @@ class ConditionCollision(ConditionCell):
     def get_objects(self):
         return self._objects
 
-    def get_opn_set(self):
-        return self._opn_set
-
     def _collision_callback(self, obj, point, normal):
         self._collision_triggered = True
         self._target = obj
         self._point = point
         self._normal = normal
         self._objects.append(obj)
-        self._opn_set.append((obj, point, normal))
 
     def reset(self):
         LogicNetworkCell.reset(self)
         self._collision_triggered = False
         self._objects = []
-        self._opn_set = []
 
     def _reset_last_monitored_object(self, new_monitored_object_value):
         if none_or_invalid(new_monitored_object_value):
@@ -4234,12 +4229,26 @@ class ConditionCollision(ConditionCell):
         self._collision_triggered = False
 
     def evaluate(self):
+        last_target = self._target
         game_object = self.get_parameter_value(self.game_object)
         self._reset_last_monitored_object(game_object)
         if game_object is LogicNetworkCell.STATUS_WAITING:
             return
         self._set_ready()
-        self._set_value(self._collision_triggered)
+        collision = self._collision_triggered
+        if last_target is not self._target:
+            self._consumed = False
+        if self._consumed:
+            self._set_value(False)
+            return
+        if not self.pulse and collision:
+            self._consumed = True
+            self._set_value(collision)
+        elif self.pulse:
+            self._set_value(collision)
+        else:
+            self._consumed = False
+            self._set_value(False)
 
 
 # Action Cells

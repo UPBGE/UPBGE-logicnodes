@@ -4648,8 +4648,11 @@ class NLMouseReleasedCondition(bpy.types.Node, NLConditionNode):
     def draw_buttons(self, context, layout):
         layout.prop(self, "pulse", text="Each Frame" if self.pulse else "Once", toggle=True)
 
-    def get_netlogic_class_name(self): return "bgelogic.ConditionMouseReleased"
-    def get_input_sockets_field_names(self): return ["mouse_button_code"]
+    def get_netlogic_class_name(self):
+        return "bgelogic.ConditionMouseReleased"
+
+    def get_input_sockets_field_names(self):
+        return ["mouse_button_code"]
 
     def write_cell_fields_initialization(self, cell_varname, uids, line_writer):
         NetLogicStatementGenerator.write_cell_fields_initialization(self, cell_varname, uids, line_writer)
@@ -4786,17 +4789,22 @@ _nodes.append(NLConditionMouseWheelMoved)
 class NLConditionCollisionNode(bpy.types.Node, NLConditionNode):
     bl_idname = "NLConditionCollisionNode"
     bl_label = "Collision"
-    nl_category = "Objects"
+    nl_category = "Physics"
+    pulse: bpy.props.BoolProperty(
+        update=update_tree_code)
 
     def init(self, context):
         NLConditionNode.init(self, context)
         self.inputs.new(NLGameObjectSocket.bl_idname, "Object")
         self.outputs.new(NLConditionSocket.bl_idname, "When Colliding")
-        self.outputs.new(NLGameObjectSocket.bl_idname, "Object")
-        self.outputs.new(NLParameterSocket.bl_idname, "Point")
-        self.outputs.new(NLParameterSocket.bl_idname, "Normal")
-        self.outputs.new(NLParameterSocket.bl_idname, "Object Set")
-        self.outputs.new(NLParameterSocket.bl_idname, "(Obj,Pt,Norm) Set")
+        self.outputs.new(NLGameObjectSocket.bl_idname, "Colliding Object")
+        self.outputs.new(NLListSocket.bl_idname, "Colliding Objects")
+        self.outputs.new(NLVec3FieldSocket.bl_idname, "Point")
+        self.outputs.new(NLVec3FieldSocket.bl_idname, "Normal")
+
+    def draw_buttons(self, context, layout):
+        layout.prop(self, "pulse", text="Each Frame" if self.pulse else "Once", toggle=True)
+
 
     def get_netlogic_class_name(self):
         return "bgelogic.ConditionCollision"
@@ -4805,10 +4813,14 @@ class NLConditionCollisionNode(bpy.types.Node, NLConditionNode):
         return ["game_object"]
 
     def get_output_socket_varnames(self):
-        return [OUTCELL, "TARGET", "POINT", "NORMAL", "OBJECTS", "OPN_SET"]
+        return [OUTCELL, "TARGET", "OBJECTS", "POINT", "NORMAL"]
+
+    def write_cell_fields_initialization(self, cell_varname, uids, line_writer):
+        NetLogicStatementGenerator.write_cell_fields_initialization(self, cell_varname, uids, line_writer)
+        line_writer.write_line("{}.{} = {}", cell_varname, "pulse", self.pulse)
 
 
-#_nodes.append(NLConditionCollisionNode)
+_nodes.append(NLConditionCollisionNode)
 
 
 class NLConditionMouseTargetingNode(bpy.types.Node, NLConditionNode):
@@ -4828,8 +4840,12 @@ class NLConditionMouseTargetingNode(bpy.types.Node, NLConditionNode):
         self.outputs.new(NLParameterSocket.bl_idname, "Normal")
     def get_netlogic_class_name(self):
         return "bgelogic.ConditionMouseTargeting"
-    def get_input_sockets_field_names(self): return ["game_object"]
-    def get_output_socket_varnames(self): return ["MOUSE_ENTERED", "MOUSE_OVER", "MOUSE_EXITED", "POINT", "NORMAL"]
+
+    def get_input_sockets_field_names(self):
+        return ["game_object"]
+
+    def get_output_socket_varnames(self):
+        return ["MOUSE_ENTERED", "MOUSE_OVER", "MOUSE_EXITED", "POINT", "NORMAL"]
 
 
 _nodes.append(NLConditionMouseTargetingNode)
@@ -6522,6 +6538,7 @@ _nodes.append(NLActionCharacterJump)
 class NLActionSaveGame(bpy.types.Node, NLActionNode):
     bl_idname = "NLActionSaveGame"
     bl_label = "Save Game"
+    bl_icon = 'FILE_TICK'
     nl_category = "Game"
     custom_path: bpy.props.BoolProperty(update=update_tree_code)
     path: bpy.props.StringProperty(
@@ -8344,7 +8361,7 @@ _nodes.append(NLActionPauseSound)
 
 class NLActionEndGame(bpy.types.Node, NLActionNode):
     bl_idname = "NLActionEndGame"
-    bl_label = "End Game"
+    bl_label = "Quit Game"
     bl_icon = 'SCREEN_BACK'
     nl_category = "Game"
 
@@ -8365,6 +8382,7 @@ _nodes.append(NLActionEndGame)
 class NLActionRestartGame(bpy.types.Node, NLActionNode):
     bl_idname = "NLActionRestartGame"
     bl_label = "Restart Game"
+    bl_icon = 'LOOP_BACK'
     nl_category = "Game"
     def init(self, context):
         NLActionNode.init(self, context)

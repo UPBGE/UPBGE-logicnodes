@@ -5,11 +5,11 @@ from os.path import join, dirname
 
 _filter_prop_types = [
     ("TREES", "Logic Trees", "Show only applied Logic Trees"),
-    ("FLOAT", "Float Properties", "Show only Float Properties"),
-    ("INT", "Int Properties", "Show only Int Properties"),
-    ("BOOL", "Boolean Properties", "Show only Boolean Properties"),
-    ("STRING", "String Properties", "Show only String Properties"),
-    ("TIMER", "Timer Properties", "Show only Timer Properties"),
+    ("FLOAT", "Floats", "Show only Float Properties"),
+    ("INT", "Integers", "Show only Int Properties"),
+    ("BOOL", "Booleans", "Show only Boolean Properties"),
+    ("STRING", "Strings", "Show only String Properties"),
+    ("TIMER", "Timers", "Show only Timer Properties"),
     ("NAME", 'Filter By Name', 'Search for a Property')
 ]
 
