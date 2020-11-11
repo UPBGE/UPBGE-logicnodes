@@ -949,8 +949,9 @@ _sockets.append(NLGameObjectNameSocket)
 class NLCollectionSocket(bpy.types.NodeSocket, NetLogicSocketType):
     bl_idname = "NLCollectionSocket"
     bl_label = "Collection"
-    value: bpy.props.StringProperty(
+    value: bpy.props.PointerProperty(
         name='Collection',
+        type=bpy.types.Collection,
         description='Select a Collection. Objects in that collection will be used for the node',
         update=update_tree_code
     )
@@ -975,7 +976,7 @@ class NLCollectionSocket(bpy.types.NodeSocket, NetLogicSocketType):
             )
 
     def get_unlinked_value(self):
-        col_name = self.value
+        col_name = self.value.name
         if col_name.startswith('F '):
             col_name = col_name.split('F ')[-1]
         elif ' F ' in col_name:
@@ -990,8 +991,9 @@ if not TOO_OLD:
 class NLSocketLogicTree(bpy.types.NodeSocket, NetLogicSocketType):
     bl_idname = "NLSocketLogicTree"
     bl_label = "Logic Tree"
-    value: bpy.props.StringProperty(
+    value: bpy.props.PointerProperty(
         name='Logic Tree',
+        type=bpy.types.NodeTree,
         description='Select a Logic Tree. NOTE: Selecting a Shader Node Group will result in an error!',
         update=update_tree_code
     )
@@ -1014,7 +1016,7 @@ class NLSocketLogicTree(bpy.types.NodeSocket, NetLogicSocketType):
             )
 
     def get_unlinked_value(self):
-        tree_name = self.value
+        tree_name = self.value.name
         if tree_name.startswith('F '):
             tree_name = tree_name.split('F ')[-1]
         elif ' F ' in tree_name:
@@ -5701,6 +5703,8 @@ class NLSetObjectAttributeActionNode(bpy.types.Node, NLActionNode):
     def write_cell_fields_initialization(self, cell_varname, uids, line_writer):
         NetLogicStatementGenerator.write_cell_fields_initialization(self, cell_varname, uids, line_writer)
         line_writer.write_line("{}.{} = '{}'", cell_varname, "value_type", self.value_type)
+
+
 _nodes.append(NLSetObjectAttributeActionNode)
 
 
