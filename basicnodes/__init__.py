@@ -198,13 +198,6 @@ _enum_loop_count_values = [
 
 
 _enum_readable_member_names = [
-    ("name", "Name", "The name of the object"),
-    ("color", "Color", "The solid color of the object"),
-    (
-        "visible",
-        "Visibility",
-        "True if the object is set to visible, False if it is set of invisible"
-    ),
     ("worldPosition", "Position (Global)", "The World Position of the object"),
     ("localPosition", "Position (Local)", "The local position of the object"),
     (
@@ -239,7 +232,14 @@ _enum_readable_member_names = [
     ),
     ("worldTransform", "Transform (Global)", "The World Transform of the object"),
     ("localTransform", "Transform (Local)", "The local transform of the object"),
-    ("worldScale", "Scale", "The global scale of the object")
+    ("worldScale", "Scale", "The global scale of the object"),
+    ("name", "Name", "The name of the object"),
+    ("color", "Color", "The solid color of the object"),
+    (
+        "visible",
+        "Visibility",
+        "True if the object is set to visible, False if it is set of invisible"
+    )
 ]
 
 _enum_writable_member_names = [
@@ -2472,6 +2472,7 @@ class NLParameterConstantValue(bpy.types.Node, NLParameterNode):
 class NLParameterFindChildByNameNode(bpy.types.Node, NLParameterNode):
     bl_idname = "NLParameterFindChildByNameNode"
     bl_label = "Get Child By Name"
+    bl_icon = 'COMMUNITY'
     nl_category = "Objects"
 
     def init(self, context):
@@ -2635,6 +2636,7 @@ class NLOwnerGameObjectParameterNode(bpy.types.Node, NLParameterNode):
     """
     bl_idname = "NLOwnerGameObjectParameterNode"
     bl_label = "Get Owner"
+    bl_icon = 'USER'
     nl_category = "Objects"
 
     def init(self, context):
@@ -3494,6 +3496,7 @@ class NLSensorPositiveNode(bpy.types.Node, NLParameterNode):
 class NLObjectAttributeParameterNode(bpy.types.Node, NLParameterNode):
     bl_idname = "NLObjectAttributeParameterNode"
     bl_label = "Get Position / Rotation / Scale etc."
+    bl_icon = 'VIEW3D'
     nl_category = "Objects"
     nl_subcat = 'Data'
 
@@ -5091,6 +5094,7 @@ _nodes.append(NLConditionLogicNetworkStatusNode)
 class NLAddObjectActionNode(bpy.types.Node, NLActionNode):
     bl_idname = "NLAddObjectActionNode"
     bl_label = "Add Object"
+    bl_icon = 'PLUS'
     nl_category = "Objects"
 
     def init(self, context):
@@ -5239,6 +5243,7 @@ _nodes.append(NLAddToGameObjectGamePropertyActionNode)
 class NLCopyPropertyFromObject(bpy.types.Node, NLActionNode):
     bl_idname = "NLCopyPropertyFromObject"
     bl_label = "Copy From Object"
+    bl_icon = 'PASTEDOWN'
     nl_category = "Objects"
     nl_subcat = 'Properties'
 
@@ -5270,6 +5275,7 @@ _nodes.append(NLCopyPropertyFromObject)
 class NLClampedAddToGameObjectGamePropertyActionNode(bpy.types.Node, NLActionNode):
     bl_idname = "NLClampedAddToGameObjectGamePropertyActionNode"
     bl_label = "Clamped Modify Property"
+    bl_icon = 'ARROW_LEFTRIGHT'
     nl_category = "Objects"
     nl_subcat = 'Properties'
 
@@ -5619,6 +5625,7 @@ if not TOO_OLD:
 class NLSetObjectAttributeActionNode(bpy.types.Node, NLActionNode):
     bl_idname = "NLSetObjectAttributeActionNode"
     bl_label = "Set Position / Rotation / Scale etc."
+    bl_icon = 'VIEW3D'
     nl_category = "Objects"
     nl_subcat = 'Data'
     value_type: bpy.props.EnumProperty(items=_enum_writable_member_names, update=update_tree_code, default='worldPosition')
@@ -5770,8 +5777,8 @@ class NLActionRepeater(bpy.types.Node, NLActionNode):
 class NLActionSetGameObjectVisibility(bpy.types.Node, NLActionNode):
     bl_idname = "NLActionSetGameObjectVisibility"
     bl_label = "Set Visibility"
+    bl_icon = 'HIDE_OFF'
     nl_category = "Objects"
-    nl_subcat = 'Data'
 
     def init(self, context):
         NLActionNode.init(self, context)
@@ -5795,6 +5802,7 @@ _nodes.append(NLActionSetGameObjectVisibility)
 class NLActionFindObjectNode(bpy.types.Node, NLActionNode):
     bl_idname = "NLActionFindObjectNode"
     bl_label = "Get Object"
+    bl_icon = 'OBJECT_DATA'
     nl_category = "Objects"
 
     def init(self, context):
@@ -7001,6 +7009,7 @@ _nodes.append(NLActionApplyTorque)
 class NLActionEndObjectNode(bpy.types.Node, NLActionNode):
     bl_idname = "NLActionEndObjectNode"
     bl_label = "Remove Object"
+    bl_icon = 'TRASH'
     nl_category = "Objects"
 
     def init(self, context):
@@ -7080,6 +7089,7 @@ class NLActionEndSceneNode(bpy.types.Node, NLActionNode):
 class NLActionReplaceMesh(bpy.types.Node, NLActionNode):
     bl_idname = "NLActionReplaceMesh"
     bl_label = "Replace Mesh"
+    bl_icon = 'MESH_DATA'
     nl_category = "Objects"
     nl_subcat = 'Data'
 
