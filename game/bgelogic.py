@@ -1453,6 +1453,20 @@ class GetActuatorByName(ParameterCell):
         self._set_value(logic.getCurrentController().actuators[act_name])
 
 
+class GetActuatorValue(ParameterCell):
+
+    def __init__(self):
+        ParameterCell.__init__(self)
+        self.actuator = None
+        self.field = None
+
+    def evaluate(self):
+        actuator = self.get_parameter_value(self.actuator)
+        field = self.get_parameter_value(self.field)
+        self._set_ready()
+        self._set_value(getattr(actuator, field))
+
+
 class ActivateActuator(ParameterCell):
 
     def __init__(self):
@@ -2392,6 +2406,31 @@ class ParameterSimpleValue(ParameterCell):
         value = self.get_parameter_value(self.value)
         self._set_ready()
         self._set_value(value)
+
+
+class ParameterTypeCast(ParameterCell):
+    def __init__(self):
+        ParameterCell.__init__(self)
+        self.to_type = None
+        self.value = None
+
+    def typecast_value(self, value, t):
+        if t == 'int':
+            return int(value)
+        elif t == 'bool':
+            return bool(value)
+        elif t == 'str':
+            return str(value)
+        elif t == 'float':
+            return float(value)
+
+    def evaluate(self):
+        to_type = self.get_parameter_value(self.to_type)
+        value = self.get_parameter_value(self.value)
+        if is_waiting(to_type, value):
+            return
+        self._set_ready()
+        self._set_value(self.typecast_value(value, to_type))
 
 
 class ParameterVectorMath(ParameterCell):

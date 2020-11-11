@@ -66,6 +66,14 @@ _enum_vector_math_options = [
 ]
 
 
+_enum_type_casts = [
+    ("int", "To Integer", "Convert this value to an integer type"),
+    ("bool", "To Boolean", "Convert this value to a boolean type"),
+    ("str", "To String", "Convert this value to a string type"),
+    ("float", "To Float", "Convert this value to a float type")
+]
+
+
 _enum_distance_models = {
     ('INVERSE', 'Inverse', ''),
     ('INVERSE_CLAMPED', 'Inverse Clamped', ''),
@@ -2273,6 +2281,30 @@ class NLVectorMathSocket(bpy.types.NodeSocket, NetLogicSocketType):
 _sockets.append(NLVectorMathSocket)
 
 
+class NLTypeCastSocket(bpy.types.NodeSocket, NetLogicSocketType):
+    bl_idname = "NLTypeCastSocket"
+    bl_label = "Types"
+    value: bpy.props.EnumProperty(
+        items=_enum_type_casts,
+        update=update_tree_code
+    )
+
+    def draw_color(self, context, node):
+        return PARAMETER_SOCKET_COLOR
+
+    def draw(self, context, layout, node, text):
+        if self.is_linked:
+            layout.label(text=text)
+        else:
+            layout.prop(self, "value", text="")
+
+    def get_unlinked_value(self):
+        return "'{}'".format(self.value)
+
+
+_sockets.append(NLTypeCastSocket)
+
+
 class NLConstraintTypeSocket(bpy.types.NodeSocket, NetLogicSocketType):
     bl_idname = "NLConstraintTypeSocket"
     bl_label = "Constraint Type"
@@ -2995,6 +3027,31 @@ class NLGetActuatorNameNode(bpy.types.Node, NLParameterNode):
 _nodes.append(NLGetActuatorNameNode)
 
 
+class NLGetActuatorValue(bpy.types.Node, NLParameterNode):
+    bl_idname = "NLGetActuatorValue"
+    bl_label = "Get Actuator Value"
+    nl_category = "Logic"
+    nl_subcat = 'Bricks'
+
+    def init(self, context):
+        NLParameterNode.init(self, context)
+        self.inputs.new(NLLogicBrickSocket.bl_idname, "Actuator Name")
+        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Field")
+        self.outputs.new(NLParameterSocket.bl_idname, "Value")
+
+    def get_netlogic_class_name(self):
+        return "bgelogic.GetActuatorValue"
+
+    def get_input_sockets_field_names(self):
+        return ["actuator", 'field']
+
+    def get_output_socket_varnames(self):
+        return [OUTCELL]
+
+
+_nodes.append(NLGetActuatorValue)
+
+
 class NLRunActuatorNode(bpy.types.Node, NLActionNode):
     bl_idname = "NLRunActuatorNode"
     bl_label = "Execute Actuator"
@@ -3702,6 +3759,7 @@ _nodes.append(NLParameterTimeNode)
 class NLMouseDataParameter(bpy.types.Node, NLParameterNode):
     bl_idname = "NLMouseDataParameter"
     bl_label = "Status"
+    bl_icon = 'OPTIONS'
     nl_category = "Input"
     nl_subcat = 'Mouse'
 
@@ -3903,6 +3961,27 @@ class NLParameterStringValue(bpy.types.Node, NLParameterNode):
 
 
 _nodes.append(NLParameterStringValue)
+
+
+class NLParameterTypeCast(bpy.types.Node, NLParameterNode):
+    bl_idname = "NLParameterTypeCast"
+    bl_label = "Typecast Value"
+    nl_category = "Python"
+
+    def init(self, context):
+        NLParameterNode.init(self, context)
+        self.inputs.new(NLTypeCastSocket.bl_idname, '')
+        self.inputs.new(NLValueFieldSocket.bl_idname, "")
+        self.outputs.new(NLParameterSocket.bl_idname, "Value")
+
+    def get_netlogic_class_name(self):
+        return "bgelogic.ParameterTypeCast"
+
+    def get_input_sockets_field_names(self):
+        return ['to_type', "value"]
+
+
+_nodes.append(NLParameterTypeCast)
 
 
 class NLParameterVector3Node(bpy.types.Node, NLParameterNode):
@@ -4442,6 +4521,7 @@ _nodes.append(NLKeyReleasedCondition)
 class NLMousePressedCondition(bpy.types.Node, NLConditionNode):
     bl_idname = "NLMousePressedCondition"
     bl_label = "Button"
+    bl_icon = 'MOUSE_LMB'
     nl_category = "Input"
     nl_subcat = 'Mouse'
 
@@ -4474,6 +4554,7 @@ _nodes.append(NLMousePressedCondition)
 class NLMouseMovedCondition(bpy.types.Node, NLConditionNode):
     bl_idname = "NLMouseMovedCondition"
     bl_label = "Moved"
+    bl_icon = 'MOUSE_MOVE'
     nl_category = "Input"
     nl_subcat = 'Mouse'
 
@@ -4615,6 +4696,7 @@ _nodes.append(NLConditionNextFrameNode)
 class NLConditionMousePressedOn(bpy.types.Node, NLConditionNode):
     bl_idname = "NLConditionMousePressedOn"
     bl_label = "Button Over"
+    bl_icon = 'MOUSE_LMB'
     nl_category = "Input"
     nl_subcat = 'Mouse'
 
@@ -4635,6 +4717,7 @@ _nodes.append(NLConditionMousePressedOn)
 class NLConditionMouseWheelMoved(bpy.types.Node, NLConditionNode):
     bl_idname = "NLConditionMouseWheelMoved"
     bl_label = "Wheel"
+    bl_icon = 'MOUSE_MMB'
     nl_category = "Input"
     nl_subcat = 'Mouse'
 
@@ -4642,8 +4725,10 @@ class NLConditionMouseWheelMoved(bpy.types.Node, NLConditionNode):
         NLConditionNode.init(self, context)
         self.inputs.new(NLSocketMouseWheelDirection.bl_idname, "")
         self.outputs.new(NLConditionSocket.bl_idname, "When Scrolled")
+
     def get_netlogic_class_name(self):
         return "bgelogic.ConditionMouseScrolled"
+
     def get_input_sockets_field_names(self):
         return ["wheel_direction"]
 
@@ -4682,6 +4767,7 @@ class NLConditionCollisionNode(bpy.types.Node, NLConditionNode):
 class NLConditionMouseTargetingNode(bpy.types.Node, NLConditionNode):
     bl_idname = "NLConditionMouseTargetingNode"
     bl_label = "Over"
+    bl_icon = 'RESTRICT_SELECT_OFF'
     nl_category = "Input"
     nl_subcat = 'Mouse'
 
@@ -7021,6 +7107,7 @@ _nodes.append(NLActionReplaceMesh)
 class NLActionRemovePhysicsConstraint(bpy.types.Node, NLActionNode):
     bl_idname = "NLActionRemovePhysicsConstraint"
     bl_label = "Remove Constraint"
+    bl_icon = 'TRASH'
     nl_category = "Physics"
 
     def init(self, context):
@@ -7046,7 +7133,8 @@ _nodes.append(NLActionRemovePhysicsConstraint)
 class NLActionAddPhysicsConstraint(bpy.types.Node, NLActionNode):
     bl_idname = "NLActionAddPhysicsConstraint"
     bl_label = "Add Constraint"
-    nl_category = "Objects"
+    bl_icon = 'CONSTRAINT'
+    nl_category = "Physics"
 
     def init(self, context):
         NLActionNode.init(self, context)
