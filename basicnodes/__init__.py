@@ -1015,14 +1015,55 @@ class NLSocketLogicTree(bpy.types.NodeSocket, NetLogicSocketType):
 
     def get_unlinked_value(self):
         tree_name = self.value
-        if self.value.startswith('F '):
-            tree_name = self.value.split('F ')[-1]
-        elif ' F ' in self.value:
-            tree_name = self.value.split(' F ')[-1]
+        if tree_name.startswith('F '):
+            tree_name = tree_name.split('F ')[-1]
+        elif ' F ' in tree_name:
+            tree_name = tree_name.split(' F ')[-1]
         return "'{}'".format(tree_name)
 
 
 _sockets.append(NLSocketLogicTree)
+
+
+class NLAnimationSocket(bpy.types.NodeSocket, NetLogicSocketType):
+    bl_idname = "NLAnimationSocket"
+    bl_label = "Action"
+    value: bpy.props.PointerProperty(
+        name='Action',
+        type=bpy.types.Action,
+        description='Select an Action',
+        update=update_tree_code
+    )
+
+    def draw_color(self, context, node):
+        return PARAMETER_SOCKET_COLOR
+
+    def draw(self, context, layout, node, text):
+        if self.is_linked or self.is_output:
+            layout.label(text=text)
+        else:
+            col = layout.column()
+            if text:
+                col.label(text=text)
+            col.prop_search(
+                self,
+                "value",
+                bpy.data,
+                'actions',
+                icon='ACTION',
+                text=''
+            )
+
+    def get_unlinked_value(self):
+        action_name = self.value.name
+        if action_name.startswith('F '):
+            action_name = action_name.split('F ')[-1]
+        elif ' F ' in action_name:
+            action_name = action_name.split(' F ')[-1]
+        return "'{}'".format(action_name)
+
+
+_sockets.append(NLAnimationSocket)
 
 
 class NLSocketAlphaFloat(bpy.types.NodeSocket, NetLogicSocketType):
@@ -4640,6 +4681,7 @@ _nodes.append(NLConditionOnceNode)
 class NLObjectPropertyOperator(bpy.types.Node, NLConditionNode):
     bl_idname = "NLObjectPropertyOperator"
     bl_label = "Evaluate Property"
+    bl_icon = 'CON_TRANSLIKE'
     nl_category = "Objects"
     nl_subcat = 'Properties'
     operator: bpy.props.EnumProperty(items=_enum_logic_operators, update=update_tree_code)
@@ -5190,6 +5232,7 @@ if not TOO_OLD:
 class NLToggleGameObjectGamePropertyActionNode(bpy.types.Node, NLActionNode):
     bl_idname = "NLToggleGameObjectGamePropertyActionNode"
     bl_label = "Toggle Property"
+    bl_icon = 'UV_SYNC_SELECT'
     nl_category = "Objects"
     nl_subcat = 'Properties'
 
@@ -5211,6 +5254,7 @@ _nodes.append(NLToggleGameObjectGamePropertyActionNode)
 class NLAddToGameObjectGamePropertyActionNode(bpy.types.Node, NLActionNode):
     bl_idname = "NLAddToGameObjectGamePropertyActionNode"
     bl_label = "Add To Property"
+    bl_icon = 'ADD'
     nl_category = "Objects"
     nl_subcat = 'Properties'
 
@@ -5628,7 +5672,11 @@ class NLSetObjectAttributeActionNode(bpy.types.Node, NLActionNode):
     bl_icon = 'VIEW3D'
     nl_category = "Objects"
     nl_subcat = 'Data'
-    value_type: bpy.props.EnumProperty(items=_enum_writable_member_names, update=update_tree_code, default='worldPosition')
+    value_type: bpy.props.EnumProperty(
+        items=_enum_writable_member_names,
+        update=update_tree_code,
+        default='worldPosition'
+    )
 
     def init(self, context):
         NLActionNode.init(self, context)
@@ -5640,7 +5688,6 @@ class NLSetObjectAttributeActionNode(bpy.types.Node, NLActionNode):
 
     def get_output_socket_varnames(self):
         return ["OUT"]
-
 
     def draw_buttons(self, context, layout):
         layout.prop(self, "value_type", text='')
@@ -6284,7 +6331,7 @@ class NLActionSetAnimationFrame(bpy.types.Node, NLActionNode):
         NLActionNode.init(self, context)
         self.inputs.new(NLConditionSocket.bl_idname, "Condition")
         self.inputs.new(NLGameObjectSocket.bl_idname, "Object")
-        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Action Name")
+        self.inputs.new(NLAnimationSocket.bl_idname, "Action")
         self.inputs.new(NLPositiveIntegerFieldSocket.bl_idname, "Layer")
         self.inputs.new(NLPositiveFloatSocket.bl_idname, "Frame")
         self.inputs.new(NLSocketAlphaFloat.bl_idname, "Layer Weight")
@@ -7491,7 +7538,7 @@ class NLActionPlayActionNode(bpy.types.Node, NLActionNode):
         NLActionNode.init(self, context)
         self.inputs.new(NLConditionSocket.bl_idname, "Condition")
         self.inputs.new(NLGameObjectSocket.bl_idname, "Object / Armature")
-        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Action Name")
+        self.inputs.new(NLAnimationSocket.bl_idname, "Action")
         self.inputs.new(NLBooleanSocket.bl_idname, "Stop When Done")
         self.inputs[-1].value = True
         self.inputs.new(NLFloatFieldSocket.bl_idname, "Start Frame")
