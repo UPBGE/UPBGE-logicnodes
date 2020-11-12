@@ -4978,14 +4978,21 @@ class NLConditionLogicOperation(bpy.types.Node, NLConditionNode):
     
     def init(self, context):
         NLConditionNode.init(self, context)
+        self.inputs.new(NLPositiveFloatSocket.bl_idname, "Threshold")
         self.inputs.new(NLValueFieldSocket.bl_idname, "")
         self.inputs.new(NLValueFieldSocket.bl_idname, "")
         self.outputs.new(NLConditionSocket.bl_idname, "If True")
-    def get_netlogic_class_name(self): return "bgelogic.ConditionLogicOp"
-    def get_input_sockets_field_names(self): return ["param_a", "param_b"]
+
+    def get_netlogic_class_name(self):
+        return "bgelogic.ConditionLogicOp"
+
+    def get_input_sockets_field_names(self):
+        return ['threshold', "param_a", "param_b"]
+
     def write_cell_fields_initialization(self, cell_varname, uids, line_writer):
         NetLogicStatementGenerator.write_cell_fields_initialization(self, cell_varname, uids, line_writer)
         line_writer.write_line("{}.{} = {}", cell_varname, "operator", self.operator)
+
 _nodes.append(NLConditionLogicOperation)
 
 
@@ -5002,14 +5009,22 @@ class NLConditionCompareVecs(bpy.types.Node, NLConditionNode):
     def init(self, context):
         NLConditionNode.init(self, context)
         self.inputs.new(NLXYZSocket.bl_idname, "")
+        self.inputs.new(NLPositiveFloatSocket.bl_idname, "Threshold")
         self.inputs.new(NLVec3FieldSocket.bl_idname, "Compare This")
         self.inputs.new(NLVec3FieldSocket.bl_idname, "To This")
         self.outputs.new(NLConditionSocket.bl_idname, "If True")
-    def get_netlogic_class_name(self): return "bgelogic.ConditionCompareVecs"
-    def get_input_sockets_field_names(self): return ['all', "param_a", "param_b"]
+
+    def get_netlogic_class_name(self):
+        return "bgelogic.ConditionCompareVecs"
+
+    def get_input_sockets_field_names(self):
+        return ['all', 'threshold', "param_a", "param_b"]
+
     def write_cell_fields_initialization(self, cell_varname, uids, line_writer):
         NetLogicStatementGenerator.write_cell_fields_initialization(self, cell_varname, uids, line_writer)
         line_writer.write_line("{}.{} = {}", cell_varname, "operator", self.operator)
+
+
 _nodes.append(NLConditionCompareVecs)
 
 
@@ -5026,8 +5041,14 @@ class NLConditionDistanceCheck(bpy.types.Node, NLConditionNode):
         self.inputs.new(NLPositiveFloatSocket.bl_idname, "Dist.")
         self.inputs.new(NLSocketOptionalPositiveFloat.bl_idname, "Hyst.")
         self.outputs.new(NLConditionSocket.bl_idname, "Out")
-    def get_netlogic_class_name(self): return "bgelogic.ConditionDistanceCheck"
-    def get_input_sockets_field_names(self): return ["operator", "param_a", "param_b", "dist", "hyst"]
+
+    def get_netlogic_class_name(self):
+        return "bgelogic.ConditionDistanceCheck"
+
+    def get_input_sockets_field_names(self):
+        return ["operator", "param_a", "param_b", "dist", "hyst"]
+
+
 _nodes.append(NLConditionDistanceCheck)
 
 

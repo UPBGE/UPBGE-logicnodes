@@ -420,7 +420,7 @@ class BGE_PT_PropertiesPanelObject(bpy.types.Panel):
 
 
 class BGE_PT_LogicTreeGroups(bpy.types.Panel):
-    bl_label = "Tree Groups"
+    bl_label = "Tree Prefabs and Subtrees"
     bl_space_type = "NODE_EDITOR"
     bl_region_type = "UI"
     bl_category = "Item"
@@ -474,6 +474,46 @@ class BGE_PT_LogicTreeGroups(bpy.types.Panel):
             )
 
 
+class BGE_PT_LogicTreeOptions(bpy.types.Panel):
+    bl_label = "Administration"
+    bl_space_type = "NODE_EDITOR"
+    bl_region_type = "UI"
+    bl_category = "Item"
+    _current_tree = None
+
+    @classmethod
+    def poll(cls, context):
+        enabled = (context.space_data.tree_type == BGELogicTree.bl_idname)
+        if enabled and (context.space_data.edit_tree is not None):
+            bge_netlogic._consume_update_tree_code_queue()
+            if not bge_netlogic._tree_code_writer_started:
+                bge_netlogic._tree_code_writer_started = True
+                bpy.ops.bgenetlogic.treecodewriter_operator()
+        return enabled
+
+    def draw(self, context):
+        layout = self.layout
+        apply_col = layout.column()
+        apply_col.scale_y = 1.4
+        apply = apply_col.box()
+        apply.operator(
+            bge_netlogic.ops.NLApplyLogicOperator.bl_idname,
+            text="Apply To Selected",
+            icon='PREFERENCES'
+        ).owner = "BGE_PT_LogicPanel"
+        code = layout.box()
+        code.operator(
+            bge_netlogic.ops.NLGenerateLogicNetworkOperator.bl_idname,
+            text="Update Code",
+            icon='FILE_SCRIPT'
+        )
+        code.operator(
+            bge_netlogic.ops.NLGenerateLogicNetworkOperatorAll.bl_idname,
+            text="Generate All Code",
+            icon='SCRIPTPLUGINS'
+        )
+
+
 class BGE_PT_LogicTreeInfoPanel(bpy.types.Panel):
     bl_label = "Object Trees"
     bl_space_type = "NODE_EDITOR"
@@ -515,33 +555,6 @@ class BGE_PT_LogicTreeInfoPanel(bpy.types.Panel):
 
     def draw(self, context):
         layout = self.layout
-        apply_col = layout.column()
-        apply_col.scale_y = 1.4
-        apply = apply_col.box()
-        if self.new_ver:
-            apply.operator(
-                bge_netlogic.ops.NLApplyLogicOperator.bl_idname,
-                icon_value=self.icons["IconApply"].icon_id,
-                text="Apply To Selected"
-            ).owner = "BGE_PT_LogicPanel"
-        else:
-            apply.operator(
-                bge_netlogic.ops.NLApplyLogicOperator.bl_idname,
-                text="Apply To Selected",
-                icon='PREFERENCES'
-            ).owner = "BGE_PT_LogicPanel"
-        code = layout.box()
-        code.operator(
-            bge_netlogic.ops.NLGenerateLogicNetworkOperator.bl_idname,
-            text="Update Code",
-            icon='FILE_SCRIPT'
-        )
-        code.operator(
-            bge_netlogic.ops.NLGenerateLogicNetworkOperatorAll.bl_idname,
-            text="Generate All Code",
-            icon='SCRIPTPLUGINS'
-        )
-        layout.separator()
         selected_objects = [
             ob for ob in context.scene.objects if ob.select_get()
         ] if not bpy.app.version < (2, 80, 0) else [

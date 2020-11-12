@@ -454,6 +454,7 @@ _registered_classes.extend([
     ui.BGE_PT_LogicTreeInfoPanel,
     ui.BGE_PT_GamePropertyPanel,
     ui.BGE_PT_HelpPanel,
+    ui.BGE_PT_LogicTreeOptions,
     # ui.BGEGameComponentPanel,
     ui.BGE_PT_GamePropertyPanel3DView,
     ui.BGE_PT_PropertiesPanelObject,

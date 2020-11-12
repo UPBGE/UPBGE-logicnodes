@@ -3033,23 +3033,17 @@ class ConditionOnce(ConditionCell):
         self.repeat = None
         self._consumed = False
 
-    def stop(self):
-        print('stopping...')
-        self._consumed = False
-
     def evaluate(self):
-        input_condition = self.get_parameter_value(self.input_condition)
-        if input_condition is LogicNetworkCell.STATUS_WAITING:
-            return
+        condition = self.get_parameter_value(self.input_condition)
         repeat = self.get_parameter_value(self.repeat)
         if repeat is LogicNetworkCell.STATUS_WAITING:
             return
         self._set_ready()
-        if input_condition and self._consumed is False:
+        if condition and self._consumed is False:
             self._consumed = True
             self._set_value(True)
             return
-        if not input_condition and repeat:
+        if is_invalid(condition) and repeat and self._consumed:
             self._consumed = False
         self._set_value(False)
 
@@ -3249,17 +3243,14 @@ class ConditionLogicOp(ConditionCell):
         self.operator = operator
         self.param_a = None
         self.param_b = None
+        self.threshold = None
 
     def evaluate(self):
         a = self.get_parameter_value(self.param_a)
         b = self.get_parameter_value(self.param_b)
+        threshold = self.get_parameter_value(self.threshold)
         operator = self.get_parameter_value(self.operator)
-        STATUS_WAITING = LogicNetworkCell.STATUS_WAITING
-        if a is STATUS_WAITING:
-            return
-        if b is STATUS_WAITING:
-            return
-        if operator is STATUS_WAITING:
+        if is_waiting(a, b, threshold, operator):
             return
         self._set_ready()
         if operator > 1:  # eq and neq are valid for None
@@ -3267,6 +3258,8 @@ class ConditionLogicOp(ConditionCell):
                 return
             if b is None:
                 return
+        if abs(a - b) < threshold:
+            a = b
         if operator is None:
             return
         self._set_value(LOGIC_OPERATORS[operator](a, b))
@@ -3277,17 +3270,17 @@ class ConditionCompareVecs(ConditionCell):
         ConditionCell.__init__(self)
         self.operator = operator
         self.all = None
+        self.threshold = None
         self.param_a = None
         self.param_b = None
 
-    def get_vec_val(self, op, a, b, all):
-        if all['x'] and not LOGIC_OPERATORS[op](a.x, b.x):
+    def get_vec_val(self, op, a, b, xyz, threshold):
+        for ax in ['x', 'y', 'z']:
+            av = getattr(a, ax)
+            bv = getattr(b, ax)
+            av = bv if abs(av - bv) < threshold else av
+            if xyz[ax] and not LOGIC_OPERATORS[op](av, bv):
                 return False
-        if all['y'] and not LOGIC_OPERATORS[op](a.y, b.y):
-                return False
-        if all['z'] and not LOGIC_OPERATORS[op](a.z, b.z):
-                return False
-        
         return True
 
     def evaluate(self):
@@ -3295,14 +3288,10 @@ class ConditionCompareVecs(ConditionCell):
         b = self.get_parameter_value(self.param_b)
         all_values = self.get_parameter_value(self.all)
         operator = self.get_parameter_value(self.operator)
-        STATUS_WAITING = LogicNetworkCell.STATUS_WAITING
-        if a is STATUS_WAITING:
+        threshold = self.get_parameter_value(self.threshold)
+        if is_waiting(a, b, all_values, operator, threshold):
             return
-        if b is STATUS_WAITING:
-            return
-        if all_values is STATUS_WAITING:
-            return
-        if operator is STATUS_WAITING:
+        if not isinstance(a, mathutils.Vector) or not isinstance(b, mathutils.Vector):
             return
         self._set_ready()
         if operator > 1:  # eq and neq are valid for None
@@ -3312,7 +3301,7 @@ class ConditionCompareVecs(ConditionCell):
                 return
         if operator is None:
             return
-        self._set_value(self.get_vec_val(operator, a, b, all_values))
+        self._set_value(self.get_vec_val(operator, a, b, all_values, threshold))
 
 
 class ConditionDistanceCheck(ConditionCell):
