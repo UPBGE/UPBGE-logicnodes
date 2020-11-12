@@ -728,6 +728,7 @@ class AudioSystem(object):
     def __init__(self):
         self.active_sounds = []
         self.listener = logic.getCurrentScene().active_camera
+        self.old_lis_pos = self.listener.worldPosition.copy()
         if not hasattr(bpy.types.Scene, 'aud_devices'):
             debug('[Logic Nodes] Opening Sound Devices: default3D, default')
             bpy.types.Scene.aud_devices = self.devices = {
@@ -751,16 +752,30 @@ class AudioSystem(object):
     def get_distance_model(self, name):
         return DISTANCE_MODELS.get(name, aud.DISTANCE_MODEL_INVERSE_CLAMPED)
 
+    def compute_listener_velocity(self, listener):
+        wpos = listener.worldPosition.copy()
+        olp = self.old_lis_pos
+        vel = (
+            (wpos.x - olp.x) * 50,
+            (wpos.y - olp.y) * 50,
+            (wpos.z - olp.z) * 50
+        )
+        self.old_lis_pos = wpos
+        return vel
+
     def update(self, network):
-        device = self.device3D
         c = logic.getCurrentScene().active_camera
         self.listener = c
         if not self.active_sounds:
             return  # do not update if no sound has been installed
         # update the listener data
-        device.listener_location = c.worldPosition
-        device.listener_orientation = c.worldOrientation.to_quaternion()
-        # device.listener_velocity = self.compute_listener_velocity(c)
+        devs = self.devices
+        listener_vel = self.compute_listener_velocity(c)
+        for d in devs:
+            dev = devs[d]
+            dev.listener_location = c.worldPosition
+            dev.listener_orientation = c.worldOrientation.to_quaternion()
+            dev.listener_velocity = listener_vel
 
 
 class LogicNetwork(LogicNetworkCell):
@@ -785,7 +800,11 @@ class LogicNetwork(LogicNetworkCell):
         ]
         self.mouse_motion_delta = [0.0, 0.0]
         self.mouse_wheel_delta = 0
-        self.audio_system = AudioSystem()
+        self.audio_system = (
+            AudioSystem()
+            if not hasattr(bpy.types.Scene, 'aud_devices')
+            else None
+        )
         self.sub_networks = []  # a list of networks updated by this network
         self.capslock_pressed = False
         self.evaluated_cells = 0
@@ -956,7 +975,8 @@ class LogicNetwork(LogicNetworkCell):
             if cell.has_status(LogicNetworkCell.STATUS_WAITING):
                 cells.append(cell)
         # update the sound system
-        self.audio_system.update(self)
+        if self.audio_system:
+            self.audio_system.update(self)
         # pulse subnetworks
         for network in self.sub_networks:
             if network._owner.invalid:
@@ -8560,6 +8580,7 @@ class ActionAddSoundDevice(ActionCell):
         distance_model = self.get_parameter_value(self.distance_model)
         doppler_fac = self.get_parameter_value(self.doppler_fac)
         sound_speed = self.get_parameter_value(self.sound_speed)
+
         self._set_ready()
 
         device = aud.Device()
@@ -8568,8 +8589,7 @@ class ActionAddSoundDevice(ActionCell):
         )
         device.doppler_factor = doppler_fac
         device.speed_of_sound = sound_speed
-        if name not in devs:
-            devs[name] = aud.Device()
+        devs[name] = device
         self.done = True
 
 
@@ -8731,7 +8751,7 @@ class ActionStart3DSoundAdv(ActionCell):
             devs = bpy.types.Scene.aud_devices
         soundpath = logic.expandPath(sound)
         soundfile = aud.Sound.file(soundpath)
-        if device not in devs:
+        if device not in devs.keys():
             devs[device] = aud.Device()
         handle = self._handle = devs[device].play(soundfile)
         handle.relative = False
@@ -8836,6 +8856,7 @@ class ActionStopSound(ActionCell):
         if sound is None:
             return
         sound.stop()
+
 
 class ActionStopAllSounds(ActionCell):
     def __init__(self):

@@ -8155,9 +8155,12 @@ class NLActionAddSoundDevice(bpy.types.Node, NLActionNode):
         self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Name")
         self.inputs[-1].value = 'custom'
         self.inputs.new(NLSocketDistanceModels.bl_idname, "Distance Model")
+        self.inputs[-1].value = 'INVERSE_CLAMPED'
         self.inputs.new(NLPositiveFloatSocket.bl_idname, "Volume")
         self.inputs.new(NLPosFloatFormatSocket.bl_idname, "Doppler Factor")
+        self.inputs[-1].value = 1.0
         self.inputs.new(NLPosFloatFormatSocket.bl_idname, "Speed of Sound")
+        self.inputs[-1].value = 343.3
         self.outputs.new(NLConditionSocket.bl_idname, 'Done')
 
     def get_output_socket_varnames(self):
