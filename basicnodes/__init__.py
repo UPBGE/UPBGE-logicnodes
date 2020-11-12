@@ -3811,19 +3811,19 @@ class NLMouseDataParameter(bpy.types.Node, NLParameterNode):
 
     def init(self, context):
         NLParameterNode.init(self, context)
+        self.outputs.new(NLParameterSocket.bl_idname, "Position")
+        self.outputs.new(NLParameterSocket.bl_idname, "Movement")
         self.outputs.new(NLParameterSocket.bl_idname, "X Position")
         self.outputs.new(NLParameterSocket.bl_idname, "Y Position")
-        self.outputs.new(NLParameterSocket.bl_idname, "X Difference")
-        self.outputs.new(NLParameterSocket.bl_idname, "Y Difference")
+        self.outputs.new(NLParameterSocket.bl_idname, "X Movement")
+        self.outputs.new(NLParameterSocket.bl_idname, "Y Movement")
         self.outputs.new(NLParameterSocket.bl_idname, "Wheel Difference")
-        self.outputs.new(NLParameterSocket.bl_idname, "Position (Vec)")
-        self.outputs.new(NLParameterSocket.bl_idname, "Difference (Vec)")
 
     def get_netlogic_class_name(self):
         return "bgelogic.ParameterMouseData"
 
     def get_output_socket_varnames(self):
-        return ["MX", "MY", "MDX", "MDY", "MDWHEEL", "MXY0", "MDXY0"]
+        return ["MXY0", "MDXY0", "MX", "MY", "MDX", "MDY", "MDWHEEL"]
 
 
 _nodes.append(NLMouseDataParameter)
