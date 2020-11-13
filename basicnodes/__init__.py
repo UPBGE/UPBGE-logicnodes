@@ -2969,7 +2969,7 @@ class NLGetListIndexNode(bpy.types.Node, NLParameterNode):
         NLParameterNode.init(self, context)
         self.inputs.new(NLListSocket.bl_idname, "List")
         self.inputs.new(NLIntegerFieldSocket.bl_idname, "Index")
-        self.outputs.new(NLParameterSocket.bl_idname, "Property Value")
+        self.outputs.new(NLParameterSocket.bl_idname, "Value")
 
     def get_netlogic_class_name(self):
         return "bgelogic.ParameterListIndex"

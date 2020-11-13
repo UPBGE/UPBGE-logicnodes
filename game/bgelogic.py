@@ -7300,7 +7300,7 @@ class ActionApplyImpulse(ActionCell):
         local = self.local
         if hasattr(point, 'worldPosition'):
             point = point.worldPosition
-        if is_waiting(game_object, point, impulse):
+        if is_waiting(point, impulse) or none_or_invalid(game_object):
             return
         self._set_ready()
         if impulse:
