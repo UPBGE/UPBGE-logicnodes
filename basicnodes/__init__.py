@@ -868,8 +868,9 @@ class NLGameObjectSocket(bpy.types.NodeSocket, NetLogicSocketType):
         update=update_tree_code
     )
     use_owner: bpy.props.BoolProperty(
+        name='Use Owner',
         update=update_tree_code,
-        description='Use Owner'
+        description='Use the owner of this tree'
     )
 
     def draw_color(self, context, node):
@@ -4671,13 +4672,15 @@ class NLConditionOnceNode(bpy.types.Node, NLConditionNode):
         NLConditionNode.init(self, context)
         self.inputs.new(NLPseudoConditionSocket.bl_idname, "Condition")
         self.inputs.new(NLBooleanSocket.bl_idname, "Repeat")
+        self.inputs.new(NLPositiveFloatSocket.bl_idname, 'Reset After')
+        self.inputs[-1].value = .5
         tools.register_outputs(self, NLConditionSocket, "Once")
 
     def get_netlogic_class_name(self):
         return "bgelogic.ConditionOnce"
 
     def get_input_sockets_field_names(self):
-        return ["input_condition", 'repeat']
+        return ["input_condition", 'repeat', 'reset_time']
 
 
 _nodes.append(NLConditionOnceNode)

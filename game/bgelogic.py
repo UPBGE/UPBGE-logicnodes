@@ -3031,14 +3031,23 @@ class ConditionOnce(ConditionCell):
         ConditionCell.__init__(self)
         self.input_condition = None
         self.repeat = None
+        self.reset_time = None
         self._consumed = False
+        self.time = 0.0
 
     def evaluate(self):
         condition = self.get_parameter_value(self.input_condition)
         repeat = self.get_parameter_value(self.repeat)
-        if repeat is LogicNetworkCell.STATUS_WAITING:
+        reset_time = self.get_parameter_value(self.reset_time)
+        if is_waiting(repeat, reset_time):
             return
+        network = self.network
+        tl = network.timeline
+
         self._set_ready()
+        if tl - self.time > reset_time and repeat:
+            self._consumed = False
+        self.time = tl
         if condition and self._consumed is False:
             self._consumed = True
             self._set_value(True)

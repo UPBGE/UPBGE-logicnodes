@@ -878,7 +878,7 @@ class NLAddComponentOperator(bpy.types.Operator):
         return True
 
     def execute(self, context):
-        bpy.ops.logic.add_python_component()
+        bpy.ops.logic.python_component_register()
         bge_netlogic.update_current_tree_code()
         return {'FINISHED'}
 
