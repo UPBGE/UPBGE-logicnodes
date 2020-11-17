@@ -121,7 +121,7 @@ class TreeCodeGenerator(object):
         for uid in range(0, cell_uid):
             tree_node = uid_map._get_node_for_uid(uid)
             cell_varname = uid_map._get_varname_for_uid(uid)
-            tree_node.write_cell_fields_initialization(cell_varname, uid_map, line_writer)
+            tree_node.init_cell_fields(cell_varname, uid_map, line_writer)
         return uid_map._list_cell_names(), uid_map
 
     def _sort_cellvarnames(self, node_cellvar_list, uid_map):

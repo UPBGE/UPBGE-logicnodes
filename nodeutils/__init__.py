@@ -20,7 +20,6 @@
 
 import bpy
 import nodeitems_utils
-from bpy.types import Menu, Panel
 
 _cat_icons = {
     'Animation': 'ARMATURE_DATA',
@@ -103,7 +102,14 @@ class NodeCategory(nodeitems_utils.NodeCategory):
 
 class NodeItem(nodeitems_utils.NodeItem):
 
-    def __init__(self, nodetype, icon='DOT', label=None, settings={}, poll=None):
+    def __init__(
+        self,
+        nodetype,
+        icon='DOT',
+        label=None,
+        settings={},
+        poll=None
+    ):
         self.nodetype = nodetype
         self._label = label
         self.icon = icon
@@ -138,26 +144,30 @@ _node_categories = nodeitems_utils._node_categories
 
 def register_node_categories(identifier, cat_list):
     if identifier in _node_categories:
-        raise KeyError("Node categories list '%s' already registered" % identifier)
+        raise KeyError("Node categories \
+            list '%s' already registered" % identifier)
         return
 
     # works as draw function for both menus and panels
     def draw_node_item(self, context):
         layout = self.layout
         col = layout.column()
-        default_context = bpy.app.translations.contexts.default
         for item in self.category.items(context):
             item.draw(item, col, context)
 
     menu_types = []
     for cat in cat_list:
-        menu_type = type("NODE_MT_category_" + cat.identifier, (bpy.types.Menu,), {
-            "bl_space_type": 'NODE_EDITOR',
-            "bl_label": cat.name,
-            "category": cat,
-            "poll": cat.poll,
-            "draw": draw_node_item,
-            })
+        menu_type = type(
+            "NODE_MT_category_" + cat.identifier,
+            (bpy.types.Menu,),
+            {
+                "bl_space_type": 'NODE_EDITOR',
+                "bl_label": cat.name,
+                "category": cat,
+                "poll": cat.poll,
+                "draw": draw_node_item,
+            }
+        )
 
         menu_types.append(menu_type)
 
@@ -179,7 +189,10 @@ def register_node_categories(identifier, cat_list):
                     li.append(m)
 
         for cat in li:
-            layout.menu("NODE_MT_category_%s" % cat.identifier, icon=_cat_icons.get(cat.identifier, 'X'))
+            layout.menu(
+                "NODE_MT_category_%s" % cat.identifier,
+                icon=_cat_icons.get(cat.identifier, 'X')
+            )
             if cat.identifier in _cat_separators:
                 layout.separator()
 

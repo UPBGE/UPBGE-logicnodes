@@ -1422,7 +1422,6 @@ class ParameterListIndex(ParameterCell):
                 self._set_value(list_d[index])
             else:
                 debug('List Index Node: Index Out Of Range!')
-                return
 
 
 class GetActuator(ParameterCell):
@@ -1479,7 +1478,6 @@ class GetActuatorValue(ParameterCell):
         ParameterCell.__init__(self)
         self.actuator = None
         self.field = None
-
 
     def evaluate(self):
         actuator = self.get_parameter_value(self.actuator)
@@ -3300,7 +3298,10 @@ class ConditionCompareVecs(ConditionCell):
         threshold = self.get_parameter_value(self.threshold)
         if is_waiting(a, b, all_values, operator, threshold):
             return
-        if not isinstance(a, mathutils.Vector) or not isinstance(b, mathutils.Vector):
+        if (
+            not isinstance(a, mathutils.Vector)
+            or not isinstance(b, mathutils.Vector)
+        ):
             return
         self._set_ready()
         if operator > 1:  # eq and neq are valid for None
@@ -3310,7 +3311,15 @@ class ConditionCompareVecs(ConditionCell):
                 return
         if operator is None:
             return
-        self._set_value(self.get_vec_val(operator, a, b, all_values, threshold))
+        self._set_value(
+            self.get_vec_val(
+                operator,
+                a,
+                b,
+                all_values,
+                threshold
+            )
+        )
 
 
 class ConditionDistanceCheck(ConditionCell):
@@ -4959,7 +4968,7 @@ class ActionCreateVehicle(ActionCell):
             return
         self._set_ready()
         orig_ori = game_object.worldOrientation
-        game_object.worldOrientation = mathutils.Euler((0, 0, 0), 'XYZ').to_matrix()
+        game_object.worldOrientation = mathutils.Euler((0, 0, 0), 'XYZ')
         ph_id = game_object.getPhysicsId()
         car = bge.constraints.createVehicle(ph_id)
         down = mathutils.Vector((0, 0, -1))
@@ -5025,12 +5034,12 @@ class ActionCreateVehicleFromParent(ActionCell):
 
     def evaluate(self):
         self.done = False
+        game_object = self.get_parameter_value(self.game_object)
         if is_invalid(self.get_parameter_value(self.condition)):
             if game_object.get('vehicle_constraint'):
                 self._set_ready()
                 self.vehicle = game_object['vehicle_constraint']
             return
-        game_object = self.get_parameter_value(self.game_object)
         suspension = self.get_parameter_value(self.suspension)
         stiffness = self.get_parameter_value(self.stiffness)
         damping = self.get_parameter_value(self.damping)
@@ -9200,7 +9209,9 @@ class SetGamma(ActionCell):
         if none_or_invalid(value):
             return
         self._set_ready()
-        bpy.data.scenes[logic.getCurrentScene().name].view_settings.gamma = value
+        bpy.data.scenes[
+            logic.getCurrentScene().name
+        ].view_settings.gamma = value
         self.done = True
 
 
@@ -9231,7 +9242,9 @@ class SetExposure(ActionCell):
         if none_or_invalid(value):
             return
         self._set_ready()
-        bpy.data.scenes[logic.getCurrentScene().name].view_settings.exposure = value
+        bpy.data.scenes[
+            logic.getCurrentScene().name
+        ].view_settings.exposure = value
         self.done = True
 
 
@@ -9324,7 +9337,9 @@ class SetEeveeVolumetrics(ActionCell):
         if none_or_invalid(value):
             return
         self._set_ready()
-        bpy.data.scenes[logic.getCurrentScene().name].eevee.use_volumetric_lights = value
+        bpy.data.scenes[
+            logic.getCurrentScene().name
+        ].eevee.use_volumetric_lights = value
         self.done = True
 
 
@@ -9355,7 +9370,9 @@ class SetEeveeVolumetricShadows(ActionCell):
         if none_or_invalid(value):
             return
         self._set_ready()
-        bpy.data.scenes[logic.getCurrentScene().name].eevee.use_volumetric_shadows = value
+        bpy.data.scenes[
+            logic.getCurrentScene().name
+        ].eevee.use_volumetric_shadows = value
         self.done = True
 
 

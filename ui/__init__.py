@@ -464,8 +464,13 @@ class BGE_PT_LogicTreeGroups(bpy.types.Panel):
 
     @classmethod
     def poll(cls, context):
-        ob = context.active_object
-        return ob and ob.name
+        enabled = (context.space_data.tree_type == BGELogicTree.bl_idname)
+        if enabled and (context.space_data.edit_tree is not None):
+            bge_netlogic._consume_update_tree_code_queue()
+            if not bge_netlogic._tree_code_writer_started:
+                bge_netlogic._tree_code_writer_started = True
+                bpy.ops.bgenetlogic.treecodewriter_operator()
+        return enabled
 
     def draw(self, context):
         layout = self.layout
