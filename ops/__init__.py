@@ -526,7 +526,7 @@ class NLAdd4KeyTemplateOperator(bpy.types.Operator):
         rightward = self.add_movement_setter(tree, 'Set Right', dkey, 'y', -1, nodes, ypos=-120)
 
         reset_x = self.add_or_cond(tree, 'W or S Pressed', forward, backward, nodes)
-        reset_y = self.add_or_cond(tree, 'A or D Pressed', leftward, rightward, nodes, ypos = -100)
+        reset_y = self.add_or_cond(tree, 'A or D Pressed', leftward, rightward, nodes, ypos=-100)
 
         inverted_x = self.add_invert_bool(tree, 'If Not', reset_x, nodes)
         inverted_y = self.add_invert_bool(tree, 'If Not', reset_y, nodes, ypos=-100)
@@ -564,9 +564,7 @@ class NLAdd4KeyTemplateOperator(bpy.types.Operator):
         calc_speed.location = (660, -240)
         nodes.append(calc_speed)
 
-        update = tree.nodes.new('NLOnUpdateConditionNode')
-        update.location = (660, -160)
-        nodes.append(update)
+        update = self.add_or_cond(tree, 'WASD Pressed', reset_x, reset_y, nodes, xpos=660, ypos=-160)
 
         owner = tree.nodes.new('NLOwnerGameObjectParameterNode')
         owner.location = (660, -200)

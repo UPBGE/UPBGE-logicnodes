@@ -75,8 +75,8 @@ class BGE_PT_GameComponentPanel(bpy.types.Panel):
         game = ob.game
 
         row = layout.row()
-        row.operator("logic.python_component_register", text="Register Component", icon="PLUS")
-        row.operator("logic.python_component_create", text="Create Component", icon="PLUS")
+        row.operator("logic.python_component_register", text="Register", icon="PLUS")
+        row.operator("logic.python_component_create", text="Create", icon="PLUS")
 
         for i, c in enumerate(game.components):
             box = layout.box()

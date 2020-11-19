@@ -99,7 +99,7 @@ _enum_constraint_types = [
         "bge.constraints.CONETWIST_CONSTRAINT",
         "Cone Twist",
         "Allow rotations around all axis with limits for the cone \
-            and twist axis"
+and twist axis"
     ),
     (
         "bge.constraints.GENERIC_6DOF_CONSTRAINT",
@@ -181,7 +181,7 @@ _enum_loop_count_values = [
         "ONCE",
         "Play",
         "Play once when condition is TRUE, then wait for \
-            the condition to become TRUE again to play it again."
+the condition to become TRUE again to play it again."
     ),
     (
         "INFINITE",
@@ -230,9 +230,9 @@ _enum_readable_member_names = [
         "The local rotational velocity of the object"
     ),
     ("worldTransform", "Transform (Global)", "The World Transform of the \
-        object"),
+object"),
     ("localTransform", "Transform (Local)", "The local transform of the \
-        object"),
+object"),
     ("worldScale", "Scale", "The global scale of the object"),
     ("name", "Name", "The name of the object"),
     ("color", "Color", "The solid color of the object"),
@@ -278,9 +278,9 @@ _enum_writable_member_names = [
         "The local rotational velocity of the object"
     ),
     ("worldTransform", "Transform (Global)", "The World Transform of the \
-        object"),
+object"),
     ("localTransform", "Transform (Local)", "The local transform of the \
-        object"),
+object"),
     ("worldScale", "Scale", "The global scale of the object")
 ]
 
@@ -294,7 +294,7 @@ _enum_vsync_modes = [
     ("bge.render.VSYNC_OFF", "Off", "Disable Vsync"),
     ("bge.render.VSYNC_ON", "On", "Enable Vsync"),
     ("bge.render.VSYNC_ADAPTIVE", "Adaptive", "Enable adaptive Vsync \
-        (if supported)")
+(if supported)")
 ]
 
 _enum_string_ops = [
@@ -307,7 +307,7 @@ _enum_string_ops = [
         "5",
         "Replace",
         "OUT = STRING with all PARAMETER A \
-            occurrences replaced by PARAMETER B"
+occurrences replaced by PARAMETER B"
     ),
     ("6", "Upper Case", "OUT = STRING to upper case"),
     ("7", "Lower Case", "OUT = STRING to lower case"),
@@ -315,37 +315,37 @@ _enum_string_ops = [
         "8",
         "Remove Range",
         "OUT = STRING - the character from index \
-            PARAMETER A to index PARAMETER B"
+PARAMETER A to index PARAMETER B"
     ),
     (
         "9",
         "Insert At",
         "OUT = STRING + the PARAMETER A \
-            inserted ad the index PARAMETER B"
+inserted ad the index PARAMETER B"
     ),
     (
         "10",
         "Length",
         "OUT = the length (character cout, integer value) \
-            of the input STRING"
+of the input STRING"
     ),
     (
         "11",
         "Substring",
         "OUT = the STRING portion from PARAMETER \
-            A to PARAMETER B"
+A to PARAMETER B"
     ),
     (
         "12",
         "First Index Of",
         "OUT = the position (integer value) of the \
-            first PARAMETER A occurrence in STRING"
+first PARAMETER A occurrence in STRING"
     ),
     (
         "13",
         "Last Index Of",
         "OUT = the position (integer value) of the \
-            first PARAMETER A occurrence int STRING"
+first PARAMETER A occurrence in STRING"
     )
 ]
 
@@ -702,7 +702,7 @@ class NLPseudoConditionSocket(bpy.types.NodeSocket, NetLogicSocketType):
     value: bpy.props.BoolProperty(
         name='Condition',
         description='Optional; When True, \
-            perform with each frame, when False, never perform',
+perform with each frame, when False, never perform',
         update=update_tree_code)
 
     def draw_color(self, context, node):
@@ -983,7 +983,7 @@ class NLCollectionSocket(bpy.types.NodeSocket, NetLogicSocketType):
         name='Collection',
         type=bpy.types.Collection,
         description='Select a Collection. \
-            Objects in that collection will be used for the node',
+Objects in that collection will be used for the node',
         update=update_tree_code
     )
 
@@ -1026,7 +1026,7 @@ class NLSocketLogicTree(bpy.types.NodeSocket, NetLogicSocketType):
         name='Logic Tree',
         type=bpy.types.NodeTree,
         description='Select a Logic Tree. \
-            NOTE: Selecting a Shader Node Group will result in an error!',
+NOTE: Selecting a Shader Node Group will result in an error!',
         update=update_tree_code
     )
 
@@ -1259,7 +1259,7 @@ class NLSocketLoopCount(bpy.types.NodeSocket, NetLogicSocketType):
         update=update_value,
         min=1,
         description="How many times the sound should \
-            be repeated when the condition is TRUE"
+be repeated when the condition is TRUE"
         )
 
     def draw_color(self, context, node):
@@ -2189,8 +2189,8 @@ class NLSocketVectorField(bpy.types.NodeSocket, NetLogicSocketType):
     value: bpy.props.StringProperty(
         update=update_tree_code,
         description=("Default to (0,0,0), \
-            type numbers separated by space or \
-                comma or anything but a dot"))
+type numbers separated by space or \
+comma or anything but a dot"))
 
     def draw_color(self, context, node):
         return PARAM_VECTOR_SOCKET_COLOR
@@ -2215,7 +2215,7 @@ class NLOptionalSocketVectorField(bpy.types.NodeSocket, NetLogicSocketType):
     value: bpy.props.StringProperty(
         update=update_tree_code,
         description=("Default to None, type numbers separated by space or comma \
-            or anything but a dot"))
+or anything but a dot"))
 
     def draw_color(self, context, node):
         return PARAMETER_SOCKET_COLOR
@@ -2242,7 +2242,7 @@ class NLSocketOptionalFilePath(bpy.types.NodeSocket, NetLogicSocketType):
     value: bpy.props.StringProperty(
         update=update_tree_code,
         description=("None if empty. Absolute or Relative path. \
-            Relative paths start with //")
+Relative paths start with //")
     )
 
     def draw_color(self, context, node):
@@ -2269,7 +2269,7 @@ class NLSocketOptionalOrientation(bpy.types.NodeSocket, NetLogicSocketType):
     value: bpy.props.StringProperty(
         update=update_tree_code,
         description="None if empty. 3 numeric values separated by anything \
-            but a dot. Can be linked to any orientation or vector value-")
+but a dot. Can be linked to any orientation or vector value-")
 
     def draw_color(self, context, node):
         return PARAMETER_SOCKET_COLOR
@@ -4303,7 +4303,7 @@ class NLGamepadButtonsCondition(bpy.types.Node, NLConditionNode):
     )
     pulse: bpy.props.BoolProperty(
         description="ON: True until the button is released, \
-            OFF: True when pressed, then False until pressed again",
+OFF: True when pressed, then False until pressed again",
         update=update_tree_code
     )
 
@@ -4360,7 +4360,7 @@ class NLKeyPressedCondition(bpy.types.Node, NLConditionNode):
     nl_subcat = 'Keyboard'
     pulse: bpy.props.BoolProperty(
         description="ON: True until the key is released, \
-            OFF: True when pressed, then False until pressed again",
+OFF: True when pressed, then False until pressed again",
         update=update_tree_code)
 
     def init(self, context):
@@ -4402,7 +4402,7 @@ class NLKeyLoggerAction(bpy.types.Node, NLActionNode):
     nl_subcat = 'Keyboard'
     pulse: bpy.props.BoolProperty(
         description="ON: True until the key is released, \
-            OFF: True when pressed, then False until pressed again",
+OFF: True when pressed, then False until pressed again",
         update=update_tree_code)
 
     def init(self, context):
@@ -4449,7 +4449,7 @@ class NLKeyReleasedCondition(bpy.types.Node, NLConditionNode):
     nl_subcat = 'Keyboard'
     pulse: bpy.props.BoolProperty(
         description="ON: True until the key is released, \
-            OFF: True when pressed, then False until pressed again",
+OFF: True when pressed, then False until pressed again",
         default=True,
         update=update_tree_code)
 
@@ -4494,7 +4494,7 @@ class NLMousePressedCondition(bpy.types.Node, NLConditionNode):
 
     pulse: bpy.props.BoolProperty(
         description="ON: True until the button is released, \
-            OFF: True when pressed, then False until pressed again",
+OFF: True when pressed, then False until pressed again",
         default=False,
         update=update_tree_code)
 
@@ -4539,7 +4539,7 @@ class NLMouseMovedCondition(bpy.types.Node, NLConditionNode):
 
     pulse: bpy.props.BoolProperty(
         description="ON: True until the button is released, \
-            OFF: True when pressed, then False until pressed again",
+OFF: True when pressed, then False until pressed again",
         default=False,
         update=update_tree_code)
 
@@ -4583,7 +4583,7 @@ class NLMouseReleasedCondition(bpy.types.Node, NLConditionNode):
 
     pulse: bpy.props.BoolProperty(
         description="ON: True until the button is released, \
-            OFF: True when pressed, then False until pressed again",
+OFF: True when pressed, then False until pressed again",
         default=False,
         update=update_tree_code)
 
@@ -5116,7 +5116,7 @@ class NLConditionValueChanged(bpy.types.Node, NLConditionNode):
 
     initialize: bpy.props.BoolProperty(
         description="When ON, skip the first change. \
-            When OFF, compare the first value to None",
+When OFF, compare the first value to None",
         update=update_tree_code)
 
     def init(self, context):
@@ -6789,7 +6789,7 @@ class NLActionSaveGame(bpy.types.Node, NLActionNode):
         subtype='FILE_PATH',
         update=update_tree_code,
         description='Choose a Path to save the file to. \
-            Start with "./" to make it relative to the file path.'
+Start with "./" to make it relative to the file path.'
     )
 
     def init(self, context):
@@ -6843,7 +6843,7 @@ class NLActionLoadGame(bpy.types.Node, NLActionNode):
         subtype='FILE_PATH',
         update=update_tree_code,
         description='Choose a Path to save the file to. \
-            Start with "./" to make it relative to the file path.'
+Start with "./" to make it relative to the file path.'
     )
 
     def init(self, context):
@@ -6897,7 +6897,7 @@ class NLActionSaveVariable(bpy.types.Node, NLActionNode):
         subtype='FILE_PATH',
         update=update_tree_code,
         description='Choose a Path to save the file to. \
-            Start with "./" to make it relative to the file path.'
+Start with "./" to make it relative to the file path.'
     )
 
     def init(self, context):
@@ -6954,7 +6954,7 @@ class NLActionSaveVariables(bpy.types.Node, NLActionNode):
         subtype='FILE_PATH',
         update=update_tree_code,
         description='Choose a Path to save the file to. \
-            Start with "./" to make it relative to the file path.'
+Start with "./" to make it relative to the file path.'
     )
 
     def init(self, context):
@@ -7030,7 +7030,7 @@ class NLActionLoadVariable(bpy.types.Node, NLActionNode):
         subtype='FILE_PATH',
         update=update_tree_code,
         description='Choose a Path to save the file to. \
-            Start with "./" to make it relative to the file path.'
+Start with "./" to make it relative to the file path.'
     )
 
     def init(self, context):
@@ -7087,7 +7087,7 @@ class NLActionLoadVariables(bpy.types.Node, NLActionNode):
         subtype='FILE_PATH',
         update=update_tree_code,
         description='Choose a Path to save the file to. \
-            Start with "./" to make it relative to the file path.'
+Start with "./" to make it relative to the file path.'
     )
 
     def init(self, context):
@@ -7142,7 +7142,7 @@ class NLActionRemoveVariable(bpy.types.Node, NLActionNode):
         subtype='FILE_PATH',
         update=update_tree_code,
         description='Choose a Path to save the file to. \
-            Start with "./" to make it relative to the file path.'
+Start with "./" to make it relative to the file path.'
     )
 
     def init(self, context):
@@ -7198,7 +7198,7 @@ class NLActionClearVariables(bpy.types.Node, NLActionNode):
         subtype='FILE_PATH',
         update=update_tree_code,
         description='Choose a Path to save the file to. \
-            Start with "./" to make it relative to the file path.'
+Start with "./" to make it relative to the file path.'
     )
 
     def init(self, context):
@@ -7252,7 +7252,7 @@ class NLActionListVariables(bpy.types.Node, NLActionNode):
         subtype='FILE_PATH',
         update=update_tree_code,
         description='Choose a Path to save the file to. \
-            Start with "./" to make it relative to the file path.'
+Start with "./" to make it relative to the file path.'
     )
 
     def init(self, context):
