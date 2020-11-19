@@ -551,7 +551,7 @@ class NLAdd4KeyTemplateOperator(bpy.types.Operator):
         nodes.append(calc_vec)
 
         speed = tree.nodes.new('NLParameterFloatValue')
-        speed.inputs[0].value = 5
+        speed.inputs[0].value = .2
         speed.label = 'Speed'
         speed.location = (440, -200)
         nodes.append(speed)
@@ -570,14 +570,10 @@ class NLAdd4KeyTemplateOperator(bpy.types.Operator):
         owner.location = (660, -200)
         nodes.append(owner)
 
-        set_vel = tree.nodes.new('NLSetObjectAttributeActionNode')
-        set_vel.value_type = 'localLinearVelocity'
-        set_vel.inputs[1].x = True
-        set_vel.inputs[1].y = True
-        set_vel.inputs[1].z = False
+        set_vel = tree.nodes.new('NLActionApplyLocation')
         tree.links.new(update.outputs[0], set_vel.inputs[0])
-        tree.links.new(owner.outputs[0], set_vel.inputs[2])
-        tree.links.new(calc_speed.outputs[0], set_vel.inputs[3])
+        tree.links.new(owner.outputs[0], set_vel.inputs[1])
+        tree.links.new(calc_speed.outputs[0], set_vel.inputs[2])
         set_vel.label = 'Move Object'
         set_vel.location = (880, -160)
         nodes.append(set_vel)

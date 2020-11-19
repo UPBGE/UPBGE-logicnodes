@@ -280,9 +280,9 @@ def compute_distance(parama, paramb):
 
 
 def debug(value):
-    if bpy.context.scene.game_settings.show_fullscreen:
-        return
     if TOO_OLD:
+        return
+    if not hasattr(bpy.context.scene, 'logic_node_settings'):
         return
     if not bpy.context.scene.logic_node_settings.use_node_debug:
         return
