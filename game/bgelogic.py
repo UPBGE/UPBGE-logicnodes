@@ -7331,9 +7331,8 @@ class ActionCharacterJump(ActionCell):
     def evaluate(self):
         self.done = False
         condition = self.get_parameter_value(self.condition)
-        if condition is LogicNetworkCell.STATUS_WAITING:
-            return
-        if not condition:
+        if is_invalid(condition):
+            self._set_ready()
             return
         game_object = self.get_parameter_value(self.game_object)
         if game_object is LogicNetworkCell.STATUS_WAITING:
@@ -8387,6 +8386,7 @@ class ActionPlayAction(ActionCell):
                     layer_weight != self.old_layer_weight or
                     speed != self.old_speed
                 ):
+                    next_frame = playing_frame + speed if playing_frame + speed <= end_frame else 0
                     game_object.stopAction(layer)
                     game_object.playAction(
                         action_name,
@@ -8399,7 +8399,7 @@ class ActionPlayAction(ActionCell):
                         speed=speed,
                         layer_weight=1 - layer_weight,
                         blend_mode=blend_mode)
-                    game_object.setActionFrame(playing_frame + speed, layer)
+                    game_object.setActionFrame(next_frame, layer)
                 # TODO: the meaning of start-end depends
                 # also on the action mode
                 if end_frame > start_frame:  # play 0 to 100
