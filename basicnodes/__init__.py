@@ -2972,6 +2972,31 @@ class NLGetDictKeyNode(bpy.types.Node, NLParameterNode):
 _nodes.append(NLGetDictKeyNode)
 
 
+class NLGetRandomListIndex(bpy.types.Node, NLParameterNode):
+    bl_idname = "NLGetRandomListIndex"
+    bl_label = "Get Random Item"
+    nl_category = "Python"
+    nl_subcat = 'List'
+
+    def init(self, context):
+        NLParameterNode.init(self, context)
+        self.inputs.new(NLPseudoConditionSocket.bl_idname, 'Condition')
+        self.inputs.new(NLListSocket.bl_idname, "List")
+        self.outputs.new(NLParameterSocket.bl_idname, "Value")
+
+    def get_netlogic_class_name(self):
+        return "bgelogic.ParameterRandomListIndex"
+
+    def get_input_sockets_field_names(self):
+        return ["condition", "list"]
+
+    def get_output_socket_varnames(self):
+        return [OUTCELL]
+
+
+_nodes.append(NLGetRandomListIndex)
+
+
 class NLGetListIndexNode(bpy.types.Node, NLParameterNode):
     bl_idname = "NLGetListIndexNode"
     bl_label = "Get Index"

@@ -13,6 +13,8 @@ import operator
 import json
 
 TOO_OLD = bge.app.version < (2, 80, 0)
+
+
 DISTANCE_MODELS = {
     'INVERSE': aud.DISTANCE_MODEL_INVERSE,
     'INVERSE_CLAMPED': aud.DISTANCE_MODEL_INVERSE_CLAMPED,
@@ -489,14 +491,15 @@ def project_vector3(v, xi, yi):
 
 
 def stop_all_sounds(a, b):
-    if not hasattr(bpy.types.Scene, 'aud_devices'):
+    if not hasattr(bpy.types.Scene, 'nl_aud_system'):
         return
     closed_devs = ''
-    for dev in bpy.types.Scene.aud_devices:
-        bpy.types.Scene.aud_devices[dev].stopAll()
+    for dev in bpy.types.Scene.nl_aud_devices:
+        bpy.types.Scene.nl_aud_devices[dev].stopAll()
         closed_devs += ' {},'.format(dev)
     debug('[Logic Nodes] Closing Sound Devices:{}'.format(closed_devs[:-1]))
-    delattr(bpy.types.Scene, 'aud_devices')
+    delattr(bpy.types.Scene, 'nl_aud_devices')
+    delattr(bpy.types.Scene, 'nl_aud_system')
 
 
 def none_or_invalid(ref):
@@ -729,14 +732,15 @@ class AudioSystem(object):
         self.active_sounds = []
         self.listener = logic.getCurrentScene().active_camera
         self.old_lis_pos = self.listener.worldPosition.copy()
-        if not hasattr(bpy.types.Scene, 'aud_devices'):
+        bpy.types.Scene.nl_aud_system = self
+        if not hasattr(bpy.types.Scene, 'nl_aud_devices'):
             debug('[Logic Nodes] Opening Sound Devices: default3D, default')
-            bpy.types.Scene.aud_devices = self.devices = {
+            bpy.types.Scene.nl_aud_devices = self.devices = {
                 'default3D': aud.Device(),
                 'default': aud.Device()
             }
         else:
-            self.devices = bpy.types.Scene.aud_devices
+            self.devices = bpy.types.Scene.nl_aud_devices
         self.device3D = self.devices['default3D']
         self.device = self.devices['default']
         self.device.distance_model = aud.DISTANCE_MODEL_INVALID
@@ -800,14 +804,20 @@ class LogicNetwork(LogicNetworkCell):
         ]
         self.mouse_motion_delta = [0.0, 0.0]
         self.mouse_wheel_delta = 0
-        self.audio_system = (
-            AudioSystem()
-            if not hasattr(bpy.types.Scene, 'aud_devices')
-            else None
-        )
+        self.aud_system_owner = False
+        self.audio_system = self.create_aud_system()
         self.sub_networks = []  # a list of networks updated by this network
         self.capslock_pressed = False
         self.evaluated_cells = 0
+
+    def create_aud_system(self):
+        if not hasattr(bpy.types.Scene, 'nl_aud_system'):
+            self.aud_system_owner = True
+            print('SETTING AUD SYSTEM')
+            return AudioSystem()
+        else:
+            print('Already initiated')
+            return bpy.types.Scene.nl_aud_system
 
     def ray_cast(
         self,
@@ -975,7 +985,7 @@ class LogicNetwork(LogicNetworkCell):
             if cell.has_status(LogicNetworkCell.STATUS_WAITING):
                 cells.append(cell)
         # update the sound system
-        if self.audio_system:
+        if self.aud_system_owner:
             self.audio_system.update(self)
         # pulse subnetworks
         for network in self.sub_networks:
@@ -1422,6 +1432,23 @@ class ParameterListIndex(ParameterCell):
                 self._set_value(list_d[index])
             else:
                 debug('List Index Node: Index Out Of Range!')
+
+
+class ParameterRandomListIndex(ParameterCell):
+    def __init__(self):
+        ParameterCell.__init__(self)
+        self.condition = None
+        self.list = None
+
+    def evaluate(self):
+        condition = self.get_parameter_value(self.condition)
+        if is_invalid(condition):
+            return
+        list_d = self.get_parameter_value(self.list)
+        if list_d is LogicNetworkCell.STATUS_WAITING:
+            return
+        self._set_ready()
+        self._set_value(random.choice(list_d))
 
 
 class GetActuator(ParameterCell):
@@ -3265,7 +3292,7 @@ class ConditionLogicOp(ConditionCell):
                 return
             if b is None:
                 return
-        if abs(a - b) < threshold:
+        if threshold > 0 and abs(a - b) < threshold:
             a = b
         if operator is None:
             return
@@ -8578,11 +8605,11 @@ class ActionAddSoundDevice(ActionCell):
         condition = self.get_parameter_value(self.condition)
         if not condition or condition is LogicNetworkCell.STATUS_WAITING:
             return
-        if not hasattr(bpy.types.Scene, 'aud_devices'):
+        if not hasattr(bpy.types.Scene, 'nl_aud_devices'):
             debug('No Audio Devices initialized!')
             return
         else:
-            devs = bpy.types.Scene.aud_devices
+            devs = bpy.types.Scene.nl_aud_devices
         name = self.get_parameter_value(self.name)
         distance_model = self.get_parameter_value(self.distance_model)
         doppler_fac = self.get_parameter_value(self.doppler_fac)
@@ -8612,6 +8639,7 @@ class ActionStart3DSound(ActionCell):
         self.distance_max = None
         self.done = None
         self._handle = None
+        self._handles = []
         self.DONE = LogicNetworkSubCell(self, self.get_done)
         self.HANDLE = LogicNetworkSubCell(self, self.get_handle)
 
@@ -8625,23 +8653,23 @@ class ActionStart3DSound(ActionCell):
         self.done = False
         audio_system = self.network.audio_system
         speaker = self.get_parameter_value(self.speaker)
-        handle = self._handle
-        if handle:
-            if handle.status:
-                handle.location = speaker.worldPosition
-                handle.orientation = speaker.worldOrientation.to_quaternion()
-                if hasattr(speaker, 'worldLinearVelocity'):
-                    handle.velocity = getattr(
-                        speaker,
-                        'worldLinearVelocity',
-                        mathutils.Vector((0, 0, 0))
-                    )
-                self._set_ready()
-                self._handle = handle
-                return
-            elif handle in audio_system.active_sounds:
-                audio_system.active_sounds.remove(handle)
-                return
+        handles = self._handles
+        if handles:
+            for handle in handles:
+                if handle.status:
+                    handle.location = speaker.worldPosition
+                    handle.orientation = speaker.worldOrientation.to_quaternion()
+                    if hasattr(speaker, 'worldLinearVelocity'):
+                        handle.velocity = getattr(
+                            speaker,
+                            'worldLinearVelocity',
+                            mathutils.Vector((0, 0, 0))
+                        )
+                    self._set_ready()
+                    self._handle = handle
+                elif handle in audio_system.active_sounds:
+                    audio_system.active_sounds.remove(handle)
+                    self._handles.remove(handle)
         condition = self.get_parameter_value(self.condition)
         if condition is LogicNetworkCell.STATUS_WAITING:
             return
@@ -8657,14 +8685,15 @@ class ActionStart3DSound(ActionCell):
 
         if none_or_invalid(sound):
             return
-        if not hasattr(bpy.types.Scene, 'aud_devices'):
+        if not hasattr(bpy.types.Scene, 'nl_aud_devices'):
             debug('No Audio Devices initialized!')
             return
         else:
-            devs = bpy.types.Scene.aud_devices
+            devs = bpy.types.Scene.nl_aud_devices
         soundpath = logic.expandPath(sound)
         soundfile = aud.Sound.file(soundpath)
         handle = self._handle = devs['default3D'].play(soundfile)
+        self._handles.append(handle)
         handle.relative = False
         handle.location = speaker.worldPosition
         if hasattr(speaker, 'worldLinearVelocity'):
@@ -8751,11 +8780,11 @@ class ActionStart3DSoundAdv(ActionCell):
 
         if none_or_invalid(sound):
             return
-        if not hasattr(bpy.types.Scene, 'aud_devices'):
+        if not hasattr(bpy.types.Scene, 'nl_aud_devices'):
             debug('No Audio Devices initialized!')
             return
         else:
-            devs = bpy.types.Scene.aud_devices
+            devs = bpy.types.Scene.nl_aud_devices
         soundpath = logic.expandPath(sound)
         soundfile = aud.Sound.file(soundpath)
         if device not in devs.keys():
@@ -8827,11 +8856,11 @@ class ActionStartSound(ActionCell):
 
         if none_or_invalid(sound):
             return
-        if not hasattr(bpy.types.Scene, 'aud_devices'):
+        if not hasattr(bpy.types.Scene, 'nl_aud_devices'):
             debug('No Audio Devices initialized!')
             return
         else:
-            devs = bpy.types.Scene.aud_devices
+            devs = bpy.types.Scene.nl_aud_devices
         soundpath = logic.expandPath(sound)
         soundfile = aud.Sound.file(soundpath)
         handle = self._handle = devs['default'].play(soundfile)
@@ -8877,12 +8906,12 @@ class ActionStopAllSounds(ActionCell):
         if not condition:
             self._set_ready()
             return
-        if not hasattr(bpy.types.Scene, 'aud_devices'):
+        if not hasattr(bpy.types.Scene, 'nl_aud_devices'):
             debug('No Audio Devices to close.')
             return
         self._set_ready()
-        for dev in bpy.types.Scene.aud_devices:
-            bpy.types.Scene.aud_devices[dev].stopAll()
+        for dev in bpy.types.Scene.nl_aud_devices:
+            bpy.types.Scene.nl_aud_devices[dev].stopAll()
 
 
 class ActionPauseSound(ActionCell):
@@ -10272,23 +10301,23 @@ class ActionAlignAxisToVector(ActionCell):
         if not condition:
             return
         game_object = self.get_parameter_value(self.game_object)
-        vector = self.get_parameter_value(self.vector)
+        v = self.get_parameter_value(self.vector)
         axis = self.get_parameter_value(self.axis)
         factor = self.get_parameter_value(self.factor)
         if none_or_invalid(game_object):
             return
-        if vector is None:
+        if v is None or (v.x == 0 and v.y == 0 and v.z == 0):
             return
         if axis is None:
             return
         if factor is None:
             return
         if axis > 2:
-            matvec = vector.copy()
+            matvec = v.copy()
             matvec.negate()
-            vector = matvec
+            v = matvec
             axis -= 3
-        game_object.alignAxisToVect(vector, axis, factor)
+        game_object.alignAxisToVect(v, axis, factor)
         self.done = True
 
 
