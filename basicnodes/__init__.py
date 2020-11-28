@@ -133,7 +133,8 @@ _enum_field_value_types = [
     ("STRING", "String", "A String"),
     ("FLOAT", "Float", "A Float value"),
     ("INTEGER", "Integer", "An Integer value"),
-    ("BOOLEAN", "Bool", "A True/False value")
+    ("BOOLEAN", "Bool", "A True/False value"),
+    ("FILE_PATH", "File Path", 'Choose a file path')
 ]
 _enum_boolean_values = [
     ("True", "TRUE", "The True value"),
@@ -1664,6 +1665,14 @@ class NLValueFieldSocket(bpy.types.NodeSocket, NetLogicSocketType):
 
     string_editor: bpy.props.StringProperty(update=store_string_value)
 
+    def store_path_value(self, context):
+        self.value = self.path_editor
+
+    path_editor: bpy.props.StringProperty(
+        update=store_path_value,
+        subtype='FILE_PATH'
+    )
+
     def draw_color(self, context, node):
         return PARAMETER_SOCKET_COLOR
 
@@ -1692,6 +1701,9 @@ class NLValueFieldSocket(bpy.types.NodeSocket, NetLogicSocketType):
             elif self.value_type == "STRING":
                 val_row.prop(self, "value_type", text="")
                 val_row.prop(self, "string_editor", text="")
+            elif self.value_type == "FILE_PATH":
+                val_row.prop(self, "value_type", text="")
+                val_row.prop(self, "path_editor", text="")
 
 
 _sockets.append(NLValueFieldSocket)

@@ -813,10 +813,8 @@ class LogicNetwork(LogicNetworkCell):
     def create_aud_system(self):
         if not hasattr(bpy.types.Scene, 'nl_aud_system'):
             self.aud_system_owner = True
-            print('SETTING AUD SYSTEM')
             return AudioSystem()
         else:
-            print('Already initiated')
             return bpy.types.Scene.nl_aud_system
 
     def ray_cast(
@@ -8729,6 +8727,7 @@ class ActionStart3DSoundAdv(ActionCell):
         self.cone_outer_volume = None
         self.done = None
         self._handle = None
+        self._handles = []
         self.DONE = LogicNetworkSubCell(self, self.get_done)
         self.HANDLE = LogicNetworkSubCell(self, self.get_handle)
 
@@ -8742,23 +8741,23 @@ class ActionStart3DSoundAdv(ActionCell):
         self.done = False
         audio_system = self.network.audio_system
         speaker = self.get_parameter_value(self.speaker)
-        handle = self._handle
-        if handle:
-            if handle.status:
-                handle.location = speaker.worldPosition
-                handle.orientation = speaker.worldOrientation.to_quaternion()
-                if hasattr(speaker, 'worldLinearVelocity'):
-                    handle.velocity = getattr(
-                        speaker,
-                        'worldLinearVelocity',
-                        mathutils.Vector((0, 0, 0))
-                    )
-                self._set_ready()
-                self._handle = handle
-                return
-            elif handle in audio_system.active_sounds:
-                audio_system.active_sounds.remove(handle)
-                return
+        handles = self._handles
+        if handles:
+            for handle in handles:
+                if handle.status:
+                    handle.location = speaker.worldPosition
+                    handle.orientation = speaker.worldOrientation.to_quaternion()
+                    if hasattr(speaker, 'worldLinearVelocity'):
+                        handle.velocity = getattr(
+                            speaker,
+                            'worldLinearVelocity',
+                            mathutils.Vector((0, 0, 0))
+                        )
+                    self._set_ready()
+                    self._handle = handle
+                elif handle in audio_system.active_sounds:
+                    self._handles.remove(handle)
+                    audio_system.active_sounds.remove(handle)
         condition = self.get_parameter_value(self.condition)
         if condition is LogicNetworkCell.STATUS_WAITING:
             return
@@ -8790,6 +8789,7 @@ class ActionStart3DSoundAdv(ActionCell):
         if device not in devs.keys():
             devs[device] = aud.Device()
         handle = self._handle = devs[device].play(soundfile)
+        self._handles.append(handle)
         handle.relative = False
         handle.location = speaker.worldPosition
         if hasattr(speaker, 'worldLinearVelocity'):
@@ -8822,6 +8822,7 @@ class ActionStartSound(ActionCell):
         self.volume = None
         self.done = None
         self._handle = None
+        self._handles = []
         self.DONE = LogicNetworkSubCell(self, self.get_done)
         self.HANDLE = LogicNetworkSubCell(self, self.get_handle)
 
@@ -8834,14 +8835,14 @@ class ActionStartSound(ActionCell):
     def evaluate(self):
         self.done = False
         audio_system = self.network.audio_system
-        handle = self._handle
-        if handle:
-            if not handle.status and handle in audio_system.active_sounds:
-                audio_system.active_sounds.remove(handle)
-                return
-            self._set_ready()
-            self._handle = handle
-            return
+        handles = self._handles
+        if handles:
+            for handle in handles:
+                if not handle.status and handle in audio_system.active_sounds:
+                    self._handles.remove(handle)
+                    audio_system.active_sounds.remove(handle)
+                self._set_ready()
+                self._handle = handle
         condition = self.get_parameter_value(self.condition)
         if condition is LogicNetworkCell.STATUS_WAITING:
             return
@@ -8864,6 +8865,7 @@ class ActionStartSound(ActionCell):
         soundpath = logic.expandPath(sound)
         soundfile = aud.Sound.file(soundpath)
         handle = self._handle = devs['default'].play(soundfile)
+        self._handles.append(handle)
         handle.relative = True
         handle.pitch = pitch
         handle.loop_count = loop_count
