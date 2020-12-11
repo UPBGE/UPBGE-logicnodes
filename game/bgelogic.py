@@ -8411,7 +8411,13 @@ class ActionPlayAction(ActionCell):
                     layer_weight != self.old_layer_weight or
                     speed != self.old_speed
                 ):
-                    next_frame = playing_frame + speed if playing_frame + speed <= end_frame else 0
+                    next_frame = (
+                        playing_frame + speed
+                        if
+                        playing_frame + speed <= end_frame
+                        else
+                        0
+                    )
                     game_object.stopAction(layer)
                     game_object.playAction(
                         action_name,
@@ -8656,7 +8662,11 @@ class ActionStart3DSound(ActionCell):
             for handle in handles:
                 if handle.status:
                     handle.location = speaker.worldPosition
-                    handle.orientation = speaker.worldOrientation.to_quaternion()
+                    handle.orientation = (
+                        speaker
+                        .worldOrientation
+                        .to_quaternion()
+                    )
                     if hasattr(speaker, 'worldLinearVelocity'):
                         handle.velocity = getattr(
                             speaker,
@@ -8746,7 +8756,11 @@ class ActionStart3DSoundAdv(ActionCell):
             for handle in handles:
                 if handle.status:
                     handle.location = speaker.worldPosition
-                    handle.orientation = speaker.worldOrientation.to_quaternion()
+                    handle.orientation = (
+                        speaker
+                        .worldOrientation
+                        .to_quaternion()
+                    )
                     if hasattr(speaker, 'worldLinearVelocity'):
                         handle.velocity = getattr(
                             speaker,
