@@ -651,7 +651,7 @@ class LogicNetworkCell(StatefulValueProducer):
     def has_status(self, status):
         return status == self._status
 
-    def get_game_object(self, param, scene=None):
+    def get_game_object(self, param, scene):
         if str(param) == 'NLO:U_O':
             return self.network._owner
         else:
