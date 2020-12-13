@@ -8627,6 +8627,7 @@ class ActionAddSoundDevice(ActionCell):
         )
         device.doppler_factor = doppler_fac
         device.speed_of_sound = sound_speed
+        debug('[Logic Nodes] Opening Sound Device: ' + name)
         devs[name] = device
         self.done = True
 
