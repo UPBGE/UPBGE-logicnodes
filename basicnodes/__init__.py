@@ -1546,6 +1546,8 @@ class NLQuotedStringFieldSocket(bpy.types.NodeSocket, NetLogicSocketType):
     def draw(self, context, layout, node, text):
         if self.is_linked or self.is_output:
             layout.label(text=text)
+        elif not text:
+            layout.prop(self, "value", text='')
         else:
             parts = layout.split()
             parts.label(text=text)
@@ -3521,6 +3523,48 @@ class NLActiveCameraParameterNode(bpy.types.Node, NLParameterNode):
 
 
 _nodes.append(NLActiveCameraParameterNode)
+
+
+class NLGetCollectionObjectsNode(bpy.types.Node, NLParameterNode):
+    bl_idname = "NLGetCollectionObjectsNode"
+    bl_label = "Get Objects"
+    nl_category = "Scene"
+    nl_subcat = 'Collections'
+
+    def init(self, context):
+        NLParameterNode.init(self, context)
+        self.inputs.new(NLCollectionSocket.bl_idname, 'Collection')
+        self.outputs.new(NLListSocket.bl_idname, "Objects")
+
+    def get_input_sockets_field_names(self):
+        return ['collection']
+
+    def get_netlogic_class_name(self):
+        return "bgelogic.GetCollectionObjects"
+
+
+_nodes.append(NLGetCollectionObjectsNode)
+
+
+class NLGetCollectionObjectNamesNode(bpy.types.Node, NLParameterNode):
+    bl_idname = "NLGetCollectionObjectNamesNode"
+    bl_label = "Get Object Names"
+    nl_category = "Scene"
+    nl_subcat = 'Collections'
+
+    def init(self, context):
+        NLParameterNode.init(self, context)
+        self.inputs.new(NLCollectionSocket.bl_idname, 'Collection')
+        self.outputs.new(NLListSocket.bl_idname, "Objects")
+
+    def get_input_sockets_field_names(self):
+        return ['collection']
+
+    def get_netlogic_class_name(self):
+        return "bgelogic.GetCollectionObjectNames"
+
+
+_nodes.append(NLGetCollectionObjectNamesNode)
 
 
 class NLArithmeticOpParameterNode(bpy.types.Node, NLParameterNode):

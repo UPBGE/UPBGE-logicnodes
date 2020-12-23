@@ -1844,6 +1844,36 @@ class ParameterActiveCamera(ParameterCell):
             self._set_value(scene.active_camera)
 
 
+class GetCollectionObjects(ParameterCell):
+    def __init__(self):
+        ParameterCell.__init__(self)
+        self.collection = None
+
+    def evaluate(self):
+        collection = self.get_parameter_value(self.collection)
+        if is_waiting(collection):
+            return
+        self._set_ready()
+        col = bpy.data.collections[collection]
+        objects = [check_game_object(o.name) for o in col.objects]
+        self._set_value(objects)
+
+
+class GetCollectionObjectNames(ParameterCell):
+    def __init__(self):
+        ParameterCell.__init__(self)
+        self.collection = None
+
+    def evaluate(self):
+        collection = self.get_parameter_value(self.collection)
+        if is_waiting(collection):
+            return
+        self._set_ready()
+        col = bpy.data.collections[collection]
+        objects = [o.name for o in col.objects]
+        self._set_value(objects)
+
+
 class ParameterScreenPosition(ParameterCell):
     def __init__(self):
         ParameterCell.__init__(self)
@@ -4326,29 +4356,17 @@ class ActionAddObject(ActionCell):
 
     def evaluate(self):
         self.done = False
-        condition_value = self.get_parameter_value(self.condition)
-        if condition_value is LogicNetworkCell.STATUS_WAITING:
+        condition = self.get_parameter_value(self.condition)
+        if is_invalid(condition):
             return
-        if not condition_value:
-            return
-        life_value = self.get_parameter_value(self.life)
-        name_value = self.get_parameter_value(self.name)
+        life = self.get_parameter_value(self.life)
+        name = self.get_parameter_value(self.name)
         self._set_ready()
-        if life_value is LogicNetworkCell.STATUS_WAITING:
-            return
-        reference_value = self.get_parameter_value(self.reference)
-        if reference_value is LogicNetworkCell.STATUS_WAITING:
-            return
-        if name_value is LogicNetworkCell.STATUS_WAITING:
-            return
+        reference = self.get_parameter_value(self.reference)
         scene = logic.getCurrentScene()
-        if none_or_invalid(scene):
+        if is_waiting(life, name, reference, scene):
             return
-        if life_value is None:
-            return
-        if name_value is None:
-            return
-        self.obj = scene.addObject(name_value, reference_value, life_value)
+        self.obj = scene.addObject(name, reference, life)
         self.done = True
 
 

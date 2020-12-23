@@ -26,6 +26,7 @@ _cat_icons = {
     'Armature / Rig': 'GROUP_BONE',
     'Camera': 'CAMERA_DATA',
     'Character': 'GHOST_ENABLED',
+    'Collections': 'OUTLINER_COLLECTION',
     'Events': 'RIGHTARROW_THIN',
     'Game': 'IMAGE_BACKGROUND',
     'Gamepad': 'LOGIC',

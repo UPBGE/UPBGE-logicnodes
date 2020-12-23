@@ -298,7 +298,7 @@ class BGE_PT_GamePropertyPanel3DView(bpy.types.Panel):
         show_trees = context.scene.prop_filter.show_trees
 
         hide_icon = 'HIDE_OFF' if show_hidden else 'HIDE_ON'
-        collapse_icon = 'CHECKBOX_DEHLT' if collapse_trees else 'OBJECT_HIDDEN'
+        collapse_icon = 'LOCKED' if collapse_trees else 'UNLOCKED'
         options.prop(context.scene.prop_filter, 'do_filter', icon='FILTER', text='')
         options.prop(context.scene.prop_filter, 'show_hidden', icon=hide_icon, text='')
         options.prop(context.scene.prop_filter, 'show_trees', icon='OUTLINER', text='')
@@ -415,7 +415,7 @@ class BGE_PT_PropertiesPanelObject(bpy.types.Panel):
         show_trees = context.scene.prop_filter.show_trees
 
         hide_icon = 'HIDE_OFF' if show_hidden else 'HIDE_ON'
-        collapse_icon = 'CHECKBOX_DEHLT' if collapse_trees else 'OBJECT_HIDDEN'
+        collapse_icon = 'LOCKED' if collapse_trees else 'UNLOCKED'
         options.prop(context.scene.prop_filter, 'do_filter', icon='FILTER', text='')
         options.prop(context.scene.prop_filter, 'show_hidden', icon=hide_icon, text='')
         options.prop(context.scene.prop_filter, 'show_trees', icon='OUTLINER', text='')
@@ -733,7 +733,7 @@ def update_tree_code(self, context):
 
 class BGELogicTree(bpy.types.NodeTree):
     bl_idname = "BGELogicTree"
-    bl_label = "Logic Tree Editor"
+    bl_label = "Logic Node Editor"
     bl_icon = "OUTLINER" if not bpy.app.version < (2, 80, 0) else 'PLUS'
     bl_category = "Scripting"
 
