@@ -11,6 +11,7 @@ PARAMETER_SOCKET_COLOR = tools.Color.RGBA(.8, 0.5, 0.2, 1.0)
 PARAM_LIST_SOCKET_COLOR = tools.Color.RGBA(0.74, .65, .48, 1.0)
 PARAM_DICT_SOCKET_COLOR = tools.Color.RGBA(0.58, 0.48, .74, 1.0)
 PARAM_OBJ_SOCKET_COLOR = tools.Color.RGBA(0.2, 0.5, .7, 1.0)
+PARAM_MAT_SOCKET_COLOR = tools.Color.RGBA(.75, 0.15, .17, 1.0)
 PARAM_COLL_SOCKET_COLOR = tools.Color.RGBA(0.25, 0.35, .8, 1.0)
 PARAM_SCENE_SOCKET_COLOR = tools.Color.RGBA(0.5, 0.5, 0.6, 1.0)
 PARAM_VECTOR_SOCKET_COLOR = tools.Color.RGBA(0.4, 0.8, 0.4, 1.0)
@@ -951,6 +952,43 @@ class NLGameObjectSocket(bpy.types.NodeSocket, NetLogicSocketType):
 
 
 _sockets.append(NLGameObjectSocket)
+
+
+class NLMaterialSocket(bpy.types.NodeSocket, NetLogicSocketType):
+    bl_idname = "NLMaterialSocket"
+    bl_label = "Material"
+    value: bpy.props.PointerProperty(
+        name='Material',
+        type=bpy.types.Material,
+        update=update_tree_code
+    )
+
+    def draw_color(self, context, node):
+        return PARAM_MAT_SOCKET_COLOR
+
+    def draw(self, context, layout, node, text):
+        if self.is_output:
+            layout.label(text=self.name)
+        elif self.is_linked:
+            layout.label(text=self.name)
+        else:
+            col = layout.column(align=False)
+            col.label(text=self.name)
+            col.prop_search(
+                self,
+                'value',
+                bpy.data,
+                'materials',
+                icon='NONE',
+                text=''
+            )
+
+    def get_unlinked_value(self):
+        if isinstance(self.value, bpy.types.Material):
+            return '"{}"'.format(self.value.name)
+
+
+_sockets.append(NLMaterialSocket)
 
 
 class NLGameObjectNameSocket(bpy.types.NodeSocket, NetLogicSocketType):
@@ -5439,6 +5477,37 @@ class NLSetGameObjectGamePropertyActionNode(bpy.types.Node, NLActionNode):
 _nodes.append(NLSetGameObjectGamePropertyActionNode)
 
 
+class NLSetMaterial(bpy.types.Node, NLActionNode):
+    bl_idname = "NLSetMaterial"
+    bl_label = "Set Material"
+    nl_category = "Materials"
+
+    def init(self, context):
+        NLActionNode.init(self, context)
+        self.inputs.new(NLConditionSocket.bl_idname, "Condition")
+        self.inputs.new(NLGameObjectSocket.bl_idname, "Object")
+        self.inputs.new(NLIntegerFieldSocket.bl_idname, "Slot")
+        self.inputs.new(NLMaterialSocket.bl_idname, "Material")
+        self.outputs.new(NLConditionSocket.bl_idname, "Done")
+
+    def get_netlogic_class_name(self):
+        return "bgelogic.SetMaterial"
+
+    def get_input_sockets_field_names(self):
+        return [
+            "condition",
+            "game_object",
+            "slot",
+            "mat_name",
+        ]
+
+    def get_output_socket_varnames(self):
+        return ['OUT']
+
+
+_nodes.append(NLSetMaterial)
+
+
 class NLSetMaterialNodeValue(bpy.types.Node, NLActionNode):
     bl_idname = "NLSetMaterialNodeValue"
     bl_label = "Set Node Input Value"
@@ -5473,8 +5542,7 @@ class NLSetMaterialNodeValue(bpy.types.Node, NLActionNode):
         return ['OUT']
 
 
-if not TOO_OLD:
-    _nodes.append(NLSetMaterialNodeValue)
+_nodes.append(NLSetMaterialNodeValue)
 
 
 class NLSetMaterialNodeInputValue(bpy.types.Node, NLActionNode):

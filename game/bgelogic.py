@@ -4409,6 +4409,39 @@ class ActionSetGameObjectGameProperty(ActionCell):
             game_object_value[property_name_value] = property_value_value
 
 
+class SetMaterial(ActionCell):
+    def __init__(self):
+        ActionCell.__init__(self)
+        self.condition = None
+        self.game_object = None
+        self.slot = None
+        self.mat_name = None
+        self.done = False
+        self.OUT = LogicNetworkSubCell(self, self._get_done)
+
+    def _get_done(self):
+        return self.done
+
+    def evaluate(self):
+        self.done = False
+        condition = self.get_parameter_value(self.condition)
+        game_object = self.get_parameter_value(self.game_object)
+        slot = self.get_parameter_value(self.slot)
+        mat_name = self.get_parameter_value(self.mat_name)
+        if is_invalid(condition, game_object):
+            return
+        if is_waiting(mat_name, slot):
+            return
+        self._set_ready()
+        bl_obj = game_object.blenderObject
+        if slot < len(bl_obj.material_slots) - 1:
+            debug('[Logic Nodes] Set Material: Slot does not exist!')
+            return
+        bl_obj.material_slots[slot].material = bpy.data.materials[mat_name]
+        logic.getCurrentScene().resetTaaSamples = True
+        self.done = True
+
+
 class ActionSetMaterialNodeValue(ActionCell):
     def __init__(self):
         ActionCell.__init__(self)
