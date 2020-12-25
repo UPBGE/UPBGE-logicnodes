@@ -11,7 +11,7 @@ PARAMETER_SOCKET_COLOR = tools.Color.RGBA(.8, 0.5, 0.2, 1.0)
 PARAM_LIST_SOCKET_COLOR = tools.Color.RGBA(0.74, .65, .48, 1.0)
 PARAM_DICT_SOCKET_COLOR = tools.Color.RGBA(0.58, 0.48, .74, 1.0)
 PARAM_OBJ_SOCKET_COLOR = tools.Color.RGBA(0.2, 0.5, .7, 1.0)
-PARAM_MAT_SOCKET_COLOR = tools.Color.RGBA(.75, 0.15, .17, 1.0)
+PARAM_MAT_SOCKET_COLOR = tools.Color.RGBA(.75, .15, .17, 1.0)
 PARAM_COLL_SOCKET_COLOR = tools.Color.RGBA(0.25, 0.35, .8, 1.0)
 PARAM_SCENE_SOCKET_COLOR = tools.Color.RGBA(0.5, 0.5, 0.6, 1.0)
 PARAM_VECTOR_SOCKET_COLOR = tools.Color.RGBA(0.4, 0.8, 0.4, 1.0)
@@ -6129,6 +6129,7 @@ class NLActionRayCastNode(bpy.types.Node, NLActionNode):
         self.inputs.new(NLVec3FieldSocket.bl_idname, "Origin")
         self.inputs.new(NLVec3FieldSocket.bl_idname, "Destination")
         self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Property")
+        self.inputs.new(NLBooleanSocket.bl_idname, 'X-Ray')
         self.inputs.new(NLPositiveFloatSocket.bl_idname, "Distance")
         self.inputs[-1].value = 100.0
         self.outputs.new(NLConditionSocket.bl_idname, "Has Result")
@@ -6146,6 +6147,7 @@ class NLActionRayCastNode(bpy.types.Node, NLActionNode):
             "origin",
             "destination",
             "property_name",
+            'xray',
             "distance"
         ]
 
@@ -8434,6 +8436,7 @@ class NLActionMousePickNode(bpy.types.Node, NLActionNode):
         self.inputs.new(NLConditionSocket.bl_idname, "Condition")
         self.inputs.new(NLGameObjectSocket.bl_idname, "Camera")
         self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Property")
+        self.inputs.new(NLBooleanSocket.bl_idname, 'X-Ray')
         self.inputs.new(NLFloatFieldSocket.bl_idname, "Distance")
         self.inputs[-1].value = 100.0
         self.outputs.new(NLConditionSocket.bl_idname, "Has Result")
@@ -8445,7 +8448,7 @@ class NLActionMousePickNode(bpy.types.Node, NLActionNode):
         return "bgelogic.ActionMousePick"
 
     def get_input_sockets_field_names(self):
-        return ["condition", "camera", "property", "distance"]
+        return ["condition", "camera", "property", 'xray', "distance"]
 
     def get_output_socket_varnames(self):
         return [OUTCELL, "OUTOBJECT", "OUTPOINT", "OUTNORMAL"]
@@ -8466,6 +8469,7 @@ class NLActionCameraPickNode(bpy.types.Node, NLActionNode):
         self.inputs.new(NLGameObjectSocket.bl_idname, "Camera")
         self.inputs.new(NLVec2FieldSocket.bl_idname, "Aim")
         self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Property")
+        self.inputs.new(NLBooleanSocket.bl_idname, 'X-Ray')
         self.inputs.new(NLFloatFieldSocket.bl_idname, "Distance")
         self.inputs[-1].value = 100.0
         self.outputs.new(NLConditionSocket.bl_idname, "Has Result")
@@ -8477,7 +8481,7 @@ class NLActionCameraPickNode(bpy.types.Node, NLActionNode):
         return "bgelogic.ActionCameraPick"
 
     def get_input_sockets_field_names(self):
-        return ["condition", "camera", "aim", "property_name", "distance"]
+        return ["condition", "camera", "aim", "property_name", "xray", "distance"]
 
     def get_output_socket_varnames(self):
         return [OUTCELL, "PICKED_OBJECT", "PICKED_POINT", "PICKED_NORMAL"]

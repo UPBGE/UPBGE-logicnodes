@@ -823,6 +823,7 @@ class LogicNetwork(LogicNetworkCell):
         ray_origin,
         ray_destination,
         property,
+        xray,
         distance
     ):
         now = time.time()
@@ -851,13 +852,15 @@ class LogicNetwork(LogicNetworkCell):
                 ray_destination,
                 ray_origin,
                 distance,
-                property
+                property,
+                xray=xray
             )
         else:
             obj, point, normal = caster_object.rayCast(
                 ray_destination,
                 ray_origin,
-                distance
+                distance,
+                xray=xray
             )
         cached_data = (
             now,
@@ -3883,6 +3886,7 @@ class ConditionMouseTargeting(ConditionCell):
             None,
             ray_target,
             None,
+            False,
             distance
         )
         if not (target is self._last_target):  # mouse over a new object
@@ -4060,6 +4064,7 @@ class ConditionMousePressedOn(ConditionCell):
             None,
             ray_target,
             None,
+            False,
             distance
         )
         self._set_value(t == game_object)
@@ -5730,6 +5735,7 @@ class ActionRayPick(ActionCell):
         self.origin = None
         self.destination = None
         self.property_name = None
+        self.xray = None
         self.distance = None
         self._picked_object = None
         self._point = None
@@ -5779,6 +5785,7 @@ class ActionRayPick(ActionCell):
         origin = self.get_parameter_value(self.origin)
         destination = self.get_parameter_value(self.destination)
         property_name = self.get_parameter_value(self.property_name)
+        xray = self.get_parameter_value(self.xray)
         distance = self.get_parameter_value(self.distance)
 
         if origin is LogicNetworkCell.STATUS_WAITING:
@@ -5793,13 +5800,14 @@ class ActionRayPick(ActionCell):
         caster = self.network._owner
         obj, point, normal = None, None, None
         if not property_name:
-            obj, point, normal = caster.rayCast(destination, origin, distance)
+            obj, point, normal = caster.rayCast(destination, origin, distance, xray=xray)
         else:
             obj, point, normal = caster.rayCast(
                 destination,
                 origin,
                 distance,
-                property_name
+                property_name,
+                xray=xray
             )
         self._set_value(obj is not None)
         self._picked_object = obj
@@ -5841,6 +5849,7 @@ class ActionMousePick(ActionCell):
         self.condition = None
         self.distance = None
         self.property = None
+        self.xray = None
         self.camera = None
         self._set_value(False)
         self._out_object = None
@@ -5865,10 +5874,11 @@ class ActionMousePick(ActionCell):
             return
         distance = self.get_parameter_value(self.distance)
         property_name = self.get_parameter_value(self.property)
+        xray = self.get_parameter_value(self.xray)
         camera = self.get_parameter_value(self.camera)
         if distance is LogicNetworkCell.STATUS_WAITING:
             return
-        if property is LogicNetworkCell.STATUS_WAITING:
+        if property_name is LogicNetworkCell.STATUS_WAITING:
             return
         if camera is LogicNetworkCell.STATUS_WAITING:
             return
@@ -5889,6 +5899,7 @@ class ActionMousePick(ActionCell):
             None,
             ray_target,
             property_name,
+            xray,
             distance
         )
         self._set_value(target is not None)
@@ -5905,6 +5916,7 @@ class ActionCameraPick(ActionCell):
         self.camera = None
         self.aim = None
         self.property_name = None
+        self.xray = None
         self.distance = None
         self._picked_object = None
         self._picked_point = None
@@ -5929,6 +5941,7 @@ class ActionCameraPick(ActionCell):
         camera = self.get_parameter_value(self.camera)
         aim = self.get_parameter_value(self.aim)
         property_name = self.get_parameter_value(self.property_name)
+        xray = self.get_parameter_value(self.xray)
         distance = self.get_parameter_value(self.distance)
         if camera is LogicNetworkCell.STATUS_WAITING:
             return
@@ -5962,7 +5975,8 @@ class ActionCameraPick(ActionCell):
                 aim,
                 None,
                 distance,
-                property_name
+                property_name,
+                xray=xray
             )
         self._set_value(obj is not None)
         self._picked_object = obj
