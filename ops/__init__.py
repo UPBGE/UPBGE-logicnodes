@@ -670,17 +670,14 @@ class NLApplyLogicOperator(bpy.types.Operator):
                 break
         if sensor is None:
             bpy.ops.logic.sensor_add(
-                type="DELAY",
+                type="ALWAYS",
                 object=obj.name
             )
             sensor = game_settings.sensors[-1]
             sensor.show_expanded = False
         sensor.pin = True
+        sensor.use_pulse_true_level = True
         sensor.name = sensor_name
-        sensor.type = "DELAY"
-        sensor.use_repeat = True
-        sensor.delay = 0
-        sensor.duration = 0
         # create the controller
         controller_name = disp_name + '_PY'
         controller = None
