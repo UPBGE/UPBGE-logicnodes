@@ -1192,7 +1192,6 @@ class ParameterObjectProperty(ParameterCell):
 class ParameterGetMaterialNodeValue(ParameterCell):
     def __init__(self):
         ActionCell.__init__(self)
-        self.game_object = None
         self.mat_name = None
         self.node_name = None
         self.input_slot = None
@@ -1204,26 +1203,20 @@ class ParameterGetMaterialNodeValue(ParameterCell):
 
     def evaluate(self):
         STATUS_WAITING = LogicNetworkCell.STATUS_WAITING
-        game_object_value = self.get_parameter_value(self.game_object)
         mat_name = self.get_parameter_value(self.mat_name)
         node_name = self.get_parameter_value(self.node_name)
         input_slot = self.get_parameter_value(self.input_slot)
-        if game_object_value is STATUS_WAITING:
-            return
         if mat_name is STATUS_WAITING:
             return
         if node_name is STATUS_WAITING:
             return
         if input_slot is STATUS_WAITING:
             return
-        if none_or_invalid(game_object_value):
+        if none_or_invalid(mat_name):
             return
         self._set_ready()
         self.val = (
-            game_object_value
-            .blenderObject
-            .material_slots[mat_name]
-            .material
+            bpy.data.materials[mat_name]
             .node_tree
             .nodes[node_name]
             .inputs[input_slot]
@@ -1234,7 +1227,6 @@ class ParameterGetMaterialNodeValue(ParameterCell):
 class ParameterGetMaterialNode(ParameterCell):
     def __init__(self):
         ActionCell.__init__(self)
-        self.game_object = None
         self.mat_name = None
         self.node_name = None
         self.val = False
@@ -1245,23 +1237,17 @@ class ParameterGetMaterialNode(ParameterCell):
 
     def evaluate(self):
         STATUS_WAITING = LogicNetworkCell.STATUS_WAITING
-        game_object_value = self.get_parameter_value(self.game_object)
         mat_name = self.get_parameter_value(self.mat_name)
         node_name = self.get_parameter_value(self.node_name)
-        if game_object_value is STATUS_WAITING:
-            return
         if mat_name is STATUS_WAITING:
             return
         if node_name is STATUS_WAITING:
             return
-        if none_or_invalid(game_object_value):
+        if none_or_invalid(mat_name):
             return
         self._set_ready()
         self.val = (
-            game_object_value
-            .blenderObject
-            .material_slots[mat_name]
-            .material
+            bpy.data.materials[mat_name]
             .node_tree
             .nodes[node_name]
         )
@@ -1311,48 +1297,6 @@ class ParameterGetMaterialInputValue(ParameterCell):
             return
         self._set_ready()
         self.val = input_val.default_value
-
-
-class ParameterGetMaterialNodeOutputValue(ParameterCell):
-    def __init__(self):
-        ActionCell.__init__(self)
-        self.game_object = None
-        self.mat_name = None
-        self.node_name = None
-        self.output_slot = None
-        self.val = False
-        self.OUT = LogicNetworkSubCell(self, self._get_val)
-
-    def _get_val(self):
-        return self.val
-
-    def evaluate(self):
-        STATUS_WAITING = LogicNetworkCell.STATUS_WAITING
-        game_object_value = self.get_parameter_value(self.game_object)
-        mat_name = self.get_parameter_value(self.mat_name)
-        node_name = self.get_parameter_value(self.node_name)
-        output_slot = self.get_parameter_value(self.output_slot)
-        if game_object_value is STATUS_WAITING:
-            return
-        if mat_name is STATUS_WAITING:
-            return
-        if node_name is STATUS_WAITING:
-            return
-        if output_slot is STATUS_WAITING:
-            return
-        if none_or_invalid(game_object_value):
-            return
-        self._set_ready()
-        self.val = (
-            game_object_value
-            .blenderObject
-            .material_slots[mat_name]
-            .material
-            .node_tree
-            .nodes[node_name]
-            .outputs[output_slot]
-            .default_value
-        )
 
 
 class ParameterObjectHasProperty(ParameterCell):
@@ -4451,7 +4395,6 @@ class ActionSetMaterialNodeValue(ActionCell):
     def __init__(self):
         ActionCell.__init__(self)
         self.condition = None
-        self.game_object = None
         self.mat_name = None
         self.node_name = None
         self.input_slot = None
@@ -4471,13 +4414,10 @@ class ActionSetMaterialNodeValue(ActionCell):
         if condition_value is False:
             self._set_ready()
             return
-        game_object_value = self.get_parameter_value(self.game_object)
         mat_name = self.get_parameter_value(self.mat_name)
         node_name = self.get_parameter_value(self.node_name)
         input_slot = self.get_parameter_value(self.input_slot)
         value = self.get_parameter_value(self.value)
-        if game_object_value is STATUS_WAITING:
-            return
         if mat_name is STATUS_WAITING:
             return
         if node_name is STATUS_WAITING:
@@ -4486,16 +4426,13 @@ class ActionSetMaterialNodeValue(ActionCell):
             return
         if value is STATUS_WAITING:
             return
-        if none_or_invalid(game_object_value):
+        if none_or_invalid(mat_name):
             return
         if condition_value:
             self.done = True
             self._set_ready()
             (
-                game_object_value
-                .blenderObject
-                .material_slots[mat_name]
-                .material
+                bpy.data.materials[mat_name]
                 .node_tree
                 .nodes[node_name]
                 .inputs[input_slot]

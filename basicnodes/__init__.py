@@ -2872,9 +2872,7 @@ class NLGetMaterialNodeValue(bpy.types.Node, NLActionNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
-        self.inputs.new(NLGameObjectSocket.bl_idname, "Object")
-        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Material Name")
-        self.inputs[-1].value = 'Material'
+        self.inputs.new(NLMaterialSocket.bl_idname, 'Material')
         self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Node Name")
         self.inputs[-1].value = 'Node'
         self.inputs.new(NLIntegerFieldSocket.bl_idname, "Input")
@@ -2884,7 +2882,7 @@ class NLGetMaterialNodeValue(bpy.types.Node, NLActionNode):
         return "bgelogic.ParameterGetMaterialNodeValue"
 
     def get_input_sockets_field_names(self):
-        return ["game_object", "mat_name", 'node_name', "input_slot"]
+        return ["mat_name", 'node_name', "input_slot"]
 
     def get_output_socket_varnames(self):
         return ['OUT']
@@ -2901,9 +2899,7 @@ class NLGetMaterialNode(bpy.types.Node, NLActionNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
-        self.inputs.new(NLGameObjectSocket.bl_idname, "Object")
-        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Material Name")
-        self.inputs[-1].value = 'Material'
+        self.inputs.new(NLMaterialSocket.bl_idname, 'Material')
         self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Node Name")
         self.inputs[-1].value = 'Node'
         self.outputs.new(NLParameterSocket.bl_idname, "Node")
@@ -2912,7 +2908,7 @@ class NLGetMaterialNode(bpy.types.Node, NLActionNode):
         return "bgelogic.ParameterGetMaterialNode"
 
     def get_input_sockets_field_names(self):
-        return ["game_object", "mat_name", 'node_name']
+        return ["mat_name", 'node_name']
 
     def get_output_socket_varnames(self):
         return ['OUT']
@@ -5516,9 +5512,7 @@ class NLSetMaterialNodeValue(bpy.types.Node, NLActionNode):
     def init(self, context):
         NLActionNode.init(self, context)
         self.inputs.new(NLConditionSocket.bl_idname, "Condition")
-        self.inputs.new(NLGameObjectSocket.bl_idname, "Object")
-        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Material Name")
-        self.inputs[-1].value = 'Material'
+        self.inputs.new(NLMaterialSocket.bl_idname, 'Material')
         self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Node Name")
         self.inputs[-1].value = 'Node'
         self.inputs.new(NLIntegerFieldSocket.bl_idname, "Input")
@@ -5531,7 +5525,6 @@ class NLSetMaterialNodeValue(bpy.types.Node, NLActionNode):
     def get_input_sockets_field_names(self):
         return [
             "condition",
-            "game_object",
             "mat_name",
             'node_name',
             "input_slot",
