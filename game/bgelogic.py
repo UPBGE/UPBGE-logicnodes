@@ -2658,11 +2658,11 @@ class ParameterVector3Simple(ParameterCell):
         self.output_vector = mathutils.Vector()
         self.OUTV = LogicNetworkSubCell(self, self.get_out_v)
 
-    def get_out_x(self): return self.output_vector.x
-    def get_out_y(self): return self.output_vector.y
-    def get_out_z(self): return self.output_vector.z
-    def get_out_v(self): return self.output_vector.copy()
-    def get_normalized_vector(self): return self.output_vector.normalized()
+    def get_out_v(self):
+        return self.output_vector.copy()
+
+    def get_normalized_vector(self):
+        return self.output_vector.normalized()
 
     def evaluate(self):
         self._set_ready()
@@ -2675,6 +2675,34 @@ class ParameterVector3Simple(ParameterCell):
             self.output_vector.y = y
         if not none_or_invalid(z):
             self.output_vector.z = z
+        self._set_value(self.output_vector)
+
+
+class ParameterRGBA(ParameterCell):
+    def __init__(self):
+        ParameterCell.__init__(self)
+        self.input_r = None
+        self.input_g = None
+        self.input_b = None
+        self.input_a = None
+        self.output_vector = None
+        self.OUTV = LogicNetworkSubCell(self, self.get_out_v)
+
+    def get_out_v(self):
+        return self.output_vector.copy()
+
+    def get_normalized_vector(self):
+        return self.output_vector.normalized()
+
+    def evaluate(self):
+        self._set_ready()
+        r = self.get_parameter_value(self.input_r)
+        g = self.get_parameter_value(self.input_g)
+        b = self.get_parameter_value(self.input_b)
+        a = self.get_parameter_value(self.input_a)
+        if is_waiting(r, g, b):
+            return
+        self.output_vector = mathutils.Vector((r, g, b, a))
         self._set_value(self.output_vector)
 
 
@@ -4194,6 +4222,7 @@ class ConditionCollision(ConditionCell):
     def __init__(self):
         ConditionCell.__init__(self)
         self.game_object = None
+        self.prop = None
         self._set_value("False")
         self.pulse = False
         self._target = None
@@ -4221,11 +4250,19 @@ class ConditionCollision(ConditionCell):
         return self._objects
 
     def _collision_callback(self, obj, point, normal):
-        self._collision_triggered = True
         self._target = obj
         self._point = point
         self._normal = normal
         self._objects.append(obj)
+        prop = self.get_parameter_value(self.prop)
+        if prop:
+            for obj in self._objects:
+                if prop in obj:
+                    self._collision_triggered = True
+                    return
+            self._collision_triggered = False
+            return
+        self._collision_triggered = True
 
     def reset(self):
         LogicNetworkCell.reset(self)

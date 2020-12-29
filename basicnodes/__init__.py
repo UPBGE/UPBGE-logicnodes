@@ -4196,6 +4196,63 @@ class NLParameterVector3SimpleNode(bpy.types.Node, NLParameterNode):
 _nodes.append(NLParameterVector3SimpleNode)
 
 
+class NLParameterRGBNode(bpy.types.Node, NLParameterNode):
+    bl_idname = "NLParameterRGBNode"
+    bl_label = "Color RGB"
+    nl_category = "Values"
+    nl_subcat = 'Vectors'
+
+    def init(self, context):
+        NLParameterNode.init(self, context)
+        tools.register_inputs(
+            self,
+            NLSocketAlphaFloat, "R",
+            NLSocketAlphaFloat, "G",
+            NLSocketAlphaFloat, "B"
+        )
+        self.outputs.new(NLVectorSocket.bl_idname, "Color")
+
+    def get_netlogic_class_name(self):
+        return "bgelogic.ParameterVector3Simple"
+
+    def get_output_socket_varnames(self):
+        return ["OUTV"]
+
+    def get_input_sockets_field_names(self):
+        return ["input_x", "input_y", "input_z"]
+
+
+_nodes.append(NLParameterRGBNode)
+
+
+class NLParameterRGBANode(bpy.types.Node, NLParameterNode):
+    bl_idname = "NLParameterRGBANode"
+    bl_label = "Color RGBA"
+    nl_category = "Values"
+    nl_subcat = 'Vectors'
+
+    def init(self, context):
+        NLParameterNode.init(self, context)
+        self.inputs.new(NLSocketAlphaFloat.bl_idname, "R")
+        self.inputs.new(NLSocketAlphaFloat.bl_idname, "G")
+        self.inputs.new(NLSocketAlphaFloat.bl_idname, "B")
+        self.inputs.new(NLSocketAlphaFloat.bl_idname, "A")
+        self.inputs[-1].value = 1
+        self.outputs.new(NLVectorSocket.bl_idname, "Color")
+
+    def get_netlogic_class_name(self):
+        return "bgelogic.ParameterRGBA"
+
+    def get_output_socket_varnames(self):
+        return ["OUTV"]
+
+    def get_input_sockets_field_names(self):
+        return ["input_r", "input_g", "input_b", 'input_a']
+
+
+_nodes.append(NLParameterRGBANode)
+
+
 class NLParameterEulerSimpleNode(bpy.types.Node, NLParameterNode):
     bl_idname = "NLParameterEulerSimpleNode"
     bl_label = "Euler"
@@ -4898,6 +4955,7 @@ class NLConditionCollisionNode(bpy.types.Node, NLConditionNode):
     def init(self, context):
         NLConditionNode.init(self, context)
         self.inputs.new(NLGameObjectSocket.bl_idname, "Object")
+        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Property")
         self.outputs.new(NLConditionSocket.bl_idname, "When Colliding")
         self.outputs.new(NLGameObjectSocket.bl_idname, "Colliding Object")
         self.outputs.new(NLListSocket.bl_idname, "Colliding Objects")
@@ -4916,7 +4974,7 @@ class NLConditionCollisionNode(bpy.types.Node, NLConditionNode):
         return "bgelogic.ConditionCollision"
 
     def get_input_sockets_field_names(self):
-        return ["game_object"]
+        return ["game_object", 'prop']
 
     def get_output_socket_varnames(self):
         return [OUTCELL, "TARGET", "OBJECTS", "POINT", "NORMAL"]
