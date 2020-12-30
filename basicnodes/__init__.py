@@ -2613,7 +2613,7 @@ class NLParameterFindChildByNameNode(bpy.types.Node, NLParameterNode):
     def init(self, context):
         NLParameterNode.init(self, context)
         self.inputs.new(NLGameObjectSocket.bl_idname, "Parent")
-        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Name")
+        self.inputs.new(NLGameObjectNameSocket.bl_idname, "Child")
         self.outputs.new(NLGameObjectSocket.bl_idname, "Child")
 
     def get_netlogic_class_name(self):

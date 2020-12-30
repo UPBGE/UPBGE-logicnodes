@@ -502,12 +502,16 @@ def stop_all_sounds(a, b):
     delattr(bpy.types.Scene, 'nl_aud_system')
 
 
-def none_or_invalid(ref):
-    if ref is None or ref == '' or ref is LogicNetworkCell.STATUS_WAITING:
-        return True
-    if not hasattr(ref, "invalid"):
-        return False
-    return ref.invalid
+def none_or_invalid(*a):
+    flag = False
+    for ref in a:
+        if ref is None or ref == '' or ref is LogicNetworkCell.STATUS_WAITING:
+            flag = True
+        if not hasattr(ref, "invalid"):
+            flag = False
+        else:
+            flag = ref.invalid
+    return flag
 
 
 def check_game_object(query, scene=None):
@@ -1802,7 +1806,10 @@ class GetCollectionObjects(ParameterCell):
             return
         self._set_ready()
         col = bpy.data.collections[collection]
-        objects = [check_game_object(o.name) for o in col.objects]
+        objects = []
+        for o in col.objects:
+            if not o.parent:
+                objects.append(check_game_object(o.name))
         self._set_value(objects)
 
 
@@ -1817,7 +1824,10 @@ class GetCollectionObjectNames(ParameterCell):
             return
         self._set_ready()
         col = bpy.data.collections[collection]
-        objects = [o.name for o in col.objects]
+        objects = []
+        for o in col.objects:
+            if not o.parent:
+                objects.append(o.name)
         self._set_value(objects)
 
 
@@ -3103,12 +3113,12 @@ class ObjectPropertyOperator(ConditionCell):
         property_name = self.get_parameter_value(self.property_name)
         compare_value = self.get_parameter_value(self.compare_value)
         operator = self.get_parameter_value(self.operator)
-        if is_waiting(game_object, property_name, operator, compare_value):
+        if is_waiting(game_object, property_name, compare_value):
             return
         self._set_ready()
         value = self.val = game_object[property_name]
         if operator > 1:  # eq and neq are valid for None
-            if is_invalid(value, compare_value):
+            if none_or_invalid(value, compare_value):
                 return
         if operator is None:
             return
