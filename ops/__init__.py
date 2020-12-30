@@ -419,7 +419,7 @@ class NLMakeGroupOperator(bpy.types.Operator):
             redir.inputs[1].value = bpy.context.object
         except Exception:
             self.report({"WARNING"}, 'No Object was selected; Set Object in tree {} manually!'.format(parent_tree.name))
-        redir.inputs[2].value = group_name
+        redir.inputs[2].value = bpy.data.node_groups[group_name]
         redir.location = self.avg_location(locs)
         node_tree.use_fake_user = True
         return node_tree
