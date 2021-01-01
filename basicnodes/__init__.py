@@ -670,7 +670,10 @@ class NetLogicStatementGenerator(NetLogicType):
             output_node.outputs
         )
 
-        assert isinstance(output_node, NetLogicStatementGenerator)
+        if not isinstance(output_node, NetLogicStatementGenerator):
+            print(output_node)
+            print(output_node.__class__)
+            raise Exception('No NetLogicStatementGenerator')
         output_node_varname = uids.get_varname_for_node(output_node)
         output_map = output_node.get_output_socket_varnames()
 
@@ -868,18 +871,6 @@ class NLConditionNode(NLAbstractNode):
 
 
 class NLActionNode(NLAbstractNode):
-    def init(self, context):
-        self.use_custom_color = (
-            bpy
-            .context
-            .scene
-            .logic_node_settings
-            .use_custom_node_color
-        )
-        self.color = ACTION_NODE_COLOR
-
-
-class NLActuatorNode(NLAbstractNode):
     def init(self, context):
         self.use_custom_color = (
             bpy
