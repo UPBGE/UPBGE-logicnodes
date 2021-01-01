@@ -1795,6 +1795,19 @@ class ParameterActiveCamera(ParameterCell):
             self._set_value(scene.active_camera)
 
 
+class GetCollection(ParameterCell):
+    def __init__(self):
+        ParameterCell.__init__(self)
+        self.collection = None
+
+    def evaluate(self):
+        collection = self.get_parameter_value(self.collection)
+        if none_or_invalid(collection):
+            return
+        self._set_ready()
+        self._set_value(collection)
+
+
 class GetCollectionObjects(ParameterCell):
     def __init__(self):
         ParameterCell.__init__(self)
@@ -1802,10 +1815,12 @@ class GetCollectionObjects(ParameterCell):
 
     def evaluate(self):
         collection = self.get_parameter_value(self.collection)
-        if is_waiting(collection):
+        if none_or_invalid(collection):
             return
         self._set_ready()
-        col = bpy.data.collections[collection]
+        col = bpy.data.collections.get(collection)
+        if not col:
+            return
         objects = []
         for o in col.objects:
             if not o.parent:
@@ -1820,10 +1835,12 @@ class GetCollectionObjectNames(ParameterCell):
 
     def evaluate(self):
         collection = self.get_parameter_value(self.collection)
-        if is_waiting(collection):
+        if none_or_invalid(collection):
             return
         self._set_ready()
-        col = bpy.data.collections[collection]
+        col = bpy.data.collections.get(collection)
+        if not col:
+            return
         objects = []
         for o in col.objects:
             if not o.parent:
@@ -4360,7 +4377,7 @@ class ActionAddObject(ActionCell):
         self._set_ready()
         reference = self.get_parameter_value(self.reference)
         scene = logic.getCurrentScene()
-        if is_waiting(life, name, reference, scene):
+        if none_or_invalid(life, name, reference, scene):
             return
         self.obj = scene.addObject(name, reference, life)
         self.done = True
@@ -4430,7 +4447,7 @@ class SetMaterial(ActionCell):
             return
         self._set_ready()
         bl_obj = game_object.blenderObject
-        if slot < len(bl_obj.material_slots) - 1:
+        if slot > len(bl_obj.material_slots) - 1:
             debug('[Logic Nodes] Set Material: Slot does not exist!')
             return
         bl_obj.material_slots[slot].material = bpy.data.materials[mat_name]
@@ -10227,6 +10244,8 @@ class ActionReplaceMesh(ActionCell):
         if physics is None:
             return
         target.replaceMesh(mesh, display, physics)
+        if physics:
+            target.reinstancePhysicsMesh()
         self.done = True
 
 

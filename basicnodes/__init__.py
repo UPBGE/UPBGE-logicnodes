@@ -11,7 +11,8 @@ PARAMETER_SOCKET_COLOR = tools.Color.RGBA(.8, 0.5, 0.2, 1.0)
 PARAM_LIST_SOCKET_COLOR = tools.Color.RGBA(0.74, .65, .48, 1.0)
 PARAM_DICT_SOCKET_COLOR = tools.Color.RGBA(0.58, 0.48, .74, 1.0)
 PARAM_OBJ_SOCKET_COLOR = tools.Color.RGBA(0.2, 0.5, .7, 1.0)
-PARAM_MAT_SOCKET_COLOR = tools.Color.RGBA(.75, .15, .17, 1.0)
+PARAM_MAT_SOCKET_COLOR = tools.Color.RGBA(.75, .35, .37, 1.0)
+PARAM_MESH_SOCKET_COLOR = tools.Color.RGBA(.0, .65, .35, 1.0)
 PARAM_COLL_SOCKET_COLOR = tools.Color.RGBA(0.25, 0.35, .8, 1.0)
 PARAM_SCENE_SOCKET_COLOR = tools.Color.RGBA(0.5, 0.5, 0.6, 1.0)
 PARAM_VECTOR_SOCKET_COLOR = tools.Color.RGBA(0.4, 0.8, 0.4, 1.0)
@@ -989,6 +990,43 @@ class NLMaterialSocket(bpy.types.NodeSocket, NetLogicSocketType):
 
 
 _sockets.append(NLMaterialSocket)
+
+
+class NLMeshSocket(bpy.types.NodeSocket, NetLogicSocketType):
+    bl_idname = "NLMeshSocket"
+    bl_label = "Mesh"
+    value: bpy.props.PointerProperty(
+        name='Mesh',
+        type=bpy.types.Mesh,
+        update=update_tree_code
+    )
+
+    def draw_color(self, context, node):
+        return PARAM_MESH_SOCKET_COLOR
+
+    def draw(self, context, layout, node, text):
+        if self.is_output:
+            layout.label(text=self.name)
+        elif self.is_linked:
+            layout.label(text=self.name)
+        else:
+            col = layout.column(align=False)
+            col.label(text=self.name)
+            col.prop_search(
+                self,
+                'value',
+                bpy.data,
+                'meshes',
+                icon='NONE',
+                text=''
+            )
+
+    def get_unlinked_value(self):
+        if isinstance(self.value, bpy.types.Mesh):
+            return '"{}"'.format(self.value.name)
+
+
+_sockets.append(NLMeshSocket)
 
 
 class NLGameObjectNameSocket(bpy.types.NodeSocket, NetLogicSocketType):
@@ -3557,6 +3595,28 @@ class NLActiveCameraParameterNode(bpy.types.Node, NLParameterNode):
 
 
 _nodes.append(NLActiveCameraParameterNode)
+
+
+class NLGetCollectionNode(bpy.types.Node, NLParameterNode):
+    bl_idname = "NLGetCollectionNode"
+    bl_label = "Get Collection"
+    bl_icon = 'OUTLINER_COLLECTION'
+    nl_category = "Scene"
+    nl_subcat = 'Collections'
+
+    def init(self, context):
+        NLParameterNode.init(self, context)
+        self.inputs.new(NLCollectionSocket.bl_idname, '')
+        self.outputs.new(NLCollectionSocket.bl_idname, "Collection")
+
+    def get_input_sockets_field_names(self):
+        return ['collection']
+
+    def get_netlogic_class_name(self):
+        return "bgelogic.GetCollection"
+
+
+_nodes.append(NLGetCollectionNode)
 
 
 class NLGetCollectionObjectsNode(bpy.types.Node, NLParameterNode):
@@ -7763,7 +7823,7 @@ class NLActionReplaceMesh(bpy.types.Node, NLActionNode):
         NLActionNode.init(self, context)
         self.inputs.new(NLConditionSocket.bl_idname, "Condition")
         self.inputs.new(NLGameObjectSocket.bl_idname, "Object")
-        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "New Mesh Name")
+        self.inputs.new(NLMeshSocket.bl_idname, "New Mesh Name")
         self.inputs.new(NLBooleanSocket.bl_idname, "Use Display")
         self.inputs.new(NLBooleanSocket.bl_idname, "Use Physics")
         self.outputs.new(NLConditionSocket.bl_idname, 'Done')
