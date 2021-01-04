@@ -1,4 +1,4 @@
-# save in ./netlogic/nodes/my_custom_nodes.py
+# save in ./bgelogic/nodes/my_custom_nodes.py
 
 import bpy
 import bge_netlogic
@@ -15,7 +15,6 @@ class CustomParameterNode(bpy.types.Node, NLParameterNode):
         NLParameterNode.init(self, context)
         self.outputs.new(NLParameterSocket.bl_idname, "My Output")
         self.inputs.new(NLIntegerFieldSocket.bl_idname, "My Input")
-        pass
 
     def get_netlogic_class_name(self):
         return "my_custom_cells.CustomParameterCell"
@@ -24,7 +23,7 @@ class CustomParameterNode(bpy.types.Node, NLParameterNode):
         return ["my_input"]
 
     def get_output_socket_varnames(self):
-        return ["my_output"]
+        return ["MY_OUTPUT"]
 
 
 bge_netlogic.register_nodes("MY CUSTOM NODES", CustomParameterNode)

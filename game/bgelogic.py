@@ -1823,8 +1823,7 @@ class GetCollectionObjects(ParameterCell):
             return
         objects = []
         for o in col.objects:
-            if not o.parent:
-                objects.append(check_game_object(o.name))
+            objects.append(check_game_object(o.name))
         self._set_value(objects)
 
 
@@ -2195,6 +2194,39 @@ class RangedThreshold(ParameterCell):
         value = self.calc_threshold(self.operator, v, t)
         self._set_ready()
         if (v is None) or (t is None):
+            self._set_value(None)
+        else:
+            self._set_value(value)
+
+
+class WithinRange(ParameterCell):
+
+    @classmethod
+    def op_by_code(cls, op):
+        return op
+
+    def __init__(self):
+        ParameterCell.__init__(self)
+        self.value = None
+        self.range = None
+        self.operator = None
+
+    def calc_range(self, op, v, r):
+        if op == 'OUTSIDE':
+            return True if (v < r.x or v > r.y) else False
+        if op == 'INSIDE':
+            return True if (r.x < v < r.y) else False
+
+    def evaluate(self):
+        v = self.get_parameter_value(self.value)
+        r = self.get_parameter_value(self.range)
+        if v is LogicNetworkCell.STATUS_WAITING:
+            return
+        if r is LogicNetworkCell.STATUS_WAITING:
+            return
+        value = self.calc_range(self.operator, v, r)
+        self._set_ready()
+        if (v is None) or (r is None):
             self._set_value(None)
         else:
             self._set_value(value)
@@ -8502,7 +8534,6 @@ class ActionPlayAction(ActionCell):
                 if end_frame > start_frame:  # play 0 to 100
                     is_near_end = (playing_frame >= (end_frame - 0.5))
                 else:  # play 100 to 0
-                    debug(playing_frame, end_frame)
                     is_near_end = (playing_frame <= (end_frame + 0.5))
                 if is_near_end:
                     self._notify_finished(game_object, layer)

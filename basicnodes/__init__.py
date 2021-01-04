@@ -371,8 +371,13 @@ _enum_math_operations = [
 ]
 
 _enum_greater_less = [
-    ("GREATER", "Greater", "Value greater than Threshold."),
+    ("GREATER", "Greater", "Value greater than Threshold"),
     ("LESS", "Less", "Value less than Threshold")
+]
+
+_enum_in_or_out = [
+    ("INSIDE", "Within", "Value is within Range"),
+    ("OUTSIDE", "Outside", "Value is outside Range")
 ]
 
 _enum_logic_operators = [
@@ -3766,6 +3771,44 @@ class NLRangedThresholdNode(bpy.types.Node, NLParameterNode):
 
 
 _nodes.append(NLRangedThresholdNode)
+
+
+class NLWithinRangeNode(bpy.types.Node, NLParameterNode):
+    bl_idname = "NLWithinRangeNode"
+    bl_label = "Within Range"
+    nl_category = "Math"
+    operator: bpy.props.EnumProperty(
+        items=_enum_in_or_out,
+        update=update_tree_code
+    )
+
+    def init(self, context):
+        NLParameterNode.init(self, context)
+        self.inputs.new(NLFloatFieldSocket.bl_idname, "Value")
+        self.inputs.new(NLVec2FieldSocket.bl_idname, "Range")
+        self.outputs.new(NLParameterSocket.bl_idname, "If True")
+
+    def draw_buttons(self, context, layout):
+        layout.prop(self, "operator", text="")
+
+    def get_nonsocket_fields(self):
+        return [
+                (
+                    "operator", lambda:
+                    'bgelogic.WithinRange.op_by_code("{}")'.format(
+                        self.operator
+                    )
+                )
+            ]
+
+    def get_netlogic_class_name(self):
+        return "bgelogic.WithinRange"
+
+    def get_input_sockets_field_names(self):
+        return ["value", "range"]
+
+
+_nodes.append(NLWithinRangeNode)
 
 
 class NLClampValueNode(bpy.types.Node, NLParameterNode):
