@@ -503,15 +503,14 @@ def stop_all_sounds(a, b):
 
 
 def none_or_invalid(*a):
-    flag = False
     for ref in a:
         if ref is None or ref == '' or ref is LogicNetworkCell.STATUS_WAITING:
-            flag = True
+            return True
         if not hasattr(ref, "invalid"):
-            flag = False
-        else:
-            flag = ref.invalid
-    return flag
+            continue
+        elif ref.invalid:
+            return True
+    return False
 
 
 def check_game_object(query, scene=None):
@@ -4853,15 +4852,11 @@ class ActionRestartGame(ActionCell):
 
 
 class ActionMouseLook(ActionCell):
-
-    x = bge.render.getWindowWidth()//2
-    y = bge.render.getWindowHeight()//2
-    screen_center = (
-        x/bge.render.getWindowWidth(),
-        y/bge.render.getWindowHeight()
-    )
-    center = mathutils.Vector(screen_center)
-    mouse = logic.mouse
+    x = None
+    y = None
+    screen_center = None
+    center = None
+    mouse = None
 
     def __init__(self):
         ActionCell.__init__(self)
@@ -4897,12 +4892,23 @@ class ActionMouseLook(ActionCell):
         game_object_y = self.get_parameter_value(self.game_object_y)
         if none_or_invalid(game_object_y):
             game_object_y = self.get_x_obj()
-        else:
+        elif game_object_y is not self.get_x_obj():
             self.use_local_head = True
         return game_object_y
 
+    def get_data(self):
+        self.x = bge.render.getWindowWidth()//2
+        self.y = bge.render.getWindowHeight()//2
+        self.screen_center = (
+            self.x/bge.render.getWindowWidth(),
+            self.y/bge.render.getWindowHeight()
+        )
+        self.center = mathutils.Vector(self.screen_center)
+        self.mouse = logic.mouse
+
     def evaluate(self):
         self.done = False
+        self.get_data()
         condition = self.get_parameter_value(self.condition)
         if condition is LogicNetworkCell.STATUS_WAITING:
             return
@@ -4926,9 +4932,6 @@ class ActionMouseLook(ActionCell):
 
         if none_or_invalid(game_object_x):
             debug('MouseLook Node: Invalid Main Object!')
-            return
-        if none_or_invalid(game_object_y):
-            debug('MouseLook Node: Invalid Head Object!')
             return
 
         mouse_position = mathutils.Vector(self.mouse.position)
