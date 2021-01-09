@@ -226,7 +226,6 @@ def register_nodes(category_label, *cls):
     except KeyError:
         print("Info: Node Category {} has not been registered before.".format(category_label))
     nodeitems_utils.register_node_categories(category_label, [node_category])
-    pass
 
 
 def _reload_module(m):
@@ -305,7 +304,7 @@ def load_nodes_from(abs_dir):
             globals = locals
             print("loading... {}".format(mod_name))
             exec(source, locals, globals)
-            #TODO: reload source to refresh intermediate compilation?
+            # TODO: reload source to refresh intermediate compilation?
 
 
 @bpy.app.handlers.persistent

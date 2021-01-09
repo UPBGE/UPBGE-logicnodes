@@ -61,7 +61,6 @@ _cat_icons = {
     'Vehicle': 'AUTO',
     'Visuals': 'HIDE_OFF',
     'Render': 'SCENE',
-    'Custom': 'MODIFIER'
 }
 
 _main_menues = [
@@ -83,7 +82,6 @@ _main_menues = [
     'Time',
     'Variables',
     'Render',
-    'Custom',
     'Utilities'
 ]
 

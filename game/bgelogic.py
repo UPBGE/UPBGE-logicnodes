@@ -7018,7 +7018,7 @@ class ActionTimeDelay(ActionCell):
         self._trigger_delay = None
         self._triggered_time = None
         self._triggered = False
-        self._condition_true_time = 0.0
+        self._condition_true_time = -1
 
     def get_done(self):
         return self.done
@@ -7044,7 +7044,7 @@ class ActionTimeDelay(ActionCell):
         if repeat is None:
             return
         self._set_value(False)
-        if condition:
+        if condition and self._condition_true_time == -1:
             self._triggered = True
             self._condition_true_time = 0.0
         if self._triggered:
@@ -7052,6 +7052,7 @@ class ActionTimeDelay(ActionCell):
             if self._condition_true_time >= delay:
                 self._trigger_delay = delay
                 self._triggered_time = self.network.timeline
+                self._condition_true_time = -1
                 self._triggered = False
                 self._set_value(True)
 
@@ -10425,7 +10426,7 @@ class ActionAlignAxisToVector(ActionCell):
         factor = self.get_parameter_value(self.factor)
         if none_or_invalid(game_object):
             return
-        if v is None or (v.x == 0 and v.y == 0 and v.z == 0):
+        if not v or (v.x == 0 and v.y == 0 and v.z == 0):
             return
         if axis is None:
             return

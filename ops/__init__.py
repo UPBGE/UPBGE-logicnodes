@@ -274,11 +274,6 @@ class NLRemoveTreeByNameOperator(bpy.types.Operator):
             tools.object_has_treeitem_for_treename(
                 ob, self.tree_name
             )
-        ] if not bpy.app.version < (2, 80, 0) else [
-            ob for ob in context.scene.objects if ob.select and
-            tools.object_has_treeitem_for_treename(
-                ob, self.tree_name
-            )
         ]
         for ob in objs:
             gs = ob.game
@@ -459,54 +454,16 @@ class NLAdd4KeyTemplateOperator(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
-        return True
-
-    def add_key_cond(self, tree, key, ypos, nodes):
-        key_cond = tree.nodes.new('NLKeyPressedCondition')
-        key_cond.inputs[0].value = key
-        key_cond.label = key + " Key"
-        key_cond.location = (0, ypos)
-        key_cond.pulse = True
-        nodes.append(key_cond)
-        return key_cond
-
-    def add_movement_setter(self, tree, name, key, axis, value, node_list, xpos=220, ypos=0):
-        set_movement = tree.nodes.new('NLActionSetGlobalValue')
-        tree.links.new(key.outputs[0], set_movement.inputs[0])
-        set_movement.inputs[1].value = 'movement'
-        set_movement.inputs[3].value = axis
-        set_movement.inputs[4].value_type = 'INTEGER'
-        set_movement.inputs[4].int_editor = value
-        set_movement.label = name
-        set_movement.location = (xpos, ypos)
-        node_list.append(set_movement)
-        return set_movement
-
-    def add_movement_getter(self, tree, name, axis, node_list, xpos=0, ypos=-160):
-        set_movement = tree.nodes.new('NLParameterGetGlobalValue')
-        set_movement.inputs[0].value = 'movement'
-        set_movement.inputs[1].value = axis
-        set_movement.label = name
-        set_movement.location = (xpos, ypos)
-        node_list.append(set_movement)
-        return set_movement
-
-    def add_or_cond(self, tree, name, node_1, node_2, node_list, xpos=440, ypos=-20):
-        or_cond = tree.nodes.new('NLConditionOrNode')
-        tree.links.new(node_1.outputs[0], or_cond.inputs[0])
-        tree.links.new(node_2.outputs[0], or_cond.inputs[1])
-        or_cond.label = name
-        or_cond.location = (xpos, ypos)
-        node_list.append(or_cond)
-        return or_cond
-
-    def add_invert_bool(self, tree, name, from_node, node_list, xpos=660, ypos=-20):
-        invert_bool = tree.nodes.new('NLInvertBoolNode')
-        tree.links.new(from_node.outputs[0], invert_bool.inputs[0])
-        invert_bool.label = name
-        invert_bool.location = (xpos, ypos)
-        node_list.append(invert_bool)
-        return invert_bool
+        tree = context.space_data.edit_tree
+        if not tree:
+            return False
+        if not (tree.bl_idname == bge_netlogic.ui.BGELogicTree.bl_idname):
+            return False
+        scene = context.scene
+        for ob in scene.objects:
+            if ob.select_get():
+                return True
+        return False
 
     def add_node(self, x, y, name, node_type, node_list, links=[], values=[]):
         tree = bpy.context.space_data.edit_tree
@@ -604,12 +561,8 @@ class NLApplyLogicOperator(bpy.types.Operator):
             return False
         scene = context.scene
         for ob in scene.objects:
-            if not bpy.app.version < (2, 80, 0):
-                if ob.select_get():
-                    return True
-            else:
-                if ob.select:
-                    return True
+            if ob.select_get():
+                return True
         return False
 
     def execute(self, context):
@@ -619,8 +572,6 @@ class NLApplyLogicOperator(bpy.types.Operator):
         py_module_name = bge_netlogic.utilities.py_module_name_for_tree(tree)
         selected_objects = [
             ob for ob in current_scene.objects if ob.select_get()
-        ] if not bpy.app.version < (2, 80, 0) else [
-            ob for ob in current_scene.objects if ob.select
         ]
         initial_status = bge_netlogic.utilities.compute_initial_status_of_tree(
             tree.name, selected_objects
@@ -749,9 +700,12 @@ class NLGenerateLogicNetworkOperatorAll(bpy.types.Operator):
             try:
                 os.mkdir(local_bgelogic_folder)
             except PermissionError:
-                self.report({"ERROR"}, "Cannot generate the code because the blender file has \
-                    not been saved or the user has no write permission for \
-                        the containing folder.")
+                self.report(
+                    {"ERROR"},
+                    "Cannot generate the code because the blender file has "
+                    "not been saved or the user has no write permission for "
+                    "the containing folder."
+                )
                 return {"FINISHED"}
         for tree in bpy.data.node_groups:
             if tree.bl_idname == bge_netlogic.ui.BGELogicTree.bl_idname:
@@ -767,20 +721,12 @@ class NLGenerateLogicNetworkOperator(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
+        context = bpy.context
         if not context.space_data:
             raise Exception(
                 "TREE TO EDIT NOT FOUND - Update Manually"
             )
-            self.report({"ERROR"}, "TREE TO EDIT NOT FOUND - Update Manually")
-
-            def oops(self, context):
-                self.layout.label("Tree to edit not found - update manually!")
-
-            bpy.context.window_manager.popup_menu(
-                oops,
-                title="Error",
-                icon='ERROR'
-            )
+            cls.report({"ERROR"}, "TREE TO EDIT NOT FOUND - Update Manually")
 
         tree = context.space_data.edit_tree
         if not tree:
@@ -814,9 +760,12 @@ class NLGenerateLogicNetworkOperator(bpy.types.Operator):
             try:
                 os.mkdir(local_bgelogic_folder)
             except PermissionError:
-                self.report({"ERROR"} ,"Cannot generate the code because the blender file has \
-                    not been saved or the user has no write permission for \
-                        the containing folder.")
+                self.report(
+                    {"ERROR"},
+                    "Cannot generate the code because the blender file has "
+                    "not been saved or the user has no write permission for "
+                    "the containing folder."
+                )
                 return {"FINISHED"}
         # write the current tree in a python module,
         # in the directory of the current blender file
@@ -939,11 +888,6 @@ class NLSwitchInitialNetworkStatusOperator(bpy.types.Operator):
             bge_netlogic.utilities.object_has_treeitem_for_treename(
                 ob, tree_name
             )
-        ] if not bpy.app.version < (2, 80, 0) else [
-            ob for ob in context.scene.objects if ob.select and
-            bge_netlogic.utilities.object_has_treeitem_for_treename(
-                ob, tree_name
-            )
         ]
         for ob in updated_objects:
             bge_netlogic.utilities.set_network_initial_status_key(
@@ -962,7 +906,8 @@ class NLPopupTemplatesOperator(bpy.types.Operator):
     bl_options = {'REGISTER', 'UNDO'}
 
     @classmethod
-    def poll(cls, context): return True
+    def poll(cls, context):
+        return True
 
     def execute(self, context):
         node_code = self.get_or_create_text_object("my_custom_nodes.py")
