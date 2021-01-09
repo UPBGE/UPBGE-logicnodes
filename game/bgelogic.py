@@ -33,6 +33,8 @@ if not TOO_OLD:
 # Persistent maps
 
 class SimpleLoggingDatabase(object):
+    index: int
+
     class LineBuffer(object):
         def __init__(self, buffer=[]):
             self.buffer = buffer
@@ -7080,11 +7082,7 @@ class ActionSetDynamics(ActionCell):
         game_object = self.get_parameter_value(self.game_object)
         ghost = self.get_parameter_value(self.ghost)
         activate = self.get_parameter_value(self.activate)
-        if game_object is LogicNetworkCell.STATUS_WAITING:
-            return
-        if ghost is LogicNetworkCell.STATUS_WAITING:
-            return
-        if activate is LogicNetworkCell.STATUS_WAITING:
+        if is_waiting(game_object, ghost, activate):
             return
         self._set_ready()
         if none_or_invalid(game_object):
