@@ -3180,8 +3180,6 @@ class OnNextFrame(ConditionCell):
 
     def evaluate(self):
         input_condition = self.get_parameter_value(self.input_condition)
-        if input_condition is LogicNetworkCell.STATUS_WAITING:
-            return
         self._set_ready()
         if self._activated == 1:
             self._set_value(True)

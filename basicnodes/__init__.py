@@ -4976,13 +4976,13 @@ _nodes.append(NLObjectPropertyOperator)
 
 class NLConditionNextFrameNode(bpy.types.Node, NLConditionNode):
     bl_idname = "NLConditionNextFrameNode"
-    bl_label = "On Next Frame"
+    bl_label = "On Next Tick"
     nl_category = "Events"
 
     def init(self, context):
         NLConditionNode.init(self, context)
         tools.register_inputs(self, NLPseudoConditionSocket, "Condition")
-        tools.register_outputs(self, NLConditionSocket, "Next Frame")
+        tools.register_outputs(self, NLConditionSocket, "Next Tick")
 
     def get_netlogic_class_name(self):
         return "bgelogic.OnNextFrame"
