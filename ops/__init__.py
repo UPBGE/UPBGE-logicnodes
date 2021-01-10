@@ -759,11 +759,14 @@ class NLGenerateLogicNetworkOperator(bpy.types.Operator):
                 return {"FINISHED"}
         # write the current tree in a python module,
         # in the directory of the current blender file
+        context = bpy.context
         if (context is None) or (context.space_data is None) or (
             context.space_data.edit_tree is None
         ):
-            print("NLGenerateLogicNetworkOperator.execute: \
-                no context, space_data or edit_tree. Abort writing tree.")
+            print(
+                'NLGenerateLogicNetworkOperator.execute: '
+                'no context, space_data or edit_tree. Abort writing tree.'
+            )
             self.report(
                 {'ERROR'},
                 'Tree to edit not found! Press "Update Code" manually.'
@@ -891,8 +894,10 @@ class NLSwitchInitialNetworkStatusOperator(bpy.types.Operator):
 class NLPopupTemplatesOperator(bpy.types.Operator):
     bl_idname = "bge_netlogic.popup_templates"
     bl_label = "Show Custom Node Templates"
-    bl_description = "Load the template code for custom nodes \
-        and cells in the text editor"
+    bl_description = (
+        'Load the template code for custom nodes '
+        'and cells in the text editor'
+    )
     bl_options = {'REGISTER', 'UNDO'}
 
     @classmethod

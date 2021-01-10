@@ -499,13 +499,13 @@ class BGE_PT_LogicTreeGroups(bpy.types.Panel):
 
     def draw(self, context):
         layout = self.layout
+        layout.prop(bpy.context.scene.nl_group_name, 'name', text='Name')
         pack_new = layout.column()
         pack_new.scale_y = 1.4
         pack_new.operator(
             bge_netlogic.ops.NLMakeGroupOperator.bl_idname,
             icon='IMPORT'
         )
-        layout.prop(bpy.context.scene.nl_group_name, 'name', text='Name')
 
         layout.separator()
         prefabs = layout.box()

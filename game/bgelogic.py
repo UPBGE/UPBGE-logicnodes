@@ -284,14 +284,14 @@ def compute_distance(parama, paramb):
 
 
 def debug(value):
-    if TOO_OLD:
+    if not hasattr(bpy.types.Scene, 'logic_node_settings'):
         return
-    if not hasattr(bpy.context.scene, 'logic_node_settings'):
+    if not bpy.context or not bpy.context.scene:
         return
     if not bpy.context.scene.logic_node_settings.use_node_debug:
         return
     else:
-        print(value)
+        print('[Logic Nodes] ' + value)
 
 
 def is_waiting(*args):
@@ -499,7 +499,7 @@ def stop_all_sounds(a, b):
     for dev in bpy.types.Scene.nl_aud_devices:
         bpy.types.Scene.nl_aud_devices[dev].stopAll()
         closed_devs += ' {},'.format(dev)
-    debug('[Logic Nodes] Closing Sound Devices:{}'.format(closed_devs[:-1]))
+    debug('Closing Sound Devices:{}'.format(closed_devs[:-1]))
     delattr(bpy.types.Scene, 'nl_aud_devices')
     delattr(bpy.types.Scene, 'nl_aud_system')
 
@@ -739,7 +739,7 @@ class AudioSystem(object):
         self.old_lis_pos = self.listener.worldPosition.copy()
         bpy.types.Scene.nl_aud_system = self
         if not hasattr(bpy.types.Scene, 'nl_aud_devices'):
-            debug('[Logic Nodes] Opening Sound Devices: default3D, default')
+            debug('Opening Sound Devices: default3D, default')
             bpy.types.Scene.nl_aud_devices = self.devices = {
                 'default3D': aud.Device(),
                 'default': aud.Device()
@@ -2059,11 +2059,7 @@ class InterpolateValue(ParameterCell):
         value_a = self.get_parameter_value(self.value_a)
         value_b = self.get_parameter_value(self.value_b)
         factor = self.get_parameter_value(self.factor)
-        if value_a is LogicNetworkCell.STATUS_WAITING:
-            return
-        if value_b is LogicNetworkCell.STATUS_WAITING:
-            return
-        if factor is LogicNetworkCell.STATUS_WAITING:
+        if none_or_invalid(value_a, value_b, factor):
             return
         self._set_ready()
         self._set_value((factor * value_b) + ((1-factor) * value_a))
@@ -4481,7 +4477,7 @@ class SetMaterial(ActionCell):
         self._set_ready()
         bl_obj = game_object.blenderObject
         if slot > len(bl_obj.material_slots) - 1:
-            debug('[Logic Nodes] Set Material: Slot does not exist!')
+            debug('Set Material: Slot does not exist!')
             return
         bl_obj.material_slots[slot].material = bpy.data.materials[mat_name]
         logic.getCurrentScene().resetTaaSamples = True
@@ -8604,8 +8600,6 @@ class ActionSetAnimationFrame(ActionCell):
         self.game_object = None
         self.action_layer = None
         self.action_frame = None
-        self.action_name = None
-        self.layer_weight = None
         self.done = None
         self.OUT = LogicNetworkSubCell(self, self.get_done)
 
@@ -8624,24 +8618,29 @@ class ActionSetAnimationFrame(ActionCell):
         action_name = self.get_parameter_value(self.action_name)
         layer_weight = self.get_parameter_value(self.layer_weight)
         self._set_ready()
-        if none_or_invalid(game_object):
-            return
-        if none_or_invalid(action_layer):
-            return
-        if none_or_invalid(action_frame):
-            return
-        if none_or_invalid(layer_weight):
-            return
-        if not action_name:
-            return
-        game_object.stopAction(action_layer)
-        game_object.playAction(
-            action_name,
+        if none_or_invalid(
+            game_object,
+            action_layer,
             action_frame,
-            action_frame,
-            layer=action_layer,
-            layer_weight=1 - layer_weight
-        )
+            layer_weight
+        ):
+            debug('Set Animation Frame Node: Invalid Parameters!')
+            return
+        is_playing = game_object.isPlayingAction(action_layer)
+        same_action = game_object.getActionName(action_layer) == action_name
+        if not (is_playing or same_action):
+            action = bpy.data.actions[action_name]
+            start_frame = action.frame_range[0]
+            end_frame = action.frame_range[1]
+            game_object.stopAction(action_layer)
+            game_object.playAction(
+                action_name,
+                start_frame,
+                end_frame,
+                layer=action_layer,
+                layer_weight=1-layer_weight
+            )
+        game_object.setActionFrame(action_frame, action_layer)
         self.done = True
 
 
@@ -8726,7 +8725,7 @@ class ActionAddSoundDevice(ActionCell):
         )
         device.doppler_factor = doppler_fac
         device.speed_of_sound = sound_speed
-        debug('[Logic Nodes] Opening Sound Device: ' + name)
+        debug('Opening Sound Device: ' + name)
         devs[name] = device
         self.done = True
 

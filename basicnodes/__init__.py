@@ -5224,17 +5224,17 @@ class NLConditionAndList(bpy.types.Node, NLConditionNode):
     def init(self, context):
         NLConditionNode.init(self, context)
         self.inputs.new(NLPseudoConditionSocket.bl_idname, "A")
-        self.inputs[-1].default_value = "True"
+        self.inputs[-1].default_value = True
         self.inputs.new(NLPseudoConditionSocket.bl_idname, "B")
-        self.inputs[-1].default_value = "True"
+        self.inputs[-1].default_value = True
         self.inputs.new(NLPseudoConditionSocket.bl_idname, "C")
-        self.inputs[-1].default_value = "True"
+        self.inputs[-1].default_value = True
         self.inputs.new(NLPseudoConditionSocket.bl_idname, "D")
-        self.inputs[-1].default_value = "True"
+        self.inputs[-1].default_value = True
         self.inputs.new(NLPseudoConditionSocket.bl_idname, "E")
-        self.inputs[-1].default_value = "True"
+        self.inputs[-1].default_value = True
         self.inputs.new(NLPseudoConditionSocket.bl_idname, "F")
-        self.inputs[-1].default_value = "True"
+        self.inputs[-1].default_value = True
         self.outputs.new(NLPseudoConditionSocket.bl_idname, "If All True")
 
     def get_netlogic_class_name(self):

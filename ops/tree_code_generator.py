@@ -99,7 +99,7 @@ class TreeCodeGenerator(object):
             if not (
                 isinstance(node, bge_netlogic.basicnodes.NetLogicStatementGenerator)
             ):
-                print("Skipping TreeNode of type {} because it is not an instance of NetLogicStatementGenerator".format(node.__class__.__name__))
+                # print("Skipping TreeNode of type {} because it is not an instance of NetLogicStatementGenerator".format(node.__class__.__name__))
                 continue
             if isinstance(node, bge_netlogic.basicnodes.NLActionNode):
                 prefix = "ACT"
