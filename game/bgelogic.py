@@ -270,9 +270,9 @@ LOGIC_OPERATORS = [
 
 # distance between objects or vectors or tuples. None if not computable
 def compute_distance(parama, paramb):
-    if none_or_invalid(parama):
+    if is_invalid(parama):
         return None
-    if none_or_invalid(paramb):
+    if is_invalid(paramb):
         return None
     if hasattr(parama, "getDistanceTo"):
         return parama.getDistanceTo(paramb)
@@ -301,22 +301,23 @@ def is_waiting(*args):
     return False
 
 
-def none_or_invalid(*a):
+def is_invalid(*a):
     for ref in a:
         if ref is None or ref == '' or ref is LogicNetworkCell.STATUS_WAITING:
             return True
-        if not ref.__dict__.get("invalid", False):
+        if not hasattr(ref, "invalid"):
             continue
         elif ref.invalid:
             return True
     return False
 
-def is_invalid(*args):
-    for a in args:
+
+def is_not_met(*conditions):
+    for c in conditions:
         if (
-            a is LogicNetworkCell.STATUS_WAITING or
-            a is None or
-            a is False
+            c is LogicNetworkCell.STATUS_WAITING or
+            c is None or
+            c is False
         ):
             return True
     return False
@@ -522,7 +523,7 @@ def check_game_object(query, scene=None):
         scene = scene
     if (query is None) or (query == ""):
         return
-    if not none_or_invalid(scene):
+    if not is_invalid(scene):
         # find from scene
         return _name_query(scene.objects, query)
 
@@ -1076,7 +1077,7 @@ class ParameterBoneStatus(ParameterCell):
         if bone_name is LogicNetworkCell.STATUS_WAITING:
             return
         self._set_ready()
-        if none_or_invalid(armature):
+        if is_invalid(armature):
             return
         if not bone_name:
             return
@@ -1121,7 +1122,7 @@ class ParameterParentGameObject(ParameterCell):
     def evaluate(self):
         self._set_ready()
         go = self.get_parameter_value(self.game_object)
-        if none_or_invalid(go):
+        if is_invalid(go):
             return self._set_value(None)
         self._set_value(go.parent)
 
@@ -1185,7 +1186,7 @@ class ParameterObjectProperty(ParameterCell):
         if property_default is LogicNetworkCell.STATUS_WAITING:
             return
         self._set_ready()
-        if none_or_invalid(game_object) or (not property_name):
+        if is_invalid(game_object) or (not property_name):
             self._set_value(property_default)
             return
         if property_name not in game_object:
@@ -1217,7 +1218,7 @@ class ParameterGetMaterialNodeValue(ParameterCell):
             return
         if input_slot is STATUS_WAITING:
             return
-        if none_or_invalid(mat_name):
+        if is_invalid(mat_name):
             return
         self._set_ready()
         self.val = (
@@ -1248,7 +1249,7 @@ class ParameterGetMaterialNode(ParameterCell):
             return
         if node_name is STATUS_WAITING:
             return
-        if none_or_invalid(mat_name):
+        if is_invalid(mat_name):
             return
         self._set_ready()
         self.val = (
@@ -1277,7 +1278,7 @@ class ParameterGetMaterialNodeIndex(ParameterCell):
         input_slot = self.get_parameter_value(self.input_slot)
         if input_slot is STATUS_WAITING:
             return
-        if none_or_invalid(node):
+        if is_invalid(node):
             return
         self._set_ready()
         self.val = node.inputs[input_slot]
@@ -1298,7 +1299,7 @@ class ParameterGetMaterialInputValue(ParameterCell):
         input_val = self.get_parameter_value(self.input)
         if input_val is STATUS_WAITING:
             return
-        if none_or_invalid(input_val):
+        if is_invalid(input_val):
             return
         self._set_ready()
         self.val = input_val.default_value
@@ -1322,7 +1323,7 @@ class ParameterObjectHasProperty(ParameterCell):
             return
         self._set_ready()
         if (
-            none_or_invalid(game_object) or
+            is_invalid(game_object) or
             not property_name or
             not game_object
         ):
@@ -1349,7 +1350,7 @@ class ParameterDictionaryValue(ParameterCell):
         if key is LogicNetworkCell.STATUS_WAITING:
             return
         self._set_ready()
-        if none_or_invalid(dictionary) or (not key):
+        if is_invalid(dictionary) or (not key):
             return
             self._set_value(None)
         else:
@@ -1374,7 +1375,7 @@ class ParameterListIndex(ParameterCell):
         if index is LogicNetworkCell.STATUS_WAITING:
             return
         self._set_ready()
-        if none_or_invalid(list_d):
+        if is_invalid(list_d):
             debug('List Index Node: Invalid List!')
             self._set_value(None)
         else:
@@ -1392,7 +1393,7 @@ class ParameterRandomListIndex(ParameterCell):
 
     def evaluate(self):
         condition = self.get_parameter_value(self.condition)
-        if is_invalid(condition):
+        if is_not_met(condition):
             return
         list_d = self.get_parameter_value(self.list)
         if list_d is LogicNetworkCell.STATUS_WAITING:
@@ -1418,9 +1419,9 @@ class GetActuator(ParameterCell):
 
     def evaluate(self):
         game_obj = self.get_parameter_value(self.obj_name)
-        if none_or_invalid(game_obj):
+        if is_invalid(game_obj):
             return
-        if none_or_invalid(self.act_name):
+        if is_invalid(self.act_name):
             return
         self._set_ready()
         self._set_value(game_obj.actuators[self.act_name])
@@ -1436,10 +1437,10 @@ class GetActuatorByName(ParameterCell):
     def evaluate(self):
         # game_obj = self.get_parameter_value(self.obj_name)
         act_name = self.get_parameter_value(self.act_name)
-        # if none_or_invalid(game_obj):
+        # if is_invalid(game_obj):
         #     return
         cont = logic.getCurrentController()
-        if none_or_invalid(act_name):
+        if is_invalid(act_name):
             return
         if act_name not in cont.actuators:
             debug('Get Actuator By Name Node: \
@@ -1482,12 +1483,12 @@ class ActivateActuator(ParameterCell):
         actuator = self.get_parameter_value(self.actuator)
         controller = logic.getCurrentController()
         self._set_ready()
-        if actuator is STATUS_WAITING or none_or_invalid(actuator):
+        if actuator is STATUS_WAITING or is_invalid(actuator):
             debug("There is a problem with the actuator \
                 in Execute Actuator Node!")
             return
         if (
-            none_or_invalid(condition) or
+            is_not_met(condition) or
             condition is STATUS_WAITING or
             not condition
         ):
@@ -1516,12 +1517,12 @@ class DeactivateActuator(ParameterCell):
         actuator = self.get_parameter_value(self.actuator)
         controller = logic.getCurrentController()
         self._set_ready()
-        if actuator is STATUS_WAITING or none_or_invalid(actuator):
+        if actuator is STATUS_WAITING or is_invalid(actuator):
             debug("There is a problem with the actuator in \
                 Execute Actuator Node!")
             return
         if (
-            none_or_invalid(condition) or
+            is_not_met(condition) or
             condition is STATUS_WAITING or
             not condition
         ):
@@ -1550,7 +1551,7 @@ class ActivateActuatorByName(ParameterCell):
         controller = logic.getCurrentController()
         actuator = self.get_parameter_value(self.actuator)
         self._set_ready()
-        if actuator is STATUS_WAITING or none_or_invalid(actuator):
+        if actuator is STATUS_WAITING or is_invalid(actuator):
             debug("There is a problem with the actuator in \
                 Execute Actuator Node!")
             return
@@ -1580,7 +1581,7 @@ class DeactivateActuatorByName(ParameterCell):
         controller = logic.getCurrentController()
         actuator = self.get_parameter_value(self.actuator)
         self._set_ready()
-        if actuator is STATUS_WAITING or none_or_invalid(actuator):
+        if actuator is STATUS_WAITING or is_invalid(actuator):
             debug("There is a problem with the actuator in \
                 Execute Actuator Node!")
             return
@@ -1611,7 +1612,7 @@ class SetActuatorValue(ParameterCell):
         condition = self.get_parameter_value(self.condition)
         actuator = self.get_parameter_value(self.actuator)
         self._set_ready()
-        if actuator is STATUS_WAITING or none_or_invalid(actuator):
+        if actuator is STATUS_WAITING or is_invalid(actuator):
             debug("Set Actuator Value Node: There is a problem with \
                the actuator!")
             return
@@ -1640,10 +1641,10 @@ class GetController(ParameterCell):
 
     def evaluate(self):
         game_obj = self.get_parameter_value(self.obj_name)
-        if none_or_invalid(game_obj):
+        if is_invalid(game_obj):
             debug('Get Controller Node: No Game Object selected!')
             return
-        if none_or_invalid(self.cont_name):
+        if is_invalid(self.cont_name):
             debug('Get Controller Node: No Controller selected!')
             return
         self._set_ready()
@@ -1677,10 +1678,10 @@ class GetSensor(ParameterCell):
 
     def evaluate(self):
         game_obj = self.get_parameter_value(self.obj_name)
-        if none_or_invalid(game_obj):
+        if is_invalid(game_obj):
             debug('Get Sensor Node: No Game Object selected!')
             return
-        if none_or_invalid(self.sens_name):
+        if is_invalid(self.sens_name):
             debug('Get Sensor Node: No Sensor selected!')
             return
         self._set_ready()
@@ -1753,10 +1754,10 @@ class SensorValue(ParameterCell):
     def evaluate(self):
         self.done = False
         game_obj = self.get_parameter_value(self.obj_name)
-        if none_or_invalid(game_obj):
+        if is_invalid(game_obj):
             debug('Get Sensor Node: No Game Object selected!')
             return
-        if none_or_invalid(self.sens_name):
+        if is_invalid(self.sens_name):
             debug('Get Sensor Node: No Sensor selected!')
             return
         field = self.get_parameter_value(self.field)
@@ -1776,7 +1777,7 @@ class SensorPositive(ParameterCell):
 
     def evaluate(self):
         sens = self.get_parameter_value(self.sensor)
-        if none_or_invalid(sens):
+        if is_invalid(sens):
             return
         self._set_ready()
         self._set_value(sens.positive)
@@ -1789,7 +1790,7 @@ class ParameterActiveCamera(ParameterCell):
     def evaluate(self):
         scene = logic.getCurrentScene()
         self._set_ready()
-        if none_or_invalid(scene):
+        if is_invalid(scene):
             debug('Active Camera Node: Invalid Scene!')
             self._set_value(None)
         else:
@@ -1803,7 +1804,7 @@ class GetCollection(ParameterCell):
 
     def evaluate(self):
         collection = self.get_parameter_value(self.collection)
-        if none_or_invalid(collection):
+        if is_invalid(collection):
             return
         self._set_ready()
         self._set_value(collection)
@@ -1816,7 +1817,7 @@ class GetCollectionObjects(ParameterCell):
 
     def evaluate(self):
         collection = self.get_parameter_value(self.collection)
-        if none_or_invalid(collection):
+        if is_invalid(collection):
             return
         self._set_ready()
         col = bpy.data.collections.get(collection)
@@ -1835,7 +1836,7 @@ class GetCollectionObjectNames(ParameterCell):
 
     def evaluate(self):
         collection = self.get_parameter_value(self.collection)
-        if none_or_invalid(collection):
+        if is_invalid(collection):
             return
         self._set_ready()
         col = bpy.data.collections.get(collection)
@@ -1868,7 +1869,7 @@ class ParameterScreenPosition(ParameterCell):
         self._set_ready()
         game_object = self.get_parameter_value(self.game_object)
         camera = self.get_parameter_value(self.camera)
-        if none_or_invalid(game_object) or none_or_invalid(camera):
+        if is_invalid(game_object) or is_invalid(camera):
             self._xpos = None
             self._ypos = None
             self._set_value(None)
@@ -1896,7 +1897,7 @@ class ParameterWorldPosition(ParameterCell):
         screen_y = self.get_parameter_value(self.screen_y)
         world_z = self.get_parameter_value(self.world_z)
         if (
-            none_or_invalid(camera) or
+            is_invalid(camera) or
             (screen_x is None) or
             (screen_y is None) or
             (world_z is None)
@@ -2009,7 +2010,7 @@ class ParameterObjectAttribute(ParameterCell):
         if attribute_name is LogicNetworkCell.STATUS_WAITING:
             return
         self._set_ready()
-        if none_or_invalid(game_object):
+        if is_invalid(game_object):
             return
         if not hasattr(game_object, attribute_name):
             debug(
@@ -2034,7 +2035,7 @@ class ClampValue(ParameterCell):
             return
         if range_ft is LogicNetworkCell.STATUS_WAITING:
             return
-        if none_or_invalid(value):
+        if is_invalid(value):
             return
         self._set_ready()
         if range_ft.x == range_ft.y:
@@ -2059,7 +2060,7 @@ class InterpolateValue(ParameterCell):
         value_a = self.get_parameter_value(self.value_a)
         value_b = self.get_parameter_value(self.value_b)
         factor = self.get_parameter_value(self.factor)
-        if none_or_invalid(value_a, value_b, factor):
+        if is_invalid(value_a, value_b, factor):
             return
         self._set_ready()
         self._set_value((factor * value_b) + ((1-factor) * value_a))
@@ -2360,7 +2361,7 @@ class ParameterActionStatus(ParameterCell):
         if action_layer is LogicNetworkCell.STATUS_WAITING:
             return
         self._set_ready()
-        if none_or_invalid(game_object):
+        if is_invalid(game_object):
             self._action_name = ""
             self._action_frame = 0.0
             self._set_value(False)
@@ -2578,13 +2579,13 @@ class ParameterVector(ParameterCell):
         z = self.get_parameter_value(self.input_z)
         v = self.get_parameter_value(self.input_vector)
         # TODO: zero vector if v is None?
-        if not none_or_invalid(v):
+        if not is_invalid(v):
             self.output_vector[:] = v
-        if not none_or_invalid(x):
+        if not is_invalid(x):
             self.output_vector.x = x
-        if not none_or_invalid(y):
+        if not is_invalid(y):
             self.output_vector.y = y
-        if not none_or_invalid(z):
+        if not is_invalid(z):
             self.output_vector.z = z
         self._set_value(self.output_vector)
 
@@ -2604,9 +2605,9 @@ class ParameterVector2Simple(ParameterCell):
         self._set_ready()
         x = self.get_parameter_value(self.input_x)
         y = self.get_parameter_value(self.input_y)
-        if not none_or_invalid(x):
+        if not is_invalid(x):
             self.output_vector.x = x
-        if not none_or_invalid(y):
+        if not is_invalid(y):
             self.output_vector.y = y
         self._set_value(self.output_vector)
 
@@ -2725,11 +2726,11 @@ class ParameterVector3Simple(ParameterCell):
         x = self.get_parameter_value(self.input_x)
         y = self.get_parameter_value(self.input_y)
         z = self.get_parameter_value(self.input_z)
-        if not none_or_invalid(x):
+        if not is_invalid(x):
             self.output_vector.x = x
-        if not none_or_invalid(y):
+        if not is_invalid(y):
             self.output_vector.y = y
-        if not none_or_invalid(z):
+        if not is_invalid(z):
             self.output_vector.z = z
         self._set_value(self.output_vector)
 
@@ -3061,7 +3062,7 @@ class ParameterFindChildByName(ParameterCell):
             return
         if child is LogicNetworkCell.STATUS_WAITING:
             return
-        elif not none_or_invalid(parent):
+        elif not is_invalid(parent):
             # find from parent
             self._set_value(_name_query(parent.childrenRecursive, child))
             # return
@@ -3136,7 +3137,7 @@ class ConditionOnce(ConditionCell):
             self._consumed = True
             self._set_value(True)
             return
-        if is_invalid(condition) and repeat and self._consumed:
+        if is_not_met(condition) and repeat and self._consumed:
             self._consumed = False
         self._set_value(False)
 
@@ -3161,12 +3162,12 @@ class ObjectPropertyOperator(ConditionCell):
         operator = self.get_parameter_value(self.operator)
         if is_waiting(property_name, compare_value):
             return
-        if none_or_invalid(game_object):
+        if is_invalid(game_object):
             return
         self._set_ready()
         value = self.val = game_object[property_name]
         if operator > 1:  # eq and neq are valid for None
-            if none_or_invalid(value, compare_value):
+            if is_invalid(value, compare_value):
                 return
         if operator is None:
             return
@@ -3233,7 +3234,7 @@ class ConditionLNStatus(ConditionCell):
         self._set_ready()
         self._running = False
         self._stopped = False
-        if none_or_invalid(game_object):
+        if is_invalid(game_object):
             return
         tree = game_object.get(tree_name)
         if tree is None:
@@ -3460,9 +3461,9 @@ class ConditionDistanceCheck(ConditionCell):
         if hyst is STATUS_WAITING:
             return
         self._set_ready()
-        if none_or_invalid(a):
+        if is_invalid(a):
             return
-        if none_or_invalid(b):
+        if is_invalid(b):
             return
         if op is None:
             return
@@ -3689,7 +3690,7 @@ class ConditionGamepadSticks(ConditionCell):
     def evaluate(self):
         self._set_ready()
         axis = self.get_parameter_value(self.axis)
-        if none_or_invalid(axis):
+        if is_invalid(axis):
             debug('Gamepad Sticks Node: Invalid Controller Stick!')
             return
         inverted = self.get_parameter_value(self.inverted)
@@ -3703,7 +3704,7 @@ class ConditionGamepadSticks(ConditionCell):
             self._x_axis_values = 0
             self._y_axis_values = 0
             return
-        if none_or_invalid(joystick):
+        if is_invalid(joystick):
             return
         raw_values = joystick.axisValues
         values = []
@@ -3739,7 +3740,7 @@ class ConditionGamepadTrigger(ConditionCell):
     def evaluate(self):
         self._set_ready()
         axis = self.get_parameter_value(self.axis)
-        if none_or_invalid(axis):
+        if is_invalid(axis):
             debug('Gamepad Trigger Node: Invalid Controller Trigger!')
             return
         index = self.get_parameter_value(self.index)
@@ -3752,7 +3753,7 @@ class ConditionGamepadTrigger(ConditionCell):
             self._x_axis_values = 0
             self._y_axis_values = 0
             return
-        if none_or_invalid(joystick):
+        if is_invalid(joystick):
             return
         value = joystick.axisValues[4] if axis == 0 else joystick.axisValues[5]
 
@@ -3784,7 +3785,7 @@ class ConditionGamepadButtons(ConditionCell):
             self._x_axis_values = 0
             self._y_axis_values = 0
             return
-        if none_or_invalid(joystick):
+        if is_invalid(joystick):
             return
 
         if self.button in joystick.activeButtons:
@@ -3894,7 +3895,7 @@ class ConditionMouseTargeting(ConditionCell):
         if game_object is LogicNetworkCell.STATUS_WAITING:
             return
         self._set_ready()
-        if none_or_invalid(game_object):
+        if is_invalid(game_object):
             self._mouse_entered_status = False
             self._mouse_exited_status = False
             self._mouse_over_status = False
@@ -4076,7 +4077,7 @@ class ConditionMousePressedOn(ConditionCell):
         self._set_ready()
         if mouse_button is None:
             return
-        if none_or_invalid(game_object):
+        if is_invalid(game_object):
             return
         mstat = self.network.mouse_events[mouse_button]
         if not mstat.activated:
@@ -4326,7 +4327,7 @@ class ConditionCollision(ConditionCell):
         self._objects = []
 
     def _reset_last_monitored_object(self, new_monitored_object_value):
-        if none_or_invalid(new_monitored_object_value):
+        if is_invalid(new_monitored_object_value):
             new_monitored_object_value = None
         if self._last_monitored_object == new_monitored_object_value:
             return
@@ -4399,14 +4400,14 @@ class ActionAddObject(ActionCell):
     def evaluate(self):
         self.done = False
         condition = self.get_parameter_value(self.condition)
-        if is_invalid(condition):
+        if is_not_met(condition):
             return
         life = self.get_parameter_value(self.life)
         name = self.get_parameter_value(self.name)
         self._set_ready()
         reference = self.get_parameter_value(self.reference)
         scene = logic.getCurrentScene()
-        if none_or_invalid(life, name, reference, scene):
+        if is_invalid(life, name, reference, scene):
             return
         self.obj = scene.addObject(name, reference, life)
         self.done = True
@@ -4443,7 +4444,7 @@ class ActionSetGameObjectGameProperty(ActionCell):
             return
         if property_value_value is STATUS_WAITING:
             return
-        if none_or_invalid(game_object_value):
+        if is_invalid(game_object_value):
             return
         if condition_value:
             self.done = True
@@ -4470,7 +4471,9 @@ class SetMaterial(ActionCell):
         game_object = self.get_parameter_value(self.game_object)
         slot = self.get_parameter_value(self.slot)
         mat_name = self.get_parameter_value(self.mat_name)
-        if is_invalid(condition, game_object):
+        if is_not_met(condition):
+            return
+        if is_invalid(game_object):
             return
         if is_waiting(mat_name, slot):
             return
@@ -4519,7 +4522,7 @@ class ActionSetMaterialNodeValue(ActionCell):
             return
         if value is STATUS_WAITING:
             return
-        if none_or_invalid(mat_name):
+        if is_invalid(mat_name):
             return
         if condition_value:
             self.done = True
@@ -4593,9 +4596,9 @@ class ActionToggleGameObjectGameProperty(ActionCell):
         game_object_value = self.get_parameter_value(self.game_object)
         property_name_value = self.get_parameter_value(self.property_name)
         property_value_value = self.get_parameter_value(self.property_value)
-        if none_or_invalid(game_object_value):
+        if is_invalid(game_object_value):
             return
-        if is_waiting(property_name_value, property_value_value)
+        if is_waiting(property_name_value, property_value_value):
             return
         self._set_ready()
         if condition_value:
@@ -4620,14 +4623,14 @@ class ActionAddToGameObjectGameProperty(ActionCell):
     def evaluate(self):
         self.done = False
         condition = self.get_parameter_value(self.condition)
-        if is_invalid(condition):
+        if is_not_met(condition):
             return
         game_object = self.get_parameter_value(self.game_object)
         property_name = self.get_parameter_value(self.property_name)
         property_value = self.get_parameter_value(self.property_value)
         if is_waiting(property_name, property_value):
             return
-        if none_or_invalid(game_object):
+        if is_invalid(game_object):
             return
         self._set_ready()
         value = game_object[property_name]
@@ -4653,11 +4656,11 @@ class CopyPropertyFromObject(ActionCell):
     def evaluate(self):
         self.done = False
         condition = self.get_parameter_value(self.condition)
-        if is_invalid(condition):
+        if is_not_met(condition):
             return
         from_object = self.get_parameter_value(self.from_object)
         to_object = self.get_parameter_value(self.to_object)
-        if none_or_invalid(from_object, to_object):
+        if is_invalid(from_object, to_object):
             return
         property_name = self.get_parameter_value(self.property_name)
         if is_waiting(property_name):
@@ -4687,7 +4690,9 @@ class ActionClampedAddToGameObjectGameProperty(ActionCell):
         self.done = False
         condition = self.get_parameter_value(self.condition)
         game_object = self.get_parameter_value(self.game_object)
-        if none_or_invalid(condition, game_object) or not condition:
+        if is_not_met(condition):
+            return
+        if is_invalid(game_object):
             return
         property_name = self.get_parameter_value(self.property_name)
         property_value = self.get_parameter_value(self.property_value)
@@ -4743,7 +4748,7 @@ class InvertBool(ActionCell):
 
     def evaluate(self):
         value = self.get_parameter_value(self.value)
-        if none_or_invalid(value):
+        if is_invalid(value):
             debug('Inver Bool Node: Value invalid, defaulting to "False"')
             self.out_value = False
             return
@@ -4763,7 +4768,7 @@ class InvertValue(ActionCell):
 
     def evaluate(self):
         value = self.get_parameter_value(self.value)
-        if none_or_invalid(value):
+        if is_invalid(value):
             debug('Inver Value Node: Value invalid, defaulting to 0')
             self.out_value = 0
             return
@@ -4782,7 +4787,7 @@ class AbsoluteValue(ActionCell):
         return self.out_value
 
     def evaluate(self):
-        if none_or_invalid(self.value):
+        if is_invalid(self.value):
             return
         value = self.get_parameter_value(self.value)
         self._set_ready()
@@ -4883,7 +4888,7 @@ class ActionMouseLook(ActionCell):
 
     def get_y_obj(self):
         game_object_y = self.get_parameter_value(self.game_object_y)
-        if none_or_invalid(game_object_y):
+        if is_invalid(game_object_y):
             game_object_y = self.get_x_obj()
         elif game_object_y is not self.get_x_obj():
             self.use_local_head = True
@@ -4923,7 +4928,7 @@ class ActionMouseLook(ActionCell):
         smooth = 1 - (self.get_parameter_value(self.smooth) * .99)
         self._set_ready()
 
-        if none_or_invalid(game_object_x):
+        if is_invalid(game_object_x):
             debug('MouseLook Node: Invalid Main Object!')
             return
 
@@ -5145,7 +5150,7 @@ class ActionCreateVehicleFromParent(ActionCell):
     def evaluate(self):
         self.done = False
         game_object = self.get_parameter_value(self.game_object)
-        if is_invalid(self.get_parameter_value(self.condition)):
+        if is_not_met(self.get_parameter_value(self.condition)):
             if game_object.get('vehicle_constraint'):
                 self._set_ready()
                 self.vehicle = game_object['vehicle_constraint']
@@ -5218,7 +5223,9 @@ class VehicleApplyForce(ActionCell):
         self.done = False
         condition = self.get_parameter_value(self.condition)
         constraint = self.get_parameter_value(self.constraint)
-        if is_invalid(condition, constraint):
+        if is_not_met(condition):
+            return
+        if is_invalid(constraint):
             return
         value = self.get_parameter_value(self.value_type)
         wheelcount = self.get_parameter_value(self.wheelcount)
@@ -5231,7 +5238,7 @@ class VehicleApplyForce(ActionCell):
                     constraint.applyEngineForce(0, wheel)
                 self._reset = False
             return
-        if none_or_invalid(constraint):
+        if is_invalid(constraint):
             return
         self._reset = True
         self._set_ready()
@@ -5285,7 +5292,7 @@ class VehicleApplyBraking(ActionCell):
                     constraint.applyBraking(0, wheel)
                 self._reset = False
             return
-        if none_or_invalid(constraint):
+        if is_invalid(constraint):
             return
         self._set_ready()
         if value_type == 'FRONT':
@@ -5333,7 +5340,7 @@ class VehicleApplySteering(ActionCell):
         power = self.get_parameter_value(self.power)
         if power is LogicNetworkCell.STATUS_WAITING:
             return
-        if none_or_invalid(constraint):
+        if is_invalid(constraint):
             return
         self._set_ready()
         if value_type == 'FRONT':
@@ -5407,7 +5414,7 @@ class VehicleSetAttributes(ActionCell):
             self.get_parameter_value(self.suspension_damping),
             self.get_parameter_value(self.tyre_friction)
         ]
-        if none_or_invalid(constraint):
+        if is_invalid(constraint):
             return
         self._set_ready()
         if value_type == 'FRONT':
@@ -5455,7 +5462,7 @@ class ActionSetObjectAttribute(ActionCell):
     def evaluate(self):
         self.done = False
         condition = self.get_parameter_value(self.condition)
-        if is_invalid(condition):
+        if is_not_met(condition):
             return
         xyz = self.get_parameter_value(self.xyz)
         game_object = self.get_parameter_value(self.game_object)
@@ -5526,7 +5533,7 @@ class ActionInstalSubNetwork(ActionCell):
         if initial_status is LogicNetworkCell.STATUS_WAITING:
             return
         self._set_ready()
-        if none_or_invalid(target_object):
+        if is_invalid(target_object):
             return
         self._network.install_subnetwork(
             target_object,
@@ -5564,7 +5571,7 @@ class ActionExecuteNetwork(ActionCell):
         if tree_name is LogicNetworkCell.STATUS_WAITING:
             return
         self._set_ready()
-        if none_or_invalid(target_object):
+        if is_invalid(target_object):
             return
         if tree_name not in target_object:
             self._network.install_subnetwork(
@@ -5609,7 +5616,7 @@ class ActionStartLogicNetwork(ActionCell):
         if logic_network_name is LogicNetworkCell.STATUS_WAITING:
             return
         self._set_ready()
-        if none_or_invalid(game_object):
+        if is_invalid(game_object):
             return
         network = game_object.get(logic_network_name)
         if network is not None:
@@ -5643,7 +5650,7 @@ class ActionStopLogicNetwork(ActionCell):
         if logic_network_name is LogicNetworkCell.STATUS_WAITING:
             return
         self._set_ready()
-        if none_or_invalid(game_object):
+        if is_invalid(game_object):
             return
         network = game_object.get(logic_network_name)
         network.stop()
@@ -5672,18 +5679,15 @@ class ActionFindObjectFromScene(ActionCell):
     def evaluate(self):
         self._set_ready()
         condition = self.get_parameter_value(self.condition)
-        if (condition is None) and (not none_or_invalid(self._value)):
+        if is_not_met(condition):
             # if no condition, early out
             return self._value
         self._set_value(None)  # remove invalid objects, if any
-        if condition is False:  # no need to evaluate
-            return
-        # condition is either True or None
         scene = self.get_parameter_value(self.scene)
         game_object = self.get_parameter_value(self.game_object, scene=scene)
         if game_object is LogicNetworkCell.STATUS_WAITING:
             return
-        if not none_or_invalid(scene):
+        if not is_invalid(scene):
             # find from scene
             self._set_value(game_object)
 
@@ -5746,7 +5750,7 @@ class ActionSetGameObjectVisibility(ActionCell):
         if recursive is STATUS_WAITING:
             return
         self._set_ready()
-        if none_or_invalid(game_object):
+        if is_invalid(game_object):
             return
         if visible is None:
             return
@@ -5918,7 +5922,7 @@ class ActionMousePick(ActionCell):
             self._out_object = None
             self._out_point = None
             return
-        if none_or_invalid(camera):
+        if is_invalid(camera):
             return
         mpos = logic.mouse.position
         vec = 10 * camera.getScreenVect(*mpos)
@@ -5987,9 +5991,9 @@ class ActionCameraPick(ActionCell):
             self._out_object = None
             self._out_point = None
             return
-        if none_or_invalid(camera):
+        if is_invalid(camera):
             return
-        if none_or_invalid(aim):
+        if is_invalid(aim):
             return
         obj, point, normal = None, None, None
         # assume screen coordinates
@@ -6035,7 +6039,7 @@ class ActionSetActiveCamera(ActionCell):
         if camera is LogicNetworkCell.STATUS_WAITING:
             return
         self._set_ready()
-        if none_or_invalid(camera):
+        if is_invalid(camera):
             return
         scene = logic.getCurrentScene()
         scene.active_camera = camera
@@ -6068,7 +6072,7 @@ class ActionSetCameraFov(ActionCell):
         if fov is LogicNetworkCell.STATUS_WAITING:
             return
         self._set_ready()
-        if none_or_invalid(camera):
+        if is_invalid(camera):
             return
         camera.fov = fov
         self.done = True
@@ -6399,7 +6403,7 @@ class InitNewList(ActionCell):
         self.list = []
         self._set_ready()
         for val in values:
-            if not is_waiting(val) and not none_or_invalid(val):
+            if not is_waiting(val) and not is_invalid(val):
                 self.list.append(val)
 
 
@@ -6554,9 +6558,9 @@ class ActionSetParent(ActionCell):
         if ghost is LogicNetworkCell.STATUS_WAITING:
             return
         self._set_ready()
-        if none_or_invalid(child_object):
+        if is_invalid(child_object):
             return
-        if none_or_invalid(parent_object):
+        if is_invalid(parent_object):
             return
         if child_object.parent is parent_object:
             return
@@ -6587,7 +6591,7 @@ class ActionRemoveParent(ActionCell):
         if child_object is LogicNetworkCell.STATUS_WAITING:
             return
         self._set_ready()
-        if none_or_invalid(child_object):
+        if is_invalid(child_object):
             return
         if not child_object.parent:
             return
@@ -6722,7 +6726,7 @@ class ActionEditArmatureConstraint(ActionCell):
         if distance_mode is LogicNetworkCell.STATUS_WAITING:
             return
         self._set_ready()
-        if none_or_invalid(armature):
+        if is_invalid(armature):
             return
         if invalid(primary_target):
             primary_target = None
@@ -6833,7 +6837,7 @@ class ActionEditBone(ActionCell):
         if scale is LogicNetworkCell.STATUS_WAITING:
             return
         self._set_ready()
-        if none_or_invalid(armature):
+        if is_invalid(armature):
             return
         if not bone_name:
             return
@@ -6895,7 +6899,7 @@ class ActionSetBonePos(ActionCell):
             debug('Set Bone Node: Position given not valid!')
             return
         self._set_ready()
-        if none_or_invalid(armature):
+        if is_invalid(armature):
             debug('Set Bone Node: Armature not valid!')
             return
         if not bone_name:
@@ -7076,7 +7080,7 @@ class ActionSetDynamics(ActionCell):
         if is_waiting(game_object, ghost, activate):
             return
         self._set_ready()
-        if none_or_invalid(game_object):
+        if is_invalid(game_object):
             return
         if activate:
             game_object.suspendDynamics(ghost)
@@ -7106,7 +7110,7 @@ class ActionEndObject(ActionCell):
         if game_object is LogicNetworkCell.STATUS_WAITING:
             return
         self._set_ready()
-        if none_or_invalid(game_object):
+        if is_invalid(game_object):
             return
         game_object.endObject()
         self.done = True
@@ -7133,7 +7137,7 @@ class ActionSetTimeScale(ActionCell):
         if timescale is LogicNetworkCell.STATUS_WAITING:
             return
         self._set_ready()
-        if none_or_invalid(timescale):
+        if is_invalid(timescale):
             return
         logic.setTimeScale(timescale)
         self.done = True
@@ -7160,7 +7164,7 @@ class ActionSetGravity(ActionCell):
         if gravity is LogicNetworkCell.STATUS_WAITING:
             return
         self._set_ready()
-        if none_or_invalid(gravity):
+        if is_invalid(gravity):
             return
         logic.setGravity(gravity)
         self.done = True
@@ -7186,7 +7190,7 @@ class ActionEndScene(ActionCell):
         if scene is LogicNetworkCell.STATUS_WAITING:
             return
         self._set_ready()
-        if none_or_invalid(scene):
+        if is_invalid(scene):
             return
         if not condition:
             return
@@ -7288,7 +7292,7 @@ class ActionApplyGameObjectValue(ActionCell):
         self._set_ready()
         if not condition:
             return
-        if none_or_invalid(game_object):
+        if is_invalid(game_object):
             return
         if movement:
             game_object.applyMovement(movement, local)
@@ -7330,7 +7334,7 @@ class ActionApplyLocation(ActionCell):
         if movement is LogicNetworkCell.STATUS_WAITING:
             return
         self._set_ready()
-        if none_or_invalid(game_object):
+        if is_invalid(game_object):
             return
         if movement:
             game_object.applyMovement(movement, local)
@@ -7364,7 +7368,7 @@ class ActionApplyRotation(ActionCell):
         if rotation is LogicNetworkCell.STATUS_WAITING:
             return
         self._set_ready()
-        if none_or_invalid(game_object):
+        if is_invalid(game_object):
             return
         if rotation:
             if len(rotation) == 3:
@@ -7389,7 +7393,7 @@ class ActionApplyForce(ActionCell):
     def evaluate(self):
         self.done = False
         condition = self.get_parameter_value(self.condition)
-        if is_invalid(condition):
+        if is_not_met(condition):
             return
         game_object = self.get_parameter_value(self.game_object)
         force = self.get_parameter_value(self.force)
@@ -7417,7 +7421,7 @@ class ActionApplyImpulse(ActionCell):
     def evaluate(self):
         self.done = False
         condition = self.get_parameter_value(self.condition)
-        if is_invalid(condition):
+        if is_not_met(condition):
             return
         game_object = self.get_parameter_value(self.game_object)
         point = self.get_parameter_value(self.point)
@@ -7425,7 +7429,7 @@ class ActionApplyImpulse(ActionCell):
         local = self.local
         if hasattr(point, 'worldPosition'):
             point = point.worldPosition
-        if is_waiting(point, impulse) or none_or_invalid(game_object):
+        if is_waiting(point, impulse) or is_invalid(game_object):
             return
         self._set_ready()
         if impulse:
@@ -7447,7 +7451,7 @@ class ActionCharacterJump(ActionCell):
     def evaluate(self):
         self.done = False
         condition = self.get_parameter_value(self.condition)
-        if is_invalid(condition):
+        if is_not_met(condition):
             self._set_ready()
             return
         game_object = self.get_parameter_value(self.game_object)
@@ -7455,7 +7459,7 @@ class ActionCharacterJump(ActionCell):
             return
         physics = bge.constraints.getCharacter(game_object)
         self._set_ready()
-        if none_or_invalid(game_object):
+        if is_invalid(game_object):
             return
         try:
             physics.jump()
@@ -8174,7 +8178,7 @@ class ActionSetCharacterJump(ActionCell):
         physics = bge.constraints.getCharacter(game_object)
         max_jumps = self.get_parameter_value(self.max_jumps)
         self._set_ready()
-        if none_or_invalid(game_object):
+        if is_invalid(game_object):
             return
         try:
             physics.maxJumps = max_jumps
@@ -8211,7 +8215,7 @@ class ActionSetCharacterGravity(ActionCell):
         physics = bge.constraints.getCharacter(game_object)
         gravity = self.get_parameter_value(self.gravity)
         self._set_ready()
-        if none_or_invalid(game_object):
+        if is_invalid(game_object):
             return
         try:
             physics.gravity = gravity
@@ -8249,7 +8253,7 @@ class ActionSetCharacterWalkDir(ActionCell):
         physics = bge.constraints.getCharacter(game_object)
         walkDir = self.get_parameter_value(self.walkDir)
         self._set_ready()
-        if none_or_invalid(game_object):
+        if is_invalid(game_object):
             return
         try:
             physics.walkDirection = walkDir
@@ -8299,7 +8303,7 @@ class ActionGetCharacterInfo(ActionCell):
             return
         physics = bge.constraints.getCharacter(game_object)
         self._set_ready()
-        if none_or_invalid(game_object):
+        if is_invalid(game_object):
             return
         try:
             self.max_jumps = physics.maxJumps
@@ -8476,7 +8480,7 @@ class ActionPlayAction(ActionCell):
         if blend_mode is LogicNetworkCell.STATUS_WAITING:
             return
         self._set_ready()
-        if none_or_invalid(game_object):  # can't play
+        if is_invalid(game_object):  # can't play
             debug("Play Action Node: Invalid Game Object!")
             self._reset_subvalues()
         else:
@@ -8579,9 +8583,9 @@ class ActionStopAnimation(ActionCell):
         if action_layer is LogicNetworkCell.STATUS_WAITING:
             return
         self._set_ready()
-        if none_or_invalid(game_object):
+        if is_invalid(game_object):
             return
-        if none_or_invalid(action_layer):
+        if is_invalid(action_layer):
             return
         game_object.stopAction(action_layer)
         self.done = True
@@ -8613,7 +8617,7 @@ class ActionSetAnimationFrame(ActionCell):
         action_name = self.get_parameter_value(self.action_name)
         layer_weight = self.get_parameter_value(self.layer_weight)
         self._set_ready()
-        if none_or_invalid(
+        if is_invalid(
             game_object,
             action_layer,
             action_frame,
@@ -8785,7 +8789,7 @@ class ActionStart3DSound(ActionCell):
         distance_max = self.get_parameter_value(self.distance_max)
         self._set_ready()
 
-        if none_or_invalid(sound):
+        if is_invalid(sound):
             return
         if not hasattr(bpy.types.Scene, 'nl_aud_devices'):
             debug('No Audio Devices initialized!')
@@ -8885,7 +8889,7 @@ class ActionStart3DSoundAdv(ActionCell):
         cone_outer_volume = self.get_parameter_value(self.cone_outer_volume)
         self._set_ready()
 
-        if none_or_invalid(sound):
+        if is_invalid(sound):
             return
         if not hasattr(bpy.types.Scene, 'nl_aud_devices'):
             debug('No Audio Devices initialized!')
@@ -8963,7 +8967,7 @@ class ActionStartSound(ActionCell):
         volume = self.get_parameter_value(self.volume)
         self._set_ready()
 
-        if none_or_invalid(sound):
+        if is_invalid(sound):
             return
         if not hasattr(bpy.types.Scene, 'nl_aud_devices'):
             debug('No Audio Devices initialized!')
@@ -9184,10 +9188,10 @@ class ActionRandomInt(ActionCell):
     def evaluate(self):
         min_value = self.get_parameter_value(self.min_value)
         max_value = self.get_parameter_value(self.max_value)
-        if none_or_invalid(min_value):
+        if is_invalid(min_value):
             debug('Random Int Node: Min Value not set correctly!')
             return
-        if none_or_invalid(max_value):
+        if is_invalid(max_value):
             debug('Random Int Node: Max Value not set correctly!')
             return
         if min_value > max_value:
@@ -9214,10 +9218,10 @@ class ActionRandomFloat(ActionCell):
     def evaluate(self):
         min_value = self.get_parameter_value(self.min_value)
         max_value = self.get_parameter_value(self.max_value)
-        if none_or_invalid(min_value):
+        if is_invalid(min_value):
             debug('Random Float Node: Min Value not set correctly!')
             return
-        if none_or_invalid(max_value):
+        if is_invalid(max_value):
             debug('Random Float Node: Max Value not set correctly!')
             return
         if min_value > max_value:
@@ -9271,7 +9275,7 @@ class ActionTranslate(ActionCell):
         if local is STATUS_WAITING:
             return
         self._set_ready()
-        if none_or_invalid(moving_object):
+        if is_invalid(moving_object):
             return
         if dx is None:
             return
@@ -9345,7 +9349,7 @@ class SetGamma(ActionCell):
         value = self.get_parameter_value(self.value)
         if value is STATUS_WAITING:
             return
-        if none_or_invalid(value):
+        if is_invalid(value):
             return
         self._set_ready()
         bpy.data.scenes[
@@ -9378,7 +9382,7 @@ class SetExposure(ActionCell):
         value = self.get_parameter_value(self.value)
         if value is STATUS_WAITING:
             return
-        if none_or_invalid(value):
+        if is_invalid(value):
             return
         self._set_ready()
         bpy.data.scenes[
@@ -9411,7 +9415,7 @@ class SetEeveeBloom(ActionCell):
         value = self.get_parameter_value(self.value)
         if value is STATUS_WAITING:
             return
-        if none_or_invalid(value):
+        if is_invalid(value):
             return
         self._set_ready()
         bpy.data.scenes[logic.getCurrentScene().name].eevee.use_bloom = value
@@ -9442,7 +9446,7 @@ class SetEeveeSSR(ActionCell):
         value = self.get_parameter_value(self.value)
         if value is STATUS_WAITING:
             return
-        if none_or_invalid(value):
+        if is_invalid(value):
             return
         self._set_ready()
         bpy.data.scenes[logic.getCurrentScene().name].eevee.use_ssr = value
@@ -9473,7 +9477,7 @@ class SetEeveeVolumetrics(ActionCell):
         value = self.get_parameter_value(self.value)
         if value is STATUS_WAITING:
             return
-        if none_or_invalid(value):
+        if is_invalid(value):
             return
         self._set_ready()
         bpy.data.scenes[
@@ -9506,7 +9510,7 @@ class SetEeveeVolumetricShadows(ActionCell):
         value = self.get_parameter_value(self.value)
         if value is STATUS_WAITING:
             return
-        if none_or_invalid(value):
+        if is_invalid(value):
             return
         self._set_ready()
         bpy.data.scenes[
@@ -9744,7 +9748,7 @@ class ActionMoveTo(ActionCell):
 
     def evaluate(self):  # the actual execution of this cell
         condition = self.get_parameter_value(self.condition)
-        if is_invalid(condition):
+        if is_not_met(condition):
             return
         moving_object = self.get_parameter_value(self.moving_object)
         destination_point = self.get_parameter_value(self.destination_point)
@@ -9806,9 +9810,9 @@ class ActionTrackTo(ActionCell):
         self._set_ready()
         if not condition:
             return
-        if none_or_invalid(moving_object):
+        if is_invalid(moving_object):
             return
-        if none_or_invalid(target_object):
+        if is_invalid(target_object):
             return
         if rot_axis is None:
             return
@@ -9857,7 +9861,7 @@ class ActionRotateTo(ActionCell):
     def evaluate(self):
         self._set_value(False)
         condition = self.get_parameter_value(self.condition)
-        if is_invalid(condition):
+        if is_not_met(condition):
             return
         moving_object = self.get_parameter_value(self.moving_object)
         target_point = self.get_parameter_value(self.target_point)
@@ -9980,11 +9984,11 @@ class ActionNavigateWithNavmesh(ActionCell):
             return
         self._set_ready()
         self._set_value(False)
-        if none_or_invalid(moving_object):
+        if is_invalid(moving_object):
             return
-        if none_or_invalid(navmesh_object):
+        if is_invalid(navmesh_object):
             return
-        if none_or_invalid(rotating_object):
+        if is_invalid(rotating_object):
             rotating_object = None
         if destination_point is None:
             return
@@ -10132,11 +10136,11 @@ class ActionFollowPath(ActionCell):
             return
         self._set_ready()
         self._set_value(False)
-        if none_or_invalid(moving_object):
+        if is_invalid(moving_object):
             return
-        if none_or_invalid(navmesh_object):
+        if is_invalid(navmesh_object):
             navmesh_object = None
-        if none_or_invalid(path_parent):
+        if is_invalid(path_parent):
             return
         if move_dynamic is None:
             return
@@ -10262,7 +10266,7 @@ class ActionReplaceMesh(ActionCell):
         mesh = self.get_parameter_value(self.new_mesh_name)
         display = self.get_parameter_value(self.use_display)
         physics = self.get_parameter_value(self.use_physics)
-        if none_or_invalid(target):
+        if is_invalid(target):
             return
         if mesh is None:
             return
@@ -10294,10 +10298,10 @@ class RemovePhysicsConstraint(ActionCell):
         if not condition:
             return
         obj = self.get_parameter_value(self.object)
-        if none_or_invalid(obj):
+        if is_invalid(obj):
             return
         name = self.get_parameter_value(self.name)
-        if none_or_invalid(name):
+        if is_invalid(name):
             return
         self._set_ready()
         try:
@@ -10335,31 +10339,31 @@ class AddPhysicsConstraint(ActionCell):
         if not condition:
             return
         target = self.get_parameter_value(self.target)
-        if none_or_invalid(target):
+        if is_invalid(target):
             return
         child = self.get_parameter_value(self.child)
-        if none_or_invalid(child):
+        if is_invalid(child):
             return
         name = self.get_parameter_value(self.name)
-        if none_or_invalid(name):
+        if is_invalid(name):
             return
         constraint = self.get_parameter_value(self.constraint)
-        if none_or_invalid(constraint):
+        if is_invalid(constraint):
             return
         pivot = self.get_parameter_value(self.pivot)
-        if none_or_invalid(pivot):
+        if is_invalid(pivot):
             return
         use_limit = self.get_parameter_value(self.use_limit)
-        if none_or_invalid(use_limit):
+        if is_invalid(use_limit):
             return
         use_world = self.get_parameter_value(self.use_world)
-        if none_or_invalid(use_world):
+        if is_invalid(use_world):
             return
         axis_limits = self.get_parameter_value(self.axis_limits)
-        if none_or_invalid(axis_limits):
+        if is_invalid(axis_limits):
             return
         linked_col = self.get_parameter_value(self.linked_col)
-        if none_or_invalid(linked_col):
+        if is_invalid(linked_col):
             return
         self._set_ready()
         flag = 0 if linked_col else 128
@@ -10416,7 +10420,7 @@ class ActionAlignAxisToVector(ActionCell):
         v = self.get_parameter_value(self.vector)
         axis = self.get_parameter_value(self.axis)
         factor = self.get_parameter_value(self.factor)
-        if none_or_invalid(game_object):
+        if is_invalid(game_object):
             return
         if not v or (v.x == 0 and v.y == 0 and v.z == 0):
             return
@@ -10455,7 +10459,7 @@ class ActionUpdateBitmapFontQuads(ActionCell):
         game_object = self.get_parameter_value(self.game_object)
         text = eval(self.get_parameter_value(self.text))
         grid_size = self.get_parameter_value(self.grid_size)
-        if none_or_invalid(game_object):
+        if is_invalid(game_object):
             return
         if text is None:
             text = ""
