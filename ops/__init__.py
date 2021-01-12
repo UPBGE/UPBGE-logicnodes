@@ -714,9 +714,9 @@ class NLGenerateLogicNetworkOperator(bpy.types.Operator):
         context = bpy.context
         if not context.space_data:
             raise Exception(
-                "TREE TO EDIT NOT FOUND - Update Manually"
+                "TREE TO EDIT NOT FOUND - Updating All"
             )
-            cls.report({"ERROR"}, "TREE TO EDIT NOT FOUND - Update Manually")
+            cls.report({"ERROR"}, "TREE TO EDIT NOT FOUND - Updating All")
 
         tree = context.space_data.edit_tree
         if not tree:
@@ -760,21 +760,23 @@ class NLGenerateLogicNetworkOperator(bpy.types.Operator):
         # write the current tree in a python module,
         # in the directory of the current blender file
         context = bpy.context
-        if (context is None) or (context.space_data is None) or (
-            context.space_data.edit_tree is None
-        ):
+        try:
+            tree = context.space_data.edit_tree
+            tree_code_generator.TreeCodeGenerator().write_code_for_tree(tree)
+        except Exception:
             print(
-                'NLGenerateLogicNetworkOperator.execute: '
-                'no context, space_data or edit_tree. Abort writing tree.'
+                '[Logic Nodes] ERROR: \n'
+                'no context, space_data or edit_tree. Updating All Trees instead.'
             )
             self.report(
                 {'ERROR'},
-                'Tree to edit not found! Press "Update Code" manually.'
+                'Tree to edit not found! Updating All Trees.'
             )
+            for tree in bpy.data.node_groups:
+                if tree.bl_idname == bge_netlogic.ui.BGELogicTree.bl_idname:
+                    tree_code_generator.TreeCodeGenerator().write_code_for_tree(tree)
             return {"FINISHED"}
 
-        tree = context.space_data.edit_tree
-        tree_code_generator.TreeCodeGenerator().write_code_for_tree(tree)
         return {"FINISHED"}
 
 

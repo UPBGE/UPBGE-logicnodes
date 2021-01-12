@@ -301,13 +301,24 @@ def is_waiting(*args):
     return False
 
 
+def none_or_invalid(*a):
+    for ref in a:
+        if ref is None or ref == '' or ref is LogicNetworkCell.STATUS_WAITING:
+            return True
+        if not ref.__dict__.get("invalid", False):
+            continue
+        elif ref.invalid:
+            return True
+    return False
+
 def is_invalid(*args):
-    if (
-        LogicNetworkCell.STATUS_WAITING in args or
-        None in args or
-        False in args
-    ):
-        return True
+    for a in args:
+        if (
+            a is LogicNetworkCell.STATUS_WAITING or
+            a is None or
+            a is False
+        ):
+            return True
     return False
 
 
@@ -502,17 +513,6 @@ def stop_all_sounds(a, b):
     debug('Closing Sound Devices:{}'.format(closed_devs[:-1]))
     delattr(bpy.types.Scene, 'nl_aud_devices')
     delattr(bpy.types.Scene, 'nl_aud_system')
-
-
-def none_or_invalid(*a):
-    for ref in a:
-        if ref is None or ref == '' or ref is LogicNetworkCell.STATUS_WAITING:
-            return True
-        if not hasattr(ref, "invalid"):
-            continue
-        elif ref.invalid:
-            return True
-    return False
 
 
 def check_game_object(query, scene=None):
@@ -3159,7 +3159,9 @@ class ObjectPropertyOperator(ConditionCell):
         property_name = self.get_parameter_value(self.property_name)
         compare_value = self.get_parameter_value(self.compare_value)
         operator = self.get_parameter_value(self.operator)
-        if is_waiting(game_object, property_name, compare_value):
+        if is_waiting(property_name, compare_value):
+            return
+        if none_or_invalid(game_object):
             return
         self._set_ready()
         value = self.val = game_object[property_name]
@@ -4591,15 +4593,11 @@ class ActionToggleGameObjectGameProperty(ActionCell):
         game_object_value = self.get_parameter_value(self.game_object)
         property_name_value = self.get_parameter_value(self.property_name)
         property_value_value = self.get_parameter_value(self.property_value)
-        if game_object_value is STATUS_WAITING:
-            return
-        if property_name_value is STATUS_WAITING:
-            return
-        if property_value_value is STATUS_WAITING:
-            return
-        self._set_ready()
         if none_or_invalid(game_object_value):
             return
+        if is_waiting(property_name_value, property_value_value)
+            return
+        self._set_ready()
         if condition_value:
             value = game_object_value[property_name_value]
             game_object_value[property_name_value] = not value
@@ -4627,11 +4625,11 @@ class ActionAddToGameObjectGameProperty(ActionCell):
         game_object = self.get_parameter_value(self.game_object)
         property_name = self.get_parameter_value(self.property_name)
         property_value = self.get_parameter_value(self.property_value)
-        if is_waiting(game_object, property_name, property_value):
+        if is_waiting(property_name, property_value):
             return
-        self._set_ready()
         if none_or_invalid(game_object):
             return
+        self._set_ready()
         value = game_object[property_name]
         game_object[property_name] = (
             value + property_value
@@ -4659,8 +4657,11 @@ class CopyPropertyFromObject(ActionCell):
             return
         from_object = self.get_parameter_value(self.from_object)
         to_object = self.get_parameter_value(self.to_object)
+        if none_or_invalid(from_object, to_object):
+            return
         property_name = self.get_parameter_value(self.property_name)
-
+        if is_waiting(property_name):
+            return
         self._set_ready()
         val = from_object.get(property_name)
         if val is not None:
@@ -4685,17 +4686,13 @@ class ActionClampedAddToGameObjectGameProperty(ActionCell):
     def evaluate(self):
         self.done = False
         condition = self.get_parameter_value(self.condition)
-        if none_or_invalid(condition) or not condition:
-            return
         game_object = self.get_parameter_value(self.game_object)
+        if none_or_invalid(condition, game_object) or not condition:
+            return
         property_name = self.get_parameter_value(self.property_name)
         property_value = self.get_parameter_value(self.property_value)
         val_range = self.get_parameter_value(self.range)
-        if none_or_invalid(game_object):
-            return
-        if none_or_invalid(property_name):
-            return
-        if none_or_invalid(property_value):
+        if is_waiting(property_name, property_value):
             return
         self._set_ready()
         value = game_object[property_name]
