@@ -315,7 +315,7 @@ class NLRemoveTreeByNameOperator(bpy.types.Operator):
 class NLMakeGroupOperator(bpy.types.Operator):
     bl_idname = "bge_netlogic.make_group"
     bl_label = "Pack Into New Tree"
-    bl_description = "Convert selected Nodes to a new tree. Will be applied to selected object. WARNING: All Nodes connected to selection must be selected too"
+    bl_description = "Convert selected Nodes to a new tree. Will be applied to selected object.\nWARNING: All Nodes connected to selection must be selected too"
     bl_options = {'REGISTER', 'UNDO'}
     owner: bpy.props.StringProperty()
 

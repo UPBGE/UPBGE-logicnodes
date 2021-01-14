@@ -4392,7 +4392,7 @@ class NLOnInitConditionNode(bpy.types.Node, NLConditionNode):
         self.outputs.new(NLConditionSocket.bl_idname, "Init")
 
     def get_netlogic_class_name(self):
-        return "bgelogic.OnInit"
+        return "bgelogic.GEOnInit"
 
     def init_cell_fields(self, cell_varname, uids, line_writer):
         NetLogicStatementGenerator.init_cell_fields(

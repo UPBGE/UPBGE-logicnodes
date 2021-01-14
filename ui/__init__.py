@@ -107,16 +107,17 @@ class BGE_PT_GamePropertyPanel(bpy.types.Panel):
         return ob and ob.name
 
     def draw_tree_prop(self, prop, index, box, show_movers):
-        row = box.row()
+        col = box.column()
         name = prop.name.split('__')[-1]
         text = 'Logic Tree'
-        row.label(text=text)
-        name_label = box.row()
-        name_label.scale_y = .7
-        name_label.label(text=name)
+        opts_row = col.row()
+        opts_row.label(text=text)
+        val_row = col.row()
+        val_row.label(text=name)
+        val_row.prop(prop, 'value', text='Start')
         if show_movers:
-            self.add_movers(index, row)
-        row.operator(
+            self.add_movers(index, opts_row)
+        opts_row.operator(
                 bge_netlogic.ops.NLRemoveTreeByNameOperator.bl_idname,
                 text="",
                 icon="X"
@@ -249,16 +250,17 @@ class BGE_PT_GamePropertyPanel3DView(bpy.types.Panel):
         return ob and ob.name
 
     def draw_tree_prop(self, prop, index, box, show_movers):
-        row = box.row()
+        col = box.column()
         name = prop.name.split('__')[-1]
         text = 'Logic Tree'
-        row.label(text=text)
-        name_label = box.row()
-        name_label.scale_y = .7
-        name_label.label(text=name)
+        opts_row = col.row()
+        opts_row.label(text=text)
+        val_row = col.row()
+        val_row.label(text=name)
+        val_row.prop(prop, 'value', text='Start')
         if show_movers:
-            self.add_movers(index, row)
-        row.operator(
+            self.add_movers(index, opts_row)
+        opts_row.operator(
                 bge_netlogic.ops.NLRemoveTreeByNameOperator.bl_idname,
                 text="",
                 icon="X"
@@ -366,16 +368,17 @@ class BGE_PT_PropertiesPanelObject(bpy.types.Panel):
         return ob and ob.name
 
     def draw_tree_prop(self, prop, index, box, show_movers):
-        row = box.row()
+        col = box.column()
         name = prop.name.split('__')[-1]
         text = 'Logic Tree'
-        row.label(text=text)
-        name_label = box.row()
-        name_label.scale_y = .7
-        name_label.label(text=name)
+        opts_row = col.row()
+        opts_row.label(text=text)
+        val_row = col.row()
+        val_row.label(text=name)
+        val_row.prop(prop, 'value', text='Start')
         if show_movers:
-            self.add_movers(index, row)
-        row.operator(
+            self.add_movers(index, opts_row)
+        opts_row.operator(
                 bge_netlogic.ops.NLRemoveTreeByNameOperator.bl_idname,
                 text="",
                 icon="X"
@@ -642,16 +645,9 @@ class BGE_PT_LogicTreeInfoPanel(bpy.types.Panel):
                 icon="X"
             ).tree_name = name
             data = col.row(align=False)
-            op_data = data.operator(
-                bge_netlogic.ops.NLSwitchInitialNetworkStatusOperator.bl_idname,
-                text="Use at Startup",
-                icon=status_icon
-            )
-            op_data.tree_name = name
-            op_data.current_status = status
             data.operator(
                 bge_netlogic.ops.NLSelectTreeByNameOperator.bl_idname,
-                text="Edit this Tree",
+                text="Edit",
                 icon="NODETREE"
             ).tree_name = name
 
