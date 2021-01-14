@@ -294,35 +294,6 @@ def debug(value):
         print('[Logic Nodes] ' + value)
 
 
-def is_waiting(*args):
-    if LogicNetworkCell.STATUS_WAITING in args:
-        debug("Something's waiting...")
-        return True
-    return False
-
-
-def is_invalid(*a):
-    for ref in a:
-        if ref is None or ref == '' or ref is LogicNetworkCell.STATUS_WAITING:
-            return True
-        if not hasattr(ref, "invalid"):
-            continue
-        elif ref.invalid:
-            return True
-    return False
-
-
-def is_not_met(*conditions):
-    for c in conditions:
-        if (
-            c is LogicNetworkCell.STATUS_WAITING or
-            c is None or
-            c is False
-        ):
-            return True
-    return False
-
-
 def xrot_to(
     rotating_object,
     target_pos,
@@ -598,6 +569,61 @@ def load_user_module(module_name):
     return sys.modules[module_name]
 
 
+class AudioSystem(object):
+    def __init__(self):
+        self.active_sounds = []
+        self.listener = logic.getCurrentScene().active_camera
+        self.old_lis_pos = self.listener.worldPosition.copy()
+        bpy.types.Scene.nl_aud_system = self
+        if not hasattr(bpy.types.Scene, 'nl_aud_devices'):
+            debug('Opening Sound Devices: default3D, default')
+            bpy.types.Scene.nl_aud_devices = self.devices = {
+                'default3D': aud.Device(),
+                'default': aud.Device()
+            }
+        else:
+            self.devices = bpy.types.Scene.nl_aud_devices
+        self.device3D = self.devices['default3D']
+        self.device = self.devices['default']
+        self.device.distance_model = aud.DISTANCE_MODEL_INVALID
+        self.device3D.distance_model = self.get_distance_model(
+            bpy.context.scene.audio_distance_model
+        )
+        self.device3D.speed_of_sound = bpy.context.scene.audio_doppler_speed
+        self.device3D.doppler_factor = bpy.context.scene.audio_doppler_factor
+
+        bpy.app.handlers.game_post.clear()
+        bpy.app.handlers.game_post.append(stop_all_sounds)
+
+    def get_distance_model(self, name):
+        return DISTANCE_MODELS.get(name, aud.DISTANCE_MODEL_INVERSE_CLAMPED)
+
+    def compute_listener_velocity(self, listener):
+        wpos = listener.worldPosition.copy()
+        olp = self.old_lis_pos
+        vel = (
+            (wpos.x - olp.x) * 50,
+            (wpos.y - olp.y) * 50,
+            (wpos.z - olp.z) * 50
+        )
+        self.old_lis_pos = wpos
+        return vel
+
+    def update(self, network):
+        c = logic.getCurrentScene().active_camera
+        self.listener = c
+        if not self.active_sounds:
+            return  # do not update if no sound has been installed
+        # update the listener data
+        devs = self.devices
+        listener_vel = self.compute_listener_velocity(c)
+        for d in devs:
+            dev = devs[d]
+            dev.listener_location = c.worldPosition
+            dev.listener_orientation = c.worldOrientation.to_quaternion()
+            dev.listener_velocity = listener_vel
+
+
 class StatefulValueProducer(object):
     def get_value(self): pass
     def has_status(self, status): pass
@@ -715,77 +741,6 @@ class LogicNetworkSubCell(StatefulValueProducer):
 
     def has_status(self, status):
         return self.owner.has_status(status)
-
-
-class ParameterCell(LogicNetworkCell):
-
-    def __init__(self):
-        LogicNetworkCell.__init__(self)
-
-
-class ActionCell(LogicNetworkCell):
-    def __init__(self):
-        LogicNetworkCell.__init__(self)
-
-
-class ConditionCell(LogicNetworkCell):
-    def __init__(self):
-        LogicNetworkCell.__init__(self)
-
-
-class AudioSystem(object):
-    def __init__(self):
-        self.active_sounds = []
-        self.listener = logic.getCurrentScene().active_camera
-        self.old_lis_pos = self.listener.worldPosition.copy()
-        bpy.types.Scene.nl_aud_system = self
-        if not hasattr(bpy.types.Scene, 'nl_aud_devices'):
-            debug('Opening Sound Devices: default3D, default')
-            bpy.types.Scene.nl_aud_devices = self.devices = {
-                'default3D': aud.Device(),
-                'default': aud.Device()
-            }
-        else:
-            self.devices = bpy.types.Scene.nl_aud_devices
-        self.device3D = self.devices['default3D']
-        self.device = self.devices['default']
-        self.device.distance_model = aud.DISTANCE_MODEL_INVALID
-        self.device3D.distance_model = self.get_distance_model(
-            bpy.context.scene.audio_distance_model
-        )
-        self.device3D.speed_of_sound = bpy.context.scene.audio_doppler_speed
-        self.device3D.doppler_factor = bpy.context.scene.audio_doppler_factor
-
-        bpy.app.handlers.game_post.clear()
-        bpy.app.handlers.game_post.append(stop_all_sounds)
-
-    def get_distance_model(self, name):
-        return DISTANCE_MODELS.get(name, aud.DISTANCE_MODEL_INVERSE_CLAMPED)
-
-    def compute_listener_velocity(self, listener):
-        wpos = listener.worldPosition.copy()
-        olp = self.old_lis_pos
-        vel = (
-            (wpos.x - olp.x) * 50,
-            (wpos.y - olp.y) * 50,
-            (wpos.z - olp.z) * 50
-        )
-        self.old_lis_pos = wpos
-        return vel
-
-    def update(self, network):
-        c = logic.getCurrentScene().active_camera
-        self.listener = c
-        if not self.active_sounds:
-            return  # do not update if no sound has been installed
-        # update the listener data
-        devs = self.devices
-        listener_vel = self.compute_listener_velocity(c)
-        for d in devs:
-            dev = devs[d]
-            dev.listener_location = c.worldPosition
-            dev.listener_orientation = c.worldOrientation.to_quaternion()
-            dev.listener_velocity = listener_vel
 
 
 class LogicNetwork(LogicNetworkCell):
@@ -1024,9 +979,1238 @@ class LogicNetwork(LogicNetworkCell):
             module._initialize(owner_object)
             subnetwork = owner_object[node_tree_name]
             self.sub_networks.append(subnetwork)
-    pass
 
-# Parameter Cells
+
+def is_waiting(*args):
+    if LogicNetworkCell.STATUS_WAITING in args:
+        debug("Something's waiting...")
+        return True
+    return False
+
+
+def is_invalid(*a):
+    for ref in a:
+        if ref is None or ref == '' or ref is LogicNetworkCell.STATUS_WAITING:
+            return True
+        if not hasattr(ref, "invalid"):
+            continue
+        elif ref.invalid:
+            return True
+    return False
+
+
+def not_met(*conditions):
+    for c in conditions:
+        if (
+            c is LogicNetworkCell.STATUS_WAITING or
+            c is None or
+            c is False
+        ):
+            return True
+    return False
+
+
+###############################################################################
+# Basic Cells
+###############################################################################
+
+
+class ParameterCell(LogicNetworkCell):
+
+    def __init__(self):
+        LogicNetworkCell.__init__(self)
+
+
+class ActionCell(LogicNetworkCell):
+    def __init__(self):
+        LogicNetworkCell.__init__(self)
+
+
+class ConditionCell(LogicNetworkCell):
+    def __init__(self):
+        LogicNetworkCell.__init__(self)
+
+
+###############################################################################
+# Events
+###############################################################################
+
+
+class GEOnInit(ConditionCell):
+    def __init__(self):
+        ConditionCell.__init__(self)
+        self._set_status(LogicNetworkCell.STATUS_READY)
+        self._value = True
+
+    def reset(self):
+        self._value = False
+
+    def evaluate(self):
+        pass
+
+
+class OnNextFrame(ConditionCell):
+
+    def __init__(self):
+        ConditionCell.__init__(self)
+        self.input_condition = None
+        self._activated = 0
+
+    def evaluate(self):
+        input_condition = self.get_parameter_value(self.input_condition)
+        self._set_ready()
+        if self._activated == 1:
+            self._set_value(True)
+            if not input_condition:
+                self._activated = 0
+        elif input_condition:
+            self._set_value(False)
+            self._activated = 1
+        elif self._activated == 0:
+            self._set_value(False)
+
+
+class ConditionOnUpdate(ConditionCell):
+    def __init__(self):
+        ConditionCell.__init__(self)
+        self._set_status(LogicNetworkCell.STATUS_READY)
+        self._value = True
+
+    def reset(self):
+        self._value = True
+
+    def evaluate(self):
+        pass
+
+
+class ConditionValueChanged(ConditionCell):
+    def __init__(self):
+        ConditionCell.__init__(self)
+        self._previous_value = None
+        self._current_value = None
+        self.current_value = None
+        self.initialize = False
+        self.PREVIOUS_VALUE = LogicNetworkSubCell(
+            self,
+            self.get_previous_value
+        )
+        self.CURRENT_VALUE = LogicNetworkSubCell(self, self.get_current_value)
+
+    def get_previous_value(self):
+        return self._previous_value
+
+    def get_current_value(self):
+        return self._current_value
+
+    def reset(self):
+        ConditionCell.reset(self)
+        self._set_value(False)
+        self._previous_value = self._current_value
+
+    def evaluate(self):
+        curr = self.get_parameter_value(self.current_value)
+        if curr is LogicNetworkCell.STATUS_WAITING:
+            return
+        self._set_ready()
+        if self.initialize:
+            self.initialize = False
+            self._previous_value = curr
+            self._set_value(False)
+        elif self._previous_value != curr:
+            self._current_value = curr
+            self._set_value(True)
+
+
+class ConditionValueTrigger(ConditionCell):
+    def __init__(self):
+        super().__init__()
+        self.monitored_value = None
+        self.trigger_value = None
+        self._last_value = LogicNetworkCell.NO_VALUE
+
+    def evaluate(self):
+        monitored_value = self.get_parameter_value(self.monitored_value)
+        trigger_value = self.get_parameter_value(self.trigger_value)
+        if monitored_value is LogicNetworkCell.STATUS_WAITING:
+            return
+        if trigger_value is LogicNetworkCell.STATUS_WAITING:
+            return
+        self._set_ready()
+        # initialize the value
+        if self._last_value is LogicNetworkCell.NO_VALUE:
+            self._last_value = monitored_value
+            self._set_value(False)
+            return
+        else:
+            value_changed = (monitored_value != self._last_value)
+            is_trigger = (monitored_value == trigger_value)
+            if value_changed:
+                self._last_value = monitored_value
+                self._set_value(is_trigger)
+            else:
+                self._set_value(False)
+
+
+class ConditionOnce(ConditionCell):
+
+    def __init__(self):
+        ConditionCell.__init__(self)
+        self.input_condition = None
+        self.repeat = None
+        self.reset_time = None
+        self._consumed = False
+        self.time = 0.0
+
+    def evaluate(self):
+        condition = self.get_parameter_value(self.input_condition)
+        repeat = self.get_parameter_value(self.repeat)
+        reset_time = self.get_parameter_value(self.reset_time)
+        if is_waiting(repeat, reset_time):
+            return
+        network = self.network
+        tl = network.timeline
+
+        self._set_ready()
+        if tl - self.time > reset_time and repeat:
+            self._consumed = False
+        self.time = tl
+        if condition and self._consumed is False:
+            self._consumed = True
+            self._set_value(True)
+            return
+        if not_met(condition) and repeat and self._consumed:
+            self._consumed = False
+        self._set_value(False)
+
+
+###############################################################################
+# Game
+###############################################################################
+
+
+class ActionLibLoad(ActionCell):
+
+    def __init__(self):
+        ActionCell.__init__(self)
+        self.condition = None
+        self.path = None
+        self._set_value(False)
+
+    def evaluate(self):
+        condition = self.get_parameter_value(self.condition)
+        path = self.get_parameter_value(self.path)
+        if condition is LogicNetworkCell.STATUS_WAITING:
+            return
+        if path is LogicNetworkCell.STATUS_WAITING:
+            return
+        self._set_ready()
+        if condition:
+            if path.startswith("//"):
+                path = logic.expandPath(path)
+            if path not in logic.LibList():
+                logic.LibLoad(path, "Scene", load_actions=True)
+            self._set_value(True)
+        else:
+            self._set_value(False)
+
+
+class ActionLoadGame(ActionCell):
+    def __init__(self):
+        ActionCell.__init__(self)
+        self.condition = None
+        self.slot = None
+        self.path = ''
+        self.done = None
+        self.OUT = LogicNetworkSubCell(self, self.get_done)
+
+    def get_done(self):
+        return self.done
+
+    def get_game_vec(self, data):
+        return mathutils.Euler((data['x'], data['y'], data['z']))
+
+    def get_custom_path(self, path):
+        if not path.endswith('/'):
+            path = path + '/'
+        if path.startswith('./'):
+            path = path.split('./', 1)[-1]
+            return bpy.path.abspath('//' + path)
+        return path
+
+    def evaluate(self):
+        self.done = False
+        condition = self.get_parameter_value(self.condition)
+        if condition is LogicNetworkCell.STATUS_WAITING:
+            return
+        if not condition:
+            return
+        self._set_ready()
+        slot = self.get_parameter_value(self.slot)
+        if slot is LogicNetworkCell.STATUS_WAITING:
+            return
+        cust_path = self.get_custom_path(self.path)
+
+        path = (
+            logic.expandPath('//Saves/') if self.path == ''
+            else cust_path
+        )
+
+        scene = logic.getCurrentScene()
+
+        try:
+            with open(path + 'save' + str(slot) + '.json') as json_file:
+                data = json.load(json_file)
+                for obj in data['objects']:
+                    if obj['name'] in scene.objects:
+                        game_obj = scene.objects[obj['name']]
+                    else:
+                        debug(
+                            'Could not load Object {}: Not in active Scene!'
+                            .format(obj['name'])
+                        )
+                        continue
+
+                    wPos = self.get_game_vec(obj['data']['worldPosition'])
+                    wOri = self.get_game_vec(obj['data']['worldOrientation'])
+                    wSca = self.get_game_vec(obj['data']['worldScale'])
+
+                    game_obj.worldPosition = wPos
+                    game_obj.worldOrientation = wOri.to_matrix()
+                    game_obj.worldScale = wSca
+
+                    if obj['type'] == 'dynamic':
+                        linVel = self.get_game_vec(
+                            obj['data']['worldLinearVelocity']
+                        )
+                        angVel = self.get_game_vec(
+                            obj['data']['worldAngularVelocity']
+                        )
+                        game_obj.worldLinearVelocity = linVel
+                        game_obj.worldAngularVelocity = angVel
+
+                    if obj['type'] == 'light':
+                        energy = obj['data']['energy']
+                        game_obj.energy = energy
+
+                    if obj['type'] == 'character':
+                        wDir = self.get_game_vec(obj['data']['walkDirection'])
+                        (
+                            bge.constraints
+                            .getCharacter(game_obj)
+                            .walkDirection
+                        ) = wDir
+
+                    for prop in obj['data']['props']:
+                        game_obj[prop['name']] = prop['value']
+        except Exception:
+            debug(
+                'Load Game Node: Could Not Find Saved Game on Slot {}!'
+                .format(slot)
+            )
+
+        self.done = True
+
+
+class ActionEndGame(ActionCell):
+    def __init__(self):
+        ActionCell.__init__(self)
+        self.condition = None
+
+    def evaluate(self):
+        self._set_ready()
+        condition = self.get_parameter_value(self.condition)
+        if condition is LogicNetworkCell.STATUS_WAITING:
+            return
+        if condition:
+            logic.endGame()
+
+
+class ActionRestartGame(ActionCell):
+
+    def __init__(self):
+        ActionCell.__init__(self)
+        self.condition = None
+        self.done = None
+        self.OUT = LogicNetworkSubCell(self, self.get_done)
+
+    def get_done(self):
+        return self.done
+
+    def evaluate(self):
+        self.done = False
+        self._set_ready()
+        condition = self.get_parameter_value(self.condition)
+        if condition:
+            logic.restartGame()
+        self.done = True
+
+
+class ActionSaveGame(ActionCell):
+    def __init__(self):
+        ActionCell.__init__(self)
+        self.condition = None
+        self.slot = None
+        self.path = ''
+        self.done = None
+        self.OUT = LogicNetworkSubCell(self, self.get_done)
+
+    def get_done(self):
+        return self.done
+
+    def get_custom_path(self, path):
+        if not path.endswith('/'):
+            path = path + '/'
+        if path.startswith('//'):
+            return bpy.path.abspath(path)
+        elif path.startswith('./'):
+            path = path.split('./', 1)[-1]
+            return bpy.path.abspath('//' + path)
+        return path
+
+    def evaluate(self):
+        self.done = False
+        condition = self.get_parameter_value(self.condition)
+        if condition is LogicNetworkCell.STATUS_WAITING:
+            return
+        if not condition:
+            return
+        slot = self.get_parameter_value(self.slot)
+        if slot is LogicNetworkCell.STATUS_WAITING:
+            return
+        self._set_ready()
+        cust_path = self.get_custom_path(self.path)
+
+        path = (
+            logic.expandPath('//Saves/') if self.path == ''
+            else cust_path
+        )
+        os.makedirs(path, exist_ok=True)
+
+        scene = logic.getCurrentScene()
+        data = {
+            'objects': []
+        }
+
+        objs = data['objects']
+
+        for obj in scene.objects:
+            if obj.name == '__default__cam__':
+                continue
+            props = obj.getPropertyNames()
+            prop_list = []
+            cha = bge.constraints.getCharacter(obj)
+            for prop in props:
+                if prop != 'NodeTree':
+                    if isinstance(obj[prop], LogicNetwork):
+                        continue
+                    if isinstance(obj[prop], mathutils.Vector):
+                        continue
+                    prop_set = {}
+                    prop_set['name'] = prop
+                    prop_set['value'] = obj[prop]
+                    prop_list.append(prop_set)
+            loc = obj.worldPosition
+            rot = obj.worldOrientation.to_euler()
+            sca = obj.worldScale
+
+            if obj.mass:
+                lin_vel = obj.worldLinearVelocity
+                ang_vel = obj.worldAngularVelocity
+
+                objs.append(
+                    {
+                        'name': obj.name,
+                        'type': 'dynamic',
+                        'data': {
+                            'worldPosition': {
+                                'x': loc.x,
+                                'y': loc.y,
+                                'z': loc.z
+                            },
+                            'worldOrientation': {
+                                'x': rot.x,
+                                'y': rot.y,
+                                'z': rot.z
+                            },
+                            'worldLinearVelocity': {
+                                'x': lin_vel.x,
+                                'y': lin_vel.y,
+                                'z': lin_vel.z
+                            },
+                            'worldAngularVelocity': {
+                                'x': ang_vel.x,
+                                'y': ang_vel.y,
+                                'z': ang_vel.z
+                            },
+                            'worldScale': {'x': sca.x, 'y': sca.y, 'z': sca.z},
+                            'props': prop_list
+                        }
+                    }
+                )
+            if cha:
+                wDir = cha.walkDirection
+
+                objs.append(
+                    {
+                        'name': obj.name,
+                        'type': 'character',
+                        'data': {
+                            'worldPosition': {
+                                'x': loc.x,
+                                'y': loc.y,
+                                'z': loc.z
+                            },
+                            'worldOrientation': {
+                                'x': rot.x,
+                                'y': rot.y,
+                                'z': rot.z
+                            },
+                            'worldScale': {'x': sca.x, 'y': sca.y, 'z': sca.z},
+                            'walkDirection': {
+                                'x': wDir.x,
+                                'y': wDir.y,
+                                'z': wDir.z
+                            },
+                            'props': prop_list
+                        }
+                    }
+                )
+            elif isinstance(obj, bge.types.KX_LightObject):
+                if not TOO_OLD:
+                    continue
+                objs.append(
+                    {
+                        'name': obj.name,
+                        'type': 'light',
+                        'data': {
+                            'worldPosition': {
+                                'x': loc.x,
+                                'y': loc.y,
+                                'z': loc.z
+                            },
+                            'worldOrientation': {
+                                'x': rot.x,
+                                'y': rot.y,
+                                'z': rot.z
+                            },
+                            'worldScale': {'x': sca.x, 'y': sca.y, 'z': sca.z},
+                            'energy': obj.energy,
+                            'props': prop_list
+                        }
+                    }
+                )
+            else:
+                objs.append(
+                    {
+                        'name': obj.name,
+                        'type': 'static',
+                        'data': {
+                            'worldPosition': {
+                                'x': loc.x,
+                                'y': loc.y,
+                                'z': loc.z
+                            },
+                            'worldOrientation': {
+                                'x': rot.x,
+                                'y': rot.y,
+                                'z': rot.z
+                            },
+                            'worldScale': {'x': sca.x, 'y': sca.y, 'z': sca.z},
+                            'props': prop_list
+                        }
+                    }
+                )
+            data['globalDict'] = logic.globalDict
+
+        with open(path + 'save' + str(slot) + ".json", "w") as file:
+            json.dump(data, file, indent=2)
+
+        self.done = True
+
+
+class ActionStartGame(ActionCell):
+    def __init__(self):
+        ActionCell.__init__(self)
+        self.condition = None
+        self.file_name = None
+        self.done = None
+        self.OUT = LogicNetworkSubCell(self, self.get_done)
+
+    def get_done(self):
+        return self.done
+
+    def evaluate(self):
+        self.done = False
+        self._set_ready()
+        condition = self.get_parameter_value(self.condition)
+        file_name = self.get_parameter_value(self.file_name)
+        if condition:
+            logic.startGame(file_name)
+        self.done = True
+
+
+class ActionLibFree(ActionCell):
+
+    def __init__(self):
+        ActionCell.__init__(self)
+        self.condition = None
+        self.path = None
+        self._set_value(False)
+
+    def evaluate(self):
+        condition = self.get_parameter_value(self.condition)
+        if condition is LogicNetworkCell.STATUS_WAITING:
+            return
+        # CONDITION IS TRUE
+        path = self.get_parameter_value(self.path)
+        if path is LogicNetworkCell.STATUS_WAITING:
+            return
+        self._set_ready()
+        if not condition:
+            self._set_value(False)
+            return
+        if path.startswith("//"):
+            path = logic.expandPath(path)
+        logic.LibFree(path)
+        self._set_value(True)
+
+
+###############################################################################
+# Input -> Mouse
+###############################################################################
+
+
+class ConditionMousePressed(ConditionCell):
+    def __init__(self):
+        ConditionCell.__init__(self)
+        self.pulse = False
+        self.mouse_button_code = None
+
+    def evaluate(self):
+        mouse_button = self.get_parameter_value(self.mouse_button_code)
+        if mouse_button is LogicNetworkCell.STATUS_WAITING:
+            return
+        self._set_ready()
+        mstat = self.network.mouse_events[mouse_button]
+        if self.pulse:
+            self._set_value(
+                mstat.active or
+                mstat.activated
+            )
+        else:
+            self._set_value(mstat.activated)
+
+
+class ConditionMousePressedOn(ConditionCell):
+    def __init__(self):
+        ConditionCell.__init__(self)
+        self.game_object = None
+        self.mouse_button = None
+
+    def evaluate(self):
+        STATUS_WAITING = LogicNetworkCell.STATUS_WAITING
+        mouse_button = self.get_parameter_value(self.mouse_button)
+        game_object = self.get_parameter_value(self.game_object)
+        if mouse_button is STATUS_WAITING:
+            return
+        if game_object is STATUS_WAITING:
+            return
+        self._set_ready()
+        if mouse_button is None:
+            return
+        if is_invalid(game_object):
+            return
+        mstat = self.network.mouse_events[mouse_button]
+        if not mstat.activated:
+            self._set_value(False)
+            return
+        mpos = logic.mouse.position
+        camera = logic.getCurrentScene().active_camera
+        vec = 10 * camera.getScreenVect(*mpos)
+        ray_target = camera.worldPosition - vec
+        distance = camera.getDistanceTo(game_object) * 2.0
+        t, p, n = self.network.ray_cast(
+            camera,
+            None,
+            ray_target,
+            None,
+            False,
+            distance
+        )
+        self._set_value(t == game_object)
+
+
+class ConditionMouseReleased(ConditionCell):
+    def __init__(self):
+        ConditionCell.__init__(self)
+        self.pulse = False
+        self.mouse_button_code = None
+        self.network = None
+
+    def setup(self, network):
+        self.network = network
+
+    def evaluate(self):
+        mouse_button = self.get_parameter_value(self.mouse_button_code)
+        if mouse_button is LogicNetworkCell.STATUS_WAITING:
+            return
+        self._set_ready()
+        mstat = self.network.mouse_events[mouse_button]
+        if self.pulse:
+            self._set_value(
+                mstat.released or
+                mstat.inactive
+            )
+        else:
+            self._set_value(mstat.released)
+
+
+class ActionSetMouseCursorVisibility(ActionCell):
+    def __init__(self):
+        ActionCell.__init__(self)
+        self.condition = None
+        self.visibility_status = None
+        self.done = None
+        self.OUT = LogicNetworkSubCell(self, self.get_done)
+
+    def get_done(self):
+        return self.done
+
+    def evaluate(self):
+        self.done = False
+        condition = self.get_parameter_value(self.condition)
+        if condition is LogicNetworkCell.STATUS_WAITING:
+            return
+        if not condition:
+            return
+        visibility_status = self.get_parameter_value(self.visibility_status)
+        if visibility_status is LogicNetworkCell.STATUS_WAITING:
+            return
+        self._set_ready()
+        logic.mouse.visible = visibility_status
+        self.done = True
+
+
+class ActionMouseLook(ActionCell):
+    x = None
+    y = None
+    screen_center = None
+    center = None
+    mouse = None
+
+    def __init__(self):
+        ActionCell.__init__(self)
+        self.condition = None
+        self.game_object_x = None
+        self.game_object_y = None
+        self.inverted = None
+        self.sensitivity = None
+        self.use_cap_z = None
+        self.cap_z = None
+        self.use_cap_z = None
+        self.cap_y = None
+        self.smooth = None
+        self._x = 0
+        self._y = 0
+        self.done = None
+        self.OUT = LogicNetworkSubCell(self, self.get_done)
+        self.use_local_head = False
+
+    def get_done(self):
+        return self.done
+
+    def interpolate(self, a, b, fac):
+        return (fac * b) + ((1-fac) * a)
+
+    def get_x_obj(self):
+        game_object_x = self.get_parameter_value(self.game_object_x)
+        if game_object_x is LogicNetworkCell.STATUS_WAITING:
+            return None
+        return game_object_x
+
+    def get_y_obj(self):
+        game_object_y = self.get_parameter_value(self.game_object_y)
+        if is_invalid(game_object_y):
+            game_object_y = self.get_x_obj()
+        elif game_object_y is not self.get_x_obj():
+            self.use_local_head = True
+        return game_object_y
+
+    def get_data(self):
+        self.x = bge.render.getWindowWidth()//2
+        self.y = bge.render.getWindowHeight()//2
+        self.screen_center = (
+            self.x/bge.render.getWindowWidth(),
+            self.y/bge.render.getWindowHeight()
+        )
+        self.center = mathutils.Vector(self.screen_center)
+        self.mouse = logic.mouse
+
+    def evaluate(self):
+        self.done = False
+        self.get_data()
+        condition = self.get_parameter_value(self.condition)
+        if condition is LogicNetworkCell.STATUS_WAITING:
+            return
+        if not condition:
+            return
+        caps = 0.0087266462599716
+        game_object_x = self.get_x_obj()
+        game_object_y = self.get_y_obj()
+        sensitivity = self.get_parameter_value(self.sensitivity) * 1000
+        use_cap_z = self.get_parameter_value(self.use_cap_z)
+        use_cap_y = self.get_parameter_value(self.use_cap_y)
+        cap_z = self.get_parameter_value(self.cap_z)
+        lowercapX = -cap_z.y * caps * 2
+        uppercapX = cap_z.x * caps * 2
+        cap_y = self.get_parameter_value(self.cap_y)
+        lowercapY = -cap_y.x * caps * 2
+        uppercapY = cap_y.y * caps * 2
+        inverted = self.get_parameter_value(self.inverted)
+        smooth = 1 - (self.get_parameter_value(self.smooth) * .99)
+        self._set_ready()
+
+        if is_invalid(game_object_x):
+            debug('MouseLook Node: Invalid Main Object!')
+            return
+
+        mouse_position = mathutils.Vector(self.mouse.position)
+        offset = (mouse_position - self.center) * -0.002
+
+        if inverted.get('y', False) is False:
+            offset.y = -offset.y
+        if inverted.get('x', False) is True:
+            offset.x = -offset.x
+        offset *= sensitivity
+
+        self._x = offset.x = self.interpolate(self._x, offset.x, smooth)
+        self._y = offset.y = self.interpolate(self._y, offset.y, smooth)
+
+        if use_cap_z:
+            objectRotation = game_object_x.localOrientation.to_euler()
+
+            if objectRotation.z + offset.x > uppercapX:
+                offset.x = 0
+                objectRotation.z = uppercapX
+                game_object_x.localOrientation = objectRotation.to_matrix()
+
+            if objectRotation.z + offset.x < lowercapX:
+                offset.x = 0
+                objectRotation.z = lowercapX
+                game_object_x.localOrientation = objectRotation.to_matrix()
+
+        game_object_x.applyRotation((0, 0, offset.x), self.use_local_head)
+
+        if use_cap_y:
+            objectRotation = game_object_y.localOrientation.to_euler()
+
+            if objectRotation.y + offset.y > uppercapY:
+                objectRotation.y = uppercapY
+                game_object_y.localOrientation = objectRotation.to_matrix()
+                offset.y = 0
+
+            if objectRotation.y + offset.y < lowercapY:
+                objectRotation.y = lowercapY
+                game_object_y.localOrientation = objectRotation.to_matrix()
+                offset.y = 0
+
+        game_object_y.applyRotation((0, (offset.y), 0), True)
+        if self.mouse.position != self.screen_center:
+            self.mouse.position = self.screen_center
+        self.done = True
+
+
+
+class ConditionMouseMoved(ConditionCell):
+    def __init__(self):
+        ConditionCell.__init__(self)
+        self.pulse = False
+
+    def evaluate(self):
+        self._set_ready()
+        mstat = self.network.mouse_events
+        if self.pulse:
+            self._set_value(
+                mstat[bge.events.MOUSEX].active or
+                mstat[bge.events.MOUSEX].activated or
+                mstat[bge.events.MOUSEY].active or
+                mstat[bge.events.MOUSEY].activated
+            )
+        else:
+            self._set_value(
+                mstat[bge.events.MOUSEX].activated or
+                mstat[bge.events.MOUSEY].activated
+            )
+
+
+class ConditionMouseTargeting(ConditionCell):
+    def __init__(self):
+        ConditionCell.__init__(self)
+        self.game_object = None
+        self._mouse_entered_status = False
+        self._mouse_exited_status = False
+        self._mouse_over_status = False
+        self._point = None
+        self._normal = None
+        self.MOUSE_ENTERED = LogicNetworkSubCell(self, self._get_mouse_entered)
+        self.MOUSE_EXITED = LogicNetworkSubCell(self, self._get_mouse_exited)
+        self.MOUSE_OVER = LogicNetworkSubCell(self, self._get_mouse_over)
+        self.POINT = LogicNetworkSubCell(self, self._get_point)
+        self.NORMAL = LogicNetworkSubCell(self, self._get_normal)
+        self._last_target = None
+
+    def _get_mouse_entered(self):
+        return self._mouse_entered_status
+
+    def _get_mouse_exited(self):
+        return self._mouse_exited_status
+
+    def _get_mouse_over(self):
+        return self._mouse_over_status
+
+    def _get_point(self):
+        return self._point
+
+    def _get_normal(self):
+        return self._normal
+
+    def evaluate(self):
+        game_object = self.get_parameter_value(self.game_object)
+        if game_object is LogicNetworkCell.STATUS_WAITING:
+            return
+        self._set_ready()
+        if is_invalid(game_object):
+            self._mouse_entered_status = False
+            self._mouse_exited_status = False
+            self._mouse_over_status = False
+            self._point = None
+            self._normal = None
+            return
+        scene = game_object.scene
+        camera = scene.active_camera
+        distance = 2.0 * camera.getDistanceTo(game_object)
+        mouse = logic.mouse
+        mouse_position = mouse.position
+        vec = 10.0 * camera.getScreenVect(*mouse_position)
+        ray_target = camera.worldPosition - vec
+        # target, point, normal = camera.rayCast(ray_target, None, distance)
+        target, point, normal = self.network.ray_cast(
+            camera,
+            None,
+            ray_target,
+            None,
+            False,
+            distance
+        )
+        if not (target is self._last_target):  # mouse over a new object
+            # was target, now it isn't -> exited
+            if self._last_target is game_object:
+                self._mouse_exited_status = True
+                self._mouse_over_status = False
+                self._mouse_entered_status = False
+                self._point = None
+                self._normal = None
+            # wasn't target, now it is -> entered
+            elif (target is game_object):
+                self._mouse_entered_status = True
+                self._mouse_over_status = False
+                self._mouse_exited_status = False
+                self._point = point
+                self._normal = normal
+            self._last_target = target
+        else:  # the target has not changed
+            # was target, still target -> over
+            if self._last_target is game_object:
+                self._mouse_entered_status = False
+                self._mouse_exited_status = False
+                self._mouse_over_status = True
+                self._point = point
+                self._normal = normal
+            else:  # wans't target, still isn't target -> clear
+                self._mouse_entered_status = False
+                self._mouse_exited_status = False
+                self._mouse_over_status = False
+                self._point = None
+                self._normal = None
+
+
+class ActionSetMousePosition(ActionCell):
+    def __init__(self):
+        ActionCell.__init__(self)
+        self.condition = None
+        self.screen_x = None
+        self.screen_y = None
+        self.network = None
+        self.done = None
+        self.OUT = LogicNetworkSubCell(self, self.get_done)
+
+    def get_done(self):
+        return self.done
+
+    def setup(self, network):
+        self.network = network
+
+    def evaluate(self):
+        self.done = False
+        condition = self.get_parameter_value(self.condition)
+        if condition is LogicNetworkCell.STATUS_WAITING:
+            return
+        if not condition:
+            return
+        screen_x = self.get_parameter_value(self.screen_x)
+        screen_y = self.get_parameter_value(self.screen_y)
+        if screen_x is LogicNetworkCell.STATUS_WAITING:
+            return
+        if screen_y is LogicNetworkCell.STATUS_WAITING:
+            return
+        self._set_ready()
+        self.network.set_mouse_position(screen_x, screen_y)
+        self.done = True
+
+
+class ParameterMouseData(ParameterCell):
+    def __init__(self):
+        ParameterCell.__init__(self)
+        self.MX = LogicNetworkSubCell(self, self.getmx)
+        self.MY = LogicNetworkSubCell(self, self.getmy)
+        self.MDX = LogicNetworkSubCell(self, self.getmdx)
+        self.MDY = LogicNetworkSubCell(self, self.getmdy)
+        self.MDWHEEL = LogicNetworkSubCell(self, self.getmdwheel)
+        self.MXY0 = LogicNetworkSubCell(self, self.getmxyz)
+        self.MDXY0 = LogicNetworkSubCell(self, self.getmdxyz)
+
+    def getmx(self):
+        return self.network._last_mouse_position[0]
+
+    def getmy(self):
+        return self.network._last_mouse_position[1]
+
+    def getmdx(self):
+        return self.network.mouse_motion_delta[0]
+
+    def getmdy(self):
+        return self.network.mouse_motion_delta[1]
+
+    def getmdwheel(self):
+        return self.network.mouse_wheel_delta
+
+    def getmxyz(self):
+        mp = self.network._last_mouse_position
+        return mathutils.Vector((mp[0], mp[1], 0))
+
+    def getmdxyz(self):
+        mp = self.network.mouse_motion_delta
+        return mathutils.Vector((mp[0], mp[1], 0))
+
+    def evaluate(self):
+        self._set_ready()
+
+    def has_status(self, status):
+        return status is LogicNetworkCell.STATUS_READY
+
+
+class ConditionMouseScrolled(ConditionCell):
+    def __init__(self):
+        ConditionCell.__init__(self)
+        self.wheel_direction = None
+
+    def evaluate(self):
+        wd = self.get_parameter_value(self.wheel_direction)
+        if wd is LogicNetworkCell.STATUS_WAITING:
+            return
+        self._set_ready()
+        if wd is None:
+            return
+        elif wd == 1:  # UP
+            self._set_value(self.network.mouse_wheel_delta == 1)
+        elif wd == 2:  # DOWN
+            self._set_value(self.network.mouse_wheel_delta == -1)
+        elif wd == 3:  # UP OR DOWN
+            self._set_value(self.network.mouse_wheel_delta != 0)
+
+###############################################################################
+# Input -> Gamepad
+###############################################################################
+
+
+class ConditionGamepadButtons(ConditionCell):
+    def __init__(self, pulse=False, button=0):
+        ConditionCell.__init__(self)
+        self.pulse = pulse
+        self.button = button
+        self.index = None
+        self._button_value = None
+        self.BUTTON = LogicNetworkSubCell(self, self.get_x_axis)
+        self.initialized = False
+
+    def get_x_axis(self):
+        return self._button_value
+
+    def evaluate(self):
+        self._set_ready()
+        index = self.get_parameter_value(self.index)
+        if logic.joysticks[index]:
+            joystick = logic.joysticks[index]
+        else:
+            debug('Gamepad Button Node: No Joystick at that Index!')
+            self._x_axis_values = 0
+            self._y_axis_values = 0
+            return
+        if is_invalid(joystick):
+            return
+
+        if self.button in joystick.activeButtons:
+            if not self.initialized:
+                self._button_value = True
+            else:
+                self._button_value = False
+            if not self.pulse:
+                self.initialized = True
+
+        else:
+            self._button_value = False
+            self.initialized = False
+
+
+class ConditionGamepadSticks(ConditionCell):
+    def __init__(self, axis=0):
+        ConditionCell.__init__(self)
+        self.axis = axis
+        self.inverted = None
+        self.index = None
+        self.sensitivity = None
+        self.threshold = None
+        self._x_axis_values = None
+        self._y_axis_values = None
+        self.X = LogicNetworkSubCell(self, self.get_x_axis)
+        self.Y = LogicNetworkSubCell(self, self.get_y_axis)
+
+    def get_x_axis(self):
+        return self._x_axis_values
+
+    def get_y_axis(self):
+        return self._y_axis_values
+
+    def evaluate(self):
+        self._set_ready()
+        axis = self.get_parameter_value(self.axis)
+        if is_invalid(axis):
+            debug('Gamepad Sticks Node: Invalid Controller Stick!')
+            return
+        inverted = self.get_parameter_value(self.inverted)
+        index = self.get_parameter_value(self.index)
+        sensitivity = self.get_parameter_value(self.sensitivity)
+        threshold = self.get_parameter_value(self.threshold)
+        if logic.joysticks[index]:
+            joystick = logic.joysticks[index]
+        else:
+            debug('Gamepad Sticks Node: No Joystick at that Index!')
+            self._x_axis_values = 0
+            self._y_axis_values = 0
+            return
+        if is_invalid(joystick):
+            return
+        raw_values = joystick.axisValues
+        values = []
+        if axis == 2:
+            raw_values = [raw_values[0], raw_values[1]]
+        elif axis == 1:
+            raw_values = [raw_values[2], raw_values[3]]
+        for x in raw_values:
+            if -threshold < x < threshold:
+                x = 0
+            x *= sensitivity
+            values.append((-x if inverted else x))
+
+        x_axis = values[0]
+        y_axis = values[1]
+        self._x_axis_values = x_axis
+        self._y_axis_values = y_axis
+
+
+class ConditionGamepadTrigger(ConditionCell):
+    def __init__(self, axis=0):
+        ConditionCell.__init__(self)
+        self.axis = axis
+        self.index = None
+        self.sensitivity = None
+        self.threshold = None
+        self._value = None
+        self.VAL = LogicNetworkSubCell(self, self.get_value)
+
+    def get_x_axis(self):
+        return self._value
+
+    def evaluate(self):
+        self._set_ready()
+        axis = self.get_parameter_value(self.axis)
+        if is_invalid(axis):
+            debug('Gamepad Trigger Node: Invalid Controller Trigger!')
+            return
+        index = self.get_parameter_value(self.index)
+        sensitivity = self.get_parameter_value(self.sensitivity)
+        threshold = self.get_parameter_value(self.threshold)
+        if logic.joysticks[index]:
+            joystick = logic.joysticks[index]
+        else:
+            debug('Gamepad Trigger Node: No Joystick at that Index!')
+            self._x_axis_values = 0
+            self._y_axis_values = 0
+            return
+        if is_invalid(joystick):
+            return
+        value = joystick.axisValues[4] if axis == 0 else joystick.axisValues[5]
+
+        if -threshold < value < threshold:
+            value = 0
+        self._value = value * sensitivity
+
+
+###############################################################################
+# Input -> Keyboard
+###############################################################################
+
+
+class ParameterKeyboardKeyCode(ParameterCell):
+    def __init__(self):
+        ParameterCell.__init__(self)
+        self.key_code = None
+
+    def evaluate(self):
+        self._set_ready()
+        key_code = self.get_parameter_value(self.key_code)
+        self._set_value(key_code)
+
+
+class ConditionKeyPressed(ConditionCell):
+    def __init__(self, pulse=False, key_code=None):
+        ConditionCell.__init__(self)
+        self.pulse = pulse
+        self.key_code = key_code
+        self.network = None
+
+    def setup(self, network):
+        self.network = network
+
+    def evaluate(self):
+        keycode = self.get_parameter_value(self.key_code)
+        if keycode is LogicNetworkCell.STATUS_WAITING:
+            return
+        self._set_ready()
+        keystat = self.network.keyboard_events[keycode]
+        if self.pulse:
+            self._set_value(
+                (
+                    keystat.active or keystat.activated
+                )
+            )
+        else:
+            self._set_value(keystat.activated)
+
+
+###############################################################################
+# Unordered
+###############################################################################
 
 
 class ParamOwnerObject(ParameterCell):
@@ -1072,15 +2256,9 @@ class ParameterBoneStatus(ParameterCell):
     def evaluate(self):
         armature = self.get_parameter_value(self.armature)
         bone_name = self.get_parameter_value(self.bone_name)
-        if armature is LogicNetworkCell.STATUS_WAITING:
-            return
-        if bone_name is LogicNetworkCell.STATUS_WAITING:
+        if is_invalid(armature, bone_name):
             return
         self._set_ready()
-        if is_invalid(armature):
-            return
-        if not bone_name:
-            return
         channel = None
         if (
             (armature is self._prev_armature) and
@@ -1121,10 +2299,10 @@ class ParameterParentGameObject(ParameterCell):
 
     def evaluate(self):
         self._set_ready()
-        go = self.get_parameter_value(self.game_object)
-        if is_invalid(go):
-            return self._set_value(None)
-        self._set_value(go.parent)
+        game_object = self.get_parameter_value(self.game_object)
+        if is_invalid(game_object):
+            return
+        self._set_value(game_object.parent)
 
 
 class ParameterAxisVector(ParameterCell):
@@ -1133,9 +2311,11 @@ class ParameterAxisVector(ParameterCell):
         self.game_object = None
 
     def evaluate(self):
-        self._set_ready()
         obj = self.get_parameter_value(self.game_object)
         front_vector = LO_AXIS_TO_VECTOR[self.axis]
+        if is_invalid(obj, front_vector):
+            return
+        self._set_ready()
         self._set_value(obj.getAxisVect(front_vector))
 
 
@@ -1163,6 +2343,8 @@ class ParameterSwitchValue(ParameterCell):
 
     def evaluate(self):
         state = self.get_parameter_value(self.state)
+        if is_waiting(state):
+            return
         self._set_ready()
         if state:
             self.outcome = True
@@ -1178,17 +2360,9 @@ class ParameterObjectProperty(ParameterCell):
     def evaluate(self):
         game_object = self.get_parameter_value(self.game_object)
         property_name = self.get_parameter_value(self.property_name)
-        property_default = 0
-        if game_object is LogicNetworkCell.STATUS_WAITING:
-            return
-        if property_name is LogicNetworkCell.STATUS_WAITING:
-            return
-        if property_default is LogicNetworkCell.STATUS_WAITING:
+        if is_invalid(game_object, property_name):
             return
         self._set_ready()
-        if is_invalid(game_object) or (not property_name):
-            self._set_value(property_default)
-            return
         if property_name not in game_object:
             game_object[property_name] = None
         else:
@@ -1208,17 +2382,12 @@ class ParameterGetMaterialNodeValue(ParameterCell):
         return self.val
 
     def evaluate(self):
-        STATUS_WAITING = LogicNetworkCell.STATUS_WAITING
         mat_name = self.get_parameter_value(self.mat_name)
         node_name = self.get_parameter_value(self.node_name)
+        if is_invalid(mat_name, node_name):
+            return
         input_slot = self.get_parameter_value(self.input_slot)
-        if mat_name is STATUS_WAITING:
-            return
-        if node_name is STATUS_WAITING:
-            return
-        if input_slot is STATUS_WAITING:
-            return
-        if is_invalid(mat_name):
+        if is_waiting(mat_name):
             return
         self._set_ready()
         self.val = (
@@ -1242,14 +2411,9 @@ class ParameterGetMaterialNode(ParameterCell):
         return self.val
 
     def evaluate(self):
-        STATUS_WAITING = LogicNetworkCell.STATUS_WAITING
         mat_name = self.get_parameter_value(self.mat_name)
         node_name = self.get_parameter_value(self.node_name)
-        if mat_name is STATUS_WAITING:
-            return
-        if node_name is STATUS_WAITING:
-            return
-        if is_invalid(mat_name):
+        if is_invalid(mat_name, node_name):
             return
         self._set_ready()
         self.val = (
@@ -1271,14 +2435,11 @@ class ParameterGetMaterialNodeIndex(ParameterCell):
         return self.val
 
     def evaluate(self):
-        STATUS_WAITING = LogicNetworkCell.STATUS_WAITING
         node = self.get_parameter_value(self.node)
-        if node is STATUS_WAITING:
+        if is_invalid(node):
             return
         input_slot = self.get_parameter_value(self.input_slot)
-        if input_slot is STATUS_WAITING:
-            return
-        if is_invalid(node):
+        if is_waiting(input_slot):
             return
         self._set_ready()
         self.val = node.inputs[input_slot]
@@ -1295,11 +2456,8 @@ class ParameterGetMaterialInputValue(ParameterCell):
         return self.val
 
     def evaluate(self):
-        STATUS_WAITING = LogicNetworkCell.STATUS_WAITING
         input_val = self.get_parameter_value(self.input)
-        if input_val is STATUS_WAITING:
-            return
-        if is_invalid(input_val):
+        if is_waiting(input_val):
             return
         self._set_ready()
         self.val = input_val.default_value
@@ -1314,26 +2472,14 @@ class ParameterObjectHasProperty(ParameterCell):
     def evaluate(self):
         game_object = self.get_parameter_value(self.game_object)
         property_name = self.get_parameter_value(self.property_name)
-        property_default = 0
-        if game_object is LogicNetworkCell.STATUS_WAITING:
-            return
-        if property_name is LogicNetworkCell.STATUS_WAITING:
-            return
-        if property_default is LogicNetworkCell.STATUS_WAITING:
+        if is_invalid(game_object, property_name):
+            debug('Has Property Node: Object or Property Name invalid!')
             return
         self._set_ready()
-        if (
-            is_invalid(game_object) or
-            not property_name or
-            not game_object
-        ):
-            debug('Has Property Node: Object or Property Name invalid!')
-            self._set_value(property_default)
-        else:
-            self._set_value(
-                True if property_name in game_object.getPropertyNames()
-                else False
-            )
+        self._set_value(
+            True if property_name in game_object.getPropertyNames()
+            else False
+        )
 
 
 class ParameterDictionaryValue(ParameterCell):
@@ -1345,20 +2491,13 @@ class ParameterDictionaryValue(ParameterCell):
     def evaluate(self):
         dictionary = self.get_parameter_value(self.dict)
         key = self.get_parameter_value(self.key)
-        if dictionary is LogicNetworkCell.STATUS_WAITING:
-            return
-        if key is LogicNetworkCell.STATUS_WAITING:
+        if is_invalid(dictionary, key):
             return
         self._set_ready()
-        if is_invalid(dictionary) or (not key):
-            return
-            self._set_value(None)
+        if key in dictionary:
+            self._set_value(dictionary[key])
         else:
-            if key in dictionary:
-                self._set_value(dictionary[key])
-            else:
-                debug("Dict Get Value Node: Key '{}' Not In Dict!".format(key))
-                return
+            debug("Dict Get Value Node: Key '{}' Not In Dict!".format(key))
 
 
 class ParameterListIndex(ParameterCell):
@@ -1370,19 +2509,15 @@ class ParameterListIndex(ParameterCell):
     def evaluate(self):
         list_d = self.get_parameter_value(self.list)
         index = self.get_parameter_value(self.index)
-        if list_d is LogicNetworkCell.STATUS_WAITING:
+        if is_invalid(list_d):
             return
-        if index is LogicNetworkCell.STATUS_WAITING:
+        if is_waiting(index):
             return
         self._set_ready()
-        if is_invalid(list_d):
-            debug('List Index Node: Invalid List!')
-            self._set_value(None)
+        if index in list_d:
+            self._set_value(list_d[index])
         else:
-            if index in list_d:
-                self._set_value(list_d[index])
-            else:
-                debug('List Index Node: Index Out Of Range!')
+            debug('List Index Node: Index Out Of Range!')
 
 
 class ParameterRandomListIndex(ParameterCell):
@@ -1393,10 +2528,10 @@ class ParameterRandomListIndex(ParameterCell):
 
     def evaluate(self):
         condition = self.get_parameter_value(self.condition)
-        if is_not_met(condition):
+        if not_met(condition):
             return
         list_d = self.get_parameter_value(self.list)
-        if list_d is LogicNetworkCell.STATUS_WAITING:
+        if is_invalid(list_d):
             return
         self._set_ready()
         self._set_value(random.choice(list_d))
@@ -1419,9 +2554,7 @@ class GetActuator(ParameterCell):
 
     def evaluate(self):
         game_obj = self.get_parameter_value(self.obj_name)
-        if is_invalid(game_obj):
-            return
-        if is_invalid(self.act_name):
+        if is_invalid(game_obj, self.act_name):
             return
         self._set_ready()
         self._set_value(game_obj.actuators[self.act_name])
@@ -1431,20 +2564,18 @@ class GetActuatorByName(ParameterCell):
 
     def __init__(self):
         ParameterCell.__init__(self)
-        # self.obj_name = None
         self.act_name = None
 
     def evaluate(self):
-        # game_obj = self.get_parameter_value(self.obj_name)
         act_name = self.get_parameter_value(self.act_name)
-        # if is_invalid(game_obj):
-        #     return
         cont = logic.getCurrentController()
         if is_invalid(act_name):
             return
         if act_name not in cont.actuators:
-            debug('Get Actuator By Name Node: \
-                Actuator not conneted or does not exist!')
+            debug(
+                'Get Actuator By Name Node: '
+                'Actuator not conneted or does not exist!'
+            )
             return
         self._set_ready()
         self._set_value(logic.getCurrentController().actuators[act_name])
@@ -1460,6 +2591,8 @@ class GetActuatorValue(ParameterCell):
     def evaluate(self):
         actuator = self.get_parameter_value(self.actuator)
         field = self.get_parameter_value(self.field)
+        if is_invalid(actuator, field):
+            return
         self._set_ready()
         self._set_value(getattr(actuator, field))
 
@@ -1478,20 +2611,15 @@ class ActivateActuator(ParameterCell):
 
     def evaluate(self):
         self.done = False
-        STATUS_WAITING = LogicNetworkCell.STATUS_WAITING
-        condition = self.get_parameter_value(self.condition)
         actuator = self.get_parameter_value(self.actuator)
-        controller = logic.getCurrentController()
         self._set_ready()
-        if actuator is STATUS_WAITING or is_invalid(actuator):
+        if is_invalid(actuator):
             debug("There is a problem with the actuator \
                 in Execute Actuator Node!")
             return
-        if (
-            is_not_met(condition) or
-            condition is STATUS_WAITING or
-            not condition
-        ):
+        condition = self.get_parameter_value(self.condition)
+        controller = logic.getCurrentController()
+        if not_met(condition):
             controller.deactivate(actuator)
             return
         controller.activate(actuator)
@@ -1512,20 +2640,13 @@ class DeactivateActuator(ParameterCell):
 
     def evaluate(self):
         self.done = False
-        STATUS_WAITING = LogicNetworkCell.STATUS_WAITING
-        condition = self.get_parameter_value(self.condition)
         actuator = self.get_parameter_value(self.actuator)
+        if is_invalid(actuator):
+            return
+        condition = self.get_parameter_value(self.condition)
         controller = logic.getCurrentController()
         self._set_ready()
-        if actuator is STATUS_WAITING or is_invalid(actuator):
-            debug("There is a problem with the actuator in \
-                Execute Actuator Node!")
-            return
-        if (
-            is_not_met(condition) or
-            condition is STATUS_WAITING or
-            not condition
-        ):
+        if not_met(condition):
             controller.deactivate(actuator)
             return
         controller.deactivate(actuator)
@@ -1546,16 +2667,13 @@ class ActivateActuatorByName(ParameterCell):
 
     def evaluate(self):
         self.done = False
-        STATUS_WAITING = LogicNetworkCell.STATUS_WAITING
+        actuator = self.get_parameter_value(self.actuator)
+        if is_invalid(actuator):
+            return
         condition = self.get_parameter_value(self.condition)
         controller = logic.getCurrentController()
-        actuator = self.get_parameter_value(self.actuator)
         self._set_ready()
-        if actuator is STATUS_WAITING or is_invalid(actuator):
-            debug("There is a problem with the actuator in \
-                Execute Actuator Node!")
-            return
-        if condition is STATUS_WAITING or not condition:
+        if not_met(condition):
             controller.deactivate(actuator)
             return
         controller.activate(actuator)
@@ -1576,17 +2694,13 @@ class DeactivateActuatorByName(ParameterCell):
 
     def evaluate(self):
         self.done = False
-        STATUS_WAITING = LogicNetworkCell.STATUS_WAITING
+        actuator = self.get_parameter_value(self.actuator)
+        if is_invalid(actuator):
+            return
         condition = self.get_parameter_value(self.condition)
         controller = logic.getCurrentController()
-        actuator = self.get_parameter_value(self.actuator)
         self._set_ready()
-        if actuator is STATUS_WAITING or is_invalid(actuator):
-            debug("There is a problem with the actuator in \
-                Execute Actuator Node!")
-            return
-        if condition is STATUS_WAITING or not condition:
-            controller.deactivate(actuator)
+        if not_met(condition):
             return
         controller.deactivate(actuator)
         self.done = True
@@ -1608,18 +2722,17 @@ class SetActuatorValue(ParameterCell):
 
     def evaluate(self):
         self.done = False
-        STATUS_WAITING = LogicNetworkCell.STATUS_WAITING
-        condition = self.get_parameter_value(self.condition)
         actuator = self.get_parameter_value(self.actuator)
+        if is_invalid(actuator):
+            return
+        condition = self.get_parameter_value(self.condition)
+        if not_met(condition):
+            return
         self._set_ready()
-        if actuator is STATUS_WAITING or is_invalid(actuator):
-            debug("Set Actuator Value Node: There is a problem with \
-               the actuator!")
-            return
-        if condition is STATUS_WAITING or not condition:
-            return
         field = self.get_parameter_value(self.field)
         value = self.get_parameter_value(self.value)
+        if is_waiting(field, value):
+            return
         setattr(actuator, field, value)
         self.done = True
 
@@ -1980,7 +3093,10 @@ class ParameterTime(ParameterCell):
         return self.network.time_per_frame
 
     def get_fps(self):
-        fps = (1 / self.network.time_per_frame)
+        tpf = self.network.time_per_frame
+        if not tpf:
+            return 1
+        fps = (1 / tpf)
         return fps
 
     def get_timeline(self):
@@ -2369,47 +3485,6 @@ class ParameterActionStatus(ParameterCell):
             self._set_value(game_object.isPlayingAction(action_layer))
             self._action_name = game_object.getActionName(action_layer)
             self._action_frame = game_object.getActionFrame(action_layer)
-
-
-class ParameterMouseData(ParameterCell):
-    def __init__(self):
-        ParameterCell.__init__(self)
-        self.MX = LogicNetworkSubCell(self, self.getmx)
-        self.MY = LogicNetworkSubCell(self, self.getmy)
-        self.MDX = LogicNetworkSubCell(self, self.getmdx)
-        self.MDY = LogicNetworkSubCell(self, self.getmdy)
-        self.MDWHEEL = LogicNetworkSubCell(self, self.getmdwheel)
-        self.MXY0 = LogicNetworkSubCell(self, self.getmxyz)
-        self.MDXY0 = LogicNetworkSubCell(self, self.getmdxyz)
-
-    def getmx(self):
-        return self.network._last_mouse_position[0]
-
-    def getmy(self):
-        return self.network._last_mouse_position[1]
-
-    def getmdx(self):
-        return self.network.mouse_motion_delta[0]
-
-    def getmdy(self):
-        return self.network.mouse_motion_delta[1]
-
-    def getmdwheel(self):
-        return self.network.mouse_wheel_delta
-
-    def getmxyz(self):
-        mp = self.network._last_mouse_position
-        return mathutils.Vector((mp[0], mp[1], 0))
-
-    def getmdxyz(self):
-        mp = self.network.mouse_motion_delta
-        return mathutils.Vector((mp[0], mp[1], 0))
-
-    def evaluate(self):
-        self._set_ready()
-
-    def has_status(self, status):
-        return status is LogicNetworkCell.STATUS_READY
 
 
 class ParameterOrientation(ParameterCell):
@@ -3084,64 +4159,6 @@ class ConditionAlways(ConditionCell):
         pass
 
 
-class ConditionOnInit(ConditionCell):
-    def __init__(self):
-        ConditionCell.__init__(self)
-        self._set_status(LogicNetworkCell.STATUS_READY)
-        self._value = True
-
-    def reset(self):
-        self._value = False
-
-    def evaluate(self):
-        pass
-
-
-class ConditionOnUpdate(ConditionCell):
-    def __init__(self):
-        ConditionCell.__init__(self)
-        self._set_status(LogicNetworkCell.STATUS_READY)
-        self._value = True
-
-    def reset(self):
-        self._value = True
-
-    def evaluate(self):
-        pass
-
-
-class ConditionOnce(ConditionCell):
-
-    def __init__(self):
-        ConditionCell.__init__(self)
-        self.input_condition = None
-        self.repeat = None
-        self.reset_time = None
-        self._consumed = False
-        self.time = 0.0
-
-    def evaluate(self):
-        condition = self.get_parameter_value(self.input_condition)
-        repeat = self.get_parameter_value(self.repeat)
-        reset_time = self.get_parameter_value(self.reset_time)
-        if is_waiting(repeat, reset_time):
-            return
-        network = self.network
-        tl = network.timeline
-
-        self._set_ready()
-        if tl - self.time > reset_time and repeat:
-            self._consumed = False
-        self.time = tl
-        if condition and self._consumed is False:
-            self._consumed = True
-            self._set_value(True)
-            return
-        if is_not_met(condition) and repeat and self._consumed:
-            self._consumed = False
-        self._set_value(False)
-
-
 class ObjectPropertyOperator(ConditionCell):
     def __init__(self, operator='EQUAL'):
         ActionCell.__init__(self)
@@ -3172,27 +4189,6 @@ class ObjectPropertyOperator(ConditionCell):
         if operator is None:
             return
         self._set_value(LOGIC_OPERATORS[operator](value, compare_value))
-
-
-class OnNextFrame(ConditionCell):
-
-    def __init__(self):
-        ConditionCell.__init__(self)
-        self.input_condition = None
-        self._activated = 0
-
-    def evaluate(self):
-        input_condition = self.get_parameter_value(self.input_condition)
-        self._set_ready()
-        if self._activated == 1:
-            self._set_value(True)
-            if not input_condition:
-                self._activated = 0
-        elif input_condition:
-            self._set_value(False)
-            self._activated = 1
-        elif self._activated == 0:
-            self._set_value(False)
 
 
 class ConditionNot(ConditionCell):
@@ -3241,94 +4237,6 @@ class ConditionLNStatus(ConditionCell):
             return
         self._running = tree.is_running()
         self._stopped = tree.is_stopped()
-
-
-class ConditionMouseScrolled(ConditionCell):
-    def __init__(self):
-        ConditionCell.__init__(self)
-        self.wheel_direction = None
-
-    def evaluate(self):
-        wd = self.get_parameter_value(self.wheel_direction)
-        if wd is LogicNetworkCell.STATUS_WAITING:
-            return
-        self._set_ready()
-        if wd is None:
-            return
-        elif wd == 1:  # UP
-            self._set_value(self.network.mouse_wheel_delta == 1)
-        elif wd == 2:  # DOWN
-            self._set_value(self.network.mouse_wheel_delta == -1)
-        elif wd == 3:  # UP OR DOWN
-            self._set_value(self.network.mouse_wheel_delta != 0)
-
-
-class ConditionValueChanged(ConditionCell):
-    def __init__(self):
-        ConditionCell.__init__(self)
-        self._previous_value = None
-        self._current_value = None
-        self.current_value = None
-        self.initialize = False
-        self.PREVIOUS_VALUE = LogicNetworkSubCell(
-            self,
-            self.get_previous_value
-        )
-        self.CURRENT_VALUE = LogicNetworkSubCell(self, self.get_current_value)
-
-    def get_previous_value(self):
-        return self._previous_value
-
-    def get_current_value(self):
-        return self._current_value
-
-    def reset(self):
-        ConditionCell.reset(self)
-        self._set_value(False)
-        self._previous_value = self._current_value
-
-    def evaluate(self):
-        curr = self.get_parameter_value(self.current_value)
-        if curr is LogicNetworkCell.STATUS_WAITING:
-            return
-        self._set_ready()
-        if self.initialize:
-            self.initialize = False
-            self._previous_value = curr
-            self._set_value(False)
-        elif self._previous_value != curr:
-            self._current_value = curr
-            self._set_value(True)
-
-
-class ConditionValueTrigger(ConditionCell):
-    def __init__(self):
-        super().__init__()
-        self.monitored_value = None
-        self.trigger_value = None
-        self._last_value = LogicNetworkCell.NO_VALUE
-
-    def evaluate(self):
-        monitored_value = self.get_parameter_value(self.monitored_value)
-        trigger_value = self.get_parameter_value(self.trigger_value)
-        if monitored_value is LogicNetworkCell.STATUS_WAITING:
-            return
-        if trigger_value is LogicNetworkCell.STATUS_WAITING:
-            return
-        self._set_ready()
-        # initialize the value
-        if self._last_value is LogicNetworkCell.NO_VALUE:
-            self._last_value = monitored_value
-            self._set_value(False)
-            return
-        else:
-            value_changed = (monitored_value != self._last_value)
-            is_trigger = (monitored_value == trigger_value)
-            if value_changed:
-                self._last_value = monitored_value
-                self._set_value(is_trigger)
-            else:
-                self._set_value(False)
 
 
 class ConditionLogicOp(ConditionCell):
@@ -3642,165 +4550,6 @@ class ConditionAndList(ConditionCell):
         self._set_value(ca and cb and cc and cd and ce and cf)
 
 
-class ConditionKeyPressed(ConditionCell):
-    def __init__(self, pulse=False, key_code=None):
-        ConditionCell.__init__(self)
-        self.pulse = pulse
-        self.key_code = key_code
-        self.network = None
-
-    def setup(self, network):
-        self.network = network
-
-    def evaluate(self):
-        keycode = self.get_parameter_value(self.key_code)
-        if keycode is LogicNetworkCell.STATUS_WAITING:
-            return
-        self._set_ready()
-        keystat = self.network.keyboard_events[keycode]
-        if self.pulse:
-            self._set_value(
-                (
-                    keystat.active or keystat.activated
-                )
-            )
-        else:
-            self._set_value(keystat.activated)
-
-
-class ConditionGamepadSticks(ConditionCell):
-    def __init__(self, axis=0):
-        ConditionCell.__init__(self)
-        self.axis = axis
-        self.inverted = None
-        self.index = None
-        self.sensitivity = None
-        self.threshold = None
-        self._x_axis_values = None
-        self._y_axis_values = None
-        self.X = LogicNetworkSubCell(self, self.get_x_axis)
-        self.Y = LogicNetworkSubCell(self, self.get_y_axis)
-
-    def get_x_axis(self):
-        return self._x_axis_values
-
-    def get_y_axis(self):
-        return self._y_axis_values
-
-    def evaluate(self):
-        self._set_ready()
-        axis = self.get_parameter_value(self.axis)
-        if is_invalid(axis):
-            debug('Gamepad Sticks Node: Invalid Controller Stick!')
-            return
-        inverted = self.get_parameter_value(self.inverted)
-        index = self.get_parameter_value(self.index)
-        sensitivity = self.get_parameter_value(self.sensitivity)
-        threshold = self.get_parameter_value(self.threshold)
-        if logic.joysticks[index]:
-            joystick = logic.joysticks[index]
-        else:
-            debug('Gamepad Sticks Node: No Joystick at that Index!')
-            self._x_axis_values = 0
-            self._y_axis_values = 0
-            return
-        if is_invalid(joystick):
-            return
-        raw_values = joystick.axisValues
-        values = []
-        if axis == 2:
-            raw_values = [raw_values[0], raw_values[1]]
-        elif axis == 1:
-            raw_values = [raw_values[2], raw_values[3]]
-        for x in raw_values:
-            if -threshold < x < threshold:
-                x = 0
-            x *= sensitivity
-            values.append((-x if inverted else x))
-
-        x_axis = values[0]
-        y_axis = values[1]
-        self._x_axis_values = x_axis
-        self._y_axis_values = y_axis
-
-
-class ConditionGamepadTrigger(ConditionCell):
-    def __init__(self, axis=0):
-        ConditionCell.__init__(self)
-        self.axis = axis
-        self.index = None
-        self.sensitivity = None
-        self.threshold = None
-        self._value = None
-        self.VAL = LogicNetworkSubCell(self, self.get_value)
-
-    def get_x_axis(self):
-        return self._value
-
-    def evaluate(self):
-        self._set_ready()
-        axis = self.get_parameter_value(self.axis)
-        if is_invalid(axis):
-            debug('Gamepad Trigger Node: Invalid Controller Trigger!')
-            return
-        index = self.get_parameter_value(self.index)
-        sensitivity = self.get_parameter_value(self.sensitivity)
-        threshold = self.get_parameter_value(self.threshold)
-        if logic.joysticks[index]:
-            joystick = logic.joysticks[index]
-        else:
-            debug('Gamepad Trigger Node: No Joystick at that Index!')
-            self._x_axis_values = 0
-            self._y_axis_values = 0
-            return
-        if is_invalid(joystick):
-            return
-        value = joystick.axisValues[4] if axis == 0 else joystick.axisValues[5]
-
-        if -threshold < value < threshold:
-            value = 0
-        self._value = value * sensitivity
-
-
-class ConditionGamepadButtons(ConditionCell):
-    def __init__(self, pulse=False, button=0):
-        ConditionCell.__init__(self)
-        self.pulse = pulse
-        self.button = button
-        self.index = None
-        self._button_value = None
-        self.BUTTON = LogicNetworkSubCell(self, self.get_x_axis)
-        self.initialized = False
-
-    def get_x_axis(self):
-        return self._button_value
-
-    def evaluate(self):
-        self._set_ready()
-        index = self.get_parameter_value(self.index)
-        if logic.joysticks[index]:
-            joystick = logic.joysticks[index]
-        else:
-            debug('Gamepad Button Node: No Joystick at that Index!')
-            self._x_axis_values = 0
-            self._y_axis_values = 0
-            return
-        if is_invalid(joystick):
-            return
-
-        if self.button in joystick.activeButtons:
-            if not self.initialized:
-                self._button_value = True
-            else:
-                self._button_value = False
-            if not self.pulse:
-                self.initialized = True
-
-        else:
-            self._button_value = False
-            self.initialized = False
-
-
 class ActionKeyLogger(ActionCell):
     def __init__(self, pulse=False):
         ActionCell.__init__(self)
@@ -3857,97 +4606,6 @@ class ActionKeyLogger(ActionCell):
                 )
                 self._key_code = keycode
                 self._key_logged = True
-
-
-class ConditionMouseTargeting(ConditionCell):
-    def __init__(self):
-        ConditionCell.__init__(self)
-        self.game_object = None
-        self._mouse_entered_status = False
-        self._mouse_exited_status = False
-        self._mouse_over_status = False
-        self._point = None
-        self._normal = None
-        self.MOUSE_ENTERED = LogicNetworkSubCell(self, self._get_mouse_entered)
-        self.MOUSE_EXITED = LogicNetworkSubCell(self, self._get_mouse_exited)
-        self.MOUSE_OVER = LogicNetworkSubCell(self, self._get_mouse_over)
-        self.POINT = LogicNetworkSubCell(self, self._get_point)
-        self.NORMAL = LogicNetworkSubCell(self, self._get_normal)
-        self._last_target = None
-
-    def _get_mouse_entered(self):
-        return self._mouse_entered_status
-
-    def _get_mouse_exited(self):
-        return self._mouse_exited_status
-
-    def _get_mouse_over(self):
-        return self._mouse_over_status
-
-    def _get_point(self):
-        return self._point
-
-    def _get_normal(self):
-        return self._normal
-
-    def evaluate(self):
-        game_object = self.get_parameter_value(self.game_object)
-        if game_object is LogicNetworkCell.STATUS_WAITING:
-            return
-        self._set_ready()
-        if is_invalid(game_object):
-            self._mouse_entered_status = False
-            self._mouse_exited_status = False
-            self._mouse_over_status = False
-            self._point = None
-            self._normal = None
-            return
-        scene = game_object.scene
-        camera = scene.active_camera
-        distance = 2.0 * camera.getDistanceTo(game_object)
-        mouse = logic.mouse
-        mouse_position = mouse.position
-        vec = 10.0 * camera.getScreenVect(*mouse_position)
-        ray_target = camera.worldPosition - vec
-        # target, point, normal = camera.rayCast(ray_target, None, distance)
-        target, point, normal = self.network.ray_cast(
-            camera,
-            None,
-            ray_target,
-            None,
-            False,
-            distance
-        )
-        if not (target is self._last_target):  # mouse over a new object
-            # was target, now it isn't -> exited
-            if self._last_target is game_object:
-                self._mouse_exited_status = True
-                self._mouse_over_status = False
-                self._mouse_entered_status = False
-                self._point = None
-                self._normal = None
-            # wasn't target, now it is -> entered
-            elif (target is game_object):
-                self._mouse_entered_status = True
-                self._mouse_over_status = False
-                self._mouse_exited_status = False
-                self._point = point
-                self._normal = normal
-            self._last_target = target
-        else:  # the target has not changed
-            # was target, still target -> over
-            if self._last_target is game_object:
-                self._mouse_entered_status = False
-                self._mouse_exited_status = False
-                self._mouse_over_status = True
-                self._point = point
-                self._normal = normal
-            else:  # wans't target, still isn't target -> clear
-                self._mouse_entered_status = False
-                self._mouse_exited_status = False
-                self._mouse_over_status = False
-                self._point = None
-                self._normal = None
 
 
 class ConditionTimeElapsed(ConditionCell):
@@ -4017,144 +4675,6 @@ class ConditionKeyReleased(ConditionCell):
     pass
 
 
-class ConditionMousePressed(ConditionCell):
-    def __init__(self):
-        ConditionCell.__init__(self)
-        self.pulse = False
-        self.mouse_button_code = None
-
-    def evaluate(self):
-        mouse_button = self.get_parameter_value(self.mouse_button_code)
-        if mouse_button is LogicNetworkCell.STATUS_WAITING:
-            return
-        self._set_ready()
-        mstat = self.network.mouse_events[mouse_button]
-        if self.pulse:
-            self._set_value(
-                mstat.active or
-                mstat.activated
-            )
-        else:
-            self._set_value(mstat.activated)
-
-
-class ConditionMouseMoved(ConditionCell):
-    def __init__(self):
-        ConditionCell.__init__(self)
-        self.pulse = False
-
-    def evaluate(self):
-        self._set_ready()
-        mstat = self.network.mouse_events
-        if self.pulse:
-            self._set_value(
-                mstat[bge.events.MOUSEX].active or
-                mstat[bge.events.MOUSEX].activated or
-                mstat[bge.events.MOUSEY].active or
-                mstat[bge.events.MOUSEY].activated
-            )
-        else:
-            self._set_value(
-                mstat[bge.events.MOUSEX].activated or
-                mstat[bge.events.MOUSEY].activated
-            )
-
-
-class ConditionMousePressedOn(ConditionCell):
-    def __init__(self):
-        ConditionCell.__init__(self)
-        self.game_object = None
-        self.mouse_button = None
-
-    def evaluate(self):
-        STATUS_WAITING = LogicNetworkCell.STATUS_WAITING
-        mouse_button = self.get_parameter_value(self.mouse_button)
-        game_object = self.get_parameter_value(self.game_object)
-        if mouse_button is STATUS_WAITING:
-            return
-        if game_object is STATUS_WAITING:
-            return
-        self._set_ready()
-        if mouse_button is None:
-            return
-        if is_invalid(game_object):
-            return
-        mstat = self.network.mouse_events[mouse_button]
-        if not mstat.activated:
-            self._set_value(False)
-            return
-        mpos = logic.mouse.position
-        camera = logic.getCurrentScene().active_camera
-        vec = 10 * camera.getScreenVect(*mpos)
-        ray_target = camera.worldPosition - vec
-        distance = camera.getDistanceTo(game_object) * 2.0
-        t, p, n = self.network.ray_cast(
-            camera,
-            None,
-            ray_target,
-            None,
-            False,
-            distance
-        )
-        self._set_value(t == game_object)
-
-
-class ConditionMouseUp(ConditionCell):
-    def __init__(self, repeat=None):
-        ConditionCell.__init__(self)
-        self.network = None
-        self.repeat = repeat
-        self._consumed = False
-
-    def setup(self, network):
-        self.network = network
-
-    def reset(self):
-        if self._consumed:
-            self._set_value(False)
-            self._set_status(LogicNetworkCell.STATUS_READY)
-        else:
-            ConditionCell.reset(self)
-
-    def evaluate(self):
-        repeat = self.get_parameter_value(self.repeat)
-        if repeat is LogicNetworkCell.STATUS_WAITING:
-            return
-        self._set_ready()
-        dy = self.network.mouse_motion_delta[1]
-        self._set_value(dy < 0)
-        if not self.repeat:
-            self._consumed = True
-
-
-class ConditionMouseDown(ConditionCell):
-    def __init__(self, repeat=None):
-        ConditionCell.__init__(self)
-        self.network = None
-        self.repeat = repeat
-        self._consumed = False
-
-    def setup(self, network):
-        self.network = network
-
-    def reset(self):
-        if self._consumed:
-            self._set_value(False)
-            self._set_status(LogicNetworkCell.STATUS_READY)
-        else:
-            ConditionCell.reset(self)
-
-    def evaluate(self):
-        repeat = self.get_parameter_value(self.repeat)
-        if repeat is LogicNetworkCell.STATUS_WAITING:
-            return
-        self._set_ready()
-        dy = self.network.mouse_motion_delta[1]
-        self._set_value(dy > 0)
-        if not self.repeat:
-            self._consumed = True
-
-
 class ConditionMouseLeft(ConditionCell):
     def __init__(self, repeat=None):
         ConditionCell.__init__(self)
@@ -4209,32 +4729,6 @@ class ConditionMouseRight(ConditionCell):
         self._set_value(dx < 0)
         if not self.repeat:
             self._consumed = True
-
-
-class ConditionMouseReleased(ConditionCell):
-    def __init__(self):
-        ConditionCell.__init__(self)
-        self.pulse = False
-        self.mouse_button_code = None
-        self.network = None
-
-    def setup(self, network):
-        self.network = network
-
-    def evaluate(self):
-        mouse_button = self.get_parameter_value(self.mouse_button_code)
-        if mouse_button is LogicNetworkCell.STATUS_WAITING:
-            return
-        self._set_ready()
-        mstat = self.network.mouse_events[mouse_button]
-        if self.pulse:
-            self._set_value(
-                mstat.released or
-                mstat.inactive
-            )
-        else:
-            self._set_value(mstat.released)
-    pass
 
 
 class ActionRepeater(ActionCell):
@@ -4400,7 +4894,7 @@ class ActionAddObject(ActionCell):
     def evaluate(self):
         self.done = False
         condition = self.get_parameter_value(self.condition)
-        if is_not_met(condition):
+        if not_met(condition):
             return
         life = self.get_parameter_value(self.life)
         name = self.get_parameter_value(self.name)
@@ -4471,7 +4965,7 @@ class SetMaterial(ActionCell):
         game_object = self.get_parameter_value(self.game_object)
         slot = self.get_parameter_value(self.slot)
         mat_name = self.get_parameter_value(self.mat_name)
-        if is_not_met(condition):
+        if not_met(condition):
             return
         if is_invalid(game_object):
             return
@@ -4623,7 +5117,7 @@ class ActionAddToGameObjectGameProperty(ActionCell):
     def evaluate(self):
         self.done = False
         condition = self.get_parameter_value(self.condition)
-        if is_not_met(condition):
+        if not_met(condition):
             return
         game_object = self.get_parameter_value(self.game_object)
         property_name = self.get_parameter_value(self.property_name)
@@ -4656,7 +5150,7 @@ class CopyPropertyFromObject(ActionCell):
     def evaluate(self):
         self.done = False
         condition = self.get_parameter_value(self.condition)
-        if is_not_met(condition):
+        if not_met(condition):
             return
         from_object = self.get_parameter_value(self.from_object)
         to_object = self.get_parameter_value(self.to_object)
@@ -4690,7 +5184,7 @@ class ActionClampedAddToGameObjectGameProperty(ActionCell):
         self.done = False
         condition = self.get_parameter_value(self.condition)
         game_object = self.get_parameter_value(self.game_object)
-        if is_not_met(condition):
+        if not_met(condition):
             return
         if is_invalid(game_object):
             return
@@ -4792,190 +5286,6 @@ class AbsoluteValue(ActionCell):
         value = self.get_parameter_value(self.value)
         self._set_ready()
         self.out_value = math.fabs(value)
-
-
-class ActionEndGame(ActionCell):
-    def __init__(self):
-        ActionCell.__init__(self)
-        self.condition = None
-
-    def evaluate(self):
-        self._set_ready()
-        condition = self.get_parameter_value(self.condition)
-        if condition is LogicNetworkCell.STATUS_WAITING:
-            return
-        if condition:
-            logic.endGame()
-
-
-class ActionStartGame(ActionCell):
-    def __init__(self):
-        ActionCell.__init__(self)
-        self.condition = None
-        self.file_name = None
-        self.done = None
-        self.OUT = LogicNetworkSubCell(self, self.get_done)
-
-    def get_done(self):
-        return self.done
-
-    def evaluate(self):
-        self.done = False
-        self._set_ready()
-        condition = self.get_parameter_value(self.condition)
-        file_name = self.get_parameter_value(self.file_name)
-        if condition:
-            logic.startGame(file_name)
-        self.done = True
-
-
-class ActionRestartGame(ActionCell):
-
-    def __init__(self):
-        ActionCell.__init__(self)
-        self.condition = None
-        self.done = None
-        self.OUT = LogicNetworkSubCell(self, self.get_done)
-
-    def get_done(self):
-        return self.done
-
-    def evaluate(self):
-        self.done = False
-        self._set_ready()
-        condition = self.get_parameter_value(self.condition)
-        if condition:
-            logic.restartGame()
-        self.done = True
-
-
-class ActionMouseLook(ActionCell):
-    x = None
-    y = None
-    screen_center = None
-    center = None
-    mouse = None
-
-    def __init__(self):
-        ActionCell.__init__(self)
-        self.condition = None
-        self.game_object_x = None
-        self.game_object_y = None
-        self.inverted = None
-        self.sensitivity = None
-        self.use_cap_z = None
-        self.cap_z = None
-        self.use_cap_z = None
-        self.cap_y = None
-        self.smooth = None
-        self._x = 0
-        self._y = 0
-        self.done = None
-        self.OUT = LogicNetworkSubCell(self, self.get_done)
-        self.use_local_head = False
-
-    def get_done(self):
-        return self.done
-
-    def interpolate(self, a, b, fac):
-        return (fac * b) + ((1-fac) * a)
-
-    def get_x_obj(self):
-        game_object_x = self.get_parameter_value(self.game_object_x)
-        if game_object_x is LogicNetworkCell.STATUS_WAITING:
-            return None
-        return game_object_x
-
-    def get_y_obj(self):
-        game_object_y = self.get_parameter_value(self.game_object_y)
-        if is_invalid(game_object_y):
-            game_object_y = self.get_x_obj()
-        elif game_object_y is not self.get_x_obj():
-            self.use_local_head = True
-        return game_object_y
-
-    def get_data(self):
-        self.x = bge.render.getWindowWidth()//2
-        self.y = bge.render.getWindowHeight()//2
-        self.screen_center = (
-            self.x/bge.render.getWindowWidth(),
-            self.y/bge.render.getWindowHeight()
-        )
-        self.center = mathutils.Vector(self.screen_center)
-        self.mouse = logic.mouse
-
-    def evaluate(self):
-        self.done = False
-        self.get_data()
-        condition = self.get_parameter_value(self.condition)
-        if condition is LogicNetworkCell.STATUS_WAITING:
-            return
-        if not condition:
-            return
-        caps = 0.0087266462599716
-        game_object_x = self.get_x_obj()
-        game_object_y = self.get_y_obj()
-        sensitivity = self.get_parameter_value(self.sensitivity) * 1000
-        use_cap_z = self.get_parameter_value(self.use_cap_z)
-        use_cap_y = self.get_parameter_value(self.use_cap_y)
-        cap_z = self.get_parameter_value(self.cap_z)
-        lowercapX = -cap_z.y * caps * 2
-        uppercapX = cap_z.x * caps * 2
-        cap_y = self.get_parameter_value(self.cap_y)
-        lowercapY = -cap_y.x * caps * 2
-        uppercapY = cap_y.y * caps * 2
-        inverted = self.get_parameter_value(self.inverted)
-        smooth = 1 - (self.get_parameter_value(self.smooth) * .99)
-        self._set_ready()
-
-        if is_invalid(game_object_x):
-            debug('MouseLook Node: Invalid Main Object!')
-            return
-
-        mouse_position = mathutils.Vector(self.mouse.position)
-        offset = (mouse_position - self.center) * -0.002
-
-        if inverted.get('y', False) is False:
-            offset.y = -offset.y
-        if inverted.get('x', False) is True:
-            offset.x = -offset.x
-        offset *= sensitivity
-
-        self._x = offset.x = self.interpolate(self._x, offset.x, smooth)
-        self._y = offset.y = self.interpolate(self._y, offset.y, smooth)
-
-        if use_cap_z:
-            objectRotation = game_object_x.localOrientation.to_euler()
-
-            if objectRotation.z + offset.x > uppercapX:
-                offset.x = 0
-                objectRotation.z = uppercapX
-                game_object_x.localOrientation = objectRotation.to_matrix()
-
-            if objectRotation.z + offset.x < lowercapX:
-                offset.x = 0
-                objectRotation.z = lowercapX
-                game_object_x.localOrientation = objectRotation.to_matrix()
-
-        game_object_x.applyRotation((0, 0, offset.x), self.use_local_head)
-
-        if use_cap_y:
-            objectRotation = game_object_y.localOrientation.to_euler()
-
-            if objectRotation.y + offset.y > uppercapY:
-                objectRotation.y = uppercapY
-                game_object_y.localOrientation = objectRotation.to_matrix()
-                offset.y = 0
-
-            if objectRotation.y + offset.y < lowercapY:
-                objectRotation.y = lowercapY
-                game_object_y.localOrientation = objectRotation.to_matrix()
-                offset.y = 0
-
-        game_object_y.applyRotation((0, (offset.y), 0), True)
-        if self.mouse.position != self.screen_center:
-            self.mouse.position = self.screen_center
-        self.done = True
 
 
 class ActionPrint(ActionCell):
@@ -5150,7 +5460,7 @@ class ActionCreateVehicleFromParent(ActionCell):
     def evaluate(self):
         self.done = False
         game_object = self.get_parameter_value(self.game_object)
-        if is_not_met(self.get_parameter_value(self.condition)):
+        if not_met(self.get_parameter_value(self.condition)):
             if game_object.get('vehicle_constraint'):
                 self._set_ready()
                 self.vehicle = game_object['vehicle_constraint']
@@ -5223,7 +5533,7 @@ class VehicleApplyForce(ActionCell):
         self.done = False
         condition = self.get_parameter_value(self.condition)
         constraint = self.get_parameter_value(self.constraint)
-        if is_not_met(condition):
+        if not_met(condition):
             return
         if is_invalid(constraint):
             return
@@ -5462,7 +5772,7 @@ class ActionSetObjectAttribute(ActionCell):
     def evaluate(self):
         self.done = False
         condition = self.get_parameter_value(self.condition)
-        if is_not_met(condition):
+        if not_met(condition):
             return
         xyz = self.get_parameter_value(self.xyz)
         game_object = self.get_parameter_value(self.game_object)
@@ -5679,7 +5989,7 @@ class ActionFindObjectFromScene(ActionCell):
     def evaluate(self):
         self._set_ready()
         condition = self.get_parameter_value(self.condition)
-        if is_not_met(condition):
+        if not_met(condition):
             # if no condition, early out
             return self._value
         self._set_value(None)  # remove invalid objects, if any
@@ -5690,32 +6000,6 @@ class ActionFindObjectFromScene(ActionCell):
         if not is_invalid(scene):
             # find from scene
             self._set_value(game_object)
-
-
-class ActionLibLoad(ActionCell):
-
-    def __init__(self):
-        ActionCell.__init__(self)
-        self.condition = None
-        self.path = None
-        self._set_value(False)
-
-    def evaluate(self):
-        condition = self.get_parameter_value(self.condition)
-        path = self.get_parameter_value(self.path)
-        if condition is LogicNetworkCell.STATUS_WAITING:
-            return
-        if path is LogicNetworkCell.STATUS_WAITING:
-            return
-        self._set_ready()
-        if condition:
-            if path.startswith("//"):
-                path = logic.expandPath(path)
-            if path not in logic.LibList():
-                logic.LibLoad(path, "Scene", load_actions=True)
-            self._set_value(True)
-        else:
-            self._set_value(False)
 
 
 class ActionSetGameObjectVisibility(ActionCell):
@@ -5847,32 +6131,6 @@ class ActionRayPick(ActionCell):
         self._point = point
         self._normal = normal
         self._direction = self._compute_direction(origin, destination)
-
-
-class ActionLibFree(ActionCell):
-
-    def __init__(self):
-        ActionCell.__init__(self)
-        self.condition = None
-        self.path = None
-        self._set_value(False)
-
-    def evaluate(self):
-        condition = self.get_parameter_value(self.condition)
-        if condition is LogicNetworkCell.STATUS_WAITING:
-            return
-        # CONDITION IS TRUE
-        path = self.get_parameter_value(self.path)
-        if path is LogicNetworkCell.STATUS_WAITING:
-            return
-        self._set_ready()
-        if not condition:
-            self._set_value(False)
-            return
-        if path.startswith("//"):
-            path = logic.expandPath(path)
-        logic.LibFree(path)
-        self._set_value(True)
 
 
 class ActionMousePick(ActionCell):
@@ -7198,66 +7456,6 @@ class ActionEndScene(ActionCell):
         self.done = True
 
 
-class ActionSetMousePosition(ActionCell):
-    def __init__(self):
-        ActionCell.__init__(self)
-        self.condition = None
-        self.screen_x = None
-        self.screen_y = None
-        self.network = None
-        self.done = None
-        self.OUT = LogicNetworkSubCell(self, self.get_done)
-
-    def get_done(self):
-        return self.done
-
-    def setup(self, network):
-        self.network = network
-
-    def evaluate(self):
-        self.done = False
-        condition = self.get_parameter_value(self.condition)
-        if condition is LogicNetworkCell.STATUS_WAITING:
-            return
-        if not condition:
-            return
-        screen_x = self.get_parameter_value(self.screen_x)
-        screen_y = self.get_parameter_value(self.screen_y)
-        if screen_x is LogicNetworkCell.STATUS_WAITING:
-            return
-        if screen_y is LogicNetworkCell.STATUS_WAITING:
-            return
-        self._set_ready()
-        self.network.set_mouse_position(screen_x, screen_y)
-        self.done = True
-
-
-class ActionSetMouseCursorVisibility(ActionCell):
-    def __init__(self):
-        ActionCell.__init__(self)
-        self.condition = None
-        self.visibility_status = None
-        self.done = None
-        self.OUT = LogicNetworkSubCell(self, self.get_done)
-
-    def get_done(self):
-        return self.done
-
-    def evaluate(self):
-        self.done = False
-        condition = self.get_parameter_value(self.condition)
-        if condition is LogicNetworkCell.STATUS_WAITING:
-            return
-        if not condition:
-            return
-        visibility_status = self.get_parameter_value(self.visibility_status)
-        if visibility_status is LogicNetworkCell.STATUS_WAITING:
-            return
-        self._set_ready()
-        logic.mouse.visible = visibility_status
-        self.done = True
-
-
 class ActionApplyGameObjectValue(ActionCell):
     def __init__(self):
         ActionCell.__init__(self)
@@ -7393,7 +7591,7 @@ class ActionApplyForce(ActionCell):
     def evaluate(self):
         self.done = False
         condition = self.get_parameter_value(self.condition)
-        if is_not_met(condition):
+        if not_met(condition):
             return
         game_object = self.get_parameter_value(self.game_object)
         force = self.get_parameter_value(self.force)
@@ -7421,7 +7619,7 @@ class ActionApplyImpulse(ActionCell):
     def evaluate(self):
         self.done = False
         condition = self.get_parameter_value(self.condition)
-        if is_not_met(condition):
+        if not_met(condition):
             return
         game_object = self.get_parameter_value(self.game_object)
         point = self.get_parameter_value(self.point)
@@ -7451,7 +7649,7 @@ class ActionCharacterJump(ActionCell):
     def evaluate(self):
         self.done = False
         condition = self.get_parameter_value(self.condition)
-        if is_not_met(condition):
+        if not_met(condition):
             self._set_ready()
             return
         game_object = self.get_parameter_value(self.game_object)
@@ -7469,286 +7667,6 @@ class ActionCharacterJump(ActionCell):
                 .format(game_object.name)
             )
             return
-        self.done = True
-
-
-class ActionSaveGame(ActionCell):
-    def __init__(self):
-        ActionCell.__init__(self)
-        self.condition = None
-        self.slot = None
-        self.path = ''
-        self.done = None
-        self.OUT = LogicNetworkSubCell(self, self.get_done)
-
-    def get_done(self):
-        return self.done
-
-    def get_custom_path(self, path):
-        if not path.endswith('/'):
-            path = path + '/'
-        if path.startswith('//'):
-            return bpy.path.abspath(path)
-        elif path.startswith('./'):
-            path = path.split('./', 1)[-1]
-            return bpy.path.abspath('//' + path)
-        return path
-
-    def evaluate(self):
-        self.done = False
-        condition = self.get_parameter_value(self.condition)
-        if condition is LogicNetworkCell.STATUS_WAITING:
-            return
-        if not condition:
-            return
-        slot = self.get_parameter_value(self.slot)
-        if slot is LogicNetworkCell.STATUS_WAITING:
-            return
-        self._set_ready()
-        cust_path = self.get_custom_path(self.path)
-
-        path = (
-            logic.expandPath('//Saves/') if self.path == ''
-            else cust_path
-        )
-        os.makedirs(path, exist_ok=True)
-
-        scene = logic.getCurrentScene()
-        data = {
-            'objects': []
-        }
-
-        objs = data['objects']
-
-        for obj in scene.objects:
-            if obj.name == '__default__cam__':
-                continue
-            props = obj.getPropertyNames()
-            prop_list = []
-            cha = bge.constraints.getCharacter(obj)
-            for prop in props:
-                if prop != 'NodeTree':
-                    if isinstance(obj[prop], LogicNetwork):
-                        continue
-                    if isinstance(obj[prop], mathutils.Vector):
-                        continue
-                    prop_set = {}
-                    prop_set['name'] = prop
-                    prop_set['value'] = obj[prop]
-                    prop_list.append(prop_set)
-            loc = obj.worldPosition
-            rot = obj.worldOrientation.to_euler()
-            sca = obj.worldScale
-
-            if obj.mass:
-                lin_vel = obj.worldLinearVelocity
-                ang_vel = obj.worldAngularVelocity
-
-                objs.append(
-                    {
-                        'name': obj.name,
-                        'type': 'dynamic',
-                        'data': {
-                            'worldPosition': {
-                                'x': loc.x,
-                                'y': loc.y,
-                                'z': loc.z
-                            },
-                            'worldOrientation': {
-                                'x': rot.x,
-                                'y': rot.y,
-                                'z': rot.z
-                            },
-                            'worldLinearVelocity': {
-                                'x': lin_vel.x,
-                                'y': lin_vel.y,
-                                'z': lin_vel.z
-                            },
-                            'worldAngularVelocity': {
-                                'x': ang_vel.x,
-                                'y': ang_vel.y,
-                                'z': ang_vel.z
-                            },
-                            'worldScale': {'x': sca.x, 'y': sca.y, 'z': sca.z},
-                            'props': prop_list
-                        }
-                    }
-                )
-            if cha:
-                wDir = cha.walkDirection
-
-                objs.append(
-                    {
-                        'name': obj.name,
-                        'type': 'character',
-                        'data': {
-                            'worldPosition': {
-                                'x': loc.x,
-                                'y': loc.y,
-                                'z': loc.z
-                            },
-                            'worldOrientation': {
-                                'x': rot.x,
-                                'y': rot.y,
-                                'z': rot.z
-                            },
-                            'worldScale': {'x': sca.x, 'y': sca.y, 'z': sca.z},
-                            'walkDirection': {
-                                'x': wDir.x,
-                                'y': wDir.y,
-                                'z': wDir.z
-                            },
-                            'props': prop_list
-                        }
-                    }
-                )
-            elif isinstance(obj, bge.types.KX_LightObject):
-                if not TOO_OLD:
-                    continue
-                objs.append(
-                    {
-                        'name': obj.name,
-                        'type': 'light',
-                        'data': {
-                            'worldPosition': {
-                                'x': loc.x,
-                                'y': loc.y,
-                                'z': loc.z
-                            },
-                            'worldOrientation': {
-                                'x': rot.x,
-                                'y': rot.y,
-                                'z': rot.z
-                            },
-                            'worldScale': {'x': sca.x, 'y': sca.y, 'z': sca.z},
-                            'energy': obj.energy,
-                            'props': prop_list
-                        }
-                    }
-                )
-            else:
-                objs.append(
-                    {
-                        'name': obj.name,
-                        'type': 'static',
-                        'data': {
-                            'worldPosition': {
-                                'x': loc.x,
-                                'y': loc.y,
-                                'z': loc.z
-                            },
-                            'worldOrientation': {
-                                'x': rot.x,
-                                'y': rot.y,
-                                'z': rot.z
-                            },
-                            'worldScale': {'x': sca.x, 'y': sca.y, 'z': sca.z},
-                            'props': prop_list
-                        }
-                    }
-                )
-            data['globalDict'] = logic.globalDict
-
-        with open(path + 'save' + str(slot) + ".json", "w") as file:
-            json.dump(data, file, indent=2)
-
-        self.done = True
-
-
-class ActionLoadGame(ActionCell):
-    def __init__(self):
-        ActionCell.__init__(self)
-        self.condition = None
-        self.slot = None
-        self.path = ''
-        self.done = None
-        self.OUT = LogicNetworkSubCell(self, self.get_done)
-
-    def get_done(self):
-        return self.done
-
-    def get_game_vec(self, data):
-        return mathutils.Euler((data['x'], data['y'], data['z']))
-
-    def get_custom_path(self, path):
-        if not path.endswith('/'):
-            path = path + '/'
-        if path.startswith('./'):
-            path = path.split('./', 1)[-1]
-            return bpy.path.abspath('//' + path)
-        return path
-
-    def evaluate(self):
-        self.done = False
-        condition = self.get_parameter_value(self.condition)
-        if condition is LogicNetworkCell.STATUS_WAITING:
-            return
-        if not condition:
-            return
-        self._set_ready()
-        slot = self.get_parameter_value(self.slot)
-        if slot is LogicNetworkCell.STATUS_WAITING:
-            return
-        cust_path = self.get_custom_path(self.path)
-
-        path = (
-            logic.expandPath('//Saves/') if self.path == ''
-            else cust_path
-        )
-
-        scene = logic.getCurrentScene()
-
-        try:
-            with open(path + 'save' + str(slot) + '.json') as json_file:
-                data = json.load(json_file)
-                for obj in data['objects']:
-                    if obj['name'] in scene.objects:
-                        game_obj = scene.objects[obj['name']]
-                    else:
-                        debug(
-                            'Could not load Object {}: Not in active Scene!'
-                            .format(obj['name'])
-                        )
-                        continue
-
-                    wPos = self.get_game_vec(obj['data']['worldPosition'])
-                    wOri = self.get_game_vec(obj['data']['worldOrientation'])
-                    wSca = self.get_game_vec(obj['data']['worldScale'])
-
-                    game_obj.worldPosition = wPos
-                    game_obj.worldOrientation = wOri.to_matrix()
-                    game_obj.worldScale = wSca
-
-                    if obj['type'] == 'dynamic':
-                        linVel = self.get_game_vec(
-                            obj['data']['worldLinearVelocity']
-                        )
-                        angVel = self.get_game_vec(
-                            obj['data']['worldAngularVelocity']
-                        )
-                        game_obj.worldLinearVelocity = linVel
-                        game_obj.worldAngularVelocity = angVel
-
-                    if obj['type'] == 'light':
-                        energy = obj['data']['energy']
-                        game_obj.energy = energy
-
-                    if obj['type'] == 'character':
-                        wDir = self.get_game_vec(obj['data']['walkDirection'])
-                        (
-                            bge.constraints
-                            .getCharacter(game_obj)
-                            .walkDirection
-                        ) = wDir
-
-                    for prop in obj['data']['props']:
-                        game_obj[prop['name']] = prop['value']
-        except Exception:
-            debug(
-                'Load Game Node: Could Not Find Saved Game on Slot {}!'
-                .format(slot)
-            )
-
         self.done = True
 
 
@@ -9748,7 +9666,7 @@ class ActionMoveTo(ActionCell):
 
     def evaluate(self):  # the actual execution of this cell
         condition = self.get_parameter_value(self.condition)
-        if is_not_met(condition):
+        if not_met(condition):
             return
         moving_object = self.get_parameter_value(self.moving_object)
         destination_point = self.get_parameter_value(self.destination_point)
@@ -9861,7 +9779,7 @@ class ActionRotateTo(ActionCell):
     def evaluate(self):
         self._set_value(False)
         condition = self.get_parameter_value(self.condition)
-        if is_not_met(condition):
+        if not_met(condition):
             return
         moving_object = self.get_parameter_value(self.moving_object)
         target_point = self.get_parameter_value(self.target_point)
@@ -10525,17 +10443,6 @@ class ActionSetCurrentScene(ActionCell):
             logic.addScene(scene_name)
             current_scene.end()
         self.done = True
-
-
-class ParameterKeyboardKeyCode(ParameterCell):
-    def __init__(self):
-        ParameterCell.__init__(self)
-        self.key_code = None
-
-    def evaluate(self):
-        self._set_ready()
-        key_code = self.get_parameter_value(self.key_code)
-        self._set_value(key_code)
 
 
 class ActionStringOp(ActionCell):

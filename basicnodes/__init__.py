@@ -2234,44 +2234,6 @@ class NLBlendActionModeSocket(bpy.types.NodeSocket, NetLogicSocketType):
 _sockets.append(NLBlendActionModeSocket)
 
 
-class NLSocketMouseMotion(bpy.types.NodeSocket, NetLogicSocketType):
-    bl_idname = "NLSocketMouseMotion"
-    bl_label = "Mouse Motion"
-    value: bpy.props.EnumProperty(
-        items=_enum_mouse_motion,
-        description="The direction of the mouse movement",
-        update=update_tree_code
-    )
-
-    def draw_color(self, context, node):
-        return CONDITION_SOCKET_COLOR
-
-    def draw(self, context, layout, node, text):
-        if self.is_linked:
-            layout.label(text=text)
-        else:
-            layout.label(text=text)
-            layout.prop(self, "value", text="")
-
-    def get_unlinked_value(self):
-        if self.value == "UP":
-            return "network.add_cell(bgelogic.ConditionMouseUp(repeat=True))"
-
-        if self.value == "DOWN":
-            return "network.add_cell(bgelogic.ConditionMouseDown(repeat=True))"
-
-        if self.value == "LEFT":
-            return "network.add_cell(bgelogic.ConditionMouseLeft(repeat=True))"
-
-        if self.value == "RIGHT":
-            return (
-                "network.add_cell(bgelogic.ConditionMouseRight(repeat=True))"
-            )
-
-
-_sockets.append(NLSocketMouseMotion)
-
-
 class NLVectorSocket(bpy.types.NodeSocket, NetLogicSocketType):
     bl_idname = "NLVectorSocket"
     bl_label = "Parameter"
@@ -2985,7 +2947,7 @@ class NLGetMaterialNodeInputValue(bpy.types.Node, NLActionNode):
     def init(self, context):
         NLActionNode.init(self, context)
         self.inputs.new(NLParameterSocket.bl_idname, "Input")
-        self.outputs.new(NLParameterSocket.bl_idname, "Input")
+        self.outputs.new(NLParameterSocket.bl_idname, "Value")
 
     def get_netlogic_class_name(self):
         return "bgelogic.ParameterGetMaterialInputValue"
@@ -3786,7 +3748,7 @@ class NLWithinRangeNode(bpy.types.Node, NLParameterNode):
         NLParameterNode.init(self, context)
         self.inputs.new(NLFloatFieldSocket.bl_idname, "Value")
         self.inputs.new(NLVec2FieldSocket.bl_idname, "Range")
-        self.outputs.new(NLParameterSocket.bl_idname, "If True")
+        self.outputs.new(NLConditionSocket.bl_idname, "If True")
 
     def draw_buttons(self, context, layout):
         layout.prop(self, "operator", text="")
@@ -4406,9 +4368,14 @@ class NLParameterMatrixToEulerNode(bpy.types.Node, NLParameterNode):
         self.inputs.new(NLParameterSocket.bl_idname, 'Matrix')
         self.outputs.new(NLParameterSocket.bl_idname, "Euler")
 
-    def get_netlogic_class_name(self): return "bgelogic.ParameterMatrixToEuler"
-    def get_output_socket_varnames(self): return ["OUT"]
-    def get_input_sockets_field_names(self): return ["input_m"]
+    def get_netlogic_class_name(self):
+        return "bgelogic.ParameterMatrixToEuler"
+
+    def get_output_socket_varnames(self):
+        return ["OUT"]
+
+    def get_input_sockets_field_names(self):
+        return ["input_m"]
 
 
 _nodes.append(NLParameterMatrixToEulerNode)
@@ -4425,7 +4392,7 @@ class NLOnInitConditionNode(bpy.types.Node, NLConditionNode):
         self.outputs.new(NLConditionSocket.bl_idname, "Init")
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ConditionOnInit"
+        return "bgelogic.OnInit"
 
     def init_cell_fields(self, cell_varname, uids, line_writer):
         NetLogicStatementGenerator.init_cell_fields(
