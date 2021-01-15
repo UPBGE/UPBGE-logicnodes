@@ -2040,10 +2040,10 @@ class ConditionGamepadButtons(ConditionCell):
         self.button = button
         self.index = None
         self._button_value = None
-        self.BUTTON = LogicNetworkSubCell(self, self.get_x_axis)
+        self.BUTTON = LogicNetworkSubCell(self, self.get_button)
         self.initialized = False
 
-    def get_x_axis(self):
+    def get_button(self):
         return self._button_value
 
     def evaluate(self):
@@ -2053,8 +2053,44 @@ class ConditionGamepadButtons(ConditionCell):
             joystick = logic.joysticks[index]
         else:
             debug('Gamepad Button Node: No Joystick at that Index!')
-            self._x_axis_values = 0
-            self._y_axis_values = 0
+            return
+        if is_invalid(joystick):
+            return
+
+        if self.button in joystick.activeButtons:
+            if not self.initialized:
+                self._button_value = True
+            else:
+                self._button_value = False
+            if not self.pulse:
+                self.initialized = True
+
+        else:
+            self._button_value = False
+            self.initialized = False
+
+
+class ConditionGamepadButtonUp(ConditionCell):
+    def __init__(self, pulse=False, button=0):
+        ConditionCell.__init__(self)
+        self.pulse = pulse
+        self.button = button
+        self.index = None
+        self._button_value = None
+        self._up_value = None
+        self.BUTTON = LogicNetworkSubCell(self, self.get_button)
+        self.initialized = False
+
+    def get_button(self):
+        return self._up_value
+
+    def evaluate(self):
+        self._set_ready()
+        index = self.get_parameter_value(self.index)
+        if logic.joysticks[index]:
+            joystick = logic.joysticks[index]
+        else:
+            debug('Gamepad Button Node: No Joystick at that Index!')
             return
         if is_invalid(joystick):
             return
@@ -2164,6 +2200,47 @@ class ConditionGamepadTrigger(ConditionCell):
         if -threshold < value < threshold:
             value = 0
         self._value = value * sensitivity
+
+
+class GEGamepadVibration(ConditionCell):
+    def __init__(self, axis=0):
+        ConditionCell.__init__(self)
+        self.condition = None
+        self.index = None
+        self.left = None
+        self.right = None
+        self.time = None
+        self.done = None
+        self.DONE = LogicNetworkSubCell(self, self.get_done)
+
+    def get_done(self):
+        return self.done
+
+    def evaluate(self):
+        self._set_ready()
+        condition = self.get_parameter_value(self.condition)
+        if not_met(condition):
+            return
+        index = self.get_parameter_value(self.index)
+        left = self.get_parameter_value(self.left)
+        right = self.get_parameter_value(self.right)
+        time = self.get_parameter_value(self.time)
+        if is_waiting(index, left, right, time):
+            return
+
+        if not logic.joysticks[index]:
+            return
+        joystick = logic.joysticks[index]
+        if not joystick.hasVibration:
+            debug('Joystick at index {} has no vibration!'.format(index))
+            return
+
+        joystick.strengthLeft = left
+        joystick.strengthRight = right
+        joystick.duration = time * 1000
+
+        joystick.startVibration()
+        self.done = True
 
 
 ###############################################################################

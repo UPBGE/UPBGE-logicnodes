@@ -4431,6 +4431,35 @@ class NLOnUpdateConditionNode(bpy.types.Node, NLConditionNode):
 _nodes.append(NLOnUpdateConditionNode)
 
 
+class NLGamepadVibration(bpy.types.Node, NLParameterNode):
+    bl_idname = "NLGamepadVibration"
+    bl_label = "Gamepad Vibration"
+    nl_category = "Input"
+    nl_subcat = 'Gamepad'
+
+    def init(self, context):
+        NLParameterNode.init(self, context)
+        self.inputs.new(NLConditionSocket.bl_idname, 'Condition')
+        self.inputs.new(NLPositiveIntegerFieldSocket.bl_idname, 'Index')
+        self.inputs.new(NLSocketAlphaFloat.bl_idname, 'Left')
+        self.inputs.new(NLSocketAlphaFloat.bl_idname, 'Right')
+        self.inputs.new(NLPositiveFloatSocket.bl_idname, 'Time')
+        self.inputs[-1].value = 1
+        self.outputs.new(NLConditionSocket.bl_idname, "Done")
+
+    def get_netlogic_class_name(self):
+        return "bgelogic.GEGamepadVibration"
+
+    def get_input_sockets_field_names(self):
+        return ['condition', 'index', 'left', 'right', 'time']
+
+    def get_output_socket_varnames(self):
+        return ["DONE"]
+
+
+_nodes.append(NLGamepadVibration)
+
+
 class NLGamepadSticksCondition(bpy.types.Node, NLParameterNode):
     bl_idname = "NLGamepadSticksCondition"
     bl_label = "Gamepad Sticks"
@@ -4525,7 +4554,7 @@ _nodes.append(NLGamepadTriggerCondition)
 
 class NLGamepadButtonsCondition(bpy.types.Node, NLConditionNode):
     bl_idname = "NLGamepadButtonsCondition"
-    bl_label = "Gamepad Button"
+    bl_label = "Button Down"
     nl_category = "Input"
     nl_subcat = 'Gamepad'
     button: bpy.props.EnumProperty(
@@ -4545,7 +4574,7 @@ class NLGamepadButtonsCondition(bpy.types.Node, NLConditionNode):
     def init(self, context):
         NLConditionNode.init(self, context)
         self.inputs.new(NLPositiveIntegerFieldSocket.bl_idname, 'Index')
-        self.outputs.new(NLConditionSocket.bl_idname, "Is Pressed")
+        self.outputs.new(NLConditionSocket.bl_idname, "Pressed")
 
     def draw_buttons(self, context, layout):
         layout.prop(
@@ -4586,6 +4615,71 @@ class NLGamepadButtonsCondition(bpy.types.Node, NLConditionNode):
 
 
 _nodes.append(NLGamepadButtonsCondition)
+
+
+class NLGamepadButtonUpCondition(bpy.types.Node, NLConditionNode):
+    bl_idname = "NLGamepadButtonUpCondition"
+    bl_label = "Button Up"
+    nl_category = "Input"
+    nl_subcat = 'Gamepad'
+    button: bpy.props.EnumProperty(
+        name='Gamepad Buttons',
+        items=_enum_controller_buttons_operators,
+        description="Controller Buttons",
+        update=update_tree_code
+    )
+    pulse: bpy.props.BoolProperty(
+        description=(
+            'ON: True until the button is released, '
+            'OFF: True when pressed, then False until pressed again'
+        ),
+        update=update_tree_code
+    )
+
+    def init(self, context):
+        NLConditionNode.init(self, context)
+        self.inputs.new(NLPositiveIntegerFieldSocket.bl_idname, 'Index')
+        self.outputs.new(NLConditionSocket.bl_idname, "Released")
+
+    def draw_buttons(self, context, layout):
+        layout.prop(
+            self,
+            "pulse",
+            text="Down" if self.pulse else "Tap",
+            toggle=True
+        )
+        layout.prop(self, "button", text='')
+
+    def get_netlogic_class_name(self):
+        return "bgelogic.ConditionGamepadButtonUp"
+
+    def get_input_sockets_field_names(self):
+        return ["index"]
+
+    def get_output_socket_varnames(self):
+        return ["BUTTON"]
+
+    def init_cell_fields(self, cell_varname, uids, line_writer):
+        NetLogicStatementGenerator.init_cell_fields(
+            self,
+            cell_varname,
+            uids,
+            line_writer)
+        line_writer.write_line(
+            "{}.{} = {}",
+            cell_varname,
+            "pulse",
+            self.pulse
+        )
+        line_writer.write_line(
+            "{}.{} = {}",
+            cell_varname,
+            "button",
+            self.button
+        )
+
+
+_nodes.append(NLGamepadButtonUpCondition)
 
 
 class NLKeyPressedCondition(bpy.types.Node, NLConditionNode):
