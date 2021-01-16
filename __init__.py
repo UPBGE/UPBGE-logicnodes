@@ -409,6 +409,8 @@ class LogicNodesAddonPreferences(bpy.types.AddonPreferences):
         link_row.operator("bge_netlogic.donate", icon="URL")
         contrib_row = col.row()
         contrib_row.label(text='Contributors: L_P, Mike King')
+        testers_row = col.row()
+        testers_row.label(text='Testers: Firespury')
 
 
 basicnodes = _abs_import("basicnodes", _abs_path("basicnodes", "__init__.py"))

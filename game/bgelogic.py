@@ -7285,108 +7285,108 @@ class ActionTimeFilter(ActionCell):
             self._set_value(True)
 
 
-class ActionTimeBarrier(ActionCell):
+class GEPulseTrigger(ActionCell):
+    _consumed: bool
+    _trigger_delay: float
+    _triggered_time: float
+    _triggered: bool
+    _condition_true_time: float
+
     def __init__(self):
         ActionCell.__init__(self)
         self.condition = None
         self.delay = None
         self.repeat = None
-        self._trigger_delay = None
-        self._triggered_time = None
+        self.mode = None
+        self._consumed = False
         self._triggered = False
         self._condition_true_time = 0.0
-        self._set_true = False
-
-    def get_done(self):
-        return self.done
 
     def evaluate(self):
-        STATUS_WAITING = LogicNetworkCell.STATUS_WAITING
-        condition = self.get_parameter_value(self.condition)
         delay = self.get_parameter_value(self.delay)
         repeat = self.get_parameter_value(self.repeat)
-        if repeat is STATUS_WAITING:
+        mode = self.get_parameter_value(self.mode)
+        if is_waiting(delay, repeat, mode):
             return
-        if self._triggered:
-            if repeat:
-                self._set_ready()
-                self._set_value(True)
-            self._set_ready()
-            self._set_value(False)
-            delta = self.network.timeline - self._triggered_time
-            if delta < self._trigger_delay:
-                return
-        if condition is STATUS_WAITING:
-            return
-        if delay is STATUS_WAITING:
-            return
+        condition = self.get_parameter_value(self.condition)
+
         self._set_ready()
-        if condition is None:
+
+        if not_met(condition):
+            self._set_value(False)
+            self._condition_true_time = delay if repeat else 0
+            if self._consumed:
+                self._consumed = False
             return
-        if delay is None:
+
+        if not repeat and self._consumed:
+            self._set_value(False)
             return
-        if repeat is None:
+        self._condition_true_time += self.network.time_per_frame
+
+        if self._condition_true_time >= delay:
+            if not mode or not (mode and self._consumed):
+                self._condition_true_time = 0.0
+            self._consumed = True
+            self._set_value(True)
             return
+
         self._set_value(False)
-        if not condition:
-            self._set_true = False
-            self._condition_true_time = 0.0
-            return
-        if condition:
-            self._condition_true_time += self.network.time_per_frame
-            if self._condition_true_time >= delay:
-                self._triggered = True
-                self._trigger_delay = delay
-                self._triggered_time = self.network.timeline
-                self._set_value(True)
 
 
 class ActionTimeDelay(ActionCell):
+    _consumed: bool
+    _trigger_delay: float
+    _triggered_time: float
+    _triggered: bool
+    _condition_true_time: float
+
     def __init__(self):
         ActionCell.__init__(self)
         self.condition = None
         self.delay = None
         self.repeat = None
+        self.mode = None
+        self._consumed = False
         self._trigger_delay = None
         self._triggered_time = None
         self._triggered = False
-        self._condition_true_time = -1
-
-    def get_done(self):
-        return self.done
+        self._condition_true_time = -1.0
 
     def evaluate(self):
-        STATUS_WAITING = LogicNetworkCell.STATUS_WAITING
         condition = self.get_parameter_value(self.condition)
+        if not_met(condition):
+            self._consumed = False
+            if not self._triggered:
+                return
         delay = self.get_parameter_value(self.delay)
         repeat = self.get_parameter_value(self.repeat)
-        if condition is STATUS_WAITING:
-            return
-        if not condition and not self._triggered:
-            return
-        if delay is STATUS_WAITING:
-            return
-        if repeat is STATUS_WAITING:
+        mode = self.get_parameter_value(self.mode)
+        if is_invalid(delay, repeat, mode):
             return
         self._set_ready()
-        if condition is None:
-            return
-        if delay is None:
-            return
-        if repeat is None:
-            return
-        self._set_value(False)
-        if condition and self._condition_true_time == -1:
+        if (
+            condition
+            and self._condition_true_time == -1.0
+            and not self._consumed
+        ):
             self._triggered = True
             self._condition_true_time = 0.0
+            if not (self._consumed and repeat):
+                self._consumed = True
+            self._set_value(False)
         if self._triggered:
             self._condition_true_time += self.network.time_per_frame
             if self._condition_true_time >= delay:
+                if repeat:
+                    self._consumed = False
                 self._trigger_delay = delay
                 self._triggered_time = self.network.timeline
-                self._condition_true_time = -1
+                self._condition_true_time = -1.0
                 self._triggered = False
                 self._set_value(True)
+                return
+        self._set_value(False)
 
 
 class ActionSetDynamics(ActionCell):
@@ -9183,15 +9183,12 @@ class ActionRandomInt(ActionCell):
     def evaluate(self):
         min_value = self.get_parameter_value(self.min_value)
         max_value = self.get_parameter_value(self.max_value)
-        if is_invalid(min_value):
-            debug('Random Int Node: Min Value not set correctly!')
-            return
-        if is_invalid(max_value):
-            debug('Random Int Node: Max Value not set correctly!')
+        if is_waiting(max_value, min_value):
             return
         if min_value > max_value:
-            debug('Random Int Node: Min Value bigger than Max Value!')
-            return
+            s = min_value
+            min_value = max_value
+            max_value = s
         self._set_ready()
         if min_value == max_value:
             min_value = -sys.maxsize
@@ -9213,15 +9210,12 @@ class ActionRandomFloat(ActionCell):
     def evaluate(self):
         min_value = self.get_parameter_value(self.min_value)
         max_value = self.get_parameter_value(self.max_value)
-        if is_invalid(min_value):
-            debug('Random Float Node: Min Value not set correctly!')
-            return
-        if is_invalid(max_value):
-            debug('Random Float Node: Max Value not set correctly!')
+        if is_waiting(min_value, max_value):
             return
         if min_value > max_value:
-            debug('Random Float Node: Min Value bigger than Max Value!')
-            return
+            s = min_value
+            min_value = max_value
+            max_value = s
         self._set_ready()
         if min_value == max_value:
             min_value = sys.float_info.min

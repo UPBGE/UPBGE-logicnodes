@@ -4433,7 +4433,7 @@ _nodes.append(NLOnUpdateConditionNode)
 
 class NLGamepadVibration(bpy.types.Node, NLParameterNode):
     bl_idname = "NLGamepadVibration"
-    bl_label = "Gamepad Vibration"
+    bl_label = "Vibration"
     nl_category = "Input"
     nl_subcat = 'Gamepad'
 
@@ -4462,7 +4462,7 @@ _nodes.append(NLGamepadVibration)
 
 class NLGamepadSticksCondition(bpy.types.Node, NLParameterNode):
     bl_idname = "NLGamepadSticksCondition"
-    bl_label = "Gamepad Sticks"
+    bl_label = "Sticks"
     nl_category = "Input"
     nl_subcat = 'Gamepad'
     axis: bpy.props.EnumProperty(
@@ -4509,7 +4509,7 @@ _nodes.append(NLGamepadSticksCondition)
 
 class NLGamepadTriggerCondition(bpy.types.Node, NLParameterNode):
     bl_idname = "NLGamepadTriggerCondition"
-    bl_label = "Gamepad Trigger"
+    bl_label = "Trigger"
     nl_category = "Input"
     nl_subcat = 'Gamepad'
     axis: bpy.props.EnumProperty(
@@ -8449,7 +8449,7 @@ class NLActionAlignAxisToVector(bpy.types.Node, NLActionNode):
         return "bgelogic.ActionAlignAxisToVector"
 
     def get_input_sockets_field_names(self):
-        return ["condition", "game_object", "vector", "axis", "factor"]
+        return ["condition", "game_object", "vector", "axis", 'factor']
 
 
 _nodes.append(NLActionAlignAxisToVector)
@@ -8458,53 +8458,61 @@ _nodes.append(NLActionAlignAxisToVector)
 # If the condition stays true for N seconds, do something,
 # then wait N seconds to repeat
 class NLActionTimeBarrier(bpy.types.Node, NLActionNode):
-    bl_idname = "NLActionTimeBarrier"
-    bl_label = "Time Barrier"
+    bl_idname = 'NLActionTimeBarrier'
+    bl_label = 'Pulse Trigger'
     nl_category = 'Time'
 
     def init(self, context):
         NLActionNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, "Condition")
-        self.inputs.new(NLPositiveFloatSocket.bl_idname, "Delay Sec.")
-        self.inputs.new(NLBooleanSocket.bl_idname, "Repeat")
+        self.inputs.new(NLConditionSocket.bl_idname, 'Condition')
+        self.inputs.new(NLPositiveFloatSocket.bl_idname, 'Pulse Sec.')
+        self.inputs.new(NLBooleanSocket.bl_idname, 'Repeat')
         self.inputs[-1].use_toggle = True
-        self.inputs[-1].true_label = "Repeat"
-        self.inputs[-1].false_label = "Once"
+        self.inputs[-1].true_label = 'Repeat'
+        self.inputs[-1].false_label = 'Once'
         self.inputs[-1].value = True
-        self.outputs.new(NLConditionSocket.bl_idname, "Out")
+        self.inputs.new(NLBooleanSocket.bl_idname, 'Mode')
+        self.inputs[-1].use_toggle = True
+        self.inputs[-1].true_label = 'Constant'
+        self.inputs[-1].false_label = 'Restart'
+        self.outputs.new(NLConditionSocket.bl_idname, 'Out')
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ActionTimeBarrier"
+        return 'bgelogic.GEPulseTrigger'
 
     def get_input_sockets_field_names(self):
-        return ["condition", "delay", "repeat"]
+        return ['condition', 'delay', 'repeat', 'mode']
 
 
 _nodes.append(NLActionTimeBarrier)
 
 
 class NLActionTimeDelay(bpy.types.Node, NLActionNode):
-    bl_idname = "NLActionTimeDelay"
-    bl_label = "Delay"
+    bl_idname = 'NLActionTimeDelay'
+    bl_label = 'Delay'
     bl_icon = 'PREVIEW_RANGE'
-    nl_category = "Time"
+    nl_category = 'Time'
 
     def init(self, context):
         NLActionNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, "Condition")
-        self.inputs.new(NLPositiveFloatSocket.bl_idname, "Delay Sec.")
-        self.inputs.new(NLBooleanSocket.bl_idname, "Repeat")
+        self.inputs.new(NLConditionSocket.bl_idname, 'Condition')
+        self.inputs.new(NLPositiveFloatSocket.bl_idname, 'Delay Sec.')
+        self.inputs.new(NLBooleanSocket.bl_idname, 'Repeat')
         self.inputs[-1].use_toggle = True
-        self.inputs[-1].true_label = "Repeat"
-        self.inputs[-1].false_label = "Do not repeat"
+        self.inputs[-1].true_label = 'Repeat'
+        self.inputs[-1].false_label = 'Once'
         self.inputs[-1].value = True
-        self.outputs.new(NLConditionSocket.bl_idname, "Out")
+        self.inputs.new(NLBooleanSocket.bl_idname, 'Mode')
+        self.inputs[-1].use_toggle = True
+        self.inputs[-1].true_label = 'Constant'
+        self.inputs[-1].false_label = 'Restart'
+        self.outputs.new(NLConditionSocket.bl_idname, 'Out')
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ActionTimeDelay"
+        return 'bgelogic.ActionTimeDelay'
 
     def get_input_sockets_field_names(self):
-        return ["condition", "delay", "repeat"]
+        return ['condition', 'delay', 'repeat', 'mode']
 
 
 _nodes.append(NLActionTimeDelay)
