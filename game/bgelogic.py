@@ -2696,6 +2696,8 @@ class ActivateActuator(ParameterCell):
             return
         condition = self.get_parameter_value(self.condition)
         controller = logic.getCurrentController()
+        if actuator not in controller.actuators:
+            return
         if not_met(condition):
             controller.deactivate(actuator)
             return
@@ -2717,15 +2719,16 @@ class DeactivateActuator(ParameterCell):
 
     def evaluate(self):
         self.done = False
+        condition = self.get_parameter_value(self.condition)
+        if not_met(condition):
+            return
         actuator = self.get_parameter_value(self.actuator)
         if is_invalid(actuator):
             return
-        condition = self.get_parameter_value(self.condition)
         controller = logic.getCurrentController()
-        self._set_ready()
-        if not_met(condition):
-            controller.deactivate(actuator)
+        if actuator not in controller.actuators:
             return
+        self._set_ready()
         controller.deactivate(actuator)
         self.done = True
 
@@ -2749,6 +2752,8 @@ class ActivateActuatorByName(ParameterCell):
             return
         condition = self.get_parameter_value(self.condition)
         controller = logic.getCurrentController()
+        if actuator not in controller.actuators:
+            return
         self._set_ready()
         if not_met(condition):
             controller.deactivate(actuator)
@@ -2776,6 +2781,8 @@ class DeactivateActuatorByName(ParameterCell):
             return
         condition = self.get_parameter_value(self.condition)
         controller = logic.getCurrentController()
+        if actuator not in controller.actuators:
+            return
         self._set_ready()
         if not_met(condition):
             return
@@ -7347,46 +7354,49 @@ class ActionTimeDelay(ActionCell):
         self.delay = None
         self.repeat = None
         self.mode = None
+        self._active = False
         self._consumed = False
         self._trigger_delay = None
         self._triggered_time = None
         self._triggered = False
-        self._condition_true_time = -1.0
+        self._down_time = -1.0
+        self._up_time = -1.0
 
     def evaluate(self):
         condition = self.get_parameter_value(self.condition)
-        if not_met(condition):
-            self._consumed = False
-            if not self._triggered:
-                return
         delay = self.get_parameter_value(self.delay)
         repeat = self.get_parameter_value(self.repeat)
         mode = self.get_parameter_value(self.mode)
         if is_invalid(delay, repeat, mode):
             return
         self._set_ready()
-        if (
-            condition
-            and self._condition_true_time == -1.0
-            and not self._consumed
-        ):
-            self._triggered = True
-            self._condition_true_time = 0.0
-            if not (self._consumed and repeat):
-                self._consumed = True
-            self._set_value(False)
-        if self._triggered:
-            self._condition_true_time += self.network.time_per_frame
-            if self._condition_true_time >= delay:
-                if repeat:
-                    self._consumed = False
-                self._trigger_delay = delay
-                self._triggered_time = self.network.timeline
-                self._condition_true_time = -1.0
-                self._triggered = False
+
+        now = self.network.timeline
+        if condition and self._down_time == -1.0:
+            self._down_time = now + delay
+        elif not condition and self._up_time == -1.0 and self._down_time != -1.0:
+            self._up_time = now + delay
+
+        if condition:
+            if self._down_time < now:
+                if not mode:
+                    self._down_time = now + delay
                 self._set_value(True)
-                return
-        self._set_value(False)
+            else:
+                self._set_value(False)
+        else:
+            if self._up_time == -1.0 and self._down_time == -1.0:
+                self._set_value(False)
+            elif self._down_time < now < self._up_time:
+                if not mode:
+                    self._down_time = now + delay
+                self._set_value(True)
+            elif now > self._up_time:
+                self._set_value(False)
+                self._down_time = -1.0
+                self._up_time = -1.0
+            else:
+                self._set_value(False)
 
 
 class ActionSetDynamics(ActionCell):
