@@ -2076,7 +2076,7 @@ class ConditionGamepadButtonUp(ConditionCell):
         self.pulse = pulse
         self.button = button
         self.index = None
-        self._button_value = None
+        self._last_value = False
         self._up_value = None
         self.BUTTON = LogicNetworkSubCell(self, self.get_button)
         self.initialized = False
@@ -2095,17 +2095,19 @@ class ConditionGamepadButtonUp(ConditionCell):
         if is_invalid(joystick):
             return
 
-        if self.button in joystick.activeButtons:
-            if not self.initialized:
-                self._button_value = True
-            else:
-                self._button_value = False
-            if not self.pulse:
-                self.initialized = True
+        button_down = True if self.button in joystick.activeButtons else False
 
-        else:
-            self._button_value = False
+        if button_down != self._last_value and not button_down:
+            self._up_value = True
+            if not self.pulse and not self.initialized:
+                self.initialized = True
+        elif (self._up_value and self.initialized) or button_down:
+            self._up_value = False
             self.initialized = False
+        elif not (self.initialized and button_down) and self._up_value:
+            self._up_value = True
+
+        self._last_value = button_down
 
 
 class ConditionGamepadSticks(ConditionCell):
