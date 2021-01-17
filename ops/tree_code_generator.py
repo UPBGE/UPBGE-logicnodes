@@ -15,10 +15,6 @@ class TreeCodeGenerator(object):
                 return None  # assuming basicnodes
             return netlogic_class[0:lastdot]
         except AttributeError:
-            if not (
-                isinstance(node, bpy.types.NodeReroute)
-            ):
-                print("Not a netlogic node", node)
             return None
 
     def list_user_modules_needed_by_tree(self, tree):

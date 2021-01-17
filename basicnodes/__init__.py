@@ -529,7 +529,8 @@ def update_tree_code(self, context):
     bge_netlogic.update_current_tree_code()
     tree = context.space_data.edit_tree
     for node in tree.nodes:
-        node.update_draw()
+        if isinstance(node, NetLogicStatementGenerator):
+            node.update_draw()
 
 
 def socket_field(s):
@@ -3383,11 +3384,36 @@ class NLVectorMath(bpy.types.Node, NLParameterNode):
         self.inputs.new(NLVectorMathSocket.bl_idname, '')
         self.inputs.new(NLVec3FieldSocket.bl_idname, "Vector 1")
         self.inputs.new(NLVec3FieldSocket.bl_idname, "Vector 2")
+        self.inputs[-1].hide = True
         self.inputs.new(NLSocketAlphaFloat.bl_idname, "Factor")
+        self.inputs[-1].hide = True
         self.outputs.new(NLParameterSocket.bl_idname, 'Vector')
 
     def get_netlogic_class_name(self):
         return "bgelogic.ParameterVectorMath"
+
+    def update_draw(self):
+        vtype = self.inputs[0].value
+        v2 = self.inputs[2]
+        fac = self.inputs[3]
+        if vtype == 'normalize':
+            v2.hide = True
+            fac.hide = True
+        elif vtype == 'lerp':
+            v2.hide = False
+            fac.hide = False
+        elif vtype == 'negate':
+            v2.hide = True
+            fac.hide = True
+        elif vtype == 'dot':
+            v2.hide = False
+            fac.hide = True
+        elif vtype == 'cross':
+            v2.hide = False
+            fac.hide = True
+        elif vtype == 'project':
+            v2.hide = False
+            fac.hide = True
 
     def get_input_sockets_field_names(self):
         return ['op', "vector", 'vector_2', 'factor']
