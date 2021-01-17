@@ -3192,7 +3192,7 @@ class NLGetActuatorNode(bpy.types.Node, NLParameterNode):
         return [
             (
                 "obj_name", lambda: 'bgelogic.GetActuator.obj("{}")'.format(
-                    'Object:{}'.format(self.obj.name)
+                    'NLO:{}'.format(self.obj.name)
                 )
             ),
             (
@@ -3479,7 +3479,7 @@ class NLGetSensorNode(bpy.types.Node, NLParameterNode):
         return [
             (
                 "obj_name", lambda: 'bgelogic.GetSensor.obj("{}")'.format(
-                    'Object:{}'.format(self.obj.name)
+                    'NLO:{}'.format(self.obj.name)
                 )
             ),
             (
@@ -3562,7 +3562,6 @@ class NLSensorValueNode(bpy.types.Node, NLParameterNode):
     def init(self, context):
         NLParameterNode.init(self, context)
         self.inputs.new(NLQuotedStringFieldSocket.bl_idname, 'Field')
-        self.outputs.new(NLConditionSocket.bl_idname, "Done")
         self.outputs.new(NLParameterSocket.bl_idname, "Value")
 
     def get_netlogic_class_name(self): return "bgelogic.SensorValue"
@@ -3600,7 +3599,7 @@ class NLSensorValueNode(bpy.types.Node, NLParameterNode):
         return [
             (
                 "obj_name", lambda: 'bgelogic.SensorValue.obj("{}")'.format(
-                    'Object:{}'.format(self.obj.name)
+                    'NLO:{}'.format(self.obj.name)
                 )
             ),
             (
@@ -3611,7 +3610,7 @@ class NLSensorValueNode(bpy.types.Node, NLParameterNode):
         ] if self.obj else []
 
     def get_output_socket_varnames(self):
-        return ['OUT', 'VAL']
+        return ['VAL']
 
 
 _nodes.append(NLSensorValueNode)

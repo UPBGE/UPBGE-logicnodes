@@ -763,14 +763,22 @@ class NLGenerateLogicNetworkOperator(bpy.types.Operator):
             tree_code_generator.TreeCodeGenerator().write_code_for_tree(tree)
         except Exception:
             print('[Logic Nodes] Automatic Update failed, attempting hard generation...')
-            self.report(
-                {'ERROR'},
-                'Tree to edit not found! Updating All Trees.'
-            )
-            for tree in bpy.data.node_groups:
-                if tree.bl_idname == bge_netlogic.ui.BGELogicTree.bl_idname:
-                    tree_code_generator.TreeCodeGenerator().write_code_for_tree(tree)
-            return {"FINISHED"}
+            if bpy.context.scene.logic_node_settings.use_generate_all:
+                self.report(
+                    {'ERROR'},
+                    'Tree to edit not found! Updating All Trees.'
+                )
+                for tree in bpy.data.node_groups:
+                    if tree.bl_idname == bge_netlogic.ui.BGELogicTree.bl_idname:
+                        tree_code_generator.TreeCodeGenerator().write_code_for_tree(tree)
+                return {"FINISHED"}
+            else:
+                self.report(
+                    {'ERROR'},
+                    'Tree to edit not found! Aborting.'
+                )
+                return {"FINISHED"}
+                
 
         return {"FINISHED"}
 

@@ -357,6 +357,9 @@ class NLAddonSettings(bpy.types.PropertyGroup):
         update=update_node_colors
     )
     use_node_debug: bpy.props.BoolProperty()
+    use_generate_all: bpy.props.BoolProperty(
+        default=True
+    )
 
 
 class NodeCategory():
@@ -402,6 +405,12 @@ class LogicNodesAddonPreferences(bpy.types.AddonPreferences):
             context.scene.logic_node_settings,
             'use_node_debug',
             text="Debug Mode (Print Errors to Console)"
+        )
+        settings_row = col.row()
+        settings_row.prop(
+            context.scene.logic_node_settings,
+            'use_generate_all',
+            text="Generate All Code on Fail (recommended)."
         )
         col.separator()
         link_row = col.row()

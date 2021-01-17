@@ -2939,19 +2939,13 @@ class SensorValue(ParameterCell):
         self.obj_name = None
         self.sens_name = None
         self.field = None
-        self.done = None
         self.val = None
-        self.OUT = LogicNetworkSubCell(self, self.get_done)
         self.VAL = LogicNetworkSubCell(self, self.get_val)
-
-    def get_done(self):
-        return self.done
 
     def get_val(self):
         return self.val
 
     def evaluate(self):
-        self.done = False
         game_obj = self.get_parameter_value(self.obj_name)
         if is_invalid(game_obj):
             debug('Get Sensor Node: No Game Object selected!')
@@ -2964,7 +2958,6 @@ class SensorValue(ParameterCell):
             return
         self._set_ready()
         self.val = getattr(game_obj.sensors[self.sens_name], field)
-        self.done = True
 
 
 class SensorPositive(ParameterCell):
