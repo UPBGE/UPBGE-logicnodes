@@ -1,6 +1,7 @@
 import os
 import bpy
 import bge_netlogic
+import bge_netlogic.utilities as utils
 from bge_netlogic.ops.file_text_buffer import FileTextBuffer
 from bge_netlogic.ops.uid_map import UIDMap
 
@@ -31,9 +32,9 @@ class TreeCodeGenerator(object):
         return FileTextBuffer(file_path)
 
     def write_code_for_tree(self, tree):
-        buffer_name = bge_netlogic.utilities.py_module_filename_for_tree(tree)
+        buffer_name = utils.py_module_filename_for_tree(tree)
         if bpy.context.scene.logic_node_settings.use_node_debug:
-            print("Updating tree code...", buffer_name)
+            utils.debug("Updating tree code...{}".format(buffer_name))
         line_writer = self.create_text_file("bgelogic/"+buffer_name)
         line_writer.write_line("# MACHINE GENERATED")
         line_writer.write_line("import bge")
@@ -54,7 +55,7 @@ class TreeCodeGenerator(object):
         line_writer.write_line('owner["{}"] = network', tree.name)
         line_writer.write_line("network._owner = owner")
         line_writer.write_line("network.setup()")
-        line_writer.write_line("network.stopped = not owner.get('{}')", bge_netlogic.utilities.get_key_network_initial_status_for_tree(tree))
+        line_writer.write_line("network.stopped = not owner.get('{}')", utils.get_key_network_initial_status_for_tree(tree))
         line_writer.write_line("return network")
         line_writer.set_indent_level(0)
         line_writer.write_line("")
@@ -96,7 +97,7 @@ class TreeCodeGenerator(object):
             if not (
                 isinstance(node, bge_netlogic.basicnodes.NetLogicStatementGenerator)
             ):
-                # print("Skipping TreeNode of type {} because it is not an instance of NetLogicStatementGenerator".format(node.__class__.__name__))
+                # utils.debug("Skipping TreeNode of type {} because it is not an instance of NetLogicStatementGenerator".format(node.__class__.__name__))
                 continue
             if isinstance(node, bge_netlogic.basicnodes.NLActionNode):
                 prefix = "ACT"

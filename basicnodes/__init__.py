@@ -1,32 +1,32 @@
 import re
 import bpy
 import bge_netlogic
-from bge_netlogic import utilities as tools
+from bge_netlogic import utilities as utils
 
 TOO_OLD = bpy.app.version < (2, 80, 0)
 
-CONDITION_SOCKET_COLOR = tools.Color.RGBA(.8, 0.2, 0.2, 1.0)
-PSEUDO_COND_SOCKET_COLOR = tools.Color.RGBA(.8, 0.2, 0.2, 1.0)
-PARAMETER_SOCKET_COLOR = tools.Color.RGBA(.8, 0.5, 0.2, 1.0)
-PARAM_BOOL_SOCKET_COLOR = tools.Color.RGBA(.8, .8, .1, 1.0)
-PARAM_LIST_SOCKET_COLOR = tools.Color.RGBA(0.74, .65, .48, 1.0)
-PARAM_DICT_SOCKET_COLOR = tools.Color.RGBA(0.58, 0.48, .74, 1.0)
-PARAM_OBJ_SOCKET_COLOR = tools.Color.RGBA(0.2, 0.5, .7, 1.0)
-PARAM_MAT_SOCKET_COLOR = tools.Color.RGBA(.75, .35, .37, 1.0)
-PARAM_TEXT_SOCKET_COLOR = tools.Color.RGBA(.55, .25, .55, 1.0)
-PARAM_MESH_SOCKET_COLOR = tools.Color.RGBA(.0, .65, .35, 1.0)
-PARAM_COLL_SOCKET_COLOR = tools.Color.RGBA(0.25, 0.35, .8, 1.0)
-PARAM_SCENE_SOCKET_COLOR = tools.Color.RGBA(0.5, 0.5, 0.6, 1.0)
-PARAM_VECTOR_SOCKET_COLOR = tools.Color.RGBA(0.4, 0.8, 0.4, 1.0)
-PARAM_SOUND_SOCKET_COLOR = tools.Color.RGBA(0.2, 0.5, 0.2, 1.0)
-PARAM_LOGIC_BRICK_SOCKET_COLOR = tools.Color.RGBA(0.9, 0.9, 0.4, 1.0)
-PARAM_PYTHON_SOCKET_COLOR = tools.Color.RGBA(0.2, 0.7, 1, 1.0)
-ACTION_SOCKET_COLOR = tools.Color.RGBA(0.2, .7, .7, 1.0)
+CONDITION_SOCKET_COLOR = utils.Color.RGBA(.8, 0.2, 0.2, 1.0)
+PSEUDO_COND_SOCKET_COLOR = utils.Color.RGBA(.8, 0.2, 0.2, 1.0)
+PARAMETER_SOCKET_COLOR = utils.Color.RGBA(.8, 0.5, 0.2, 1.0)
+PARAM_BOOL_SOCKET_COLOR = utils.Color.RGBA(.8, .8, .1, 1.0)
+PARAM_LIST_SOCKET_COLOR = utils.Color.RGBA(0.74, .65, .48, 1.0)
+PARAM_DICT_SOCKET_COLOR = utils.Color.RGBA(0.58, 0.48, .74, 1.0)
+PARAM_OBJ_SOCKET_COLOR = utils.Color.RGBA(0.2, 0.5, .7, 1.0)
+PARAM_MAT_SOCKET_COLOR = utils.Color.RGBA(.75, .35, .37, 1.0)
+PARAM_TEXT_SOCKET_COLOR = utils.Color.RGBA(.55, .25, .55, 1.0)
+PARAM_MESH_SOCKET_COLOR = utils.Color.RGBA(.0, .65, .35, 1.0)
+PARAM_COLL_SOCKET_COLOR = utils.Color.RGBA(0.25, 0.35, .8, 1.0)
+PARAM_SCENE_SOCKET_COLOR = utils.Color.RGBA(0.5, 0.5, 0.6, 1.0)
+PARAM_VECTOR_SOCKET_COLOR = utils.Color.RGBA(0.4, 0.8, 0.4, 1.0)
+PARAM_SOUND_SOCKET_COLOR = utils.Color.RGBA(0.2, 0.5, 0.2, 1.0)
+PARAM_LOGIC_BRICK_SOCKET_COLOR = utils.Color.RGBA(0.9, 0.9, 0.4, 1.0)
+PARAM_PYTHON_SOCKET_COLOR = utils.Color.RGBA(0.2, 0.7, 1, 1.0)
+ACTION_SOCKET_COLOR = utils.Color.RGBA(0.2, .7, .7, 1.0)
 
-CONDITION_NODE_COLOR = tools.Color.RGBA(0.2, 0.2, 0.2, 1)[:-1]
-PARAMETER_NODE_COLOR = tools.Color.RGBA(0.2, 0.2, 0.2, 1)[:-1]
-ACTION_NODE_COLOR = tools.Color.RGBA(0.2, 0.2, 0.2, 1)[:-1]
-PYTHON_NODE_COLOR = tools.Color.RGBA(0.2, 0.2, 0.2, 1)[:-1]
+CONDITION_NODE_COLOR = utils.Color.RGBA(0.2, 0.2, 0.2, 1)[:-1]
+PARAMETER_NODE_COLOR = utils.Color.RGBA(0.2, 0.2, 0.2, 1)[:-1]
+ACTION_NODE_COLOR = utils.Color.RGBA(0.2, 0.2, 0.2, 1)[:-1]
+PYTHON_NODE_COLOR = utils.Color.RGBA(0.2, 0.2, 0.2, 1)[:-1]
 
 _sockets = []
 _nodes = []
@@ -531,7 +531,10 @@ def update_tree_code(self, context):
     tree = context.space_data.edit_tree
     for node in tree.nodes:
         if isinstance(node, NetLogicStatementGenerator) and not node.hide:
-            node.update_draw()
+            try:
+                node.update_draw()
+            except Exception:
+                utils.debug('Node not ready!')
 
 
 def socket_field(s):
@@ -645,7 +648,7 @@ class NetLogicStatementGenerator(NetLogicType):
         return None
 
     def get_field_name_for_socket(self, socket):
-        print("not implemented in ", self)
+        utils.debug("not implemented in ", self)
         raise NotImplementedError()
 
     def get_netlogic_class_name(self):
@@ -4231,7 +4234,7 @@ class NLParameterVector2SimpleNode(bpy.types.Node, NLParameterNode):
 
     def init(self, context):
         NLParameterNode.init(self, context)
-        tools.register_inputs(
+        utils.register_inputs(
             self,
             NLFloatFieldSocket, "X",
             NLFloatFieldSocket, "Y"
@@ -4259,7 +4262,7 @@ class NLParameterVector2SplitNode(bpy.types.Node, NLParameterNode):
 
     def init(self, context):
         NLParameterNode.init(self, context)
-        tools.register_inputs(
+        utils.register_inputs(
             self,
             NLVec2FieldSocket, 'Vector'
         )
@@ -4282,7 +4285,7 @@ class NLParameterVector3SplitNode(bpy.types.Node, NLParameterNode):
 
     def init(self, context):
         NLParameterNode.init(self, context)
-        tools.register_inputs(
+        utils.register_inputs(
             self,
             NLVec3FieldSocket, 'Vector'
         )
@@ -4311,7 +4314,7 @@ class NLParameterAbsVector3Node(bpy.types.Node, NLParameterNode):
 
     def init(self, context):
         NLParameterNode.init(self, context)
-        tools.register_inputs(
+        utils.register_inputs(
             self,
             NLVec3FieldSocket, 'Vector'
         )
@@ -4338,7 +4341,7 @@ class NLParameterVector3SimpleNode(bpy.types.Node, NLParameterNode):
 
     def init(self, context):
         NLParameterNode.init(self, context)
-        tools.register_inputs(
+        utils.register_inputs(
             self,
             NLFloatFieldSocket, "X",
             NLFloatFieldSocket, "Y",
@@ -4367,7 +4370,7 @@ class NLParameterRGBNode(bpy.types.Node, NLParameterNode):
 
     def init(self, context):
         NLParameterNode.init(self, context)
-        tools.register_inputs(
+        utils.register_inputs(
             self,
             NLSocketAlphaFloat, "R",
             NLSocketAlphaFloat, "G",
@@ -4424,7 +4427,7 @@ class NLParameterEulerSimpleNode(bpy.types.Node, NLParameterNode):
 
     def init(self, context):
         NLParameterNode.init(self, context)
-        tools.register_inputs(
+        utils.register_inputs(
             self,
             NLFloatFieldSocket, "X",
             NLFloatFieldSocket, "Y",
@@ -5078,7 +5081,7 @@ class NLConditionOnceNode(bpy.types.Node, NLConditionNode):
         self.inputs.new(NLBooleanSocket.bl_idname, "Repeat")
         self.inputs.new(NLPositiveFloatSocket.bl_idname, 'Reset After')
         self.inputs[-1].value = .5
-        tools.register_outputs(self, NLConditionSocket, "Once")
+        utils.register_outputs(self, NLConditionSocket, "Once")
 
     def get_netlogic_class_name(self):
         return "bgelogic.ConditionOnce"
@@ -5149,8 +5152,8 @@ class NLConditionNextFrameNode(bpy.types.Node, NLConditionNode):
 
     def init(self, context):
         NLConditionNode.init(self, context)
-        tools.register_inputs(self, NLPseudoConditionSocket, "Condition")
-        tools.register_outputs(self, NLConditionSocket, "Next Tick")
+        utils.register_inputs(self, NLPseudoConditionSocket, "Condition")
+        utils.register_outputs(self, NLConditionSocket, "Next Tick")
 
     def get_netlogic_class_name(self):
         return "bgelogic.OnNextFrame"
@@ -5588,7 +5591,7 @@ class NLConditionValueChanged(bpy.types.Node, NLConditionNode):
 
     def init(self, context):
         NLConditionNode.init(self, context)
-        tools.register_inputs(self, NLParameterSocket, "Value")
+        utils.register_inputs(self, NLParameterSocket, "Value")
         self.outputs.new(NLConditionSocket.bl_idname, "If Changed")
         self.outputs.new(NLParameterSocket.bl_idname, "Old Value")
         self.outputs.new(NLParameterSocket.bl_idname, "New Value")
@@ -5645,8 +5648,8 @@ class NLConditionNotNoneNode(bpy.types.Node, NLConditionNode):
 
     def init(self, context):
         NLConditionNode.init(self, context)
-        tools.register_inputs(self, NLParameterSocket, "Value")
-        tools.register_outputs(self, NLConditionSocket, "If Not None")
+        utils.register_inputs(self, NLParameterSocket, "Value")
+        utils.register_outputs(self, NLConditionSocket, "If Not None")
 
     def get_netlogic_class_name(self):
         return "bgelogic.ConditionNotNone"
@@ -7099,7 +7102,7 @@ class NLActionApplyLocation(bpy.types.Node, NLActionNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
-        tools.register_inputs(
+        utils.register_inputs(
             self,
             NLConditionSocket, "Condition",
             NLGameObjectSocket, "Object",
@@ -7139,7 +7142,7 @@ class NLActionApplyRotation(bpy.types.Node, NLActionNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
-        tools.register_inputs(
+        utils.register_inputs(
             self,
             NLConditionSocket, "Condition",
             NLGameObjectSocket, "Object",
@@ -7179,7 +7182,7 @@ class NLActionApplyForce(bpy.types.Node, NLActionNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
-        tools.register_inputs(
+        utils.register_inputs(
             self,
             NLConditionSocket, "Condition",
             NLGameObjectSocket, "Object",
@@ -7928,7 +7931,7 @@ class NLActionApplyTorque(bpy.types.Node, NLActionNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
-        tools.register_inputs(
+        utils.register_inputs(
             self,
             NLConditionSocket, "Condition",
             NLGameObjectSocket, "Object",

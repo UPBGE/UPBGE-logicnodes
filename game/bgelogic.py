@@ -283,7 +283,7 @@ def compute_distance(parama, paramb):
     return (va - vb).length
 
 
-def debug(value):
+def debug(message):
     if not hasattr(bpy.types.Scene, 'logic_node_settings'):
         return
     if not bpy.context or not bpy.context.scene:
@@ -291,7 +291,7 @@ def debug(value):
     if not bpy.context.scene.logic_node_settings.use_node_debug:
         return
     else:
-        print('[Logic Nodes] ' + value)
+        print('[Logic Nodes] ' + message)
 
 
 def xrot_to(

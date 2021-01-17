@@ -1,6 +1,7 @@
 import bpy
 # import nodeitems_utils
 from bge_netlogic import nodeutils as nodeitems_utils
+import bge_netlogic.utilities as utils
 import os
 import sys
 import time
@@ -130,13 +131,12 @@ def _consume_update_tree_code_queue():
     last_event = _update_queue[-1]
     delta = now - last_event
     if delta > 0.25:
-        debug("Updating tree code...")
+        utils.debug("Updating tree code...")
         _update_queue.clear()
         try:
             bpy.ops.bge_netlogic.generate_logicnetwork()
         except Exception:
-            print("Context Incorrect, abort generating Network code")
-            # return update_current_tree_code()
+            pass
         return True
 
 

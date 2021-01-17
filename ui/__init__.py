@@ -1,5 +1,6 @@
 import bpy
 import bge_netlogic
+import bge_netlogic.utilities as utils
 from os.path import join, dirname
 
 

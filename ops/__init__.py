@@ -2,6 +2,7 @@ import os
 import json
 import bpy
 import bge_netlogic
+import bge_netlogic.utilities as utils
 import webbrowser
 
 class TreeCodeWriterOperator(bpy.types.Operator):
@@ -79,7 +80,7 @@ class WaitForKeyOperator(bpy.types.Operator):
         self.node = context.node
 
         if(not self.socket) and (not self.node):
-            print("no socket or node")
+            utils.debug("no socket or node")
             return {'FINISHED'}
 
         if(self.socket):
@@ -188,7 +189,7 @@ class NLImportProjectNodes(bpy.types.Operator):
 
 
 def _do_load_project_nodes(context):
-    print("loading project nodes and cells...")
+    utils.debug("loading project nodes and cells...")
     current_file = context.blend_data.filepath
     file_dir = os.path.dirname(current_file)
     netlogic_dir = os.path.join(file_dir, "bgelogic")
@@ -235,7 +236,7 @@ class NLSelectTreeByNameOperator(bpy.types.Operator):
             )
         ]
         if len(blt_groups) != 1:
-            print("Something went wrong here...")
+            utils.debug("Something went wrong here...")
         for t in blt_groups:
             context.space_data.node_tree = t
         return {'FINISHED'}
@@ -277,15 +278,15 @@ class NLRemoveTreeByNameOperator(bpy.types.Operator):
                 s for s in gs.sensors if py_module_name in s.name
             ]
             for s in sensors:
-                print("Removed Sensor", s.name, "from", ob.name)
+                utils.debug("Removed Sensor {} from {}".format(s.name, ob.name))
                 bpy.ops.logic.sensor_remove(sensor=s.name, object=ob.name)
             for c in controllers:
-                print("Removed Controller", c.name, "from", ob.name)
+                utils.debug("Removed Controller {} from {}".format(c.name, ob.name))
                 bpy.ops.logic.controller_remove(
                     controller=c.name, object=ob.name
                 )
             for a in actuators:
-                print("Removed Actuator", a.name, "from", ob.name)
+                utils.debug("Removed Actuator {} from {}".format(a.name, ob.name))
                 bpy.ops.logic.actuator_remove(actuator=a.name, object=ob.name)
 
             bge_netlogic.utilities.remove_tree_item_from_object(
@@ -294,7 +295,7 @@ class NLRemoveTreeByNameOperator(bpy.types.Operator):
             bge_netlogic.utilities.remove_network_initial_status_key(
                 ob, self.tree_name
             )
-            print("Succsessfully removed tree {} from object {}.".format(
+            utils.debug("Succsessfully removed tree {} from object {}.".format(
                 self.tree_name,
                 ob.name
             ))
@@ -382,7 +383,7 @@ class NLMakeGroupOperator(bpy.types.Operator):
                         try:
                             setattr(new_node.inputs[index], attr, getattr(socket, attr))
                         except Exception:
-                            print('Attribute {} not writable.'.format(attr))
+                            utils.debug('Attribute {} not writable.'.format(attr))
                 for link in socket.links:
                     try:
                         output_socket = link.from_socket
@@ -568,7 +569,7 @@ class NLApplyLogicOperator(bpy.types.Operator):
         )
         initial_status = True if initial_status is None else False
         for obj in selected_objects:
-            print(
+            utils.debug(
                 "Applied tree {} to object {}".format(
                     tree.name,
                     obj.name
@@ -713,9 +714,6 @@ class NLGenerateLogicNetworkOperator(bpy.types.Operator):
     def poll(cls, context):
         context = bpy.context
         if not context.space_data:
-            raise Exception(
-                "TREE TO EDIT NOT FOUND - Updating All"
-            )
             cls.report({"ERROR"}, "TREE TO EDIT NOT FOUND - Updating All")
 
         tree = context.space_data.edit_tree
@@ -764,10 +762,7 @@ class NLGenerateLogicNetworkOperator(bpy.types.Operator):
             tree = context.space_data.edit_tree
             tree_code_generator.TreeCodeGenerator().write_code_for_tree(tree)
         except Exception:
-            print(
-                '[Logic Nodes] ERROR: \n'
-                'no context, space_data or edit_tree. Updating All Trees instead.'
-            )
+            print('[Logic Nodes] Automatic Update failed, attempting hard generation...')
             self.report(
                 {'ERROR'},
                 'Tree to edit not found! Updating All Trees.'

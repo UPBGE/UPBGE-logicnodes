@@ -153,6 +153,18 @@ class Color(object):
         )
     pass
 
+
+def debug(message):
+    if not hasattr(bpy.types.Scene, 'logic_node_settings'):
+        return
+    if not bpy.context or not bpy.context.scene:
+        return
+    if not bpy.context.scene.logic_node_settings.use_node_debug:
+        return
+    else:
+        print('[Logic Nodes] ' + message)
+
+
 def register_inputs(node, *data):
     assert isinstance(node, bpy.types.Node)
     i = 0
@@ -321,7 +333,7 @@ def remove_tree_item_from_object(ob, tree_name):
     if index >= 0:
         ob.bgelogic_treelist.remove(index)
     else:
-        print("WARNING 18763 cannot remove item {} from object {} because no such item exists in that object".format(tree_name, ob.name))
+        debug("WARNING 18763 cannot remove item {} from object {} because no such item exists in that object".format(tree_name, ob.name))
 
 
 def object_has_treeitem_for_treename(ob, treename):
