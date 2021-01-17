@@ -8,10 +8,12 @@ TOO_OLD = bpy.app.version < (2, 80, 0)
 CONDITION_SOCKET_COLOR = tools.Color.RGBA(.8, 0.2, 0.2, 1.0)
 PSEUDO_COND_SOCKET_COLOR = tools.Color.RGBA(.8, 0.2, 0.2, 1.0)
 PARAMETER_SOCKET_COLOR = tools.Color.RGBA(.8, 0.5, 0.2, 1.0)
+PARAM_BOOL_SOCKET_COLOR = tools.Color.RGBA(.8, .8, .1, 1.0)
 PARAM_LIST_SOCKET_COLOR = tools.Color.RGBA(0.74, .65, .48, 1.0)
 PARAM_DICT_SOCKET_COLOR = tools.Color.RGBA(0.58, 0.48, .74, 1.0)
 PARAM_OBJ_SOCKET_COLOR = tools.Color.RGBA(0.2, 0.5, .7, 1.0)
 PARAM_MAT_SOCKET_COLOR = tools.Color.RGBA(.75, .35, .37, 1.0)
+PARAM_TEXT_SOCKET_COLOR = tools.Color.RGBA(.55, .25, .55, 1.0)
 PARAM_MESH_SOCKET_COLOR = tools.Color.RGBA(.0, .65, .35, 1.0)
 PARAM_COLL_SOCKET_COLOR = tools.Color.RGBA(0.25, 0.35, .8, 1.0)
 PARAM_SCENE_SOCKET_COLOR = tools.Color.RGBA(0.5, 0.5, 0.6, 1.0)
@@ -525,6 +527,9 @@ def parse_field_value(value_type, value):
 
 def update_tree_code(self, context):
     bge_netlogic.update_current_tree_code()
+    tree = context.space_data.edit_tree
+    for node in tree.nodes:
+        node.update_draw()
 
 
 def socket_field(s):
@@ -856,11 +861,19 @@ class NLAbstractNode(NetLogicStatementGenerator):
     def draw_buttons(self, context, layout):
         pass
 
+    def update_draw(self):
+        pass
+
     def draw_buttons_ext(self, context, layout):
         pass
 
     def draw_label(self):
         return self.__class__.bl_label
+
+
+###############################################################################
+# Basic Nodes
+###############################################################################
 
 
 class NLConditionNode(NLAbstractNode):
@@ -900,6 +913,11 @@ class NLParameterNode(NLAbstractNode):
         self.master_nodes = []
 
 
+###############################################################################
+# Pointer Sockets
+###############################################################################
+
+
 class NLGameObjectSocket(bpy.types.NodeSocket, NetLogicSocketType):
     bl_idname = "NLGameObjectSocket"
     bl_label = "Object"
@@ -926,7 +944,8 @@ class NLGameObjectSocket(bpy.types.NodeSocket, NetLogicSocketType):
             if not self.use_owner:
                 col = layout.column(align=False)
                 row = col.row()
-                row.label(text=self.name)
+                if self.name:
+                    row.label(text=self.name)
                 row.prop(self, 'use_owner', icon='USER', text='')
                 col.prop_search(
                     self,
@@ -970,7 +989,8 @@ class NLMaterialSocket(bpy.types.NodeSocket, NetLogicSocketType):
             layout.label(text=self.name)
         else:
             col = layout.column(align=False)
-            col.label(text=self.name)
+            if self.name:
+                col.label(text=self.name)
             col.prop_search(
                 self,
                 'value',
@@ -986,6 +1006,44 @@ class NLMaterialSocket(bpy.types.NodeSocket, NetLogicSocketType):
 
 
 _sockets.append(NLMaterialSocket)
+
+
+class NLTextIDSocket(bpy.types.NodeSocket, NetLogicSocketType):
+    bl_idname = "NLTextIDSocket"
+    bl_label = "Text"
+    value: bpy.props.PointerProperty(
+        name='Text',
+        type=bpy.types.Text,
+        update=update_tree_code
+    )
+
+    def draw_color(self, context, node):
+        return PARAM_TEXT_SOCKET_COLOR
+
+    def draw(self, context, layout, node, text):
+        if self.is_output:
+            layout.label(text=self.name)
+        elif self.is_linked:
+            layout.label(text=self.name)
+        else:
+            col = layout.column(align=False)
+            if self.name:
+                col.label(text=self.name)
+            col.prop_search(
+                self,
+                'value',
+                bpy.data,
+                'texts',
+                icon='NONE',
+                text=''
+            )
+
+    def get_unlinked_value(self):
+        if isinstance(self.value, bpy.types.Text):
+            return '"{}"'.format(self.value.name.split('.')[0])
+
+
+_sockets.append(NLTextIDSocket)
 
 
 class NLMeshSocket(bpy.types.NodeSocket, NetLogicSocketType):
@@ -1007,7 +1065,8 @@ class NLMeshSocket(bpy.types.NodeSocket, NetLogicSocketType):
             layout.label(text=self.name)
         else:
             col = layout.column(align=False)
-            col.label(text=self.name)
+            if self.name:
+                col.label(text=self.name)
             col.prop_search(
                 self,
                 'value',
@@ -1044,7 +1103,8 @@ class NLGameObjectNameSocket(bpy.types.NodeSocket, NetLogicSocketType):
             layout.label(text=self.name)
         else:
             col = layout.column(align=False)
-            col.label(text=self.name)
+            if self.name:
+                col.label(text=self.name)
             col.prop_search(
                 self,
                 'value',
@@ -1085,7 +1145,8 @@ class NLCollectionSocket(bpy.types.NodeSocket, NetLogicSocketType):
             layout.label(text=self.name)
         else:
             col = layout.column(align=False)
-            col.label(text=self.name)
+            if text:
+                col.label(text=text)
             col.prop_search(
                 self,
                 'value',
@@ -1128,7 +1189,10 @@ class NLSocketLogicTree(bpy.types.NodeSocket, NetLogicSocketType):
         if self.is_linked or self.is_output:
             layout.label(text=text)
         else:
-            layout.prop_search(
+            col = layout.column(align=False)
+            if text:
+                col.label(text=text)
+            col.prop_search(
                 self,
                 "value",
                 bpy.data,
@@ -1188,6 +1252,11 @@ class NLAnimationSocket(bpy.types.NodeSocket, NetLogicSocketType):
 
 
 _sockets.append(NLAnimationSocket)
+
+
+###############################################################################
+# Value Sockets
+###############################################################################
 
 
 class NLSocketAlphaFloat(bpy.types.NodeSocket, NetLogicSocketType):
@@ -1390,7 +1459,7 @@ class NLBooleanSocket(bpy.types.NodeSocket, NetLogicSocketType):
     false_label: bpy.props.StringProperty()
 
     def draw_color(self, context, node):
-        return PARAMETER_SOCKET_COLOR
+        return PARAM_BOOL_SOCKET_COLOR
 
     def draw(self, context, layout, node, text):
         if self.is_linked or self.is_output:
@@ -3980,12 +4049,19 @@ class NLParameterPythonModuleFunction(bpy.types.Node, NLActionNode):
     def init(self, context):
         NLParameterNode.init(self, context)
         self.inputs.new(NLPseudoConditionSocket.bl_idname, "Condition")
-        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Module")
+        self.inputs.new(NLTextIDSocket.bl_idname, "")
         self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Function")
         self.inputs.new(NLBooleanSocket.bl_idname, 'Use Argument')
-        self.inputs.new(NLValueFieldSocket.bl_idname, "Argument")
+        self.inputs.new(NLValueFieldSocket.bl_idname, "")
+        self.inputs[-1].hide = True
         self.outputs.new(NLConditionSocket.bl_idname, "Done")
         self.outputs.new(NLParameterSocket.bl_idname, "Returned Value")
+
+    def update_draw(self):
+        if self.inputs[3].value:
+            self.inputs[4].hide = False
+        else:
+            self.inputs[4].hide = True
 
     def get_netlogic_class_name(self):
         return "bgelogic.ParameterPythonModuleFunction"
@@ -9055,14 +9131,14 @@ _nodes.append(NLActionSetMouseCursorVisibility)
 
 class NLActionAddSoundDevice(bpy.types.Node, NLActionNode):
     bl_idname = "NLActionAddSoundDevice"
-    bl_label = "New Sound Device"
+    bl_label = "New Sound Type"
     bl_icon = 'MUTE_IPO_OFF'
     nl_category = "Sound"
 
     def init(self, context):
         NLActionNode.init(self, context)
         self.inputs.new(NLConditionSocket.bl_idname, "Condition")
-        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Name")
+        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Type")
         self.inputs[-1].value = 'custom'
         self.inputs.new(NLSocketDistanceModels.bl_idname, "Distance Model")
         self.inputs[-1].value = 'INVERSE_CLAMPED'
@@ -9145,7 +9221,7 @@ class NLActionStart3DSoundAdv(bpy.types.Node, NLActionNode):
         self.inputs.new(NLConditionSocket.bl_idname, "Condition")
         self.inputs.new(NLGameObjectSocket.bl_idname, "Speaker")
         self.inputs.new(NLFilePathSocket.bl_idname, "Sound File")
-        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Device")
+        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Type")
         self.inputs[-1].value = 'default3D'
         self.inputs.new(NLSocketLoopCount.bl_idname, "Mode")
         self.inputs.new(NLFloatFieldSocket.bl_idname, "Pitch")
