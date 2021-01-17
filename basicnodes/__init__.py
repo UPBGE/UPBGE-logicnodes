@@ -527,9 +527,10 @@ def parse_field_value(value_type, value):
 
 def update_tree_code(self, context):
     bge_netlogic.update_current_tree_code()
+
     tree = context.space_data.edit_tree
     for node in tree.nodes:
-        if isinstance(node, NetLogicStatementGenerator):
+        if isinstance(node, NetLogicStatementGenerator) and not node.hide:
             node.update_draw()
 
 
@@ -564,6 +565,8 @@ class NetLogicType:
 
 
 class NetLogicSocketType:
+    nlhide = False
+
     def get_unlinked_value(self):
         raise NotImplementedError()
 
@@ -682,8 +685,6 @@ class NetLogicStatementGenerator(NetLogicType):
         )
 
         if not isinstance(output_node, NetLogicStatementGenerator):
-            print(output_node)
-            print(output_node.__class__)
             raise Exception('No NetLogicStatementGenerator')
         output_node_varname = uids.get_varname_for_node(output_node)
         output_map = output_node.get_output_socket_varnames()
@@ -718,7 +719,8 @@ class NLConditionSocket(bpy.types.NodeSocket, NetLogicSocketType):
     def draw(self, context, layout, node, text):
         layout.label(text=text)
 
-    def get_unlinked_value(self): return self.default_value
+    def get_unlinked_value(self):
+        return self.default_value
 
 
 _sockets.append(NLConditionSocket)
@@ -867,6 +869,9 @@ class NLAbstractNode(NetLogicStatementGenerator):
 
     def draw_buttons_ext(self, context, layout):
         pass
+
+    def update(self):
+        update_tree_code(self, bpy.context)
 
     def draw_label(self):
         return self.__class__.bl_label
@@ -5354,13 +5359,21 @@ class NLConditionOrList(bpy.types.Node, NLConditionNode):
 
     def init(self, context):
         NLConditionNode.init(self, context)
-        self.inputs.new(NLPseudoConditionSocket.bl_idname, "A")
-        self.inputs.new(NLPseudoConditionSocket.bl_idname, "B")
-        self.inputs.new(NLPseudoConditionSocket.bl_idname, "C")
-        self.inputs.new(NLPseudoConditionSocket.bl_idname, "D")
-        self.inputs.new(NLPseudoConditionSocket.bl_idname, "E")
-        self.inputs.new(NLPseudoConditionSocket.bl_idname, "F")
-        self.outputs.new(NLPseudoConditionSocket.bl_idname, "Or...")
+        self.inputs.new(NLConditionSocket.bl_idname, "A")
+        self.inputs.new(NLConditionSocket.bl_idname, "B")
+        self.inputs.new(NLConditionSocket.bl_idname, "C")
+        self.inputs.new(NLConditionSocket.bl_idname, "D")
+        self.inputs.new(NLConditionSocket.bl_idname, "E")
+        self.inputs.new(NLConditionSocket.bl_idname, "F")
+        self.outputs.new(NLConditionSocket.bl_idname, "Or...")
+
+    def update_draw(self):
+        for x in range(5):
+            if self.inputs[x].is_linked:
+                self.inputs[x].hide = False
+                self.inputs[x+1].hide = False
+            else:
+                self.inputs[x+1].hide = True
 
     def get_netlogic_class_name(self):
         return "bgelogic.ConditionOrList"
@@ -5386,19 +5399,27 @@ class NLConditionAndList(bpy.types.Node, NLConditionNode):
 
     def init(self, context):
         NLConditionNode.init(self, context)
-        self.inputs.new(NLPseudoConditionSocket.bl_idname, "A")
-        self.inputs[-1].default_value = True
-        self.inputs.new(NLPseudoConditionSocket.bl_idname, "B")
-        self.inputs[-1].default_value = True
-        self.inputs.new(NLPseudoConditionSocket.bl_idname, "C")
-        self.inputs[-1].default_value = True
-        self.inputs.new(NLPseudoConditionSocket.bl_idname, "D")
-        self.inputs[-1].default_value = True
-        self.inputs.new(NLPseudoConditionSocket.bl_idname, "E")
-        self.inputs[-1].default_value = True
-        self.inputs.new(NLPseudoConditionSocket.bl_idname, "F")
-        self.inputs[-1].default_value = True
-        self.outputs.new(NLPseudoConditionSocket.bl_idname, "If All True")
+        self.inputs.new(NLConditionSocket.bl_idname, "A")
+        self.inputs[-1].default_value = "True"
+        self.inputs.new(NLConditionSocket.bl_idname, "B")
+        self.inputs[-1].default_value = "True"
+        self.inputs.new(NLConditionSocket.bl_idname, "C")
+        self.inputs[-1].default_value = "True"
+        self.inputs.new(NLConditionSocket.bl_idname, "D")
+        self.inputs[-1].default_value = "True"
+        self.inputs.new(NLConditionSocket.bl_idname, "E")
+        self.inputs[-1].default_value = "True"
+        self.inputs.new(NLConditionSocket.bl_idname, "F")
+        self.inputs[-1].default_value = "True"
+        self.outputs.new(NLConditionSocket.bl_idname, "If All True")
+
+    def update_draw(self):
+        for x in range(5):
+            if self.inputs[x].is_linked:
+                self.inputs[x].hide = False
+                self.inputs[x+1].hide = False
+            else:
+                self.inputs[x+1].hide = True
 
     def get_netlogic_class_name(self):
         return "bgelogic.ConditionAndList"
