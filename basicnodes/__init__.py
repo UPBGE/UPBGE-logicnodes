@@ -1165,12 +1165,8 @@ class NLCollectionSocket(bpy.types.NodeSocket, NetLogicSocketType):
             )
 
     def get_unlinked_value(self):
-        col_name = self.value.name
-        if col_name.startswith('F '):
-            col_name = col_name.split('F ')[-1]
-        elif ' F ' in col_name:
-            col_name = col_name.split(' F ')[-1]
-        return "'{}'".format(col_name)
+        if isinstance(self.value, bpy.types.Collection):
+            return '"{}"'.format(self.value.name)
 
 
 if not TOO_OLD:
@@ -1211,12 +1207,8 @@ class NLSocketLogicTree(bpy.types.NodeSocket, NetLogicSocketType):
             )
 
     def get_unlinked_value(self):
-        tree_name = self.value.name
-        if tree_name.startswith('F '):
-            tree_name = tree_name.split('F ')[-1]
-        elif ' F ' in tree_name:
-            tree_name = tree_name.split(' F ')[-1]
-        return "'{}'".format(tree_name)
+        if isinstance(self.value, bpy.types.NodeTree):
+            return '"{}"'.format(self.value.name)
 
 
 _sockets.append(NLSocketLogicTree)
@@ -1252,12 +1244,8 @@ class NLAnimationSocket(bpy.types.NodeSocket, NetLogicSocketType):
             )
 
     def get_unlinked_value(self):
-        action_name = self.value.name
-        if action_name.startswith('F '):
-            action_name = action_name.split('F ')[-1]
-        elif ' F ' in action_name:
-            action_name = action_name.split(' F ')[-1]
-        return "'{}'".format(action_name)
+        if isinstance(self.value, bpy.types.Action):
+            return '"{}"'.format(self.value.name)
 
 
 _sockets.append(NLAnimationSocket)
@@ -1487,7 +1475,8 @@ class NLBooleanSocket(bpy.types.NodeSocket, NetLogicSocketType):
                 label = self.false_label
             layout.prop(self, "value", text=label, toggle=self.use_toggle)
 
-    def get_unlinked_value(self): return "True" if self.value else "False"
+    def get_unlinked_value(self):
+        return "True" if self.value and self.enabled else "False"
 
 
 _sockets.append(NLBooleanSocket)
@@ -8466,13 +8455,13 @@ class NLActionPlayActionNode(bpy.types.Node, NLActionNode):
         self.inputs.new(NLConditionSocket.bl_idname, "Condition")
         self.inputs.new(NLGameObjectSocket.bl_idname, "Object / Armature")
         self.inputs.new(NLAnimationSocket.bl_idname, "Action")
-        self.inputs.new(NLBooleanSocket.bl_idname, "Stop When Done")
-        self.inputs[-1].value = True
         self.inputs.new(NLFloatFieldSocket.bl_idname, "Start Frame")
         self.inputs.new(NLFloatFieldSocket.bl_idname, "End Frame")
         self.inputs.new(NLPositiveIntegerFieldSocket.bl_idname, "Layer")
         self.inputs.new(NLPositiveIntegerFieldSocket.bl_idname, "Priority")
         self.inputs.new(NLPlayActionModeSocket.bl_idname, "Play Mode")
+        self.inputs.new(NLBooleanSocket.bl_idname, "Stop When Done")
+        self.inputs[-1].value = True
         self.inputs.new(NLSocketAlphaFloat.bl_idname, "Layer Weight")
         self.inputs[-1].value = 1.0
         self.inputs.new(NLPositiveFloatSocket.bl_idname, "Speed")
@@ -8484,6 +8473,12 @@ class NLActionPlayActionNode(bpy.types.Node, NLActionNode):
         self.outputs.new(NLConditionSocket.bl_idname, "Finished")
         self.outputs.new(NLParameterSocket.bl_idname, "Current Frame")
 
+    def update_draw(self):
+        if self.inputs[7].value == 'bge.logic.KX_ACTION_MODE_LOOP':
+            self.inputs[8].enabled = False
+        else:
+            self.inputs[8].enabled = True
+
     def get_netlogic_class_name(self):
         return "bgelogic.ActionPlayAction"
 
@@ -8492,12 +8487,12 @@ class NLActionPlayActionNode(bpy.types.Node, NLActionNode):
             "condition",
             "game_object",
             "action_name",
-            "stop",
             "start_frame",
             "end_frame",
             "layer",
             "priority",
             "play_mode",
+            "stop",
             "layer_weight",
             "speed",
             "blendin",

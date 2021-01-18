@@ -8386,11 +8386,10 @@ class ActionPlayAction(ActionCell):
         self._finish_notified = False
 
     def _notify_finished(self, obj, layer):
-        if not self._finish_notified:
+        if not self._finish_notified and self.stop:
             self._finish_notified = True
             self._finished = True
-            if self.stop:
-                obj.stopAction(layer)
+            obj.stopAction(layer)
         else:
             self._finished = False
 
