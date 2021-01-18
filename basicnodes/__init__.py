@@ -536,7 +536,7 @@ def update_tree_code(self, context):
             try:
                 node.update_draw()
             except Exception:
-                utils.debug('Node not ready!')
+                pass
 
 
 def socket_field(s):

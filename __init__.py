@@ -95,11 +95,10 @@ def update_tree_name(tree, old_name):
                     actuator.name = actuator.name.replace(
                         old_name_code, new_name_code
                     )
-        else:
-            print("Tree name change doesn't affect object {} because the tree is not applied to it".format(ob.name))
-    old_module_file = utilities.py_module_file_path_for_stripped_tree_name(old_name)
-    new_module_file = utilities.py_module_file_path_for_stripped_tree_name(new_name)
-    print("TODO: also rename {} to {}?".format(old_module_file, new_module_file))
+            utils.success(f'Renamed Tree {old_name_code} to {new_name_code}')
+    # old_module_file = utilities.py_module_file_path_for_stripped_tree_name(old_name)
+    # new_module_file = utilities.py_module_file_path_for_stripped_tree_name(new_name)
+    # print("TODO: also rename {} to {}?".format(old_module_file, new_module_file))
     bpy.ops.bge_netlogic.generate_logicnetwork()
 
 

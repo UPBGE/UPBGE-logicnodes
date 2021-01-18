@@ -80,7 +80,7 @@ class WaitForKeyOperator(bpy.types.Operator):
         self.node = context.node
 
         if(not self.socket) and (not self.node):
-            utils.debug("no socket or node")
+            utils.error("No socket or Node")
             return {'FINISHED'}
 
         if(self.socket):
@@ -189,7 +189,7 @@ class NLImportProjectNodes(bpy.types.Operator):
 
 
 def _do_load_project_nodes(context):
-    utils.debug("loading project nodes and cells...")
+    utils.debug("Loading project nodes and cells...")
     current_file = context.blend_data.filepath
     file_dir = os.path.dirname(current_file)
     netlogic_dir = os.path.join(file_dir, "bgelogic")
@@ -236,7 +236,7 @@ class NLSelectTreeByNameOperator(bpy.types.Operator):
             )
         ]
         if len(blt_groups) != 1:
-            utils.debug("Something went wrong here...")
+            utils.error("Something went wrong here...")
         for t in blt_groups:
             context.space_data.node_tree = t
         return {'FINISHED'}
@@ -381,7 +381,7 @@ class NLMakeGroupOperator(bpy.types.Operator):
                         try:
                             setattr(new_node.inputs[index], attr, getattr(socket, attr))
                         except Exception:
-                            utils.debug('Attribute {} not writable.'.format(attr))
+                            utils.warn('Attribute {} not writable.'.format(attr))
                 for link in socket.links:
                     try:
                         output_socket = link.from_socket
@@ -390,7 +390,9 @@ class NLMakeGroupOperator(bpy.types.Operator):
                         node_tree.links.new(new_node.inputs[index], output_node.outputs[outdex])
                     except Exception:
                         bpy.data.node_groups.remove(node_tree)
-                        self.report({"ERROR"}, "Some linked Nodes are not selected!")
+                        msg = 'Some linked Nodes are not selected! Aborting...'
+                        self.report({"ERROR"}, msg)
+                        utils.error(msg)
                         return None
             locs.append(old_node.location)
 
@@ -402,7 +404,9 @@ class NLMakeGroupOperator(bpy.types.Operator):
         try:
             redir.inputs[1].value = bpy.context.object
         except Exception:
-            self.report({"WARNING"}, 'No Object was selected; Set Object in tree {} manually!'.format(parent_tree.name))
+            msg = 'No Object was selected; Set Object in tree {} manually!'.format(parent_tree.name)
+            self.report({"WARNING"}, msg)
+            utils.warn(msg)
         redir.inputs[2].value = bpy.data.node_groups[group_name]
         redir.location = self.avg_location(locs)
         node_tree.use_fake_user = True
