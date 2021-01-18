@@ -676,6 +676,7 @@ class NetLogicStatementGenerator(NetLogicType):
         while isinstance(output_node, bpy.types.NodeReroute):
             # cycle through and reset output_node until master is met
             if not output_node.inputs[0].links:
+                print('Heres a prob yo')
                 return None
             next_socket = output_node.inputs[0].links[0].from_socket
             next_node = next_socket.node
@@ -1004,6 +1005,7 @@ class NLGamePropertySocket(bpy.types.NodeSocket, NetLogicSocketType):
             tree = getattr(context.space_data, 'edit_tree', None)
             if not tree:
                 return
+            game_object = None
             game_obj_socket = self.node.inputs[self.ref_index]
             if not game_obj_socket.use_owner:
                 game_object = game_obj_socket.value
@@ -1011,7 +1013,7 @@ class NLGamePropertySocket(bpy.types.NodeSocket, NetLogicSocketType):
                 for obj in bpy.data.objects:
                     if 'NODELOGIC__{}'.format(tree.name) in obj.game.properties:
                         game_object = obj
-                    break
+                        break
             if self.name:
                 row = col.row()
                 row.label(text=self.name)
