@@ -675,6 +675,8 @@ class NetLogicStatementGenerator(NetLogicType):
 
         while isinstance(output_node, bpy.types.NodeReroute):
             # cycle through and reset output_node until master is met
+            if not output_node.inputs[0].links:
+                return None
             next_socket = output_node.inputs[0].links[0].from_socket
             next_node = next_socket.node
             output_socket = next_socket

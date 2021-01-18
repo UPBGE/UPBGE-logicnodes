@@ -131,6 +131,8 @@ class TreeCodeGenerator(object):
                 if self._test_node_links(node, added_cells, uid_map):
                     available_cells.remove(cell_name)
                     added_cells.append(cell_name)
+                else:
+                    return []
         return added_cells
 
     def _test_node_links(self, node, added_cell_names, uid_map):
@@ -138,6 +140,9 @@ class TreeCodeGenerator(object):
             if input.is_linked:
                 linked_node = input.links[0].from_socket.node
                 while isinstance(linked_node, bpy.types.NodeReroute):
+                    if not linked_node.inputs[0].links:
+                        utils.error('A Reroute does not have any input links! Aborting...')
+                        return False
                     linked_node = linked_node.inputs[0].links[0].from_socket.node
                 linked_node_varname = uid_map.get_varname_for_node(linked_node)
                 if not (linked_node_varname in added_cell_names):

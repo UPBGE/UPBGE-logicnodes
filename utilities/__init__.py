@@ -1,4 +1,13 @@
 import bpy
+import os
+
+
+class ansicol:
+    RED = '\033[31m'
+    GREEN = '\033[32m'
+    YELLOW = '\033[33m'
+    BYELLOW = '\033[93m'
+    END = '\033[0m'
 
 
 class Color(object):
@@ -162,7 +171,23 @@ def debug(message):
     if not bpy.context.scene.logic_node_settings.use_node_debug:
         return
     else:
-        print('[Logic Nodes] ' + message)
+        os.system('color')
+        print(f'[Logic Nodes][{ansicol.BYELLOW}DEBUG{ansicol.END}] ' + message)
+
+
+def error(message):
+    os.system('color')
+    print(f'[Logic Nodes][{ansicol.RED}ERROR{ansicol.END}] ' + message)
+
+
+def warn(message):
+    os.system('color')
+    print(f'[Logic Nodes][{ansicol.YELLOW}WARNING{ansicol.END}] ' + message)
+
+
+def success(message):
+    os.system('color')
+    print(f'[Logic Nodes][{ansicol.GREEN}SUCCESS{ansicol.END}] ' + message)
 
 
 def register_inputs(node, *data):
@@ -174,6 +199,7 @@ def register_inputs(node, *data):
         node.inputs.new(cls.bl_idname, lab)
         i += 2
 
+
 def register_outputs(node, *data):
     assert isinstance(node, bpy.types.Node)
     i = 0
@@ -182,6 +208,7 @@ def register_outputs(node, *data):
         lab = data[i + 1]
         node.outputs.new(cls.bl_idname, lab)
         i += 2
+
 
 def _map_socket(input, node, socket, *names):
     assert isinstance(node, bpy.types.Node)
@@ -193,6 +220,7 @@ def _map_socket(input, node, socket, *names):
         if s == socket: return names[i]
     assert False
 
+
 def _map_value(input, node, socket, *fun):
     assert isinstance(node, bpy.types.Node)
     assert isinstance(socket, bpy.types.NodeSocket)
@@ -203,23 +231,29 @@ def _map_value(input, node, socket, *fun):
         if s == socket: return fun[i](s)
     assert False
 
+
 def map_input_name(node, socket, *names):
     return _map_socket(True, node, socket, *names)
+
 
 def map_input_value(node, socket, *fun):
     return _map_value(True, node, socket, *fun)
 
+
 def map_output_name(node, socket, *names):
     return _map_socket(False, node, socket, *names)
 
+
 def map_output_value(node, socket, *names):
     return _map_value(False, node, socket, *names)
+
 
 def quoted(s):
     if s.startswith("'"): return s
     if s.startswith('"'): return s
     return '"{}"'.format(s)
 quoted_string = quoted#alias
+
 
 def strip_tree_name(name):
     buffer = ""
@@ -228,19 +262,24 @@ def strip_tree_name(name):
         if c in valid_characters: buffer += c
     return buffer
 
+
 def py_module_name_for_tree(tree):
     tree_module_name = strip_tree_name(tree.name)
     return "NL" + tree_module_name
 
+
 def py_module_name_for_stripped_tree_name(stripped_tree_name):
     return "NL" + stripped_tree_name
+
 
 def py_module_filename_for_tree(tree):
     name = strip_tree_name(tree.name)
     return "NL{}.py".format(name)
 
+
 def py_controller_module_string(py_module_name):
     return "bgelogic.{}.pulse_network".format(py_module_name)
+
 
 def py_module_file_path_for_stripped_tree_name(stripped_tree_name):
     module_name = py_module_name_for_stripped_tree_name(stripped_tree_name)
@@ -250,6 +289,7 @@ def py_module_file_path_for_stripped_tree_name(stripped_tree_name):
 
 def get_key_network_initial_status_for_tree_name(tree_name):
     return 'NODELOGIC__{}'.format(tree_name)
+
 
 def get_key_network_initial_status_for_tree(nodetree):
     return get_key_network_initial_status_for_tree_name(nodetree.name)
@@ -340,7 +380,6 @@ def object_has_treeitem_for_treename(ob, treename):
     for item in ob.bgelogic_treelist:
         if item.tree_name == treename: return True
     return False
-
 
 
 def compute_initial_status_of_tree(tree_name, objects):

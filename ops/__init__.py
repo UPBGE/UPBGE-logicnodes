@@ -570,7 +570,7 @@ class NLApplyLogicOperator(bpy.types.Operator):
         )
         initial_status = True if initial_status is None else False
         for obj in selected_objects:
-            utils.debug(
+            utils.success(
                 "Applied tree {} to object {}".format(
                     tree.name,
                     obj.name
@@ -763,7 +763,7 @@ class NLGenerateLogicNetworkOperator(bpy.types.Operator):
             tree = context.space_data.edit_tree
             tree_code_generator.TreeCodeGenerator().write_code_for_tree(tree)
         except Exception:
-            print('[Logic Nodes] Automatic Update failed, attempting hard generation...')
+            utils.warn('Automatic Update failed, attempting hard generation...')
             if bpy.context.scene.logic_node_settings.use_generate_all:
                 self.report(
                     {'ERROR'},
@@ -778,8 +778,8 @@ class NLGenerateLogicNetworkOperator(bpy.types.Operator):
                     {'ERROR'},
                     'Tree to edit not found! Aborting.'
                 )
+                utils.error('Tree to edit not found! Aborting.')
                 return {"FINISHED"}
-                
 
         return {"FINISHED"}
 
