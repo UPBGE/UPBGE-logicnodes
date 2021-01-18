@@ -131,7 +131,6 @@ def _consume_update_tree_code_queue():
     last_event = _update_queue[-1]
     delta = now - last_event
     if delta > 0.25:
-        utils.debug("Updating tree code...")
         _update_queue.clear()
         try:
             bpy.ops.bge_netlogic.generate_logicnetwork()

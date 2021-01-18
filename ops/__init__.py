@@ -278,15 +278,12 @@ class NLRemoveTreeByNameOperator(bpy.types.Operator):
                 s for s in gs.sensors if py_module_name in s.name
             ]
             for s in sensors:
-                utils.debug("Removed Sensor {} from {}".format(s.name, ob.name))
                 bpy.ops.logic.sensor_remove(sensor=s.name, object=ob.name)
             for c in controllers:
-                utils.debug("Removed Controller {} from {}".format(c.name, ob.name))
                 bpy.ops.logic.controller_remove(
                     controller=c.name, object=ob.name
                 )
             for a in actuators:
-                utils.debug("Removed Actuator {} from {}".format(a.name, ob.name))
                 bpy.ops.logic.actuator_remove(actuator=a.name, object=ob.name)
 
             bge_netlogic.utilities.remove_tree_item_from_object(
@@ -295,7 +292,7 @@ class NLRemoveTreeByNameOperator(bpy.types.Operator):
             bge_netlogic.utilities.remove_network_initial_status_key(
                 ob, self.tree_name
             )
-            utils.debug("Succsessfully removed tree {} from object {}.".format(
+            utils.success("Successfully removed tree {} from object {}.".format(
                 self.tree_name,
                 ob.name
             ))
@@ -571,7 +568,7 @@ class NLApplyLogicOperator(bpy.types.Operator):
         initial_status = True if initial_status is None else False
         for obj in selected_objects:
             utils.success(
-                "Applied tree {} to object {}".format(
+                "Applied tree {} to object {}.".format(
                     tree.name,
                     obj.name
                 )

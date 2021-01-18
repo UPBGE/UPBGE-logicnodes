@@ -175,7 +175,6 @@ def register_node_categories(identifier, cat_list):
         bpy.utils.register_class(menu_type)
 
     def draw_add_menu(self, context):
-        print('WHERE TIIIIII')
         layout = self.layout
 
         menues = []
