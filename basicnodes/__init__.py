@@ -981,6 +981,60 @@ class NLGameObjectSocket(bpy.types.NodeSocket, NetLogicSocketType):
 _sockets.append(NLGameObjectSocket)
 
 
+class NLGamePropertySocket(bpy.types.NodeSocket, NetLogicSocketType):
+    bl_idname = "NLGamePropertySocket"
+    bl_label = "Property"
+    value: bpy.props.StringProperty(
+        update=update_tree_code
+    )
+    ref_index: bpy.props.IntProperty(default=0)
+
+    def draw_color(self, context, node):
+        return PARAMETER_SOCKET_COLOR
+
+    def draw(self, context, layout, node, text):
+        if self.is_output:
+            layout.label(text=self.name)
+        elif self.is_linked:
+            layout.label(text=self.name)
+        else:
+            col = layout.column(align=False)
+            tree = getattr(context.space_data, 'edit_tree', None)
+            if not tree:
+                return
+            game_obj_socket = self.node.inputs[self.ref_index]
+            if not game_obj_socket.use_owner:
+                game_object = game_obj_socket.value
+            else:
+                for obj in bpy.data.objects:
+                    if 'NODELOGIC__{}'.format(tree.name) in obj.game.properties:
+                        game_object = obj
+                    break
+            if self.name:
+                row = col.row()
+                row.label(text=self.name)
+            if game_object:
+                # game_object = bpy.data.objects[game_object.split('NLO:')[-1]]
+                game = game_object.game
+                if not game_obj_socket.is_linked:
+                    col.prop_search(
+                        self,
+                        'value',
+                        game,
+                        'properties',
+                        icon='NONE',
+                        text=''
+                    )
+                else:
+                    col.prop(self, 'value', text='')
+
+    def get_unlinked_value(self):
+        return '"{}"'.format(self.value)
+
+
+_sockets.append(NLGamePropertySocket)
+
+
 class NLMaterialSocket(bpy.types.NodeSocket, NetLogicSocketType):
     bl_idname = "NLMaterialSocket"
     bl_label = "Material"
@@ -1262,7 +1316,7 @@ class NLSocketAlphaFloat(bpy.types.NodeSocket, NetLogicSocketType):
     bl_idname = "NLSocketAlphaFloat"
     bl_label = "Factor"
     value: bpy.props.FloatProperty(
-        name='Aplha Value',
+        name='Alpha Value',
         description='Value range from 0 - 1',
         min=0.0,
         max=1.0,
@@ -2983,8 +3037,8 @@ class NLGameObjectPropertyParameterNode(bpy.types.Node, NLParameterNode):
     def init(self, context):
         NLParameterNode.init(self, context)
         self.inputs.new(NLGameObjectSocket.bl_idname, "Object")
-        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Name")
-        self.inputs[-1].value = 'prop'
+        self.inputs.new(NLGamePropertySocket.bl_idname, "Property")
+        self.inputs[-1].ref_index = 0
         self.outputs.new(NLParameterSocket.bl_idname, "Property Value")
 
     def get_netlogic_class_name(self):
@@ -5176,8 +5230,8 @@ class NLObjectPropertyOperator(bpy.types.Node, NLConditionNode):
     def init(self, context):
         NLConditionNode.init(self, context)
         self.inputs.new(NLGameObjectSocket.bl_idname, 'Object')
-        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, 'Name')
-        self.inputs[-1].value = 'prop'
+        self.inputs.new(NLGamePropertySocket.bl_idname, "Property")
+        self.inputs[-1].ref_index = 0
         self.inputs.new(NLValueFieldSocket.bl_idname, '')
         self.outputs.new(NLConditionSocket.bl_idname, 'If True')
         self.outputs.new(NLParameterSocket.bl_idname, 'Value')
@@ -5842,8 +5896,8 @@ class NLSetGameObjectGamePropertyActionNode(bpy.types.Node, NLActionNode):
         NLActionNode.init(self, context)
         self.inputs.new(NLConditionSocket.bl_idname, "Condition")
         self.inputs.new(NLGameObjectSocket.bl_idname, "Object")
-        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Name")
-        self.inputs[-1].value = 'prop'
+        self.inputs.new(NLGamePropertySocket.bl_idname, "Property")
+        self.inputs[-1].ref_index = 1
         self.inputs.new(NLValueFieldSocket.bl_idname, "")
         self.outputs.new(NLConditionSocket.bl_idname, "Done")
 
@@ -5967,8 +6021,8 @@ class NLToggleGameObjectGamePropertyActionNode(bpy.types.Node, NLActionNode):
         NLActionNode.init(self, context)
         self.inputs.new(NLConditionSocket.bl_idname, "Condition")
         self.inputs.new(NLGameObjectSocket.bl_idname, "Object")
-        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Name")
-        self.inputs[-1].value = 'prop'
+        self.inputs.new(NLGamePropertySocket.bl_idname, "Property")
+        self.inputs[-1].ref_index = 1
         self.outputs.new(NLConditionSocket.bl_idname, "Done")
 
     def get_netlogic_class_name(self):
@@ -6000,8 +6054,8 @@ class NLAddToGameObjectGamePropertyActionNode(bpy.types.Node, NLActionNode):
         NLActionNode.init(self, context)
         self.inputs.new(NLConditionSocket.bl_idname, "Condition")
         self.inputs.new(NLGameObjectSocket.bl_idname, "Object")
-        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Name")
-        self.inputs[-1].value = 'prop'
+        self.inputs.new(NLGamePropertySocket.bl_idname, "Property")
+        self.inputs[-1].ref_index = 1
         self.inputs.new(NLFloatFieldSocket.bl_idname, "Value")
         self.outputs.new(NLConditionSocket.bl_idname, "Done")
 
@@ -6035,8 +6089,8 @@ class NLCopyPropertyFromObject(bpy.types.Node, NLActionNode):
         self.inputs.new(NLConditionSocket.bl_idname, "Condition")
         self.inputs.new(NLGameObjectSocket.bl_idname, "Copy From")
         self.inputs.new(NLGameObjectSocket.bl_idname, "To")
-        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Name")
-        self.inputs[-1].value = 'prop'
+        self.inputs.new(NLGamePropertySocket.bl_idname, "Property")
+        self.inputs[-1].ref_index = 1
         self.outputs.new(NLConditionSocket.bl_idname, "Done")
 
     def get_netlogic_class_name(self):
@@ -6068,8 +6122,8 @@ class NLClampedModifyProperty(bpy.types.Node, NLActionNode):
         NLActionNode.init(self, context)
         self.inputs.new(NLConditionSocket.bl_idname, "Condition")
         self.inputs.new(NLGameObjectSocket.bl_idname, "Object")
-        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Name")
-        self.inputs[-1].value = 'prop'
+        self.inputs.new(NLGamePropertySocket.bl_idname, "Property")
+        self.inputs[-1].ref_index = 1
         self.inputs.new(NLFloatFieldSocket.bl_idname, "Value")
         self.inputs.new(NLVec2FieldSocket.bl_idname, "Range")
         self.outputs.new(NLConditionSocket.bl_idname, "Done")
@@ -6752,6 +6806,30 @@ class NLActionSetFullscreen(bpy.types.Node, NLActionNode):
 
 
 _nodes.append(NLActionSetFullscreen)
+
+
+class NLSetProfile(bpy.types.Node, NLActionNode):
+    bl_idname = "NLSetProfile"
+    bl_label = "Show Profile"
+    nl_category = 'Render'
+
+    def init(self, context):
+        NLActionNode.init(self, context)
+        self.inputs.new(NLConditionSocket.bl_idname, 'Condition')
+        self.inputs.new(NLBooleanSocket.bl_idname, 'Show')
+        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+
+    def get_output_socket_varnames(self):
+        return ["OUT"]
+
+    def get_netlogic_class_name(self):
+        return "bgelogic.GESetProfile"
+
+    def get_input_sockets_field_names(self):
+        return ["condition", "use_profile"]
+
+
+_nodes.append(NLSetProfile)
 
 
 class NLActionSetVSync(bpy.types.Node, NLActionNode):

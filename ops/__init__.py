@@ -336,6 +336,7 @@ class NLMakeGroupOperator(bpy.types.Operator):
         group_name = node_tree.name
         attrs = [
             'value',
+            'game_object',
             'default_value',
             'use_toggle',
             'true_label',

@@ -6459,15 +6459,37 @@ class ActionSetFullscreen(ActionCell):
     def evaluate(self):
         self.done = False
         condition = self.get_parameter_value(self.condition)
-        if condition is LogicNetworkCell.STATUS_WAITING:
-            return
-        if not condition:
+        if not_met(condition):
             return
         use_fullscreen = self.get_parameter_value(self.use_fullscreen)
-        if use_fullscreen is LogicNetworkCell.STATUS_WAITING:
+        if is_waiting(use_fullscreen):
             return
         self._set_ready()
         bge.render.setFullScreen(use_fullscreen)
+        self.done = True
+
+
+class GESetProfile(ActionCell):
+    def __init__(self):
+        ActionCell.__init__(self)
+        self.condition = None
+        self.use_profile = None
+        self.done = None
+        self.OUT = LogicNetworkSubCell(self, self.get_done)
+
+    def get_done(self):
+        return self.done
+
+    def evaluate(self):
+        self.done = False
+        condition = self.get_parameter_value(self.condition)
+        if not_met(condition):
+            return
+        use_profile = self.get_parameter_value(self.use_profile)
+        if is_waiting(use_profile):
+            return
+        self._set_ready()
+        bge.render.showProfile(use_profile)
         self.done = True
 
 
