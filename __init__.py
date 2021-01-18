@@ -116,7 +116,7 @@ def _update_all_logic_tree_code():
 
 
 def _consume_update_tree_code_queue():
-    if hasattr(bpy.context.space_data, "edit_tree") and (bpy.context.space_data.edit_tree is not None):
+    if hasattr(bpy.context.space_data, "edit_tree") and (bpy.context.space_data.edit_tree):
         edit_tree = bpy.context.space_data.edit_tree
         old_name = _tree_to_name_map.get(edit_tree)
         if not old_name:

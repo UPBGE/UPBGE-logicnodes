@@ -141,7 +141,8 @@ class TreeCodeGenerator(object):
                 linked_node = input.links[0].from_socket.node
                 while isinstance(linked_node, bpy.types.NodeReroute):
                     if not linked_node.inputs[0].links:
-                        utils.error('A Reroute does not have any input links! Aborting...')
+                        name = node.label if node.label else node.name
+                        utils.error(f'A Reroute does not have any input links! Skipping {name}.')
                         return False
                     linked_node = linked_node.inputs[0].links[0].from_socket.node
                 linked_node_varname = uid_map.get_varname_for_node(linked_node)
