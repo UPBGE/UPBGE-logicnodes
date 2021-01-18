@@ -313,12 +313,12 @@ def refresh_custom_nodes(dummy):
 def request_tree_code_writer_start(dummy):
     global _tree_code_writer_started
     _tree_code_writer_started = False
-    print("updating tree code on file open...")
-    generator = ops.tree_code_generator.TreeCodeGenerator()
-    for node_tree in bpy.data.node_groups:
-        if node_tree.bl_idname == ui.BGELogicTree.bl_idname:
-            print("writing tree script for ", node_tree.name)
-            generator.write_code_for_tree(node_tree)
+    # print("updating tree code on file open...")
+    # generator = ops.tree_code_generator.TreeCodeGenerator()
+    # for node_tree in bpy.data.node_groups:
+    #     if node_tree.bl_idname == ui.BGELogicTree.bl_idname:
+    #         print("writing tree script for ", node_tree.name)
+    #         generator.write_code_for_tree(node_tree)
 
 
 bpy.app.handlers.load_post.append(refresh_custom_nodes)
