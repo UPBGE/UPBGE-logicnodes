@@ -2962,8 +2962,7 @@ class NLGetMaterialNodeValue(bpy.types.Node, NLActionNode):
         return ['OUT']
 
 
-if not TOO_OLD:
-    _nodes.append(NLGetMaterialNodeValue)
+_nodes.append(NLGetMaterialNodeValue)
 
 
 class NLGetMaterialNode(bpy.types.Node, NLActionNode):
@@ -2988,8 +2987,7 @@ class NLGetMaterialNode(bpy.types.Node, NLActionNode):
         return ['OUT']
 
 
-if not TOO_OLD:
-    _nodes.append(NLGetMaterialNode)
+_nodes.append(NLGetMaterialNode)
 
 
 class NLGetMaterialNodeInput(bpy.types.Node, NLActionNode):
@@ -3013,8 +3011,7 @@ class NLGetMaterialNodeInput(bpy.types.Node, NLActionNode):
         return ['OUT']
 
 
-if not TOO_OLD:
-    _nodes.append(NLGetMaterialNodeInput)
+_nodes.append(NLGetMaterialNodeInput)
 
 
 class NLGetMaterialNodeInputValue(bpy.types.Node, NLActionNode):
@@ -3037,8 +3034,7 @@ class NLGetMaterialNodeInputValue(bpy.types.Node, NLActionNode):
         return ['OUT']
 
 
-if not TOO_OLD:
-    _nodes.append(NLGetMaterialNodeInputValue)
+_nodes.append(NLGetMaterialNodeInputValue)
 
 
 class NLGameObjectHasPropertyParameterNode(bpy.types.Node, NLParameterNode):
@@ -3392,9 +3388,7 @@ class NLVectorMath(bpy.types.Node, NLParameterNode):
         self.inputs.new(NLVectorMathSocket.bl_idname, '')
         self.inputs.new(NLVec3FieldSocket.bl_idname, "Vector 1")
         self.inputs.new(NLVec3FieldSocket.bl_idname, "Vector 2")
-        self.inputs[-1].hide = True
         self.inputs.new(NLSocketAlphaFloat.bl_idname, "Factor")
-        self.inputs[-1].hide = True
         self.outputs.new(NLParameterSocket.bl_idname, 'Vector')
 
     def get_netlogic_class_name(self):
@@ -3405,23 +3399,23 @@ class NLVectorMath(bpy.types.Node, NLParameterNode):
         v2 = self.inputs[2]
         fac = self.inputs[3]
         if vtype == 'normalize':
-            v2.hide = True
-            fac.hide = True
+            v2.enabled = False
+            fac.enabled = False
         elif vtype == 'lerp':
-            v2.hide = False
-            fac.hide = False
+            v2.enabled = True
+            fac.enabled = True
         elif vtype == 'negate':
-            v2.hide = True
-            fac.hide = True
+            v2.enabled = False
+            fac.enabled = False
         elif vtype == 'dot':
-            v2.hide = False
-            fac.hide = True
+            v2.enabled = True
+            fac.enabled = False
         elif vtype == 'cross':
-            v2.hide = False
-            fac.hide = True
+            v2.enabled = True
+            fac.enabled = False
         elif vtype == 'project':
-            v2.hide = False
-            fac.hide = True
+            v2.enabled = True
+            fac.enabled = False
 
     def get_input_sockets_field_names(self):
         return ['op', "vector", 'vector_2', 'factor']
@@ -4086,15 +4080,14 @@ class NLParameterPythonModuleFunction(bpy.types.Node, NLActionNode):
         self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Function")
         self.inputs.new(NLBooleanSocket.bl_idname, 'Use Argument')
         self.inputs.new(NLValueFieldSocket.bl_idname, "")
-        self.inputs[-1].hide = True
         self.outputs.new(NLConditionSocket.bl_idname, "Done")
         self.outputs.new(NLParameterSocket.bl_idname, "Returned Value")
 
     def update_draw(self):
         if self.inputs[3].value:
-            self.inputs[4].hide = False
+            self.inputs[4].enabled = True
         else:
-            self.inputs[4].hide = True
+            self.inputs[4].enabled = False
 
     def get_netlogic_class_name(self):
         return "bgelogic.ParameterPythonModuleFunction"
@@ -5372,10 +5365,10 @@ class NLConditionOrList(bpy.types.Node, NLConditionNode):
     def update_draw(self):
         for x in range(5):
             if self.inputs[x].is_linked:
-                self.inputs[x].hide = False
-                self.inputs[x+1].hide = False
+                self.inputs[x].enabled = True
+                self.inputs[x+1].enabled = True
             else:
-                self.inputs[x+1].hide = True
+                self.inputs[x+1].enabled = False
 
     def get_netlogic_class_name(self):
         return "bgelogic.ConditionOrList"
@@ -5418,10 +5411,10 @@ class NLConditionAndList(bpy.types.Node, NLConditionNode):
     def update_draw(self):
         for x in range(5):
             if self.inputs[x].is_linked:
-                self.inputs[x].hide = False
-                self.inputs[x+1].hide = False
+                self.inputs[x].enabled = True
+                self.inputs[x+1].enabled = True
             else:
-                self.inputs[x+1].hide = True
+                self.inputs[x+1].enabled = False
 
     def get_netlogic_class_name(self):
         return "bgelogic.ConditionAndList"
@@ -6872,6 +6865,15 @@ class NLInitNewList(bpy.types.Node, NLActionNode):
         self.inputs.new(NLParameterSocket.bl_idname, 'Item 5')
         self.inputs.new(NLParameterSocket.bl_idname, 'Item 6')
         self.outputs.new(NLListSocket.bl_idname, 'List')
+
+    def update_draw(self):
+        for x in range(5):
+            print(self.inputs[x].enabled)
+            if self.inputs[x].is_linked:
+                self.inputs[x].enabled = True
+                self.inputs[x+1].enabled = True
+            else:
+                self.inputs[x+1].enabled = False
 
     def get_output_socket_varnames(self):
         return ['LIST']
@@ -8527,7 +8529,7 @@ class NLActionLibLoadNode(bpy.types.Node, NLActionNode):
         return ["condition", "path"]
 
 
-_nodes.append(NLActionLibLoadNode)
+#_nodes.append(NLActionLibLoadNode)
 
 
 class NLActionLibFreeNode(bpy.types.Node, NLActionNode):
@@ -8548,7 +8550,7 @@ class NLActionLibFreeNode(bpy.types.Node, NLActionNode):
         return ["condition", "path"]
 
 
-_nodes.append(NLActionLibFreeNode)
+#_nodes.append(NLActionLibFreeNode)
 
 
 class NLActionAlignAxisToVector(bpy.types.Node, NLActionNode):

@@ -7741,14 +7741,8 @@ class ActionCharacterJump(ActionCell):
         self._set_ready()
         if is_invalid(game_object):
             return
-        try:
-            physics.jump()
-        except Exception:
-            debug(
-                'Error: {} not set to Character Physics!'
-                .format(game_object.name)
-            )
-            return
+        physics.jump()
+
         self.done = True
 
 
@@ -7767,23 +7761,20 @@ class ActionSaveVariable(ActionCell):
 
     def write_to_json(self, path, name, val):
         data = None
-        try:
-            f = open(path + 'variables.json', 'r')
+        file_path = path + 'variables.json'
+        if os.path.isfile(file_path):
+            f = open(file_path, 'r')
             data = json.load(f)
             data[name] = val
             f.close()
-            f = open(path + 'variables.json', 'w')
+            f = open(file_path, 'w')
             json.dump(data, f, indent=2)
-        except IOError:
+        else:
             debug('file does not exist - creating...')
-            f = open(path + 'variables.json', 'w')
-            try:
-                data = {name: val}
-            except Exception:
-                data = {}
+            f = open(file_path, 'w')
+            data = {name: val}
             json.dump(data, f, indent=2)
-        finally:
-            f.close()
+        f.close()
 
     def get_custom_path(self, path):
         if not path.endswith('/'):
@@ -7886,16 +7877,15 @@ class ActionLoadVariable(ActionCell):
 
     def read_from_json(self, path, name):
         self.done = False
-        try:
-            f = open(path + 'variables.json', 'r')
+        file_path = os.path.isfile(path + 'variables.json')
+        if file_path:
+            f = open(file_path, 'r')
             data = json.load(f)
-            try:
-                self.var = data[name]
-            except Exception:
-                debug('Error: {} not saved in variables!'.format(name))
-                return
+            if name not in data:
+                debug('"{}" is not a saved Variabe!')
+            self.var = data[name]
             f.close()
-        except IOError:
+        else:
             debug('No saved variables!')
 
     def get_custom_path(self, path):
@@ -7992,23 +7982,18 @@ class ActionRemoveVariable(ActionCell):
 
     def write_to_json(self, path, name):
         data = None
-        try:
-            f = open(path + 'variables.json', 'r')
+        file_path = path + 'variables.json'
+        if os.path.isfile(file_path):
+            f = open(file_path, 'r')
             data = json.load(f)
-            try:
+            if name in data:
                 del data[name]
-            except Exception:
-                debug(
-                    'Error: Could not remove {} from variables!'
-                    .format(name)
-                )
             f.close()
-            f = open(path + 'variables.json', 'w')
+            f = open(file_path, 'w')
             json.dump(data, f, indent=2)
-        except IOError:
-            debug('file does not exist!')
-        finally:
             f.close()
+        else:
+            debug('File does not exist!')
 
     def get_custom_path(self, path):
         if not path.endswith('/'):
@@ -8052,17 +8037,17 @@ class ActionClearVariables(ActionCell):
 
     def write_to_json(self, path):
         data = None
-        try:
+        file_path = path + 'variables.json'
+        if os.path.isfile(file_path):
             data = {}
-            f = open(path + 'variables.json', 'w')
+            f = open(file_path, 'w')
             json.dump(data, f, indent=2)
-        except IOError:
-            debug('file does not exist - creating...')
-            f = open(path + 'variables.json', 'w')
+        else:
+            debug('File does not exist - creating...')
+            f = open(file_path, 'w')
             data = {}
             json.dump(data, f, indent=2)
-        finally:
-            f.close()
+        f.close()
 
     def get_custom_path(self, path):
         if not path.endswith('/'):
@@ -8108,8 +8093,9 @@ class ActionListVariables(ActionCell):
 
     def write_to_json(self, path, p_l):
         data = None
-        try:
-            f = open(path + 'variables.json', 'r')
+        file_path = path + 'variables.json'
+        if os.path.isfile(file_path):
+            f = open(file_path, 'r')
             data = json.load(f)
             if len(data) == 0:
                 debug('There are no saved variables')
@@ -8120,10 +8106,9 @@ class ActionListVariables(ActionCell):
                     print('{}\t->\t{}'.format(x, data[x]))
                 li.append(x)
             self.list = li
-        except IOError:
+        else:
             debug('There are no saved variables')
-        finally:
-            f.close()
+        f.close()
 
     def get_custom_path(self, path):
         if not path.endswith('/'):
@@ -8180,13 +8165,7 @@ class ActionSetCharacterJump(ActionCell):
         self._set_ready()
         if is_invalid(game_object):
             return
-        try:
-            physics.maxJumps = max_jumps
-        except Exception:
-            debug(
-                'Error: {} not set to Character Physics!'
-                .format(game_object.name)
-            )
+        physics.maxJumps = max_jumps
         self.done = True
 
 
@@ -8217,14 +8196,7 @@ class ActionSetCharacterGravity(ActionCell):
         self._set_ready()
         if is_invalid(game_object):
             return
-        try:
-            physics.gravity = gravity
-        except Exception as e:
-            debug(
-                'Error: {} not set to Character Physics!'
-                .format(game_object.name)
-            )
-            debug('Message: ' + e)
+        physics.gravity = gravity
         self.done = True
 
 
@@ -8254,15 +8226,7 @@ class ActionSetCharacterWalkDir(ActionCell):
         walkDir = self.get_parameter_value(self.walkDir)
         self._set_ready()
         if is_invalid(game_object):
-            return
-        try:
-            physics.walkDirection = walkDir
-        except Exception as e:
-            debug(
-                'Error: {} not set to Character Physics!'
-                .format(game_object.name)
-            )
-            debug('Message: ' + e)
+            returnphysics.walkDirection = walkDir
         self.done = True
 
 
@@ -8305,16 +8269,10 @@ class ActionGetCharacterInfo(ActionCell):
         self._set_ready()
         if is_invalid(game_object):
             return
-        try:
-            self.max_jumps = physics.maxJumps
-            self.cur_jump = physics.jumpCount
-            self.gravity = physics.gravity
-            self.on_ground = physics.onGround
-        except Exception:
-            debug(
-                'Error: {} not set to Character Physics!'
-                .format(game_object.name)
-            )
+        self.max_jumps = physics.maxJumps
+        self.cur_jump = physics.jumpCount
+        self.gravity = physics.gravity
+        self.on_ground = physics.onGround
 
 
 class ActionApplyTorque(ActionCell):
@@ -10298,13 +10256,7 @@ class RemovePhysicsConstraint(ActionCell):
         if is_invalid(name):
             return
         self._set_ready()
-        try:
-            bge.constraints.removeConstraint(obj[name].getConstraintId())
-        except Exception:
-            debug(
-                'Remove Physics Constraint Node: Constraint {} does not exist!'
-                .format(name)
-            )
+        bge.constraints.removeConstraint(obj[name].getConstraintId())
         self.done = True
 
 
