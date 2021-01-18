@@ -2239,7 +2239,7 @@ class GEGamepadVibration(ConditionCell):
 
         joystick.strengthLeft = left
         joystick.strengthRight = right
-        joystick.duration = time * 1000
+        joystick.duration = int(round(time * 1000))
 
         joystick.startVibration()
         self.done = True
@@ -6487,6 +6487,37 @@ class GetFullscreen(ActionCell):
     def evaluate(self):
         self._set_ready()
         self._set_value(bge.render.getFullScreen())
+
+
+class GEDrawLine(ActionCell):
+    def __init__(self):
+        ActionCell.__init__(self)
+        self.from_point = None
+        self.to_point = None
+        self.color = None
+
+    def evaluate(self):
+        condition = self.get_parameter_value(self.condition)
+        if not_met(condition):
+            return
+        from_point = self.get_parameter_value(self.from_point)
+        to_point = self.get_parameter_value(self.to_point)
+        color = self.get_parameter_value(self.color)
+        if is_invalid(from_point, to_point, color):
+            return
+        self._set_ready()
+        self._set_value(
+            bge.render.drawLine(
+                from_point,
+                to_point,
+                [
+                    color.x,
+                    color.y,
+                    color.z,
+                    1
+                ]
+            )
+        )
 
 
 class GetResolution(ActionCell):

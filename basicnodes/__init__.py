@@ -528,6 +528,8 @@ def parse_field_value(value_type, value):
 def update_tree_code(self, context):
     bge_netlogic.update_current_tree_code()
 
+    if not hasattr(context.space_data, 'edit_tree'):
+        return
     tree = context.space_data.edit_tree
     for node in tree.nodes:
         if isinstance(node, NetLogicStatementGenerator) and not node.hide:
@@ -2276,6 +2278,53 @@ class NLVec3PositiveFieldSocket(bpy.types.NodeSocket, NetLogicSocketType):
 _sockets.append(NLVec3PositiveFieldSocket)
 
 
+class NLColorSocket(bpy.types.NodeSocket, NetLogicSocketType):
+    bl_idname = "NLColorSocket"
+    bl_label = "Float Value"
+    value_x: bpy.props.FloatProperty(
+        min=0.0,
+        max=1.0,
+        default=0,
+        update=update_tree_code
+    )
+    value_y: bpy.props.FloatProperty(
+        min=0.0,
+        max=1.0,
+        default=0,
+        update=update_tree_code
+    )
+    value_z: bpy.props.FloatProperty(
+        min=0.0,
+        max=1.0,
+        default=0,
+        update=update_tree_code)
+    title: bpy.props.StringProperty(default='')
+
+    def draw_color(self, context, node):
+        return PARAM_BOOL_SOCKET_COLOR
+
+    def get_unlinked_value(self):
+        return "mathutils.Vector(({}, {}, {}))".format(
+            self.value_x,
+            self.value_y,
+            self.value_z
+        )
+
+    def draw(self, context, layout, node, text):
+        if self.is_linked or self.is_output:
+            layout.label(text=text)
+        else:
+            column = layout.column()
+            if text != '':
+                column.label(text=text)
+            column.prop(self, "value_x", text='R')
+            column.prop(self, "value_y", text='G')
+            column.prop(self, "value_z", text='B')
+
+
+_sockets.append(NLColorSocket)
+
+
 class NLBlendActionModeSocket(bpy.types.NodeSocket, NetLogicSocketType):
     bl_idname = "NLBlendActionMode"
     bl_label = "Blend Mode"
@@ -2880,6 +2929,29 @@ class NLGetFullscreen(bpy.types.Node, NLParameterNode):
 _nodes.append(NLGetFullscreen)
 
 
+class NLDrawLine(bpy.types.Node, NLParameterNode):
+    bl_idname = "NLDrawLine"
+    bl_label = "Draw Line"
+    nl_category = 'Render'
+
+    def init(self, context):
+        NLParameterNode.init(self, context)
+        self.inputs.new(NLPseudoConditionSocket.bl_idname, 'Condition')
+        self.inputs.new(NLVec3FieldSocket.bl_idname, 'From')
+        self.inputs.new(NLVec3FieldSocket.bl_idname, 'To')
+        self.inputs.new(NLColorSocket.bl_idname, 'Color')
+        self.outputs.new(NLConditionSocket.bl_idname, "Done")
+
+    def get_input_sockets_field_names(self):
+        return ['condition', 'from_point', 'to_point', 'color']
+
+    def get_netlogic_class_name(self):
+        return "bgelogic.GEDrawLine"
+
+
+_nodes.append(NLDrawLine)
+
+
 class NLGetResolution(bpy.types.Node, NLParameterNode):
     bl_idname = "NLGetResolution"
     bl_label = "Get Resolution"
@@ -2928,7 +3000,7 @@ class NLGameObjectPropertyParameterNode(bpy.types.Node, NLParameterNode):
 _nodes.append(NLGameObjectPropertyParameterNode)
 
 
-class NLGetMaterialNodeValue(bpy.types.Node, NLActionNode):
+class NLGetMaterialNodeValue(bpy.types.Node, NLParameterNode):
     bl_idname = "NLGetMaterialNodeValue"
     bl_label = "Get Node Input Value"
     nl_category = "Materials"
@@ -2954,7 +3026,7 @@ class NLGetMaterialNodeValue(bpy.types.Node, NLActionNode):
 _nodes.append(NLGetMaterialNodeValue)
 
 
-class NLGetMaterialNode(bpy.types.Node, NLActionNode):
+class NLGetMaterialNode(bpy.types.Node, NLParameterNode):
     bl_idname = "NLGetMaterialNode"
     bl_label = "Get Node"
     nl_category = "Materials"
@@ -2979,7 +3051,7 @@ class NLGetMaterialNode(bpy.types.Node, NLActionNode):
 _nodes.append(NLGetMaterialNode)
 
 
-class NLGetMaterialNodeInput(bpy.types.Node, NLActionNode):
+class NLGetMaterialNodeInput(bpy.types.Node, NLParameterNode):
     bl_idname = "NLGetMaterialNodeInput"
     bl_label = "Get Input"
     nl_category = "Materials"
@@ -3003,7 +3075,7 @@ class NLGetMaterialNodeInput(bpy.types.Node, NLActionNode):
 _nodes.append(NLGetMaterialNodeInput)
 
 
-class NLGetMaterialNodeInputValue(bpy.types.Node, NLActionNode):
+class NLGetMaterialNodeInputValue(bpy.types.Node, NLParameterNode):
     bl_idname = "NLGetMaterialNodeInputValue"
     bl_label = "Get Input Value"
     nl_category = "Materials"
