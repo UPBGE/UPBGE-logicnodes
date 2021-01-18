@@ -7,6 +7,7 @@ class ansicol:
     GREEN = '\033[32m'
     YELLOW = '\033[33m'
     BYELLOW = '\033[93m'
+    BBLUE = '\033[36m'
     END = '\033[0m'
 
 
@@ -173,6 +174,18 @@ def debug(message):
     else:
         os.system('color')
         print(f'[Logic Nodes][{ansicol.BYELLOW}DEBUG{ansicol.END}] ' + message)
+
+
+def notify(message):
+    if not hasattr(bpy.types.Scene, 'logic_node_settings'):
+        return
+    if not bpy.context or not bpy.context.scene:
+        return
+    if not bpy.context.scene.logic_node_settings.use_node_debug:
+        return
+    else:
+        os.system('color')
+        print(f'[Logic Nodes][{ansicol.BBLUE}NOTIFICATION{ansicol.END}] ' + message)
 
 
 def error(message):

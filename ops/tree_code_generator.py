@@ -34,7 +34,7 @@ class TreeCodeGenerator(object):
     def write_code_for_tree(self, tree):
         buffer_name = utils.py_module_filename_for_tree(tree)
         if bpy.context.scene.logic_node_settings.use_node_debug:
-            utils.debug("Generating code for tree {}".format(buffer_name))
+            utils.notify("Generating code for tree {}".format(buffer_name))
         line_writer = self.create_text_file("bgelogic/"+buffer_name)
         line_writer.write_line("# MACHINE GENERATED")
         line_writer.write_line("import bge")
@@ -131,6 +131,8 @@ class TreeCodeGenerator(object):
                 if self._test_node_links(node, added_cells, uid_map):
                     available_cells.remove(cell_name)
                     added_cells.append(cell_name)
+                else:
+                    available_cells.remove(cell_name)
         return added_cells
 
     def _test_node_links(self, node, added_cell_names, uid_map):

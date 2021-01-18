@@ -928,7 +928,6 @@ class LogicNetwork(LogicNetworkCell):
                 return
             cell = cells.popleft()
             if cell in done_cells:
-                debug('Cell already done')
                 continue
             else:
                 done_cells.append(cell)
@@ -6489,6 +6488,30 @@ class GESetProfile(ActionCell):
             return
         self._set_ready()
         bge.render.showProfile(use_profile)
+        self.done = True
+
+
+class GEShowFramerate(ActionCell):
+    def __init__(self):
+        ActionCell.__init__(self)
+        self.condition = None
+        self.use_framerate = None
+        self.done = None
+        self.OUT = LogicNetworkSubCell(self, self.get_done)
+
+    def get_done(self):
+        return self.done
+
+    def evaluate(self):
+        self.done = False
+        condition = self.get_parameter_value(self.condition)
+        if not_met(condition):
+            return
+        use_framerate = self.get_parameter_value(self.use_framerate)
+        if is_waiting(use_framerate):
+            return
+        self._set_ready()
+        bge.render.showFramerate(use_framerate)
         self.done = True
 
 

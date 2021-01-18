@@ -6836,6 +6836,30 @@ class NLSetProfile(bpy.types.Node, NLActionNode):
 _nodes.append(NLSetProfile)
 
 
+class NLShowFramerate(bpy.types.Node, NLActionNode):
+    bl_idname = "NLShowFramerate"
+    bl_label = "Show Framerate"
+    nl_category = 'Render'
+
+    def init(self, context):
+        NLActionNode.init(self, context)
+        self.inputs.new(NLConditionSocket.bl_idname, 'Condition')
+        self.inputs.new(NLBooleanSocket.bl_idname, 'Show')
+        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+
+    def get_output_socket_varnames(self):
+        return ["OUT"]
+
+    def get_netlogic_class_name(self):
+        return "bgelogic.GEShowFramerate"
+
+    def get_input_sockets_field_names(self):
+        return ["condition", "use_framerate"]
+
+
+_nodes.append(NLShowFramerate)
+
+
 class NLActionSetVSync(bpy.types.Node, NLActionNode):
     bl_idname = "NLActionSetVSync"
     bl_label = "Set VSync"
