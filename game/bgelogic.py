@@ -928,6 +928,7 @@ class LogicNetwork(LogicNetworkCell):
                 return
             cell = cells.popleft()
             if cell in done_cells:
+                debug('Cell already done')
                 continue
             else:
                 done_cells.append(cell)
@@ -5382,9 +5383,7 @@ class ActionPrint(ActionCell):
     def evaluate(self):
         self.done = False
         condition = self.get_parameter_value(self.condition)
-        if condition is LogicNetworkCell.STATUS_WAITING:
-            return
-        if not condition:
+        if not_met(condition):
             return
         value = self.get_parameter_value(self.value)
         self._set_ready()
