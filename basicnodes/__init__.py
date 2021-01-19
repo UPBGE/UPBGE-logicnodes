@@ -8768,7 +8768,7 @@ class NLActionTimeBarrier(bpy.types.Node, NLActionNode):
         self.outputs.new(NLConditionSocket.bl_idname, 'Out')
 
     def get_netlogic_class_name(self):
-        return 'bgelogic.GEPulseTrigger'
+        return 'bgelogic.GEBarrier'
 
     def get_input_sockets_field_names(self):
         return ['condition', 'time']
@@ -8787,28 +8787,13 @@ class NLActionTimeDelay(bpy.types.Node, NLActionNode):
         NLActionNode.init(self, context)
         self.inputs.new(NLConditionSocket.bl_idname, 'Condition')
         self.inputs.new(NLPositiveFloatSocket.bl_idname, 'Delay Sec.')
-        self.inputs.new(NLBooleanSocket.bl_idname, 'Repeat')
-        self.inputs[-1].use_toggle = True
-        self.inputs[-1].true_label = 'Repeat'
-        self.inputs[-1].false_label = 'Once'
-        self.inputs[-1].value = True
-        self.inputs.new(NLBooleanSocket.bl_idname, 'Mode')
-        self.inputs[-1].use_toggle = True
-        self.inputs[-1].true_label = 'Constant'
-        self.inputs[-1].false_label = 'Restart'
         self.outputs.new(NLConditionSocket.bl_idname, 'Out')
-
-    def update_draw(self):
-        if self.inputs[2].value:
-            self.inputs[3].enabled = True
-        else:
-            self.inputs[3].enabled = False
 
     def get_netlogic_class_name(self):
         return 'bgelogic.ActionTimeDelay'
 
     def get_input_sockets_field_names(self):
-        return ['condition', 'delay', 'repeat', 'constant']
+        return ['condition', 'delay']
 
 
 _nodes.append(NLActionTimeDelay)

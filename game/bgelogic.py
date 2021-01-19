@@ -7404,31 +7404,21 @@ class ActionTimeDelay(ActionCell):
         ActionCell.__init__(self)
         self.condition = None
         self.delay = None
-        self.repeat = None
-        self.constant = None
-        self.consumed = False
         self.triggers = []
 
     def evaluate(self):
         condition = self.get_parameter_value(self.condition)
         delay = self.get_parameter_value(self.delay)
-        repeat = self.get_parameter_value(self.repeat)
-        constant = self.get_parameter_value(self.constant)
-        if is_invalid(delay, repeat, constant):
+        if is_invalid(delay):
             return
         self._set_ready()
 
         now = self.network.timeline
 
-        if condition and (not self.consumed or repeat):
-            if constant or not self.triggers:
-                self.triggers.append(now + delay)
-            if not repeat:
-                self.consumed = True
+        if condition:
+           self.triggers.append(now + delay)
 
         if not self.triggers:
-            if not condition:
-                self.consumed = False
             self._set_value(False)
             return
         t = self.triggers[0]
