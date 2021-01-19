@@ -7362,25 +7362,22 @@ class ActionTimeFilter(ActionCell):
             self._set_value(True)
 
 
-class GEPulseTrigger(ActionCell):
-    _consumed: bool
-    _trigger_delay: float
-    _triggered_time: float
-    _triggered: bool
-    _condition_true_time: float
+class GEBarrier(ActionCell):
+    consumed: bool
+    trigger: float
 
     def __init__(self):
         ActionCell.__init__(self)
         self.condition = None
-        self.delay = None
+        self.time = None
         self.consumed = False
         self.trigger = 0
 
     def evaluate(self):
-        delay = self.get_parameter_value(self.delay)
-        if is_waiting(delay):
-            return
         condition = self.get_parameter_value(self.condition)
+        time = self.get_parameter_value(self.time)
+        if is_waiting(time):
+            return
 
         self._set_ready()
 
@@ -7389,7 +7386,7 @@ class GEPulseTrigger(ActionCell):
         if condition:
             if not self.consumed:
                 self.consumed = True
-                self.trigger = now + delay
+                self.trigger = now + time
 
             if now >= self.trigger:
                 self._set_value(True)

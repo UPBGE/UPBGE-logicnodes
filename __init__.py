@@ -354,11 +354,9 @@ class NLAddonSettings(bpy.types.PropertyGroup):
     use_custom_node_color: bpy.props.BoolProperty(
         update=update_node_colors
     )
-    use_node_debug: bpy.props.BoolProperty()
-    use_node_notify: bpy.props.BoolProperty()
-    use_generate_all: bpy.props.BoolProperty(
-        default=True
-    )
+    use_node_debug: bpy.props.BoolProperty(default=True)
+    use_node_notify: bpy.props.BoolProperty(default=True)
+    use_generate_all: bpy.props.BoolProperty(default=True)
 
 
 class NodeCategory():
