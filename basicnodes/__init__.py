@@ -8755,32 +8755,23 @@ _nodes.append(NLActionAlignAxisToVector)
 
 
 # If the condition stays true for N seconds, do something,
-# then wait N seconds to repeat
+# then stay true
 class NLActionTimeBarrier(bpy.types.Node, NLActionNode):
     bl_idname = 'NLActionTimeBarrier'
-    bl_label = 'Pulse Trigger'
+    bl_label = 'Barrier'
     nl_category = 'Time'
 
     def init(self, context):
         NLActionNode.init(self, context)
         self.inputs.new(NLConditionSocket.bl_idname, 'Condition')
         self.inputs.new(NLPositiveFloatSocket.bl_idname, 'Pulse Sec.')
-        self.inputs.new(NLBooleanSocket.bl_idname, 'Repeat')
-        self.inputs[-1].use_toggle = True
-        self.inputs[-1].true_label = 'Repeat'
-        self.inputs[-1].false_label = 'Once'
-        self.inputs[-1].value = True
-        self.inputs.new(NLBooleanSocket.bl_idname, 'Mode')
-        self.inputs[-1].use_toggle = True
-        self.inputs[-1].true_label = 'Constant'
-        self.inputs[-1].false_label = 'Restart'
         self.outputs.new(NLConditionSocket.bl_idname, 'Out')
 
     def get_netlogic_class_name(self):
         return 'bgelogic.GEPulseTrigger'
 
     def get_input_sockets_field_names(self):
-        return ['condition', 'delay', 'repeat', 'mode']
+        return ['condition', 'time']
 
 
 _nodes.append(NLActionTimeBarrier)
@@ -8807,11 +8798,17 @@ class NLActionTimeDelay(bpy.types.Node, NLActionNode):
         self.inputs[-1].false_label = 'Restart'
         self.outputs.new(NLConditionSocket.bl_idname, 'Out')
 
+    def update_draw(self):
+        if self.inputs[2].value:
+            self.inputs[3].enabled = True
+        else:
+            self.inputs[3].enabled = False
+
     def get_netlogic_class_name(self):
         return 'bgelogic.ActionTimeDelay'
 
     def get_input_sockets_field_names(self):
-        return ['condition', 'delay', 'repeat', 'mode']
+        return ['condition', 'delay', 'repeat', 'constant']
 
 
 _nodes.append(NLActionTimeDelay)
@@ -8822,7 +8819,7 @@ _nodes.append(NLActionTimeDelay)
 # N seconds have elapsed
 class NLActionTimeFilter(bpy.types.Node, NLActionNode):
     bl_idname = "NLActionTimeFilter"
-    bl_label = "Time Filter"
+    bl_label = "Pulsify"
     bl_icon = 'TEMP'
     nl_category = "Time"
 

@@ -5,6 +5,7 @@ import bge_netlogic
 import bge_netlogic.utilities as utils
 import webbrowser
 
+
 class TreeCodeWriterOperator(bpy.types.Operator):
     bl_idname = "bgenetlogic.treecodewriter_operator"
     bl_label = "Timed code writer"
@@ -189,7 +190,7 @@ class NLImportProjectNodes(bpy.types.Operator):
 
 
 def _do_load_project_nodes(context):
-    utils.debug("Loading project nodes and cells...")
+    utils.notify("Loading project nodes and cells...")
     current_file = context.blend_data.filepath
     file_dir = os.path.dirname(current_file)
     netlogic_dir = os.path.join(file_dir, "bgelogic")
@@ -423,17 +424,21 @@ class NLMakeGroupOperator(bpy.types.Operator):
         return (avg_x, avg_y)
 
     def execute(self, context):
+        utils.debug('Packing Group...')
         nodes_to_group = []
         tree = context.space_data.edit_tree
 
         if tree is None:
+            utils.error('Could not pack group! Aborting...')
             return {'FINISHED'}
         for node in tree.nodes:
             if node.select:
                 nodes_to_group.append(node)
         if len(nodes_to_group) > 0:
-            self.group_make(bpy.context.scene.nl_group_name.name, nodes_to_group)
+            name = bpy.context.scene.nl_group_name.name
+            self.group_make(name, nodes_to_group)
             bge_netlogic._update_all_logic_tree_code()
+        utils.success(f'Created Node Tree {name}.')
         return {'FINISHED'}
 
 
@@ -499,10 +504,12 @@ class NLAdd4KeyTemplateOperator(bpy.types.Operator):
         )
 
     def execute(self, context):
+        utils.debug('Adding template...')
         tree = context.space_data.edit_tree
         content = json.load(open(self.get_template_path()))['nodes']
 
         if tree is None:
+            utils.error('Cannot add template! Aborting...')
             return {'FINISHED'}
         for node in tree.nodes:
             node.select = False
@@ -535,6 +542,7 @@ class NLAdd4KeyTemplateOperator(bpy.types.Operator):
                     socket.hide = True
 
         bpy.ops.transform.translate()
+        utils.success('Added 4 Key Template.')
         return {'FINISHED'}
 
 

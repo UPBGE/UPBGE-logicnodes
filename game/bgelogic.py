@@ -7373,100 +7373,73 @@ class GEPulseTrigger(ActionCell):
         ActionCell.__init__(self)
         self.condition = None
         self.delay = None
-        self.repeat = None
-        self.mode = None
-        self._consumed = False
-        self._triggered = False
-        self._condition_true_time = 0.0
+        self.consumed = False
+        self.trigger = 0
 
     def evaluate(self):
         delay = self.get_parameter_value(self.delay)
-        repeat = self.get_parameter_value(self.repeat)
-        mode = self.get_parameter_value(self.mode)
-        if is_waiting(delay, repeat, mode):
+        if is_waiting(delay):
             return
         condition = self.get_parameter_value(self.condition)
 
         self._set_ready()
 
-        if not_met(condition):
+        now = self.network.timeline
+
+        if condition:
+            if not self.consumed:
+                self.consumed = True
+                self.trigger = now + delay
+
+            if now >= self.trigger:
+                self._set_value(True)
+
+        else:
             self._set_value(False)
-            self._condition_true_time = delay if repeat else 0
-            if self._consumed:
-                self._consumed = False
-            return
-
-        if not repeat and self._consumed:
-            self._set_value(False)
-            return
-        self._condition_true_time += self.network.time_per_frame
-
-        if self._condition_true_time >= delay:
-            if not mode or not (mode and self._consumed):
-                self._condition_true_time = 0.0
-            self._consumed = True
-            self._set_value(True)
-            return
-
-        self._set_value(False)
+            self.consumed = False
 
 
 class ActionTimeDelay(ActionCell):
-    _consumed: bool
-    _trigger_delay: float
-    _triggered_time: float
-    _triggered: bool
-    _condition_true_time: float
+    consumed: bool
+    triggers: list
 
     def __init__(self):
         ActionCell.__init__(self)
         self.condition = None
         self.delay = None
         self.repeat = None
-        self.mode = None
-        self._active = False
-        self._consumed = False
-        self._trigger_delay = None
-        self._triggered_time = None
-        self._triggered = False
-        self._down_time = -1.0
-        self._up_time = -1.0
+        self.constant = None
+        self.consumed = False
+        self.triggers = []
 
     def evaluate(self):
         condition = self.get_parameter_value(self.condition)
         delay = self.get_parameter_value(self.delay)
         repeat = self.get_parameter_value(self.repeat)
-        mode = self.get_parameter_value(self.mode)
-        if is_invalid(delay, repeat, mode):
+        constant = self.get_parameter_value(self.constant)
+        if is_invalid(delay, repeat, constant):
             return
         self._set_ready()
 
         now = self.network.timeline
-        if condition and self._down_time == -1.0:
-            self._down_time = now + delay
-        elif not condition and self._up_time == -1.0 and self._down_time != -1.0:
-            self._up_time = now + delay
 
-        if condition:
-            if self._down_time < now:
-                if not mode:
-                    self._down_time = now + delay
-                self._set_value(True)
-            else:
-                self._set_value(False)
-        else:
-            if self._up_time == -1.0 and self._down_time == -1.0:
-                self._set_value(False)
-            elif self._down_time < now < self._up_time:
-                if not mode:
-                    self._down_time = now + delay
-                self._set_value(True)
-            elif now > self._up_time:
-                self._set_value(False)
-                self._down_time = -1.0
-                self._up_time = -1.0
-            else:
-                self._set_value(False)
+        if condition and (not self.consumed or repeat):
+            if constant or not self.triggers:
+                self.triggers.append(now + delay)
+            if not repeat:
+                self.consumed = True
+
+        if not self.triggers:
+            if not condition:
+                self.consumed = False
+            self._set_value(False)
+            return
+        t = self.triggers[0]
+        if now >= t:
+            self._set_value(True)
+            self.triggers.remove(t)
+            return
+        self._set_value(False)
 
 
 class ActionSetDynamics(ActionCell):
@@ -8931,6 +8904,7 @@ class ActionStart3DSoundAdv(ActionCell):
         soundpath = logic.expandPath(sound)
         soundfile = aud.Sound.file(soundpath)
         if device not in devs.keys():
+            debug(f'Opening Sound Device: {device}')
             devs[device] = aud.Device()
         handle = self._handle = devs[device].play(soundfile)
         self._handles.append(handle)

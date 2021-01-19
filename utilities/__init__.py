@@ -181,7 +181,7 @@ def notify(message):
         return
     if not bpy.context or not bpy.context.scene:
         return
-    if not bpy.context.scene.logic_node_settings.use_node_debug:
+    if not bpy.context.scene.logic_node_settings.use_node_notify:
         return
     else:
         os.system('color')

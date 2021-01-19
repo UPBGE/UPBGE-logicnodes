@@ -128,10 +128,10 @@ class TreeCodeGenerator(object):
             for cell_name in available_cells:
                 node = uid_map.get_node_for_varname(cell_name)
                 # if all the links of node are either constant or cells in added_cells, then this node can be put in the list
-                if self._test_node_links(node, added_cells, uid_map):
+                if self._test_node_links(node, added_cells, uid_map) == 'GOOD':
                     available_cells.remove(cell_name)
                     added_cells.append(cell_name)
-                else:
+                elif self._test_node_links(node, added_cells, uid_map) == 'FAULTY':
                     available_cells.remove(cell_name)
         return added_cells
 
@@ -143,10 +143,10 @@ class TreeCodeGenerator(object):
                     if not linked_node.inputs[0].links:
                         name = node.label if node.label else node.name
                         utils.error(f'A Reroute does not have any input links! Skipping {name}.')
-                        return False
+                        return 'FAULTY'
                     linked_node = linked_node.inputs[0].links[0].from_socket.node
                 linked_node_varname = uid_map.get_varname_for_node(linked_node)
                 if not (linked_node_varname in added_cell_names):
-                    return False  # node is linked to a cell that has not been resolved
+                    return 'WAITING'  # node is linked to a cell that has not been resolved
         # all inputs are constant expressions or linked to resolved cells
-        return True
+        return 'GOOD'

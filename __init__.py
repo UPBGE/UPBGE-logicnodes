@@ -355,6 +355,7 @@ class NLAddonSettings(bpy.types.PropertyGroup):
         update=update_node_colors
     )
     use_node_debug: bpy.props.BoolProperty()
+    use_node_notify: bpy.props.BoolProperty()
     use_generate_all: bpy.props.BoolProperty(
         default=True
     )
@@ -398,6 +399,11 @@ class LogicNodesAddonPreferences(bpy.types.AddonPreferences):
             context.scene.logic_node_settings,
             'use_custom_node_color',
             text="Dark Node Color"
+        )
+        use_color_row.prop(
+            context.scene.logic_node_settings,
+            'use_node_notify',
+            text="Notifications"
         )
         use_color_row.prop(
             context.scene.logic_node_settings,
