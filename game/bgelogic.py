@@ -8757,7 +8757,7 @@ class ActionStart3DSound(ActionCell):
                         .worldOrientation
                         .to_quaternion()
                     )
-                    if hasattr(speaker, 'worldLinearVelocity'):
+                    if speaker.mass:
                         handle.velocity = getattr(
                             speaker,
                             'worldLinearVelocity',
@@ -8794,7 +8794,7 @@ class ActionStart3DSound(ActionCell):
         self._handles.append(handle)
         handle.relative = False
         handle.location = speaker.worldPosition
-        if hasattr(speaker, 'worldLinearVelocity'):
+        if speaker.mass:
             handle.velocity = getattr(
                 speaker,
                 'worldLinearVelocity',
@@ -8851,7 +8851,7 @@ class ActionStart3DSoundAdv(ActionCell):
                         .worldOrientation
                         .to_quaternion()
                     )
-                    if hasattr(speaker, 'worldLinearVelocity'):
+                    if speaker.mass:
                         handle.velocity = getattr(
                             speaker,
                             'worldLinearVelocity',
@@ -8897,7 +8897,7 @@ class ActionStart3DSoundAdv(ActionCell):
         self._handles.append(handle)
         handle.relative = False
         handle.location = speaker.worldPosition
-        if hasattr(speaker, 'worldLinearVelocity'):
+        if speaker.mass:
             handle.velocity = getattr(
                 speaker,
                 'worldLinearVelocity',

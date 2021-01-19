@@ -102,6 +102,8 @@ class NLImportProjectNodes(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
+        if not hasattr(context.space_data, 'tree_type'):
+            return False
         tree_type = context.space_data.tree_type
         return tree_type == bge_netlogic.ui.BGELogicTree.bl_idname
 
@@ -382,7 +384,8 @@ class NLMakeGroupOperator(bpy.types.Operator):
                         try:
                             setattr(new_node.inputs[index], attr, getattr(socket, attr))
                         except Exception:
-                            utils.warn('Attribute {} not writable.'.format(attr))
+                            if attr != 'label':
+                                utils.warn('Attribute {} not writable.'.format(attr))
                 for link in socket.links:
                     try:
                         output_socket = link.from_socket
@@ -411,6 +414,7 @@ class NLMakeGroupOperator(bpy.types.Operator):
         redir.inputs[2].value = bpy.data.node_groups[group_name]
         redir.location = self.avg_location(locs)
         node_tree.use_fake_user = True
+        utils.success(f'Created Node Tree {group_name}.')
         return node_tree
 
     def avg_location(self, locs):
@@ -436,9 +440,8 @@ class NLMakeGroupOperator(bpy.types.Operator):
                 nodes_to_group.append(node)
         if len(nodes_to_group) > 0:
             name = bpy.context.scene.nl_group_name.name
-            self.group_make(name, nodes_to_group)
-            bge_netlogic._update_all_logic_tree_code()
-        utils.success(f'Created Node Tree {name}.')
+            if self.group_make(name, nodes_to_group):
+                bge_netlogic._update_all_logic_tree_code()
         return {'FINISHED'}
 
 
@@ -452,15 +455,13 @@ class NLAdd4KeyTemplateOperator(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
-        tree = context.space_data.edit_tree
-        if not tree:
+        if not hasattr(context.space_data, 'edit_tree'):
             return False
+        tree = context.space_data.edit_tree
         if not (tree.bl_idname == bge_netlogic.ui.BGELogicTree.bl_idname):
             return False
-        scene = context.scene
-        for ob in scene.objects:
-            if ob.select_get():
-                return True
+        elif tree:
+            return True
         return False
 
     def add_node(self, x, y, name, node_type, node_list, links=[], values=[]):
@@ -555,6 +556,8 @@ class NLApplyLogicOperator(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
+        if not hasattr(context.space_data, 'edit_tree'):
+            return False
         tree = context.space_data.edit_tree
         if not tree:
             return False
@@ -722,10 +725,8 @@ class NLGenerateLogicNetworkOperator(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
-        context = bpy.context
-        if not context.space_data:
-            cls.report({"ERROR"}, "TREE TO EDIT NOT FOUND - Updating All")
-
+        if not hasattr(context.space_data, 'edit_tree'):
+            return False
         tree = context.space_data.edit_tree
         if not tree:
             return False
