@@ -3213,7 +3213,11 @@ class ParameterObjectAttribute(ParameterCell):
                 .format(game_object, attribute_name)
             )
             return
-        self._set_value(getattr(game_object, attribute_name))
+        val = getattr(game_object, attribute_name)
+        self._set_value(
+            val.copy() if isinstance(val, mathutils.Vector)
+            else val
+        )
 
 
 class ClampValue(ParameterCell):
@@ -8696,7 +8700,7 @@ class ActionAddSoundDevice(ActionCell):
     def evaluate(self):
         self.done = False
         condition = self.get_parameter_value(self.condition)
-        if not condition or condition is LogicNetworkCell.STATUS_WAITING:
+        if not_met(condition):
             return
         if not hasattr(bpy.types.Scene, 'nl_aud_devices'):
             debug('No Audio Devices initialized!')
@@ -8705,6 +8709,7 @@ class ActionAddSoundDevice(ActionCell):
             devs = bpy.types.Scene.nl_aud_devices
         name = self.get_parameter_value(self.name)
         distance_model = self.get_parameter_value(self.distance_model)
+        volume = self.get_parameter_value(self.volume)
         doppler_fac = self.get_parameter_value(self.doppler_fac)
         sound_speed = self.get_parameter_value(self.sound_speed)
 
@@ -8714,6 +8719,7 @@ class ActionAddSoundDevice(ActionCell):
         device.distance_model = DISTANCE_MODELS.get(
             distance_model, aud.DISTANCE_MODEL_INVALID
         )
+        device.volume = volume
         device.doppler_factor = doppler_fac
         device.speed_of_sound = sound_speed
         debug('Opening Sound Device: ' + name)
