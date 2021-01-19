@@ -7416,7 +7416,7 @@ class ActionTimeDelay(ActionCell):
         now = self.network.timeline
 
         if condition:
-           self.triggers.append(now + delay)
+            self.triggers.append(now + delay)
 
         if not self.triggers:
             self._set_value(False)

@@ -4628,6 +4628,7 @@ _nodes.append(NLOnInitConditionNode)
 class NLOnUpdateConditionNode(bpy.types.Node, NLConditionNode):
     bl_idname = "NLOnUpdateConditionNode"
     bl_label = "On Update"
+    bl_icon = 'TRIA_RIGHT'
     nl_category = "Events"
 
     repeat: bpy.props.BoolProperty(update=update_tree_code)
@@ -5183,6 +5184,7 @@ _nodes.append(NLMouseReleasedCondition)
 class NLConditionOnceNode(bpy.types.Node, NLConditionNode):
     bl_idname = "NLConditionOnceNode"
     bl_label = "Once"
+    bl_icon = 'FRAME_NEXT'
     nl_category = "Events"
 
     def init(self, context):
@@ -5258,6 +5260,7 @@ _nodes.append(NLObjectPropertyOperator)
 class NLConditionNextFrameNode(bpy.types.Node, NLConditionNode):
     bl_idname = "NLConditionNextFrameNode"
     bl_label = "On Next Tick"
+    bl_icon = 'FF'
     nl_category = "Events"
 
     def init(self, context):
@@ -5555,6 +5558,7 @@ class NLConditionValueTriggerNode(bpy.types.Node, NLConditionNode):
     """When input becomes trigger, sends a true signal"""
     bl_idname = "NLConditionValueTriggerNode"
     bl_label = "On Value Changed To"
+    bl_icon = 'CON_TRANSLIKE'
     nl_category = "Events"
 
     def init(self, context):
@@ -5690,6 +5694,7 @@ _nodes.append(NLConditionDistanceCheck)
 class NLConditionValueChanged(bpy.types.Node, NLConditionNode):
     bl_idname = "NLConditionValueChanged"
     bl_label = "On Value Changed"
+    bl_icon = 'DRIVER_TRANSFORM'
     nl_category = "Events"
 
     initialize: bpy.props.BoolProperty(
