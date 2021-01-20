@@ -8778,8 +8778,10 @@ class ActionStart3DSound(ActionCell):
                         self._set_ready()
                         self._handle = handle
                     elif handle in audio_system.active_sounds:
-                        self._handles.remove(handle)
+                        handles[sound].remove(handle)
                         audio_system.active_sounds.remove(handle)
+                if not handles[sound]:
+                    continue
                 if occlusion:
                     if occluder and self._clear_sound > 0:
                         self._clear_sound -= .1
@@ -8788,15 +8790,11 @@ class ActionStart3DSound(ActionCell):
                     handles[sound][0].volume = volume * self._clear_sound
                     handles[sound][1].volume = volume * (1 - self._clear_sound)
         condition = self.get_parameter_value(self.condition)
-        if condition is LogicNetworkCell.STATUS_WAITING:
-            return
-        if not condition:
-            self._set_ready()
+        if not_met(condition):
             return
         sound = self.get_parameter_value(self.sound)
         pitch = self.get_parameter_value(self.pitch)
         loop_count = self.get_parameter_value(self.loop_count)
-        volume = self.get_parameter_value(self.volume)
         distance_max = self.get_parameter_value(self.distance_max)
         self._set_ready()
 
@@ -8898,8 +8896,10 @@ class ActionStart3DSoundAdv(ActionCell):
                         self._set_ready()
                         self._handle = handle
                     elif handle in audio_system.active_sounds:
-                        self._handles.remove(handle)
+                        handles[sound].remove(handle)
                         audio_system.active_sounds.remove(handle)
+                if not handles[sound]:
+                    continue
                 if occlusion:
                     if occluder and self._clear_sound > 0:
                         self._clear_sound -= .1
