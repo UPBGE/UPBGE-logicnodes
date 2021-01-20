@@ -526,9 +526,11 @@ def parse_field_value(value_type, value):
 
 
 def update_tree_code(self, context):
+    print('Updating should start')
     bge_netlogic.update_current_tree_code()
 
     if not hasattr(context.space_data, 'edit_tree'):
+        utils.warn('Wrong editor context! Skipping nodesocket updates.')
         return
     tree = context.space_data.edit_tree
     for node in tree.nodes:
@@ -5742,7 +5744,7 @@ class NLConditionTimeElapsed(bpy.types.Node, NLConditionNode):
 
     def init(self, context):
         NLConditionNode.init(self, context)
-        self.inputs.new(NLBooleanSocket.bl_idname, "Repeat")
+        self.inputs.new(NLConditionSocket.bl_idname, "Set Timer")
         self.inputs.new(NLPositiveFloatSocket.bl_idname, "Seconds")
         self.outputs.new(NLConditionSocket.bl_idname, "When Elapsed")
 
@@ -5750,7 +5752,7 @@ class NLConditionTimeElapsed(bpy.types.Node, NLConditionNode):
         return "bgelogic.ConditionTimeElapsed"
 
     def get_input_sockets_field_names(self):
-        return ["repeat", "delta_time"]
+        return ["condition", "delta_time"]
 
 
 _nodes.append(NLConditionTimeElapsed)
@@ -8769,7 +8771,7 @@ class NLActionTimeBarrier(bpy.types.Node, NLActionNode):
     def init(self, context):
         NLActionNode.init(self, context)
         self.inputs.new(NLConditionSocket.bl_idname, 'Condition')
-        self.inputs.new(NLPositiveFloatSocket.bl_idname, 'Pulse Sec.')
+        self.inputs.new(NLPositiveFloatSocket.bl_idname, 'Time')
         self.outputs.new(NLConditionSocket.bl_idname, 'Out')
 
     def get_netlogic_class_name(self):
@@ -9390,6 +9392,7 @@ class NLActionStart3DSound(bpy.types.Node, NLActionNode):
         self.inputs.new(NLConditionSocket.bl_idname, "Condition")
         self.inputs.new(NLGameObjectSocket.bl_idname, "Speaker")
         self.inputs.new(NLFilePathSocket.bl_idname, "Sound File")
+        self.inputs.new(NLBooleanSocket.bl_idname, "Use Occlusion")
         self.inputs.new(NLSocketLoopCount.bl_idname, "Mode")
         self.inputs.new(NLFloatFieldSocket.bl_idname, "Pitch")
         self.inputs[-1].value = 1.0
@@ -9411,6 +9414,7 @@ class NLActionStart3DSound(bpy.types.Node, NLActionNode):
             "condition",
             "speaker",
             "sound",
+            'occlusion',
             "loop_count",
             "pitch",
             "volume",
@@ -9432,6 +9436,7 @@ class NLActionStart3DSoundAdv(bpy.types.Node, NLActionNode):
         self.inputs.new(NLConditionSocket.bl_idname, "Condition")
         self.inputs.new(NLGameObjectSocket.bl_idname, "Speaker")
         self.inputs.new(NLFilePathSocket.bl_idname, "Sound File")
+        self.inputs.new(NLBooleanSocket.bl_idname, "Use Occlusion")
         self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Type")
         self.inputs[-1].value = 'default3D'
         self.inputs.new(NLSocketLoopCount.bl_idname, "Mode")
@@ -9465,6 +9470,7 @@ class NLActionStart3DSoundAdv(bpy.types.Node, NLActionNode):
             "condition",
             "speaker",
             "sound",
+            'occlusion',
             "device",
             "loop_count",
             "pitch",

@@ -591,9 +591,14 @@ class AudioSystem(object):
         )
         self.device3D.speed_of_sound = bpy.context.scene.audio_doppler_speed
         self.device3D.doppler_factor = bpy.context.scene.audio_doppler_factor
+        # self.lowpass = aud.Sound.lowpass(5000, .5)
+        # self.highpass = aud.Sound.highpass(40, .5)
 
         bpy.app.handlers.game_post.clear()
         bpy.app.handlers.game_post.append(stop_all_sounds)
+
+    def lowpass(soundfile):
+        aud.Sound.lowpass(soundfile)
 
     def get_distance_model(self, name):
         return DISTANCE_MODELS.get(name, aud.DISTANCE_MODEL_INVERSE_CLAMPED)
@@ -4695,39 +4700,27 @@ class ConditionTimeElapsed(ConditionCell):
 
     def __init__(self):
         ConditionCell.__init__(self)
-        self.repeat = None
+        self.condition = None
         self.delta_time = None
-        self._then = None
+        self._trigger = 0
         self.network = None
-        self._consumed = False
 
     def setup(self, network):
         self.network = network
 
-    def reset(self):
-        if self._consumed:
-            self._set_value(False)
-            self._set_ready()
-        else:
-            ConditionCell.reset(self)
-
     def evaluate(self):
-        repeat = self.get_parameter_value(self.repeat)
+        condition = self.get_parameter_value(self.condition)
         delta_time = self.get_parameter_value(self.delta_time)
-        if repeat is LogicNetworkCell.STATUS_WAITING:
-            return
         if delta_time is LogicNetworkCell.STATUS_WAITING:
             return
         self._set_ready()
         now = self.network.timeline
-        if self._then is None:
-            self._then = now
-        delta = now - self._then
-        if delta >= delta_time:
+
+        if not not_met(condition):
+            self._trigger = now + delta_time
+
+        if now >= self._trigger:
             self._set_value(True)
-            self._then = now
-            if not repeat:
-                self._consumed = True
         else:
             self._set_value(False)
 
@@ -8733,13 +8726,15 @@ class ActionStart3DSound(ActionCell):
         self.condition = None
         self.sound = None
         self.speaker = None
+        self.occlusion = None
         self.loop_count = None
         self.pitch = None
         self.volume = None
         self.distance_max = None
         self.done = None
+        self._clear_sound = 0
         self._handle = None
-        self._handles = []
+        self._handles = {}
         self.DONE = LogicNetworkSubCell(self, self.get_done)
         self.HANDLE = LogicNetworkSubCell(self, self.get_handle)
 
@@ -8753,27 +8748,45 @@ class ActionStart3DSound(ActionCell):
         self.done = False
         audio_system = self.network.audio_system
         speaker = self.get_parameter_value(self.speaker)
+        cam = bge.logic.getCurrentScene().active_camera
+        occluder = cam.rayCast(
+            speaker.worldPosition,
+            cam.worldPosition,
+            compute_distance(speaker, cam),
+            xray=False
+        )[0]
+        occluder = True if occluder is not speaker else False
         handles = self._handles
+        occlusion = self.get_parameter_value(self.occlusion)
+        volume = self.get_parameter_value(self.volume)
         if handles:
-            for handle in handles:
-                if handle.status:
-                    handle.location = speaker.worldPosition
-                    handle.orientation = (
-                        speaker
-                        .worldOrientation
-                        .to_quaternion()
-                    )
-                    if speaker.mass:
-                        handle.velocity = getattr(
-                            speaker,
-                            'worldLinearVelocity',
-                            mathutils.Vector((0, 0, 0))
+            for sound in handles:
+                for handle in handles[sound]:
+                    if handle.status:
+                        handle.location = speaker.worldPosition
+                        handle.orientation = (
+                            speaker
+                            .worldOrientation
+                            .to_quaternion()
                         )
-                    self._set_ready()
-                    self._handle = handle
-                elif handle in audio_system.active_sounds:
-                    audio_system.active_sounds.remove(handle)
-                    self._handles.remove(handle)
+                        if speaker.mass:
+                            handle.velocity = getattr(
+                                speaker,
+                                'worldLinearVelocity',
+                                mathutils.Vector((0, 0, 0))
+                            )
+                        self._set_ready()
+                        self._handle = handle
+                    elif handle in audio_system.active_sounds:
+                        self._handles.remove(handle)
+                        audio_system.active_sounds.remove(handle)
+                if occlusion:
+                    if occluder and self._clear_sound > 0:
+                        self._clear_sound -= .1
+                    elif not occluder and self._clear_sound < 1:
+                        self._clear_sound += .1
+                    handles[sound][0].volume = volume * self._clear_sound
+                    handles[sound][1].volume = volume * (1 - self._clear_sound)
         condition = self.get_parameter_value(self.condition)
         if condition is LogicNetworkCell.STATUS_WAITING:
             return
@@ -8797,21 +8810,27 @@ class ActionStart3DSound(ActionCell):
         soundpath = logic.expandPath(sound)
         soundfile = aud.Sound.file(soundpath)
         handle = self._handle = devs['default3D'].play(soundfile)
-        self._handles.append(handle)
-        handle.relative = False
-        handle.location = speaker.worldPosition
-        if speaker.mass:
-            handle.velocity = getattr(
-                speaker,
-                'worldLinearVelocity',
-                mathutils.Vector((0, 0, 0))
-            )
-        handle.orientation = speaker.worldOrientation.to_quaternion()
-        handle.pitch = pitch
-        handle.loop_count = loop_count
-        handle.volume = volume
-        handle.distance_maximum = distance_max
-        audio_system.active_sounds.append(handle)
+        if occlusion:
+            soundlow = aud.Sound.lowpass(soundfile, 400, .5)
+            handlelow = devs['default3D'].play(soundlow)
+            self._handles[soundfile] = [handle, handlelow]
+        else:
+            self._handles[soundfile] = [handle]
+        for handle in self._handles[soundfile]:
+            handle.relative = False
+            handle.location = speaker.worldPosition
+            if speaker.mass:
+                handle.velocity = getattr(
+                    speaker,
+                    'worldLinearVelocity',
+                    mathutils.Vector((0, 0, 0))
+                )
+            handle.orientation = speaker.worldOrientation.to_quaternion()
+            handle.pitch = pitch
+            handle.loop_count = loop_count
+            handle.volume = volume
+            handle.distance_maximum = distance_max
+            audio_system.active_sounds.append(handle)
         self.done = True
 
 
@@ -8820,6 +8839,7 @@ class ActionStart3DSoundAdv(ActionCell):
         ActionCell.__init__(self)
         self.condition = None
         self.sound = None
+        self.occlusion = None
         self.speaker = None
         self.device = None
         self.loop_count = None
@@ -8832,8 +8852,9 @@ class ActionStart3DSoundAdv(ActionCell):
         self.cone_outer_angle = None
         self.cone_outer_volume = None
         self.done = None
+        self._clear_sound = 1
         self._handle = None
-        self._handles = []
+        self._handles = {}
         self.DONE = LogicNetworkSubCell(self, self.get_done)
         self.HANDLE = LogicNetworkSubCell(self, self.get_handle)
 
@@ -8847,38 +8868,52 @@ class ActionStart3DSoundAdv(ActionCell):
         self.done = False
         audio_system = self.network.audio_system
         speaker = self.get_parameter_value(self.speaker)
+        cam = bge.logic.getCurrentScene().active_camera
+        occluder = cam.rayCast(
+            speaker.worldPosition,
+            cam.worldPosition,
+            compute_distance(speaker, cam),
+            xray=False
+        )[0]
+        occluder = True if occluder is not speaker else False
         handles = self._handles
+        occlusion = self.get_parameter_value(self.occlusion)
+        volume = self.get_parameter_value(self.volume)
         if handles:
-            for handle in handles:
-                if handle.status:
-                    handle.location = speaker.worldPosition
-                    handle.orientation = (
-                        speaker
-                        .worldOrientation
-                        .to_quaternion()
-                    )
-                    if speaker.mass:
-                        handle.velocity = getattr(
-                            speaker,
-                            'worldLinearVelocity',
-                            mathutils.Vector((0, 0, 0))
+            for sound in handles:
+                for handle in handles[sound]:
+                    if handle.status:
+                        handle.location = speaker.worldPosition
+                        handle.orientation = (
+                            speaker
+                            .worldOrientation
+                            .to_quaternion()
                         )
-                    self._set_ready()
-                    self._handle = handle
-                elif handle in audio_system.active_sounds:
-                    self._handles.remove(handle)
-                    audio_system.active_sounds.remove(handle)
+                        if speaker.mass:
+                            handle.velocity = getattr(
+                                speaker,
+                                'worldLinearVelocity',
+                                mathutils.Vector((0, 0, 0))
+                            )
+                        self._set_ready()
+                        self._handle = handle
+                    elif handle in audio_system.active_sounds:
+                        self._handles.remove(handle)
+                        audio_system.active_sounds.remove(handle)
+                if occlusion:
+                    if occluder and self._clear_sound > 0:
+                        self._clear_sound -= .1
+                    elif not occluder and self._clear_sound < 1:
+                        self._clear_sound += .1
+                    handles[sound][0].volume = volume * self._clear_sound
+                    handles[sound][1].volume = volume * (1 - self._clear_sound)
         condition = self.get_parameter_value(self.condition)
-        if condition is LogicNetworkCell.STATUS_WAITING:
-            return
-        if not condition:
-            self._set_ready()
+        if not_met(condition):
             return
         sound = self.get_parameter_value(self.sound)
         device = self.get_parameter_value(self.device)
         pitch = self.get_parameter_value(self.pitch)
         loop_count = self.get_parameter_value(self.loop_count)
-        volume = self.get_parameter_value(self.volume)
         attenuation = self.get_parameter_value(self.attenuation)
         distance_ref = self.get_parameter_value(self.distance_ref)
         distance_max = self.get_parameter_value(self.distance_max)
@@ -8900,26 +8935,32 @@ class ActionStart3DSoundAdv(ActionCell):
             debug(f'Opening Sound Device: {device}')
             devs[device] = aud.Device()
         handle = self._handle = devs[device].play(soundfile)
-        self._handles.append(handle)
-        handle.relative = False
-        handle.location = speaker.worldPosition
-        if speaker.mass:
-            handle.velocity = getattr(
-                speaker,
-                'worldLinearVelocity',
-                mathutils.Vector((0, 0, 0))
-            )
-        handle.orientation = speaker.worldOrientation.to_quaternion()
-        handle.pitch = pitch
-        handle.loop_count = loop_count
-        handle.volume = volume
-        handle.attenuation = attenuation
-        handle.distance_reference = distance_ref
-        handle.distance_maximum = distance_max
-        handle.cone_angle_inner = cone_inner_angle
-        handle.cone_angle_outer = cone_outer_angle
-        handle.cone_volume_outer = cone_outer_volume
-        audio_system.active_sounds.append(handle)
+        if occlusion:
+            soundlow = aud.Sound.lowpass(soundfile, 400, .5)
+            handlelow = devs[device].play(soundlow)
+            self._handles[soundfile] = [handle, handlelow]
+        else:
+            self._handles[soundfile] = [handle]
+        for handle in self._handles[soundfile]:
+            handle.relative = False
+            handle.location = speaker.worldPosition
+            if speaker.mass:
+                handle.velocity = getattr(
+                    speaker,
+                    'worldLinearVelocity',
+                    mathutils.Vector((0, 0, 0))
+                )
+            handle.orientation = speaker.worldOrientation.to_quaternion()
+            handle.pitch = pitch
+            handle.loop_count = loop_count
+            handle.volume = volume
+            handle.attenuation = attenuation
+            handle.distance_reference = distance_ref
+            handle.distance_maximum = distance_max
+            handle.cone_angle_inner = cone_inner_angle
+            handle.cone_angle_outer = cone_outer_angle
+            handle.cone_volume_outer = cone_outer_volume
+            audio_system.active_sounds.append(handle)
         self.done = True
 
 

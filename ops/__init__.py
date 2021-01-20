@@ -19,12 +19,15 @@ class TreeCodeWriterOperator(bpy.types.Operator):
 
     def execute(self, context):
         if context.window is None:
+            utils.warn('Working Window not found, hibernating...')
             bge_netlogic._tree_code_writer_started = False
             return {"FINISHED"}
         if context.window_manager is None:
+            utils.warn('Window Manager not found, hibernating...')
             bge_netlogic._tree_code_writer_started = False
             return {"FINISHED"}
         if self.timer is not None:
+            utils.warn('No Timer Set. Hibernating...')
             return {'FINISHED'}
         self.timer = context.window_manager.event_timer_add(
             1.0,
