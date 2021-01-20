@@ -438,12 +438,12 @@ _registered_classes = [
     ops.WaitForKeyOperator,
     ops.TreeCodeWriterOperator,
     ops.NLMakeGroupOperator,
+    ops.NLLoadSoundOperator,
     ops.NLSwitchInitialNetworkStatusOperator,
     ops.NLAddPropertyOperator,
     ops.NLAddComponentOperator,
     ops.NLRemovePropertyOperator,
     ops.NLMovePropertyOperator,
-    ops.NLLoadSoundOperator,
     ops.NLPopupTemplatesOperator,
     ops.NLAddonPatreonButton,
     ops.NLAddonGithubButton,
@@ -466,6 +466,7 @@ _registered_classes.extend([
     ui.BGE_PT_LogicTreeInfoPanel,
     ui.BGE_PT_GamePropertyPanel,
     ui.BGE_PT_HelpPanel,
+    ui.BGE_PT_LogicNodeSettingsObject,
     ui.BGE_PT_LogicTreeOptions,
     ui.BGE_PT_GameComponentPanel,
     ui.BGE_PT_GamePropertyPanel3DView,
@@ -556,6 +557,9 @@ def register():
         bpy.utils.register_class(cls)
     menu_nodes = _list_menu_nodes()
     nodeitems_utils.register_node_categories("NETLOGIC_NODES", menu_nodes)
+
+    bpy.types.Object.sound_occluder = bpy.props.BoolProperty(default=True)
+
     bpy.types.Object.bgelogic_treelist = bpy.props.CollectionProperty(
         type=NLNodeTreeReference
     )

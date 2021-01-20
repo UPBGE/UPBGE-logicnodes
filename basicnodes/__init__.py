@@ -18,7 +18,7 @@ PARAM_MESH_SOCKET_COLOR = utils.Color.RGBA(.0, .65, .35, 1.0)
 PARAM_COLL_SOCKET_COLOR = utils.Color.RGBA(0.25, 0.35, .8, 1.0)
 PARAM_SCENE_SOCKET_COLOR = utils.Color.RGBA(0.5, 0.5, 0.6, 1.0)
 PARAM_VECTOR_SOCKET_COLOR = utils.Color.RGBA(0.4, 0.8, 0.4, 1.0)
-PARAM_SOUND_SOCKET_COLOR = utils.Color.RGBA(0.2, 0.5, 0.2, 1.0)
+PARAM_SOUND_SOCKET_COLOR = utils.Color.RGBA(0.4, 0.8, 0.8, 1.0)
 PARAM_LOGIC_BRICK_SOCKET_COLOR = utils.Color.RGBA(0.9, 0.9, 0.4, 1.0)
 PARAM_PYTHON_SOCKET_COLOR = utils.Color.RGBA(0.2, 0.7, 1, 1.0)
 ACTION_SOCKET_COLOR = utils.Color.RGBA(0.2, .7, .7, 1.0)
@@ -1312,6 +1312,51 @@ class NLAnimationSocket(bpy.types.NodeSocket, NetLogicSocketType):
 _sockets.append(NLAnimationSocket)
 
 
+class NLSoundFileSocket(bpy.types.NodeSocket, NetLogicSocketType):
+    bl_idname = "NLSoundFileSocket"
+    bl_label = "String"
+    filepath_value: bpy.props.StringProperty(
+        subtype='FILE_PATH',
+        update=update_tree_code
+    )
+    sound_value = bpy.props.PointerProperty(
+        name='Sound',
+        type=bpy.types.Sound,
+        description='Select a Sound',
+        update=update_tree_code
+    )
+    use_path: bpy.props.BoolProperty()
+
+    def draw_color(self, context, node):
+        return PARAM_SOUND_SOCKET_COLOR
+
+    def draw(self, context, layout, node, text):
+        if self.is_linked or self.is_output:
+            layout.label(text=text)
+        else:
+            col = layout.column()
+            row = col.row(align=True)
+            text = text if text else 'Sound'
+            row.label(text=text)
+            if not self.use_path:
+                row.operator(bge_netlogic.ops.NLLoadSoundOperator.bl_idname, icon='SOUND', text='')
+            row.prop(self, 'use_path', icon='FILEBROWSER', text='')
+            if self.use_path:
+                col.prop(self, "filepath_value", text='')
+            else:
+                col.prop(self, "sound_value", text='')
+
+    def get_unlinked_value(self):
+        path = str(self.filepath_value) if self.use_path else str(self.sound_value.filepath)
+        path = path.replace('\\', '/')
+        if path.endswith('\\'):
+            path = path[:-1]
+        return '"{}"'.format(path)
+
+
+_sockets.append(NLSoundFileSocket)
+
+
 ###############################################################################
 # Value Sockets
 ###############################################################################
@@ -1343,44 +1388,6 @@ class NLSocketAlphaFloat(bpy.types.NodeSocket, NetLogicSocketType):
 
 
 _sockets.append(NLSocketAlphaFloat)
-
-
-class NLSocketSound(bpy.types.NodeSocket, NetLogicSocketType):
-    bl_idname = "NLSocketSound"
-    bl_label = "Sound"
-    value: bpy.props.PointerProperty(
-        name='Sound',
-        type=bpy.types.Sound,
-        update=update_tree_code
-    )
-
-    def draw_color(self, context, node):
-        return PARAM_SOUND_SOCKET_COLOR
-
-    def draw(self, context, layout, node, text):
-        if self.is_output:
-            layout.label(text=text)
-        elif self.is_linked:
-            layout.label(text=text)
-        else:
-            row = layout.row(align=True)
-            row.prop_search(
-                self,
-                'value',
-                bpy.context.blend_data,
-                'sounds',
-                icon='NONE',
-                text=''
-            )
-
-    def get_unlinked_value(self):
-        if self.value is None:
-            return "{}".format(self.value)
-        else:
-            return "'{}'".format(self.value.filepath)
-
-
-_sockets.append(NLSocketSound)
 
 
 class NLSocketLogicOperator(bpy.types.NodeSocket, NetLogicSocketType):
@@ -9354,7 +9361,6 @@ class NLActionAddSoundDevice(bpy.types.Node, NLActionNode):
         self.inputs[-1].value = 'custom'
         self.inputs.new(NLSocketDistanceModels.bl_idname, "Distance Model")
         self.inputs[-1].value = 'INVERSE_CLAMPED'
-        self.inputs.new(NLPositiveFloatSocket.bl_idname, "Volume")
         self.inputs.new(NLPosFloatFormatSocket.bl_idname, "Doppler Factor")
         self.inputs[-1].value = 1.0
         self.inputs.new(NLPosFloatFormatSocket.bl_idname, "Speed of Sound")
@@ -9372,7 +9378,6 @@ class NLActionAddSoundDevice(bpy.types.Node, NLActionNode):
             "condition",
             "name",
             "distance_model",
-            "volume",
             "doppler_fac",
             "sound_speed"
         ]
@@ -9391,7 +9396,7 @@ class NLActionStart3DSound(bpy.types.Node, NLActionNode):
         NLActionNode.init(self, context)
         self.inputs.new(NLConditionSocket.bl_idname, "Condition")
         self.inputs.new(NLGameObjectSocket.bl_idname, "Speaker")
-        self.inputs.new(NLFilePathSocket.bl_idname, "Sound File")
+        self.inputs.new(NLSoundFileSocket.bl_idname, "Sound File")
         self.inputs.new(NLBooleanSocket.bl_idname, "Use Occlusion")
         self.inputs.new(NLSocketLoopCount.bl_idname, "Mode")
         self.inputs.new(NLFloatFieldSocket.bl_idname, "Pitch")
@@ -9435,7 +9440,7 @@ class NLActionStart3DSoundAdv(bpy.types.Node, NLActionNode):
         NLActionNode.init(self, context)
         self.inputs.new(NLConditionSocket.bl_idname, "Condition")
         self.inputs.new(NLGameObjectSocket.bl_idname, "Speaker")
-        self.inputs.new(NLFilePathSocket.bl_idname, "Sound File")
+        self.inputs.new(NLSoundFileSocket.bl_idname, "Sound File")
         self.inputs.new(NLBooleanSocket.bl_idname, "Use Occlusion")
         self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Type")
         self.inputs[-1].value = 'default3D'
@@ -9496,7 +9501,7 @@ class NLActionStartSound(bpy.types.Node, NLActionNode):
     def init(self, context):
         NLActionNode.init(self, context)
         self.inputs.new(NLConditionSocket.bl_idname, "Condition")
-        self.inputs.new(NLFilePathSocket.bl_idname, "Sound File")
+        self.inputs.new(NLSoundFileSocket.bl_idname, "Sound File")
         self.inputs.new(NLSocketLoopCount.bl_idname, "Mode")
         self.inputs.new(NLFloatFieldSocket.bl_idname, "Pitch")
         self.inputs[-1].value = 1.0

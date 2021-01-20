@@ -356,6 +356,24 @@ class BGE_PT_GamePropertyPanel3DView(bpy.types.Panel):
             row_info.prop(prop, 'value', text='Value')
 
 
+class BGE_PT_LogicNodeSettingsObject(bpy.types.Panel):
+    bl_label = "Logic Node Settings"
+    bl_space_type = "PROPERTIES"
+    bl_region_type = "WINDOW"
+    bl_context = "object"
+    name: bpy.props.StringProperty()
+
+    @classmethod
+    def poll(cls, context):
+        ob = context.active_object
+        return ob and ob.name
+
+    def draw(self, context):
+        layout = self.layout
+        col1 = layout.column()
+        col1.prop(context.active_object, 'sound_occluder', text='Sound Occluder')
+
+
 class BGE_PT_PropertiesPanelObject(bpy.types.Panel):
     bl_label = "Game Properties"
     bl_space_type = "PROPERTIES"

@@ -3,6 +3,7 @@ import json
 import bpy
 import bge_netlogic
 import bge_netlogic.utilities as utils
+from bpy_extras.io_utils import ImportHelper
 import webbrowser
 
 
@@ -350,6 +351,8 @@ class NLMakeGroupOperator(bpy.types.Operator):
             'float_editor',
             'string_editor',
             'radians',
+            'filepath_value',
+            'sound_value',
             'float_field',
             'expression_field',
             'input_type',
@@ -385,10 +388,10 @@ class NLMakeGroupOperator(bpy.types.Operator):
                 for attr in dir(socket):
                     if attr in attrs:
                         try:
-                            setattr(new_node.inputs[index], attr, getattr(socket, attr))
-                        except Exception:
                             if attr != 'label':
-                                utils.warn('Attribute {} not writable.'.format(attr))
+                                setattr(new_node.inputs[index], attr, getattr(socket, attr))
+                        except Exception:
+                            utils.warn('Attribute {} not writable.'.format(attr))
                 for link in socket.links:
                     try:
                         output_socket = link.from_socket
@@ -797,6 +800,26 @@ class NLGenerateLogicNetworkOperator(bpy.types.Operator):
         return {"FINISHED"}
 
 
+class NLLoadSoundOperator(bpy.types.Operator, ImportHelper):
+    bl_idname = "bge_netlogic.load_sound"
+    bl_label = "Load Sound"
+    bl_options = {'REGISTER', 'UNDO'}
+    bl_description = "Load a sound file"
+
+    filter_glob: bpy.props.StringProperty(
+        default='*.wav;*.mp3;',
+        options={'HIDDEN'}
+    )
+
+    @classmethod
+    def poll(cls, context):
+        return True
+
+    def execute(self, context):
+        bpy.ops.sound.open_mono(filepath=self.filepath)
+        return {'FINISHED'}
+
+
 class NLAddPropertyOperator(bpy.types.Operator):
     bl_idname = "bge_netlogic.add_game_prop"
     bl_label = "Add Game Property"
@@ -864,16 +887,6 @@ class NLMovePropertyOperator(bpy.types.Operator):
             direction=self.direction
         )
         bge_netlogic.update_current_tree_code()
-        return {'FINISHED'}
-
-
-class NLLoadSoundOperator(bpy.types.Operator):
-    bl_idname = "bge_netlogic.load_sound"
-    bl_label = "Load Sound"
-    bl_description = "Load any sound file"
-
-    def execute(self, context):
-        bpy.ops.sound.open()
         return {'FINISHED'}
 
 

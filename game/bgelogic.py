@@ -591,14 +591,9 @@ class AudioSystem(object):
         )
         self.device3D.speed_of_sound = bpy.context.scene.audio_doppler_speed
         self.device3D.doppler_factor = bpy.context.scene.audio_doppler_factor
-        # self.lowpass = aud.Sound.lowpass(5000, .5)
-        # self.highpass = aud.Sound.highpass(40, .5)
 
         bpy.app.handlers.game_post.clear()
         bpy.app.handlers.game_post.append(stop_all_sounds)
-
-    def lowpass(soundfile):
-        aud.Sound.lowpass(soundfile)
 
     def get_distance_model(self, name):
         return DISTANCE_MODELS.get(name, aud.DISTANCE_MODEL_INVERSE_CLAMPED)
@@ -988,7 +983,6 @@ class LogicNetwork(LogicNetworkCell):
 
 def is_waiting(*args):
     if LogicNetworkCell.STATUS_WAITING in args:
-        debug("Something's waiting...")
         return True
     return False
 
@@ -7380,7 +7374,7 @@ class GEBarrier(ActionCell):
 
         now = self.network.timeline
 
-        if condition:
+        if not not_met(condition):
             if not self.consumed:
                 self.consumed = True
                 self.trigger = now + time
@@ -7412,7 +7406,7 @@ class ActionTimeDelay(ActionCell):
 
         now = self.network.timeline
 
-        if condition:
+        if not not_met(condition):
             self.triggers.append(now + delay)
 
         if not self.triggers:
@@ -8681,7 +8675,6 @@ class ActionAddSoundDevice(ActionCell):
         self.condition = None
         self.name = None
         self.distance_model = None
-        self.volume = None
         self.doppler_fac = None
         self.sound_speed = None
         self.done = None
@@ -8702,17 +8695,18 @@ class ActionAddSoundDevice(ActionCell):
             devs = bpy.types.Scene.nl_aud_devices
         name = self.get_parameter_value(self.name)
         distance_model = self.get_parameter_value(self.distance_model)
-        volume = self.get_parameter_value(self.volume)
         doppler_fac = self.get_parameter_value(self.doppler_fac)
         sound_speed = self.get_parameter_value(self.sound_speed)
 
         self._set_ready()
 
+        if devs.get(name):
+            self.done = True
+            return
         device = aud.Device()
         device.distance_model = DISTANCE_MODELS.get(
             distance_model, aud.DISTANCE_MODEL_INVALID
         )
-        device.volume = volume
         device.doppler_factor = doppler_fac
         device.speed_of_sound = sound_speed
         debug('Opening Sound Device: ' + name)
@@ -8732,7 +8726,7 @@ class ActionStart3DSound(ActionCell):
         self.volume = None
         self.distance_max = None
         self.done = None
-        self._clear_sound = 0
+        self._clear_sound = 1
         self._handle = None
         self._handles = {}
         self.DONE = LogicNetworkSubCell(self, self.get_done)
@@ -8755,14 +8749,20 @@ class ActionStart3DSound(ActionCell):
             compute_distance(speaker, cam),
             xray=False
         )[0]
-        occluder = True if occluder is not speaker else False
+        occluded = True if occluder and occluder is not speaker else False
         handles = self._handles
         occlusion = self.get_parameter_value(self.occlusion)
         volume = self.get_parameter_value(self.volume)
+        pitch = self.get_parameter_value(self.pitch)
         if handles:
             for sound in handles:
+                ind = 0
                 for handle in handles[sound]:
                     if handle.status:
+                        self._set_ready()
+                        if ind == 0:
+                            self._handle = handle
+                        handle.pitch = pitch
                         handle.location = speaker.worldPosition
                         handle.orientation = (
                             speaker
@@ -8775,25 +8775,24 @@ class ActionStart3DSound(ActionCell):
                                 'worldLinearVelocity',
                                 mathutils.Vector((0, 0, 0))
                             )
-                        self._set_ready()
-                        self._handle = handle
+                        if occlusion:
+                            if occluded and self._clear_sound > 0:
+                                if occluder.blenderObject.get('sound_occluder', True):
+                                    self._clear_sound -= .1
+                            elif not occluded and self._clear_sound < 1:
+                                self._clear_sound += .1
+                            mult = self._clear_sound if not ind else (1 - self._clear_sound) * .8
+                            handles[sound][ind].volume = volume * mult
                     elif handle in audio_system.active_sounds:
-                        handles[sound].remove(handle)
-                        audio_system.active_sounds.remove(handle)
-                if not handles[sound]:
-                    continue
-                if occlusion:
-                    if occluder and self._clear_sound > 0:
-                        self._clear_sound -= .1
-                    elif not occluder and self._clear_sound < 1:
-                        self._clear_sound += .1
-                    handles[sound][0].volume = volume * self._clear_sound
-                    handles[sound][1].volume = volume * (1 - self._clear_sound)
+                        for handle in handles[sound]:
+                            audio_system.active_sounds.remove(handle)
+                            handles[sound] = []
+                        return
+                    ind += 1
         condition = self.get_parameter_value(self.condition)
         if not_met(condition):
             return
         sound = self.get_parameter_value(self.sound)
-        pitch = self.get_parameter_value(self.pitch)
         loop_count = self.get_parameter_value(self.loop_count)
         distance_max = self.get_parameter_value(self.distance_max)
         self._set_ready()
@@ -8873,14 +8872,20 @@ class ActionStart3DSoundAdv(ActionCell):
             compute_distance(speaker, cam),
             xray=False
         )[0]
-        occluder = True if occluder is not speaker else False
+        occluded = True if occluder and occluder is not speaker else False
         handles = self._handles
         occlusion = self.get_parameter_value(self.occlusion)
         volume = self.get_parameter_value(self.volume)
+        pitch = self.get_parameter_value(self.pitch)
         if handles:
             for sound in handles:
+                ind = 0
                 for handle in handles[sound]:
                     if handle.status:
+                        self._set_ready()
+                        if ind == 0:
+                            self._handle = handle
+                        handle.pitch = pitch
                         handle.location = speaker.worldPosition
                         handle.orientation = (
                             speaker
@@ -8893,26 +8898,25 @@ class ActionStart3DSoundAdv(ActionCell):
                                 'worldLinearVelocity',
                                 mathutils.Vector((0, 0, 0))
                             )
-                        self._set_ready()
-                        self._handle = handle
+                        if occlusion:
+                            if occluded and self._clear_sound > 0:
+                                if occluder.blenderObject.get('sound_occluder', True):
+                                    self._clear_sound -= .1
+                            elif not occluded and self._clear_sound < 1:
+                                self._clear_sound += .1
+                            mult = self._clear_sound if not ind else (1 - self._clear_sound) * .8
+                            handles[sound][ind].volume = volume * mult
                     elif handle in audio_system.active_sounds:
-                        handles[sound].remove(handle)
-                        audio_system.active_sounds.remove(handle)
-                if not handles[sound]:
-                    continue
-                if occlusion:
-                    if occluder and self._clear_sound > 0:
-                        self._clear_sound -= .1
-                    elif not occluder and self._clear_sound < 1:
-                        self._clear_sound += .1
-                    handles[sound][0].volume = volume * self._clear_sound
-                    handles[sound][1].volume = volume * (1 - self._clear_sound)
+                        for handle in handles[sound]:
+                            audio_system.active_sounds.remove(handle)
+                            handles[sound] = []
+                        return
+                    ind += 1
         condition = self.get_parameter_value(self.condition)
         if not_met(condition):
             return
         sound = self.get_parameter_value(self.sound)
         device = self.get_parameter_value(self.device)
-        pitch = self.get_parameter_value(self.pitch)
         loop_count = self.get_parameter_value(self.loop_count)
         attenuation = self.get_parameter_value(self.attenuation)
         distance_ref = self.get_parameter_value(self.distance_ref)
@@ -8950,11 +8954,11 @@ class ActionStart3DSoundAdv(ActionCell):
                     'worldLinearVelocity',
                     mathutils.Vector((0, 0, 0))
                 )
+            handle.attenuation = attenuation
             handle.orientation = speaker.worldOrientation.to_quaternion()
             handle.pitch = pitch
             handle.loop_count = loop_count
             handle.volume = volume
-            handle.attenuation = attenuation
             handle.distance_reference = distance_ref
             handle.distance_maximum = distance_max
             handle.cone_angle_inner = cone_inner_angle
