@@ -8822,12 +8822,17 @@ class ActionStart3DSound(ActionCell):
                                     compute_distance(speaker, point),
                                     xray=False
                                 )
-                                self._sustained = alpha_move(self._sustained, penetration, .1)
-                            if occluded and self._clear_sound > 0:
+                            cs = self._clear_sound
+                            if occluded and cs > 0:
                                 self._clear_sound -= .1
-                            elif not occluded and self._clear_sound < 1:
+                            elif not occluded and cs < 1:
                                 self._clear_sound += .1
-                            mult = self._clear_sound * self._sustained if not ind else (1 - self._clear_sound) * self._sustained
+                            sustained = self._sustained
+                            if sustained > penetration:
+                                self._sustained -= .01
+                            elif sustained < penetration:
+                                self._sustained += .01
+                            mult = cs * sustained if not ind else (1 - cs) * sustained
                             # handles[sound][ind].attenuation = attenuation
                             handles[sound][ind].volume = volume * mult
                     elif handle in audio_system.active_sounds:
