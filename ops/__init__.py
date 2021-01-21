@@ -816,7 +816,12 @@ class NLLoadSoundOperator(bpy.types.Operator, ImportHelper):
         return True
 
     def execute(self, context):
-        bpy.ops.sound.open_mono(filepath=self.filepath)
+        bpy.ops.sound.open_mono(
+            filepath=self.filepath,
+            mono=True,
+            relative_path=True,
+            filter_sound=True
+        )
         return {'FINISHED'}
 
 

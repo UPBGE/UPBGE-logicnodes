@@ -370,8 +370,12 @@ class BGE_PT_LogicNodeSettingsObject(bpy.types.Panel):
 
     def draw(self, context):
         layout = self.layout
-        col1 = layout.column()
+        main_col = layout.column()
+        parts = main_col.split()
+        col1 = parts.column()
+        col2 = parts.column()
         col1.prop(context.active_object, 'sound_occluder', text='Sound Occluder')
+        col2.prop(context.active_object, 'sound_blocking', text='Factor')
 
 
 class BGE_PT_PropertiesPanelObject(bpy.types.Panel):

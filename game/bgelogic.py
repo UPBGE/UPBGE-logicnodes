@@ -8740,16 +8740,9 @@ class ActionStart3DSound(ActionCell):
 
     def evaluate(self):
         self.done = False
+        occluded = False
         audio_system = self.network.audio_system
         speaker = self.get_parameter_value(self.speaker)
-        cam = bge.logic.getCurrentScene().active_camera
-        occluder = cam.rayCast(
-            speaker.worldPosition,
-            cam.worldPosition,
-            compute_distance(speaker, cam),
-            xray=False
-        )[0]
-        occluded = True if occluder and occluder is not speaker else False
         handles = self._handles
         occlusion = self.get_parameter_value(self.occlusion)
         volume = self.get_parameter_value(self.volume)
@@ -8776,12 +8769,35 @@ class ActionStart3DSound(ActionCell):
                                 mathutils.Vector((0, 0, 0))
                             )
                         if occlusion:
-                            if occluded and self._clear_sound > 0:
+                            cam = bge.logic.getCurrentScene().active_camera
+                            occluder, point, normal = cam.rayCast(
+                                speaker.worldPosition,
+                                cam.worldPosition,
+                                compute_distance(speaker, cam),
+                                xray=False
+                            )
+                            occluded = False
+                            penetration = 1
+                            while occluder:
+                                if occluder is speaker:
+                                    break
                                 if occluder.blenderObject.get('sound_occluder', True):
-                                    self._clear_sound -= .1
+                                    block = occluder.blenderObject.get('sound_blocking', .2)
+                                    occluded = True
+                                    penetration -= block
+                                    attenuation *= 1 + block
+                                occluder, point, normal = occluder.rayCast(
+                                    speaker.worldPosition,
+                                    point,
+                                    compute_distance(speaker, point),
+                                    xray=False
+                                )
+                            if occluded and self._clear_sound > 0:
+                                self._clear_sound -= .1
                             elif not occluded and self._clear_sound < 1:
                                 self._clear_sound += .1
-                            mult = self._clear_sound if not ind else (1 - self._clear_sound) * .8
+                            mult = self._clear_sound * penetration if not ind else (1 - self._clear_sound) * penetration
+                            handles[sound][ind].attenuation = attenuation
                             handles[sound][ind].volume = volume * mult
                     elif handle in audio_system.active_sounds:
                         for handle in handles[sound]:
@@ -8863,20 +8879,15 @@ class ActionStart3DSoundAdv(ActionCell):
 
     def evaluate(self):
         self.done = False
+        occluded: bool
         audio_system = self.network.audio_system
         speaker = self.get_parameter_value(self.speaker)
-        cam = bge.logic.getCurrentScene().active_camera
-        occluder = cam.rayCast(
-            speaker.worldPosition,
-            cam.worldPosition,
-            compute_distance(speaker, cam),
-            xray=False
-        )[0]
-        occluded = True if occluder and occluder is not speaker else False
         handles = self._handles
         occlusion = self.get_parameter_value(self.occlusion)
         volume = self.get_parameter_value(self.volume)
+        cone_outer_volume = self.get_parameter_value(self.cone_outer_volume)
         pitch = self.get_parameter_value(self.pitch)
+        attenuation = self.get_parameter_value(self.attenuation)
         if handles:
             for sound in handles:
                 ind = 0
@@ -8899,13 +8910,37 @@ class ActionStart3DSoundAdv(ActionCell):
                                 mathutils.Vector((0, 0, 0))
                             )
                         if occlusion:
-                            if occluded and self._clear_sound > 0:
+                            cam = bge.logic.getCurrentScene().active_camera
+                            occluder, point, normal = cam.rayCast(
+                                speaker.worldPosition,
+                                cam.worldPosition,
+                                compute_distance(speaker, cam),
+                                xray=False
+                            )
+                            occluded = False
+                            penetration = 1
+                            while occluder:
+                                if occluder is speaker:
+                                    break
                                 if occluder.blenderObject.get('sound_occluder', True):
-                                    self._clear_sound -= .1
+                                    block = occluder.blenderObject.get('sound_blocking', .2)
+                                    occluded = True
+                                    penetration -= block
+                                    attenuation *= 1 + block
+                                occluder, point, normal = occluder.rayCast(
+                                    speaker.worldPosition,
+                                    point,
+                                    compute_distance(speaker, point),
+                                    xray=False
+                                )
+                            if occluded and self._clear_sound > 0:
+                                self._clear_sound -= .1
                             elif not occluded and self._clear_sound < 1:
                                 self._clear_sound += .1
-                            mult = self._clear_sound if not ind else (1 - self._clear_sound) * .8
+                            mult = self._clear_sound * penetration if not ind else (1 - self._clear_sound) * penetration
+                            handles[sound][ind].attenuation = attenuation
                             handles[sound][ind].volume = volume * mult
+                            handles[sound][ind].cone_volume_outer = cone_outer_volume * volume * mult
                     elif handle in audio_system.active_sounds:
                         for handle in handles[sound]:
                             audio_system.active_sounds.remove(handle)
@@ -8918,12 +8953,10 @@ class ActionStart3DSoundAdv(ActionCell):
         sound = self.get_parameter_value(self.sound)
         device = self.get_parameter_value(self.device)
         loop_count = self.get_parameter_value(self.loop_count)
-        attenuation = self.get_parameter_value(self.attenuation)
         distance_ref = self.get_parameter_value(self.distance_ref)
         distance_max = self.get_parameter_value(self.distance_max)
         cone_inner_angle = self.get_parameter_value(self.cone_inner_angle)
         cone_outer_angle = self.get_parameter_value(self.cone_outer_angle)
-        cone_outer_volume = self.get_parameter_value(self.cone_outer_volume)
         self._set_ready()
 
         if is_invalid(sound):
@@ -8963,7 +8996,7 @@ class ActionStart3DSoundAdv(ActionCell):
             handle.distance_maximum = distance_max
             handle.cone_angle_inner = cone_inner_angle
             handle.cone_angle_outer = cone_outer_angle
-            handle.cone_volume_outer = cone_outer_volume
+            handle.cone_volume_outer = cone_outer_volume * volume
             audio_system.active_sounds.append(handle)
         self.done = True
 

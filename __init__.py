@@ -559,6 +559,7 @@ def register():
     nodeitems_utils.register_node_categories("NETLOGIC_NODES", menu_nodes)
 
     bpy.types.Object.sound_occluder = bpy.props.BoolProperty(default=True)
+    bpy.types.Object.sound_blocking = bpy.props.FloatProperty(min=0.0, max=1.0 default=.2)
 
     bpy.types.Object.bgelogic_treelist = bpy.props.CollectionProperty(
         type=NLNodeTreeReference
