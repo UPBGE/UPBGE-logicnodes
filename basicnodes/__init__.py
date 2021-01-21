@@ -526,7 +526,6 @@ def parse_field_value(value_type, value):
 
 
 def update_tree_code(self, context):
-    print('Updating should start')
     bge_netlogic.update_current_tree_code()
 
     if not hasattr(context.space_data, 'edit_tree'):
@@ -711,7 +710,8 @@ class NetLogicStatementGenerator(NetLogicType):
         return None
 
     def update(self):
-        bge_netlogic.update_current_tree_code()
+        # bge_netlogic.update_current_tree_code()
+        pass
 
 
 class NLConditionSocket(bpy.types.NodeSocket, NetLogicSocketType):
@@ -766,9 +766,10 @@ _sockets.append(NLPseudoConditionSocket)
 class NLParameterSocket(bpy.types.NodeSocket, NetLogicSocketType):
     bl_idname = "NLParameterSocket"
     bl_label = "Parameter"
+    color = PARAMETER_SOCKET_COLOR
 
     def draw_color(self, context, node):
-        return PARAMETER_SOCKET_COLOR
+        return self.color
 
     def draw(self, context, layout, node, text):
         layout.label(text=text)
@@ -1325,7 +1326,9 @@ class NLSoundFileSocket(bpy.types.NodeSocket, NetLogicSocketType):
         description='Select a Sound',
         update=update_tree_code
     )
-    use_path: bpy.props.BoolProperty()
+    use_path: bpy.props.BoolProperty(
+        update=update_tree_code
+    )
 
     def draw_color(self, context, node):
         return PARAM_SOUND_SOCKET_COLOR
@@ -2347,48 +2350,70 @@ _sockets.append(NLVec3PositiveFieldSocket)
 class NLColorSocket(bpy.types.NodeSocket, NetLogicSocketType):
     bl_idname = "NLColorSocket"
     bl_label = "Float Value"
-    value_x: bpy.props.FloatProperty(
+    value: bpy.props.FloatVectorProperty(
+        subtype='COLOR_GAMMA',
         min=0.0,
         max=1.0,
-        default=0,
+        size=3,
+        default=(1.0, 1.0, 1.0),
         update=update_tree_code
     )
-    value_y: bpy.props.FloatProperty(
-        min=0.0,
-        max=1.0,
-        default=0,
-        update=update_tree_code
-    )
-    value_z: bpy.props.FloatProperty(
-        min=0.0,
-        max=1.0,
-        default=0,
-        update=update_tree_code)
-    title: bpy.props.StringProperty(default='')
 
     def draw_color(self, context, node):
         return PARAM_BOOL_SOCKET_COLOR
 
     def get_unlinked_value(self):
         return "mathutils.Vector(({}, {}, {}))".format(
-            self.value_x,
-            self.value_y,
-            self.value_z
+            self.value[0],
+            self.value[1],
+            self.value[2]
         )
 
     def draw(self, context, layout, node, text):
         if self.is_linked or self.is_output:
             layout.label(text=text)
         else:
-            column = layout.column()
-            if text != '':
-                column.label(text=text)
-            column.prop(self, "value_x", text='R')
-            column.prop(self, "value_y", text='G')
-            column.prop(self, "value_z", text='B')
+            row = layout.row()
+            row.label(text=text if text else 'Color')
+            row.prop(self, "value", text='')
 
 
 _sockets.append(NLColorSocket)
+
+
+class NLColorAlphaSocket(bpy.types.NodeSocket, NetLogicSocketType):
+    bl_idname = "NLColorAlphaSocket"
+    bl_label = "Float Value"
+    value: bpy.props.FloatVectorProperty(
+        subtype='COLOR_GAMMA',
+        min=0.0,
+        max=1.0,
+        size=4,
+        default=(1.0, 1.0, 1.0, 1.0),
+        update=update_tree_code
+    )
+
+    def draw_color(self, context, node):
+        return PARAM_BOOL_SOCKET_COLOR
+
+    def get_unlinked_value(self):
+        return "mathutils.Vector(({}, {}, {}, {}))".format(
+            self.value[0],
+            self.value[1],
+            self.value[2],
+            self.value[3]
+        )
+
+    def draw(self, context, layout, node, text):
+        if self.is_linked or self.is_output:
+            layout.label(text=text)
+        else:
+            row = layout.row()
+            row.label(text=text if text else 'Color')
+            row.prop(self, "value", text='')
+
+
+_sockets.append(NLColorAlphaSocket)
 
 
 class NLBlendActionModeSocket(bpy.types.NodeSocket, NetLogicSocketType):
@@ -3750,6 +3775,14 @@ class NLObjectAttributeParameterNode(bpy.types.Node, NLParameterNode):
         self.inputs.new(NLSocketReadableMemberName.bl_idname, "Value")
         self.inputs[-1].value = 'worldPosition'
         self.outputs.new(NLParameterSocket.bl_idname, "Value")
+        self.outputs[0].color = PARAM_VECTOR_SOCKET_COLOR
+
+    def update_draw(self):
+        t = self.inputs[1].value
+        if t == 'name' or t == 'color':
+            self.outputs[0].color = PARAMETER_SOCKET_COLOR
+        else:
+            self.outputs[0].color = PARAM_VECTOR_SOCKET_COLOR
 
     def get_netlogic_class_name(self):
         return "bgelogic.ParameterObjectAttribute"
@@ -4489,22 +4522,17 @@ class NLParameterRGBNode(bpy.types.Node, NLParameterNode):
 
     def init(self, context):
         NLParameterNode.init(self, context)
-        utils.register_inputs(
-            self,
-            NLSocketAlphaFloat, "R",
-            NLSocketAlphaFloat, "G",
-            NLSocketAlphaFloat, "B"
-        )
+        self.inputs.new(NLColorSocket.bl_idname, 'Color')
         self.outputs.new(NLVectorSocket.bl_idname, "Color")
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ParameterVector3Simple"
+        return "bgelogic.ParameterColor"
 
     def get_output_socket_varnames(self):
         return ["OUTV"]
 
     def get_input_sockets_field_names(self):
-        return ["input_x", "input_y", "input_z"]
+        return ['color']
 
 
 _nodes.append(NLParameterRGBNode)
@@ -4518,21 +4546,17 @@ class NLParameterRGBANode(bpy.types.Node, NLParameterNode):
 
     def init(self, context):
         NLParameterNode.init(self, context)
-        self.inputs.new(NLSocketAlphaFloat.bl_idname, "R")
-        self.inputs.new(NLSocketAlphaFloat.bl_idname, "G")
-        self.inputs.new(NLSocketAlphaFloat.bl_idname, "B")
-        self.inputs.new(NLSocketAlphaFloat.bl_idname, "A")
-        self.inputs[-1].value = 1
+        self.inputs.new(NLColorAlphaSocket.bl_idname, "Color")
         self.outputs.new(NLVectorSocket.bl_idname, "Color")
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ParameterRGBA"
+        return "bgelogic.ParameterColor"
 
     def get_output_socket_varnames(self):
         return ["OUTV"]
 
     def get_input_sockets_field_names(self):
-        return ["input_r", "input_g", "input_b", 'input_a']
+        return ['color']
 
 
 _nodes.append(NLParameterRGBANode)
@@ -7048,7 +7072,6 @@ class NLInitNewList(bpy.types.Node, NLActionNode):
 
     def update_draw(self):
         for x in range(5):
-            print(self.inputs[x].enabled)
             if self.inputs[x].is_linked:
                 self.inputs[x].enabled = True
                 self.inputs[x+1].enabled = True
@@ -7519,6 +7542,7 @@ _nodes.append(NLActionSaveGame)
 class NLActionLoadGame(bpy.types.Node, NLActionNode):
     bl_idname = "NLActionLoadGame"
     bl_label = "Load Game"
+    bl_icon = 'FILE_FOLDER'
     nl_category = "Game"
     custom_path: bpy.props.BoolProperty(update=update_tree_code)
     path: bpy.props.StringProperty(
@@ -8562,10 +8586,7 @@ class NLSetLightColorAction(bpy.types.Node, NLActionNode):
         NLActionNode.init(self, context)
         self.inputs.new(NLConditionSocket.bl_idname, "Condition")
         self.inputs.new(NLGameObjectSocket.bl_idname, "Light Object")
-        self.inputs.new(NLBooleanSocket.bl_idname, "Clamp")
-        self.inputs.new(NLSocketAlphaFloat.bl_idname, "Red")
-        self.inputs.new(NLSocketAlphaFloat.bl_idname, "Green")
-        self.inputs.new(NLSocketAlphaFloat.bl_idname, "Blue")
+        self.inputs.new(NLColorSocket.bl_idname, "Color")
         self.outputs.new(NLConditionSocket.bl_idname, 'Done')
 
     def get_output_socket_varnames(self):
@@ -8578,10 +8599,7 @@ class NLSetLightColorAction(bpy.types.Node, NLActionNode):
         return [
             "condition",
             "lamp",
-            'clamp',
-            "red",
-            "green",
-            "blue"
+            "color"
         ]
 
 
@@ -8619,12 +8637,10 @@ class NLGetLightColorAction(bpy.types.Node, NLParameterNode):
     def init(self, context):
         NLParameterNode.init(self, context)
         self.inputs.new(NLGameObjectSocket.bl_idname, "Light Object")
-        self.outputs.new(NLParameterSocket.bl_idname, 'Red')
-        self.outputs.new(NLParameterSocket.bl_idname, 'Green')
-        self.outputs.new(NLParameterSocket.bl_idname, 'Blue')
+        self.outputs.new(NLColorSocket.bl_idname, 'Red')
 
     def get_output_socket_varnames(self):
-        return ['R', 'G', 'B']
+        return ['COLOR']
 
     def get_netlogic_class_name(self):
         return "bgelogic.GetLightColor"

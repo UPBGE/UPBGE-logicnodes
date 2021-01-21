@@ -41,6 +41,7 @@ def debug(*message):
 
 def update_current_tree_code(*ignored):
     global _tree_code_writer_started
+    print(_tree_code_writer_started)
     if not _tree_code_writer_started:
         _tree_code_writer_started = True
         bpy.ops.bgenetlogic.treecodewriter_operator()
@@ -313,17 +314,21 @@ def refresh_custom_nodes(dummy):
 def request_tree_code_writer_start(dummy):
     global _tree_code_writer_started
     _tree_code_writer_started = False
-    # print("updating tree code on file open...")
-    # generator = ops.tree_code_generator.TreeCodeGenerator()
-    # for node_tree in bpy.data.node_groups:
-    #     if node_tree.bl_idname == ui.BGELogicTree.bl_idname:
-    #         print("writing tree script for ", node_tree.name)
-    #         generator.write_code_for_tree(node_tree)
+    generator = ops.tree_code_generator.TreeCodeGenerator()
+    for node_tree in bpy.data.node_groups:
+        if node_tree.bl_idname == ui.BGELogicTree.bl_idname:
+            print("writing tree script for ", node_tree.name)
+            generator.write_code_for_tree(node_tree)
 
 
-bpy.app.handlers.load_post.append(refresh_custom_nodes)
-bpy.app.handlers.load_post.append(request_tree_code_writer_start)
-bpy.app.handlers.save_post.append(refresh_custom_nodes)
+for f in [
+    refresh_custom_nodes,
+    request_tree_code_writer_start,
+    refresh_custom_nodes
+]:
+    if f in bpy.app.handlers.load_post:
+        bpy.app.handlers.load_post.remove(f)
+    bpy.app.handlers.load_post.append(f)
 
 #import modules and definitions
 ui = _abs_import("ui", _abs_path("ui", "__init__.py"))
@@ -417,7 +422,7 @@ class LogicNodesAddonPreferences(bpy.types.AddonPreferences):
         col.separator()
         link_row = col.row()
         link_row.operator("bge_netlogic.github", icon="URL")
-        link_row.operator("bge_netlogic.donate", icon="URL")
+        link_row.operator("bge_netlogic.donate", icon="FUND")
         contrib_row = col.row()
         contrib_row.label(text='Contributors: L_P, Mike King')
         testers_row = col.row()
@@ -559,7 +564,7 @@ def register():
     nodeitems_utils.register_node_categories("NETLOGIC_NODES", menu_nodes)
 
     bpy.types.Object.sound_occluder = bpy.props.BoolProperty(default=True)
-    bpy.types.Object.sound_blocking = bpy.props.FloatProperty(min=0.0, max=1.0 default=.2)
+    bpy.types.Object.sound_blocking = bpy.props.FloatProperty(min=0.0, max=1.0, default=.15)
 
     bpy.types.Object.bgelogic_treelist = bpy.props.CollectionProperty(
         type=NLNodeTreeReference

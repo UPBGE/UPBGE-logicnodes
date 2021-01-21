@@ -360,7 +360,7 @@ class BGE_PT_LogicNodeSettingsObject(bpy.types.Panel):
     bl_label = "Logic Node Settings"
     bl_space_type = "PROPERTIES"
     bl_region_type = "WINDOW"
-    bl_context = "object"
+    bl_context = "physics"
     name: bpy.props.StringProperty()
 
     @classmethod

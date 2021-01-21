@@ -3892,13 +3892,10 @@ class ParameterVector3Simple(ParameterCell):
         self._set_value(self.output_vector)
 
 
-class ParameterRGBA(ParameterCell):
+class ParameterColor(ParameterCell):
     def __init__(self):
         ParameterCell.__init__(self)
-        self.input_r = None
-        self.input_g = None
-        self.input_b = None
-        self.input_a = None
+        self.color = None
         self.output_vector = None
         self.OUTV = LogicNetworkSubCell(self, self.get_out_v)
 
@@ -3910,13 +3907,32 @@ class ParameterRGBA(ParameterCell):
 
     def evaluate(self):
         self._set_ready()
-        r = self.get_parameter_value(self.input_r)
-        g = self.get_parameter_value(self.input_g)
-        b = self.get_parameter_value(self.input_b)
-        a = self.get_parameter_value(self.input_a)
-        if is_waiting(r, g, b):
+        c = self.get_parameter_value(self.color)
+        if is_waiting(c):
             return
-        self.output_vector = mathutils.Vector((r, g, b, a))
+        self.output_vector = mathutils.Vector((c.x, c.y, c.z))
+        self._set_value(self.output_vector)
+
+
+class ParameterColorAlpha(ParameterCell):
+    def __init__(self):
+        ParameterCell.__init__(self)
+        self.color = None
+        self.output_vector = None
+        self.OUTV = LogicNetworkSubCell(self, self.get_out_v)
+
+    def get_out_v(self):
+        return self.output_vector.copy()
+
+    def get_normalized_vector(self):
+        return self.output_vector.normalized()
+
+    def evaluate(self):
+        self._set_ready()
+        c = self.get_parameter_value(self.color)
+        if is_waiting(c):
+            return
+        self.output_vector = mathutils.Vector((c.x, c.y, c.z, c.w))
         self._set_value(self.output_vector)
 
 
@@ -8778,11 +8794,12 @@ class ActionStart3DSound(ActionCell):
                             )
                             occluded = False
                             penetration = 1
+                            attenuation = 1
                             while occluder:
                                 if occluder is speaker:
                                     break
                                 if occluder.blenderObject.get('sound_occluder', True):
-                                    block = occluder.blenderObject.get('sound_blocking', .2)
+                                    block = occluder.blenderObject.get('sound_blocking', .15)
                                     occluded = True
                                     penetration -= block
                                     attenuation *= 1 + block
@@ -8923,7 +8940,7 @@ class ActionStart3DSoundAdv(ActionCell):
                                 if occluder is speaker:
                                     break
                                 if occluder.blenderObject.get('sound_occluder', True):
-                                    block = occluder.blenderObject.get('sound_blocking', .2)
+                                    block = occluder.blenderObject.get('sound_blocking', .15)
                                     occluded = True
                                     penetration -= block
                                     attenuation *= 1 + block
@@ -9682,10 +9699,7 @@ class SetLightColor(ActionCell):
         ActionCell.__init__(self)
         self.condition = None
         self.lamp = None
-        self.clamp = None
-        self.red = None
-        self.green = None
-        self.blue = None
+        self.color = None
         self.done = None
         self.OUT = LogicNetworkSubCell(self, self.get_done)
 
@@ -9697,14 +9711,6 @@ class SetLightColor(ActionCell):
         light.color = color
         logic.getCurrentScene().resetTaaSamples = True
 
-    def set_blender_27x(self, lamp, color):
-        lamp.color = color
-
-    def clamp_col(self, c):
-        if c > 1:
-            return 1
-        return c
-
     def evaluate(self):
         self.done = False
         STATUS_WAITING = LogicNetworkCell.STATUS_WAITING
@@ -9715,20 +9721,11 @@ class SetLightColor(ActionCell):
             self._set_value(False)
             return self._set_ready()
         lamp = self.get_parameter_value(self.lamp)
-        clamp = self.get_parameter_value(self.clamp)
-        r = self.get_parameter_value(self.red)
-        g = self.get_parameter_value(self.green)
-        b = self.get_parameter_value(self.blue)
-        if lamp is STATUS_WAITING:
+        color = self.get_parameter_value(self.color)
+        if is_waiting(lamp, color):
             return
         self._set_ready()
-        colors = [r, g, b]
-        if clamp:
-            colors = [self.clamp_col(c) for c in colors]
-        if TOO_OLD:
-            self.set_blender_27x(lamp, colors)
-        else:
-            self.set_blender_28x(lamp, colors)
+        self.set_blender_28x(lamp, color)
         self.done = True
 
 
@@ -9766,42 +9763,22 @@ class GetLightColor(ActionCell):
     def __init__(self):
         ActionCell.__init__(self)
         self.lamp = None
-        self.r = 0
-        self.g = 0
-        self.b = 0
-        self.R = LogicNetworkSubCell(self, self.get_r)
-        self.G = LogicNetworkSubCell(self, self.get_g)
-        self.B = LogicNetworkSubCell(self, self.get_b)
+        self.color = 0
+        self.COLOR = LogicNetworkSubCell(self, self.get_color)
 
-    def get_r(self):
-        return self.r
-
-    def get_g(self):
-        return self.g
-
-    def get_b(self):
-        return self.b
+    def get_color(self):
+        return self.color
 
     def get_blender_28x(self, lamp):
         light = lamp.blenderObject.data
-        self.r = light.color[0]
-        self.g = light.color[1]
-        self.b = light.color[2]
-
-    def get_blender_27x(self, lamp):
-        self.r = lamp.color[0]
-        self.g = lamp.color[1]
-        self.b = lamp.color[2]
+        self.color = light.color
 
     def evaluate(self):
         lamp = self.get_parameter_value(self.lamp)
         if lamp is LogicNetworkCell.STATUS_WAITING:
             return
         self._set_ready()
-        if TOO_OLD:
-            self.get_blender_27x(lamp)
-        else:
-            self.get_blender_28x(lamp)
+        self.get_blender_28x(lamp)
 
 
 # Action "Move To": an object will follow a point
