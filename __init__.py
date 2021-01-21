@@ -117,6 +117,9 @@ def _update_all_logic_tree_code():
 
 
 def _consume_update_tree_code_queue():
+    if not _update_queue:
+        return
+    print("The damn update queue isn't empty, yo!")
     if hasattr(bpy.context.space_data, "edit_tree") and (bpy.context.space_data.edit_tree):
         edit_tree = bpy.context.space_data.edit_tree
         old_name = _tree_to_name_map.get(edit_tree)
@@ -125,8 +128,6 @@ def _consume_update_tree_code_queue():
         else:
             if old_name != edit_tree.name:
                 update_tree_name(edit_tree, old_name)
-    if not _update_queue:
-        return
     now = time.time()
     last_event = _update_queue[-1]
     delta = now - last_event
@@ -135,6 +136,7 @@ def _consume_update_tree_code_queue():
         try:
             bpy.ops.bge_netlogic.generate_logicnetwork()
         except Exception:
+            print('Well here we have da culprit!')
             pass
         return True
 
@@ -564,7 +566,7 @@ def register():
     nodeitems_utils.register_node_categories("NETLOGIC_NODES", menu_nodes)
 
     bpy.types.Object.sound_occluder = bpy.props.BoolProperty(default=True)
-    bpy.types.Object.sound_blocking = bpy.props.FloatProperty(min=0.0, max=1.0, default=.15)
+    bpy.types.Object.sound_blocking = bpy.props.FloatProperty(min=0.0, max=1.0, default=.05)
 
     bpy.types.Object.bgelogic_treelist = bpy.props.CollectionProperty(
         type=NLNodeTreeReference

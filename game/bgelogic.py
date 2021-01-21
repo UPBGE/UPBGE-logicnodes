@@ -30,6 +30,18 @@ if not TOO_OLD:
     import bpy
 
 
+def interpolate(a, b, fac):
+    return (fac * b) + ((1-fac) * a)
+
+
+def alpha_move(a, b, fac):
+    if a < b:
+        return a + fac
+    elif a > b:
+        return a - fac
+    else:
+        return a
+
 # Persistent maps
 
 class SimpleLoggingDatabase(object):
@@ -6543,9 +6555,9 @@ class GetFullscreen(ActionCell):
 class GEDrawLine(ActionCell):
     def __init__(self):
         ActionCell.__init__(self)
+        self.color = None
         self.from_point = None
         self.to_point = None
-        self.color = None
 
     def evaluate(self):
         condition = self.get_parameter_value(self.condition)
@@ -8743,6 +8755,7 @@ class ActionStart3DSound(ActionCell):
         self.distance_max = None
         self.done = None
         self._clear_sound = 1
+        self._sustained = 1
         self._handle = None
         self._handles = {}
         self.DONE = LogicNetworkSubCell(self, self.get_done)
@@ -8794,27 +8807,28 @@ class ActionStart3DSound(ActionCell):
                             )
                             occluded = False
                             penetration = 1
-                            attenuation = 1
+                            # attenuation = 1
                             while occluder:
                                 if occluder is speaker:
                                     break
                                 if occluder.blenderObject.get('sound_occluder', True):
-                                    block = occluder.blenderObject.get('sound_blocking', .15)
+                                    block = occluder.blenderObject.get('sound_blocking', .1)
                                     occluded = True
                                     penetration -= block
-                                    attenuation *= 1 + block
+                                    # attenuation *= 1 + block / 2
                                 occluder, point, normal = occluder.rayCast(
                                     speaker.worldPosition,
                                     point,
                                     compute_distance(speaker, point),
                                     xray=False
                                 )
+                                self._sustained = alpha_move(self._sustained, penetration, .1)
                             if occluded and self._clear_sound > 0:
                                 self._clear_sound -= .1
                             elif not occluded and self._clear_sound < 1:
                                 self._clear_sound += .1
-                            mult = self._clear_sound * penetration if not ind else (1 - self._clear_sound) * penetration
-                            handles[sound][ind].attenuation = attenuation
+                            mult = self._clear_sound * self._sustained if not ind else (1 - self._clear_sound) * self._sustained
+                            # handles[sound][ind].attenuation = attenuation
                             handles[sound][ind].volume = volume * mult
                     elif handle in audio_system.active_sounds:
                         for handle in handles[sound]:
@@ -8883,6 +8897,7 @@ class ActionStart3DSoundAdv(ActionCell):
         self.cone_outer_volume = None
         self.done = None
         self._clear_sound = 1
+        self._sustained = 1
         self._handle = None
         self._handles = {}
         self.DONE = LogicNetworkSubCell(self, self.get_done)
@@ -8896,7 +8911,6 @@ class ActionStart3DSoundAdv(ActionCell):
 
     def evaluate(self):
         self.done = False
-        occluded: bool
         audio_system = self.network.audio_system
         speaker = self.get_parameter_value(self.speaker)
         handles = self._handles
@@ -8934,28 +8948,39 @@ class ActionStart3DSoundAdv(ActionCell):
                                 compute_distance(speaker, cam),
                                 xray=False
                             )
+                            last = occluder
                             occluded = False
                             penetration = 1
                             while occluder:
                                 if occluder is speaker:
                                     break
-                                if occluder.blenderObject.get('sound_occluder', True):
-                                    block = occluder.blenderObject.get('sound_blocking', .15)
+                                sound_occluder = occluder.blenderObject.get('sound_occluder', True)
+                                if sound_occluder:
                                     occluded = True
-                                    penetration -= block
-                                    attenuation *= 1 + block
+                                    block = occluder.blenderObject.get('sound_blocking', .1)
+                                    if penetration > 0:
+                                        penetration -= block
+                                    else:
+                                        penetration = 0
+                                    # attenuation *= 1 + block / 2
                                 occluder, point, normal = occluder.rayCast(
                                     speaker.worldPosition,
                                     point,
                                     compute_distance(speaker, point),
                                     xray=False
                                 )
-                            if occluded and self._clear_sound > 0:
+                            cs = self._clear_sound
+                            if occluded and cs > 0:
                                 self._clear_sound -= .1
-                            elif not occluded and self._clear_sound < 1:
+                            elif not occluded and cs < 1:
                                 self._clear_sound += .1
-                            mult = self._clear_sound * penetration if not ind else (1 - self._clear_sound) * penetration
-                            handles[sound][ind].attenuation = attenuation
+                            sustained = self._sustained
+                            if sustained > penetration:
+                                self._sustained -= .01
+                            elif sustained < penetration:
+                                self._sustained += .01
+                            mult = cs * sustained if not ind else (1 - cs) * sustained
+                            # handles[sound][ind].attenuation = attenuation
                             handles[sound][ind].volume = volume * mult
                             handles[sound][ind].cone_volume_outer = cone_outer_volume * volume * mult
                     elif handle in audio_system.active_sounds:

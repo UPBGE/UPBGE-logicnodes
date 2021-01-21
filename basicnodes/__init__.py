@@ -8,7 +8,7 @@ TOO_OLD = bpy.app.version < (2, 80, 0)
 CONDITION_SOCKET_COLOR = utils.Color.RGBA(.8, 0.2, 0.2, 1.0)
 PSEUDO_COND_SOCKET_COLOR = utils.Color.RGBA(.8, 0.2, 0.2, 1.0)
 PARAMETER_SOCKET_COLOR = utils.Color.RGBA(.8, 0.5, 0.2, 1.0)
-PARAM_BOOL_SOCKET_COLOR = utils.Color.RGBA(.95, .7, .1, 1.0)
+PARAM_BOOL_SOCKET_COLOR = utils.Color.RGBA(1.0, .85, .1, 1.0)
 PARAM_LIST_SOCKET_COLOR = utils.Color.RGBA(0.74, .65, .48, 1.0)
 PARAM_DICT_SOCKET_COLOR = utils.Color.RGBA(0.58, 0.48, .74, 1.0)
 PARAM_OBJ_SOCKET_COLOR = utils.Color.RGBA(0.2, 0.5, .7, 1.0)
@@ -78,12 +78,12 @@ _enum_type_casts = [
 
 
 _enum_distance_models = {
-    ('INVERSE', 'Inverse', ''),
-    ('INVERSE_CLAMPED', 'Inverse Clamped', ''),
-    ('EXPONENT', 'Exponent', ''),
-    ('EXPONENT_CLAMPED', 'Exponent Clamped', ''),
-    ('LINEAR', 'Linear', ''),
-    ('LINEAR_CLAMPED', 'Linear Clamped', ''),
+    ('INVERSE', 'Inverse', 'Sound will fade exponentially (Realistic)'),
+    ('INVERSE_CLAMPED', 'Inverse Clamped', 'Sound will fade exponentially (Realistic, Clamped)'),
+    ('EXPONENT', 'Exponent', 'Sound will fade detemined by an exponent (Good audibility)'),
+    ('EXPONENT_CLAMPED', 'Exponent Clamped', 'Sound will fade detemined by an exponent (Good audibility, Clamped)'),
+    ('LINEAR', 'Linear', 'Sound will fade in a linear relation to distance'),
+    ('LINEAR_CLAMPED', 'Linear Clamped', 'Sound will fade in a linear relation to distance (Clamped)'),
     ('NONE', 'None', "Don't use a distance model")
 }
 
@@ -3028,13 +3028,13 @@ class NLDrawLine(bpy.types.Node, NLParameterNode):
     def init(self, context):
         NLParameterNode.init(self, context)
         self.inputs.new(NLPseudoConditionSocket.bl_idname, 'Condition')
+        self.inputs.new(NLColorSocket.bl_idname, 'Color')
         self.inputs.new(NLVec3FieldSocket.bl_idname, 'From')
         self.inputs.new(NLVec3FieldSocket.bl_idname, 'To')
-        self.inputs.new(NLColorSocket.bl_idname, 'Color')
         self.outputs.new(NLConditionSocket.bl_idname, "Done")
 
     def get_input_sockets_field_names(self):
-        return ['condition', 'from_point', 'to_point', 'color']
+        return ['condition', 'color', 'from_point', 'to_point']
 
     def get_netlogic_class_name(self):
         return "bgelogic.GEDrawLine"
@@ -4523,7 +4523,7 @@ class NLParameterRGBNode(bpy.types.Node, NLParameterNode):
     def init(self, context):
         NLParameterNode.init(self, context)
         self.inputs.new(NLColorSocket.bl_idname, 'Color')
-        self.outputs.new(NLVectorSocket.bl_idname, "Color")
+        self.outputs.new(NLColorSocket.bl_idname, "Color")
 
     def get_netlogic_class_name(self):
         return "bgelogic.ParameterColor"
@@ -4547,7 +4547,7 @@ class NLParameterRGBANode(bpy.types.Node, NLParameterNode):
     def init(self, context):
         NLParameterNode.init(self, context)
         self.inputs.new(NLColorAlphaSocket.bl_idname, "Color")
-        self.outputs.new(NLVectorSocket.bl_idname, "Color")
+        self.outputs.new(NLColorSocket.bl_idname, "Color")
 
     def get_netlogic_class_name(self):
         return "bgelogic.ParameterColor"
@@ -5523,6 +5523,8 @@ class NLConditionOrList(bpy.types.Node, NLConditionNode):
                 self.inputs[x+1].enabled = True
             else:
                 self.inputs[x+1].enabled = False
+        if self.inputs[-1].is_linked:
+            self.inputs[-1].enabled = True
 
     def get_netlogic_class_name(self):
         return "bgelogic.ConditionOrList"
@@ -5569,6 +5571,8 @@ class NLConditionAndList(bpy.types.Node, NLConditionNode):
                 self.inputs[x+1].enabled = True
             else:
                 self.inputs[x+1].enabled = False
+        if self.inputs[-1].is_linked:
+            self.inputs[-1].enabled = True
 
     def get_netlogic_class_name(self):
         return "bgelogic.ConditionAndList"
@@ -7077,6 +7081,8 @@ class NLInitNewList(bpy.types.Node, NLActionNode):
                 self.inputs[x+1].enabled = True
             else:
                 self.inputs[x+1].enabled = False
+        if self.inputs[-1].is_linked:
+            self.inputs[-1].enabled = True
 
     def get_output_socket_varnames(self):
         return ['LIST']
@@ -8637,7 +8643,7 @@ class NLGetLightColorAction(bpy.types.Node, NLParameterNode):
     def init(self, context):
         NLParameterNode.init(self, context)
         self.inputs.new(NLGameObjectSocket.bl_idname, "Light Object")
-        self.outputs.new(NLColorSocket.bl_idname, 'Red')
+        self.outputs.new(NLColorSocket.bl_idname, 'Color')
 
     def get_output_socket_varnames(self):
         return ['COLOR']
@@ -9420,7 +9426,7 @@ class NLActionStart3DSound(bpy.types.Node, NLActionNode):
         self.inputs.new(NLPositiveFloatSocket.bl_idname, "Volume")
         self.inputs[-1].value = 1.0
         self.inputs.new(NLPosFloatFormatSocket.bl_idname, "Maximum Distance")
-        self.inputs[-1].value = 500.0
+        self.inputs[-1].value = 1000.0
         self.outputs.new(NLConditionSocket.bl_idname, 'Done')
         self.outputs.new(NLParameterSocket.bl_idname, 'Sound')
 
