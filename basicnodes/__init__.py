@@ -9408,50 +9408,6 @@ class NLActionAddSoundDevice(bpy.types.Node, NLActionNode):
 _nodes.append(NLActionAddSoundDevice)
 
 
-class NLActionStart3DSound(bpy.types.Node, NLActionNode):
-    bl_idname = "NLActionStart3DSound"
-    bl_label = "3D Sound"
-    bl_icon = 'MUTE_IPO_ON'
-    nl_category = "Sound"
-
-    def init(self, context):
-        NLActionNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, "Condition")
-        self.inputs.new(NLGameObjectSocket.bl_idname, "Speaker")
-        self.inputs.new(NLSoundFileSocket.bl_idname, "Sound File")
-        self.inputs.new(NLBooleanSocket.bl_idname, "Use Occlusion")
-        self.inputs.new(NLSocketLoopCount.bl_idname, "Mode")
-        self.inputs.new(NLFloatFieldSocket.bl_idname, "Pitch")
-        self.inputs[-1].value = 1.0
-        self.inputs.new(NLPositiveFloatSocket.bl_idname, "Volume")
-        self.inputs[-1].value = 1.0
-        self.inputs.new(NLPosFloatFormatSocket.bl_idname, "Maximum Distance")
-        self.inputs[-1].value = 1000.0
-        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
-        self.outputs.new(NLParameterSocket.bl_idname, 'Sound')
-
-    def get_output_socket_varnames(self):
-        return ["DONE", "HANDLE"]
-
-    def get_netlogic_class_name(self):
-        return "bgelogic.ActionStart3DSound"
-
-    def get_input_sockets_field_names(self):
-        return [
-            "condition",
-            "speaker",
-            "sound",
-            'occlusion',
-            "loop_count",
-            "pitch",
-            "volume",
-            "distance_max"
-        ]
-
-
-# _nodes.append(NLActionStart3DSound)
-
-
 class NLActionStart3DSoundAdv(bpy.types.Node, NLActionNode):
     bl_idname = "NLActionStart3DSoundAdv"
     bl_label = "3D Sound"
@@ -9470,7 +9426,7 @@ class NLActionStart3DSoundAdv(bpy.types.Node, NLActionNode):
         self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Type")
         self.inputs[-1].value = 'default3D'
         self.inputs.new(NLSocketLoopCount.bl_idname, "Mode")
-        self.inputs.new(NLFloatFieldSocket.bl_idname, "Pitch")
+        self.inputs.new(NLPositiveFloatSocket.bl_idname, "Pitch")
         self.inputs[-1].value = 1.0
         self.inputs.new(NLPositiveFloatSocket.bl_idname, "Volume")
         self.inputs[-1].value = 1.0
@@ -9488,6 +9444,12 @@ class NLActionStart3DSoundAdv(bpy.types.Node, NLActionNode):
 
     def update_draw(self):
         state = self.advanced
+        for i in [4, 8, 9, 10, 11, 12]:
+            ipt = self.inputs[i]
+            if ipt.is_linked:
+                ipt.enabled = True
+            else:
+                ipt.enabled = state
         self.inputs[4].enabled = state
         self.inputs[8].enabled = state
         self.inputs[9].enabled = state
@@ -9535,7 +9497,7 @@ class NLActionStartSound(bpy.types.Node, NLActionNode):
         self.inputs.new(NLConditionSocket.bl_idname, "Condition")
         self.inputs.new(NLSoundFileSocket.bl_idname, "Sound File")
         self.inputs.new(NLSocketLoopCount.bl_idname, "Mode")
-        self.inputs.new(NLFloatFieldSocket.bl_idname, "Pitch")
+        self.inputs.new(NLPositiveFloatSocket.bl_idname, "Pitch")
         self.inputs[-1].value = 1.0
         self.inputs.new(NLSocketAlphaFloat.bl_idname, "Volume")
         self.inputs[-1].value = 1.0
