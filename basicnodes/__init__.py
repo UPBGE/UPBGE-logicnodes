@@ -8847,7 +8847,7 @@ class NLActionTimeFilter(bpy.types.Node, NLActionNode):
     def init(self, context):
         NLActionNode.init(self, context)
         self.inputs.new(NLConditionSocket.bl_idname, "Condition")
-        self.inputs.new(NLPositiveFloatSocket.bl_idname, "Delay Sec.")
+        self.inputs.new(NLPositiveFloatSocket.bl_idname, "Gap Sec.")
         self.inputs[-1].value = 1.0
         self.outputs.new(NLConditionSocket.bl_idname, "Out")
 
@@ -9449,14 +9449,17 @@ class NLActionStart3DSound(bpy.types.Node, NLActionNode):
         ]
 
 
-_nodes.append(NLActionStart3DSound)
+# _nodes.append(NLActionStart3DSound)
 
 
 class NLActionStart3DSoundAdv(bpy.types.Node, NLActionNode):
     bl_idname = "NLActionStart3DSoundAdv"
-    bl_label = "3D Sound (Advanced)"
+    bl_label = "3D Sound"
     bl_icon = 'MUTE_IPO_ON'
     nl_category = "Sound"
+    advanced = bpy.props.BoolProperty(
+        update=update_tree_code
+    )
 
     def init(self, context):
         NLActionNode.init(self, context)
@@ -9475,16 +9478,25 @@ class NLActionStart3DSoundAdv(bpy.types.Node, NLActionNode):
         self.inputs[-1].value = 1.0
         self.inputs.new(NLPosFloatFormatSocket.bl_idname, "Reference Distance")
         self.inputs[-1].value = 1.0
-        self.inputs.new(NLPosFloatFormatSocket.bl_idname, "Maximum Distance")
-        self.inputs[-1].value = 1000.0
-        self.inputs.new(NLPosFloatFormatSocket.bl_idname, "Cone Inner Angle")
-        self.inputs[-1].value = 360
-        self.inputs.new(NLPosFloatFormatSocket.bl_idname, "Cone Outer Angle")
-        self.inputs[-1].value = 360
+        self.inputs.new(NLVec2FieldSocket.bl_idname, "Cone Inner / Outer")
+        self.inputs[-1].value_x = 360
+        self.inputs[-1].value_y = 360
         self.inputs.new(NLPosFloatFormatSocket.bl_idname, "Cone Outer Volume")
         self.inputs[-1].value = 0.0
         self.outputs.new(NLConditionSocket.bl_idname, 'Done')
         self.outputs.new(NLParameterSocket.bl_idname, 'Sound')
+
+    def update_draw(self):
+        state = self.advanced
+        self.inputs[4].enabled = state
+        self.inputs[8].enabled = state
+        self.inputs[9].enabled = state
+        self.inputs[10].enabled = state
+        self.inputs[11].enabled = state
+        self.inputs[12].enabled = state
+
+    def draw_buttons(self, context, layout):
+        layout.prop(self, 'advanced', text='Advanced', icon='SETTINGS')
 
     def get_output_socket_varnames(self):
         return ["DONE", "HANDLE"]
@@ -9504,9 +9516,7 @@ class NLActionStart3DSoundAdv(bpy.types.Node, NLActionNode):
             "volume",
             "attenuation",
             "distance_ref",
-            "distance_max",
-            "cone_inner_angle",
-            "cone_outer_angle",
+            "cone_angle",
             "cone_outer_volume"
         ]
 

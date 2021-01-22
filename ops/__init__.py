@@ -365,7 +365,8 @@ class NLMakeGroupOperator(bpy.types.Operator):
             'pulse',
             'hide',
             'label',
-            'use_owner'
+            'use_owner',
+            'advanced'
         ]
 
         nodes = node_tree.nodes

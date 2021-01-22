@@ -8896,9 +8896,7 @@ class ActionStart3DSoundAdv(ActionCell):
         self.volume = None
         self.attenuation = None
         self.distance_ref = None
-        self.distance_max = None
-        self.cone_inner_angle = None
-        self.cone_outer_angle = None
+        self.cone_angle = None
         self.cone_outer_volume = None
         self.done = None
         self._clear_sound = 1
@@ -8953,7 +8951,6 @@ class ActionStart3DSoundAdv(ActionCell):
                                 compute_distance(speaker, cam),
                                 xray=False
                             )
-                            last = occluder
                             occluded = False
                             penetration = 1
                             while occluder:
@@ -9001,9 +8998,9 @@ class ActionStart3DSoundAdv(ActionCell):
         device = self.get_parameter_value(self.device)
         loop_count = self.get_parameter_value(self.loop_count)
         distance_ref = self.get_parameter_value(self.distance_ref)
-        distance_max = self.get_parameter_value(self.distance_max)
-        cone_inner_angle = self.get_parameter_value(self.cone_inner_angle)
-        cone_outer_angle = self.get_parameter_value(self.cone_outer_angle)
+        cone_angle = self.get_parameter_value(self.cone_angle)
+        cone_inner_angle = cone_angle.x
+        cone_outer_angle = cone_angle.y
         self._set_ready()
 
         if is_invalid(sound):
@@ -9040,7 +9037,7 @@ class ActionStart3DSoundAdv(ActionCell):
             handle.loop_count = loop_count
             handle.volume = volume
             handle.distance_reference = distance_ref
-            handle.distance_maximum = distance_max
+            handle.distance_maximum = 1000
             handle.cone_angle_inner = cone_inner_angle
             handle.cone_angle_outer = cone_outer_angle
             handle.cone_volume_outer = cone_outer_volume * volume
