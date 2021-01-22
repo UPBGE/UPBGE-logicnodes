@@ -41,7 +41,6 @@ def debug(*message):
 
 def update_current_tree_code(*ignored):
     global _tree_code_writer_started
-    print(_tree_code_writer_started)
     if not _tree_code_writer_started:
         _tree_code_writer_started = True
         bpy.ops.bgenetlogic.treecodewriter_operator()
@@ -108,18 +107,17 @@ def _update_all_logic_tree_code():
     _update_queue.append(now)
     now = time.time()
     last_event = _update_queue[-1]
-    delta = now - last_event
+    # delta = now - last_event
     try:
         bpy.ops.bge_netlogic.generate_logicnetwork_all()
     except Exception:
-        print("Unknown Error, abort generating Network code")
+        utils.error("Unknown Error, abort generating Network code")
         return
 
 
 def _consume_update_tree_code_queue():
     if not _update_queue:
         return
-    print("The damn update queue isn't empty, yo!")
     if hasattr(bpy.context.space_data, "edit_tree") and (bpy.context.space_data.edit_tree):
         edit_tree = bpy.context.space_data.edit_tree
         old_name = _tree_to_name_map.get(edit_tree)
@@ -135,9 +133,12 @@ def _consume_update_tree_code_queue():
         _update_queue.clear()
         try:
             bpy.ops.bge_netlogic.generate_logicnetwork()
-        except Exception:
-            print('Well here we have da culprit!')
-            pass
+        except Exception as e:
+            if bpy.context.scene.logic_node_settings.use_generate_all:
+                utils.warn('Could not update tree, updating all...')
+                bpy.ops.bge_netlogic.generate_logicnetwork_all()
+            else:
+                utils.error('Could not update tree, context incorrect!')
         return True
 
 

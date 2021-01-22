@@ -753,7 +753,7 @@ def update_tree_code(self, context):
 class BGELogicTree(bpy.types.NodeTree):
     bl_idname = "BGELogicTree"
     bl_label = "Logic Node Editor"
-    bl_icon = "OUTLINER" if not bpy.app.version < (2, 80, 0) else 'PLUS'
+    bl_icon = "OUTLINER"
     bl_category = "Scripting"
 
     @classmethod

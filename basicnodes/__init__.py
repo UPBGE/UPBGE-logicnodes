@@ -7,8 +7,9 @@ TOO_OLD = bpy.app.version < (2, 80, 0)
 
 CONDITION_SOCKET_COLOR = utils.Color.RGBA(.8, 0.2, 0.2, 1.0)
 PSEUDO_COND_SOCKET_COLOR = utils.Color.RGBA(.8, 0.2, 0.2, 1.0)
-PARAMETER_SOCKET_COLOR = utils.Color.RGBA(.8, 0.5, 0.2, 1.0)
-PARAM_BOOL_SOCKET_COLOR = utils.Color.RGBA(1.0, .85, .1, 1.0)
+PARAMETER_SOCKET_COLOR = utils.Color.RGBA(.9, 0.56, 0.22, 1.0)
+PARAM_BOOL_SOCKET_COLOR = utils.Color.RGBA(1.0, 0.5, .4, 1.0)
+PARAM_COLOR_SOCKET_COLOR = utils.Color.RGBA(1.0, .85, .1, 1.0)
 PARAM_LIST_SOCKET_COLOR = utils.Color.RGBA(0.74, .65, .48, 1.0)
 PARAM_DICT_SOCKET_COLOR = utils.Color.RGBA(0.58, 0.48, .74, 1.0)
 PARAM_OBJ_SOCKET_COLOR = utils.Color.RGBA(0.2, 0.5, .7, 1.0)
@@ -18,7 +19,7 @@ PARAM_MESH_SOCKET_COLOR = utils.Color.RGBA(.0, .65, .35, 1.0)
 PARAM_COLL_SOCKET_COLOR = utils.Color.RGBA(0.25, 0.35, .8, 1.0)
 PARAM_SCENE_SOCKET_COLOR = utils.Color.RGBA(0.5, 0.5, 0.6, 1.0)
 PARAM_VECTOR_SOCKET_COLOR = utils.Color.RGBA(0.4, 0.8, 0.4, 1.0)
-PARAM_SOUND_SOCKET_COLOR = utils.Color.RGBA(0.4, 0.8, 0.8, 1.0)
+PARAM_SOUND_SOCKET_COLOR = utils.Color.RGBA(0.3, 0.6, 0.3, 1.0)
 PARAM_LOGIC_BRICK_SOCKET_COLOR = utils.Color.RGBA(0.9, 0.9, 0.4, 1.0)
 PARAM_PYTHON_SOCKET_COLOR = utils.Color.RGBA(0.2, 0.7, 1, 1.0)
 ACTION_SOCKET_COLOR = utils.Color.RGBA(0.2, .7, .7, 1.0)
@@ -2360,7 +2361,7 @@ class NLColorSocket(bpy.types.NodeSocket, NetLogicSocketType):
     )
 
     def draw_color(self, context, node):
-        return PARAM_BOOL_SOCKET_COLOR
+        return PARAM_COLOR_SOCKET_COLOR
 
     def get_unlinked_value(self):
         return "mathutils.Vector(({}, {}, {}))".format(
@@ -2394,7 +2395,7 @@ class NLColorAlphaSocket(bpy.types.NodeSocket, NetLogicSocketType):
     )
 
     def draw_color(self, context, node):
-        return PARAM_BOOL_SOCKET_COLOR
+        return PARAM_COLOR_SOCKET_COLOR
 
     def get_unlinked_value(self):
         return "mathutils.Vector(({}, {}, {}, {}))".format(
@@ -4380,7 +4381,7 @@ _nodes.append(NLParameterTypeCast)
 
 class NLParameterVector2SimpleNode(bpy.types.Node, NLParameterNode):
     bl_idname = "NLParameterVector2SimpleNode"
-    bl_label = "Vector 2"
+    bl_label = "Vector XY"
     nl_category = "Values"
     nl_subcat = 'Vectors'
 
@@ -4487,7 +4488,7 @@ _nodes.append(NLParameterAbsVector3Node)
 
 class NLParameterVector3SimpleNode(bpy.types.Node, NLParameterNode):
     bl_idname = "NLParameterVector3SimpleNode"
-    bl_label = "Vector 3"
+    bl_label = "Vector XYZ"
     nl_category = "Values"
     nl_subcat = 'Vectors'
 

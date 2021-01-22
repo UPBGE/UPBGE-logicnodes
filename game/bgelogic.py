@@ -1,5 +1,6 @@
 from bge import logic
 import bge
+import bpy
 import aud
 import mathutils
 import math
@@ -12,8 +13,6 @@ import sys
 import operator
 import json
 
-TOO_OLD = bge.app.version < (2, 80, 0)
-
 
 DISTANCE_MODELS = {
     'INVERSE': aud.DISTANCE_MODEL_INVERSE,
@@ -24,10 +23,6 @@ DISTANCE_MODELS = {
     'LINEAR_CLAMPED': aud.DISTANCE_MODEL_LINEAR_CLAMPED,
     'NONE': aud.DISTANCE_MODEL_INVALID
 }
-
-
-if not TOO_OLD:
-    import bpy
 
 
 def interpolate(a, b, fac):
@@ -1482,30 +1477,6 @@ class ActionSaveGame(ActionCell):
                                 'y': wDir.y,
                                 'z': wDir.z
                             },
-                            'props': prop_list
-                        }
-                    }
-                )
-            elif isinstance(obj, bge.types.KX_LightObject):
-                if not TOO_OLD:
-                    continue
-                objs.append(
-                    {
-                        'name': obj.name,
-                        'type': 'light',
-                        'data': {
-                            'worldPosition': {
-                                'x': loc.x,
-                                'y': loc.y,
-                                'z': loc.z
-                            },
-                            'worldOrientation': {
-                                'x': rot.x,
-                                'y': rot.y,
-                                'z': rot.z
-                            },
-                            'worldScale': {'x': sca.x, 'y': sca.y, 'z': sca.z},
-                            'energy': obj.energy,
                             'props': prop_list
                         }
                     }
@@ -9531,10 +9502,7 @@ class SetLightEnergy(ActionCell):
         if lamp is STATUS_WAITING:
             return
         self._set_ready()
-        if TOO_OLD:
-            self.set_blender_27x(lamp, energy)
-        else:
-            self.set_blender_28x(lamp, energy)
+        self.set_blender_28x(lamp, energy)
         self.done = True
 
 
@@ -9574,10 +9542,7 @@ class SetLightShadow(ActionCell):
         if lamp is STATUS_WAITING:
             return
         self._set_ready()
-        if TOO_OLD:
-            self.set_blender_27x(lamp, use_shadow)
-        else:
-            self.set_blender_28x(lamp, use_shadow)
+        self.set_blender_28x(lamp, use_shadow)
         self.done = True
 
 
@@ -9640,10 +9605,7 @@ class GetLightEnergy(ActionCell):
         if lamp is LogicNetworkCell.STATUS_WAITING:
             return
         self._set_ready()
-        if TOO_OLD:
-            self.get_blender_27x(lamp)
-        else:
-            self.get_blender_28x(lamp)
+        self.get_blender_28x(lamp)
 
 
 class GetLightColor(ActionCell):
