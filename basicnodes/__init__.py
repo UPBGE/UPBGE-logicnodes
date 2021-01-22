@@ -3259,7 +3259,7 @@ class NLGetRandomListIndex(bpy.types.Node, NLParameterNode):
         return "bgelogic.ParameterRandomListIndex"
 
     def get_input_sockets_field_names(self):
-        return ["condition", "list"]
+        return ["condition", "items"]
 
     def get_output_socket_varnames(self):
         return [OUTCELL]
@@ -3284,7 +3284,7 @@ class NLGetListIndexNode(bpy.types.Node, NLParameterNode):
         return "bgelogic.ParameterListIndex"
 
     def get_input_sockets_field_names(self):
-        return ["list", "index"]
+        return ["items", "index"]
 
     def get_output_socket_varnames(self):
         return [OUTCELL]
@@ -4548,10 +4548,10 @@ class NLParameterRGBANode(bpy.types.Node, NLParameterNode):
     def init(self, context):
         NLParameterNode.init(self, context)
         self.inputs.new(NLColorAlphaSocket.bl_idname, "Color")
-        self.outputs.new(NLColorSocket.bl_idname, "Color")
+        self.outputs.new(NLColorAlphaSocket.bl_idname, "Color")
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ParameterColor"
+        return "bgelogic.ParameterColorAlpha"
 
     def get_output_socket_varnames(self):
         return ["OUTV"]

@@ -2564,11 +2564,11 @@ class ParameterDictionaryValue(ParameterCell):
 class ParameterListIndex(ParameterCell):
     def __init__(self):
         ParameterCell.__init__(self)
-        self.list = None
+        self.items = None
         self.index = None
 
     def evaluate(self):
-        list_d = self.get_parameter_value(self.list)
+        list_d = self.get_parameter_value(self.items)
         index = self.get_parameter_value(self.index)
         if is_invalid(list_d):
             return
@@ -2585,13 +2585,13 @@ class ParameterRandomListIndex(ParameterCell):
     def __init__(self):
         ParameterCell.__init__(self)
         self.condition = None
-        self.list = None
+        self.items = None
 
     def evaluate(self):
         condition = self.get_parameter_value(self.condition)
         if not_met(condition):
             return
-        list_d = self.get_parameter_value(self.list)
+        list_d = self.get_parameter_value(self.items)
         if is_invalid(list_d):
             return
         self._set_ready()
@@ -3893,8 +3893,7 @@ class ParameterColor(ParameterCell):
         c = self.get_parameter_value(self.color)
         if is_waiting(c):
             return
-        self.output_vector = mathutils.Vector((c.x, c.y, c.z))
-        self._set_value(self.output_vector)
+        self.output_vector = c  # mathutils.Vector((c.x, c.y, c.z))
 
 
 class ParameterColorAlpha(ParameterCell):
@@ -3915,8 +3914,7 @@ class ParameterColorAlpha(ParameterCell):
         c = self.get_parameter_value(self.color)
         if is_waiting(c):
             return
-        self.output_vector = mathutils.Vector((c.x, c.y, c.z, c.w))
-        self._set_value(self.output_vector)
+        self.output_vector = c  # mathutils.Vector((c.x, c.y, c.z, c.w))
 
 
 class ParameterEulerSimple(ParameterCell):
@@ -6753,7 +6751,7 @@ class InitEmptyList(ActionCell):
         ActionCell.__init__(self)
         self.condition = None
         self.length = None
-        self.list = None
+        self.items = None
         self.done = None
         self.OUT = LogicNetworkSubCell(self, self.get_done)
         self.LIST = LogicNetworkSubCell(self, self.get_list)
@@ -6762,7 +6760,7 @@ class InitEmptyList(ActionCell):
         return self.done
 
     def get_list(self):
-        return self.list
+        return self.items
 
     def evaluate(self):
         self.done = False
@@ -6775,7 +6773,7 @@ class InitEmptyList(ActionCell):
         if length is LogicNetworkCell.STATUS_WAITING:
             return
         self._set_ready()
-        self.list = [None for x in range(length)]
+        self.items = [None for x in range(length)]
         self.done = True
 
 
@@ -6788,11 +6786,11 @@ class InitNewList(ActionCell):
         self.value4 = None
         self.value5 = None
         self.value6 = None
-        self.list = None
+        self.items = None
         self.LIST = LogicNetworkSubCell(self, self.get_list)
 
     def get_list(self):
-        return self.list
+        return self.items
 
     def evaluate(self):
         value = self.get_parameter_value(self.value)
@@ -6802,18 +6800,18 @@ class InitNewList(ActionCell):
         value5 = self.get_parameter_value(self.value5)
         value6 = self.get_parameter_value(self.value6)
         values = [value, value2, value3, value4, value5, value6]
-        self.list = []
+        self.items = []
         self._set_ready()
         for val in values:
             if not is_waiting(val) and not is_invalid(val):
-                self.list.append(val)
+                self.items.append(val)
 
 
 class AppendListItem(ActionCell):
     def __init__(self):
         ActionCell.__init__(self)
         self.condition = None
-        self.list = None
+        self.items = None
         self.val = None
         self.new_list = None
         self.done = None
@@ -6833,7 +6831,7 @@ class AppendListItem(ActionCell):
             return
         if not condition:
             return
-        list_d = self.get_parameter_value(self.list)
+        list_d = self.get_parameter_value(self.items)
         if list_d is LogicNetworkCell.STATUS_WAITING:
             return
         val = self.get_parameter_value(self.val)
@@ -6849,7 +6847,7 @@ class SetListIndex(ActionCell):
     def __init__(self):
         ActionCell.__init__(self)
         self.condition = None
-        self.list = None
+        self.items = None
         self.index = None
         self.val = None
         self.new_list = None
@@ -6870,7 +6868,7 @@ class SetListIndex(ActionCell):
             return
         if not condition:
             return
-        list_d = self.get_parameter_value(self.list)
+        list_d = self.get_parameter_value(self.items)
         if list_d is LogicNetworkCell.STATUS_WAITING:
             return
         index = self.get_parameter_value(self.index)
@@ -6889,7 +6887,7 @@ class RemoveListValue(ActionCell):
     def __init__(self):
         ActionCell.__init__(self)
         self.condition = None
-        self.list = None
+        self.items = None
         self.val = None
         self.new_list = None
         self.done = None
@@ -6909,7 +6907,7 @@ class RemoveListValue(ActionCell):
             return
         if not condition:
             return
-        list_d = self.get_parameter_value(self.list)
+        list_d = self.get_parameter_value(self.items)
         if list_d is LogicNetworkCell.STATUS_WAITING:
             return
         val = self.get_parameter_value(self.val)
@@ -8106,7 +8104,7 @@ class ActionListVariables(ActionCell):
         self.print_list = None
         self.path = ''
         self.done = None
-        self.list = None
+        self.items = None
         self.OUT = LogicNetworkSubCell(self, self.get_done)
         self.LIST = LogicNetworkSubCell(self, self.get_list)
 
@@ -8114,7 +8112,7 @@ class ActionListVariables(ActionCell):
         return self.done
 
     def get_list(self):
-        return self.list
+        return self.items
 
     def write_to_json(self, path, p_l):
         data = None
@@ -8130,7 +8128,7 @@ class ActionListVariables(ActionCell):
                 if p_l:
                     print('{}\t->\t{}'.format(x, data[x]))
                 li.append(x)
-            self.list = li
+            self.items = li
         else:
             debug('There are no saved variables')
         f.close()

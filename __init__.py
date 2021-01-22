@@ -318,10 +318,11 @@ def request_tree_code_writer_start(dummy):
     global _tree_code_writer_started
     _tree_code_writer_started = False
     generator = ops.tree_code_generator.TreeCodeGenerator()
+    utils.debug('Writing trees on file open...')
     for node_tree in bpy.data.node_groups:
         if node_tree.bl_idname == ui.BGELogicTree.bl_idname:
-            print("writing tree script for ", node_tree.name)
             generator.write_code_for_tree(node_tree)
+    utils.debug('FINISHED')
 
 
 for f in [
