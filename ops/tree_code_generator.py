@@ -35,6 +35,7 @@ class TreeCodeGenerator(object):
         buffer_name = utils.py_module_filename_for_tree(tree)
         if bpy.context.scene.logic_node_settings.use_node_debug:
             utils.notify("Generating code for tree {}".format(tree.name))
+            utils.set_compile_status(utils.TREE_COMPILED)
         line_writer = self.create_text_file("bgelogic/"+buffer_name)
         line_writer.write_line("# MACHINE GENERATED")
         line_writer.write_line("import bge")

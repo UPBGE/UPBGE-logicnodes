@@ -527,6 +527,7 @@ def parse_field_value(value_type, value):
 
 
 def update_tree_code(self, context):
+    utils.set_compile_status(utils.TREE_MODIFIED)
     bge_netlogic.update_current_tree_code()
 
     if not hasattr(context.space_data, 'edit_tree'):

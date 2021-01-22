@@ -49,6 +49,7 @@ def update_current_tree_code(*ignored):
 
 
 def update_tree_name(tree, old_name):
+    utils.set_compile_status(utils.TREE_MODIFIED)
     new_name = tree.name
     _tree_to_name_map[tree] = new_name
     old_name_code = utilities.strip_tree_name(old_name)
@@ -108,6 +109,7 @@ def _update_all_logic_tree_code():
     now = time.time()
     last_event = _update_queue[-1]
     # delta = now - last_event
+    utils.set_compile_status(utils.TREE_MODIFIED)
     try:
         bpy.ops.bge_netlogic.generate_logicnetwork_all()
     except Exception:
@@ -366,6 +368,7 @@ class NLAddonSettings(bpy.types.PropertyGroup):
     use_node_debug: bpy.props.BoolProperty(default=True)
     use_node_notify: bpy.props.BoolProperty(default=True)
     use_generate_all: bpy.props.BoolProperty(default=True)
+    tree_compiled: bpy.props.StringProperty(default=utils.TREE_NOT_INITIALIZED)
 
 
 class NodeCategory():

@@ -589,6 +589,10 @@ class BGE_PT_LogicTreeOptions(bpy.types.Panel):
             text="Generate All Code",
             icon='SCRIPTPLUGINS'
         )
+        status = layout.box()
+        compiled = status.row()
+        compiled.label(text='STATUS:')
+        compiled.label(text=context.scene.logic_node_settings.tree_compiled)
 
 
 class BGE_PT_LogicTreeInfoPanel(bpy.types.Panel):
