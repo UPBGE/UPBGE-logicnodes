@@ -3893,7 +3893,7 @@ class ParameterColor(ParameterCell):
         c = self.get_parameter_value(self.color)
         if is_waiting(c):
             return
-        self.output_vector = c  # mathutils.Vector((c.x, c.y, c.z))
+        self.output_vector = c
 
 
 class ParameterColorAlpha(ParameterCell):
@@ -3914,7 +3914,7 @@ class ParameterColorAlpha(ParameterCell):
         c = self.get_parameter_value(self.color)
         if is_waiting(c):
             return
-        self.output_vector = c  # mathutils.Vector((c.x, c.y, c.z, c.w))
+        self.output_vector = c
 
 
 class ParameterEulerSimple(ParameterCell):

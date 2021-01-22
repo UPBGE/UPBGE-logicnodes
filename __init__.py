@@ -133,7 +133,7 @@ def _consume_update_tree_code_queue():
         _update_queue.clear()
         try:
             bpy.ops.bge_netlogic.generate_logicnetwork()
-        except Exception as e:
+        except Exception:
             if bpy.context.scene.logic_node_settings.use_generate_all:
                 utils.warn('Could not update tree, updating all...')
                 bpy.ops.bge_netlogic.generate_logicnetwork_all()
@@ -147,8 +147,8 @@ def _get_this_module():
     return sys.modules[__name__]
 
 
-#This is called when the program needs to ensure that the user nodes have been loaded when the
-#edited file changes.
+# This is called when the program needs to ensure that the user nodes have been loaded when the
+# edited file changes.
 def setup_user_nodes():
     global _current_user_nodes_parent_directory
     parent_dir_for_current_blender_file = bpy.path.abspath("//")
