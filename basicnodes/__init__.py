@@ -462,6 +462,26 @@ _enum_blend_mode_values = [
 OUTCELL = "__standard_logic_cell_value__"
 
 
+def filter_materials(self, item):
+    if item.is_grease_pencil:
+        return False
+    else:
+        return True
+
+
+def filter_lights(self, item):
+    print(item.data)
+    if (
+        isinstance(item.data, bpy.types.AreaLight)
+        or isinstance(item.data, bpy.types.PointLight)
+        or isinstance(item.data, bpy.types.SpotLight)
+        or isinstance(item.data, bpy.types.SunLight)
+    ):
+        return True
+    else:
+        return False
+
+
 def parse_field_value(value_type, value):
     t = value_type
     v = value
@@ -484,39 +504,8 @@ def parse_field_value(value_type, value):
     if t == "STRING":
         return '"{}"'.format(v)
 
-    if t == "VECTOR":
-        numbers = re.findall("[-+]?\d+[\.]?\d*", v)
-        if len(numbers) == 2:
-            return "mathutils.Vector(({},{}))".format(numbers[0], numbers[1])
-        if len(numbers) == 3:
-            return "mathutils.Vector(({},{},{}))".format(*numbers)
-        if len(numbers) == 4:
-            return "mathutils.Vector(({},{},{},{}))".format(*numbers)
-        return "mathutils.Vector()"
-
-    if t == "EULER":
-        numbers = re.findall("[-+]?\d+[\.]?\d*", v)
-        if len(numbers) == 1:
-            return 'mathutils.Euler(({}, 0.0, 0.0), "XYZ")'.format(numbers[0])
-        if len(numbers) == 2:
-            return (
-                'mathutils.Euler(({}, {}, 0.0), "XYZ")'.format(
-                    numbers[0],
-                    numbers[1]
-                )
-            )
-        if len(numbers) == 3:
-            return (
-                'mathutils.Euler(({}, {}, {}), "XYZ")'.format(
-                    numbers[0],
-                    numbers[1],
-                    numbers[2]
-                )
-            )
-        return 'mathutils.Euler((0,0,0), "XYZ")'
-
-    if t == "EXPRESSION":
-        return v
+    if t == "FILE_PATH":
+        return '"{}"'.format(v)
 
     if t == "BOOLEAN":
         return v
@@ -573,7 +562,15 @@ class NetLogicType:
 
 
 class NetLogicSocketType:
-    nlhide = False
+    valid_sockets = []
+
+    def validate(self, from_socket):
+        if not self.valid_sockets:
+            return True
+        elif from_socket.bl_idname not in self.valid_sockets:
+            return False
+        else:
+            return True
 
     def get_unlinked_value(self):
         raise NotImplementedError()
@@ -866,9 +863,15 @@ _sockets.append(NLActionSocket)
 
 
 class NLAbstractNode(NetLogicStatementGenerator):
+
     @classmethod
     def poll(cls, node_tree):
         pass
+
+    def insert_link(self, link):
+        to_socket = link.to_socket
+        from_socket = link.from_socket
+        link.is_valid = to_socket.validate(from_socket)
 
     def free(self):
         pass
@@ -988,6 +991,59 @@ class NLGameObjectSocket(bpy.types.NodeSocket, NetLogicSocketType):
 _sockets.append(NLGameObjectSocket)
 
 
+class NLLightObjectSocket(bpy.types.NodeSocket, NetLogicSocketType):
+    bl_idname = "NLLightObjectSocket"
+    bl_label = "Light"
+    value: bpy.props.PointerProperty(
+        name='Light',
+        type=bpy.types.Light,
+        poll=filter_lights,
+        update=update_tree_code
+    )
+    use_owner: bpy.props.BoolProperty(
+        name='Use Owner',
+        update=update_tree_code,
+        description='Use the owner of this tree'
+    )
+
+    def draw_color(self, context, node):
+        return PARAM_OBJ_SOCKET_COLOR
+
+    def draw(self, context, layout, node, text):
+        if self.is_output:
+            layout.label(text=self.name)
+        elif self.is_linked:
+            layout.label(text=self.name)
+        else:
+            if not self.use_owner:
+                col = layout.column(align=False)
+                row = col.row()
+                if self.name:
+                    row.label(text=self.name)
+                row.prop(self, 'use_owner', icon='USER', text='')
+                col.prop_search(
+                    self,
+                    'value',
+                    bpy.context.scene,
+                    'objects',
+                    icon='NONE',
+                    text=''
+                )
+            else:
+                row = layout.row()
+                row.label(text=self.name)
+                row.prop(self, 'use_owner', icon='USER', text='')
+
+    def get_unlinked_value(self):
+        if self.use_owner:
+            return '"NLO:U_O"'
+        if isinstance(self.value, bpy.types.Light):
+            return '"NLO:{}"'.format(self.value.name)
+
+
+_sockets.append(NLLightObjectSocket)
+
+
 class NLGamePropertySocket(bpy.types.NodeSocket, NetLogicSocketType):
     bl_idname = "NLGamePropertySocket"
     bl_label = "Property"
@@ -1049,6 +1105,7 @@ class NLMaterialSocket(bpy.types.NodeSocket, NetLogicSocketType):
     value: bpy.props.PointerProperty(
         name='Material',
         type=bpy.types.Material,
+        poll=filter_materials,
         update=update_tree_code
     )
 
@@ -1352,6 +1409,8 @@ class NLSoundFileSocket(bpy.types.NodeSocket, NetLogicSocketType):
                 col.prop(self, "sound_value", text='')
 
     def get_unlinked_value(self):
+        if not self.use_path and self.sound_value is None:
+            return '"None"'
         path = str(self.filepath_value) if self.use_path else str(self.sound_value.filepath)
         path = path.replace('\\', '/')
         if path.endswith('\\'):
@@ -1870,6 +1929,10 @@ class NLValueFieldSocket(bpy.types.NodeSocket, NetLogicSocketType):
     def on_type_changed(self, context):
         if self.value_type == "BOOLEAN":
             self.value = str(self.bool_editor)
+        if self.value_type == "STRING":
+            self.value = str(self.string_editor)
+        if self.value_type == "FILE_PATH":
+            self.value = str(self.path_editor)
         update_tree_code(self, context)
 
     value_type: bpy.props.EnumProperty(
@@ -2196,11 +2259,13 @@ class NLFloatFieldSocket(bpy.types.NodeSocket, NetLogicSocketType):
     bl_idname = "NLFloatFieldSocket"
     bl_label = "Float Value"
     value: bpy.props.FloatProperty(default=0, update=update_tree_code)
+    valid_sockets = ['NLFloatFieldSocket']
 
     def draw_color(self, context, node):
         return PARAMETER_SOCKET_COLOR
 
-    def get_unlinked_value(self): return "{}".format(self.value)
+    def get_unlinked_value(self):
+        return "{}".format(self.value)
 
     def draw(self, context, layout, node, text):
         if self.is_linked or self.is_output:
@@ -8066,6 +8131,7 @@ class NLActionSetCharacterGravity(bpy.types.Node, NLActionNode):
         self.inputs.new(NLConditionSocket.bl_idname, "Condition")
         self.inputs.new(NLGameObjectSocket.bl_idname, "Object")
         self.inputs.new(NLFloatFieldSocket.bl_idname, "Gravity")
+        self.inputs[-1].value_z = -9.8
         self.outputs.new(NLConditionSocket.bl_idname, 'Done')
 
     def get_output_socket_varnames(self):
@@ -8534,7 +8600,7 @@ class NLSetLightEnergyAction(bpy.types.Node, NLActionNode):
     def init(self, context):
         NLActionNode.init(self, context)
         self.inputs.new(NLConditionSocket.bl_idname, 'Condition')
-        self.inputs.new(NLGameObjectSocket.bl_idname, 'Light Object')
+        self.inputs.new(NLLightObjectSocket.bl_idname, 'Light Object')
         self.inputs.new(NLFloatFieldSocket.bl_idname, 'Energy')
         self.outputs.new(NLConditionSocket.bl_idname, 'Done')
 
@@ -8563,7 +8629,7 @@ class NLSetLightShadowAction(bpy.types.Node, NLActionNode):
     def init(self, context):
         NLActionNode.init(self, context)
         self.inputs.new(NLConditionSocket.bl_idname, 'Condition')
-        self.inputs.new(NLGameObjectSocket.bl_idname, 'Light Object')
+        self.inputs.new(NLLightObjectSocket.bl_idname, 'Light Object')
         self.inputs.new(NLBooleanSocket.bl_idname, 'Use Shadow')
         self.outputs.new(NLConditionSocket.bl_idname, 'Done')
 
@@ -8593,7 +8659,7 @@ class NLSetLightColorAction(bpy.types.Node, NLActionNode):
     def init(self, context):
         NLActionNode.init(self, context)
         self.inputs.new(NLConditionSocket.bl_idname, "Condition")
-        self.inputs.new(NLGameObjectSocket.bl_idname, "Light Object")
+        self.inputs.new(NLLightObjectSocket.bl_idname, "Light Object")
         self.inputs.new(NLColorSocket.bl_idname, "Color")
         self.outputs.new(NLConditionSocket.bl_idname, 'Done')
 
@@ -8621,7 +8687,7 @@ class NLGetLightEnergy(bpy.types.Node, NLParameterNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
-        self.inputs.new(NLGameObjectSocket.bl_idname, "Light Object")
+        self.inputs.new(NLLightObjectSocket.bl_idname, "Light Object")
         self.outputs.new(NLParameterSocket.bl_idname, 'Enery')
 
     def get_output_socket_varnames(self):
@@ -8644,7 +8710,7 @@ class NLGetLightColorAction(bpy.types.Node, NLParameterNode):
 
     def init(self, context):
         NLParameterNode.init(self, context)
-        self.inputs.new(NLGameObjectSocket.bl_idname, "Light Object")
+        self.inputs.new(NLLightObjectSocket.bl_idname, "Light Object")
         self.outputs.new(NLColorSocket.bl_idname, 'Color')
 
     def get_output_socket_varnames(self):

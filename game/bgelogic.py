@@ -1137,16 +1137,13 @@ class ConditionValueTrigger(ConditionCell):
     def evaluate(self):
         monitored_value = self.get_parameter_value(self.monitored_value)
         trigger_value = self.get_parameter_value(self.trigger_value)
-        if monitored_value is LogicNetworkCell.STATUS_WAITING:
-            return
-        if trigger_value is LogicNetworkCell.STATUS_WAITING:
+        if is_waiting(monitored_value, trigger_value):
             return
         self._set_ready()
         # initialize the value
         if self._last_value is LogicNetworkCell.NO_VALUE:
             self._last_value = monitored_value
             self._set_value(False)
-            return
         else:
             value_changed = (monitored_value != self._last_value)
             is_trigger = (monitored_value == trigger_value)
@@ -8748,7 +8745,7 @@ class ActionStart3DSoundAdv(ActionCell):
         occlusion = self.get_parameter_value(self.occlusion)
         volume = self.get_parameter_value(self.volume)
         cone_outer_volume = self.get_parameter_value(self.cone_outer_volume)
-        pitch = self.get_parameter_value(self.pitch)
+        pitch = self.get_parameter_value(self.pitch) * logic.getTimeScale()
         attenuation = self.get_parameter_value(self.attenuation)
         if handles:
             for sound in handles:

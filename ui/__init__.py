@@ -765,4 +765,7 @@ class BGELogicTree(bpy.types.NodeTree):
         return True
 
     def update(self):
+        print('Updating Tree ##############################')
         bge_netlogic.update_current_tree_code()
+        for link in self.links:
+            print(link.is_valid)

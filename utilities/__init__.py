@@ -4,6 +4,7 @@ import os
 
 TREE_COMPILED = 'Compiled'
 TREE_MODIFIED = 'MODIFIED'
+TREE_FAILED = 'FAILED'
 TREE_NOT_INITIALIZED = 'STARTUP'
 
 
@@ -182,7 +183,7 @@ def debug(message):
         return
     else:
         os.system('color')
-        print(f'[Logic Nodes][{ansicol.BYELLOW}DEBUG{ansicol.END}] ' + message)
+        print(f'[Logic Nodes][{ansicol.BYELLOW}DEBUG{ansicol.END}] {message}')
 
 
 def notify(message):
@@ -194,12 +195,12 @@ def notify(message):
         return
     else:
         os.system('color')
-        print(f'[Logic Nodes][{ansicol.BBLUE}NOTIFICATION{ansicol.END}] ' + message)
+        print(f'[Logic Nodes][{ansicol.BBLUE}NOTIFICATION{ansicol.END}] {message}')
 
 
 def error(message):
     os.system('color')
-    print(f'[Logic Nodes][{ansicol.RED}ERROR{ansicol.END}] ' + message)
+    print(f'[Logic Nodes][{ansicol.RED}ERROR{ansicol.END}] {message}')
 
 
 def warn(message):

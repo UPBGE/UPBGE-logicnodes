@@ -717,10 +717,12 @@ class NLGenerateLogicNetworkOperatorAll(bpy.types.Operator):
                     "not been saved or the user has no write permission for "
                     "the containing folder."
                 )
+                utils.set_compile_status(utils.TREE_FAILED)
                 return {"FINISHED"}
         for tree in bpy.data.node_groups:
             if tree.bl_idname == bge_netlogic.ui.BGELogicTree.bl_idname:
                 tree_code_generator.TreeCodeGenerator().write_code_for_tree(tree)
+        utils.set_compile_status(utils.TREE_COMPILED)
         return {"FINISHED"}
 
 
@@ -772,6 +774,7 @@ class NLGenerateLogicNetworkOperator(bpy.types.Operator):
                     "not been saved or the user has no write permission for "
                     "the containing folder."
                 )
+                utils.set_compile_status(utils.TREE_FAILED)
                 return {"FINISHED"}
         # write the current tree in a python module,
         # in the directory of the current blender file
@@ -779,7 +782,8 @@ class NLGenerateLogicNetworkOperator(bpy.types.Operator):
         try:
             tree = context.space_data.edit_tree
             tree_code_generator.TreeCodeGenerator().write_code_for_tree(tree)
-        except Exception:
+        except Exception as e:
+            utils.error(e)
             utils.warn('Automatic Update failed, attempting hard generation...')
             if bpy.context.scene.logic_node_settings.use_generate_all:
                 self.report(
@@ -789,6 +793,7 @@ class NLGenerateLogicNetworkOperator(bpy.types.Operator):
                 for tree in bpy.data.node_groups:
                     if tree.bl_idname == bge_netlogic.ui.BGELogicTree.bl_idname:
                         tree_code_generator.TreeCodeGenerator().write_code_for_tree(tree)
+                utils.set_compile_status(utils.TREE_FAILED)
                 return {"FINISHED"}
             else:
                 self.report(
@@ -796,8 +801,9 @@ class NLGenerateLogicNetworkOperator(bpy.types.Operator):
                     'Tree to edit not found! Aborting.'
                 )
                 utils.error('Tree to edit not found! Aborting.')
+                utils.set_compile_status(utils.TREE_FAILED)
                 return {"FINISHED"}
-
+        utils.set_compile_status(utils.TREE_COMPILED)
         return {"FINISHED"}
 
 
