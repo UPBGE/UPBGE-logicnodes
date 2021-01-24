@@ -723,6 +723,7 @@ class NLGenerateLogicNetworkOperatorAll(bpy.types.Operator):
             if tree.bl_idname == bge_netlogic.ui.BGELogicTree.bl_idname:
                 tree_code_generator.TreeCodeGenerator().write_code_for_tree(tree)
         utils.set_compile_status(utils.TREE_COMPILED)
+        context.region.tag_redraw()
         return {"FINISHED"}
 
 
@@ -804,6 +805,7 @@ class NLGenerateLogicNetworkOperator(bpy.types.Operator):
                 utils.set_compile_status(utils.TREE_FAILED)
                 return {"FINISHED"}
         utils.set_compile_status(utils.TREE_COMPILED)
+        context.region.tag_redraw()
         return {"FINISHED"}
 
 

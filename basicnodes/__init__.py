@@ -470,7 +470,6 @@ def filter_materials(self, item):
 
 
 def filter_lights(self, item):
-    print(item.data)
     if (
         isinstance(item.data, bpy.types.AreaLight)
         or isinstance(item.data, bpy.types.PointLight)
@@ -5284,7 +5283,7 @@ _nodes.append(NLMouseReleasedCondition)
 class NLConditionOnceNode(bpy.types.Node, NLConditionNode):
     bl_idname = "NLConditionOnceNode"
     bl_label = "Once"
-    bl_icon = 'FRAME_NEXT'
+    bl_icon = 'FF'
     nl_category = "Events"
 
     def init(self, context):
@@ -5360,7 +5359,7 @@ _nodes.append(NLObjectPropertyOperator)
 class NLConditionNextFrameNode(bpy.types.Node, NLConditionNode):
     bl_idname = "NLConditionNextFrameNode"
     bl_label = "On Next Tick"
-    bl_icon = 'FF'
+    bl_icon = 'FRAME_NEXT'
     nl_category = "Events"
 
     def init(self, context):

@@ -9281,22 +9281,18 @@ class SetGamma(ActionCell):
 
     def evaluate(self):
         self.done = False
-        STATUS_WAITING = LogicNetworkCell.STATUS_WAITING
         condition = self.get_parameter_value(self.condition)
-        if condition is STATUS_WAITING:
+        if not_met(condition):
             return
-        if not condition:
-            self._set_value(False)
-            return self._set_ready()
         value = self.get_parameter_value(self.value)
-        if value is STATUS_WAITING:
-            return
         if is_invalid(value):
             return
         self._set_ready()
+        scene = logic.getCurrentScene()
         bpy.data.scenes[
-            logic.getCurrentScene().name
+            scene.name
         ].view_settings.gamma = value
+        scene.resetTaaSamples = True
         self.done = True
 
 
@@ -9314,22 +9310,18 @@ class SetExposure(ActionCell):
 
     def evaluate(self):
         self.done = False
-        STATUS_WAITING = LogicNetworkCell.STATUS_WAITING
         condition = self.get_parameter_value(self.condition)
-        if condition is STATUS_WAITING:
+        if not_met(condition):
             return
-        if not condition:
-            self._set_value(False)
-            return self._set_ready()
         value = self.get_parameter_value(self.value)
-        if value is STATUS_WAITING:
-            return
         if is_invalid(value):
             return
         self._set_ready()
+        scene = logic.getCurrentScene()
         bpy.data.scenes[
-            logic.getCurrentScene().name
+            scene.name
         ].view_settings.exposure = value
+        scene.resetTaaSamples = True
         self.done = True
 
 
@@ -9347,20 +9339,16 @@ class SetEeveeBloom(ActionCell):
 
     def evaluate(self):
         self.done = False
-        STATUS_WAITING = LogicNetworkCell.STATUS_WAITING
         condition = self.get_parameter_value(self.condition)
-        if condition is STATUS_WAITING:
+        if not_met(condition):
             return
-        if not condition:
-            self._set_value(False)
-            return self._set_ready()
         value = self.get_parameter_value(self.value)
-        if value is STATUS_WAITING:
-            return
         if is_invalid(value):
             return
         self._set_ready()
-        bpy.data.scenes[logic.getCurrentScene().name].eevee.use_bloom = value
+        scene = logic.getCurrentScene()
+        bpy.data.scenes[scene.name].eevee.use_bloom = value
+        scene.resetTaaSamples = True
         self.done = True
 
 
@@ -9378,20 +9366,16 @@ class SetEeveeSSR(ActionCell):
 
     def evaluate(self):
         self.done = False
-        STATUS_WAITING = LogicNetworkCell.STATUS_WAITING
         condition = self.get_parameter_value(self.condition)
-        if condition is STATUS_WAITING:
+        if not_met(condition):
             return
-        if not condition:
-            self._set_value(False)
-            return self._set_ready()
         value = self.get_parameter_value(self.value)
-        if value is STATUS_WAITING:
-            return
         if is_invalid(value):
             return
         self._set_ready()
-        bpy.data.scenes[logic.getCurrentScene().name].eevee.use_ssr = value
+        scene = logic.getCurrentScene()
+        bpy.data.scenes[scene.name].eevee.use_ssr = value
+        scene.resetTaaSamples = True
         self.done = True
 
 
@@ -9409,22 +9393,18 @@ class SetEeveeVolumetrics(ActionCell):
 
     def evaluate(self):
         self.done = False
-        STATUS_WAITING = LogicNetworkCell.STATUS_WAITING
         condition = self.get_parameter_value(self.condition)
-        if condition is STATUS_WAITING:
+        if not_met(condition):
             return
-        if not condition:
-            self._set_value(False)
-            return self._set_ready()
         value = self.get_parameter_value(self.value)
-        if value is STATUS_WAITING:
-            return
         if is_invalid(value):
             return
         self._set_ready()
+        scene = logic.getCurrentScene()
         bpy.data.scenes[
-            logic.getCurrentScene().name
+            scene.name
         ].eevee.use_volumetric_lights = value
+        scene.resetTaaSamples = True
         self.done = True
 
 
@@ -9442,22 +9422,18 @@ class SetEeveeVolumetricShadows(ActionCell):
 
     def evaluate(self):
         self.done = False
-        STATUS_WAITING = LogicNetworkCell.STATUS_WAITING
         condition = self.get_parameter_value(self.condition)
-        if condition is STATUS_WAITING:
+        if not_met(condition):
             return
-        if not condition:
-            self._set_value(False)
-            return self._set_ready()
         value = self.get_parameter_value(self.value)
-        if value is STATUS_WAITING:
-            return
         if is_invalid(value):
             return
         self._set_ready()
+        scene = logic.getCurrentScene()
         bpy.data.scenes[
-            logic.getCurrentScene().name
+            scene.name
         ].eevee.use_volumetric_shadows = value
+        scene.resetTaaSamples = True
         self.done = True
 
 
