@@ -671,11 +671,6 @@ class NLApplyLogicOperator(bpy.types.Operator):
         sensor.link(controller)
 
 
-class UpdateCodeMessageBox(bpy.types.Operator):
-    bl_idname = "message.messagebox"
-    bl_label = ""
-
-
 class NLGenerateLogicNetworkOperatorAll(bpy.types.Operator):
     bl_idname = "bge_netlogic.generate_logicnetwork_all"
     bl_label = "Generate LogicNetwork"

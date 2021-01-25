@@ -7,7 +7,7 @@ TREE_MODIFIED = 'MODIFIED'
 TREE_FAILED = 'FAILED'
 TREE_NOT_INITIALIZED = 'STARTUP'
 
-NLPREFIX = 'NL_'
+NLPREFIX = 'NL__'
 
 
 def set_compile_status(status):
