@@ -1120,7 +1120,7 @@ class NLMaterialSocket(bpy.types.NodeSocket, NetLogicSocketType):
             layout.label(text=self.name)
         else:
             col = layout.column(align=False)
-            if self.name:
+            if self.name and self.is_linked:
                 col.label(text=self.name)
             col.prop_search(
                 self,
@@ -1155,18 +1155,23 @@ class NLTreeNodeSocket(bpy.types.NodeSocket, NetLogicSocketType):
         if self.is_linked or self.is_output:
             layout.label(text=text)
         else:
-            mat = self.node.inputs[self.ref_index].value
+            mat_socket = self.node.inputs[self.ref_index]
+            mat = mat_socket.value
             col = layout.column(align=False)
-            if text:
-                col.label(text=text)
             if mat:
-                col.prop_search(
-                    self,
-                    "value",
-                    bpy.data.materials[mat.name].node_tree,
-                    'nodes',
-                    text=''
-                )
+                if not mat_socket.is_linked:
+                    col.prop_search(
+                        self,
+                        "value",
+                        bpy.data.materials[mat.name].node_tree,
+                        'nodes',
+                        text=''
+                    )
+                else:
+                    col.label(text=text)
+                    col.prop(self, 'value', text='')
+            elif text and self.is_linked:
+                col.label(text=text)
 
     def get_unlinked_value(self):
         return '"{}"'.format(self.value)
@@ -1194,7 +1199,7 @@ class NLTextIDSocket(bpy.types.NodeSocket, NetLogicSocketType):
             layout.label(text=self.name)
         else:
             col = layout.column(align=False)
-            if self.name:
+            if text and self.is_linked:
                 col.label(text=self.name)
             col.prop_search(
                 self,
@@ -1232,7 +1237,7 @@ class NLMeshSocket(bpy.types.NodeSocket, NetLogicSocketType):
             layout.label(text=self.name)
         else:
             col = layout.column(align=False)
-            if self.name:
+            if text and self.is_linked:
                 col.label(text=self.name)
             col.prop_search(
                 self,
@@ -1270,7 +1275,7 @@ class NLGameObjectNameSocket(bpy.types.NodeSocket, NetLogicSocketType):
             layout.label(text=self.name)
         else:
             col = layout.column(align=False)
-            if self.name:
+            if text:
                 col.label(text=self.name)
             col.prop_search(
                 self,
@@ -1312,7 +1317,7 @@ class NLCollectionSocket(bpy.types.NodeSocket, NetLogicSocketType):
             layout.label(text=self.name)
         else:
             col = layout.column(align=False)
-            if text:
+            if text and self.is_linked:
                 col.label(text=text)
             col.prop_search(
                 self,
@@ -1352,7 +1357,7 @@ class NLSocketLogicTree(bpy.types.NodeSocket, NetLogicSocketType):
             layout.label(text=text)
         else:
             col = layout.column(align=False)
-            if text:
+            if text and self.is_linked:
                 col.label(text=text)
             col.prop_search(
                 self,
@@ -1389,7 +1394,7 @@ class NLAnimationSocket(bpy.types.NodeSocket, NetLogicSocketType):
             layout.label(text=text)
         else:
             col = layout.column()
-            if text:
+            if text and self.is_linked:
                 col.label(text=text)
             col.prop_search(
                 self,
@@ -3305,30 +3310,31 @@ class NLGetMaterialNodeValue(bpy.types.Node, NLParameterNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
-        self.inputs.new(NLMaterialSocket.bl_idname, '')
-        self.inputs.new(NLTreeNodeSocket.bl_idname, '')
+        self.inputs.new(NLMaterialSocket.bl_idname, 'Material')
+        self.inputs.new(NLTreeNodeSocket.bl_idname, 'Node Name')
         self.inputs[-1].ref_index = 0
         self.inputs.new(NLPositiveIntegerFieldSocket.bl_idname, "Input")
         self.outputs.new(NLParameterSocket.bl_idname, "Value")
 
     def update_draw(self):
-        if not self.inputs[0].value:
+        if not self.inputs[0].value and not self.inputs[0].is_linked:
             self.inputs[1].enabled = self.inputs[2].enabled = False
         else:
             self.inputs[1].enabled = True
-        if self.inputs[1].enabled and self.inputs[1].value:
+        if self.inputs[1].enabled and self.inputs[1].value or self.inputs[1].is_linked:
             self.inputs[2].enabled = True
         else:
             self.inputs[2].enabled = False
             return
-        mat_name = self.inputs[0].value.name
-        node_name = self.inputs[1].value
-        target = bpy.data.materials[mat_name].node_tree.nodes[node_name]
-        limit = len(target.inputs) - 1
-        if int(self.inputs[2].value) > limit:
-            self.inputs[2].value = limit
-        name = target.inputs[self.inputs[2].value].name
-        self.inputs[2].name = name
+        if not self.inputs[1].is_linked:
+            mat_name = self.inputs[0].value.name
+            node_name = self.inputs[1].value
+            target = bpy.data.materials[mat_name].node_tree.nodes[node_name]
+            limit = len(target.inputs) - 1
+            if int(self.inputs[2].value) > limit:
+                self.inputs[2].value = limit
+            name = target.inputs[self.inputs[2].value].name
+            self.inputs[2].name = name
 
     def get_netlogic_class_name(self):
         return "bgelogic.ParameterGetMaterialNodeValue"
@@ -3350,13 +3356,13 @@ class NLGetMaterialNode(bpy.types.Node, NLParameterNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
-        self.inputs.new(NLMaterialSocket.bl_idname, '')
-        self.inputs.new(NLTreeNodeSocket.bl_idname, '')
+        self.inputs.new(NLMaterialSocket.bl_idname, 'Material')
+        self.inputs.new(NLTreeNodeSocket.bl_idname, 'Node Name')
         self.inputs[-1].ref_index = 0
         self.outputs.new(NLParameterSocket.bl_idname, "Node")
 
     def update_draw(self):
-        if not self.inputs[0].value:
+        if not self.inputs[0].value and not self.inputs[0].is_linked:
             self.inputs[1].enabled = False
         else:
             self.inputs[1].enabled = True
@@ -4490,7 +4496,7 @@ class NLParameterPythonModuleFunction(bpy.types.Node, NLActionNode):
     def init(self, context):
         NLParameterNode.init(self, context)
         self.inputs.new(NLPseudoConditionSocket.bl_idname, "Condition")
-        self.inputs.new(NLTextIDSocket.bl_idname, "")
+        self.inputs.new(NLTextIDSocket.bl_idname, "Module Name")
         self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Function")
         self.inputs.new(NLBooleanSocket.bl_idname, 'Use Argument')
         self.inputs.new(NLValueFieldSocket.bl_idname, "")
@@ -6257,33 +6263,34 @@ class NLSetMaterialNodeValue(bpy.types.Node, NLActionNode):
     def init(self, context):
         NLActionNode.init(self, context)
         self.inputs.new(NLConditionSocket.bl_idname, "Condition")
-        self.inputs.new(NLMaterialSocket.bl_idname, '')
-        self.inputs.new(NLTreeNodeSocket.bl_idname, '')
+        self.inputs.new(NLMaterialSocket.bl_idname, 'Material')
+        self.inputs.new(NLTreeNodeSocket.bl_idname, 'Node Name')
         self.inputs[-1].ref_index = 1
         self.inputs.new(NLPositiveIntegerFieldSocket.bl_idname, "Input")
         self.inputs.new(NLFloatFieldSocket.bl_idname, 'Value')
         self.outputs.new(NLConditionSocket.bl_idname, "Done")
 
     def update_draw(self):
-        if not self.inputs[1].value:
+        if not self.inputs[1].value and not self.inputs[1].is_linked:
             self.inputs[2].enabled = False
         else:
             self.inputs[2].enabled = True
-        if self.inputs[2].enabled and self.inputs[2].value:
+        if self.inputs[2].enabled and self.inputs[2].value or self.inputs[2].is_linked:
             self.inputs[3].enabled = True
             self.inputs[4].enabled = True
         else:
             self.inputs[3].enabled = False
             self.inputs[4].enabled = False
             return
-        mat_name = self.inputs[1].value.name
-        node_name = self.inputs[2].value
-        target = bpy.data.materials[mat_name].node_tree.nodes[node_name]
-        limit = len(target.inputs) - 1
-        if int(self.inputs[3].value) > limit:
-            self.inputs[3].value = limit
-        name = target.inputs[self.inputs[3].value].name
-        self.inputs[3].name = name
+        if not self.inputs[2].is_linked:
+            mat_name = self.inputs[1].value.name
+            node_name = self.inputs[2].value
+            target = bpy.data.materials[mat_name].node_tree.nodes[node_name]
+            limit = len(target.inputs) - 1
+            if int(self.inputs[3].value) > limit:
+                self.inputs[3].value = limit
+            name = target.inputs[self.inputs[3].value].name
+            self.inputs[3].name = name
 
     def get_netlogic_class_name(self):
         return "bgelogic.ActionSetMaterialNodeValue"
