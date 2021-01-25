@@ -570,8 +570,18 @@ def register():
     menu_nodes = _list_menu_nodes()
     nodeitems_utils.register_node_categories("NETLOGIC_NODES", menu_nodes)
 
-    bpy.types.Object.sound_occluder = bpy.props.BoolProperty(default=True)
-    bpy.types.Object.sound_blocking = bpy.props.FloatProperty(min=0.0, max=1.0, default=.05)
+    bpy.types.Object.sound_occluder = bpy.props.BoolProperty(
+        default=True,
+        name='Sound Occluder',
+        description='Wether this object will dampen sound played from Logic Nodes'
+    )
+    bpy.types.Object.sound_blocking = bpy.props.FloatProperty(
+        min=0.0,
+        max=1.0,
+        default=.05,
+        name='Sound Blocking',
+        description='The amound of sound blocking caused by this wall. A value of 1 will block all sound'
+    )
 
     bpy.types.Object.bgelogic_treelist = bpy.props.CollectionProperty(
         type=NLNodeTreeReference

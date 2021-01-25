@@ -979,7 +979,7 @@ class LogicNetwork(LogicNetworkCell):
                 owner_object[node_tree_name].stopped = False
         else:
             debug("Installing sub network...")
-            initial_status_key = 'NODELOGIC__{}'.format(node_tree_name)
+            initial_status_key = f'NL_{node_tree_name}'
             owner_object[initial_status_key] = initial_status
             module_name = 'bgelogic.NL{}'.format(stripped_name)
             module = load_user_module(module_name)
@@ -1733,18 +1733,17 @@ class ActionMouseLook(ActionCell):
             return
         if not condition:
             return
-        caps = 0.0087266462599716
         game_object_x = self.get_x_obj()
         game_object_y = self.get_y_obj()
         sensitivity = self.get_parameter_value(self.sensitivity) * 1000
         use_cap_z = self.get_parameter_value(self.use_cap_z)
         use_cap_y = self.get_parameter_value(self.use_cap_y)
         cap_z = self.get_parameter_value(self.cap_z)
-        lowercapX = -cap_z.y * caps * 2
-        uppercapX = cap_z.x * caps * 2
+        lowercapX = -cap_z.y
+        uppercapX = cap_z.x
         cap_y = self.get_parameter_value(self.cap_y)
-        lowercapY = -cap_y.x * caps * 2
-        uppercapY = cap_y.y * caps * 2
+        lowercapY = -cap_y.x
+        uppercapY = cap_y.y
         inverted = self.get_parameter_value(self.inverted)
         smooth = 1 - (self.get_parameter_value(self.smooth) * .99)
         self._set_ready()
@@ -10199,34 +10198,28 @@ class AddPhysicsConstraint(ActionCell):
     def evaluate(self):
         self.done = False
         condition = self.get_parameter_value(self.condition)
-        if not condition:
+        if not_met(condition):
             return
         target = self.get_parameter_value(self.target)
-        if is_invalid(target):
-            return
         child = self.get_parameter_value(self.child)
-        if is_invalid(child):
-            return
         name = self.get_parameter_value(self.name)
-        if is_invalid(name):
-            return
         constraint = self.get_parameter_value(self.constraint)
-        if is_invalid(constraint):
-            return
         pivot = self.get_parameter_value(self.pivot)
-        if is_invalid(pivot):
-            return
         use_limit = self.get_parameter_value(self.use_limit)
-        if is_invalid(use_limit):
-            return
         use_world = self.get_parameter_value(self.use_world)
-        if is_invalid(use_world):
-            return
         axis_limits = self.get_parameter_value(self.axis_limits)
-        if is_invalid(axis_limits):
-            return
         linked_col = self.get_parameter_value(self.linked_col)
-        if is_invalid(linked_col):
+        if is_invalid(
+            target,
+            child,
+            name,
+            constraint,
+            pivot,
+            use_limit,
+            use_world,
+            axis_limits,
+            linked_col
+        ):
             return
         self._set_ready()
         flag = 0 if linked_col else 128

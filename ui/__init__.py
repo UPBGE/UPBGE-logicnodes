@@ -172,7 +172,7 @@ class BGE_PT_GamePropertyPanel(bpy.types.Panel):
             text=''
         )
         options.prop(
-            context.scene.prop_filter, 
+            context.scene.prop_filter,
             'show_trees',
             icon='OUTLINER',
             text=''
@@ -202,7 +202,7 @@ class BGE_PT_GamePropertyPanel(bpy.types.Panel):
         for prop in obj.game.properties:
             if not show_hidden and prop.name.startswith('_'):
                 continue
-            is_tree = prop.name.startswith('NODELOGIC__')
+            is_tree = prop.name.startswith(utils.NLPREFIX)
             if is_tree and not show_trees:
                 continue
             has_name = prop_name in prop.name
@@ -321,7 +321,7 @@ class BGE_PT_GamePropertyPanel3DView(bpy.types.Panel):
         for prop in obj.game.properties:
             if not show_hidden and prop.name.startswith('_'):
                 continue
-            is_tree = prop.name.startswith('NODELOGIC__')
+            is_tree = prop.name.startswith(utils.NLPREFIX)
             if is_tree and not show_trees:
                 continue
             has_name = prop_name in prop.name
@@ -462,7 +462,7 @@ class BGE_PT_PropertiesPanelObject(bpy.types.Panel):
         for prop in obj.game.properties:
             if not show_hidden and prop.name.startswith('_'):
                 continue
-            is_tree = prop.name.startswith('NODELOGIC__')
+            is_tree = prop.name.startswith(utils.NLPREFIX)
             if is_tree and not show_trees:
                 continue
             has_name = prop_name in prop.name
@@ -584,18 +584,14 @@ class BGE_PT_LogicTreeOptions(bpy.types.Panel):
         code = layout.box()
         code.operator(
             bge_netlogic.ops.NLGenerateLogicNetworkOperator.bl_idname,
-            text="Update Code",
-            icon='FILE_SCRIPT'
+            text=context.scene.logic_node_settings.tree_compiled,
+            icon='ERROR' if not utils.TREE_COMPILED in bpy.context.scene.logic_node_settings.tree_compiled else 'CHECKBOX_HLT'
         )
         code.operator(
             bge_netlogic.ops.NLGenerateLogicNetworkOperatorAll.bl_idname,
-            text="Generate All Code",
-            icon='SCRIPTPLUGINS'
+            text="Compile All",
+            icon='FILE_SCRIPT'
         )
-        status = layout.box()
-        compiled = status.row()
-        compiled.label(text='STATUS:')
-        compiled.label(text=context.scene.logic_node_settings.tree_compiled)
 
 
 class BGE_PT_LogicTreeInfoPanel(bpy.types.Panel):

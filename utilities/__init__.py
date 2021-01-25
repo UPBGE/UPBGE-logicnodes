@@ -7,6 +7,8 @@ TREE_MODIFIED = 'MODIFIED'
 TREE_FAILED = 'FAILED'
 TREE_NOT_INITIALIZED = 'STARTUP'
 
+NLPREFIX = 'NL_'
+
 
 def set_compile_status(status):
     bpy.context.scene.logic_node_settings.tree_compiled = status
