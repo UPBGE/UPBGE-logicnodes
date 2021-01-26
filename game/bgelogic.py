@@ -9998,8 +9998,8 @@ class ActionFollowPath(ActionCell):
             return
         if front_axis is STATUS_WAITING:
             return
-        if rot_speed is STATUS_WAITING:
-            return
+        if is_invalid(rot_speed):
+            rot_speed = 0
         if loop is None:
             return
         self._set_ready()

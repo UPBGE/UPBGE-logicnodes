@@ -3319,7 +3319,7 @@ class NLGetMaterialNodeValue(bpy.types.Node, NLParameterNode):
         mat = self.inputs[0]
         nde = self.inputs[1]
         ipt = self.inputs[2]
-        if mat.is_linked:
+        if mat.is_linked or nde.is_linked:
             ipt.name = 'Input'
         if (mat.value or mat.is_linked) and (nde.value or nde.is_linked):
             ipt.enabled = True
@@ -6262,7 +6262,7 @@ class NLSetMaterialNodeValue(bpy.types.Node, NLActionNode):
         nde = self.inputs[2]
         ipt = self.inputs[3]
         val = self.inputs[4]
-        if mat.is_linked:
+        if mat.is_linked or nde.is_linked:
             ipt.name = 'Input'
         if (mat.value or mat.is_linked) and (nde.value or nde.is_linked):
             ipt.enabled = val.enabled = True
