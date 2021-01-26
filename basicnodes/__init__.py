@@ -3775,7 +3775,7 @@ class NLVectorMath(bpy.types.Node, NLParameterNode):
         self.inputs.new(NLVec3FieldSocket.bl_idname, "Vector 1")
         self.inputs.new(NLVec3FieldSocket.bl_idname, "Vector 2")
         self.inputs.new(NLSocketAlphaFloat.bl_idname, "Factor")
-        self.inputs[-1] = 1.0
+        self.inputs[-1].value = 1.0
         self.outputs.new(NLParameterSocket.bl_idname, 'Vector')
 
     def get_netlogic_class_name(self):
