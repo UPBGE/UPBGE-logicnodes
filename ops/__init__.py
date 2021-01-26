@@ -59,7 +59,10 @@ class WaitForKeyOperator(bpy.types.Operator):
             self.socket.value = ""
         self.socket = None
         self.node = None
-        context.region.tag_redraw()
+        try:
+            context.region.tag_redraw()
+        except Exception:
+            pass
 
     def modal(self, context, event):
         if event.value == "PRESS":
@@ -93,7 +96,10 @@ class WaitForKeyOperator(bpy.types.Operator):
 
         else:
             self.node.value = "Press a key..."
-        context.region.tag_redraw()
+        try:
+            context.region.tag_redraw()
+        except Exception:
+            pass
         context.window_manager.modal_handler_add(self)
         return {'RUNNING_MODAL'}
 
@@ -465,6 +471,8 @@ class NLAdd4KeyTemplateOperator(bpy.types.Operator):
         if not hasattr(context.space_data, 'edit_tree'):
             return False
         tree = context.space_data.edit_tree
+        if not tree:
+            return False
         if not (tree.bl_idname == bge_netlogic.ui.BGELogicTree.bl_idname):
             return False
         elif tree:
@@ -718,7 +726,10 @@ class NLGenerateLogicNetworkOperatorAll(bpy.types.Operator):
             if tree.bl_idname == bge_netlogic.ui.BGELogicTree.bl_idname:
                 tree_code_generator.TreeCodeGenerator().write_code_for_tree(tree)
         utils.set_compile_status(utils.TREE_COMPILED + ' (A)')
-        context.region.tag_redraw()
+        try:
+            context.region.tag_redraw()
+        except Exception:
+            pass
         return {"FINISHED"}
 
 
@@ -802,7 +813,10 @@ class NLGenerateLogicNetworkOperator(bpy.types.Operator):
                 utils.set_compile_status(utils.TREE_FAILED)
                 return {"FINISHED"}
         utils.set_compile_status(utils.TREE_COMPILED)
-        context.region.tag_redraw()
+        try:
+            context.region.tag_redraw()
+        except Exception:
+            pass
         return {"FINISHED"}
 
 

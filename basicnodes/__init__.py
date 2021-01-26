@@ -4496,6 +4496,12 @@ class NLParameterPythonModuleFunction(bpy.types.Node, NLActionNode):
         self.outputs.new(NLConditionSocket.bl_idname, "Done")
         self.outputs.new(NLParameterSocket.bl_idname, "Returned Value")
 
+    def update_draw(self):
+        if self.inputs[3].value:
+            self.inputs[4].enabled = True
+        else:
+            self.inputs[4].enabled = False
+
     def get_netlogic_class_name(self):
         return "bgelogic.ParameterPythonModuleFunction"
 
@@ -4759,6 +4765,33 @@ class NLParameterVector3SimpleNode(bpy.types.Node, NLParameterNode):
 
 
 _nodes.append(NLParameterVector3SimpleNode)
+
+
+class NLParameterVector4SimpleNode(bpy.types.Node, NLParameterNode):
+    bl_idname = "NLParameterVector4SimpleNode"
+    bl_label = "Vector XYZW"
+    nl_category = "Values"
+    nl_subcat = 'Vectors'
+
+    def init(self, context):
+        NLParameterNode.init(self, context)
+        self.inputs.new(NLFloatFieldSocket.bl_idname, 'X')
+        self.inputs.new(NLFloatFieldSocket.bl_idname, 'Y')
+        self.inputs.new(NLFloatFieldSocket.bl_idname, 'Z')
+        self.inputs.new(NLFloatFieldSocket.bl_idname, 'W')
+        self.outputs.new(NLVectorSocket.bl_idname, "Vector")
+
+    def get_netlogic_class_name(self):
+        return "bgelogic.ParameterVector4Simple"
+
+    def get_output_socket_varnames(self):
+        return ["OUTV"]
+
+    def get_input_sockets_field_names(self):
+        return ["input_x", "input_y", "input_z", 'input_w']
+
+
+_nodes.append(NLParameterVector4SimpleNode)
 
 
 class NLParameterRGBNode(bpy.types.Node, NLParameterNode):
@@ -5466,6 +5499,11 @@ class NLConditionOnceNode(bpy.types.Node, NLConditionNode):
     bl_label = "Once"
     bl_icon = 'FF'
     nl_category = "Events"
+    advanced: bpy.props.BoolProperty(
+        name='Offline Reset',
+        description='Show Timer for when to reset if tree is inactive',
+        update=update_tree_code
+    )
 
     def init(self, context):
         NLConditionNode.init(self, context)
@@ -5474,6 +5512,15 @@ class NLConditionOnceNode(bpy.types.Node, NLConditionNode):
         self.inputs.new(NLPositiveFloatSocket.bl_idname, 'Reset After')
         self.inputs[-1].value = .5
         utils.register_outputs(self, NLConditionSocket, "Once")
+
+    def draw_buttons(self, context, layout):
+        layout.prop(self, 'advanced', text='Timer', icon='SETTINGS')
+
+    def update_draw(self):
+        if self.advanced:
+            self.inputs[2].enabled = True
+        else:
+            self.inputs[2].enabled = False
 
     def get_netlogic_class_name(self):
         return "bgelogic.ConditionOnce"
@@ -8657,8 +8704,7 @@ class NLSetGammaAction(bpy.types.Node, NLActionNode):
         ]
 
 
-if not TOO_OLD:
-    _nodes.append(NLSetGammaAction)
+_nodes.append(NLSetGammaAction)
 
 
 class NLSetExposureAction(bpy.types.Node, NLActionNode):
@@ -8686,8 +8732,7 @@ class NLSetExposureAction(bpy.types.Node, NLActionNode):
         ]
 
 
-if not TOO_OLD:
-    _nodes.append(NLSetExposureAction)
+_nodes.append(NLSetExposureAction)
 
 
 class NLSetEeveeBloom(bpy.types.Node, NLActionNode):
@@ -8715,8 +8760,7 @@ class NLSetEeveeBloom(bpy.types.Node, NLActionNode):
         ]
 
 
-if not TOO_OLD:
-    _nodes.append(NLSetEeveeBloom)
+_nodes.append(NLSetEeveeBloom)
 
 
 class NLSetEeveeSSR(bpy.types.Node, NLActionNode):
@@ -8744,8 +8788,7 @@ class NLSetEeveeSSR(bpy.types.Node, NLActionNode):
         ]
 
 
-if not TOO_OLD:
-    _nodes.append(NLSetEeveeSSR)
+_nodes.append(NLSetEeveeSSR)
 
 
 class NLSetEeveeVolumetrics(bpy.types.Node, NLActionNode):
@@ -8773,8 +8816,7 @@ class NLSetEeveeVolumetrics(bpy.types.Node, NLActionNode):
         ]
 
 
-if not TOO_OLD:
-    _nodes.append(NLSetEeveeVolumetrics)
+_nodes.append(NLSetEeveeVolumetrics)
 
 
 class NLSetEeveeVolumetricShadows(bpy.types.Node, NLActionNode):
@@ -8802,8 +8844,7 @@ class NLSetEeveeVolumetricShadows(bpy.types.Node, NLActionNode):
         ]
 
 
-if not TOO_OLD:
-    _nodes.append(NLSetEeveeVolumetricShadows)
+# _nodes.append(NLSetEeveeVolumetricShadows)
 
 
 class NLSetLightEnergyAction(bpy.types.Node, NLActionNode):
@@ -9743,7 +9784,7 @@ class NLActionStart3DSoundAdv(bpy.types.Node, NLActionNode):
 
     def update_draw(self):
         state = self.advanced
-        for i in [4, 8, 9, 10, 11, 12]:
+        for i in [4, 8, 9, 10, 11]:
             ipt = self.inputs[i]
             if ipt.is_linked:
                 ipt.enabled = True

@@ -83,10 +83,8 @@ class TreeCodeGenerator(object):
             bgelogic_source_code = f.read()
         assert (bgelogic_source_code is not None)
         bgelogic_output_writer = self.create_text_file("bgelogic/__init__.py")
-        bgelogic_output_writer.write_line("# MACHINE GENERATED")
         bgelogic_output_writer.write_line(bgelogic_source_code)
         bgelogic_output_writer.close()
-        pass
 
     def _write_tree(self, tree, line_writer):
         uid_map = UIDMap()
