@@ -1,5 +1,6 @@
 import os
 import bpy
+import shutil
 import bge_netlogic
 import bge_netlogic.utilities as utils
 from bge_netlogic.ops.file_text_buffer import FileTextBuffer
@@ -76,6 +77,20 @@ class TreeCodeGenerator(object):
         #write the bgelogic.py module source in the directory of the current blender file
         this_module_dir = os.path.dirname(__file__)
         bge_netlogic_dir = os.path.dirname(this_module_dir)
+
+        try:
+            del sys.modules['mymodule']
+        except:
+            print('This wont do yo')
+            pass
+        
+        # game_dir = os.path.join(bge_netlogic_dir, "game", 'windows')
+        # bgelogic_input_file = os.path.join(game_dir, "bgelogic.pyd")
+        # target_path = os.path.join(bpy.path.abspath("//bgelogic"), "__init__.pyd")
+        # print(bgelogic_input_file)
+        # print(target_path)
+        # shutil.copyfile(bgelogic_input_file, target_path)
+
         game_dir = os.path.join(bge_netlogic_dir, "game")
         bgelogic_input_file = os.path.join(game_dir, "bgelogic.py")
         bgelogic_source_code = None

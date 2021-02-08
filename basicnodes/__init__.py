@@ -483,6 +483,15 @@ def filter_lights(self, item):
         return False
 
 
+def filter_armatures(self, item):
+    if (
+        isinstance(item.data, bpy.types.Armature)
+    ):
+        return True
+    else:
+        return False
+
+
 def parse_field_value(value_type, value):
     t = value_type
     v = value
@@ -1045,6 +1054,59 @@ class NLLightObjectSocket(bpy.types.NodeSocket, NetLogicSocketType):
 _sockets.append(NLLightObjectSocket)
 
 
+class NLArmatureObjectSocket(bpy.types.NodeSocket, NetLogicSocketType):
+    bl_idname = "NLArmatureObjectSocket"
+    bl_label = "Armature"
+    value: bpy.props.PointerProperty(
+        name='Armature',
+        type=bpy.types.Armature,
+        poll=filter_armatures,
+        update=update_tree_code
+    )
+    use_owner: bpy.props.BoolProperty(
+        name='Use Owner',
+        update=update_tree_code,
+        description='Use the owner of this tree'
+    )
+
+    def draw_color(self, context, node):
+        return PARAM_OBJ_SOCKET_COLOR
+
+    def draw(self, context, layout, node, text):
+        if self.is_output:
+            layout.label(text=self.name)
+        elif self.is_linked:
+            layout.label(text=self.name)
+        else:
+            if not self.use_owner:
+                col = layout.column(align=False)
+                row = col.row()
+                if self.name:
+                    row.label(text=self.name)
+                row.prop(self, 'use_owner', icon='USER', text='')
+                col.prop_search(
+                    self,
+                    'value',
+                    bpy.context.scene,
+                    'objects',
+                    icon='NONE',
+                    text=''
+                )
+            else:
+                row = layout.row()
+                row.label(text=self.name)
+                row.prop(self, 'use_owner', icon='USER', text='')
+
+    def get_unlinked_value(self):
+        if self.use_owner:
+            return '"NLO:U_O"'
+        if isinstance(self.value, bpy.types.Object):
+            return '"NLO:{}"'.format(self.value.name)
+
+
+_sockets.append(NLArmatureObjectSocket)
+
+
 class NLGamePropertySocket(bpy.types.NodeSocket, NetLogicSocketType):
     bl_idname = "NLGamePropertySocket"
     bl_label = "Property"
@@ -1098,6 +1160,60 @@ class NLGamePropertySocket(bpy.types.NodeSocket, NetLogicSocketType):
 
 
 _sockets.append(NLGamePropertySocket)
+
+
+class NLArmatureBoneSocket(bpy.types.NodeSocket, NetLogicSocketType):
+    bl_idname = "NLArmatureBoneSocket"
+    bl_label = "Property"
+    value: bpy.props.StringProperty(
+        update=update_tree_code
+    )
+    ref_index: bpy.props.IntProperty(default=0)
+
+    def draw_color(self, context, node):
+        return PARAMETER_SOCKET_COLOR
+
+    def draw(self, context, layout, node, text):
+        if self.is_output:
+            layout.label(text=self.name)
+        elif self.is_linked:
+            layout.label(text=self.name)
+        else:
+            col = layout.column(align=False)
+            tree = getattr(context.space_data, 'edit_tree', None)
+            if not tree:
+                return
+            game_object = None
+            game_obj_socket = self.node.inputs[self.ref_index]
+            if not game_obj_socket.use_owner:
+                game_object = game_obj_socket.value
+            else:
+                for obj in bpy.data.objects:
+                    if f'{utils.NLPREFIX}{tree.name}' in obj.game.properties:
+                        game_object = obj
+                        break
+            if self.name:
+                row = col.row()
+                row.label(text=self.name)
+            if game_object:
+                # game_object = bpy.data.objects[game_object.split('NLO:')[-1]]
+                if not game_obj_socket.is_linked:
+                    col.prop_search(
+                        self,
+                        'value',
+                        game_object.data,
+                        'bones',
+                        icon='NONE',
+                        text=''
+                    )
+                else:
+                    col.prop(self, 'value', text='')
+
+    def get_unlinked_value(self):
+        return '"{}"'.format(self.value)
+
+
+_sockets.append(NLArmatureBoneSocket)
 
 
 class NLMaterialSocket(bpy.types.NodeSocket, NetLogicSocketType):
@@ -3178,6 +3294,31 @@ class NLParameterWorldPosition(bpy.types.Node, NLParameterNode):
 _nodes.append(NLParameterWorldPosition)
 
 
+class NLCursorBehavior(bpy.types.Node, NLParameterNode):
+    bl_idname = "NLCursorBehavior"
+    bl_label = "Custom Cursor"
+    nl_category = "Scene"
+
+    def init(self, context):
+        NLParameterNode.init(self, context)
+        self.inputs.new(NLPseudoConditionSocket.bl_idname, "Condition")
+        self.inputs.new(NLGameObjectSocket.bl_idname, "Cursor")
+        self.inputs.new(NLFloatFieldSocket.bl_idname, "Distance")
+        self.outputs.new(NLParameterSocket.bl_idname, "Done")
+
+    def get_netlogic_class_name(self):
+        return "bgelogic.GECursorBehavior"
+
+    def get_output_socket_varnames(self):
+        return ["OUT"]
+
+    def get_input_sockets_field_names(self):
+        return ["condition", "cursor_object", "world_z"]
+
+
+_nodes.append(NLCursorBehavior)
+
+
 class NLOwnerGameObjectParameterNode(bpy.types.Node, NLParameterNode):
     """The owner of this logic tree.
     Each Object that has this tree installed is
@@ -3652,7 +3793,8 @@ class NLRunActuatorNode(bpy.types.Node, NLActionNode):
     def get_output_socket_varnames(self):
         return ["OUT"]
 
-    def get_netlogic_class_name(self): return "bgelogic.ActivateActuator"
+    def get_netlogic_class_name(self):
+        return "bgelogic.ActivateActuator"
 
     def get_input_sockets_field_names(self):
         return ["condition", 'actuator']
@@ -3700,7 +3842,8 @@ class NLRunActuatorByNameNode(bpy.types.Node, NLActionNode):
     def get_output_socket_varnames(self):
         return ["OUT"]
 
-    def get_netlogic_class_name(self): return "bgelogic.ActivateActuatorByName"
+    def get_netlogic_class_name(self):
+        return "bgelogic.ActivateActuatorByName"
 
     def get_input_sockets_field_names(self):
         return ["condition", 'actuator']
@@ -4462,8 +4605,8 @@ class NLParameterBoneStatus(bpy.types.Node, NLParameterNode):
 
     def init(self, context):
         NLParameterNode.init(self, context)
-        self.inputs.new(NLGameObjectSocket.bl_idname, "Armature Object")
-        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Bone Name")
+        self.inputs.new(NLArmatureObjectSocket.bl_idname, "Armature Object")
+        self.inputs.new(NLArmatureBoneSocket.bl_idname, "Bone Name")
         self.outputs.new(NLParameterSocket.bl_idname, "Position")
         self.outputs.new(NLParameterSocket.bl_idname, "Rotation")
         self.outputs.new(NLParameterSocket.bl_idname, "Scale")
@@ -9517,7 +9660,7 @@ class NLActionEditArmatureConstraint(bpy.types.Node, NLActionNode):
     def init(self, context):
         NLActionNode.init(self, context)
         self.inputs.new(NLConditionSocket.bl_idname, "Condition")
-        self.inputs.new(NLGameObjectSocket.bl_idname, "Armature")
+        self.inputs.new(NLArmatureObjectSocket.bl_idname, "Armature")
         self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Constraint Name")
         self.inputs.new(NLSocketAlphaFloat.bl_idname, "Enforced Factor")
         self.inputs.new(NLGameObjectSocket.bl_idname, "Primary Target")
@@ -9562,8 +9705,9 @@ class NLActionSetBonePos(bpy.types.Node, NLActionNode):
     def init(self, context):
         NLActionNode.init(self, context)
         self.inputs.new(NLConditionSocket.bl_idname, "Condition")
-        self.inputs.new(NLGameObjectSocket.bl_idname, "Armature")
-        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Bone Name")
+        self.inputs.new(NLArmatureObjectSocket.bl_idname, "Armature")
+        self.inputs.new(NLArmatureBoneSocket.bl_idname, "Bone Name")
+        self.inputs[-1].ref_index = 1
         self.inputs.new(NLVec3FieldSocket.bl_idname, "Set Pos")
         self.outputs.new(NLConditionSocket.bl_idname, 'Done')
 
@@ -9590,8 +9734,9 @@ class NLActionEditBoneNode(bpy.types.Node, NLActionNode):
     def init(self, context):
         NLActionNode.init(self, context)
         self.inputs.new(NLConditionSocket.bl_idname, "Condition")
-        self.inputs.new(NLGameObjectSocket.bl_idname, "Armature")
-        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Bone Name")
+        self.inputs.new(NLArmatureObjectSocket.bl_idname, "Armature")
+        self.inputs.new(NLArmatureBoneSocket.bl_idname, "Bone Name")
+        self.inputs[-1].ref_index = 1
         self.inputs.new(NLVec3FieldSocket.bl_idname, "Set Pos")
         self.inputs.new(NLVec3FieldSocket.bl_idname, "Set Rot")
         self.inputs.new(NLVec3FieldSocket.bl_idname, "Set Scale")

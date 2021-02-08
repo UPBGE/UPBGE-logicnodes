@@ -2618,10 +2618,7 @@ class GetActuatorByName(ParameterCell):
         if is_invalid(act_name):
             return
         if act_name not in cont.actuators:
-            debug(
-                'Get Actuator By Name Node: '
-                'Actuator not conneted or does not exist!'
-            )
+            debug(f'Controller "{cont}" has no actuator "{act_name}"')
             return
         self._set_ready()
         self._set_value(logic.getCurrentController().actuators[act_name])
@@ -2657,16 +2654,15 @@ class ActivateActuator(ParameterCell):
 
     def evaluate(self):
         self.done = False
-        actuator = self.get_parameter_value(self.actuator)
+        actuator = str(self.get_parameter_value(self.actuator))
         self._set_ready()
         if is_invalid(actuator):
-            debug("There is a problem with the actuator \
-                in Execute Actuator Node!")
             return
-        condition = self.get_parameter_value(self.condition)
         controller = logic.getCurrentController()
         if actuator not in controller.actuators:
+            debug(f'Controller "{controller}" has no actuator "{actuator}"')
             return
+        condition = self.get_parameter_value(self.condition)
         if not_met(condition):
             controller.deactivate(actuator)
             return
@@ -2691,7 +2687,7 @@ class DeactivateActuator(ParameterCell):
         condition = self.get_parameter_value(self.condition)
         if not_met(condition):
             return
-        actuator = self.get_parameter_value(self.actuator)
+        actuator = str(self.get_parameter_value(self.actuator))
         if is_invalid(actuator):
             return
         controller = logic.getCurrentController()
@@ -2716,13 +2712,14 @@ class ActivateActuatorByName(ParameterCell):
 
     def evaluate(self):
         self.done = False
-        actuator = self.get_parameter_value(self.actuator)
+        actuator = str(self.get_parameter_value(self.actuator))
         if is_invalid(actuator):
             return
-        condition = self.get_parameter_value(self.condition)
         controller = logic.getCurrentController()
         if actuator not in controller.actuators:
+            debug(f'Controller "{controller}" has no actuator "{actuator}"')
             return
+        condition = self.get_parameter_value(self.condition)
         self._set_ready()
         if not_met(condition):
             controller.deactivate(actuator)
@@ -2745,7 +2742,7 @@ class DeactivateActuatorByName(ParameterCell):
 
     def evaluate(self):
         self.done = False
-        actuator = self.get_parameter_value(self.actuator)
+        actuator = str(self.get_parameter_value(self.actuator))
         if is_invalid(actuator):
             return
         condition = self.get_parameter_value(self.condition)
@@ -3037,8 +3034,6 @@ class ParameterScreenPosition(ParameterCell):
         self._set_value(position)
         self._xpos = position[0]
         self._ypos = position[1]
-        pass
-    pass
 
 
 class ParameterWorldPosition(ParameterCell):
@@ -3064,11 +3059,49 @@ class ParameterWorldPosition(ParameterCell):
             self._set_value(None)
         else:
             direction = camera.getScreenVect(screen_x, screen_y)
-            origin = direction + camera.worldPosition
-            point = origin + (direction * -world_z)
+            origin = camera.worldPosition
+            aim = direction * -world_z
+            point = origin + (aim)
             self._set_value(point)
-        pass
-    pass
+
+
+class GECursorBehavior(ActionCell):
+    def __init__(self):
+        ParameterCell.__init__(self)
+        self.condition = None
+        self.cursor_object = None
+        self.world_z = None
+        self.done = None
+        self.OUT = LogicNetworkSubCell(self, self.get_done)
+
+    def get_done(self):
+        return self.done
+
+    def evaluate(self):
+        self.done = False
+        self._set_ready()
+        camera = logic.getCurrentScene().active_camera
+        condition = self.get_parameter_value(self.condition)
+        cursor_object = self.get_parameter_value(self.cursor_object)
+        world_z = self.get_parameter_value(self.world_z)
+        if is_invalid(cursor_object):
+            return
+        if not_met(condition):
+            if cursor_object.visible:
+                cursor_object.setVisible(False, True)
+            return
+        if not cursor_object.visible:
+            cursor_object.setVisible(True, True)
+        else:
+            x = self.network._last_mouse_position[0]
+            y = self.network._last_mouse_position[1]
+            direction = camera.getScreenVect(x, y)
+            origin = camera.worldPosition
+            aim = direction * -world_z
+            point = origin + aim
+            cursor_object.worldOrientation = camera.worldOrientation
+            cursor_object.worldPosition = point
+        self.done = True
 
 
 class ParameterPythonModuleFunction(ParameterCell):
@@ -7246,14 +7279,8 @@ class ActionSetBonePos(ActionCell):
         armature = self.get_parameter_value(self.armature)
         bone_name = self.get_parameter_value(self.bone_name)
         set_translation = self.get_parameter_value(self.set_translation)
-        if armature is LogicNetworkCell.STATUS_WAITING:
-            return
-        if bone_name is LogicNetworkCell.STATUS_WAITING:
-            return
-        if set_translation is LogicNetworkCell.STATUS_WAITING:
-            return
         self._set_ready()
-        if is_invalid(armature):
+        if is_invalid(armature, bone_name, set_translation):
             return
         if not bone_name:
             return
