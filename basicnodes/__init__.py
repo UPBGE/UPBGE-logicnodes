@@ -1966,6 +1966,7 @@ class NLQuotedStringFieldSocket(bpy.types.NodeSocket, NetLogicSocketType):
     bl_idname = "NLQuotedStringFieldSocket"
     bl_label = "String"
     value: bpy.props.StringProperty(update=update_tree_code)
+    formatted: bpy.props.BoolProperty(update=update_tree_code)
 
     def draw_color(self, context, node):
         return PARAMETER_SOCKET_COLOR
@@ -1976,12 +1977,19 @@ class NLQuotedStringFieldSocket(bpy.types.NodeSocket, NetLogicSocketType):
         elif not text:
             layout.prop(self, "value", text='')
         else:
-            parts = layout.split()
-            parts.label(text=text)
-            parts.prop(self, "value", text='')
+            if self.formatted:
+                col = layout.column()
+                row1 = col.row()
+                row1.label(text=text)
+                row2 = col.row()
+                row2.prop(self, 'value', text='')
+            else:
+                parts = layout.split()
+                parts.label(text=text)
+                parts.prop(self, "value", text='')
 
-    def get_unlinked_value(self): return '"{}"'.format(self.value)
-    pass
+    def get_unlinked_value(self):
+        return '"{}"'.format(self.value)
 
 
 _sockets.append(NLQuotedStringFieldSocket)
@@ -7737,6 +7745,7 @@ class NLActionSetAnimationFrame(bpy.types.Node, NLActionNode):
         self.inputs.new(NLAnimationSocket.bl_idname, "Action")
         self.inputs.new(NLPositiveIntegerFieldSocket.bl_idname, "Layer")
         self.inputs.new(NLPositiveFloatSocket.bl_idname, "Frame")
+        self.inputs.new(NLBooleanSocket.bl_idname, "Freeze")
         self.inputs.new(NLSocketAlphaFloat.bl_idname, "Layer Weight")
         self.outputs.new(NLConditionSocket.bl_idname, 'Done')
 
@@ -7753,6 +7762,7 @@ class NLActionSetAnimationFrame(bpy.types.Node, NLActionNode):
             "action_name",
             "action_layer",
             "action_frame",
+            'freeze',
             'layer_weight'
         ]
 
@@ -10207,7 +10217,8 @@ class NLParameterFormattedString(bpy.types.Node, NLParameterNode):
     def init(self, context):
         NLParameterNode.init(self, context)
         self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Format String")
-        self.inputs[-1].value = "Value A:{}, Value B:{}"
+        self.inputs[-1].formatted = True
+        self.inputs[-1].value = "A is {} and B is {}"
         self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "A")
         self.inputs[-1].value = "Hello"
         self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "B")
@@ -10215,6 +10226,11 @@ class NLParameterFormattedString(bpy.types.Node, NLParameterNode):
         self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "C")
         self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "D")
         self.outputs.new(NLParameterSocket.bl_idname, "String")
+
+    def update_draw(self):
+        string = self.inputs[0].value
+        count = string.count('{}')
+        print(count)
 
     def get_input_sockets_field_names(self):
         return ["format_string", "value_a", "value_b", "value_c", "value_d"]

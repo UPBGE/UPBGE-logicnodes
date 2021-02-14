@@ -8392,14 +8392,8 @@ class ActionPlayAction(ActionCell):
             layer_weight = 0.0
         elif layer_weight >= 1:
             layer_weight = 1.0
-        if speed is LogicNetworkCell.STATUS_WAITING:
-            return
         if speed <= 0:
             speed = 0.01
-        if blendin is LogicNetworkCell.STATUS_WAITING:
-            return
-        if blend_mode is LogicNetworkCell.STATUS_WAITING:
-            return
         self._set_ready()
         if is_invalid(game_object):  # can't play
             debug("Play Action Node: Invalid Game Object!")
@@ -8520,6 +8514,7 @@ class ActionSetAnimationFrame(ActionCell):
         self.game_object = None
         self.action_layer = None
         self.action_frame = None
+        self.freeze = None
         self.done = None
         self.OUT = LogicNetworkSubCell(self, self.get_done)
 
@@ -8535,6 +8530,7 @@ class ActionSetAnimationFrame(ActionCell):
         game_object = self.get_parameter_value(self.game_object)
         action_layer = self.get_parameter_value(self.action_layer)
         action_frame = self.get_parameter_value(self.action_frame)
+        freeze = self.get_parameter_value(self.freeze)
         action_name = self.get_parameter_value(self.action_name)
         layer_weight = self.get_parameter_value(self.layer_weight)
         self._set_ready()
@@ -8548,10 +8544,13 @@ class ActionSetAnimationFrame(ActionCell):
             return
         is_playing = game_object.isPlayingAction(action_layer)
         same_action = game_object.getActionName(action_layer) == action_name
-        if not (is_playing or same_action):
+        if freeze:
+            start_frame = end_frame = action_frame
+        else:
             action = bpy.data.actions[action_name]
             start_frame = action.frame_range[0]
             end_frame = action.frame_range[1]
+        if not (is_playing or same_action):
             game_object.stopAction(action_layer)
             game_object.playAction(
                 action_name,
@@ -8986,15 +8985,7 @@ class ParameterFormattedString(ParameterCell):
         value_b = self.get_parameter_value(self.value_b)
         value_c = self.get_parameter_value(self.value_c)
         value_d = self.get_parameter_value(self.value_d)
-        if format_string is STATUS_WAITING:
-            return
-        if value_a is STATUS_WAITING:
-            return
-        if value_b is STATUS_WAITING:
-            return
-        if value_c is STATUS_WAITING:
-            return
-        if value_d is STATUS_WAITING:
+        if is_waiting(format_string, value_a, value_b, value_c, value_d):
             return
         self._set_ready()
         if format_string is None:

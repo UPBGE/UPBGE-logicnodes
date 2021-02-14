@@ -368,6 +368,7 @@ class NLMakeGroupOperator(bpy.types.Operator):
             'title',
             'local',
             'operator',
+            'formatted',
             'pulse',
             'hide',
             'label',

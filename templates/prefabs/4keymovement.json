@@ -268,7 +268,7 @@
             "y": -160,
             "label": "Normalize",
             "node_type": "NLVectorMath",
-            "links": [[16, 0, 1]],
+            "links": [[16, 0, 0]],
             "values": []
         }, {
             "x": 440,
@@ -305,11 +305,20 @@
             "x": 880,
             "y": -180,
             "label": "Move Object",
-            "node_type": "NLActionApplyLocation",
-            "links": [[20, 0, 0], [19, 0, 2]],
+            "node_type": "NLSetObjectAttributeActionNode",
+            "links": [[20, 0, 0], [19, 0, 3]],
             "values": [
                 {
+                    "index": "value_type",
+                    "value": "localLinearVelocity"
+                },
+                {
                     "index": 1,
+                    "type": "z",
+                    "value": false
+                },
+                {
+                    "index": 2,
                     "type": "use_owner",
                     "value": true
                 }
