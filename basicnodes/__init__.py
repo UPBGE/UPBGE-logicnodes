@@ -9128,14 +9128,19 @@ class NLActionPlayActionNode(bpy.types.Node, NLActionNode):
     bl_idname = "NLActionPlayActionNode"
     bl_label = "Play Animation"
     nl_category = "Animation"
+    advanced: bpy.props.BoolProperty(
+        name='Advanced',
+        description='Show advanced settings for this node',
+        update=update_tree_code
+    )
 
     def init(self, context):
         NLActionNode.init(self, context)
         self.inputs.new(NLConditionSocket.bl_idname, "Condition")
         self.inputs.new(NLGameObjectSocket.bl_idname, "Object / Armature")
         self.inputs.new(NLAnimationSocket.bl_idname, "Action")
-        self.inputs.new(NLFloatFieldSocket.bl_idname, "Start Frame")
-        self.inputs.new(NLFloatFieldSocket.bl_idname, "End Frame")
+        self.inputs.new(NLFloatFieldSocket.bl_idname, "Start")
+        self.inputs.new(NLFloatFieldSocket.bl_idname, "End")
         self.inputs.new(NLPositiveIntegerFieldSocket.bl_idname, "Layer")
         self.inputs.new(NLPositiveIntegerFieldSocket.bl_idname, "Priority")
         self.inputs.new(NLPlayActionModeSocket.bl_idname, "Play Mode")
@@ -9157,6 +9162,12 @@ class NLActionPlayActionNode(bpy.types.Node, NLActionNode):
             self.inputs[8].enabled = False
         else:
             self.inputs[8].enabled = True
+        adv = [9, 10, 11, 12]
+        for x in adv:
+            self.inputs[x].enabled = self.advanced
+
+    def draw_buttons(self, context, layout):
+        layout.prop(self, 'advanced', text='Advanced', icon='SETTINGS')
 
     def get_netlogic_class_name(self):
         return "bgelogic.ActionPlayAction"
@@ -9166,8 +9177,8 @@ class NLActionPlayActionNode(bpy.types.Node, NLActionNode):
             "condition",
             "game_object",
             "action_name",
-            "start_frame",
-            "end_frame",
+            "start",
+            "end",
             "layer",
             "priority",
             "play_mode",
@@ -9888,7 +9899,7 @@ class NLActionAddSoundDevice(bpy.types.Node, NLActionNode):
         ]
 
 
-_nodes.append(NLActionAddSoundDevice)
+#_nodes.append(NLActionAddSoundDevice)
 
 
 class NLActionStart3DSoundAdv(bpy.types.Node, NLActionNode):
@@ -9929,7 +9940,8 @@ class NLActionStart3DSoundAdv(bpy.types.Node, NLActionNode):
 
     def update_draw(self):
         state = self.advanced
-        for i in [4, 8, 9, 10, 11]:
+        self.inputs[4].enabled = False
+        for i in [8, 9, 10, 11]:
             ipt = self.inputs[i]
             if ipt.is_linked:
                 ipt.enabled = True

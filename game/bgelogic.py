@@ -8312,6 +8312,7 @@ class ActionPlayAction(ActionCell):
         self.game_object = None
         self.action_name = None
         self.stop = None
+        self.frames = None
         self.start_frame = None
         self.end_frame = None
         self.layer = None
@@ -8373,21 +8374,19 @@ class ActionPlayAction(ActionCell):
         speed = self.get_parameter_value(self.speed)
         blendin = self.get_parameter_value(self.blendin)
         blend_mode = self.get_parameter_value(self.blend_mode)
-        if game_object is LogicNetworkCell.STATUS_WAITING:
-            return
-        if action_name is LogicNetworkCell.STATUS_WAITING:
-            return
-        if start_frame is LogicNetworkCell.STATUS_WAITING:
-            return
-        if end_frame is LogicNetworkCell.STATUS_WAITING:
-            return
-        if layer is LogicNetworkCell.STATUS_WAITING:
-            return
-        if priority is LogicNetworkCell.STATUS_WAITING:
-            return
-        if play_mode is LogicNetworkCell.STATUS_WAITING:
-            return
-        if layer_weight is LogicNetworkCell.STATUS_WAITING:
+        if is_waiting(
+            game_object,
+            action_name,
+            start_frame,
+            end_frame,
+            layer,
+            priority,
+            play_mode,
+            layer_weight,
+            speed,
+            blendin,
+            blend_mode
+        ):
             return
         if layer_weight <= 0:
             layer_weight = 0.0
