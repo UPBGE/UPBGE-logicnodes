@@ -1702,11 +1702,12 @@ class NLSocketLoopCount(bpy.types.NodeSocket, NetLogicSocketType):
     integer_editor: bpy.props.IntProperty(
         update=update_value,
         min=1,
+        default=1,
         description=(
             'How many times the sound should '
             'be repeated when the condition is TRUE'
         )
-        )
+    )
 
     def draw_color(self, context, node):
         return PARAMETER_SOCKET_COLOR
@@ -4362,7 +4363,7 @@ class NLRangedThresholdNode(bpy.types.Node, NLParameterNode):
     bl_label = "Ranged Threshold"
     nl_category = "Math"
     operator: bpy.props.EnumProperty(
-        items=_enum_greater_less,
+        items=_enum_in_or_out,
         update=update_tree_code
     )
 
@@ -4602,7 +4603,7 @@ class NLParameterOrientationNode(bpy.types.Node, NLParameterNode):
         return ["input_x", "input_y", "input_z", "source_matrix"]
 
 
-_nodes.append(NLParameterOrientationNode)
+# _nodes.append(NLParameterOrientationNode)
 
 
 class NLParameterBoneStatus(bpy.types.Node, NLParameterNode):
@@ -6812,7 +6813,7 @@ class NLVehicleApplyEngineForce(bpy.types.Node, NLActionNode):
         self.inputs.new(NLParameterSocket.bl_idname, "Vehicle Constraint")
         self.inputs.new(NLPositiveIntegerFieldSocket.bl_idname, "Wheels")
         self.inputs[-1].value = 2
-        self.inputs.new(NLFloatFieldSocket.bl_idname, "Power")
+        self.inputs.new(NLPositiveFloatSocket.bl_idname, "Power")
         self.inputs[-1].value = 1
         self.outputs.new(NLConditionSocket.bl_idname, 'Done')
 
@@ -6863,7 +6864,7 @@ class NLVehicleApplyBraking(bpy.types.Node, NLActionNode):
         self.inputs.new(NLParameterSocket.bl_idname, "Vehicle Constraint")
         self.inputs.new(NLPositiveIntegerFieldSocket.bl_idname, "Wheels")
         self.inputs[-1].value = 2
-        self.inputs.new(NLFloatFieldSocket.bl_idname, "Power")
+        self.inputs.new(NLPositiveFloatSocket.bl_idname, "Power")
         self.inputs[-1].value = 1
         self.outputs.new(NLConditionSocket.bl_idname, 'Done')
 
@@ -6973,6 +6974,13 @@ class NLVehicleSetAttributes(bpy.types.Node, NLActionNode):
         self.inputs.new(NLBooleanSocket.bl_idname, "Friction")
         self.inputs.new(NLFloatFieldSocket.bl_idname, "")
         self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+
+    def update_draw(self):
+        ipts = self.inputs
+        ipts[4].enabled = ipts[3].value
+        ipts[6].enabled = ipts[5].value
+        ipts[8].enabled = ipts[7].value
+        ipts[10].enabled = ipts[9].value
 
     def get_output_socket_varnames(self):
         return ["OUT"]
@@ -7590,7 +7598,7 @@ class NLAppendListItem(bpy.types.Node, NLActionNode):
         return "bgelogic.AppendListItem"
 
     def get_input_sockets_field_names(self):
-        return ["condition", 'list', 'val']
+        return ["condition", 'items', 'val']
 
 
 _nodes.append(NLAppendListItem)
@@ -7618,7 +7626,7 @@ class NLSetListIndex(bpy.types.Node, NLActionNode):
         return "bgelogic.SetListIndex"
 
     def get_input_sockets_field_names(self):
-        return ["condition", 'list', 'index', 'val']
+        return ["condition", 'items', 'index', 'val']
 
 
 _nodes.append(NLSetListIndex)
@@ -7645,7 +7653,7 @@ class NLRemoveListValue(bpy.types.Node, NLActionNode):
         return "bgelogic.RemoveListValue"
 
     def get_input_sockets_field_names(self):
-        return ["condition", 'list', 'val']
+        return ["condition", 'items', 'val']
 
 
 _nodes.append(NLRemoveListValue)
@@ -8197,7 +8205,7 @@ class NLParameterSetAttribute(bpy.types.Node, NLActionNode):
         self.inputs.new(NLValueFieldSocket.bl_idname, "")
 
     def get_netlogic_class_name(self):
-        return "bgelogic.setObInstanceAttr"
+        return "bgelogic.SetObInstanceAttr"
 
     def get_input_sockets_field_names(self):
         return ['instance', 'attr', 'value']
@@ -9929,8 +9937,11 @@ class NLActionStart3DSoundAdv(bpy.types.Node, NLActionNode):
         self.inputs.new(NLGameObjectSocket.bl_idname, "Speaker")
         self.inputs.new(NLSoundFileSocket.bl_idname, "Sound File")
         self.inputs.new(NLBooleanSocket.bl_idname, "Use Occlusion")
+        self.inputs.new(NLSocketAlphaFloat.bl_idname, 'Transition')
+        self.inputs[-1].value = .1
         self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Type")
         self.inputs[-1].value = 'default3D'
+        self.inputs[-1].enabled = False
         self.inputs.new(NLSocketLoopCount.bl_idname, "Mode")
         self.inputs.new(NLPositiveFloatSocket.bl_idname, "Pitch")
         self.inputs[-1].value = 1.0
@@ -9949,9 +9960,9 @@ class NLActionStart3DSoundAdv(bpy.types.Node, NLActionNode):
         self.outputs.new(NLParameterSocket.bl_idname, 'Sound')
 
     def update_draw(self):
+        self.inputs[4].enabled = self.inputs[3].value
         state = self.advanced
-        self.inputs[4].enabled = False
-        for i in [8, 9, 10, 11]:
+        for i in [9, 10, 11, 12]:
             ipt = self.inputs[i]
             if ipt.is_linked:
                 ipt.enabled = True
@@ -9973,6 +9984,7 @@ class NLActionStart3DSoundAdv(bpy.types.Node, NLActionNode):
             "speaker",
             "sound",
             'occlusion',
+            'transition',
             "device",
             "loop_count",
             "pitch",
@@ -10230,7 +10242,12 @@ class NLParameterFormattedString(bpy.types.Node, NLParameterNode):
     def update_draw(self):
         string = self.inputs[0].value
         count = string.count('{}')
-        print(count)
+        ipts = [1, 2, 3, 4]
+        for ipt in ipts:
+            if ipt <= count:
+                self.inputs[ipt].enabled = True
+            else:
+                self.inputs[ipt].enabled = False
 
     def get_input_sockets_field_names(self):
         return ["format_string", "value_a", "value_b", "value_c", "value_d"]

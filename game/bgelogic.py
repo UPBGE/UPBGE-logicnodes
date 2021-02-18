@@ -309,20 +309,22 @@ def xrot_to(
     time_per_frame
 ):
     front_vector = LO_AXIS_TO_VECTOR[front_axis_code]
-    direction_vector = rotating_object.getVectTo(target_pos)[1]
+    vec = rotating_object.getVectTo(target_pos)[1]
     if speed == 0:
         if front_axis_code >= 3:
-            direction_vector.negate()
+            vec.negate()
             front_axis_code = front_axis_code - 3
-        rotating_object.alignAxisToVect(direction_vector, front_axis_code, 1.0)
+        if vec.x == 0 and vec.y == 0 and vec.z == 0:
+            return
+        rotating_object.alignAxisToVect(vec, front_axis_code, 1.0)
         rotating_object.alignAxisToVect(LO_AXIS_TO_VECTOR[0], 0, 1.0)
         return True
     else:
-        direction_vector = project_vector3(direction_vector, 1, 2)
-        direction_vector.normalize()
+        vec = project_vector3(vec, 1, 2)
+        vec.normalize()
         front_vector = rotating_object.getAxisVect(front_vector)
         front_vector = project_vector3(front_vector, 1, 2)
-        signed_angle = direction_vector.angle_signed(front_vector, None)
+        signed_angle = vec.angle_signed(front_vector, None)
         if signed_angle is None:
             return
         abs_angle = abs(signed_angle)
@@ -344,20 +346,22 @@ def yrot_to(
     time_per_frame
 ):
     front_vector = LO_AXIS_TO_VECTOR[front_axis_code]
-    direction_vector = rotating_object.getVectTo(target_pos)[1]
+    vec = rotating_object.getVectTo(target_pos)[1]
     if speed == 0:
         if front_axis_code >= 3:
-            direction_vector.negate()
+            vec.negate()
             front_axis_code = front_axis_code - 3
-        rotating_object.alignAxisToVect(direction_vector, front_axis_code, 1.0)
+        if vec.x == 0 and vec.y == 0 and vec.z == 0:
+            return
+        rotating_object.alignAxisToVect(vec, front_axis_code, 1.0)
         rotating_object.alignAxisToVect(LO_AXIS_TO_VECTOR[1], 1, 1.0)
         return True
     else:
-        direction_vector = project_vector3(direction_vector, 2, 0)
-        direction_vector.normalize()
+        vec = project_vector3(vec, 2, 0)
+        vec.normalize()
         front_vector = rotating_object.getAxisVect(front_vector)
         front_vector = project_vector3(front_vector, 2, 0)
-        signed_angle = direction_vector.angle_signed(front_vector, None)
+        signed_angle = vec.angle_signed(front_vector, None)
         if signed_angle is None:
             return
         abs_angle = abs(signed_angle)
@@ -380,21 +384,23 @@ def zrot_to(
     time_per_frame
 ):
     front_vector = LO_AXIS_TO_VECTOR[front_axis_code]
-    direction_vector = rotating_object.getVectTo(target_pos)[1]
+    vec = rotating_object.getVectTo(target_pos)[1]
     if speed == 0:
         if front_axis_code >= 3:
-            direction_vector.negate()
+            vec.negate()
             front_axis_code = front_axis_code - 3
-        rotating_object.alignAxisToVect(direction_vector, front_axis_code, 1.0)
+        if vec.x == 0 and vec.y == 0 and vec.z == 0:
+            return
+        rotating_object.alignAxisToVect(vec, front_axis_code, 1.0)
         rotating_object.alignAxisToVect(LO_AXIS_TO_VECTOR[2], 2, 1.0)
         return True
     else:
         # project in 2d, compute angle diff, set euler rot 2
-        direction_vector = project_vector3(direction_vector, 0, 1)
-        direction_vector.normalize()
+        vec = project_vector3(vec, 0, 1)
+        vec.normalize()
         front_vector = rotating_object.getAxisVect(front_vector)
         front_vector = project_vector3(front_vector, 0, 1)
-        signed_angle = direction_vector.angle_signed(front_vector, None)
+        signed_angle = vec.angle_signed(front_vector, None)
         if signed_angle is None:
             return True
         abs_angle = abs(signed_angle)
@@ -3394,9 +3400,9 @@ class RangedThreshold(ParameterCell):
         self.operator = None
 
     def calc_threshold(self, op, v, t):
-        if op == 'GREATER':
+        if op == 'OUTSIDE':
             return v if (v < t.x or v > t.y) else 0
-        if op == 'LESS':
+        if op == 'INSIDE':
             return v if (t.x < v < t.y) else 0
 
     def evaluate(self):
@@ -4080,172 +4086,6 @@ class ParameterVector4(ParameterCell):
             self.out_z = 0 if z is None else z
             self.out_w = 1 if w is None else w
             self.out_vec[:] = (self.out_x, self.out_y, self.out_z, self.out_w)
-
-
-class ParameterSound(ParameterCell):
-    class SoundHandleController():
-        def __init__(self, ps_cell):
-            self.owner = ps_cell
-            self.handle = None
-
-        def update(
-            self,
-            location,
-            orientation_quat,
-            velocity,
-            pitch,
-            volume,
-            loop_count,
-            attenuation,
-            distance_ref,
-            distance_max
-        ):
-            handle = self.handle
-            if handle is None:
-                return
-            if not (handle.status == aud.AUD_STATUS_PLAYING):
-                return
-            if location is not None:
-                handle.location = location
-            if orientation_quat is not None:
-                handle.orientation = orientation_quat
-            if velocity is not None:
-                handle.velocity = velocity
-            if volume is not None:
-                handle.volume = volume
-            if pitch is not None:
-                handle.pitch = pitch
-            if loop_count is not None:
-                handle.loop_count = loop_count
-            if attenuation is not None:
-                handle.attenuation = attenuation
-            if distance_ref is not None:
-                handle.distance_reference = distance_ref
-            if distance_max is not None:
-                handle.distance_maximum = distance_max
-
-        def play(
-            self,
-            location,
-            orientation_quat,
-            velocity,
-            pitch,
-            volume,
-            loop_count,
-            attenuation,
-            distance_ref,
-            distance_max
-        ):
-            handle = self.handle
-            if (
-                handle is None or (handle.status == aud.AUD_STATUS_STOPPED) or
-                (handle.status == aud.AUD_STATUS_INVALID)
-            ):
-                handle = self.owner.create_handle()
-                handle.relative = False
-                self.handle = handle
-            elif handle.status == aud.AUD_STATUS_PLAYING:
-                handle.position = 0.0
-            if handle.status == aud.AUD_STATUS_PAUSED:
-                handle.resume()
-            if location is not None:
-                handle.location = location
-            if orientation_quat is not None:
-                handle.orientation = orientation_quat
-            if velocity is not None:
-                handle.velocity = velocity
-            if volume is not None:
-                handle.volume = volume
-            if pitch is not None:
-                handle.pitch = pitch
-            if loop_count is not None:
-                handle.loop_count = loop_count
-            if attenuation is not None:
-                handle.attenuation = attenuation
-            if distance_ref is not None:
-                handle.distance_reference = distance_ref
-            if distance_max is not None:
-                handle.distance_maximum = distance_max
-
-        def stop(self):
-            handle = self.handle
-            if handle is not None:
-                if handle.status == aud.AUD_STATUS_INVALID:
-                    self.handle = None
-                else:
-                    handle.stop()
-                    self.handle = None
-
-        def pause(self):
-            handle = self.handle
-            if handle is not None:
-                if handle.status == aud.AUD_STATUS_INVALID:
-                    self.handle = None
-                else:
-                    handle.pause()
-
-        def is_playing(self):
-            handle = self.handle
-            if handle is None:
-                return False
-            if handle.status == aud.AUD_STATUS_PLAYING:
-                return True
-            return False
-
-        def get_frame(self):
-            if self.is_playing():
-                return self.handle.position
-            return 0.0
-
-    def __init__(self):
-        ParameterCell.__init__(self)
-        self.file_path = None
-        self._loaded_path = None
-        self._file_path_value = None
-        self._factory = None
-        self.network = None
-        self.controller = self.__class__.SoundHandleController(self)
-        self.IS_PLAYING = LogicNetworkSubCell(self, self._is_playing)
-        self.CURRENT_FRAME = LogicNetworkSubCell(self, self._current_frame)
-
-    def _is_playing(self):
-        return self.controller.is_playing()
-
-    def _current_frame(self):
-        return self.controller.get_frame()
-
-    def create_handle(self):
-        return self.network.audio_system.create_sound_handle(
-            self._file_path_value
-        )
-
-    def get_value(self):
-        return self.controller
-
-    def setup(self, network):
-        self.network = network
-
-    def dispose_loaded_audio(self):
-        if not self._loaded_path:
-            return
-        self._loaded_path = None
-        self._handle = None
-
-    def load_audio(self, fpath):
-        self._loaded_path = fpath
-        self._factory = self.network.audio_system.get_or_create_audio_factory(
-            fpath
-        )
-
-    def evaluate(self):
-        file_path = self.get_parameter_value(self.file_path)
-        if file_path is LogicNetworkCell.STATUS_WAITING:
-            return
-        self._set_ready()
-        if file_path != self._loaded_path:
-            self._file_path_value = file_path
-            self.dispose_loaded_audio()
-            self.load_audio(file_path)
 
 
 class ParameterFindChildByName(ParameterCell):
@@ -7792,7 +7632,7 @@ class ActionSaveVariable(ActionCell):
         self._set_ready()
 
         cust_path = self.get_custom_path(self.path)
-        path = bpy.path.abspath('//Data/') if self.path == '' else cust_path
+        path = bpy.path.abspath('//Data/') if self.path == '' else bpy.path.abspath(cust_path)
         os.makedirs(path, exist_ok=True)
 
         self.write_to_json(path, name, val)
@@ -7841,7 +7681,7 @@ class ActionSaveVariables(ActionCell):
         self._set_ready()
 
         cust_path = self.get_custom_path(self.path)
-        path = bpy.path.abspath('//Data/') if self.path == '' else cust_path
+        path = bpy.path.abspath('//Data/') if self.path == '' else bpy.path.abspath(cust_path)
         os.makedirs(path, exist_ok=True)
 
         self.write_to_json(path, val)
@@ -7867,7 +7707,7 @@ class ActionLoadVariable(ActionCell):
 
     def read_from_json(self, path, name):
         self.done = False
-        file_path = os.path.isfile(path + 'variables.json')
+        file_path = path + 'variables.json'
         if file_path:
             f = open(file_path, 'r')
             data = json.load(f)
@@ -7897,7 +7737,7 @@ class ActionLoadVariable(ActionCell):
         self._set_ready()
         cust_path = self.get_custom_path(self.path)
 
-        path = bpy.path.abspath('//Data/') if self.path == '' else cust_path
+        path = bpy.path.abspath('//Data/') if self.path == '' else bpy.path.abspath(cust_path)
         os.makedirs(path, exist_ok=True)
 
         self.read_from_json(path, name)
@@ -7947,7 +7787,7 @@ class ActionLoadVariables(ActionCell):
         self._set_ready()
         cust_path = self.get_custom_path(self.path)
 
-        path = bpy.path.abspath('//Data/') if self.path == '' else cust_path
+        path = bpy.path.abspath('//Data/') if self.path == '' else bpy.path.abspath(cust_path)
         os.makedirs(path, exist_ok=True)
 
         self.read_from_json(path)
@@ -8001,7 +7841,7 @@ class ActionRemoveVariable(ActionCell):
 
         cust_path = self.get_custom_path(self.path)
 
-        path = bpy.path.abspath('//Data/') if self.path == '' else cust_path
+        path = bpy.path.abspath('//Data/') if self.path == '' else bpy.path.abspath(cust_path)
         os.makedirs(path, exist_ok=True)
 
         self.write_to_json(path, name)
@@ -8049,7 +7889,7 @@ class ActionClearVariables(ActionCell):
         self._set_ready()
         cust_path = self.get_custom_path(self.path)
 
-        path = bpy.path.abspath('//Data/') if self.path == '' else cust_path
+        path = bpy.path.abspath('//Data/') if self.path == '' else bpy.path.abspath(cust_path)
         os.makedirs(path, exist_ok=True)
 
         self.write_to_json(path)
@@ -8111,7 +7951,7 @@ class ActionListVariables(ActionCell):
         self._set_ready()
         cust_path = self.get_custom_path(self.path)
 
-        path = bpy.path.abspath('//Data/') if self.path == '' else cust_path
+        path = bpy.path.abspath('//Data/') if self.path == '' else bpy.path.abspath(cust_path)
         os.makedirs(path, exist_ok=True)
 
         self.write_to_json(path, print_list)
@@ -8655,6 +8495,7 @@ class ActionStart3DSoundAdv(ActionCell):
         self.condition = None
         self.sound = None
         self.occlusion = None
+        self.transition = None
         self.speaker = None
         self.device = None
         self.loop_count = None
@@ -8710,6 +8551,7 @@ class ActionStart3DSoundAdv(ActionCell):
                                 mathutils.Vector((0, 0, 0))
                             )
                         if occlusion:
+                            transition = self.get_parameter_value(self.transition)
                             cam = bge.logic.getCurrentScene().active_camera
                             occluder, point, normal = cam.rayCast(
                                 speaker.worldPosition,
@@ -8739,14 +8581,16 @@ class ActionStart3DSoundAdv(ActionCell):
                                 )
                             cs = self._clear_sound
                             if occluded and cs > 0:
-                                self._clear_sound -= .1
+                                self._clear_sound -= transition
                             elif not occluded and cs < 1:
-                                self._clear_sound += .1
+                                self._clear_sound += transition
+                            if self._clear_sound < 0:
+                                self._clear_sound = 0
                             sustained = self._sustained
                             if sustained > penetration:
-                                self._sustained -= .01
+                                self._sustained -= transition / 10
                             elif sustained < penetration:
-                                self._sustained += .01
+                                self._sustained += transition / 10
                             mult = cs * sustained if not ind else (1 - cs) * sustained
                             # handles[sound][ind].attenuation = attenuation
                             handles[sound][ind].volume = volume * mult
@@ -8979,7 +8823,6 @@ class ParameterFormattedString(ParameterCell):
         self.value_d = None
 
     def evaluate(self):
-        STATUS_WAITING = LogicNetworkCell.STATUS_WAITING
         format_string = self.get_parameter_value(self.format_string)
         value_a = self.get_parameter_value(self.value_a)
         value_b = self.get_parameter_value(self.value_b)
@@ -10199,8 +10042,6 @@ class ActionAlignAxisToVector(ActionCell):
         axis = self.get_parameter_value(self.axis)
         factor = self.get_parameter_value(self.factor)
         if is_invalid(game_object):
-            return
-        if not v or (v.x == 0 and v.y == 0 and v.z == 0):
             return
         if axis is None:
             return
