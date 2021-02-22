@@ -62,7 +62,7 @@ class WaitForKeyOperator(bpy.types.Operator):
         try:
             context.region.tag_redraw()
         except Exception:
-            pass
+            utils.warn("Couldn't redraw panel, code updated.")
 
     def modal(self, context, event):
         if event.value == "PRESS":
@@ -99,7 +99,7 @@ class WaitForKeyOperator(bpy.types.Operator):
         try:
             context.region.tag_redraw()
         except Exception:
-            pass
+            utils.warn("Couldn't redraw panel, code updated.")
         context.window_manager.modal_handler_add(self)
         return {'RUNNING_MODAL'}
 
@@ -730,7 +730,7 @@ class NLGenerateLogicNetworkOperatorAll(bpy.types.Operator):
         try:
             context.region.tag_redraw()
         except Exception:
-            pass
+            utils.warn("Couldn't redraw panel, code updated.")
         return {"FINISHED"}
 
 
@@ -817,7 +817,7 @@ class NLGenerateLogicNetworkOperator(bpy.types.Operator):
         try:
             context.region.tag_redraw()
         except Exception:
-            pass
+            utils.warn("Couldn't redraw panel, code updated.")
         return {"FINISHED"}
 
 

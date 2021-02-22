@@ -5189,7 +5189,7 @@ class ValueSwitch(ActionCell):
         val_b = self.get_parameter_value(self.val_b)
         self._set_ready()
         self.out_value = (
-            val_b if condition else val_a
+            val_a if condition is True else val_b
         )
 
 
@@ -8053,10 +8053,12 @@ class ActionGetCharacterInfo(ActionCell):
         self.max_jumps = None
         self.cur_jump = None
         self.gravity = None
+        self.walk_dir = None
         self.on_ground = None
         self.MAX_JUMPS = LogicNetworkSubCell(self, self.get_max_jumps)
         self.CUR_JUMP = LogicNetworkSubCell(self, self.get_current_jump)
         self.GRAVITY = LogicNetworkSubCell(self, self.get_gravity)
+        self.WALKDIR = LogicNetworkSubCell(self, self.get_walk_dir)
         self.ON_GROUND = LogicNetworkSubCell(self, self.get_on_ground)
 
     def get_max_jumps(self):
@@ -8067,6 +8069,9 @@ class ActionGetCharacterInfo(ActionCell):
 
     def get_gravity(self):
         return self.gravity
+    
+    def get_walk_dir(self):
+        return self.walk_dir
 
     def get_on_ground(self):
         return self.on_ground
@@ -8083,6 +8088,7 @@ class ActionGetCharacterInfo(ActionCell):
         self.max_jumps = physics.maxJumps
         self.cur_jump = physics.jumpCount
         self.gravity = physics.gravity
+        self.walk_dir = physics.walkDirection
         self.on_ground = physics.onGround
 
 
@@ -9197,6 +9203,60 @@ class SetEeveeVolumetricShadows(ActionCell):
         bpy.data.scenes[
             scene.name
         ].eevee.use_volumetric_shadows = value
+        scene.resetTaaSamples = True
+        self.done = True
+
+
+class SetEeveeSMAA(ActionCell):
+
+    def __init__(self):
+        ActionCell.__init__(self)
+        self.condition = None
+        self.value = None
+        self.done = None
+        self.OUT = LogicNetworkSubCell(self, self.get_done)
+
+    def get_done(self):
+        return self.done
+
+    def evaluate(self):
+        self.done = False
+        condition = self.get_parameter_value(self.condition)
+        if not_met(condition):
+            return
+        value = self.get_parameter_value(self.value)
+        if is_invalid(value):
+            return
+        self._set_ready()
+        scene = logic.getCurrentScene()
+        bpy.data.scenes[scene.name].eevee.use_eevee_smaa = value
+        scene.resetTaaSamples = True
+        self.done = True
+
+
+class SetEeveeSMAAQuality(ActionCell):
+
+    def __init__(self):
+        ActionCell.__init__(self)
+        self.condition = None
+        self.value = None
+        self.done = None
+        self.OUT = LogicNetworkSubCell(self, self.get_done)
+
+    def get_done(self):
+        return self.done
+
+    def evaluate(self):
+        self.done = False
+        condition = self.get_parameter_value(self.condition)
+        if not_met(condition):
+            return
+        value = self.get_parameter_value(self.value)
+        if is_invalid(value):
+            return
+        self._set_ready()
+        scene = logic.getCurrentScene()
+        bpy.data.scenes[scene.name].eevee.use_eevee_smaa = value
         scene.resetTaaSamples = True
         self.done = True
 

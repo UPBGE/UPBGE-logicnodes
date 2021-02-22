@@ -368,6 +368,13 @@ _enum_string_ops = [
     )
 ]
 
+_enum_quality_levels = [
+    ("LOW", "Low", "Set a lower quality to increase performance"),
+    ("MEDIUM", "Medium", "Set a medium quality for a balanced performance"),
+    ("HIGH", "High", "Set a high quality at the cost of performance"),
+    ("ULTRA", "Ultra", "Set a very high quality at the cost of performance")
+]
+
 _enum_math_operations = [
     ("ADD", "Add", "Sum A and B"),
     ("SUB", "Substract", "Subtract B from A"),
@@ -881,7 +888,10 @@ class NLAbstractNode(NetLogicStatementGenerator):
     def insert_link(self, link):
         to_socket = link.to_socket
         from_socket = link.from_socket
-        link.is_valid = to_socket.validate(from_socket)
+        try:
+            link.is_valid = to_socket.validate(from_socket)
+        except Exception:
+            utils.debug('Receiving Node not a Logic Node Type, skipping validation.')
 
     def free(self):
         pass
@@ -1659,6 +1669,36 @@ class NLSocketControllerButtons(bpy.types.NodeSocket, NetLogicSocketType):
 
 
 _sockets.append(NLSocketControllerButtons)
+
+
+class NLQualitySocket(bpy.types.NodeSocket, NetLogicSocketType):
+    bl_idname = "NLQualitySocket"
+    bl_label = "Quality"
+    value: bpy.props.EnumProperty(
+        name='Quality',
+        items=_enum_quality_levels,
+        update=update_tree_code
+    )
+
+    def draw_color(self, context, node):
+        return PARAMETER_SOCKET_COLOR
+
+    def draw(self, context, layout, node, text):
+        if self.is_linked or self.is_output:
+            layout.label(text=text)
+        else:
+            if text:
+                col = layout.column()
+                col.label(text=text)
+                col.prop(self, 'value', text='')
+            else:
+                layout.prop(self, "value", text='')
+
+    def get_unlinked_value(self):
+        return "'{}'".format(self.value)
+
+
+_sockets.append(NLQualitySocket)
 
 
 class NLSocketDistanceCheck(bpy.types.NodeSocket, NetLogicSocketType):
@@ -2596,6 +2636,50 @@ class NLVec3FieldSocket(bpy.types.NodeSocket, NetLogicSocketType):
 
 
 _sockets.append(NLVec3FieldSocket)
+
+
+class NLVec3RotationSocket(bpy.types.NodeSocket, NetLogicSocketType):
+    bl_idname = "NLVec3RotationSocket"
+    bl_label = "Float Value"
+    value_x: bpy.props.FloatProperty(
+        default=0,
+        unit='ROTATION',
+        update=update_tree_code
+    )
+    value_y: bpy.props.FloatProperty(
+        default=0,
+        unit='ROTATION',
+        update=update_tree_code
+    )
+    value_z: bpy.props.FloatProperty(
+        default=0,
+        unit='ROTATION',
+        update=update_tree_code
+    )
+
+    def draw_color(self, context, node):
+        return PARAM_VECTOR_SOCKET_COLOR
+
+    def get_unlinked_value(self):
+        return "mathutils.Vector(({}, {}, {}))".format(
+            self.value_x,
+            self.value_y,
+            self.value_z
+        )
+
+    def draw(self, context, layout, node, text):
+        if self.is_linked or self.is_output:
+            layout.label(text=text)
+        else:
+            column = layout.column(align=True)
+            if text != '':
+                column.label(text=text)
+            column.prop(self, "value_x", text='X')
+            column.prop(self, "value_y", text='Y')
+            column.prop(self, "value_z", text='Z')
+
+
+_sockets.append(NLVec3RotationSocket)
 
 
 class NLVelocitySocket(bpy.types.NodeSocket, NetLogicSocketType):
@@ -6665,7 +6749,7 @@ class NLValueSwitch(bpy.types.Node, NLParameterNode):
 
     def init(self, context):
         NLParameterNode.init(self, context)
-        self.inputs.new(NLBooleanSocket.bl_idname, "A if False, else B")
+        self.inputs.new(NLBooleanSocket.bl_idname, "A if True, else B")
         self.inputs.new(NLValueFieldSocket.bl_idname, "")
         self.inputs[-1].value = 'A'
         self.inputs.new(NLValueFieldSocket.bl_idname, "")
@@ -7831,7 +7915,7 @@ class NLActionApplyRotation(bpy.types.Node, NLActionNode):
             self,
             NLConditionSocket, "Condition",
             NLGameObjectSocket, "Object",
-            NLVec3FieldSocket, "Vector")
+            NLVec3RotationSocket, "Vector")
         self.outputs.new(NLConditionSocket.bl_idname, 'Done')
 
     def get_output_socket_varnames(self):
@@ -8594,6 +8678,7 @@ class NLActionGetCharacterInfo(bpy.types.Node, NLActionNode):
         self.outputs.new(NLIntegerFieldSocket.bl_idname, 'Max Jumps')
         self.outputs.new(NLIntegerFieldSocket.bl_idname, 'Current Jump Count')
         self.outputs.new(NLVec3FieldSocket.bl_idname, 'Gravity')
+        self.outputs.new(NLVec3FieldSocket.bl_idname, 'Walk Direction')
         self.outputs.new(NLBooleanSocket.bl_idname, 'On Ground')
 
     def get_netlogic_class_name(self):
@@ -8603,7 +8688,7 @@ class NLActionGetCharacterInfo(bpy.types.Node, NLActionNode):
         return ["condition", "game_object"]
 
     def get_output_socket_varnames(self):
-        return ["MAX_JUMPS", "CUR_JUMP", "GRAVITY", 'ON_GROUND']
+        return ["MAX_JUMPS", "CUR_JUMP", "GRAVITY", 'WALKDIR', 'ON_GROUND']
 
 
 _nodes.append(NLActionGetCharacterInfo)
@@ -9006,6 +9091,62 @@ class NLSetEeveeVolumetricShadows(bpy.types.Node, NLActionNode):
 
 
 # _nodes.append(NLSetEeveeVolumetricShadows)
+
+
+class NLSetEeveeSMAA(bpy.types.Node, NLActionNode):
+    bl_idname = "NLSetEeveeSMAA"
+    bl_label = "Set SMAA"
+    nl_category = 'Render'
+    nl_subcat = 'Visuals'
+
+    def init(self, context):
+        NLActionNode.init(self, context)
+        self.inputs.new(NLConditionSocket.bl_idname, 'Condition')
+        self.inputs.new(NLBooleanSocket.bl_idname, 'Use SMAA')
+        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+
+    def get_output_socket_varnames(self):
+        return ["OUT"]
+
+    def get_netlogic_class_name(self):
+        return "bgelogic.SetEeveeSMAA"
+
+    def get_input_sockets_field_names(self):
+        return [
+            "condition",
+            "value"
+        ]
+
+
+_nodes.append(NLSetEeveeSMAA)
+
+
+class NLSetEeveeSMAAQuality(bpy.types.Node, NLActionNode):
+    bl_idname = "NLSetEeveeSMAAQuality"
+    bl_label = "Set SMAA Quality"
+    nl_category = 'Render'
+    nl_subcat = 'Visuals'
+
+    def init(self, context):
+        NLActionNode.init(self, context)
+        self.inputs.new(NLConditionSocket.bl_idname, 'Condition')
+        self.inputs.new(NLQualitySocket.bl_idname, '')
+        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+
+    def get_output_socket_varnames(self):
+        return ["OUT"]
+
+    def get_netlogic_class_name(self):
+        return "bgelogic.SetEeveeSMAAQuality"
+
+    def get_input_sockets_field_names(self):
+        return [
+            "condition",
+            "value"
+        ]
+
+
+_nodes.append(NLSetEeveeSMAAQuality)
 
 
 class NLSetLightEnergyAction(bpy.types.Node, NLActionNode):
