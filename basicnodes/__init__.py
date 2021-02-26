@@ -1552,7 +1552,8 @@ class NLSoundFileSocket(bpy.types.NodeSocket, NetLogicSocketType):
         update=update_tree_code
     )
     use_path: bpy.props.BoolProperty(
-        update=update_tree_code
+        update=update_tree_code,
+        default=True
     )
 
     def draw_color(self, context, node):

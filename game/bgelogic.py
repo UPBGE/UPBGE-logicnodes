@@ -8069,7 +8069,7 @@ class ActionGetCharacterInfo(ActionCell):
 
     def get_gravity(self):
         return self.gravity
-    
+
     def get_walk_dir(self):
         return self.walk_dir
 

@@ -1,3 +1,4 @@
+from __future__ import annotations
 import bpy
 # import nodeitems_utils
 from bge_netlogic import nodeutils as nodeitems_utils
@@ -5,6 +6,8 @@ import bge_netlogic.utilities as utils
 import os
 import sys
 import time
+
+#define USE_POSTPONED_ANNOTATIONS
 
 bl_info = {
     "name": "Logic Nodes",
