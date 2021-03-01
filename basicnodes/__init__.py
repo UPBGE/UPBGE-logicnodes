@@ -9581,30 +9581,6 @@ class NLActionPrint(bpy.types.Node, NLActionNode):
 _nodes.append(NLActionPrint)
 
 
-class NLActionResetTaaSamples(bpy.types.Node, NLActionNode):
-    bl_idname = "NLActionResetTaaSamples"
-    bl_label = "Reset TAA Samples"
-    bl_icon = 'FILE_REFRESH'
-    nl_category = 'Render'
-
-    def init(self, context):
-        NLActionNode.init(self, context)
-        self.inputs.new(NLPseudoConditionSocket.bl_idname, "Condition")
-        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
-
-    def get_output_socket_varnames(self):
-        return ["OUT"]
-
-    def get_netlogic_class_name(self):
-        return "bgelogic.ActionResetTaaSamples"
-
-    def get_input_sockets_field_names(self):
-        return ["condition"]
-
-
-_nodes.append(NLActionResetTaaSamples)
-
-
 class NLActionMousePickNode(bpy.types.Node, NLActionNode):
     bl_idname = "NLActionMousePickNode"
     bl_label = "Mouse Ray"

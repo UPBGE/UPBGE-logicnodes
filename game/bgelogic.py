@@ -4942,7 +4942,6 @@ class SetMaterial(ActionCell):
             debug('Set Material: Slot does not exist!')
             return
         bl_obj.material_slots[slot].material = bpy.data.materials[mat_name]
-        logic.getCurrentScene().resetTaaSamples = True
         self.done = True
 
 
@@ -4993,7 +4992,6 @@ class ActionSetMaterialNodeValue(ActionCell):
                 .inputs[input_slot]
                 .default_value
             ) = value
-            logic.getCurrentScene().resetTaaSamples = True
 
 
 class ActionSetMaterialNodeInputValue(ActionCell):
@@ -5027,7 +5025,6 @@ class ActionSetMaterialNodeInputValue(ActionCell):
             self.done = True
             self._set_ready()
             input_slot.default_value = value
-            logic.getCurrentScene().resetTaaSamples = True
 
 
 class ActionToggleGameObjectGameProperty(ActionCell):
@@ -5271,27 +5268,6 @@ class ActionPrint(ActionCell):
         value = self.get_parameter_value(self.value)
         self._set_ready()
         print(value)
-        self.done = True
-
-
-class ActionResetTaaSamples(ActionCell):
-
-    def __init__(self):
-        ActionCell.__init__(self)
-        self.condition = None
-        self.done = None
-        self.OUT = LogicNetworkSubCell(self, self.get_done)
-
-    def get_done(self):
-        return self.done
-
-    def evaluate(self):
-        self.done = False
-        condition = self.get_parameter_value(self.condition)
-        if not_met(condition):
-            return
-        self._set_ready()
-        logic.getCurrentScene().resetTaaSamples = True
         self.done = True
 
 
@@ -9062,7 +9038,6 @@ class SetGamma(ActionCell):
         bpy.data.scenes[
             scene.name
         ].view_settings.gamma = value
-        scene.resetTaaSamples = True
         self.done = True
 
 
@@ -9091,7 +9066,6 @@ class SetExposure(ActionCell):
         bpy.data.scenes[
             scene.name
         ].view_settings.exposure = value
-        scene.resetTaaSamples = True
         self.done = True
 
 
@@ -9118,7 +9092,6 @@ class SetEeveeBloom(ActionCell):
         self._set_ready()
         scene = logic.getCurrentScene()
         bpy.data.scenes[scene.name].eevee.use_bloom = value
-        scene.resetTaaSamples = True
         self.done = True
 
 
@@ -9145,7 +9118,6 @@ class SetEeveeSSR(ActionCell):
         self._set_ready()
         scene = logic.getCurrentScene()
         bpy.data.scenes[scene.name].eevee.use_ssr = value
-        scene.resetTaaSamples = True
         self.done = True
 
 
@@ -9174,7 +9146,6 @@ class SetEeveeVolumetrics(ActionCell):
         bpy.data.scenes[
             scene.name
         ].eevee.use_volumetric_lights = value
-        scene.resetTaaSamples = True
         self.done = True
 
 
@@ -9203,7 +9174,6 @@ class SetEeveeVolumetricShadows(ActionCell):
         bpy.data.scenes[
             scene.name
         ].eevee.use_volumetric_shadows = value
-        scene.resetTaaSamples = True
         self.done = True
 
 
@@ -9230,7 +9200,6 @@ class SetEeveeSMAA(ActionCell):
         self._set_ready()
         scene = logic.getCurrentScene()
         bpy.data.scenes[scene.name].eevee.use_eevee_smaa = value
-        scene.resetTaaSamples = True
         self.done = True
 
 
@@ -9257,7 +9226,6 @@ class SetEeveeSMAAQuality(ActionCell):
         self._set_ready()
         scene = logic.getCurrentScene()
         bpy.data.scenes[scene.name].eevee.use_eevee_smaa = value
-        scene.resetTaaSamples = True
         self.done = True
 
 
@@ -9274,14 +9242,6 @@ class SetLightEnergy(ActionCell):
     def get_done(self):
         return self.done
 
-    def set_blender_28x(self, lamp, energy):
-        light = lamp.blenderObject.data
-        light.energy = energy
-        logic.getCurrentScene().resetTaaSamples = True
-
-    def set_blender_27x(self, lamp, energy):
-        lamp.energy = energy
-
     def evaluate(self):
         self.done = False
         STATUS_WAITING = LogicNetworkCell.STATUS_WAITING
@@ -9297,7 +9257,8 @@ class SetLightEnergy(ActionCell):
         if lamp is STATUS_WAITING:
             return
         self._set_ready()
-        self.set_blender_28x(lamp, energy)
+        light = lamp.blenderObject.data
+        light.energy = energy
         self.done = True
 
 
@@ -9314,14 +9275,6 @@ class SetLightShadow(ActionCell):
     def get_done(self):
         return self.done
 
-    def set_blender_28x(self, lamp, use_shadow):
-        light = lamp.blenderObject.data
-        light.use_shadow = use_shadow
-        logic.getCurrentScene().resetTaaSamples = True
-
-    def set_blender_27x(self, lamp, use_shadow):
-        lamp.use_shadow = use_shadow
-
     def evaluate(self):
         self.done = False
         STATUS_WAITING = LogicNetworkCell.STATUS_WAITING
@@ -9337,7 +9290,8 @@ class SetLightShadow(ActionCell):
         if lamp is STATUS_WAITING:
             return
         self._set_ready()
-        self.set_blender_28x(lamp, use_shadow)
+        light = lamp.blenderObject.data
+        light.use_shadow = use_shadow
         self.done = True
 
 
@@ -9354,11 +9308,6 @@ class SetLightColor(ActionCell):
     def get_done(self):
         return self.done
 
-    def set_blender_28x(self, lamp, color):
-        light = lamp.blenderObject.data
-        light.color = color
-        logic.getCurrentScene().resetTaaSamples = True
-
     def evaluate(self):
         self.done = False
         STATUS_WAITING = LogicNetworkCell.STATUS_WAITING
@@ -9373,7 +9322,8 @@ class SetLightColor(ActionCell):
         if is_waiting(lamp, color):
             return
         self._set_ready()
-        self.set_blender_28x(lamp, color)
+        light = lamp.blenderObject.data
+        light.color = color
         self.done = True
 
 
@@ -9388,19 +9338,13 @@ class GetLightEnergy(ActionCell):
     def get_energy(self):
         return self.energy
 
-    def get_blender_28x(self, lamp):
-        light = lamp.blenderObject.data
-        self.energy = light.energy
-
-    def get_blender_27x(self, lamp):
-        self.energy = lamp.energy
-
     def evaluate(self):
         lamp = self.get_parameter_value(self.lamp)
         if lamp is LogicNetworkCell.STATUS_WAITING:
             return
         self._set_ready()
-        self.get_blender_28x(lamp)
+        light = lamp.blenderObject.data
+        self.energy = light.energy
 
 
 class GetLightColor(ActionCell):
@@ -9414,16 +9358,13 @@ class GetLightColor(ActionCell):
     def get_color(self):
         return self.color
 
-    def get_blender_28x(self, lamp):
-        light = lamp.blenderObject.data
-        self.color = light.color
-
     def evaluate(self):
         lamp = self.get_parameter_value(self.lamp)
         if lamp is LogicNetworkCell.STATUS_WAITING:
             return
         self._set_ready()
-        self.get_blender_28x(lamp)
+        light = lamp.blenderObject.data
+        self.color = light.color
 
 
 # Action "Move To": an object will follow a point
