@@ -120,6 +120,14 @@ def _update_all_logic_tree_code():
         return
 
 
+def _generate_on_game_start(*args):
+    try:
+        bpy.ops.bge_netlogic.generate_logicnetwork_all()
+    except Exception:
+        utils.error("Unknown Error, abort generating Network code")
+        return
+
+
 def _consume_update_tree_code_queue():
     if not _update_queue:
         return
@@ -263,7 +271,6 @@ def _abs_import(module_name, full_path):
         sys.modules[module_name] = module
         spec.loader.exec_module(module)
         return module
-    pass
 
 
 def _rel_import(module_name, rel_path):
@@ -573,6 +580,10 @@ def register():
         bpy.utils.register_class(cls)
     menu_nodes = _list_menu_nodes()
     nodeitems_utils.register_node_categories("NETLOGIC_NODES", menu_nodes)
+
+    filter(lambda a: a is not _generate_on_game_start, bpy.app.handlers.game_pre)
+    # bpy.app.handlers.game_pre.clear()
+    bpy.app.handlers.game_pre.append(_generate_on_game_start)
 
     bpy.types.Object.sound_occluder = bpy.props.BoolProperty(
         default=True,

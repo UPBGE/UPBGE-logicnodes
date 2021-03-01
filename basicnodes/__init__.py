@@ -2111,6 +2111,27 @@ class NLPositiveIntegerFieldSocket(bpy.types.NodeSocket, NetLogicSocketType):
 _sockets.append(NLPositiveIntegerFieldSocket)
 
 
+class NLCountSocket(bpy.types.NodeSocket, NetLogicSocketType):
+    bl_idname = "NLCountSocket"
+    bl_label = "Integer"
+    value: bpy.props.IntProperty(min=1, default=1, update=update_tree_code)
+
+    def draw_color(self, context, node):
+        return PARAMETER_SOCKET_COLOR
+
+    def draw(self, context, layout, node, text):
+        if self.is_linked or self.is_output:
+            layout.label(text=text)
+        else:
+            layout.prop(self, "value", text=text)
+
+    def get_unlinked_value(self):
+        return '{}'.format(self.value)
+
+
+_sockets.append(NLCountSocket)
+
+
 class NLPositiveIntCentSocket(bpy.types.NodeSocket, NetLogicSocketType):
     bl_idname = "NLPositiveIntCentSocket"
     bl_label = "Integer"
@@ -6504,12 +6525,19 @@ class NLSetMaterial(bpy.types.Node, NLActionNode):
         NLActionNode.init(self, context)
         self.inputs.new(NLConditionSocket.bl_idname, "Condition")
         self.inputs.new(NLGameObjectSocket.bl_idname, "Object")
-        self.inputs.new(NLIntegerFieldSocket.bl_idname, "Slot")
+        self.inputs.new(NLCountSocket.bl_idname, "Slot")
         self.inputs.new(NLMaterialSocket.bl_idname, "Material")
         self.outputs.new(NLConditionSocket.bl_idname, "Done")
 
     def get_netlogic_class_name(self):
         return "bgelogic.SetMaterial"
+
+    def update_draw(self):
+        obj_socket = self.inputs[1]
+        if obj_socket.use_owner or not obj_socket.value:
+            return
+        if self.inputs[2].value > len(obj_socket.value.material_slots):
+            self.inputs[2].value = len(obj_socket.value.material_slots)
 
     def get_input_sockets_field_names(self):
         return [

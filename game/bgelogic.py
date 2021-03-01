@@ -605,7 +605,8 @@ class AudioSystem(object):
         self.device3D.speed_of_sound = bpy.context.scene.audio_doppler_speed
         self.device3D.doppler_factor = bpy.context.scene.audio_doppler_factor
 
-        bpy.app.handlers.game_post.clear()
+        filter(lambda a: a is not stop_all_sounds, bpy.app.handlers.game_post)
+        # bpy.app.handlers.game_post.clear()
         bpy.app.handlers.game_post.append(stop_all_sounds)
 
     def get_distance_model(self, name):

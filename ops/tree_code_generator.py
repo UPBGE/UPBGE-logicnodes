@@ -34,7 +34,7 @@ class TreeCodeGenerator(object):
 
     def write_code_for_tree(self, tree):
         buffer_name = utils.py_module_filename_for_tree(tree)
-        if bpy.context.scene.logic_node_settings.use_node_debug:
+        if getattr(bpy.context.scene.logic_node_settings, 'use_node_debug', False):
             utils.notify("Generating code for tree {}".format(tree.name))
         line_writer = self.create_text_file("bgelogic/"+buffer_name)
         line_writer.write_line("# MACHINE GENERATED")
@@ -145,6 +145,8 @@ class TreeCodeGenerator(object):
                     available_cells.remove(cell_name)
                     added_cells.append(cell_name)
                 elif self._test_node_links(node, added_cells, uid_map) == 'FAULTY':
+                    name = node.label if node.label else node.name
+                    utils.error(f'A Reroute does not have any input links! Skipping {name}.')
                     available_cells.remove(cell_name)
         return added_cells
 
@@ -154,8 +156,6 @@ class TreeCodeGenerator(object):
                 linked_node = input.links[0].from_socket.node
                 while isinstance(linked_node, bpy.types.NodeReroute):
                     if not linked_node.inputs[0].links:
-                        name = node.label if node.label else node.name
-                        utils.error(f'A Reroute does not have any input links! Skipping {name}.')
                         return 'FAULTY'
                     linked_node = linked_node.inputs[0].links[0].from_socket.node
                 linked_node_varname = uid_map.get_varname_for_node(linked_node)
