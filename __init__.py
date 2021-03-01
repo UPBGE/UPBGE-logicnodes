@@ -260,6 +260,7 @@ def _abs_import(module_name, full_path):
         import importlib.util
         spec = importlib.util.spec_from_file_location(module_name, full_path)
         module = importlib.util.module_from_spec(spec)
+        sys.modules[module_name] = module
         spec.loader.exec_module(module)
         return module
     pass
