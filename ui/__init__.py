@@ -57,45 +57,6 @@ class BGEGroupName(bpy.types.PropertyGroup):
     enabled: bpy.props.BoolProperty()
 
 
-class BGE_PT_GameComponentPanel(bpy.types.Panel):
-    bl_label = "Components"
-    bl_space_type = "NODE_EDITOR"
-    bl_region_type = "UI"
-    bl_category = "Item"
-    # module = bpy.StringProperty()
-
-    @classmethod
-    def poll(cls, context):
-        ob = context.active_object
-        return ob and ob.name
-
-    def draw(self, context):
-        layout = self.layout
-
-        ob = context.active_object
-        game = ob.game
-
-        row = layout.row()
-        row.operator("logic.python_component_register", text="Register", icon="PLUS")
-        row.operator("logic.python_component_create", text="Create", icon="PLUS")
-
-        for i, c in enumerate(game.components):
-            box = layout.box()
-            row = box.row()
-            row.prop(c, "show_expanded", text="", emboss=False)
-            row.label(text=c.name)
-            row.operator("logic.python_component_reload", text="", icon='RECOVER_LAST').index = i
-            row.operator("logic.python_component_remove", text="", icon='X').index = i
-
-            if c.show_expanded and len(c.properties) > 0:
-                box = box.box()
-                for prop in c.properties:
-                    row = box.row()
-                    row.label(text=prop.name)
-                    col = row.column()
-                    col.prop(prop, "value", text="")
-
-
 class BGE_PT_GamePropertyPanel(bpy.types.Panel):
     bl_label = "Object Properties"
     bl_space_type = "NODE_EDITOR"
