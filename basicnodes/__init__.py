@@ -499,6 +499,16 @@ def filter_armatures(self, item):
         return False
 
 
+def filter_logic_trees(self, item):
+    print(item)
+    if (
+        isinstance(item, bge_netlogic.ui.BGELogicTree)
+    ):
+        return True
+    else:
+        return False
+
+
 def parse_field_value(value_type, value):
     t = value_type
     v = value
@@ -534,6 +544,8 @@ def parse_field_value(value_type, value):
 
 def update_tree_code(self, context):
     utils.set_compile_status(utils.TREE_MODIFIED)
+    if not getattr(bpy.context.scene.logic_node_settings, 'auto_compile'):
+        return
     bge_netlogic.update_current_tree_code()
 
     if not hasattr(context.space_data, 'edit_tree'):
@@ -1470,6 +1482,7 @@ class NLSocketLogicTree(bpy.types.NodeSocket, NetLogicSocketType):
             'Select a Logic Tree. '
             'NOTE: Selecting a Shader Node Group will result in an error!'
         ),
+        poll=filter_logic_trees,
         update=update_tree_code
     )
 

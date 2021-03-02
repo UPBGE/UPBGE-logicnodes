@@ -8367,12 +8367,9 @@ class ActionSetAnimationFrame(ActionCell):
             return
         is_playing = game_object.isPlayingAction(action_layer)
         same_action = game_object.getActionName(action_layer) == action_name
-        if freeze:
-            start_frame = end_frame = action_frame
-        else:
-            action = bpy.data.actions[action_name]
-            start_frame = action.frame_range[0]
-            end_frame = action.frame_range[1]
+        action = bpy.data.actions[action_name]
+        start_frame = action.frame_range[0]
+        end_frame = action.frame_range[1]
         if not (is_playing or same_action):
             game_object.stopAction(action_layer)
             game_object.playAction(
@@ -8383,6 +8380,8 @@ class ActionSetAnimationFrame(ActionCell):
                 layer_weight=1-layer_weight
             )
         game_object.setActionFrame(action_frame, action_layer)
+        if freeze:
+            game_object.stopAction(action_layer)
         self.done = True
 
 

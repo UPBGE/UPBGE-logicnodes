@@ -1,4 +1,3 @@
-from __future__ import annotations
 import bpy
 # import nodeitems_utils
 from bge_netlogic import nodeutils as nodeitems_utils
@@ -7,7 +6,6 @@ import os
 import sys
 import time
 
-#define USE_POSTPONED_ANNOTATIONS
 
 bl_info = {
     "name": "Logic Nodes",
@@ -15,7 +13,7 @@ bl_info = {
         "A Node System to create game logic."
     ),
     "author": "pgi, Leopold A-C (Iza Zed)",
-    "version": (0, 9, 7),
+    "version": (0, 9, 9),
     "blender": (2, 91, 0),
     "location": "View Menu",
     "warning": "Beta",
@@ -129,6 +127,8 @@ def _generate_on_game_start(*args):
 
 
 def _consume_update_tree_code_queue():
+    if _generate_on_game_start not in bpy.app.handlers.game_pre:
+        bpy.app.handlers.game_pre.append(_generate_on_game_start)
     if not _update_queue:
         return
     if hasattr(bpy.context.space_data, "edit_tree") and (bpy.context.space_data.edit_tree):
@@ -147,7 +147,7 @@ def _consume_update_tree_code_queue():
         try:
             bpy.ops.bge_netlogic.generate_logicnetwork()
         except Exception:
-            if bpy.context.scene.logic_node_settings.use_generate_all:
+            if getattr(bpy.context.scene.logic_node_settings, 'use_generate_all', False):
                 utils.warn('Could not update tree, updating all...')
                 bpy.ops.bge_netlogic.generate_logicnetwork_all()
             else:
@@ -364,7 +364,7 @@ def update_node_colors(self, context):
             for node in tree.nodes:
                 if isinstance(node, bpy.types.NodeFrame):
                     continue
-                node.use_custom_color = bpy.context.scene.logic_node_settings.use_custom_node_color
+                node.use_custom_color = getattr(bpy.context.scene.logic_node_settings, 'use_custom_node_color', False)
 
 
 class NLNodeTreeReference(bpy.types.PropertyGroup):
@@ -379,6 +379,7 @@ class NLAddonSettings(bpy.types.PropertyGroup):
     use_node_debug: bpy.props.BoolProperty(default=True)
     use_node_notify: bpy.props.BoolProperty(default=True)
     use_generate_all: bpy.props.BoolProperty(default=True)
+    auto_compile: bpy.props.BoolProperty(default=True)
     tree_compiled: bpy.props.StringProperty(default=utils.TREE_NOT_INITIALIZED)
 
 
@@ -435,7 +436,12 @@ class LogicNodesAddonPreferences(bpy.types.AddonPreferences):
         settings_row.prop(
             context.scene.logic_node_settings,
             'use_generate_all',
-            text="Generate All Code on Fail (recommended)."
+            text="Generate All Code on Fail."
+        )
+        settings_row.prop(
+            context.scene.logic_node_settings,
+            'auto_compile',
+            text="Generate Code after editing (Slow)."
         )
         col.separator()
         link_row = col.row()
@@ -574,16 +580,14 @@ def _list_menu_nodes():
 
 # blender add-on registration callback
 def register():
+    if _generate_on_game_start not in bpy.app.handlers.game_pre:
+        bpy.app.handlers.game_pre.append(_generate_on_game_start)
     print(bpy.app.version)
     for cls in _registered_classes:
         print("Registering... {}".format(cls.__name__))
         bpy.utils.register_class(cls)
     menu_nodes = _list_menu_nodes()
     nodeitems_utils.register_node_categories("NETLOGIC_NODES", menu_nodes)
-
-    filter(lambda a: a is not _generate_on_game_start, bpy.app.handlers.game_pre)
-    # bpy.app.handlers.game_pre.clear()
-    bpy.app.handlers.game_pre.append(_generate_on_game_start)
 
     bpy.types.Object.sound_occluder = bpy.props.BoolProperty(
         default=True,
@@ -595,7 +599,7 @@ def register():
         max=1.0,
         default=.05,
         name='Sound Blocking',
-        description='The amound of sound blocking caused by this wall. A value of 1 will block all sound'
+        description='The amount of sound blocking caused by this wall. A value of 1 will block all sound'
     )
 
     bpy.types.Object.bgelogic_treelist = bpy.props.CollectionProperty(
@@ -614,6 +618,8 @@ def register():
 
 # blender add-on unregistration callback
 def unregister():
+    print('Removing Game Start Compile handler...')
+    filter(lambda a: a is not _generate_on_game_start, bpy.app.handlers.game_pre)
     print("Unregister node category [{}]".format("NETLOGIC_NODES"))
     nodeitems_utils.unregister_node_categories("NETLOGIC_NODES")
     for cls in reversed(_registered_classes):

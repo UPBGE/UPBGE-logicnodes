@@ -795,7 +795,7 @@ class NLGenerateLogicNetworkOperator(bpy.types.Operator):
         except Exception as e:
             utils.error(e)
             utils.warn('Automatic Update failed, attempting hard generation...')
-            if bpy.context.scene.logic_node_settings.use_generate_all:
+            if getattr(bpy.context.scene.logic_node_settings, 'use_generate_all', False):
                 self.report(
                     {'ERROR'},
                     'Tree to edit not found! Updating All Trees.'
