@@ -416,29 +416,31 @@ class LogicNodesAddonPreferences(bpy.types.AddonPreferences):
     def draw(self, context):
         layout = self.layout
         col = layout.column()
-        use_color_row = col.row()
-        use_color_row.prop(
+        main_row = layout.row()
+        debug_col = main_row.column()
+        ui_col = main_row.column()
+        code_col = main_row.column()
+        ui_col.prop(
             context.scene.logic_node_settings,
             'use_custom_node_color',
             text="Dark Node Color"
         )
-        use_color_row.prop(
+        debug_col.prop(
             context.scene.logic_node_settings,
             'use_node_notify',
             text="Notifications"
         )
-        use_color_row.prop(
+        debug_col.prop(
             context.scene.logic_node_settings,
             'use_node_debug',
             text="Debug Mode (Print Errors to Console)"
         )
-        settings_row = col.row()
-        settings_row.prop(
+        code_col.prop(
             context.scene.logic_node_settings,
             'use_generate_all',
             text="Generate All Code on Fail."
         )
-        settings_row.prop(
+        code_col.prop(
             context.scene.logic_node_settings,
             'auto_compile',
             text="Generate Code after editing (Slow)."
