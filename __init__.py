@@ -98,9 +98,6 @@ def update_tree_name(tree, old_name):
                         old_name_code, new_name_code
                     )
             utils.success(f'Renamed Tree {old_name_code} to {new_name_code}')
-    # old_module_file = utilities.py_module_file_path_for_stripped_tree_name(old_name)
-    # new_module_file = utilities.py_module_file_path_for_stripped_tree_name(new_name)
-    # print("TODO: also rename {} to {}?".format(old_module_file, new_module_file))
     bpy.ops.bge_netlogic.generate_logicnetwork()
 
 
@@ -109,7 +106,6 @@ def _update_all_logic_tree_code():
     _update_queue.append(now)
     now = time.time()
     last_event = _update_queue[-1]
-    # delta = now - last_event
     utils.set_compile_status(utils.TREE_MODIFIED)
     try:
         bpy.ops.bge_netlogic.generate_logicnetwork_all()
@@ -119,11 +115,11 @@ def _update_all_logic_tree_code():
 
 
 def _generate_on_game_start(*args):
-    try:
-        bpy.ops.bge_netlogic.generate_logicnetwork_all()
-    except Exception:
-        utils.error("Unknown Error, abort generating Network code")
-        return
+    if utils.is_compile_status(utils.TREE_MODIFIED):
+        try:
+            bpy.ops.bge_netlogic.generate_logicnetwork_all()
+        except Exception:
+            utils.error("Unknown Error, abort generating Network code")
 
 
 def _consume_update_tree_code_queue():

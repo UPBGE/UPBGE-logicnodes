@@ -14,6 +14,10 @@ def set_compile_status(status):
     bpy.context.scene.logic_node_settings.tree_compiled = status
 
 
+def is_compile_status(status):
+    return bpy.context.scene.logic_node_settings.tree_compiled == status
+
+
 class ansicol:
     RED = '\033[31m'
     GREEN = '\033[32m'

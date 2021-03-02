@@ -7880,6 +7880,7 @@ class NLActionSetAnimationFrame(bpy.types.Node, NLActionNode):
         self.inputs.new(NLPositiveIntegerFieldSocket.bl_idname, "Layer")
         self.inputs.new(NLPositiveFloatSocket.bl_idname, "Frame")
         self.inputs.new(NLBooleanSocket.bl_idname, "Freeze")
+        self.inputs[-1].value = True
         self.inputs.new(NLSocketAlphaFloat.bl_idname, "Layer Weight")
         self.inputs[-1].value = 1.0
         self.outputs.new(NLConditionSocket.bl_idname, 'Done')
