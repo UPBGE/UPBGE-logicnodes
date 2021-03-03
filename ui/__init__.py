@@ -734,19 +734,19 @@ class BGE_PT_HelpPanel(bpy.types.Panel):
         layout.scale_y = 1.4
         layout.operator(
             bge_netlogic.ops.NLBGEDocsButton.bl_idname,
-            text="Blender Game Engine",
+            text="Engine API",
             icon='FILE_BLEND'
         )
         layout.operator(
             bge_netlogic.ops.NLUPBGEDocsButton.bl_idname,
-            text="UPBGE",
+            text="Manual",
             icon='BLENDER'
         )
-        layout.operator(
-            bge_netlogic.ops.NLDocsButton.bl_idname,
-            text="Logic Nodes",
-            icon='OUTLINER'
-        )
+        # layout.operator(
+        #     bge_netlogic.ops.NLDocsButton.bl_idname,
+        #     text="Logic Nodes",
+        #     icon='OUTLINER'
+        # )
 
 
 class BGELogicTree(bpy.types.NodeTree):
