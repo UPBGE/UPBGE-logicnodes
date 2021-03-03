@@ -512,9 +512,10 @@ class NLAdd4KeyTemplateOperator(bpy.types.Operator):
 
     def get_template_path(self):
         addon_path = ''.join(bpy.utils.script_paths(subdir='addons', user_pref=False, check_all=False, use_user=False))
+        addon_path = os.path.join(addon_path, 'bge_netlogic')
+        addon_path = addon_path if os.path.exists(addon_path) else os.path.join(bpy.utils.user_resource('SCRIPTS', "addons"), 'bge_netlogic')
         return os.path.join(
             addon_path,
-            'bge_netlogic',
             'templates',
             'prefabs',
             self.nl_template_name + '.json'
