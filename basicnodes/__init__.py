@@ -544,13 +544,6 @@ def parse_field_value(value_type, value):
 
 def update_tree_code(self, context):
     utils.set_compile_status(utils.TREE_MODIFIED)
-    if not getattr(bpy.context.scene.logic_node_settings, 'auto_compile'):
-        return
-    bge_netlogic.update_current_tree_code()
-
-    if not hasattr(context.space_data, 'edit_tree'):
-        utils.warn('Wrong editor context! Skipping nodesocket updates.')
-        return
     tree = context.space_data.edit_tree
     for node in tree.nodes:
         if isinstance(node, NetLogicStatementGenerator) and not node.hide:
@@ -558,6 +551,13 @@ def update_tree_code(self, context):
                 node.update_draw()
             except Exception as e:
                 print(e)
+    if not getattr(bpy.context.scene.logic_node_settings, 'auto_compile'):
+        return
+    bge_netlogic.update_current_tree_code()
+
+    if not hasattr(context.space_data, 'edit_tree'):
+        utils.warn('Wrong editor context! Skipping nodesocket updates.')
+        return
 
 
 def socket_field(s):
@@ -3205,63 +3205,6 @@ _sockets.append(NLSocketOrientedLocalAxis)
 # Parameters
 
 
-class NLParameterConstantValue(bpy.types.Node, NLParameterNode):
-    bl_idname = "NLParameterConstantValue"
-    bl_label = "Value"
-    nl_category = "Values"
-
-    def on_type_changed(self, context):
-        tp = self.value_type
-        if tp == "BOOLEAN":
-            self.value = "True" if (self.bool_editor == "True") else "False"
-        update_tree_code(self, context)
-        pass
-    value_type: bpy.props.EnumProperty(
-        items=_enum_field_value_types,
-        update=on_type_changed
-    )
-
-    value: bpy.props.StringProperty(update=update_tree_code)
-
-    def store_boolean_value(self, context):
-        self.value = "True" if (self.bool_editor == "True") else "False"
-        update_tree_code(self, context)
-    bool_editor: bpy.props.EnumProperty(
-        items=_enum_boolean_values,
-        update=store_boolean_value
-    )
-
-    def draw_color(self, context, node):
-        return PARAMETER_SOCKET_COLOR
-
-    def draw_buttons(self, context, layout):
-        split = layout
-        if self.value_type == "NONE":
-            split.prop(self, "value_type", text="")
-        elif self.value_type == "BOOLEAN":
-            row = split.row(align=True)
-            row.prop(self, "value_type", text="")
-            row.prop(self, "bool_editor", text="")
-        else:
-            row = split.row(align=True)
-            row.prop(self, "value_type", text="")
-            row.prop(self, "value", text="")
-
-    def init(self, context):
-        NLParameterNode.init(self, context)
-        self.outputs.new(NLParameterSocket.bl_idname, "")
-
-    def get_nonsocket_fields(self):
-        v = parse_field_value(self.value_type, self.value)
-        return [("value", v)]
-
-    def get_netlogic_class_name(self):
-        return "bgelogic.ParameterConstantValue"
-
-
-# _nodes.append(NLParameterConstantValue)
-
-
 class NLParameterFindChildByNameNode(bpy.types.Node, NLParameterNode):
     bl_idname = "NLParameterFindChildByNameNode"
     bl_label = "Get Child By Name"
@@ -3285,54 +3228,6 @@ class NLParameterFindChildByNameNode(bpy.types.Node, NLParameterNode):
 
 
 _nodes.append(NLParameterFindChildByNameNode)
-
-
-class NLParameterSound(bpy.types.Node, NLParameterNode):
-    bl_idname = "NLParameterSound"
-    bl_label = "Sound"
-    nl_category = "Sound"
-
-    def init(self, context):
-        NLParameterNode.init(self, context)
-        self.inputs.new(NLSocketOptionalFilePath.bl_idname, "File")
-        self.outputs.new(NLSocketSound.bl_idname, "Sound")
-        self.outputs.new(NLConditionSocket.bl_idname, "Is Playing")
-        self.outputs.new(NLParameterSocket.bl_idname, "Current Frame")
-
-    def get_netlogic_class_name(self):
-        return "bgelogic.ParameterSound"
-
-    def get_input_sockets_field_names(self):
-        return ["file_path"]
-
-    def get_output_socket_varnames(self):
-        return [OUTCELL, "IS_PLAYING", "CURRENT_FRAME"]
-
-
-# _nodes.append(NLParameterSound)
-
-
-class NLParameterValueFilter3(bpy.types.Node, NLParameterNode):
-    bl_idname = "NLParameterValueFilter"
-    bl_label = "Limit Range"
-    nl_category = "Math"
-
-    def init(self, context):
-        NLParameterNode.init(self, context)
-        self.inputs.new(NLSocketFilter3.bl_idname, "Op")
-        self.inputs.new(NLFloatFieldSocket.bl_idname, "Value")
-        self.inputs.new(NLFloatFieldSocket.bl_idname, "Lower Limit")
-        self.inputs.new(NLFloatFieldSocket.bl_idname, "Upper Limit")
-        self.outputs.new(NLParameterSocket.bl_idname, "Value")
-
-    def get_netlogic_class_name(self):
-        return "bgelogic.ParameterValueFilter3"
-
-    def get_input_sockets_field_names(self):
-        return ["opcode", "parama", "paramb", "paramc"]
-
-
-# _nodes.append(NLParameterValueFilter3)
 
 
 class NLParameterGetAttribute(bpy.types.Node, NLParameterNode):
@@ -3640,53 +3535,6 @@ class NLGetMaterialNode(bpy.types.Node, NLParameterNode):
 
 
 _nodes.append(NLGetMaterialNode)
-
-
-class NLGetMaterialNodeInput(bpy.types.Node, NLParameterNode):
-    bl_idname = "NLGetMaterialNodeInput"
-    bl_label = "Get Input"
-    nl_category = "Materials"
-
-    def init(self, context):
-        NLActionNode.init(self, context)
-        self.inputs.new(NLParameterSocket.bl_idname, "Material Node")
-        self.inputs.new(NLIntegerFieldSocket.bl_idname, "Input")
-        self.outputs.new(NLParameterSocket.bl_idname, "Input")
-
-    def get_netlogic_class_name(self):
-        return "bgelogic.ParameterGetMaterialNodeIndex"
-
-    def get_input_sockets_field_names(self):
-        return ["node", 'input_slot']
-
-    def get_output_socket_varnames(self):
-        return ['OUT']
-
-
-# _nodes.append(NLGetMaterialNodeInput)
-
-
-class NLGetMaterialNodeInputValue(bpy.types.Node, NLParameterNode):
-    bl_idname = "NLGetMaterialNodeInputValue"
-    bl_label = "Get Input Value"
-    nl_category = "Materials"
-
-    def init(self, context):
-        NLActionNode.init(self, context)
-        self.inputs.new(NLParameterSocket.bl_idname, "Input")
-        self.outputs.new(NLParameterSocket.bl_idname, "Value")
-
-    def get_netlogic_class_name(self):
-        return "bgelogic.ParameterGetMaterialInputValue"
-
-    def get_input_sockets_field_names(self):
-        return ['input']
-
-    def get_output_socket_varnames(self):
-        return ['OUT']
-
-
-# _nodes.append(NLGetMaterialNodeInputValue)
 
 
 class NLGameObjectHasPropertyParameterNode(bpy.types.Node, NLParameterNode):
@@ -4693,36 +4541,6 @@ class NLMouseDataParameter(bpy.types.Node, NLParameterNode):
 
 
 _nodes.append(NLMouseDataParameter)
-
-
-class NLParameterOrientationNode(bpy.types.Node, NLParameterNode):
-    bl_idname = "NLParameterOrientationNode"
-    bl_label = "Orientation"
-    nl_category = "Math"
-
-    def init(self, context):
-        NLParameterNode.init(self, context)
-        self.inputs.new(NLOptionalRadiansFieldSocket.bl_idname, "X Rad")
-        self.inputs.new(NLOptionalRadiansFieldSocket.bl_idname, "Y Rad")
-        self.inputs.new(NLOptionalRadiansFieldSocket.bl_idname, "Z Rad")
-        self.inputs.new(NLParameterSocket.bl_idname, "Orientation")
-        self.outputs.new(NLParameterSocket.bl_idname, "Orientation")
-        self.outputs.new(NLParameterSocket.bl_idname, "Rad Euler")
-        self.outputs.new(NLParameterSocket.bl_idname, "X")
-        self.outputs.new(NLParameterSocket.bl_idname, "Y")
-        self.outputs.new(NLParameterSocket.bl_idname, "Z")
-
-    def get_netlogic_class_name(self):
-        return "bgelogic.ParameterOrientation"
-
-    def get_output_socket_varnames(self):
-        return [OUTCELL, "OUTEULER", "OUTX", "OUTY", "OUTZ"]
-
-    def get_input_sockets_field_names(self):
-        return ["input_x", "input_y", "input_z", "source_matrix"]
-
-
-# _nodes.append(NLParameterOrientationNode)
 
 
 class NLParameterBoneStatus(bpy.types.Node, NLParameterNode):
@@ -6620,31 +6438,6 @@ class NLSetMaterialNodeValue(bpy.types.Node, NLActionNode):
 
 
 _nodes.append(NLSetMaterialNodeValue)
-
-
-class NLSetMaterialNodeInputValue(bpy.types.Node, NLActionNode):
-    bl_idname = "NLSetMaterialNodeInputValue"
-    bl_label = "Set Input Value"
-    nl_category = "Materials"
-
-    def init(self, context):
-        NLActionNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, "Condition")
-        self.inputs.new(NLParameterSocket.bl_idname, "Input")
-        self.inputs.new(NLFloatFieldSocket.bl_idname, 'Value')
-        self.outputs.new(NLConditionSocket.bl_idname, "Done")
-
-    def get_netlogic_class_name(self):
-        return "bgelogic.ActionSetMaterialNodeInputValue"
-
-    def get_input_sockets_field_names(self):
-        return ['condition', "input_slot", 'value']
-
-    def get_output_socket_varnames(self):
-        return ['OUT']
-
-
-# _nodes.append(NLSetMaterialNodeInputValue)
 
 
 class NLToggleGameObjectGamePropertyActionNode(bpy.types.Node, NLActionNode):
@@ -9109,34 +8902,6 @@ class NLSetEeveeVolumetrics(bpy.types.Node, NLActionNode):
 _nodes.append(NLSetEeveeVolumetrics)
 
 
-class NLSetEeveeVolumetricShadows(bpy.types.Node, NLActionNode):
-    bl_idname = "NLSetEeveeVolumetricShadows"
-    bl_label = "Set Volumetric Shadows"
-    nl_category = 'Render'
-    nl_subcat = 'Visuals'
-
-    def init(self, context):
-        NLActionNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, 'Condition')
-        self.inputs.new(NLBooleanSocket.bl_idname, 'Vol. Shadows')
-        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
-
-    def get_output_socket_varnames(self):
-        return ["OUT"]
-
-    def get_netlogic_class_name(self):
-        return "bgelogic.SetEeveeVolumetricShadows"
-
-    def get_input_sockets_field_names(self):
-        return [
-            "condition",
-            "value"
-        ]
-
-
-# _nodes.append(NLSetEeveeVolumetricShadows)
-
-
 class NLSetEeveeSMAA(bpy.types.Node, NLActionNode):
     bl_idname = "NLSetEeveeSMAA"
     bl_label = "Set SMAA"
@@ -9397,48 +9162,6 @@ class NLActionPlayActionNode(bpy.types.Node, NLActionNode):
 
 
 _nodes.append(NLActionPlayActionNode)
-
-
-class NLActionLibLoadNode(bpy.types.Node, NLActionNode):
-    bl_idname = "NLActionLibLoadNode"
-    bl_label = "Load Blender File"
-    nl_category = "Game"
-
-    def init(self, context):
-        NLActionNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, "Condition")
-        self.inputs.new(NLFilePathSocket.bl_idname, "Path")
-        self.outputs.new(NLConditionSocket.bl_idname, "When Loaded")
-
-    def get_netlogic_class_name(self):
-        return "bgelogic.ActionLibLoad"
-
-    def get_input_sockets_field_names(self):
-        return ["condition", "path"]
-
-
-#_nodes.append(NLActionLibLoadNode)
-
-
-class NLActionLibFreeNode(bpy.types.Node, NLActionNode):
-    bl_idname = "NLActionLibFreeNode"
-    bl_label = "Unload Blender File"
-    nl_category = "Game"
-
-    def init(self, context):
-        NLActionNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, "Condition")
-        self.inputs.new(NLFilePathSocket.bl_idname, "Path")
-        self.outputs.new(NLConditionSocket.bl_idname, "When Unloaded")
-
-    def get_netlogic_class_name(self):
-        return "bgelogic.ActionLibFree"
-
-    def get_input_sockets_field_names(self):
-        return ["condition", "path"]
-
-
-#_nodes.append(NLActionLibFreeNode)
 
 
 class NLActionAlignAxisToVector(bpy.types.Node, NLActionNode):
@@ -10041,44 +9764,6 @@ class NLActionSetMouseCursorVisibility(bpy.types.Node, NLActionNode):
 
 
 _nodes.append(NLActionSetMouseCursorVisibility)
-
-
-class NLActionAddSoundDevice(bpy.types.Node, NLActionNode):
-    bl_idname = "NLActionAddSoundDevice"
-    bl_label = "New Sound Type"
-    bl_icon = 'MUTE_IPO_OFF'
-    nl_category = "Sound"
-
-    def init(self, context):
-        NLActionNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, "Condition")
-        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Type")
-        self.inputs[-1].value = 'custom'
-        self.inputs.new(NLSocketDistanceModels.bl_idname, "Distance Model")
-        self.inputs[-1].value = 'INVERSE_CLAMPED'
-        self.inputs.new(NLPosFloatFormatSocket.bl_idname, "Doppler Factor")
-        self.inputs[-1].value = 1.0
-        self.inputs.new(NLPosFloatFormatSocket.bl_idname, "Speed of Sound")
-        self.inputs[-1].value = 343.3
-        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
-
-    def get_output_socket_varnames(self):
-        return ["DONE"]
-
-    def get_netlogic_class_name(self):
-        return "bgelogic.ActionAddSoundDevice"
-
-    def get_input_sockets_field_names(self):
-        return [
-            "condition",
-            "name",
-            "distance_model",
-            "doppler_fac",
-            "sound_speed"
-        ]
-
-
-#_nodes.append(NLActionAddSoundDevice)
 
 
 class NLActionStart3DSoundAdv(bpy.types.Node, NLActionNode):

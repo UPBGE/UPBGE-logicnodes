@@ -37,7 +37,9 @@ def alpha_move(a, b, fac):
     else:
         return a
 
+
 # Persistent maps
+
 
 class SimpleLoggingDatabase(object):
     index: int
@@ -1198,32 +1200,6 @@ class ConditionOnce(ConditionCell):
 ###############################################################################
 
 
-class ActionLibLoad(ActionCell):
-
-    def __init__(self):
-        ActionCell.__init__(self)
-        self.condition = None
-        self.path = None
-        self._set_value(False)
-
-    def evaluate(self):
-        condition = self.get_parameter_value(self.condition)
-        path = self.get_parameter_value(self.path)
-        if not_met(condition):
-            return
-        if path is LogicNetworkCell.STATUS_WAITING:
-            return
-        self._set_ready()
-        if condition:
-            if path.startswith("//"):
-                path = logic.expandPath(path)
-            if path not in logic.LibList():
-                logic.LibLoad(path, "Scene", load_actions=True)
-            self._set_value(True)
-        else:
-            self._set_value(False)
-
-
 class ActionLoadGame(ActionCell):
     def __init__(self):
         ActionCell.__init__(self)
@@ -1530,32 +1506,6 @@ class ActionStartGame(ActionCell):
         self.done = True
 
 
-class ActionLibFree(ActionCell):
-
-    def __init__(self):
-        ActionCell.__init__(self)
-        self.condition = None
-        self.path = None
-        self._set_value(False)
-
-    def evaluate(self):
-        condition = self.get_parameter_value(self.condition)
-        if not_met(condition):
-            return
-        # CONDITION IS TRUE
-        path = self.get_parameter_value(self.path)
-        if path is LogicNetworkCell.STATUS_WAITING:
-            return
-        self._set_ready()
-        if not condition:
-            self._set_value(False)
-            return
-        if path.startswith("//"):
-            path = logic.expandPath(path)
-        logic.LibFree(path)
-        self._set_value(True)
-
-
 ###############################################################################
 # Input -> Mouse
 ###############################################################################
@@ -1794,7 +1744,6 @@ class ActionMouseLook(ActionCell):
         if self.mouse.position != self.screen_center:
             self.mouse.position = self.screen_center
         self.done = True
-
 
 
 class ConditionMouseMoved(ConditionCell):
@@ -2474,46 +2423,6 @@ class ParameterGetMaterialNode(ParameterCell):
             .node_tree
             .nodes[node_name]
         )
-
-
-class ParameterGetMaterialNodeIndex(ParameterCell):
-    def __init__(self):
-        ActionCell.__init__(self)
-        self.node = None
-        self.input_slot = None
-        self.val = False
-        self.OUT = LogicNetworkSubCell(self, self._get_val)
-
-    def _get_val(self):
-        return self.val
-
-    def evaluate(self):
-        node = self.get_parameter_value(self.node)
-        if is_invalid(node):
-            return
-        input_slot = self.get_parameter_value(self.input_slot)
-        if is_waiting(input_slot):
-            return
-        self._set_ready()
-        self.val = node.inputs[input_slot]
-
-
-class ParameterGetMaterialInputValue(ParameterCell):
-    def __init__(self):
-        ActionCell.__init__(self)
-        self.input = None
-        self.val = False
-        self.OUT = LogicNetworkSubCell(self, self._get_val)
-
-    def _get_val(self):
-        return self.val
-
-    def evaluate(self):
-        input_val = self.get_parameter_value(self.input)
-        if is_waiting(input_val):
-            return
-        self._set_ready()
-        self.val = input_val.default_value
 
 
 class ParameterObjectHasProperty(ParameterCell):
@@ -3454,39 +3363,6 @@ class WithinRange(ParameterCell):
             self._set_value(value)
 
 
-class ParameterValueFilter3(ParameterCell):
-    def __init__(self):
-        ParameterCell.__init__(self)
-        self.opcode = None
-        self.parama = None
-        self.paramb = None
-        self.paramc = None
-
-    def evaluate(self):
-        opcode = self.get_parameter_value(self.opcode)
-        parama = self.get_parameter_value(self.parama)
-        paramb = self.get_parameter_value(self.paramb)
-        paramc = self.get_parameter_value(self.paramc)
-        STATUS_WAITING = LogicNetworkCell.STATUS_WAITING
-        if opcode is STATUS_WAITING:
-            return
-        if parama is STATUS_WAITING:
-            return
-        self._set_ready()
-        if opcode == 1:  # limit a between b and c
-            if parama is None:
-                return
-            if paramb is None:
-                return
-            if paramc is None:
-                return
-            self._set_value(parama)
-            if parama < paramb:
-                self._set_value(paramb)
-            if parama > paramc:
-                self._set_value(paramc)
-
-
 class GetObInstanceAttr(ParameterCell):
     def __init__(self):
         ParameterCell.__init__(self)
@@ -3593,69 +3469,6 @@ class ParameterActionStatus(ParameterCell):
             self._set_value(game_object.isPlayingAction(action_layer))
             self._action_name = game_object.getActionName(action_layer)
             self._action_frame = game_object.getActionFrame(action_layer)
-
-
-class ParameterOrientation(ParameterCell):
-    def __init__(self):
-        ParameterCell.__init__(self)
-        self.source_matrix = None
-        self.input_x = None
-        self.input_y = None
-        self.input_z = None
-        self.OUTX = LogicNetworkSubCell(self, self.get_out_x)
-        self.OUTY = LogicNetworkSubCell(self, self.get_out_y)
-        self.OUTZ = LogicNetworkSubCell(self, self.get_out_z)
-        self.OUTEULER = LogicNetworkSubCell(self, self.get_out_euler)
-        self._matrix = mathutils.Matrix.Identity(3)
-        self._eulers = mathutils.Euler((0, 0, 0), "XYZ")
-        pass
-
-    def get_out_x(self):
-        return self._eulers[0]
-
-    def get_out_y(self):
-        return self._eulers[1]
-
-    def get_out_z(self):
-        return self._eulers[2]
-
-    def get_out_euler(self):
-        return self._eulers
-
-    def evaluate(self):
-        source_matrix = self.get_parameter_value(self.source_matrix)
-        input_x = self.get_parameter_value(self.input_x)
-        input_y = self.get_parameter_value(self.input_y)
-        input_z = self.get_parameter_value(self.input_z)
-        if source_matrix is LogicNetworkCell.STATUS_WAITING:
-            return
-        if input_x is LogicNetworkCell.STATUS_WAITING:
-            return
-        if input_y is LogicNetworkCell.STATUS_WAITING:
-            return
-        if input_z is LogicNetworkCell.STATUS_WAITING:
-            return
-        self._set_ready()
-        matrix = self._matrix
-        eulers = self._eulers
-        eulers.zero()
-        matrix.identity()
-        if source_matrix is not None:
-            matrix[:] = source_matrix
-        eulers.rotate(matrix)
-        mutate = False
-        if (input_x is not None):
-            eulers[0] = input_x
-            mutate = True
-        if (input_y is not None):
-            eulers[1] = input_y
-            mutate = True
-        if (input_z is not None):
-            eulers[2] = input_z
-            mutate = True
-        if mutate:
-            matrix = eulers.to_matrix()
-        self._set_value(matrix)
 
 
 class ParameterSimpleValue(ParameterCell):
@@ -4995,39 +4808,6 @@ class ActionSetMaterialNodeValue(ActionCell):
             ) = value
 
 
-class ActionSetMaterialNodeInputValue(ActionCell):
-    def __init__(self):
-        ActionCell.__init__(self)
-        self.condition = None
-        self.input_slot = None
-        self.value = None
-        self.done = False
-        self.OUT = LogicNetworkSubCell(self, self._get_done)
-
-    def _get_done(self):
-        return self.done
-
-    def evaluate(self):
-        self.done = False
-        STATUS_WAITING = LogicNetworkCell.STATUS_WAITING
-        condition_value = self.get_parameter_value(self.condition)
-        if condition_value is STATUS_WAITING:
-            return
-        if condition_value is False:
-            self._set_ready()
-            return
-        input_slot = self.get_parameter_value(self.input_slot)
-        value = self.get_parameter_value(self.value)
-        if input_slot is STATUS_WAITING:
-            return
-        if value is STATUS_WAITING:
-            return
-        if condition_value:
-            self.done = True
-            self._set_ready()
-            input_slot.default_value = value
-
-
 class ActionToggleGameObjectGameProperty(ActionCell):
     def __init__(self):
         ActionCell.__init__(self)
@@ -6042,7 +5822,12 @@ class ActionRayPick(ActionCell):
         caster = self.network._owner
         obj, point, normal = None, None, None
         if not property_name:
-            obj, point, normal = caster.rayCast(destination, origin, distance, xray=xray)
+            obj, point, normal = caster.rayCast(
+                destination,
+                origin,
+                distance,
+                xray=xray
+            )
         else:
             obj, point, normal = caster.rayCast(
                 destination,
@@ -7609,7 +7394,11 @@ class ActionSaveVariable(ActionCell):
         self._set_ready()
 
         cust_path = self.get_custom_path(self.path)
-        path = bpy.path.abspath('//Data/') if self.path == '' else bpy.path.abspath(cust_path)
+        path = (
+            bpy.path.abspath('//Data/')
+            if self.path == ''
+            else bpy.path.abspath(cust_path)
+        )
         os.makedirs(path, exist_ok=True)
 
         self.write_to_json(path, name, val)
@@ -7658,7 +7447,11 @@ class ActionSaveVariables(ActionCell):
         self._set_ready()
 
         cust_path = self.get_custom_path(self.path)
-        path = bpy.path.abspath('//Data/') if self.path == '' else bpy.path.abspath(cust_path)
+        path = (
+            bpy.path.abspath('//Data/')
+            if self.path == ''
+            else bpy.path.abspath(cust_path)
+        )
         os.makedirs(path, exist_ok=True)
 
         self.write_to_json(path, val)
@@ -7714,7 +7507,11 @@ class ActionLoadVariable(ActionCell):
         self._set_ready()
         cust_path = self.get_custom_path(self.path)
 
-        path = bpy.path.abspath('//Data/') if self.path == '' else bpy.path.abspath(cust_path)
+        path = (
+            bpy.path.abspath('//Data/')
+            if self.path == ''
+            else bpy.path.abspath(cust_path)
+        )
         os.makedirs(path, exist_ok=True)
 
         self.read_from_json(path, name)
@@ -7764,7 +7561,11 @@ class ActionLoadVariables(ActionCell):
         self._set_ready()
         cust_path = self.get_custom_path(self.path)
 
-        path = bpy.path.abspath('//Data/') if self.path == '' else bpy.path.abspath(cust_path)
+        path = (
+            bpy.path.abspath('//Data/')
+            if self.path == ''
+            else bpy.path.abspath(cust_path)
+        )
         os.makedirs(path, exist_ok=True)
 
         self.read_from_json(path)
@@ -7818,7 +7619,11 @@ class ActionRemoveVariable(ActionCell):
 
         cust_path = self.get_custom_path(self.path)
 
-        path = bpy.path.abspath('//Data/') if self.path == '' else bpy.path.abspath(cust_path)
+        path = (
+            bpy.path.abspath('//Data/')
+            if self.path == ''
+            else bpy.path.abspath(cust_path)
+        )
         os.makedirs(path, exist_ok=True)
 
         self.write_to_json(path, name)
@@ -7866,7 +7671,11 @@ class ActionClearVariables(ActionCell):
         self._set_ready()
         cust_path = self.get_custom_path(self.path)
 
-        path = bpy.path.abspath('//Data/') if self.path == '' else bpy.path.abspath(cust_path)
+        path = (
+            bpy.path.abspath('//Data/')
+            if self.path == ''
+            else bpy.path.abspath(cust_path)
+        )
         os.makedirs(path, exist_ok=True)
 
         self.write_to_json(path)
@@ -7928,7 +7737,11 @@ class ActionListVariables(ActionCell):
         self._set_ready()
         cust_path = self.get_custom_path(self.path)
 
-        path = bpy.path.abspath('//Data/') if self.path == '' else bpy.path.abspath(cust_path)
+        path = (
+            bpy.path.abspath('//Data/')
+            if self.path == ''
+            else bpy.path.abspath(cust_path)
+        )
         os.makedirs(path, exist_ok=True)
 
         self.write_to_json(path, print_list)
@@ -8427,51 +8240,6 @@ class ActionFindScene(ActionCell):
         self.done = True
 
 
-class ActionAddSoundDevice(ActionCell):
-    def __init__(self):
-        ActionCell.__init__(self)
-        self.condition = None
-        self.name = None
-        self.distance_model = None
-        self.doppler_fac = None
-        self.sound_speed = None
-        self.done = None
-        self.DONE = LogicNetworkSubCell(self, self.get_done)
-
-    def get_done(self):
-        return self.done
-
-    def evaluate(self):
-        self.done = False
-        condition = self.get_parameter_value(self.condition)
-        if not_met(condition):
-            return
-        if not hasattr(bpy.types.Scene, 'nl_aud_devices'):
-            debug('No Audio Devices initialized!')
-            return
-        else:
-            devs = bpy.types.Scene.nl_aud_devices
-        name = self.get_parameter_value(self.name)
-        distance_model = self.get_parameter_value(self.distance_model)
-        doppler_fac = self.get_parameter_value(self.doppler_fac)
-        sound_speed = self.get_parameter_value(self.sound_speed)
-
-        self._set_ready()
-
-        if devs.get(name):
-            self.done = True
-            return
-        device = aud.Device()
-        device.distance_model = DISTANCE_MODELS.get(
-            distance_model, aud.DISTANCE_MODEL_INVALID
-        )
-        device.doppler_factor = doppler_fac
-        device.speed_of_sound = sound_speed
-        debug('Opening Sound Device: ' + name)
-        devs[name] = device
-        self.done = True
-
-
 class ActionStart3DSoundAdv(ActionCell):
     def __init__(self):
         ActionCell.__init__(self)
@@ -8534,7 +8302,9 @@ class ActionStart3DSoundAdv(ActionCell):
                                 mathutils.Vector((0, 0, 0))
                             )
                         if occlusion:
-                            transition = self.get_parameter_value(self.transition)
+                            transition = self.get_parameter_value(
+                                self.transition
+                            )
                             cam = bge.logic.getCurrentScene().active_camera
                             occluder, point, normal = cam.rayCast(
                                 speaker.worldPosition,
@@ -8547,10 +8317,16 @@ class ActionStart3DSoundAdv(ActionCell):
                             while occluder:
                                 if occluder is speaker:
                                     break
-                                sound_occluder = occluder.blenderObject.get('sound_occluder', True)
+                                sound_occluder = occluder.blenderObject.get(
+                                    'sound_occluder',
+                                    True
+                                )
                                 if sound_occluder:
                                     occluded = True
-                                    block = occluder.blenderObject.get('sound_blocking', .1)
+                                    block = occluder.blenderObject.get(
+                                        'sound_blocking',
+                                        .1
+                                    )
                                     if penetration > 0:
                                         penetration -= block
                                     else:
@@ -8574,10 +8350,18 @@ class ActionStart3DSoundAdv(ActionCell):
                                 self._sustained -= transition / 10
                             elif sustained < penetration:
                                 self._sustained += transition / 10
-                            mult = cs * sustained if not ind else (1 - cs) * sustained
+                            mult = (
+                                cs * sustained
+                                if not ind
+                                else (1 - cs) * sustained
+                            )
                             # handles[sound][ind].attenuation = attenuation
                             handles[sound][ind].volume = volume * mult
-                            handles[sound][ind].cone_volume_outer = cone_outer_volume * volume * mult
+                            handles[sound][ind].cone_volume_outer = (
+                                cone_outer_volume *
+                                volume *
+                                mult
+                            )
                     elif handle in audio_system.active_sounds:
                         for handle in handles[sound]:
                             audio_system.active_sounds.remove(handle)
@@ -8775,25 +8559,6 @@ class ParameterGetGlobalValue(ParameterCell):
         self._set_ready()
         db = SimpleLoggingDatabase.get_or_create_shared_db(data_id)
         self._set_value(db.get(key, default))
-
-
-class ParameterConstantValue(ParameterCell):
-    def __init__(self):
-        ParameterCell.__init__(self)
-        self._status = LogicNetworkCell.STATUS_READY
-        self.value = None
-
-    def get_value(self):
-        return self.value
-
-    def reset(self):
-        self._set_ready()
-
-    def has_status(self, status):
-        return status == LogicNetworkCell.STATUS_READY
-
-    def evaluate(self):
-        return self._set_ready()
 
 
 class ParameterFormattedString(ParameterCell):
@@ -9147,34 +8912,6 @@ class SetEeveeVolumetrics(ActionCell):
         bpy.data.scenes[
             scene.name
         ].eevee.use_volumetric_lights = value
-        self.done = True
-
-
-class SetEeveeVolumetricShadows(ActionCell):
-
-    def __init__(self):
-        ActionCell.__init__(self)
-        self.condition = None
-        self.value = None
-        self.done = None
-        self.OUT = LogicNetworkSubCell(self, self.get_done)
-
-    def get_done(self):
-        return self.done
-
-    def evaluate(self):
-        self.done = False
-        condition = self.get_parameter_value(self.condition)
-        if not_met(condition):
-            return
-        value = self.get_parameter_value(self.value)
-        if is_invalid(value):
-            return
-        self._set_ready()
-        scene = logic.getCurrentScene()
-        bpy.data.scenes[
-            scene.name
-        ].eevee.use_volumetric_shadows = value
         self.done = True
 
 

@@ -725,8 +725,11 @@ class NLGenerateLogicNetworkOperatorAll(bpy.types.Operator):
                 return {"FINISHED"}
         for tree in bpy.data.node_groups:
             if tree.bl_idname == bge_netlogic.ui.BGELogicTree.bl_idname:
-                tree_code_generator.TreeCodeGenerator().write_code_for_tree(tree)
-        utils.set_compile_status(utils.TREE_COMPILED + ' (A)')
+                try:
+                    tree_code_generator.TreeCodeGenerator().write_code_for_tree(tree)
+                except Exception:
+                    utils.error(f"Couldn't compile tree {tree.name}!")
+        utils.set_compile_status(utils.TREE_COMPILED_ALL)
         try:
             context.region.tag_redraw()
         except Exception:
@@ -1004,19 +1007,19 @@ class NLAddonPatreonButton(bpy.types.Operator):
 
 class NLBGEDocsButton(bpy.types.Operator):
     bl_idname = "bge_netlogic.bge_docs"
-    bl_label = "Blender Game Engine Documentation"
+    bl_label = "Engine API"
 
     def execute(self, context):
-        webbrowser.open('https://docs.blender.org/api/2.79/')
+        webbrowser.open('https://upbge.org/api')
         return {"FINISHED"}
 
 
 class NLUPBGEDocsButton(bpy.types.Operator):
     bl_idname = "bge_netlogic.upbge_docs"
-    bl_label = "UPBGE Documentation"
+    bl_label = "Manual"
 
     def execute(self, context):
-        webbrowser.open('https://upbge-docs.readthedocs.io/en/latest/')
+        webbrowser.open('https://upbge.org/manual')
         return {"FINISHED"}
 
 

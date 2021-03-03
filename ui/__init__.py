@@ -585,7 +585,7 @@ class BGE_PT_LogicTreeOptions(bpy.types.Panel):
         code.operator(
             bge_netlogic.ops.NLGenerateLogicNetworkOperator.bl_idname,
             text=context.scene.logic_node_settings.tree_compiled,
-            icon='ERROR' if not utils.TREE_COMPILED in bpy.context.scene.logic_node_settings.tree_compiled else 'CHECKBOX_HLT'
+            icon=utils.STATUS_ICONS.get(context.scene.logic_node_settings.tree_compiled)
         )
         code.operator(
             bge_netlogic.ops.NLGenerateLogicNetworkOperatorAll.bl_idname,
@@ -747,10 +747,6 @@ class BGE_PT_HelpPanel(bpy.types.Panel):
             text="Logic Nodes",
             icon='OUTLINER'
         )
-
-
-def update_tree_code(self, context):
-    bge_netlogic.update_current_tree_code()
 
 
 class BGELogicTree(bpy.types.NodeTree):

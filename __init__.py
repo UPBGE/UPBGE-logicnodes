@@ -111,15 +111,11 @@ def _update_all_logic_tree_code():
         bpy.ops.bge_netlogic.generate_logicnetwork_all()
     except Exception:
         utils.error("Unknown Error, abort generating Network code")
-        return
 
 
 def _generate_on_game_start(*args):
     if utils.is_compile_status(utils.TREE_MODIFIED):
-        try:
-            bpy.ops.bge_netlogic.generate_logicnetwork_all()
-        except Exception:
-            utils.error("Unknown Error, abort generating Network code")
+        bpy.ops.bge_netlogic.generate_logicnetwork_all()
 
 
 def _consume_update_tree_code_queue():
@@ -328,9 +324,7 @@ def request_tree_code_writer_start(dummy):
     _tree_code_writer_started = False
     generator = ops.tree_code_generator.TreeCodeGenerator()
     utils.debug('Writing trees on file open...')
-    for node_tree in bpy.data.node_groups:
-        if node_tree.bl_idname == ui.BGELogicTree.bl_idname:
-            generator.write_code_for_tree(node_tree)
+    bpy.ops.bge_netlogic.generate_logicnetwork_all()
     utils.debug('FINISHED')
 
 
@@ -375,7 +369,7 @@ class NLAddonSettings(bpy.types.PropertyGroup):
     use_node_debug: bpy.props.BoolProperty(default=True)
     use_node_notify: bpy.props.BoolProperty(default=True)
     use_generate_all: bpy.props.BoolProperty(default=True)
-    auto_compile: bpy.props.BoolProperty(default=True)
+    auto_compile: bpy.props.BoolProperty(default=False)
     tree_compiled: bpy.props.StringProperty(default=utils.TREE_NOT_INITIALIZED)
 
 
