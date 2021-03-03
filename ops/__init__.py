@@ -511,7 +511,7 @@ class NLAdd4KeyTemplateOperator(bpy.types.Operator):
             )
 
     def get_template_path(self):
-        addon_path = bpy.utils.user_resource('SCRIPTS', "addons")
+        addon_path = ''.join(bpy.utils.script_paths(subdir='addons', user_pref=False, check_all=False, use_user=False))
         return os.path.join(
             addon_path,
             'bge_netlogic',
