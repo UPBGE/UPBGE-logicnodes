@@ -3390,6 +3390,15 @@ class GetObInstanceAttr(ParameterCell):
         self._set_value(getattr(instance, attr))
 
 
+class GetScene(ParameterCell):
+    def __init__(self):
+        ParameterCell.__init__(self)
+
+    def evaluate(self):
+        self._set_ready()
+        self._set_value(logic.getCurrentScene())
+
+
 class GetTimeScale(ParameterCell):
     def __init__(self):
         ParameterCell.__init__(self)

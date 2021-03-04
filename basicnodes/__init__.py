@@ -3251,6 +3251,22 @@ class NLParameterGetAttribute(bpy.types.Node, NLParameterNode):
 _nodes.append(NLParameterGetAttribute)
 
 
+class NLGetScene(bpy.types.Node, NLParameterNode):
+    bl_idname = "NLGetScene"
+    bl_label = "Get Scene"
+    nl_category = "Scene"
+
+    def init(self, context):
+        NLParameterNode.init(self, context)
+        self.outputs.new(NLPythonSocket.bl_idname, "Scene")
+
+    def get_netlogic_class_name(self):
+        return "bgelogic.GetScene"
+
+
+_nodes.append(NLGetScene)
+
+
 class NLParameterGetTimeScale(bpy.types.Node, NLParameterNode):
     bl_idname = "NLParameterGetTimeScale"
     bl_label = "Get Timescale"
