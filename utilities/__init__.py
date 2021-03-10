@@ -243,6 +243,30 @@ def success(message):
         print(f'[Logic Nodes][{ansicol.GREEN}SUCCESS{ansicol.END}] ' + message)
 
 
+def get_global_category():
+    scene = bpy.context.scene
+    return (
+        scene.nl_global_categories[0]
+        if
+        scene.nl_global_cat_selected > len(scene.nl_global_categories) - 1
+        else
+        scene.nl_global_categories[scene.nl_global_cat_selected]
+    )
+
+
+def get_global_value():
+    cat = get_global_category()
+    if len(cat.content) < 1:
+        return None
+    return (
+        cat.content[0]
+        if
+        cat.selected > len(cat.content) - 1
+        else
+        cat.content[cat.selected]
+    )
+
+
 def register_inputs(node, *data):
     assert isinstance(node, bpy.types.Node)
     i = 0

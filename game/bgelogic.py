@@ -73,7 +73,7 @@ class SimpleLoggingDatabase(object):
             raise NotImplementedError()
 
     serializers = {}
-    storage_dir = logic.expandPath("//bgelogic/storage")
+    storage_dir = logic.expandPath("//Globals")
     shared_dbs = {}
 
     @classmethod
@@ -160,6 +160,10 @@ class SimpleLoggingDatabase(object):
     def __init__(self, file_name):
         self.fname = file_name
         self.data = {}
+
+        filter(lambda a: a is not remove_globals, bpy.app.handlers.game_post)
+        bpy.app.handlers.game_post.append(remove_globals)
+
         log_size = SimpleLoggingDatabase.read(self.fname, self.data)
         if log_size > (5 * len(self.data)):
             debug("Compressing sld {}".format(file_name))
@@ -502,6 +506,12 @@ def stop_all_sounds(a, b):
     delattr(bpy.types.Scene, 'nl_aud_system')
 
 
+def remove_globals(a, b):
+    if not hasattr(bpy.types.Scene, 'nl_globals_initialized'):
+        return
+    delattr(bpy.types.Scene, 'nl_globals_initialized')
+
+
 def check_game_object(query, scene=None):
     if not scene:
         scene = logic.getCurrentScene()
@@ -608,7 +618,6 @@ class AudioSystem(object):
         self.device3D.doppler_factor = bpy.context.scene.audio_doppler_factor
 
         filter(lambda a: a is not stop_all_sounds, bpy.app.handlers.game_post)
-        # bpy.app.handlers.game_post.clear()
         bpy.app.handlers.game_post.append(stop_all_sounds)
 
     def get_distance_model(self, name):
@@ -782,6 +791,7 @@ class LogicNetwork(LogicNetworkCell):
         self.mouse_motion_delta = [0.0, 0.0]
         self.mouse_wheel_delta = 0
         self.aud_system_owner = False
+        self.init_glob_cats()
         self.audio_system = self.create_aud_system()
         self.sub_networks = []  # a list of networks updated by this network
         self.capslock_pressed = False
@@ -793,6 +803,32 @@ class LogicNetwork(LogicNetworkCell):
             return AudioSystem()
         else:
             return bpy.types.Scene.nl_aud_system
+
+    def init_glob_cats(self):
+        if not hasattr(bpy.types.Scene, 'nl_globals_initialized'):
+            scene = bge.logic.getCurrentScene()
+            cats = bpy.data.scenes[scene.name].nl_global_categories
+
+            msg = ''
+
+            dat = {
+                'STRING': 'string_val',
+                'FLOAT': 'float_val',
+                'INTEGER': 'int_val',
+                'BOOLEAN': 'bool_val',
+                'FILE_PATH': 'filepath_val'
+            }
+
+            for c in cats:
+                db = SimpleLoggingDatabase.get_or_create_shared_db(c.name)
+                msg += f' {c.name},'
+                for v in c.content:
+                    val = v.get(dat.get(v.value_type, 'FLOAT'))
+                    print(val)
+                    db.put(v.name, val, v.persistent)
+
+            debug(f'Globals Initialized:{msg[:-1]}')
+            bpy.types.Scene.nl_globals_initialized = True
 
     def ray_cast(
         self,
@@ -4751,7 +4787,7 @@ class SetMaterial(ActionCell):
         self.done = False
         condition = self.get_parameter_value(self.condition)
         game_object = self.get_parameter_value(self.game_object)
-        slot = self.get_parameter_value(self.slot)
+        slot = self.get_parameter_value(self.slot) - 1
         mat_name = self.get_parameter_value(self.mat_name)
         if not_met(condition):
             return
@@ -8599,9 +8635,9 @@ class ActionSetGlobalValue(ActionCell):
         ActionCell.__init__(self)
         self.condition = None
         self.data_id = None
-        self.persistent = None
         self.key = None
         self.value = None
+        self.persistent = None
         self.done = None
         self.OUT = LogicNetworkSubCell(self, self.get_done)
 

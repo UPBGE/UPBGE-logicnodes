@@ -500,7 +500,6 @@ def filter_armatures(self, item):
 
 
 def filter_logic_trees(self, item):
-    print(item)
     if (
         isinstance(item, bge_netlogic.ui.BGELogicTree)
     ):
@@ -544,20 +543,20 @@ def parse_field_value(value_type, value):
 
 def update_tree_code(self, context):
     utils.set_compile_status(utils.TREE_MODIFIED)
+    if utils.is_compile_status(utils.TREE_COMPILED_ALL):
+        return
+    if not hasattr(context.space_data, 'edit_tree'):
+        return
     tree = context.space_data.edit_tree
     for node in tree.nodes:
         if isinstance(node, NetLogicStatementGenerator) and not node.hide:
             try:
                 node.update_draw()
-            except Exception as e:
-                print(e)
+            except Exception:
+                pass
     if not getattr(bpy.context.scene.logic_node_settings, 'auto_compile'):
         return
     bge_netlogic.update_current_tree_code()
-
-    if not hasattr(context.space_data, 'edit_tree'):
-        utils.warn('Wrong editor context! Skipping nodesocket updates.')
-        return
 
 
 def socket_field(s):
@@ -1162,10 +1161,10 @@ class NLGamePropertySocket(bpy.types.NodeSocket, NetLogicSocketType):
             if self.name:
                 row = col.row()
                 row.label(text=self.name)
-            if game_object:
+            if game_object or game_obj_socket.is_linked:
                 # game_object = bpy.data.objects[game_object.split('NLO:')[-1]]
-                game = game_object.game
                 if not game_obj_socket.is_linked:
+                    game = game_object.game
                     col.prop_search(
                         self,
                         'value',
@@ -1599,6 +1598,81 @@ class NLSoundFileSocket(bpy.types.NodeSocket, NetLogicSocketType):
 
 
 _sockets.append(NLSoundFileSocket)
+
+
+###############################################################################
+# String Pointer Sockets
+###############################################################################
+
+
+class NLGlobalCatSocket(bpy.types.NodeSocket, NetLogicSocketType):
+    bl_idname = "NLGlobalCatSocket"
+    bl_label = "Category"
+    value: bpy.props.StringProperty(
+        update=update_tree_code
+    )
+
+    def draw_color(self, context, node):
+        return PARAMETER_SOCKET_COLOR
+
+    def draw(self, context, layout, node, text):
+        if self.is_linked or self.is_output:
+            layout.label(text=text)
+        else:
+            col = layout.column()
+            col.prop_search(
+                self,
+                "value",
+                context.scene,
+                'nl_global_categories',
+                icon='OUTLINER_COLLECTION',
+                text=''
+            )
+
+    def get_unlinked_value(self):
+        return '"{}"'.format(self.value)
+
+
+_sockets.append(NLGlobalCatSocket)
+
+
+class NLGlobalPropSocket(bpy.types.NodeSocket, NetLogicSocketType):
+    bl_idname = "NLGlobalPropSocket"
+    bl_label = "Category"
+    value: bpy.props.StringProperty(
+        update=update_tree_code
+    )
+    ref_index: bpy.props.IntProperty(
+        update=update_tree_code
+    )
+
+    def draw_color(self, context, node):
+        return PARAMETER_SOCKET_COLOR
+
+    def draw(self, context, layout, node, text):
+        if self.is_linked or self.is_output:
+            layout.label(text=text)
+        else:
+            col = layout.column()
+            ref_socket = self.node.inputs[self.ref_index]
+            if ref_socket.is_linked:
+                col.prop(self, 'value', text='')
+            else:
+                cat = context.scene.nl_global_categories[ref_socket.value]
+                col.prop_search(
+                    self,
+                    "value",
+                    cat,
+                    'content',
+                    icon='DOT',
+                    text=''
+                )
+
+    def get_unlinked_value(self):
+        return '"{}"'.format(self.value)
+
+
+_sockets.append(NLGlobalPropSocket)
 
 
 ###############################################################################
@@ -2269,6 +2343,97 @@ class NLValueFieldSocket(bpy.types.NodeSocket, NetLogicSocketType):
 
 
 _sockets.append(NLValueFieldSocket)
+
+
+class NLOptionalValueFieldSocket(bpy.types.NodeSocket, NetLogicSocketType):
+    bl_idname = "NLOptionalValueFieldSocket"
+    bl_label = "Value"
+    value: bpy.props.StringProperty(update=update_tree_code)
+
+    def on_type_changed(self, context):
+        if self.value_type == "BOOLEAN":
+            self.value = str(self.bool_editor)
+        if self.value_type == "STRING":
+            self.value = str(self.string_editor)
+        if self.value_type == "FILE_PATH":
+            self.value = str(self.path_editor)
+        update_tree_code(self, context)
+
+    value_type: bpy.props.EnumProperty(
+        items=_enum_field_value_types,
+        update=on_type_changed
+    )
+
+    use_value: bpy.props.BoolProperty(
+        update=update_tree_code
+    )
+
+    def store_boolean_value(self, context):
+        self.value = str(self.bool_editor)
+        update_tree_code(self, context)
+
+    bool_editor: bpy.props.BoolProperty(update=store_boolean_value)
+
+    def store_int_value(self, context):
+        self.value = str(self.int_editor)
+
+    int_editor: bpy.props.IntProperty(update=store_int_value)
+
+    def store_float_value(self, context):
+        self.value = str(self.float_editor)
+
+    float_editor: bpy.props.FloatProperty(update=store_float_value)
+
+    def store_string_value(self, context):
+        self.value = self.string_editor
+
+    string_editor: bpy.props.StringProperty(update=store_string_value)
+
+    def store_path_value(self, context):
+        self.value = self.path_editor
+
+    path_editor: bpy.props.StringProperty(
+        update=store_path_value,
+        subtype='FILE_PATH'
+    )
+
+    def draw_color(self, context, node):
+        return PARAMETER_SOCKET_COLOR
+
+    def get_unlinked_value(self):
+        return socket_field(self) if self.use_value else None
+
+    def draw(self, context, layout, node, text):
+        if self.is_linked or self.is_output:
+            layout.label(text=text)
+        else:
+            col = layout.column()
+            if text:
+                name_row = col.row()
+                name_row.label(text=text)
+                name_row.prop(self, "use_value", text="")
+            if not self.use_value:
+                return
+            val_line = col.row()
+            val_row = val_line.split()
+            if self.value_type == "BOOLEAN":
+                val_row.prop(self, "value_type", text="")
+                val_row.prop(self, "bool_editor", text="")
+            elif self.value_type == "INTEGER":
+                val_row.prop(self, "value_type", text="")
+                val_row.prop(self, "int_editor", text="")
+            elif self.value_type == "FLOAT":
+                val_row.prop(self, "value_type", text="")
+                val_row.prop(self, "float_editor", text="")
+            elif self.value_type == "STRING":
+                val_row.prop(self, "value_type", text="")
+                val_row.prop(self, "string_editor", text="")
+            elif self.value_type == "FILE_PATH":
+                val_row.prop(self, "value_type", text="")
+                val_row.prop(self, "path_editor", text="")
+
+
+_sockets.append(NLOptionalValueFieldSocket)
 
 
 class NLNumericFieldSocket(bpy.types.NodeSocket, NetLogicSocketType):
@@ -6029,16 +6194,24 @@ class NLConditionLogicOperation(bpy.types.Node, NLConditionNode):
 
     def init(self, context):
         NLConditionNode.init(self, context)
+        self.inputs.new(NLValueFieldSocket.bl_idname, "")
+        self.inputs.new(NLValueFieldSocket.bl_idname, "")
         self.inputs.new(NLPositiveFloatSocket.bl_idname, "Threshold")
-        self.inputs.new(NLValueFieldSocket.bl_idname, "")
-        self.inputs.new(NLValueFieldSocket.bl_idname, "")
         self.outputs.new(NLConditionSocket.bl_idname, "If True")
+
+    def update_draw(self):
+        numerics = ['INTEGER', 'FLOAT']
+        self.inputs[2].enabled = (
+            self.inputs[0].value_type in numerics or self.inputs[0].is_linked
+            and
+            self.inputs[1].value_type in numerics or self.inputs[1].is_linked
+        )
 
     def get_netlogic_class_name(self):
         return "bgelogic.ConditionLogicOp"
 
     def get_input_sockets_field_names(self):
-        return ['threshold', "param_a", "param_b"]
+        return ["param_a", "param_b", 'threshold']
 
     def init_cell_fields(self, cell_varname, uids, line_writer):
         NetLogicStatementGenerator.init_cell_fields(
@@ -10036,12 +10209,14 @@ class NLParameterGetGlobalValue(bpy.types.Node, NLParameterNode):
 
     def init(self, context):
         NLParameterNode.init(self, context)
-        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Name")
-        self.inputs[-1].value = 'general'
-        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Key")
-        self.inputs[-1].value = 'var_name'
-        self.inputs.new(NLValueFieldSocket.bl_idname, "Default Value")
+        self.inputs.new(NLGlobalCatSocket.bl_idname, "Category")
+        self.inputs.new(NLGlobalPropSocket.bl_idname, "Property")
+        self.inputs[-1].ref_index = 0
+        self.inputs.new(NLOptionalValueFieldSocket.bl_idname, "Default Value")
         self.outputs.new(NLParameterSocket.bl_idname, "Value")
+
+    def update_draw(self):
+        self.inputs[1].enabled = True if self.inputs[0].value or self.inputs[0].is_linked else False
 
     def get_input_sockets_field_names(self):
         return ["data_id", "key", 'default']
@@ -10062,19 +10237,22 @@ class NLActionSetGlobalValue(bpy.types.Node, NLActionNode):
     def init(self, context):
         NLActionNode.init(self, context)
         self.inputs.new(NLPseudoConditionSocket.bl_idname, "Condition")
-        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Name")
-        self.inputs[-1].value = 'general'
-        self.inputs.new(NLBooleanSocket.bl_idname, "Persistent")
-        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Key")
-        self.inputs[-1].value = 'var_name'
+        self.inputs.new(NLGlobalCatSocket.bl_idname, "Category")
+        self.inputs.new(NLGlobalPropSocket.bl_idname, "Property")
+        self.inputs[-1].ref_index = 1
         self.inputs.new(NLValueFieldSocket.bl_idname, "")
+        self.inputs.new(NLBooleanSocket.bl_idname, "Persistent")
         self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+
+    def update_draw(self):
+        self.inputs[2].enabled = True if self.inputs[1].value or self.inputs[1].is_linked else False
+        self.inputs[3].enabled = self.inputs[4].enabled = self.inputs[2].enabled
 
     def get_output_socket_varnames(self):
         return ["OUT"]
 
     def get_input_sockets_field_names(self):
-        return ["condition", "data_id", "persistent", "key", "value"]
+        return ["condition", "data_id", "key", "value", 'persistent']
 
     def get_netlogic_class_name(self):
         return "bgelogic.ActionSetGlobalValue"

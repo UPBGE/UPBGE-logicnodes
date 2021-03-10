@@ -57,6 +57,152 @@ class BGEGroupName(bpy.types.PropertyGroup):
     enabled: bpy.props.BoolProperty()
 
 
+def check_double_prop(self, context):
+    category = utils.get_global_category()
+    props = category.content
+    check_double_name(self, props)
+
+
+def check_double_cat(self, context):
+    cats = bpy.context.scene.nl_global_categories
+    check_double_name(self, cats)
+
+
+def check_double_name(self, data):
+    name = base = self.name
+    names = []
+    for p in data:
+        if p != self:
+            names.append(p.name)
+    if base in names:
+        count = 1
+        name = f'{base}{count}'
+        while name in names:
+            count += 1
+            name = f'{base}{count}'
+        self.name = name
+
+
+_enum_value_types = [
+    ("FLOAT", "Float", "A Float value"),
+    ("STRING", "String", "A String"),
+    ("INTEGER", "Integer", "An Integer value"),
+    ("BOOLEAN", "Bool", "A True/False value"),
+    ("FILE_PATH", "File Path", 'Choose a file path')
+]
+
+
+class BGEGlobalValue(bpy.types.PropertyGroup):
+    name: bpy.props.StringProperty(name='Name', default='prop', update=check_double_prop)
+    value_type: bpy.props.EnumProperty(items=_enum_value_types, name='Value Types')
+    string_val: bpy.props.StringProperty(name='String')
+    float_val: bpy.props.FloatProperty(name='Floating Point')
+    int_val: bpy.props.IntProperty(name='Integer')
+    bool_val: bpy.props.BoolProperty(name='Boolean')
+    filepath_val: bpy.props.StringProperty(name='File Path', subtype='FILE_PATH')
+    persistent: bpy.props.BoolProperty(name='Persistent')
+
+
+class BGEGlobalValueCategory(bpy.types.PropertyGroup):
+    name: bpy.props.StringProperty(name='Name', default='category', update=check_double_cat)
+    content: bpy.props.CollectionProperty(type=BGEGlobalValue)
+    selected: bpy.props.IntProperty(name='Value')
+
+
+class NL_UL_glcategory(bpy.types.UIList):
+    def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
+        layout.prop(item, "name", text="", emboss=False)
+
+
+class NL_UL_glvalue(bpy.types.UIList):
+    def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
+        dat = {
+            'STRING': 'string_val',
+            'FLOAT': 'float_val',
+            'INTEGER': 'int_val',
+            'BOOLEAN': 'bool_val',
+            'FILE_PATH': 'filepath_val'
+        }
+        row = layout.split()
+        row.prop(item, "name", text="", emboss=False)
+        # row.prop(item, 'value_type', text='', emboss=False)
+        emboss = item.value_type == 'BOOLEAN' or item.value_type == 'STRING'
+        row.prop(item, dat.get(item.value_type, 'FLOAT'), text='', emboss=emboss)
+
+
+class BGE_PT_GlobalValuePanel(bpy.types.Panel):
+    bl_label = "Globals"
+    bl_space_type = "NODE_EDITOR"
+    bl_region_type = "UI"
+    bl_category = "Item"
+
+    @classmethod
+    def poll(cls, context):
+        enabled = (context.space_data.tree_type == BGELogicTree.bl_idname)
+        return enabled
+
+    def draw(self, context):
+        layout = self.layout
+        categories = bpy.context.scene.nl_global_categories
+        if len(categories) > 0:
+            category = utils.get_global_category()
+            row = layout.row()
+            row.template_list(
+                'NL_UL_glcategory',
+                '',
+                bpy.context.scene,
+                'nl_global_categories',
+                bpy.context.scene,
+                'nl_global_cat_selected',
+                rows=3
+            )
+            opts = row.column(align=True)
+            opts.operator(
+                bge_netlogic.ops.NLAddGlobalCatOperator.bl_idname,
+                text='',
+                icon='PLUS'
+            )
+            opts.operator(
+                bge_netlogic.ops.NLRemoveGlobalCatOperator.bl_idname,
+                text='',
+                icon='REMOVE'
+            )
+            # Draw Category Properties
+            row = layout.row()
+            value = utils.get_global_value()
+            row.template_list(
+                'NL_UL_glvalue',
+                '',
+                category,
+                'content',
+                category,
+                'selected',
+                rows=3
+            )
+            opts = row.column()
+            adders = opts.column(align=True)
+            adders.operator(
+                bge_netlogic.ops.NLAddGlobalOperator.bl_idname,
+                text='',
+                icon='PLUS'
+            )
+            adders.operator(
+                bge_netlogic.ops.NLRemoveGlobalOperator.bl_idname,
+                text='',
+                icon='REMOVE'
+            )
+            if value:
+                opts.prop(value, 'persistent', text='', icon='RADIOBUT_ON' if value.persistent else 'RADIOBUT_OFF')
+                row2 = layout.row()
+                row2.prop(value, 'value_type', text='Type')
+        else:
+            layout.operator(
+                bge_netlogic.ops.NLAddGlobalCatOperator.bl_idname,
+                text='Add Global Value',
+                icon='PLUS'
+            )
+
+
 class BGE_PT_GamePropertyPanel(bpy.types.Panel):
     bl_label = "Object Properties"
     bl_space_type = "NODE_EDITOR"

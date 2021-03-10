@@ -323,6 +323,65 @@ class NLRemoveTreeByNameOperator(bpy.types.Operator):
             ob.bgelogic_treelist.remove(index)
 
 
+class NLUpdateTreeVersionOperator(bpy.types.Operator):
+    bl_idname = "bge_netlogic.update_tree_version"
+    bl_label = "Update Trees"
+    bl_description = "Update trees to the current version of the Addon"
+
+    @classmethod
+    def poll(cls, context):
+        return True
+
+    def execute(self, context):
+        for tree in bpy.data.node_groups:
+            if tree.bl_idname == bge_netlogic.ui.BGELogicTree.bl_idname:
+                for node in tree.nodes:
+                    if node.bl_idname == 'NLConditionLogicOperation':
+                        self.update_compare_node(tree, node)
+        return {'FINISHED'}
+
+    def update_compare_node(self, tree, node):
+        if node.inputs[0].bl_idname != 'NLPositiveFloatSocket':
+            return
+        replacer = tree.nodes.new('NLConditionLogicOperation')
+        replacer.location = node.location
+        replacer.label = node.label
+        replacer.operator = node.operator
+        replacer.inputs[0].value_type = node.inputs[1].value_type
+        replacer.inputs[0].value = node.inputs[1].value
+        replacer.inputs[1].value_type = node.inputs[2].value_type
+        replacer.inputs[1].value = node.inputs[2].value
+
+        if node.inputs[0].is_linked:
+            link = node.inputs[0].links[0]
+            tree.links.new(
+                link.from_socket,
+                replacer.inputs[2]
+            )
+        if node.inputs[1].is_linked:
+            link = node.inputs[1].links[0]
+            tree.links.new(
+                link.from_socket,
+                replacer.inputs[0]
+            )
+        if node.inputs[2].is_linked:
+            link = node.inputs[2].links[0]
+            tree.links.new(
+                link.from_socket,
+                replacer.inputs[1]
+            )
+        idx = 0
+        for o in node.outputs:
+            if o.is_linked:
+                for link in o.links:
+                    tree.links.new(
+                        replacer.outputs[idx],
+                        link.to_socket
+                    )
+            idx += 1
+        tree.nodes.remove(node)
+
+
 class NLMakeGroupOperator(bpy.types.Operator):
     bl_idname = "bge_netlogic.make_group"
     bl_label = "Pack Into New Tree"
@@ -349,6 +408,7 @@ class NLMakeGroupOperator(bpy.types.Operator):
             'game_object',
             'default_value',
             'use_toggle',
+            'use_value',
             'true_label',
             'false_label',
             'value_type',
@@ -372,6 +432,7 @@ class NLMakeGroupOperator(bpy.types.Operator):
             'pulse',
             'hide',
             'label',
+            'ref_index',
             'use_owner',
             'advanced'
         ]
@@ -524,13 +585,27 @@ class NLAdd4KeyTemplateOperator(bpy.types.Operator):
     def execute(self, context):
         utils.debug('Adding template...')
         tree = context.space_data.edit_tree
-        content = json.load(open(self.get_template_path()))['nodes']
+        jf = json.load(open(self.get_template_path()))
+        globs = jf['globals']
+        content = jf['nodes']
 
         if tree is None:
             utils.error('Cannot add template! Aborting...')
             return {'FINISHED'}
         for node in tree.nodes:
             node.select = False
+
+        for g in globs.keys():
+            db = context.scene.nl_global_categories
+            if g not in db:
+                cat = db.add()
+                cat.name = g
+            for v in globs[g].keys():
+                if v not in db[g].content:
+                    val = db[g].content.add()
+                    val.name = v
+                    for entry in globs[g][v]:
+                        setattr(val, entry, globs[g][v][entry])
 
         nodes = []
         for c in content:
@@ -664,13 +739,13 @@ class NLApplyLogicOperator(bpy.types.Operator):
             )
             controller = game_settings.controllers[-1]
             controller.show_expanded = False
-            if 'NL_OR' not in game_settings.controllers:
-                bpy.ops.logic.controller_add(
-                    type="LOGIC_OR",
-                    object=obj.name,
-                    name='NL_OR'
-                )
-            game_settings.controllers[-1].show_expanded = False
+            # if 'NL_OR' not in game_settings.controllers:
+            #     bpy.ops.logic.controller_add(
+            #         type="LOGIC_OR",
+            #         object=obj.name,
+            #         name='NL_OR'
+            #     )
+            # game_settings.controllers[-1].show_expanded = False
         controller.name = controller_name
         controller.type = "PYTHON"
         controller.mode = "MODULE"
@@ -823,6 +898,86 @@ class NLGenerateLogicNetworkOperator(bpy.types.Operator):
         except Exception:
             utils.warn("Couldn't redraw panel, code updated.")
         return {"FINISHED"}
+
+
+class NLAddGlobalOperator(bpy.types.Operator):
+    bl_idname = "bge_netlogic.add_global"
+    bl_label = "Add Global"
+    bl_options = {'REGISTER', 'UNDO'}
+    bl_description = "Add a value accessible from anywhere"
+
+    @classmethod
+    def poll(cls, context):
+        return True
+
+    def execute(self, context):
+        category = utils.get_global_category()
+        prop = category.content.add()
+        prop.name = 'prop'
+        prop.string_val = ''
+        prop.float_val = 0.0
+        prop.int_val = 0
+        prop.bool_val = False
+        prop.filepath_val = ''
+        category.selected = len(category.content) - 1
+
+        return {'FINISHED'}
+
+
+class NLRemoveGlobalOperator(bpy.types.Operator):
+    bl_idname = "bge_netlogic.remove_global"
+    bl_label = "Remove Global"
+    bl_options = {'REGISTER', 'UNDO'}
+    bl_description = "Remove a value accessible from anywhere"
+
+    @classmethod
+    def poll(cls, context):
+        return True
+
+    def execute(self, context):
+        category = utils.get_global_category()
+        category.content.remove(category.selected)
+        if category.selected > len(category.content) - 1:
+            category.selected = len(category.content) - 1
+        return {'FINISHED'}
+
+
+class NLAddGlobalCatOperator(bpy.types.Operator):
+    bl_idname = "bge_netlogic.add_global_cat"
+    bl_label = "Add Global"
+    bl_options = {'REGISTER', 'UNDO'}
+    bl_description = "Add a global value category"
+
+    @classmethod
+    def poll(cls, context):
+        return True
+
+    def execute(self, context):
+        scene = context.scene
+        cats = scene.nl_global_categories
+        cat = cats.add()
+        cat.name = 'category'
+        scene.nl_global_cat_selected = len(scene.nl_global_categories) - 1
+
+        return {'FINISHED'}
+
+
+class NLRemoveGlobalCatOperator(bpy.types.Operator):
+    bl_idname = "bge_netlogic.remove_global_cat"
+    bl_label = "Remove Global"
+    bl_options = {'REGISTER', 'UNDO'}
+    bl_description = "Remove a global value category"
+
+    @classmethod
+    def poll(cls, context):
+        return True
+
+    def execute(self, context):
+        scene = context.scene
+        scene.nl_global_categories.remove(scene.nl_global_cat_selected)
+        if scene.nl_global_cat_selected > len(scene.nl_global_categories) - 1:
+            scene.nl_global_cat_selected = len(scene.nl_global_categories) - 1
+        return {'FINISHED'}
 
 
 class NLLoadSoundOperator(bpy.types.Operator, ImportHelper):

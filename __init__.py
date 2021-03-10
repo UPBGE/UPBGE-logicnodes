@@ -405,8 +405,8 @@ class LogicNodesAddonPreferences(bpy.types.AddonPreferences):
 
     def draw(self, context):
         layout = self.layout
-        col = layout.column()
         main_row = layout.row()
+        col = layout.column()
         debug_col = main_row.column()
         ui_col = main_row.column()
         code_col = main_row.column()
@@ -436,8 +436,9 @@ class LogicNodesAddonPreferences(bpy.types.AddonPreferences):
             text="Generate Code after editing (Slow)."
         )
         col.separator()
-        link_row = col.row()
+        link_row = col.row(align=True)
         link_row.operator("bge_netlogic.github", icon="URL")
+        link_row.operator("bge_netlogic.update_tree_version", icon='PLUGIN')
         link_row.operator("bge_netlogic.donate", icon="FUND")
         contrib_row = col.row()
         contrib_row.label(text='Contributors: L_P, Mike King')
@@ -461,6 +462,7 @@ _registered_classes = [
     ops.NLMakeGroupOperator,
     ops.NLLoadSoundOperator,
     ops.NLSwitchInitialNetworkStatusOperator,
+    ops.NLUpdateTreeVersionOperator,
     ops.NLAddPropertyOperator,
     ops.NLAddComponentOperator,
     ops.NLRemovePropertyOperator,
@@ -471,6 +473,10 @@ _registered_classes = [
     ops.NLBGEDocsButton,
     ops.NLUPBGEDocsButton,
     ops.NLDocsButton,
+    ops.NLAddGlobalOperator,
+    ops.NLRemoveGlobalOperator,
+    ops.NLAddGlobalCatOperator,
+    ops.NLRemoveGlobalCatOperator,
     NLNodeTreeReference
 ]
 
@@ -483,8 +489,13 @@ _registered_classes.extend([
     LogicNodesAddonPreferences,
     ui.BGEPropFilter,
     ui.BGEGroupName,
+    ui.BGEGlobalValue,
+    ui.BGEGlobalValueCategory,
+    ui.NL_UL_glcategory,
+    ui.NL_UL_glvalue,
     ui.BGE_PT_LogicPanel,
     ui.BGE_PT_LogicTreeInfoPanel,
+    ui.BGE_PT_GlobalValuePanel,
     ui.BGE_PT_GamePropertyPanel,
     ui.BGE_PT_HelpPanel,
     ui.BGE_PT_LogicNodeSettingsObject,
@@ -604,6 +615,12 @@ def register():
     )
     bpy.types.Scene.logic_node_settings = bpy.props.PointerProperty(
         type=NLAddonSettings
+    )
+    bpy.types.Scene.nl_global_categories = bpy.props.CollectionProperty(
+        type=ui.BGEGlobalValueCategory
+    )
+    bpy.types.Scene.nl_global_cat_selected = bpy.props.IntProperty(
+        name='Category'
     )
 
 

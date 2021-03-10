@@ -1,4 +1,16 @@
 {
+    "globals": {
+        "movement": {
+            "x": {
+                "value_type": "FLOAT",
+                "float_val": 0
+            },
+            "y": {
+                "value_type": "FLOAT",
+                "float_val": 0
+            }
+        }
+    },
     "nodes": [
         {
             "x": 0,
@@ -71,14 +83,14 @@
                     "index": 1,
                     "value": "movement"
                 }, {
-                    "index": 3,
+                    "index": 2,
                     "value": "x"
                 }, {
-                    "index": 4,
+                    "index": 3,
                     "type": "value_type",
                     "value": "INTEGER"
                 }, {
-                    "index": 4,
+                    "index": 3,
                     "type": "int_editor",
                     "value": 1
                 }
@@ -94,14 +106,14 @@
                     "index": 1,
                     "value": "movement"
                 }, {
-                    "index": 3,
+                    "index": 2,
                     "value": "x"
                 }, {
-                    "index": 4,
+                    "index": 3,
                     "type": "value_type",
                     "value": "INTEGER"
                 }, {
-                    "index": 4,
+                    "index": 3,
                     "type": "int_editor",
                     "value": -1
                 }
@@ -117,14 +129,14 @@
                     "index": 1,
                     "value": "movement"
                 }, {
-                    "index": 3,
+                    "index": 2,
                     "value": "y"
                 }, {
-                    "index": 4,
+                    "index": 3,
                     "type": "value_type",
                     "value": "INTEGER"
                 }, {
-                    "index": 4,
+                    "index": 3,
                     "type": "int_editor",
                     "value": 1
                 }
@@ -140,14 +152,14 @@
                     "index": 1,
                     "value": "movement"
                 }, {
-                    "index": 3,
+                    "index": 2,
                     "value": "y"
                 }, {
-                    "index": 4,
+                    "index": 3,
                     "type": "value_type",
                     "value": "INTEGER"
                 }, {
-                    "index": 4,
+                    "index": 3,
                     "type": "int_editor",
                     "value": -1
                 }
@@ -191,14 +203,14 @@
                     "index": 1,
                     "value": "movement"
                 }, {
-                    "index": 3,
+                    "index": 2,
                     "value": "x"
                 }, {
-                    "index": 4,
+                    "index": 3,
                     "type": "value_type",
                     "value": "INTEGER"
                 }, {
-                    "index": 4,
+                    "index": 3,
                     "type": "int_editor",
                     "value": 0
                 }
@@ -214,14 +226,14 @@
                     "index": 1,
                     "value": "movement"
                 }, {
-                    "index": 3,
+                    "index": 2,
                     "value": "y"
                 }, {
-                    "index": 4,
+                    "index": 3,
                     "type": "value_type",
                     "value": "INTEGER"
                 }, {
-                    "index": 4,
+                    "index": 3,
                     "type": "int_editor",
                     "value": 0
                 }
@@ -278,8 +290,8 @@
             "links": [],
             "values": [
                 {
-                    "index": 0,
-                    "value": 5
+                    "value": 5,
+                    "index": 0
                 }
             ]
         }, {
