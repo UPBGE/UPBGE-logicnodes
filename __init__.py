@@ -113,24 +113,25 @@ def _update_all_logic_tree_code():
         utils.error("Unknown Error, abort generating Network code")
 
 
-def _generate_on_game_start(*args):
+def _generate_on_game_start(self, context):
     if utils.is_compile_status(utils.TREE_MODIFIED):
         bpy.ops.bge_netlogic.generate_logicnetwork_all()
 
 
 def _consume_update_tree_code_queue():
+    edit_tree = getattr(bpy.context.space_data, "edit_tree", None)
     if _generate_on_game_start not in bpy.app.handlers.game_pre:
         bpy.app.handlers.game_pre.append(_generate_on_game_start)
-    if not _update_queue:
-        return
-    if hasattr(bpy.context.space_data, "edit_tree") and (bpy.context.space_data.edit_tree):
-        edit_tree = bpy.context.space_data.edit_tree
+    if edit_tree:
+        # edit_tree = bpy.context.space_data.edit_tree
         old_name = _tree_to_name_map.get(edit_tree)
         if not old_name:
             _tree_to_name_map[edit_tree] = edit_tree.name
         else:
             if old_name != edit_tree.name:
                 update_tree_name(edit_tree, old_name)
+    if not _update_queue:
+        return
     now = time.time()
     last_event = _update_queue[-1]
     delta = now - last_event
@@ -323,9 +324,11 @@ def request_tree_code_writer_start(dummy):
     global _tree_code_writer_started
     _tree_code_writer_started = False
     generator = ops.tree_code_generator.TreeCodeGenerator()
-    utils.debug('Writing trees on file open...')
-    bpy.ops.bge_netlogic.generate_logicnetwork_all()
-    utils.debug('FINISHED')
+    print(getattr(bpy.context.scene.logic_node_settings, 'use_generate_on_open', False))
+    if getattr(bpy.context.scene.logic_node_settings, 'use_generate_on_open', False):
+        utils.debug('Writing trees on file open...')
+        bpy.ops.bge_netlogic.generate_logicnetwork_all()
+        utils.debug('FINISHED')
 
 
 for f in [
@@ -368,6 +371,7 @@ class NLAddonSettings(bpy.types.PropertyGroup):
     )
     use_node_debug: bpy.props.BoolProperty(default=True)
     use_node_notify: bpy.props.BoolProperty(default=True)
+    use_generate_on_open: bpy.props.BoolProperty(default=False)
     use_generate_all: bpy.props.BoolProperty(default=True)
     auto_compile: bpy.props.BoolProperty(default=False)
     tree_compiled: bpy.props.StringProperty(default=utils.TREE_NOT_INITIALIZED)
@@ -425,15 +429,21 @@ class LogicNodesAddonPreferences(bpy.types.AddonPreferences):
             'use_node_debug',
             text="Debug Mode (Print Errors to Console)"
         )
+        code_col.label(text='Generate Code:')
         code_col.prop(
             context.scene.logic_node_settings,
             'use_generate_all',
-            text="Generate All Code on Fail."
+            text="On Fail."
         )
         code_col.prop(
             context.scene.logic_node_settings,
             'auto_compile',
-            text="Generate Code after editing (Slow)."
+            text="After Editing (Slow)."
+        )
+        code_col.prop(
+            context.scene.logic_node_settings,
+            'use_generate_on_open',
+            text="On File Open."
         )
         col.separator()
         link_row = col.row(align=True)

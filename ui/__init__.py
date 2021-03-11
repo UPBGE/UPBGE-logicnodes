@@ -626,11 +626,6 @@ class BGE_PT_LogicTreeGroups(bpy.types.Panel):
     @classmethod
     def poll(cls, context):
         enabled = (context.space_data.tree_type == BGELogicTree.bl_idname)
-        if enabled and (context.space_data.edit_tree is not None):
-            bge_netlogic._consume_update_tree_code_queue()
-            if not bge_netlogic._tree_code_writer_started:
-                bge_netlogic._tree_code_writer_started = True
-                bpy.ops.bgenetlogic.treecodewriter_operator()
         return enabled
 
     def draw(self, context):
@@ -671,7 +666,7 @@ class BGE_PT_LogicTreeOptions(bpy.types.Panel):
     @classmethod
     def poll(cls, context):
         enabled = (context.space_data.tree_type == BGELogicTree.bl_idname)
-        if enabled and (context.space_data.edit_tree is not None):
+        if getattr(context.space_data, 'edit_tree', None) is not None:
             bge_netlogic._consume_update_tree_code_queue()
             if not bge_netlogic._tree_code_writer_started:
                 bge_netlogic._tree_code_writer_started = True
@@ -795,11 +790,6 @@ class BGE_PT_LogicPanel(bpy.types.Panel):
     @classmethod
     def poll(cls, context):
         enabled = (context.space_data.tree_type == BGELogicTree.bl_idname)
-        if enabled and (context.space_data.edit_tree is not None):
-            bge_netlogic._consume_update_tree_code_queue()
-            if not bge_netlogic._tree_code_writer_started:
-                bge_netlogic._tree_code_writer_started = True
-                bpy.ops.bgenetlogic.treecodewriter_operator()
         return enabled
 
     def draw(self, context):
@@ -829,11 +819,6 @@ class BGE_PT_HelpPanel(bpy.types.Panel):
     @classmethod
     def poll(cls, context):
         enabled = (context.space_data.tree_type == BGELogicTree.bl_idname)
-        if enabled and (context.space_data.edit_tree is not None):
-            bge_netlogic._consume_update_tree_code_queue()
-            if not bge_netlogic._tree_code_writer_started:
-                bge_netlogic._tree_code_writer_started = True
-                bpy.ops.bgenetlogic.treecodewriter_operator()
         return enabled
 
     def draw(self, context):
@@ -849,11 +834,6 @@ class BGE_PT_HelpPanel(bpy.types.Panel):
             text="Manual",
             icon='BLENDER'
         )
-        # layout.operator(
-        #     bge_netlogic.ops.NLDocsButton.bl_idname,
-        #     text="Logic Nodes",
-        #     icon='OUTLINER'
-        # )
 
 
 class BGELogicTree(bpy.types.NodeTree):
