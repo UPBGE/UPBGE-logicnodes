@@ -198,7 +198,7 @@ class BGE_PT_GlobalValuePanel(bpy.types.Panel):
         else:
             layout.operator(
                 bge_netlogic.ops.NLAddGlobalCatOperator.bl_idname,
-                text='Add Global Value',
+                text='Add Global Category',
                 icon='PLUS'
             )
 
@@ -846,9 +846,9 @@ class BGELogicTree(bpy.types.NodeTree):
     def poll(cls, context):
         return True
 
-    def update(self):
-        if not getattr(bpy.context.scene.logic_node_settings, 'auto_compile'):
-            return
-        bge_netlogic.update_current_tree_code()
+    #def update(self):
+    #    if not getattr(bpy.context.scene.logic_node_settings, 'auto_compile'):
+    #        return
+    #    bge_netlogic.update_current_tree_code()
         # for link in self.links:
         #     print(link.is_valid)

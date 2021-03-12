@@ -896,13 +896,13 @@ class NLAbstractNode(NetLogicStatementGenerator):
     def poll(cls, node_tree):
         pass
 
-    def insert_link(self, link):
-        to_socket = link.to_socket
-        from_socket = link.from_socket
-        try:
-            link.is_valid = to_socket.validate(from_socket)
-        except Exception:
-            utils.debug('Receiving Node not a Logic Node Type, skipping validation.')
+    #def insert_link(self, link):
+    #    to_socket = link.to_socket
+    #    from_socket = link.from_socket
+    #    try:
+    #        link.is_valid = to_socket.validate(from_socket)
+    #    except Exception:
+    #        utils.debug('Receiving Node not a Logic Node Type, skipping validation.')
 
     def free(self):
         pass
@@ -919,8 +919,8 @@ class NLAbstractNode(NetLogicStatementGenerator):
     def update(self):
         update_tree_code(self, bpy.context)
 
-    def draw_label(self):
-        return self.__class__.bl_label
+    #def draw_label(self):
+    #    return self.__class__.bl_label
 
 
 ###############################################################################
@@ -3796,6 +3796,31 @@ class NLGetRandomListIndex(bpy.types.Node, NLParameterNode):
 _nodes.append(NLGetRandomListIndex)
 
 
+class NLDuplicateList(bpy.types.Node, NLParameterNode):
+    bl_idname = "NLDuplicateList"
+    bl_label = "Duplicate"
+    bl_icon = 'CON_TRANSLIKE'
+    nl_category = "Python"
+    nl_subcat = 'List'
+
+    def init(self, context):
+        NLParameterNode.init(self, context)
+        self.inputs.new(NLListSocket.bl_idname, "List")
+        self.outputs.new(NLListSocket.bl_idname, "List")
+
+    def get_netlogic_class_name(self):
+        return "bgelogic.DuplicateList"
+
+    def get_input_sockets_field_names(self):
+        return ["items"]
+
+    def get_output_socket_varnames(self):
+        return [OUTCELL]
+
+
+_nodes.append(NLDuplicateList)
+
+
 class NLGetListIndexNode(bpy.types.Node, NLParameterNode):
     bl_idname = "NLGetListIndexNode"
     bl_label = "Get Index"
@@ -3918,7 +3943,7 @@ class NLGetActuatorValue(bpy.types.Node, NLParameterNode):
 
     def init(self, context):
         NLParameterNode.init(self, context)
-        self.inputs.new(NLLogicBrickSocket.bl_idname, "Actuator Name")
+        self.inputs.new(NLLogicBrickSocket.bl_idname, "Actuator")
         self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Field")
         self.outputs.new(NLParameterSocket.bl_idname, "Value")
 
@@ -6202,9 +6227,9 @@ class NLConditionLogicOperation(bpy.types.Node, NLConditionNode):
     def update_draw(self):
         numerics = ['INTEGER', 'FLOAT']
         self.inputs[2].enabled = (
-            self.inputs[0].value_type in numerics or self.inputs[0].is_linked
+            (self.inputs[0].value_type in numerics or self.inputs[0].is_linked)
             and
-            self.inputs[1].value_type in numerics or self.inputs[1].is_linked
+            (self.inputs[1].value_type in numerics or self.inputs[1].is_linked)
         )
 
     def get_netlogic_class_name(self):

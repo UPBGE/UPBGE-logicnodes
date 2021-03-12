@@ -902,7 +902,7 @@ class NLGenerateLogicNetworkOperator(bpy.types.Operator):
 
 class NLAddGlobalOperator(bpy.types.Operator):
     bl_idname = "bge_netlogic.add_global"
-    bl_label = "Add Global"
+    bl_label = "Add Global Value"
     bl_options = {'REGISTER', 'UNDO'}
     bl_description = "Add a value accessible from anywhere"
 
@@ -926,7 +926,7 @@ class NLAddGlobalOperator(bpy.types.Operator):
 
 class NLRemoveGlobalOperator(bpy.types.Operator):
     bl_idname = "bge_netlogic.remove_global"
-    bl_label = "Remove Global"
+    bl_label = "Remove Global Value"
     bl_options = {'REGISTER', 'UNDO'}
     bl_description = "Remove a value accessible from anywhere"
 
@@ -944,7 +944,7 @@ class NLRemoveGlobalOperator(bpy.types.Operator):
 
 class NLAddGlobalCatOperator(bpy.types.Operator):
     bl_idname = "bge_netlogic.add_global_cat"
-    bl_label = "Add Global"
+    bl_label = "Add Global Category"
     bl_options = {'REGISTER', 'UNDO'}
     bl_description = "Add a global value category"
 
@@ -964,7 +964,7 @@ class NLAddGlobalCatOperator(bpy.types.Operator):
 
 class NLRemoveGlobalCatOperator(bpy.types.Operator):
     bl_idname = "bge_netlogic.remove_global_cat"
-    bl_label = "Remove Global"
+    bl_label = "Remove Global Category"
     bl_options = {'REGISTER', 'UNDO'}
     bl_description = "Remove a global value category"
 

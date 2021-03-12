@@ -2535,6 +2535,20 @@ class ParameterRandomListIndex(ParameterCell):
         self._set_value(random.choice(list_d))
 
 
+class DuplicateList(ParameterCell):
+    def __init__(self):
+        ParameterCell.__init__(self)
+        self.condition = None
+        self.items = None
+
+    def evaluate(self):
+        list_d = self.get_parameter_value(self.items)
+        if is_invalid(list_d):
+            return
+        self._set_ready()
+        self._set_value(list_d.copy())
+
+
 class GetActuator(ParameterCell):
 
     @classmethod
@@ -4093,14 +4107,14 @@ class ConditionLogicOp(ConditionCell):
         b = self.get_parameter_value(self.param_b)
         threshold = self.get_parameter_value(self.threshold)
         operator = self.get_parameter_value(self.operator)
-        if is_waiting(a, b, threshold, operator):
-            return
         self._set_ready()
         if operator > 1:  # eq and neq are valid for None
             if a is None:
                 return
             if b is None:
                 return
+        if threshold is None:
+            threshold = 0
         if threshold > 0 and abs(a - b) < threshold:
             a = b
         if operator is None:
@@ -5630,24 +5644,19 @@ class ActionExecuteNetwork(ActionCell):
     def evaluate(self):
         self.done = False
         condition = self.get_parameter_value(self.condition)
-        if not_met(condition):
-            return
         target_object = self.get_parameter_value(self.target_object)
         tree_name = self.get_parameter_value(self.tree_name)
-        if target_object is LogicNetworkCell.STATUS_WAITING:
-            return
-        if tree_name is LogicNetworkCell.STATUS_WAITING:
-            return
         self._set_ready()
         if is_invalid(target_object):
             return
-        if tree_name not in target_object:
+        added_network = target_object.get(tree_name, None)
+        if not added_network:
             self._network.install_subnetwork(
                 target_object,
                 tree_name,
                 False
             )
-        added_network = target_object.get(tree_name)
+            added_network = target_object.get(tree_name, None)
         if condition:
             added_network.stopped = False
         else:

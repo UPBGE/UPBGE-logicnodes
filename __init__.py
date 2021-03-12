@@ -16,7 +16,7 @@ bl_info = {
     "version": (0, 9, 9),
     "blender": (2, 91, 0),
     "location": "View Menu",
-    "warning": "Beta",
+    "warning": "Now actually Beta",
     "category": "Game Engine"
 }
 
