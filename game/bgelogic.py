@@ -2919,6 +2919,16 @@ class ParameterActiveCamera(ParameterCell):
             self._set_value(scene.active_camera)
 
 
+class GetGravity(ParameterCell):
+    def __init__(self):
+        ParameterCell.__init__(self)
+        self.collection = None
+
+    def evaluate(self):
+        self._set_ready()
+        self._set_value(bge.logic.getCurrentScene().gravity)
+
+
 class GetCollection(ParameterCell):
     def __init__(self):
         ParameterCell.__init__(self)
@@ -3759,6 +3769,23 @@ class ParameterMatrixToEuler(ParameterCell):
         self._set_ready()
         matrix = self.get_parameter_value(self.input_m)
         self.euler = matrix.to_euler()
+
+
+class ParameterMatrixToVector(ParameterCell):
+    def __init__(self):
+        ParameterCell.__init__(self)
+        self.input_m = None
+        self.vec = mathutils.Vector()
+        self.OUT = LogicNetworkSubCell(self, self.get_vec)
+
+    def get_vec(self):
+        return self.vec
+
+    def evaluate(self):
+        self._set_ready()
+        matrix = self.get_parameter_value(self.input_m)
+        e = matrix.to_euler()
+        self.vec = mathutils.Vector((e.x, e.y, e.z))
 
 
 class ParameterVector3Simple(ParameterCell):
@@ -9828,7 +9855,7 @@ class ActionAlignAxisToVector(ActionCell):
         self.done = False
         condition = self.get_parameter_value(self.condition)
         self._set_ready()
-        if not condition:
+        if not_met(condition):
             return
         game_object = self.get_parameter_value(self.game_object)
         v = self.get_parameter_value(self.vector)
@@ -9840,6 +9867,9 @@ class ActionAlignAxisToVector(ActionCell):
             return
         if factor is None:
             return
+        v = getattr(v, 'worldPosition', v).copy()
+        if not self.local:
+            v -= game_object.worldPosition
         if axis > 2:
             matvec = v.copy()
             matvec.negate()

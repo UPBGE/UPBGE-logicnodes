@@ -4389,6 +4389,22 @@ class NLActiveCameraParameterNode(bpy.types.Node, NLParameterNode):
 _nodes.append(NLActiveCameraParameterNode)
 
 
+class NLGetGravityNode(bpy.types.Node, NLParameterNode):
+    bl_idname = "NLGetGravityNode"
+    bl_label = "Get Gravity"
+    nl_category = "Scene"
+
+    def init(self, context):
+        NLParameterNode.init(self, context)
+        self.outputs.new(NLVec3FieldSocket.bl_idname, "Gravity")
+
+    def get_netlogic_class_name(self):
+        return "bgelogic.GetGravity"
+
+
+_nodes.append(NLGetGravityNode)
+
+
 class NLGetCollectionNode(bpy.types.Node, NLParameterNode):
     bl_idname = "NLGetCollectionNode"
     bl_label = "Get Collection"
@@ -5207,6 +5223,30 @@ class NLParameterMatrixToEulerNode(bpy.types.Node, NLParameterNode):
 
 
 _nodes.append(NLParameterMatrixToEulerNode)
+
+
+class NLParameterMatrixToVectorNode(bpy.types.Node, NLParameterNode):
+    bl_idname = "NLParameterMatrixToVectorNode"
+    bl_label = "Matrix To Vector"
+    nl_category = "Math"
+    nl_subcat = 'Vector Math'
+
+    def init(self, context):
+        NLParameterNode.init(self, context)
+        self.inputs.new(NLParameterSocket.bl_idname, 'Matrix')
+        self.outputs.new(NLVec3FieldSocket.bl_idname, "Vector")
+
+    def get_netlogic_class_name(self):
+        return "bgelogic.ParameterMatrixToVector"
+
+    def get_output_socket_varnames(self):
+        return ["OUT"]
+
+    def get_input_sockets_field_names(self):
+        return ["input_m"]
+
+
+_nodes.append(NLParameterMatrixToVectorNode)
 
 
 class NLOnInitConditionNode(bpy.types.Node, NLConditionNode):
@@ -7937,7 +7977,7 @@ class NLActionApplyLocation(bpy.types.Node, NLActionNode):
             self,
             "local",
             toggle=True,
-            text="Apply Local" if self.local else "Apply Global"
+            text="Local" if self.local else "Global"
         )
 
     def get_netlogic_class_name(self):
@@ -9383,6 +9423,7 @@ class NLActionAlignAxisToVector(bpy.types.Node, NLActionNode):
     bl_label = "Align Axis to Vector"
     nl_category = "Objects"
     nl_subcat = 'Transformation'
+    local: bpy.props.BoolProperty(default=True, update=update_tree_code)
 
     def init(self, context):
         NLActionNode.init(self, context)
@@ -9393,6 +9434,14 @@ class NLActionAlignAxisToVector(bpy.types.Node, NLActionNode):
         self.inputs.new(NLSocketAlphaFloat.bl_idname, "Factor")
         self.inputs[-1].value = 1.0
         self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+    
+    def draw_buttons(self, context, layout):
+        layout.prop(
+            self,
+            "local",
+            toggle=True,
+            text="Apply Local" if self.local else "Apply Global"
+        )
 
     def get_output_socket_varnames(self):
         return ["OUT"]
@@ -9402,6 +9451,9 @@ class NLActionAlignAxisToVector(bpy.types.Node, NLActionNode):
 
     def get_input_sockets_field_names(self):
         return ["condition", "game_object", "vector", "axis", 'factor']
+    
+    def get_nonsocket_fields(self):
+        return [("local", lambda: "True" if self.local else "False")]
 
 
 _nodes.append(NLActionAlignAxisToVector)

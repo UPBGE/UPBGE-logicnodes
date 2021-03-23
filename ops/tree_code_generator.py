@@ -53,7 +53,7 @@ class TreeCodeGenerator(object):
         for varname in self._sort_cellvarnames(cell_var_names, uid_map):
             if not uid_map.is_removed(varname):
                 line_writer.write_line("network.add_cell({})", varname)
-        line_writer.write_line('owner["{}"] = network', tree.name)
+        line_writer.write_line('owner["IGNLTree_{}"] = network', tree.name)
         line_writer.write_line("network._owner = owner")
         line_writer.write_line("network.setup()")
         line_writer.write_line("network.stopped = not owner.get('{}')", utils.get_key_network_initial_status_for_tree(tree))
@@ -63,7 +63,7 @@ class TreeCodeGenerator(object):
         line_writer.write_line("def pulse_network(controller):")
         line_writer.set_indent_level(1)
         line_writer.write_line("owner = controller.owner")
-        line_writer.write_line('network = owner.get("{}")', tree.name)
+        line_writer.write_line('network = owner.get("IGNLTree_{}")', tree.name)
         line_writer.write_line("if network is None:")
         line_writer.set_indent_level(2)
         line_writer.write_line("network = _initialize(owner)")
@@ -74,7 +74,7 @@ class TreeCodeGenerator(object):
         line_writer.set_indent_level(2)
         line_writer.write_line("controller.sensors[0].repeat = False")
         line_writer.close()
-        #write the bgelogic.py module source in the directory of the current blender file
+        # write the bgelogic.py module source in the directory of the current blender file
         this_module_dir = os.path.dirname(__file__)
         bge_netlogic_dir = os.path.dirname(this_module_dir)
 
@@ -153,6 +153,7 @@ class TreeCodeGenerator(object):
     def _test_node_links(self, node, added_cell_names, uid_map):
         for input in node.inputs:
             if input.is_linked:
+                # XXX: MAYBE THIS IS THE CAUSE OF ACCESS VIOLATION
                 linked_node = input.links[0].from_socket.node
                 while isinstance(linked_node, bpy.types.NodeReroute):
                     if not linked_node.inputs[0].links:

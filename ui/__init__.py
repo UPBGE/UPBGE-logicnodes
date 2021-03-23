@@ -212,7 +212,8 @@ class BGE_PT_GamePropertyPanel(bpy.types.Panel):
     @classmethod
     def poll(cls, context):
         ob = context.active_object
-        return ob and ob.name
+        enabled = (context.space_data.tree_type == BGELogicTree.bl_idname)
+        return ob and ob.name and enabled
 
     def draw_tree_prop(self, prop, index, box, show_movers):
         col = box.column()
@@ -716,7 +717,8 @@ class BGE_PT_LogicTreeInfoPanel(bpy.types.Panel):
     @classmethod
     def poll(cls, context):
         ob = context.active_object
-        return ob and ob.name
+        enabled = (context.space_data.tree_type == BGELogicTree.bl_idname)
+        return ob and ob.name and enabled
 
     def get_combined_status_of_tree_items(self, tree_item_list):
         last = None

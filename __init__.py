@@ -452,8 +452,6 @@ class LogicNodesAddonPreferences(bpy.types.AddonPreferences):
         link_row.operator("bge_netlogic.donate", icon="FUND")
         contrib_row = col.row()
         contrib_row.label(text='Contributors: L_P, Mike King')
-        testers_row = col.row()
-        testers_row.label(text='Testers: Firespury')
 
 
 basicnodes = _abs_import("basicnodes", _abs_path("basicnodes", "__init__.py"))
@@ -599,6 +597,11 @@ def register():
         print("Registering... {}".format(cls.__name__))
         bpy.utils.register_class(cls)
     menu_nodes = _list_menu_nodes()
+    layout_items = [
+        nodeitems_utils.NodeItem('NodeReroute'),
+        nodeitems_utils.NodeItem('NodeFrame')
+    ]
+    menu_nodes.append(NodeCategory('LayoutNodes', 'Layout', items=layout_items))
     nodeitems_utils.register_node_categories("NETLOGIC_NODES", menu_nodes)
 
     bpy.types.Object.sound_occluder = bpy.props.BoolProperty(
