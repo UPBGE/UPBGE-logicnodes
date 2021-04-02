@@ -338,7 +338,40 @@ class NLUpdateTreeVersionOperator(bpy.types.Operator):
                 for node in tree.nodes:
                     if node.bl_idname == 'NLConditionLogicOperation':
                         self.update_compare_node(tree, node)
+                    if node.bl_idname == 'NLActionRayCastNode':
+                        self.update_ray_node(tree, node)
         return {'FINISHED'}
+
+    def restore_all_inputs(self, tree, node, replacer):
+        idx = 0
+        for i in node.inputs:
+            if i.is_linked:
+                for link in i.links:
+                    tree.links.new(
+                        link.from_socket,
+                        replacer.inputs[idx]
+                    )
+            idx += 1
+
+    def restore_all_outputs(self, tree, node, replacer):
+        idx = 0
+        for o in node.outputs:
+            if o.is_linked:
+                for link in o.links:
+                    tree.links.new(
+                        replacer.outputs[idx],
+                        link.to_socket
+                    )
+            idx += 1
+
+    def update_ray_node(self, tree, node):
+        if len(node.inputs) == 6:
+            replacer = tree.nodes.new('NLActionRayCastNode')
+            replacer.location = node.location
+            replacer.label = node.label
+            self.restore_all_inputs(tree, node, replacer)
+            self.restore_all_outputs(tree, node, replacer)
+            tree.nodes.remove(node)
 
     def update_compare_node(self, tree, node):
         if node.inputs[0].bl_idname != 'NLPositiveFloatSocket':
@@ -370,15 +403,7 @@ class NLUpdateTreeVersionOperator(bpy.types.Operator):
                 link.from_socket,
                 replacer.inputs[1]
             )
-        idx = 0
-        for o in node.outputs:
-            if o.is_linked:
-                for link in o.links:
-                    tree.links.new(
-                        replacer.outputs[idx],
-                        link.to_socket
-                    )
-            idx += 1
+        self.restore_all_outputs(tree, node, replacer)
         tree.nodes.remove(node)
 
 

@@ -7262,6 +7262,7 @@ class NLActionRayCastNode(bpy.types.Node, NLActionNode):
         self.inputs.new(NLBooleanSocket.bl_idname, 'X-Ray')
         self.inputs.new(NLPositiveFloatSocket.bl_idname, "Distance")
         self.inputs[-1].value = 100.0
+        self.inputs.new(NLBooleanSocket.bl_idname, 'Visualize')
         self.outputs.new(NLConditionSocket.bl_idname, "Has Result")
         self.outputs.new(NLGameObjectSocket.bl_idname, "Picked Object")
         self.outputs.new(NLVec3FieldSocket.bl_idname, "Picked Point")
@@ -7278,7 +7279,8 @@ class NLActionRayCastNode(bpy.types.Node, NLActionNode):
             "destination",
             "property_name",
             'xray',
-            "distance"
+            "distance",
+            "visualize"
         ]
 
     def get_output_socket_varnames(self):

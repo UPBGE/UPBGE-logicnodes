@@ -1029,7 +1029,7 @@ class LogicNetwork(LogicNetworkCell):
             module_name = 'bgelogic.NL{}'.format(stripped_name)
             module = load_user_module(module_name)
             module._initialize(owner_object)
-            subnetwork = owner_object[node_tree_name]
+            subnetwork = owner_object[f'IGNLTree_{node_tree_name}]
             self.sub_networks.append(subnetwork)
 
 
@@ -5843,6 +5843,7 @@ class ActionRayPick(ActionCell):
         self.property_name = None
         self.xray = None
         self.distance = None
+        self.visualize = None
         self._picked_object = None
         self._point = None
         self._normal = None
@@ -5890,14 +5891,9 @@ class ActionRayPick(ActionCell):
         property_name = self.get_parameter_value(self.property_name)
         xray = self.get_parameter_value(self.xray)
         distance = self.get_parameter_value(self.distance)
+        visualize = self.get_parameter_value(self.visualize)
 
-        if origin is LogicNetworkCell.STATUS_WAITING:
-            return
-        if destination is LogicNetworkCell.STATUS_WAITING:
-            return
-        if property_name is LogicNetworkCell.STATUS_WAITING:
-            return
-        if distance is LogicNetworkCell.STATUS_WAITING:
+        if is_waiting(origin, destination, property_name, distance):
             return
         self._set_ready()
         caster = self.network._owner
@@ -5917,11 +5913,29 @@ class ActionRayPick(ActionCell):
                 property_name,
                 xray=xray
             )
+        direction = self._compute_direction(origin, destination)
+        if visualize:
+            origin = getattr(origin, 'worldPosition', origin)
+            line_dest = direction.copy()
+            line_dest.x *= distance
+            line_dest.y *= distance
+            line_dest.z *= distance
+            line_dest = line_dest + origin
+            bge.render.drawLine(
+                origin,
+                line_dest,
+                [
+                    1,
+                    0,
+                    0,
+                    1
+                ]
+            )
         self._set_value(obj is not None)
         self._picked_object = obj
         self._point = point
         self._normal = normal
-        self._direction = self._compute_direction(origin, destination)
+        self._direction = direction
 
 
 class ActionMousePick(ActionCell):
@@ -7982,11 +7996,9 @@ class ActionApplyTorque(ActionCell):
         if not_met(condition):
             return
         game_object = self.get_parameter_value(self.game_object)
-        if game_object is LogicNetworkCell.STATUS_WAITING:
-            return
         torque = self.get_parameter_value(self.torque)
         local = self.local
-        if torque is LogicNetworkCell.STATUS_WAITING:
+        if is_waiting(game_object, torque):
             return
         self._set_ready()
         if torque:
