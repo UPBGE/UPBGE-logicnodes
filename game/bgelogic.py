@@ -1029,7 +1029,7 @@ class LogicNetwork(LogicNetworkCell):
             module_name = 'bgelogic.NL{}'.format(stripped_name)
             module = load_user_module(module_name)
             module._initialize(owner_object)
-            subnetwork = owner_object[f'IGNLTree_{node_tree_name}]
+            subnetwork = owner_object[f'IGNLTree_{node_tree_name}']
             self.sub_networks.append(subnetwork)
 
 
