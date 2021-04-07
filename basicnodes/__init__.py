@@ -7834,6 +7834,33 @@ class NLRemoveListValue(bpy.types.Node, NLActionNode):
 _nodes.append(NLRemoveListValue)
 
 
+class NLRemoveListIndex(bpy.types.Node, NLActionNode):
+    bl_idname = "NLRemoveListIndex"
+    bl_label = "Remove Index"
+    nl_category = "Python"
+    nl_subcat = 'List'
+
+    def init(self, context):
+        NLActionNode.init(self, context)
+        self.inputs.new(NLConditionSocket.bl_idname, 'Condition')
+        self.inputs.new(NLListSocket.bl_idname, 'List')
+        self.inputs.new(NLIntegerFieldSocket.bl_idname, 'Index')
+        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+        self.outputs.new(NLListSocket.bl_idname, 'List')
+
+    def get_output_socket_varnames(self):
+        return ["OUT", "LIST"]
+
+    def get_netlogic_class_name(self):
+        return "bgelogic.RemoveListIndex"
+
+    def get_input_sockets_field_names(self):
+        return ["condition", 'items', 'idx']
+
+
+_nodes.append(NLRemoveListIndex)
+
+
 class NLActionInstallSubNetwork(bpy.types.Node, NLActionNode):
     bl_idname = "NLActionInstallSubNetwork"
     bl_label = "Add Logic Tree to Object"
@@ -8737,6 +8764,7 @@ class NLActionSetCharacterWalkDir(bpy.types.Node, NLActionNode):
     bl_label = "Set Walk Direction"
     nl_category = "Physics"
     nl_subcat = 'Character'
+    local: bpy.props.BoolProperty(default=True, update=update_tree_code)
 
     def init(self, context):
         NLActionNode.init(self, context)
@@ -8747,12 +8775,23 @@ class NLActionSetCharacterWalkDir(bpy.types.Node, NLActionNode):
 
     def get_output_socket_varnames(self):
         return ["OUT"]
+    
+    def draw_buttons(self, context, layout):
+        layout.prop(
+            self,
+            "local",
+            toggle=True,
+            text="Apply Local" if self.local else "Apply Global"
+        )
 
     def get_netlogic_class_name(self):
         return "bgelogic.ActionSetCharacterWalkDir"
 
     def get_input_sockets_field_names(self):
         return ["condition", "game_object", 'walkDir']
+    
+    def get_nonsocket_fields(self):
+        return [("local", lambda: "True" if self.local else "False")]
 
 
 _nodes.append(NLActionSetCharacterWalkDir)

@@ -5676,7 +5676,7 @@ class ActionExecuteNetwork(ActionCell):
         self._set_ready()
         if is_invalid(target_object):
             return
-        added_network = target_object.get(tree_name, None)
+        added_network = target_object.get(f'IGNLTree_{tree_name}', None)
         if not added_network:
             self._network.install_subnetwork(
                 target_object,
@@ -6630,6 +6630,42 @@ class RemoveListValue(ActionCell):
             list_d.remove(val)
         else:
             debug("List Remove Value Node: Item '{}' not in List!".format(val))
+            return
+        self.new_list = list_d
+        self.done = True
+
+
+class RemoveListIndex(ActionCell):
+    def __init__(self):
+        ActionCell.__init__(self)
+        self.condition = None
+        self.items = None
+        self.idx = None
+        self.new_list = None
+        self.done = None
+        self.OUT = LogicNetworkSubCell(self, self.get_done)
+        self.LIST = LogicNetworkSubCell(self, self.get_list)
+
+    def get_done(self):
+        return self.done
+
+    def get_list(self):
+        return self.new_list
+
+    def evaluate(self):
+        self.done = False
+        condition = self.get_parameter_value(self.condition)
+        if not_met(condition):
+            return
+        list_d = self.get_parameter_value(self.items)
+        idx = self.get_parameter_value(self.idx)
+        if is_invalid(list_d, idx):
+            return
+        self._set_ready()
+        if len(list_d) > idx:
+            del list_d[idx]
+        else:
+            debug("List Index exceeds length!".format(val))
             return
         self.new_list = list_d
         self.done = True
@@ -7907,6 +7943,7 @@ class ActionSetCharacterWalkDir(ActionCell):
         self.condition = None
         self.game_object = None
         self.walkDir = None
+        self.local = False
         self.done = None
         self.OUT = LogicNetworkSubCell(self, self.get_done)
 
@@ -7921,11 +7958,14 @@ class ActionSetCharacterWalkDir(ActionCell):
         game_object = self.get_parameter_value(self.game_object)
         if game_object is LogicNetworkCell.STATUS_WAITING:
             return
+        local = self.local
         physics = bge.constraints.getCharacter(game_object)
         walkDir = self.get_parameter_value(self.walkDir)
         self._set_ready()
         if is_invalid(game_object):
             return
+        if local:
+            walkDir = game_object.worldOrientation @ walkDir
         physics.walkDirection = walkDir
         self.done = True
 
