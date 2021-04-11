@@ -8761,7 +8761,7 @@ _nodes.append(NLActionSetCharacterGravity)
 
 class NLActionSetCharacterWalkDir(bpy.types.Node, NLActionNode):
     bl_idname = "NLActionSetCharacterWalkDir"
-    bl_label = "Set Walk Direction"
+    bl_label = "Walk"
     nl_category = "Physics"
     nl_subcat = 'Character'
     local: bpy.props.BoolProperty(default=True, update=update_tree_code)
@@ -8795,6 +8795,45 @@ class NLActionSetCharacterWalkDir(bpy.types.Node, NLActionNode):
 
 
 _nodes.append(NLActionSetCharacterWalkDir)
+
+
+class NLActionSetCharacterVelocity(bpy.types.Node, NLActionNode):
+    bl_idname = "NLActionSetCharacterVelocity"
+    bl_label = "Set Velocity"
+    nl_category = "Physics"
+    nl_subcat = 'Character'
+    local: bpy.props.BoolProperty(default=True, update=update_tree_code)
+
+    def init(self, context):
+        NLActionNode.init(self, context)
+        self.inputs.new(NLConditionSocket.bl_idname, "Condition")
+        self.inputs.new(NLGameObjectSocket.bl_idname, "Object")
+        self.inputs.new(NLVec3FieldSocket.bl_idname, "Velocity")
+        self.inputs.new(NLPositiveFloatSocket.bl_idname, "Time")
+        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+
+    def get_output_socket_varnames(self):
+        return ["OUT"]
+    
+    def draw_buttons(self, context, layout):
+        layout.prop(
+            self,
+            "local",
+            toggle=True,
+            text="Apply Local" if self.local else "Apply Global"
+        )
+
+    def get_netlogic_class_name(self):
+        return "bgelogic.ActionSetCharacterVelocity"
+
+    def get_input_sockets_field_names(self):
+        return ["condition", "game_object", 'vel', 'time']
+    
+    def get_nonsocket_fields(self):
+        return [("local", lambda: "True" if self.local else "False")]
+
+
+_nodes.append(NLActionSetCharacterVelocity)
 
 
 class NLActionGetCharacterInfo(bpy.types.Node, NLActionNode):
@@ -10092,6 +10131,8 @@ class NLActionStart3DSoundAdv(bpy.types.Node, NLActionNode):
         self.inputs.new(NLBooleanSocket.bl_idname, "Use Occlusion")
         self.inputs.new(NLSocketAlphaFloat.bl_idname, 'Transition')
         self.inputs[-1].value = .1
+        self.inputs.new(NLSocketAlphaFloat.bl_idname, 'Cutoff')
+        self.inputs[-1].value = .1
         self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Type")
         self.inputs[-1].value = 'default3D'
         self.inputs[-1].enabled = False
@@ -10113,9 +10154,9 @@ class NLActionStart3DSoundAdv(bpy.types.Node, NLActionNode):
         self.outputs.new(NLParameterSocket.bl_idname, 'Sound')
 
     def update_draw(self):
-        self.inputs[4].enabled = self.inputs[3].value
+        self.inputs[4].enabled = self.inputs[5].enabled = self.inputs[3].value
         state = self.advanced
-        for i in [9, 10, 11, 12]:
+        for i in [10, 11, 12, 13]:
             ipt = self.inputs[i]
             if ipt.is_linked:
                 ipt.enabled = True
@@ -10138,6 +10179,7 @@ class NLActionStart3DSoundAdv(bpy.types.Node, NLActionNode):
             "sound",
             'occlusion',
             'transition',
+            'cutoff',
             "device",
             "loop_count",
             "pitch",
@@ -10344,6 +10386,29 @@ class NLParameterGetGlobalValue(bpy.types.Node, NLParameterNode):
 
 
 _nodes.append(NLParameterGetGlobalValue)
+
+
+class NLActionListGlobalValues(bpy.types.Node, NLActionNode):
+    bl_idname = "NLActionListGlobalValues"
+    bl_label = "List Global Category"
+    nl_category = "Values"
+    nl_subcat = 'Global'
+
+    def init(self, context):
+        NLActionNode.init(self, context)
+        self.inputs.new(NLConditionSocket.bl_idname, "Condition")
+        self.inputs.new(NLGlobalCatSocket.bl_idname, "Category")
+        self.inputs.new(NLBooleanSocket.bl_idname, 'Print')
+        self.outputs.new(NLDictSocket.bl_idname, "Value")
+
+    def get_input_sockets_field_names(self):
+        return ['condition', "data_id", 'print_d']
+
+    def get_netlogic_class_name(self):
+        return "bgelogic.ActionListGlobalValues"
+
+
+_nodes.append(NLActionListGlobalValues)
 
 
 class NLActionSetGlobalValue(bpy.types.Node, NLActionNode):

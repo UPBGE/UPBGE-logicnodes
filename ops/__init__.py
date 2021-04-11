@@ -1,3 +1,4 @@
+from basicnodes import NLSocketAlphaFloat
 import os
 import json
 import bpy
@@ -5,6 +6,41 @@ import bge_netlogic
 import bge_netlogic.utilities as utils
 from bpy_extras.io_utils import ImportHelper
 import webbrowser
+
+
+NODE_ATTRS = [
+    'value',
+    'game_object',
+    'default_value',
+    'use_toggle',
+    'use_value',
+    'true_label',
+    'false_label',
+    'value_type',
+    'bool_editor',
+    'int_editor',
+    'float_editor',
+    'string_editor',
+    'radians',
+    'filepath_value',
+    'sound_value',
+    'float_field',
+    'expression_field',
+    'input_type',
+    'value_x',
+    'value_y',
+    'value_z',
+    'title',
+    'local',
+    'operator',
+    'formatted',
+    'pulse',
+    'hide',
+    'label',
+    'ref_index',
+    'use_owner',
+    'advanced'
+]
 
 
 class TreeCodeWriterOperator(bpy.types.Operator):
@@ -340,29 +376,38 @@ class NLUpdateTreeVersionOperator(bpy.types.Operator):
                         self.update_compare_node(tree, node)
                     if node.bl_idname == 'NLActionRayCastNode':
                         self.update_ray_node(tree, node)
+                    if node.bl_idname == 'NLActionStart3DSoundAdv':
+                        self.update_3dsound_node(tree, node)
         return {'FINISHED'}
 
-    def restore_all_inputs(self, tree, node, replacer):
-        idx = 0
-        for i in node.inputs:
+    def restore_all_inputs(self, tree, node, replacer, scope=0, offset=0, offset_2=0):
+        if scope == 0:
+            scope = len(node.inputs) - 1
+        for idx in range(scope):
+            i = node.inputs[idx+offset]
+            for attr in NODE_ATTRS:
+                if attr == 'label':
+                    continue
+                if hasattr(i, attr):
+                    setattr(replacer.inputs[idx+offset_2], attr, getattr(i, attr))
             if i.is_linked:
                 for link in i.links:
                     tree.links.new(
                         link.from_socket,
-                        replacer.inputs[idx]
+                        replacer.inputs[idx+offset_2]
                     )
-            idx += 1
 
-    def restore_all_outputs(self, tree, node, replacer):
-        idx = 0
-        for o in node.outputs:
+    def restore_all_outputs(self, tree, node, replacer, scope=0, offset=0, offset_2=0):
+        if scope == 0:
+            scope = len(node.outputs) - 1
+        for idx in range(scope):
+            o = node.outputs[idx+offset]
             if o.is_linked:
                 for link in o.links:
                     tree.links.new(
-                        replacer.outputs[idx],
-                        link.to_socket
+                        replacer.outputs[idx+offset_2],
+                        link.from_socket
                     )
-            idx += 1
 
     def update_ray_node(self, tree, node):
         if len(node.inputs) == 6:
@@ -372,6 +417,24 @@ class NLUpdateTreeVersionOperator(bpy.types.Operator):
             self.restore_all_inputs(tree, node, replacer)
             self.restore_all_outputs(tree, node, replacer)
             tree.nodes.remove(node)
+
+    def update_3dsound_node(self, tree, node):
+        if node.inputs[5].bl_idname == 'NLSocketAlphaFloat':
+            return
+        replacer = tree.nodes.new('NLActionStart3DSoundAdv')
+        replacer.location = node.location
+        replacer.label = node.label
+        self.restore_all_inputs(tree, node, replacer, scope=4)
+        self.restore_all_inputs(
+            tree,
+            node,
+            replacer,
+            scope=6,
+            offset=7,
+            offset_2=8
+        )
+        self.restore_all_outputs(tree, node, replacer)
+        tree.nodes.remove(node)
 
     def update_compare_node(self, tree, node):
         if node.inputs[0].bl_idname != 'NLPositiveFloatSocket':

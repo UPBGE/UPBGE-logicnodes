@@ -823,8 +823,7 @@ class LogicNetwork(LogicNetworkCell):
                 db = SimpleLoggingDatabase.get_or_create_shared_db(c.name)
                 msg += f' {c.name},'
                 for v in c.content:
-                    val = v.get(dat.get(v.value_type, 'FLOAT'))
-                    print(val)
+                    val = getattr(v , dat.get(v.value_type, 'FLOAT'), 0)
                     db.put(v.name, val, v.persistent)
 
             debug(f'Globals Initialized:{msg[:-1]}')
@@ -1021,7 +1020,7 @@ class LogicNetwork(LogicNetworkCell):
                     stripped_name, owner_object.name
                 ))
             if(initial_status is True):
-                owner_object[node_tree_name].stopped = False
+                owner_object[f'IGNLTree_{node_tree_name}'].stopped = False
         else:
             debug("Installing sub network...")
             initial_status_key = f'NL__{node_tree_name}'
@@ -4114,7 +4113,7 @@ class ConditionLNStatus(ConditionCell):
         self._stopped = False
         if is_invalid(game_object):
             return
-        tree = game_object.get(tree_name)
+        tree = game_object.get(f'IGNLTree_{tree_name}')
         if tree is None:
             return
         self._running = tree.is_running()
@@ -5683,7 +5682,7 @@ class ActionExecuteNetwork(ActionCell):
                 tree_name,
                 False
             )
-            added_network = target_object.get(tree_name, None)
+            added_network = target_object.get(f'IGNLTree_{tree_name}', None)
         if condition:
             added_network.stopped = False
         else:
@@ -5931,6 +5930,17 @@ class ActionRayPick(ActionCell):
                     1
                 ]
             )
+            if obj:
+                bge.render.drawLine(
+                    origin,
+                    point,
+                    [
+                        0,
+                        1,
+                        0,
+                        1
+                    ]
+                )
         self._set_value(obj is not None)
         self._picked_object = obj
         self._point = point
@@ -7970,6 +7980,39 @@ class ActionSetCharacterWalkDir(ActionCell):
         self.done = True
 
 
+class ActionSetCharacterVelocity(ActionCell):
+    def __init__(self):
+        ActionCell.__init__(self)
+        self.condition = None
+        self.game_object = None
+        self.vel = None
+        self.time = None
+        self.local = False
+        self.done = None
+        self.OUT = LogicNetworkSubCell(self, self.get_done)
+
+    def get_done(self):
+        return self.done
+
+    def evaluate(self):
+        self.done = False
+        condition = self.get_parameter_value(self.condition)
+        if not_met(condition):
+            return
+        game_object = self.get_parameter_value(self.game_object)
+        if game_object is LogicNetworkCell.STATUS_WAITING:
+            return
+        local = self.local
+        physics = bge.constraints.getCharacter(game_object)
+        vel = self.get_parameter_value(self.vel)
+        time = self.get_parameter_value(self.time)
+        self._set_ready()
+        if is_invalid(game_object):
+            return
+        physics.setVelocity(vel, time, local)
+        self.done = True
+
+
 class ActionGetCharacterInfo(ActionCell):
     def __init__(self):
         ActionCell.__init__(self)
@@ -8380,6 +8423,7 @@ class ActionStart3DSoundAdv(ActionCell):
         self.sound = None
         self.occlusion = None
         self.transition = None
+        self.cutoff = None
         self.speaker = None
         self.device = None
         self.loop_count = None
@@ -8504,6 +8548,7 @@ class ActionStart3DSoundAdv(ActionCell):
         condition = self.get_parameter_value(self.condition)
         if not_met(condition):
             return
+        cutoff = self.get_parameter_value(self.cutoff)
         sound = self.get_parameter_value(self.sound)
         device = self.get_parameter_value(self.device)
         loop_count = self.get_parameter_value(self.loop_count)
@@ -8527,7 +8572,7 @@ class ActionStart3DSoundAdv(ActionCell):
             devs[device] = aud.Device()
         handle = self._handle = devs[device].play(soundfile)
         if occlusion:
-            soundlow = aud.Sound.lowpass(soundfile, 400, .5)
+            soundlow = aud.Sound.lowpass(soundfile, 4000*cutoff, .5)
             handlelow = devs[device].play(soundlow)
             self._handles[soundfile] = [handle, handlelow]
         else:
@@ -8692,6 +8737,31 @@ class ParameterGetGlobalValue(ParameterCell):
         self._set_ready()
         db = SimpleLoggingDatabase.get_or_create_shared_db(data_id)
         self._set_value(db.get(key, default))
+
+
+class ActionListGlobalValues(ParameterCell):
+    def __init__(self):
+        ParameterCell.__init__(self)
+        self.condition = None
+        self.data_id = None
+        self.print_d = None
+
+    def evaluate(self):
+        condition = self.get_parameter_value(self.condition)
+        if not_met(condition):
+            return
+        data_id = self.get_parameter_value(self.data_id)
+        print_d = self.get_parameter_value(self.print_d)
+        if is_waiting(data_id, print_d):
+            return
+        self._set_ready()
+        db = SimpleLoggingDatabase.get_or_create_shared_db(data_id)
+        if print_d:
+            print(f'[Logic Nodes] Global category "{data_id}":')
+            for e in db.data:
+                print('{}\t->\t{}'.format(e, db.data[e]))
+            print('END ------------------------------------')
+        self._set_value(db.data)
 
 
 class ParameterFormattedString(ParameterCell):
