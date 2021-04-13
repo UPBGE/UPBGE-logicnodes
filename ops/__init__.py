@@ -1,4 +1,3 @@
-from basicnodes import NLSocketAlphaFloat
 import os
 import json
 import bpy
