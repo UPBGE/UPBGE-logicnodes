@@ -8539,6 +8539,12 @@ class ActionStart3DSoundAdv(ActionCell):
                                 volume *
                                 mult
                             )
+                        else:
+                            handles[sound][ind].volume = volume
+                            handles[sound][ind].cone_volume_outer = (
+                                cone_outer_volume *
+                                volume
+                            )
                     elif handle in audio_system.active_sounds:
                         for handle in handles[sound]:
                             audio_system.active_sounds.remove(handle)
