@@ -8851,7 +8851,6 @@ class NLActionGetCharacterInfo(bpy.types.Node, NLActionNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
-        self.inputs.new(NLPseudoConditionSocket.bl_idname, "Condition")
         self.inputs.new(NLGameObjectSocket.bl_idname, "Object")
         self.outputs.new(NLIntegerFieldSocket.bl_idname, 'Max Jumps')
         self.outputs.new(NLIntegerFieldSocket.bl_idname, 'Current Jump Count')
@@ -8863,7 +8862,7 @@ class NLActionGetCharacterInfo(bpy.types.Node, NLActionNode):
         return "bgelogic.ActionGetCharacterInfo"
 
     def get_input_sockets_field_names(self):
-        return ["condition", "game_object"]
+        return ["game_object"]
 
     def get_output_socket_varnames(self):
         return ["MAX_JUMPS", "CUR_JUMP", "GRAVITY", 'WALKDIR', 'ON_GROUND']

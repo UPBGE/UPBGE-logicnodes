@@ -8016,7 +8016,6 @@ class ActionSetCharacterVelocity(ActionCell):
 class ActionGetCharacterInfo(ActionCell):
     def __init__(self):
         ActionCell.__init__(self)
-        self.condition = None
         self.game_object = None
         self.max_jumps = None
         self.cur_jump = None
@@ -8045,9 +8044,6 @@ class ActionGetCharacterInfo(ActionCell):
         return self.on_ground
 
     def evaluate(self):
-        condition = self.get_parameter_value(self.condition)
-        if not_met(condition):
-            return
         game_object = self.get_parameter_value(self.game_object)
         if is_invalid(game_object):
             return
