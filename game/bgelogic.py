@@ -8200,6 +8200,12 @@ class ActionPlayAction(ActionCell):
             blend_mode
         ):
             return
+        if play_mode > 2:
+            if not_met(condition):
+                self._notify_finished(game_object, layer)
+                return
+            else:
+                play_mode -= 3
         if layer_weight <= 0:
             layer_weight = 0.0
         elif layer_weight >= 1:
