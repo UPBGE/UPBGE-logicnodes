@@ -379,32 +379,32 @@ class NLUpdateTreeVersionOperator(bpy.types.Operator):
                         self.update_3dsound_node(tree, node)
         return {'FINISHED'}
 
-    def restore_all_inputs(self, tree, node, replacer, scope=0, offset=0, offset_2=0):
+    def restore_inputs(self, tree, node, replacer, scope=0, start=0, offset=0):
         if scope == 0:
             scope = len(node.inputs) - 1
         for idx in range(scope):
-            i = node.inputs[idx+offset]
+            i = node.inputs[idx+start]
             for attr in NODE_ATTRS:
                 if attr == 'label':
                     continue
                 if hasattr(i, attr):
-                    setattr(replacer.inputs[idx+offset_2], attr, getattr(i, attr))
+                    setattr(replacer.inputs[idx+offset], attr, getattr(i, attr))
             if i.is_linked:
                 for link in i.links:
                     tree.links.new(
                         link.from_socket,
-                        replacer.inputs[idx+offset_2]
+                        replacer.inputs[idx+offset]
                     )
 
-    def restore_all_outputs(self, tree, node, replacer, scope=0, offset=0, offset_2=0):
+    def restore_outputs(self, tree, node, replacer, scope=0, start=0, offset=0):
         if scope == 0:
             scope = len(node.outputs) - 1
         for idx in range(scope):
-            o = node.outputs[idx+offset]
+            o = node.outputs[idx+start]
             if o.is_linked:
                 for link in o.links:
                     tree.links.new(
-                        replacer.outputs[idx+offset_2],
+                        replacer.outputs[idx+offset],
                         link.from_socket
                     )
 
@@ -413,8 +413,8 @@ class NLUpdateTreeVersionOperator(bpy.types.Operator):
             replacer = tree.nodes.new('NLActionRayCastNode')
             replacer.location = node.location
             replacer.label = node.label
-            self.restore_all_inputs(tree, node, replacer)
-            self.restore_all_outputs(tree, node, replacer)
+            self.restore_inputs(tree, node, replacer)
+            self.restore_outputs(tree, node, replacer)
             tree.nodes.remove(node)
 
     def update_3dsound_node(self, tree, node):
@@ -423,16 +423,16 @@ class NLUpdateTreeVersionOperator(bpy.types.Operator):
         replacer = tree.nodes.new('NLActionStart3DSoundAdv')
         replacer.location = node.location
         replacer.label = node.label
-        self.restore_all_inputs(tree, node, replacer, scope=4)
-        self.restore_all_inputs(
+        self.restore_inputs(tree, node, replacer, scope=4)
+        self.restore_inputs(
             tree,
             node,
             replacer,
             scope=6,
-            offset=7,
-            offset_2=8
+            start=7,
+            offset=8
         )
-        self.restore_all_outputs(tree, node, replacer)
+        self.restore_outputs(tree, node, replacer)
         tree.nodes.remove(node)
 
     def update_compare_node(self, tree, node):
@@ -465,7 +465,7 @@ class NLUpdateTreeVersionOperator(bpy.types.Operator):
                 link.from_socket,
                 replacer.inputs[1]
             )
-        self.restore_all_outputs(tree, node, replacer)
+        self.restore_outputs(tree, node, replacer)
         tree.nodes.remove(node)
 
 
