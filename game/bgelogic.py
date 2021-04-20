@@ -5718,7 +5718,7 @@ class ActionStartLogicNetwork(ActionCell):
         self._set_ready()
         if is_invalid(game_object):
             return
-        network = game_object.get(logic_network_name)
+        network = game_object.get(f'IGNLTree_{logic_network_name}')
         if network is not None:
             network.stopped = False
         self.done = True
@@ -5750,7 +5750,7 @@ class ActionStopLogicNetwork(ActionCell):
         self._set_ready()
         if is_invalid(game_object):
             return
-        network = game_object.get(logic_network_name)
+        network = game_object.get(f'IGNLTree_{logic_network_name}')
         network.stop()
         self.done = True
 
