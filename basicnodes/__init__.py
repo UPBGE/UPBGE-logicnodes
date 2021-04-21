@@ -4347,6 +4347,34 @@ class NLSensorValueNode(bpy.types.Node, NLParameterNode):
 _nodes.append(NLSensorValueNode)
 
 
+class NLActionGetCharacterInfo(bpy.types.Node, NLParameterNode):
+    bl_idname = "NLActionGetCharacterInfo"
+    bl_label = "Get Physics Info"
+    nl_category = "Physics"
+    nl_subcat = 'Character'
+
+    def init(self, context):
+        NLActionNode.init(self, context)
+        self.inputs.new(NLGameObjectSocket.bl_idname, "Object")
+        self.outputs.new(NLIntegerFieldSocket.bl_idname, 'Max Jumps')
+        self.outputs.new(NLIntegerFieldSocket.bl_idname, 'Current Jump Count')
+        self.outputs.new(NLVec3FieldSocket.bl_idname, 'Gravity')
+        self.outputs.new(NLVec3FieldSocket.bl_idname, 'Walk Direction')
+        self.outputs.new(NLBooleanSocket.bl_idname, 'On Ground')
+
+    def get_netlogic_class_name(self):
+        return "bgelogic.ParameterGetCharacterInfo"
+
+    def get_input_sockets_field_names(self):
+        return ["game_object"]
+
+    def get_output_socket_varnames(self):
+        return ["MAX_JUMPS", "CUR_JUMP", "GRAVITY", 'WALKDIR', 'ON_GROUND']
+
+
+_nodes.append(NLActionGetCharacterInfo)
+
+
 class NLObjectAttributeParameterNode(bpy.types.Node, NLParameterNode):
     bl_idname = "NLObjectAttributeParameterNode"
     bl_label = "Get Position / Rotation / Scale etc."
@@ -8849,34 +8877,6 @@ class NLActionSetCharacterVelocity(bpy.types.Node, NLActionNode):
 _nodes.append(NLActionSetCharacterVelocity)
 
 
-class NLActionGetCharacterInfo(bpy.types.Node, NLActionNode):
-    bl_idname = "NLActionGetCharacterInfo"
-    bl_label = "Get Physics Info"
-    nl_category = "Physics"
-    nl_subcat = 'Character'
-
-    def init(self, context):
-        NLActionNode.init(self, context)
-        self.inputs.new(NLGameObjectSocket.bl_idname, "Object")
-        self.outputs.new(NLIntegerFieldSocket.bl_idname, 'Max Jumps')
-        self.outputs.new(NLIntegerFieldSocket.bl_idname, 'Current Jump Count')
-        self.outputs.new(NLVec3FieldSocket.bl_idname, 'Gravity')
-        self.outputs.new(NLVec3FieldSocket.bl_idname, 'Walk Direction')
-        self.outputs.new(NLBooleanSocket.bl_idname, 'On Ground')
-
-    def get_netlogic_class_name(self):
-        return "bgelogic.ActionGetCharacterInfo"
-
-    def get_input_sockets_field_names(self):
-        return ["game_object"]
-
-    def get_output_socket_varnames(self):
-        return ["MAX_JUMPS", "CUR_JUMP", "GRAVITY", 'WALKDIR', 'ON_GROUND']
-
-
-_nodes.append(NLActionGetCharacterInfo)
-
-
 class NLActionApplyTorque(bpy.types.Node, NLActionNode):
     bl_idname = "NLActionApplyTorque"
     bl_label = "Apply Torque"
@@ -10303,6 +10303,27 @@ class NLActionPauseSound(bpy.types.Node, NLActionNode):
 
 
 _nodes.append(NLActionPauseSound)
+
+
+class NLActionResumeSound(bpy.types.Node, NLActionNode):
+    bl_idname = "NLActionResumeSound"
+    bl_label = "Resume Sound"
+    bl_icon = 'FRAME_NEXT'
+    nl_category = "Sound"
+
+    def init(self, context):
+        NLActionNode.init(self, context)
+        self.inputs.new(NLConditionSocket.bl_idname, "Condition")
+        self.inputs.new(NLParameterSocket.bl_idname, "Sound")
+
+    def get_netlogic_class_name(self):
+        return "bgelogic.ActionResumeSound"
+
+    def get_input_sockets_field_names(self):
+        return ["condition", "sound"]
+
+
+_nodes.append(NLActionResumeSound)
 
 
 class NLActionEndGame(bpy.types.Node, NLActionNode):

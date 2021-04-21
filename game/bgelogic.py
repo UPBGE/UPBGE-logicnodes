@@ -8746,6 +8746,25 @@ class ActionPauseSound(ActionCell):
         sound.pause()
 
 
+class ActionResumeSound(ActionCell):
+    def __init__(self):
+        ActionCell.__init__(self)
+        self.condition = None
+        self.sound = None
+
+    def evaluate(self):
+        condition = self.get_parameter_value(self.condition)
+        if not_met(condition):
+            return
+        sound = self.get_parameter_value(self.sound)
+        if sound is LogicNetworkCell.STATUS_WAITING:
+            return
+        self._set_ready()
+        if sound is None:
+            return
+        sound.resume()
+
+
 class ParameterGetGlobalValue(ParameterCell):
     def __init__(self):
         ParameterCell.__init__(self)
