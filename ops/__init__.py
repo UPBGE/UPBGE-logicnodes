@@ -377,44 +377,62 @@ class NLUpdateTreeVersionOperator(bpy.types.Operator):
                         self.update_ray_node(tree, node)
                     if node.bl_idname == 'NLActionStart3DSoundAdv':
                         self.update_3dsound_node(tree, node)
+                    if node.bl_idname == 'NLActionGetCharacterInfo':
+                        self.update_charinfo_node(tree, node)
         return {'FINISHED'}
 
-    def restore_all_inputs(self, tree, node, replacer, scope=0, offset=0, offset_2=0):
+    def restore_input(self, tree, node, replacer, idx, new_idx):
+        ipt = node.inputs[idx]
+        new_ipt = replacer.inputs[new_idx]
+        if ipt.is_linked:
+            for link in ipt.links:
+                tree.links.new(link.from_socket, new_ipt)
+
+    def restore_inputs(self, tree, node, replacer, scope=0, start=0, offset=0):
         if scope == 0:
             scope = len(node.inputs) - 1
         for idx in range(scope):
-            i = node.inputs[idx+offset]
+            i = node.inputs[idx+start]
             for attr in NODE_ATTRS:
                 if attr == 'label':
                     continue
                 if hasattr(i, attr):
-                    setattr(replacer.inputs[idx+offset_2], attr, getattr(i, attr))
+                    setattr(replacer.inputs[idx+offset], attr, getattr(i, attr))
             if i.is_linked:
                 for link in i.links:
                     tree.links.new(
                         link.from_socket,
-                        replacer.inputs[idx+offset_2]
+                        replacer.inputs[idx+offset]
                     )
 
-    def restore_all_outputs(self, tree, node, replacer, scope=0, offset=0, offset_2=0):
+    def restore_outputs(self, tree, node, replacer, scope=0, start=0, offset=0):
         if scope == 0:
             scope = len(node.outputs) - 1
         for idx in range(scope):
-            o = node.outputs[idx+offset]
+            o = node.outputs[idx+start]
             if o.is_linked:
                 for link in o.links:
                     tree.links.new(
-                        replacer.outputs[idx+offset_2],
+                        replacer.outputs[idx+offset],
                         link.from_socket
                     )
+
+    def update_charinfo_node(self, tree, node):
+        if len(node.inputs) > 1:
+            replacer = tree.nodes.new('NLActionGetCharacterInfo')
+            replacer.location = node.location
+            replacer.label = node.label
+            self.restore_input(tree, node, replacer, 1, 0)
+            self.restore_outputs(tree, node, replacer)
+            tree.nodes.remove(node)
 
     def update_ray_node(self, tree, node):
         if len(node.inputs) == 6:
             replacer = tree.nodes.new('NLActionRayCastNode')
             replacer.location = node.location
             replacer.label = node.label
-            self.restore_all_inputs(tree, node, replacer)
-            self.restore_all_outputs(tree, node, replacer)
+            self.restore_inputs(tree, node, replacer)
+            self.restore_outputs(tree, node, replacer)
             tree.nodes.remove(node)
 
     def update_3dsound_node(self, tree, node):
@@ -423,16 +441,16 @@ class NLUpdateTreeVersionOperator(bpy.types.Operator):
         replacer = tree.nodes.new('NLActionStart3DSoundAdv')
         replacer.location = node.location
         replacer.label = node.label
-        self.restore_all_inputs(tree, node, replacer, scope=4)
-        self.restore_all_inputs(
+        self.restore_inputs(tree, node, replacer, scope=4)
+        self.restore_inputs(
             tree,
             node,
             replacer,
             scope=6,
-            offset=7,
-            offset_2=8
+            start=7,
+            offset=8
         )
-        self.restore_all_outputs(tree, node, replacer)
+        self.restore_outputs(tree, node, replacer)
         tree.nodes.remove(node)
 
     def update_compare_node(self, tree, node):
@@ -465,7 +483,7 @@ class NLUpdateTreeVersionOperator(bpy.types.Operator):
                 link.from_socket,
                 replacer.inputs[1]
             )
-        self.restore_all_outputs(tree, node, replacer)
+        self.restore_outputs(tree, node, replacer)
         tree.nodes.remove(node)
 
 
@@ -490,39 +508,6 @@ class NLMakeGroupOperator(bpy.types.Operator):
     def group_make(self, group_name, add_nodes):
         node_tree = bpy.data.node_groups.new(group_name, 'BGELogicTree')
         group_name = node_tree.name
-        attrs = [
-            'value',
-            'game_object',
-            'default_value',
-            'use_toggle',
-            'use_value',
-            'true_label',
-            'false_label',
-            'value_type',
-            'bool_editor',
-            'int_editor',
-            'float_editor',
-            'string_editor',
-            'radians',
-            'filepath_value',
-            'sound_value',
-            'float_field',
-            'expression_field',
-            'input_type',
-            'value_x',
-            'value_y',
-            'value_z',
-            'title',
-            'local',
-            'operator',
-            'formatted',
-            'pulse',
-            'hide',
-            'label',
-            'ref_index',
-            'use_owner',
-            'advanced'
-        ]
 
         nodes = node_tree.nodes
         new_nodes = {}
@@ -537,12 +522,12 @@ class NLMakeGroupOperator(bpy.types.Operator):
         for old_node in new_nodes:
             new_node = new_nodes[old_node]
             for attr in dir(old_node):
-                if attr in attrs:
+                if attr in NODE_ATTRS:
                     setattr(new_node, attr, getattr(old_node, attr))
             for socket in old_node.inputs:
                 index = self._index_of(socket, old_node.inputs)
                 for attr in dir(socket):
-                    if attr in attrs:
+                    if attr in NODE_ATTRS:
                         try:
                             if attr != 'label':
                                 setattr(new_node.inputs[index], attr, getattr(socket, attr))

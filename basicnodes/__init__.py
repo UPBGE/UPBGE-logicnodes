@@ -456,6 +456,13 @@ _enum_play_mode_values = [
         "bge.logic.KX_ACTION_MODE_PING_PONG",
         "Ping Pong",
         "Play the action in one direction then in the opposite one"
+    ),
+    ("bge.logic.KX_ACTION_MODE_PLAY + 3", "Play Stop", "Play the action once"),
+    ("bge.logic.KX_ACTION_MODE_LOOP + 3", "Loop Stop", "Loop the action"),
+    (
+        "bge.logic.KX_ACTION_MODE_PING_PONG + 3",
+        "Ping Pong Stop",
+        "Play the action in one direction then in the opposite one"
     )
 ]
 
@@ -8844,7 +8851,6 @@ class NLActionGetCharacterInfo(bpy.types.Node, NLActionNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
-        self.inputs.new(NLPseudoConditionSocket.bl_idname, "Condition")
         self.inputs.new(NLGameObjectSocket.bl_idname, "Object")
         self.outputs.new(NLIntegerFieldSocket.bl_idname, 'Max Jumps')
         self.outputs.new(NLIntegerFieldSocket.bl_idname, 'Current Jump Count')
@@ -8856,7 +8862,7 @@ class NLActionGetCharacterInfo(bpy.types.Node, NLActionNode):
         return "bgelogic.ActionGetCharacterInfo"
 
     def get_input_sockets_field_names(self):
-        return ["condition", "game_object"]
+        return ["game_object"]
 
     def get_output_socket_varnames(self):
         return ["MAX_JUMPS", "CUR_JUMP", "GRAVITY", 'WALKDIR', 'ON_GROUND']
@@ -9456,7 +9462,7 @@ class NLActionPlayActionNode(bpy.types.Node, NLActionNode):
         self.inputs.new(NLBlendActionModeSocket.bl_idname, "Blend Mode")
         self.outputs.new(NLConditionSocket.bl_idname, "Started")
         self.outputs.new(NLConditionSocket.bl_idname, "Running")
-        self.outputs.new(NLConditionSocket.bl_idname, "Finished")
+        self.outputs.new(NLConditionSocket.bl_idname, "On Finish")
         self.outputs.new(NLParameterSocket.bl_idname, "Current Frame")
 
     def update_draw(self):

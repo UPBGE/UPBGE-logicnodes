@@ -5718,7 +5718,7 @@ class ActionStartLogicNetwork(ActionCell):
         self._set_ready()
         if is_invalid(game_object):
             return
-        network = game_object.get(logic_network_name)
+        network = game_object.get(f'IGNLTree_{logic_network_name}')
         if network is not None:
             network.stopped = False
         self.done = True
@@ -5750,7 +5750,7 @@ class ActionStopLogicNetwork(ActionCell):
         self._set_ready()
         if is_invalid(game_object):
             return
-        network = game_object.get(logic_network_name)
+        network = game_object.get(f'IGNLTree_{logic_network_name}')
         network.stop()
         self.done = True
 
@@ -8024,7 +8024,6 @@ class ActionSetCharacterVelocity(ActionCell):
 class ActionGetCharacterInfo(ActionCell):
     def __init__(self):
         ActionCell.__init__(self)
-        self.condition = None
         self.game_object = None
         self.max_jumps = None
         self.cur_jump = None
@@ -8053,9 +8052,6 @@ class ActionGetCharacterInfo(ActionCell):
         return self.on_ground
 
     def evaluate(self):
-        condition = self.get_parameter_value(self.condition)
-        if not_met(condition):
-            return
         game_object = self.get_parameter_value(self.game_object)
         if is_invalid(game_object):
             return
@@ -8208,6 +8204,12 @@ class ActionPlayAction(ActionCell):
             blend_mode
         ):
             return
+        if play_mode > 2:
+            if not_met(condition):
+                self._notify_finished(game_object, layer)
+                return
+            else:
+                play_mode -= 3
         if layer_weight <= 0:
             layer_weight = 0.0
         elif layer_weight >= 1:
