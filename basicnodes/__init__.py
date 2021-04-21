@@ -16,6 +16,7 @@ PARAM_LIST_SOCKET_COLOR = utils.Color.RGBA(0.74, .65, .48, 1.0)
 PARAM_DICT_SOCKET_COLOR = utils.Color.RGBA(0.58, 0.48, .74, 1.0)
 PARAM_OBJ_SOCKET_COLOR = utils.Color.RGBA(0.2, 0.5, .7, 1.0)
 PARAM_MAT_SOCKET_COLOR = utils.Color.RGBA(.75, .35, .37, 1.0)
+PARAM_GEOMTREE_SOCKET_COLOR = utils.Color.RGBA(.47, .59, .46, 1.0)
 PARAM_TEXT_SOCKET_COLOR = utils.Color.RGBA(.55, .25, .55, 1.0)
 PARAM_MESH_SOCKET_COLOR = utils.Color.RGBA(.0, .65, .35, 1.0)
 PARAM_COLL_SOCKET_COLOR = utils.Color.RGBA(0.25, 0.35, .8, 1.0)
@@ -481,8 +482,13 @@ OUTCELL = "__standard_logic_cell_value__"
 def filter_materials(self, item):
     if item.is_grease_pencil:
         return False
-    else:
+    return True
+
+
+def filter_geometry_nodes(self, item):
+    if isinstance(item, bpy.types.GeometryNodeTree):
         return True
+    return False
 
 
 def filter_lights(self, item):
@@ -493,8 +499,7 @@ def filter_lights(self, item):
         or isinstance(item.data, bpy.types.SunLight)
     ):
         return True
-    else:
-        return False
+    return False
 
 
 def filter_armatures(self, item):
@@ -502,8 +507,7 @@ def filter_armatures(self, item):
         isinstance(item.data, bpy.types.Armature)
     ):
         return True
-    else:
-        return False
+    return False
 
 
 def filter_logic_trees(self, item):
@@ -511,8 +515,7 @@ def filter_logic_trees(self, item):
         isinstance(item, bge_netlogic.ui.BGELogicTree)
     ):
         return True
-    else:
-        return False
+    return False
 
 
 def parse_field_value(value_type, value):
@@ -1242,6 +1245,85 @@ class NLArmatureBoneSocket(bpy.types.NodeSocket, NetLogicSocketType):
 
 
 _sockets.append(NLArmatureBoneSocket)
+
+
+class NLGeomNodeTreeSocket(bpy.types.NodeSocket, NetLogicSocketType):
+    bl_idname = "NLGeomNodeTreeSocket"
+    bl_label = "Material"
+    value: bpy.props.PointerProperty(
+        name='Geometry Node Tree',
+        type=bpy.types.GeometryNodeTree ,
+        poll=filter_geometry_nodes,
+        update=update_tree_code
+    )
+
+    def draw_color(self, context, node):
+        return PARAM_GEOMTREE_SOCKET_COLOR
+
+    def draw(self, context, layout, node, text):
+        if self.is_output:
+            layout.label(text=self.name)
+        elif self.is_linked:
+            layout.label(text=self.name)
+        else:
+            col = layout.column(align=False)
+            if self.name and self.is_linked:
+                col.label(text=self.name)
+            col.prop_search(
+                self,
+                'value',
+                bpy.data,
+                'node_groups',
+                icon='NONE',
+                text=''
+            )
+
+    def get_unlinked_value(self):
+        if isinstance(self.value, bpy.types.GeometryNodeTree):
+            return '"{}"'.format(self.value.name)
+
+
+_sockets.append(NLGeomNodeTreeSocket)
+
+
+class NLGeomTreeNodeSocket(bpy.types.NodeSocket, NetLogicSocketType):
+    bl_idname = "NLGeomTreeNodeSocket"
+    bl_label = "Tree Node"
+    value: bpy.props.StringProperty(
+        name='Tree Node',
+        update=update_tree_code
+    )
+    ref_index: bpy.props.IntProperty(default=0)
+
+    def draw_color(self, context, node):
+        return PARAMETER_SOCKET_COLOR
+
+    def draw(self, context, layout, node, text):
+        if self.is_linked or self.is_output:
+            layout.label(text=text)
+        else:
+            tree_socket = self.node.inputs[self.ref_index]
+            tree = tree_socket.value
+            col = layout.column(align=False)
+            if tree and not tree_socket.is_linked:
+                col.prop_search(
+                    self,
+                    "value",
+                    bpy.data.node_groups[tree.name],
+                    'nodes',
+                    text=''
+                )
+            elif tree_socket.is_linked:
+                col.label(text=text)
+                col.prop(self, 'value', text='')
+            else:
+                col.label(text=self.name)
+
+    def get_unlinked_value(self):
+        return '"{}"'.format(self.value)
+
+
+_sockets.append(NLGeomTreeNodeSocket)
 
 
 class NLMaterialSocket(bpy.types.NodeSocket, NetLogicSocketType):
@@ -3654,10 +3736,58 @@ class NLGameObjectPropertyParameterNode(bpy.types.Node, NLParameterNode):
 _nodes.append(NLGameObjectPropertyParameterNode)
 
 
+class NLGetGeometryNodeValue(bpy.types.Node, NLParameterNode):
+    bl_idname = "NLGetGeometryNodeValue"
+    bl_label = "Get Node Input Value"
+    nl_category = 'Nodes'
+    nl_subcat = 'Geometry'
+
+    def init(self, context):
+        NLActionNode.init(self, context)
+        self.inputs.new(NLGeomNodeTreeSocket.bl_idname, 'Material')
+        self.inputs.new(NLGeomTreeNodeSocket.bl_idname, 'Node Name')
+        self.inputs[-1].ref_index = 0
+        self.inputs.new(NLPositiveIntegerFieldSocket.bl_idname, "Input")
+        self.outputs.new(NLParameterSocket.bl_idname, "Value")
+
+    def update_draw(self):
+        tree = self.inputs[0]
+        nde = self.inputs[1]
+        ipt = self.inputs[2]
+        if tree.is_linked or nde.is_linked:
+            ipt.name = 'Input'
+        if (tree.value or tree.is_linked) and (nde.value or nde.is_linked):
+            ipt.enabled = True
+        else:
+            ipt.enabled = False
+        if not tree.is_linked and not nde.is_linked:
+            tree_name = tree.value.name
+            node_name = nde.value
+            target = bpy.data.node_groups[tree_name].nodes[node_name]
+            limit = len(target.inputs) - 1
+            if int(ipt.value) > limit:
+                ipt.value = limit
+            name = target.inputs[ipt.value].name
+            ipt.name = name
+
+    def get_netlogic_class_name(self):
+        return "bgelogic.ParameterGetGeometryNodeValue"
+
+    def get_input_sockets_field_names(self):
+        return ["tree_name", 'node_name', "input_slot"]
+
+    def get_output_socket_varnames(self):
+        return ['OUT']
+
+
+_nodes.append(NLGetGeometryNodeValue)
+
+
 class NLGetMaterialNodeValue(bpy.types.Node, NLParameterNode):
     bl_idname = "NLGetMaterialNodeValue"
     bl_label = "Get Node Input Value"
-    nl_category = "Materials"
+    nl_category = 'Nodes'
+    nl_subcat = 'Materials'
 
     def init(self, context):
         NLActionNode.init(self, context)
@@ -3703,7 +3833,8 @@ _nodes.append(NLGetMaterialNodeValue)
 class NLGetMaterialNode(bpy.types.Node, NLParameterNode):
     bl_idname = "NLGetMaterialNode"
     bl_label = "Get Node"
-    nl_category = "Materials"
+    nl_category = 'Nodes'
+    nl_subcat = 'Materials'
 
     def init(self, context):
         NLActionNode.init(self, context)
@@ -6642,10 +6773,67 @@ class NLSetGameObjectGamePropertyActionNode(bpy.types.Node, NLActionNode):
 _nodes.append(NLSetGameObjectGamePropertyActionNode)
 
 
+class NLSetGeometryNodeValue(bpy.types.Node, NLActionNode):
+    bl_idname = "NLSetGeometryNodeValue"
+    bl_label = "Set Node Input Value"
+    nl_category = 'Nodes'
+    nl_subcat = 'Geometry'
+
+    def init(self, context):
+        NLActionNode.init(self, context)
+        self.inputs.new(NLConditionSocket.bl_idname, "Condition")
+        self.inputs.new(NLGeomNodeTreeSocket.bl_idname, 'Tree')
+        self.inputs.new(NLGeomTreeNodeSocket.bl_idname, 'Node Name')
+        self.inputs[-1].ref_index = 1
+        self.inputs.new(NLPositiveIntegerFieldSocket.bl_idname, "Input")
+        self.inputs.new(NLFloatFieldSocket.bl_idname, 'Value')
+        self.outputs.new(NLConditionSocket.bl_idname, "Done")
+
+    def update_draw(self):
+        tree = self.inputs[1]
+        nde = self.inputs[2]
+        ipt = self.inputs[3]
+        val = self.inputs[4]
+        if tree.is_linked or nde.is_linked:
+            ipt.name = 'Input'
+        if (tree.value or tree.is_linked) and (nde.value or nde.is_linked):
+            ipt.enabled = val.enabled = True
+        else:
+            ipt.enabled = val.enabled = False
+        if not tree.is_linked and not nde.is_linked:
+            tree_name = tree.value.name
+            node_name = nde.value
+            target = bpy.data.node_groups[tree_name].nodes[node_name]
+            limit = len(target.inputs) - 1
+            if int(ipt.value) > limit:
+                ipt.value = limit
+            name = target.inputs[ipt.value].name
+            ipt.name = name
+
+    def get_netlogic_class_name(self):
+        return "bgelogic.ActionSetGeometryNodeValue"
+
+    def get_input_sockets_field_names(self):
+        return [
+            "condition",
+            "tree_name",
+            'node_name',
+            "input_slot",
+            'value'
+        ]
+
+    def get_output_socket_varnames(self):
+        return ['OUT']
+
+
+_nodes.append(NLSetGeometryNodeValue)
+
+
 class NLSetMaterial(bpy.types.Node, NLActionNode):
     bl_idname = "NLSetMaterial"
     bl_label = "Set Material"
-    nl_category = "Materials"
+    nl_category = 'Nodes'
+    nl_subcat = 'Materials'
 
     def init(self, context):
         NLActionNode.init(self, context)
@@ -6683,7 +6871,8 @@ _nodes.append(NLSetMaterial)
 class NLSetMaterialNodeValue(bpy.types.Node, NLActionNode):
     bl_idname = "NLSetMaterialNodeValue"
     bl_label = "Set Node Input Value"
-    nl_category = "Materials"
+    nl_category = 'Nodes'
+    nl_subcat = 'Materials'
 
     def init(self, context):
         NLActionNode.init(self, context)

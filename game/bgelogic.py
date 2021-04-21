@@ -2406,6 +2406,35 @@ class ParameterObjectProperty(ParameterCell):
             self._set_value(game_object[property_name])
 
 
+class ParameterGetGeometryNodeValue(ParameterCell):
+    def __init__(self):
+        ActionCell.__init__(self)
+        self.tree_name = None
+        self.node_name = None
+        self.input_slot = None
+        self.val = False
+        self.OUT = LogicNetworkSubCell(self, self._get_val)
+
+    def _get_val(self):
+        return self.val
+
+    def evaluate(self):
+        tree_name = self.get_parameter_value(self.tree_name)
+        node_name = self.get_parameter_value(self.node_name)
+        if is_invalid(tree_name, node_name):
+            return
+        input_slot = self.get_parameter_value(self.input_slot)
+        if is_waiting(tree_name):
+            return
+        self._set_ready()
+        self.val = (
+            bpy.data.node_groups[tree_name]
+            .nodes[node_name]
+            .inputs[input_slot]
+            .default_value
+        )
+
+
 class ParameterGetMaterialNodeValue(ParameterCell):
     def __init__(self):
         ActionCell.__init__(self)
@@ -4856,6 +4885,54 @@ class SetMaterial(ActionCell):
             return
         bl_obj.material_slots[slot].material = bpy.data.materials[mat_name]
         self.done = True
+
+
+class ActionSetGeometryNodeValue(ActionCell):
+    def __init__(self):
+        ActionCell.__init__(self)
+        self.condition = None
+        self.tree_name = None
+        self.node_name = None
+        self.input_slot = None
+        self.value = None
+        self.done = False
+        self.OUT = LogicNetworkSubCell(self, self._get_done)
+
+    def _get_done(self):
+        return self.done
+
+    def evaluate(self):
+        self.done = False
+        STATUS_WAITING = LogicNetworkCell.STATUS_WAITING
+        condition_value = self.get_parameter_value(self.condition)
+        if condition_value is STATUS_WAITING:
+            return
+        if condition_value is False:
+            self._set_ready()
+            return
+        tree_name = self.get_parameter_value(self.tree_name)
+        node_name = self.get_parameter_value(self.node_name)
+        input_slot = self.get_parameter_value(self.input_slot)
+        value = self.get_parameter_value(self.value)
+        if tree_name is STATUS_WAITING:
+            return
+        if node_name is STATUS_WAITING:
+            return
+        if input_slot is STATUS_WAITING:
+            return
+        if value is STATUS_WAITING:
+            return
+        if is_invalid(tree_name):
+            return
+        if condition_value:
+            self.done = True
+            self._set_ready()
+            (
+                bpy.data.node_groups[tree_name]
+                .nodes[node_name]
+                .inputs[input_slot]
+                .default_value
+            ) = value
 
 
 class ActionSetMaterialNodeValue(ActionCell):
