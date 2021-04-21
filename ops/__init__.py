@@ -368,22 +368,6 @@ class NLUpdateTreeVersionOperator(bpy.types.Operator):
         return True
 
     def execute(self, context):
-        addon_path = ''.join(bpy.utils.script_paths(subdir='addons', user_pref=False, check_all=False, use_user=False))
-        addon_path = os.path.join(addon_path, 'bge_netlogic')
-        addon_path = addon_path if os.path.exists(addon_path) else os.path.join(bpy.utils.user_resource('SCRIPTS', "addons"), 'bge_netlogic')
-        p = subprocess.Popen(
-            ['cd', addon_path],
-            stdin=subprocess.PIPE,
-            stdout=subprocess.PIPE,
-            universal_newlines=True,
-            bufsize=0,
-            shell=True
-        )
-        p.stdin.write('git pull')
-        print(p.stdout)
-        for line in p.stdout:
-            print(line.split())
-        os.system('git pull')
         for tree in bpy.data.node_groups:
             if tree.bl_idname == bge_netlogic.ui.BGELogicTree.bl_idname:
                 for node in tree.nodes:
