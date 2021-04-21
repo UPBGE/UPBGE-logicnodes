@@ -601,7 +601,7 @@ def register():
         nodeitems_utils.NodeItem('NodeReroute'),
         nodeitems_utils.NodeItem('NodeFrame')
     ]
-    menu_nodes.append(NodeCategory('LayoutNodes', 'Layout', items=layout_items))
+    menu_nodes.append(NodeCategory('Layout', 'Layout', items=layout_items))
     nodeitems_utils.register_node_categories("NETLOGIC_NODES", menu_nodes)
 
     bpy.types.Object.sound_occluder = bpy.props.BoolProperty(
