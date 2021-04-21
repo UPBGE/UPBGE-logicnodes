@@ -9164,6 +9164,34 @@ class NLSetExposureAction(bpy.types.Node, NLActionNode):
 _nodes.append(NLSetExposureAction)
 
 
+class NLSetEeveeAO(bpy.types.Node, NLActionNode):
+    bl_idname = "NLSetEeveeAO"
+    bl_label = "Set Ambient Occlusion"
+    nl_category = 'Render'
+    nl_subcat = 'Visuals'
+
+    def init(self, context):
+        NLActionNode.init(self, context)
+        self.inputs.new(NLConditionSocket.bl_idname, 'Condition')
+        self.inputs.new(NLBooleanSocket.bl_idname, 'Use AO')
+        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+
+    def get_output_socket_varnames(self):
+        return ["OUT"]
+
+    def get_netlogic_class_name(self):
+        return "bgelogic.SetEeveeAO"
+
+    def get_input_sockets_field_names(self):
+        return [
+            "condition",
+            "value"
+        ]
+
+
+_nodes.append(NLSetEeveeAO)
+
+
 class NLSetEeveeBloom(bpy.types.Node, NLActionNode):
     bl_idname = "NLSetEeveeBloom"
     bl_label = "Set Bloom"

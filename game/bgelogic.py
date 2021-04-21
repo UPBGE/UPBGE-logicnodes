@@ -8035,7 +8035,7 @@ class ActionSetCharacterVelocity(ActionCell):
         self.done = True
 
 
-class ActionGetCharacterInfo(ActionCell):
+class ParameterGetCharacterInfo(ParameterCell):
     def __init__(self):
         ActionCell.__init__(self)
         self.game_object = None
@@ -9084,6 +9084,32 @@ class SetExposure(ActionCell):
         bpy.data.scenes[
             scene.name
         ].view_settings.exposure = value
+        self.done = True
+
+
+class SetEeveeAO(ActionCell):
+
+    def __init__(self):
+        ActionCell.__init__(self)
+        self.condition = None
+        self.value = None
+        self.done = None
+        self.OUT = LogicNetworkSubCell(self, self.get_done)
+
+    def get_done(self):
+        return self.done
+
+    def evaluate(self):
+        self.done = False
+        condition = self.get_parameter_value(self.condition)
+        if not_met(condition):
+            return
+        value = self.get_parameter_value(self.value)
+        if is_invalid(value):
+            return
+        self._set_ready()
+        scene = logic.getCurrentScene()
+        bpy.data.scenes[scene.name].eevee.use_gtao = value
         self.done = True
 
 
