@@ -7954,6 +7954,7 @@ class ActionSetCharacterWalkDir(ActionCell):
         self.game_object = None
         self.walkDir = None
         self.local = False
+        self.active = False
         self.done = None
         self.OUT = LogicNetworkSubCell(self, self.get_done)
 
@@ -7964,7 +7965,14 @@ class ActionSetCharacterWalkDir(ActionCell):
         self.done = False
         condition = self.get_parameter_value(self.condition)
         if not_met(condition):
+            if self.active:
+                game_object = self.get_parameter_value(self.game_object)
+                physics = bge.constraints.getCharacter(game_object)
+                physics.walkDirection = mathutils.Vector((0, 0, 0))
+                self.active = False
             return
+        elif not self.active:
+            self.active = True
         game_object = self.get_parameter_value(self.game_object)
         if game_object is LogicNetworkCell.STATUS_WAITING:
             return
