@@ -6002,12 +6002,18 @@ class NLConditionCollisionNode(bpy.types.Node, NLConditionNode):
     def init(self, context):
         NLConditionNode.init(self, context)
         self.inputs.new(NLGameObjectSocket.bl_idname, "Object")
+        self.inputs.new(NLBooleanSocket.bl_idname, 'Use Material')
         self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Property")
+        self.inputs.new(NLMaterialSocket.bl_idname, 'Material')
         self.outputs.new(NLConditionSocket.bl_idname, "When Colliding")
         self.outputs.new(NLGameObjectSocket.bl_idname, "Colliding Object")
         self.outputs.new(NLListSocket.bl_idname, "Colliding Objects")
         self.outputs.new(NLVec3FieldSocket.bl_idname, "Point")
         self.outputs.new(NLVec3FieldSocket.bl_idname, "Normal")
+
+    def update_draw(self):
+        self.inputs[2].enabled = not self.inputs[1].value
+        self.inputs[3].enabled = self.inputs[1].value
 
     def draw_buttons(self, context, layout):
         layout.prop(
@@ -6021,7 +6027,7 @@ class NLConditionCollisionNode(bpy.types.Node, NLConditionNode):
         return "bgelogic.ConditionCollision"
 
     def get_input_sockets_field_names(self):
-        return ["game_object", 'prop']
+        return ["game_object", 'use_mat', 'prop', 'material']
 
     def get_output_socket_varnames(self):
         return [OUTCELL, "TARGET", "OBJECTS", "POINT", "NORMAL"]

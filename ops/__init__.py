@@ -379,11 +379,20 @@ class NLUpdateTreeVersionOperator(bpy.types.Operator):
                         self.update_3dsound_node(tree, node)
                     if node.bl_idname == 'NLActionGetCharacterInfo':
                         self.update_charinfo_node(tree, node)
+                    if node.bl_idname == 'NLConditionCollisionNode':
+                        self.update_collision_node(tree, node)
         return {'FINISHED'}
 
-    def restore_input(self, tree, node, replacer, idx, new_idx):
+    def restore_input(self, tree, node, replacer, idx, new_idx=None):
+        if new_idx is None:
+            new_idx = idx
         ipt = node.inputs[idx]
         new_ipt = replacer.inputs[new_idx]
+        for attr in NODE_ATTRS:
+            if attr == 'label':
+                continue
+            if hasattr(ipt, attr):
+                setattr(new_ipt, attr, getattr(ipt, attr))
         if ipt.is_linked:
             for link in ipt.links:
                 tree.links.new(link.from_socket, new_ipt)
@@ -416,6 +425,17 @@ class NLUpdateTreeVersionOperator(bpy.types.Operator):
                         replacer.outputs[idx+offset],
                         link.from_socket
                     )
+
+    def update_collision_node(self, tree, node):
+        if len(node.inputs) == 2:
+            replacer = tree.nodes.new('NLConditionCollisionNode')
+            replacer.location = node.location
+            replacer.label = node.label
+            self.restore_input(tree, node, replacer, 0, 0)
+            self.restore_input(tree, node, replacer, 1, 2)
+            self.restore_outputs(tree, node, replacer)
+            replacer.update_draw()
+            tree.nodes.remove(node)
 
     def update_charinfo_node(self, tree, node):
         if len(node.inputs) > 1:

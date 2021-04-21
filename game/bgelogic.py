@@ -4637,7 +4637,9 @@ class ConditionCollision(ConditionCell):
     def __init__(self):
         ConditionCell.__init__(self)
         self.game_object = None
+        self.use_mat = None
         self.prop = None
+        self.material = None
         self._set_value("False")
         self.pulse = False
         self._target = None
@@ -4669,14 +4671,26 @@ class ConditionCollision(ConditionCell):
         self._point = point
         self._normal = normal
         self._objects.append(obj)
-        prop = self.get_parameter_value(self.prop)
-        if prop:
-            for obj in self._objects:
-                if prop in obj:
-                    self._collision_triggered = True
-                    return
-            self._collision_triggered = False
-            return
+        use_mat = self.get_parameter_value(self.use_mat)
+        if use_mat:
+            material = self.get_parameter_value(self.material)
+            if material:
+                for obj in self._objects:
+                    bo = obj.blenderObject
+                    if material in [slot.material.name for slot in bo.material_slots]:
+                        self._collision_triggered = True
+                        return
+                self._collision_triggered = False
+                return
+        else:
+            prop = self.get_parameter_value(self.prop)
+            if prop:
+                for obj in self._objects:
+                    if prop in obj:
+                        self._collision_triggered = True
+                        return
+                self._collision_triggered = False
+                return
         self._collision_triggered = True
 
     def reset(self):
