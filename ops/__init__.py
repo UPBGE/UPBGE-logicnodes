@@ -1249,7 +1249,7 @@ class NLAddonPatreonButton(bpy.types.Operator):
     bl_description = "Consider supporting this Add-On"
 
     def execute(self, context):
-        webbrowser.open('https://www.patreon.com/iza_zed_upbge_toolkits')
+        webbrowser.open('https://www.patreon.com/iza_zed')
         return {"FINISHED"}
 
 

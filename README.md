@@ -32,6 +32,6 @@ https://discord.gg/uuBbNmPK2Z
 
 # If you want to support this project
 
-head over to https://www.patreon.com/iza_zed_upbge_toolkits
+head over to https://www.patreon.com/iza_zed
 
 Thanks to all who use and support this!
