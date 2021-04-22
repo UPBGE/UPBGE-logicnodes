@@ -7029,6 +7029,7 @@ class NLPlayMaterialSequence(bpy.types.Node, NLActionNode):
         self.outputs.new(NLConditionSocket.bl_idname, "On Start")
         self.outputs.new(NLConditionSocket.bl_idname, "Running")
         self.outputs.new(NLConditionSocket.bl_idname, "On Finish")
+        self.outputs.new(NLParameterSocket.bl_idname, "Current Frame")
 
     def update_draw(self):
         mat = self.inputs[1]
@@ -7058,7 +7059,7 @@ class NLPlayMaterialSequence(bpy.types.Node, NLActionNode):
         ]
 
     def get_output_socket_varnames(self):
-        return ['ON_START', 'RUNNING', 'ON_FINISH']
+        return ['ON_START', 'RUNNING', 'ON_FINISH', 'FRAME']
 
 
 _nodes.append(NLPlayMaterialSequence)

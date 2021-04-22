@@ -5090,10 +5090,12 @@ class ActionPlayMaterialSequence(ActionCell):
         self.on_start = False
         self.running = False
         self.on_finish = False
+        self.frame = 0
         self._consumed = False
         self.ON_START = LogicNetworkSubCell(self, self._get_on_start)
         self.RUNNING = LogicNetworkSubCell(self, self._get_running)
         self.ON_FINISH = LogicNetworkSubCell(self, self._get_on_finish)
+        self.FRAME = LogicNetworkSubCell(self, self._get_frame)
 
     def _get_on_start(self):
         return self.on_start
@@ -5103,6 +5105,9 @@ class ActionPlayMaterialSequence(ActionCell):
     
     def _get_on_finish(self):
         return self.on_finish
+    
+    def _get_frame(self):
+        return self.frame
 
     def evaluate(self):
         self.done = False
@@ -5145,7 +5150,7 @@ class ActionPlayMaterialSequence(ActionCell):
             self.reverse = False
             self.on_start = True
             self._consumed = False
-        frame = player.frame_offset
+        frame = self.frame = player.frame_offset
         stops = [3, 4, 5]
 
         start_cond = (frame > start_frame) if inverted else (frame < start_frame)
