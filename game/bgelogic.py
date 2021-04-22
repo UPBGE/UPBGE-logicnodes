@@ -5083,6 +5083,7 @@ class ActionPlayMaterialSequence(ActionCell):
         self.mat_name = None
         self.node_name = None
         self.play_mode = None
+        self.play_continue = None
         self.frames = None
         self.fps = None
         self.reverse = False
@@ -5115,6 +5116,7 @@ class ActionPlayMaterialSequence(ActionCell):
         self.on_start = False
         running = self.running
         condition = self.get_parameter_value(self.condition)
+        play_continue = self.get_parameter_value(self.play_continue)
         if not_met(condition) and not running:
             return
         self.time += self.network.time_per_frame
@@ -5145,12 +5147,15 @@ class ActionPlayMaterialSequence(ActionCell):
         start_frame = frames.y if self.reverse else frames.x
         end_frame = frames.x if self.reverse else frames.y
         inverted = (start_frame > end_frame)
+        frame = self.frame = player.frame_offset
+        reset_cond = (frame <= end_frame) if inverted else (frame >= end_frame)
         if not running:
-            player.frame_offset = start_frame if inverted else 0
-            self.reverse = False
+            if not play_continue and play_mode > 2 or reset_cond:
+                player.frame_offset = start_frame if inverted else 0
+            if not play_continue:
+                self.reverse = False
             self.on_start = True
             self._consumed = False
-        frame = self.frame = player.frame_offset
         stops = [3, 4, 5]
 
         start_cond = (frame > start_frame) if inverted else (frame < start_frame)
@@ -5169,9 +5174,9 @@ class ActionPlayMaterialSequence(ActionCell):
             if not running:
                 self.running = True
             if inverted:
-                player.frame_offset -= int(speed)
+                player.frame_offset -= round(speed)
             else:
-                player.frame_offset += int(speed)
+                player.frame_offset += round(speed)
         elif play_mode == 1 and condition:
             player.frame_offset = start_frame
         elif play_mode == 4:

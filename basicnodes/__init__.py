@@ -7023,6 +7023,7 @@ class NLPlayMaterialSequence(bpy.types.Node, NLActionNode):
         self.inputs.new(NLTreeNodeSocket.bl_idname, 'Node Name')
         self.inputs[-1].ref_index = 1
         self.inputs.new(NLPlayActionModeSocket.bl_idname, "Mode")
+        self.inputs.new(NLBooleanSocket.bl_idname, 'Continue')
         self.inputs.new(NLVec2FieldSocket.bl_idname, "Frames")
         self.inputs.new(NLPositiveFloatSocket.bl_idname, "FPS")
         self.inputs[-1].value = 60
@@ -7035,9 +7036,10 @@ class NLPlayMaterialSequence(bpy.types.Node, NLActionNode):
         mat = self.inputs[1]
         nde = self.inputs[2]
         mod = self.inputs[3]
-        fra = self.inputs[4]
-        fps = self.inputs[5]
+        fra = self.inputs[5]
+        fps = self.inputs[6]
         subs = [mod, fra, fps]
+        self.inputs[4].enabled = '3' in mod.value
         if (mat.value or mat.is_linked) and (nde.value or nde.is_linked):
             for ipt in subs:
                 ipt.enabled = True
@@ -7054,6 +7056,7 @@ class NLPlayMaterialSequence(bpy.types.Node, NLActionNode):
             "mat_name",
             'node_name',
             'play_mode',
+            'play_continue',
             "frames",
             'fps'
         ]
