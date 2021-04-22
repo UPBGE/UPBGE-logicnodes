@@ -8720,6 +8720,7 @@ class NLParameterSetAttribute(bpy.types.Node, NLActionNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
+        self.inputs.new(NLConditionSocket.bl_idname, 'Condition')
         self.inputs.new(NLPythonSocket.bl_idname, "Object Instance")
         self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Attribute")
         self.inputs.new(NLValueFieldSocket.bl_idname, "")
@@ -8728,7 +8729,7 @@ class NLParameterSetAttribute(bpy.types.Node, NLActionNode):
         return "bgelogic.SetObInstanceAttr"
 
     def get_input_sockets_field_names(self):
-        return ['instance', 'attr', 'value']
+        return ['condition', 'instance', 'attr', 'value']
 
 
 _nodes.append(NLParameterSetAttribute)

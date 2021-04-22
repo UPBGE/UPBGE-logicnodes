@@ -3532,11 +3532,15 @@ class GetTimeScale(ParameterCell):
 class SetObInstanceAttr(ParameterCell):
     def __init__(self):
         ParameterCell.__init__(self)
+        self.condition = None
         self.instance = None
         self.attr = None
         self.value = None
 
     def evaluate(self):
+        condition = self.get_parameter_value(self.condition)
+        if not_met(condition):
+            return
         instance = self.get_parameter_value(self.instance)
         attr = self.get_parameter_value(self.attr)
         value = self.get_parameter_value(self.value)
