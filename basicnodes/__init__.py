@@ -3830,6 +3830,44 @@ class NLGetMaterialNodeValue(bpy.types.Node, NLParameterNode):
 _nodes.append(NLGetMaterialNodeValue)
 
 
+class NLGetMaterialNodeAttribute(bpy.types.Node, NLParameterNode):
+    bl_idname = "NLGetMaterialNodeAttribute"
+    bl_label = "Get Node Value"
+    nl_category = 'Nodes'
+    nl_subcat = 'Materials'
+
+    def init(self, context):
+        NLActionNode.init(self, context)
+        self.inputs.new(NLMaterialSocket.bl_idname, 'Material')
+        self.inputs.new(NLTreeNodeSocket.bl_idname, 'Node Name')
+        self.inputs[-1].ref_index = 0
+        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Internal")
+        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Attribute")
+        self.outputs.new(NLParameterSocket.bl_idname, "Value")
+
+    def update_draw(self):
+        mat = self.inputs[0]
+        nde = self.inputs[1]
+        itl = self.inputs[2]
+        att = self.inputs[3]
+        if (mat.value or mat.is_linked) and (nde.value or nde.is_linked):
+            itl.enabled = att.enabled = True
+        else:
+            itl.enabled = att.enabled = False
+
+    def get_netlogic_class_name(self):
+        return "bgelogic.ParameterGetMaterialNodeAttribute"
+
+    def get_input_sockets_field_names(self):
+        return ["mat_name", 'node_name', "internal", 'attribute']
+
+    def get_output_socket_varnames(self):
+        return ['OUT']
+
+
+_nodes.append(NLGetMaterialNodeAttribute)
+
+
 class NLGetMaterialNode(bpy.types.Node, NLParameterNode):
     bl_idname = "NLGetMaterialNode"
     bl_label = "Get Node"
@@ -5094,15 +5132,15 @@ class NLParameterTypeCast(bpy.types.Node, NLParameterNode):
 
     def init(self, context):
         NLParameterNode.init(self, context)
-        self.inputs.new(NLTypeCastSocket.bl_idname, '')
         self.inputs.new(NLValueFieldSocket.bl_idname, "")
+        self.inputs.new(NLTypeCastSocket.bl_idname, '')
         self.outputs.new(NLParameterSocket.bl_idname, "Value")
 
     def get_netlogic_class_name(self):
         return "bgelogic.ParameterTypeCast"
 
     def get_input_sockets_field_names(self):
-        return ['to_type', "value"]
+        return ['value', "to_type"]
 
 
 _nodes.append(NLParameterTypeCast)
@@ -6922,6 +6960,54 @@ class NLSetMaterialNodeValue(bpy.types.Node, NLActionNode):
 
 
 _nodes.append(NLSetMaterialNodeValue)
+
+
+class NLSetMaterialNodeAttribute(bpy.types.Node, NLActionNode):
+    bl_idname = "NLSetMaterialNodeAttribute"
+    bl_label = "Set Node Value"
+    nl_category = 'Nodes'
+    nl_subcat = 'Materials'
+
+    def init(self, context):
+        NLActionNode.init(self, context)
+        self.inputs.new(NLConditionSocket.bl_idname, "Condition")
+        self.inputs.new(NLMaterialSocket.bl_idname, 'Material')
+        self.inputs.new(NLTreeNodeSocket.bl_idname, 'Node Name')
+        self.inputs[-1].ref_index = 1
+        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Internal")
+        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Attribute")
+        self.inputs.new(NLValueFieldSocket.bl_idname, '')
+        self.outputs.new(NLConditionSocket.bl_idname, "Done")
+
+    def update_draw(self):
+        mat = self.inputs[1]
+        nde = self.inputs[2]
+        att = self.inputs[3]
+        itl = self.inputs[4]
+        val = self.inputs[5]
+        if (mat.value or mat.is_linked) and (nde.value or nde.is_linked):
+            att.enabled = val.enabled = itl.enabled = True
+        else:
+            att.enabled = val.enabled = itl.enabled = False
+
+    def get_netlogic_class_name(self):
+        return "bgelogic.ActionSetMaterialNodeAttribute"
+
+    def get_input_sockets_field_names(self):
+        return [
+            "condition",
+            "mat_name",
+            'node_name',
+            'internal',
+            "attribute",
+            'value'
+        ]
+
+    def get_output_socket_varnames(self):
+        return ['OUT']
+
+
+_nodes.append(NLSetMaterialNodeAttribute)
 
 
 class NLToggleGameObjectGamePropertyActionNode(bpy.types.Node, NLActionNode):

@@ -2465,6 +2465,39 @@ class ParameterGetMaterialNodeValue(ParameterCell):
         )
 
 
+class ParameterGetMaterialNodeAttribute(ParameterCell):
+    def __init__(self):
+        ActionCell.__init__(self)
+        self.mat_name = None
+        self.node_name = None
+        self.internal = None
+        self.attribute = None
+        self.val = False
+        self.OUT = LogicNetworkSubCell(self, self._get_val)
+
+    def _get_val(self):
+        return self.val
+
+    def evaluate(self):
+        mat_name = self.get_parameter_value(self.mat_name)
+        node_name = self.get_parameter_value(self.node_name)
+        if is_invalid(mat_name, node_name):
+            return
+        internal = self.get_parameter_value(self.internal)
+        attribute = self.get_parameter_value(self.attribute)
+        if is_waiting(mat_name):
+            return
+        self._set_ready()
+        target = (
+            bpy.data.materials[mat_name]
+            .node_tree
+            .nodes[node_name]
+        )
+        if internal:
+            target = getattr(target, internal, target)
+        self.val = getattr(target, attribute, None)
+
+
 class ParameterGetMaterialNode(ParameterCell):
     def __init__(self):
         ActionCell.__init__(self)
@@ -3596,8 +3629,8 @@ class ParameterTypeCast(ParameterCell):
             return float(value)
 
     def evaluate(self):
-        to_type = self.get_parameter_value(self.to_type)
         value = self.get_parameter_value(self.value)
+        to_type = self.get_parameter_value(self.to_type)
         if is_waiting(to_type, value):
             return
         self._set_ready()
@@ -4982,6 +5015,61 @@ class ActionSetMaterialNodeValue(ActionCell):
                 .inputs[input_slot]
                 .default_value
             ) = value
+
+
+class ActionSetMaterialNodeAttribute(ActionCell):
+    def __init__(self):
+        ActionCell.__init__(self)
+        self.condition = None
+        self.mat_name = None
+        self.node_name = None
+        self.internal = None
+        self.attribute = None
+        self.value = None
+        self.done = False
+        self.OUT = LogicNetworkSubCell(self, self._get_done)
+
+    def _get_done(self):
+        return self.done
+
+    def evaluate(self):
+        self.done = False
+        STATUS_WAITING = LogicNetworkCell.STATUS_WAITING
+        condition_value = self.get_parameter_value(self.condition)
+        if condition_value is STATUS_WAITING:
+            return
+        if condition_value is False:
+            self._set_ready()
+            return
+        mat_name = self.get_parameter_value(self.mat_name)
+        node_name = self.get_parameter_value(self.node_name)
+        attribute = self.get_parameter_value(self.attribute)
+        internal = self.get_parameter_value(self.internal)
+        value = self.get_parameter_value(self.value)
+        if mat_name is STATUS_WAITING:
+            return
+        if node_name is STATUS_WAITING:
+            return
+        if attribute is STATUS_WAITING:
+            return
+        if internal is STATUS_WAITING:
+            return
+        if value is STATUS_WAITING:
+            return
+        if is_invalid(mat_name):
+            return
+        if condition_value:
+            self._set_ready()
+            target = (
+                bpy.data.materials[mat_name]
+                .node_tree
+                .nodes[node_name]
+            )
+            if internal:
+                target = getattr(target, internal, target)
+            if hasattr(target, attribute):
+                setattr(target, attribute, value)
+            self.done = True
 
 
 class ActionToggleGameObjectGameProperty(ActionCell):

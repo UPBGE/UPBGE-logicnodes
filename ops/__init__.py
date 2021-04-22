@@ -381,6 +381,8 @@ class NLUpdateTreeVersionOperator(bpy.types.Operator):
                         self.update_charinfo_node(tree, node)
                     if node.bl_idname == 'NLConditionCollisionNode':
                         self.update_collision_node(tree, node)
+                    if node.bl_idname == 'NLParameterTypeCast':
+                        self.update_typecast_node(tree, node)
         return {'FINISHED'}
 
     def restore_input(self, tree, node, replacer, idx, new_idx=None):
@@ -425,13 +427,24 @@ class NLUpdateTreeVersionOperator(bpy.types.Operator):
                         replacer.outputs[idx+offset],
                         link.from_socket
                     )
+    
+    def update_typecast_node(self, tree, node):
+        if node.inputs[0].bl_idname == 'NLTypeCastSocket':
+            replacer = tree.nodes.new('NLParameterTypeCast')
+            replacer.location = node.location
+            replacer.label = node.label
+            self.restore_input(tree, node, replacer, 0, 1)
+            self.restore_input(tree, node, replacer, 1, 0)
+            self.restore_outputs(tree, node, replacer)
+            tree.nodes.remove(node)
+
 
     def update_collision_node(self, tree, node):
         if len(node.inputs) == 2:
             replacer = tree.nodes.new('NLConditionCollisionNode')
             replacer.location = node.location
             replacer.label = node.label
-            self.restore_input(tree, node, replacer, 0, 0)
+            self.restore_input(tree, node, replacer, 0)
             self.restore_input(tree, node, replacer, 1, 2)
             self.restore_outputs(tree, node, replacer)
             replacer.update_draw()
