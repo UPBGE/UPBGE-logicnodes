@@ -5076,6 +5076,124 @@ class ActionSetMaterialNodeAttribute(ActionCell):
             self.done = True
 
 
+class ActionPlayMaterialSequence(ActionCell):
+    def __init__(self):
+        ActionCell.__init__(self)
+        self.condition = None
+        self.mat_name = None
+        self.node_name = None
+        self.play_mode = None
+        self.frames = None
+        self.fps = None
+        self.reverse = False
+        self.time = 0.0
+        self.on_start = False
+        self.running = False
+        self.on_finish = False
+        self._consumed = False
+        self.ON_START = LogicNetworkSubCell(self, self._get_on_start)
+        self.RUNNING = LogicNetworkSubCell(self, self._get_running)
+        self.ON_FINISH = LogicNetworkSubCell(self, self._get_on_finish)
+
+    def _get_on_start(self):
+        return self.on_start
+    
+    def _get_running(self):
+        return self.running
+    
+    def _get_on_finish(self):
+        return self.on_finish
+
+    def evaluate(self):
+        self.done = False
+        self.on_finish = False
+        self.on_start = False
+        running = self.running
+        condition = self.get_parameter_value(self.condition)
+        if not_met(condition) and not running:
+            return
+        self.time += self.network.time_per_frame
+        mat_name = self.get_parameter_value(self.mat_name)
+        node_name = self.get_parameter_value(self.node_name)
+        play_mode = self.get_parameter_value(self.play_mode)
+        frames = self.get_parameter_value(self.frames)
+        fps = self.get_parameter_value(self.fps)
+        if is_waiting(
+            mat_name,
+            node_name,
+            play_mode,
+            frames,
+            fps
+        ):
+            return
+        rate = 1/fps
+        speed = self.time / rate
+        self._set_ready()
+        if speed < 1:
+            return
+        self.time -= rate * speed
+        player = (
+            bpy.data.materials[mat_name]
+            .node_tree
+            .nodes[node_name]
+        ).image_user
+        start_frame = frames.y if self.reverse else frames.x
+        end_frame = frames.x if self.reverse else frames.y
+        inverted = (start_frame > end_frame)
+        if not running:
+            player.frame_offset = start_frame if inverted else 0
+            self.reverse = False
+            self.on_start = True
+            self._consumed = False
+        frame = player.frame_offset
+        stops = [3, 4, 5]
+
+        start_cond = (frame > start_frame) if inverted else (frame < start_frame)
+        run_cond = (frame > end_frame) if inverted else (frame < end_frame)
+
+        if not condition and play_mode in stops:
+            if running:
+                self.on_finish = True
+            self.running = False
+            return
+        if start_cond:
+            if not running:
+                self.running = True
+            player.frame_offset = start_frame
+        if run_cond:
+            if not running:
+                self.running = True
+            if inverted:
+                player.frame_offset -= int(speed)
+            else:
+                player.frame_offset += int(speed)
+        elif play_mode == 1 and condition:
+            player.frame_offset = start_frame
+        elif play_mode == 4:
+            player.frame_offset = start_frame
+        elif play_mode == 3:
+            if running and not self._consumed:
+                self.on_finish = True
+                self._consumed = True
+        elif play_mode == 0 or play_mode == 3:
+            if running and not self._consumed:
+                self.on_finish = True
+                self._consumed = True
+            if not condition:
+                self.running = False
+        elif play_mode == 2 or play_mode == 5:
+            if running and not condition:
+                self.on_finish = True
+            if not condition:
+                self.running = False
+            self.reverse = not self.reverse
+        else:
+            if running:
+                self.on_finish = True
+            self.running = False
+        self.done = True
+
+
 class ActionToggleGameObjectGameProperty(ActionCell):
     def __init__(self):
         ActionCell.__init__(self)

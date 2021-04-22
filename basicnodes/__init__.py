@@ -7010,6 +7010,60 @@ class NLSetMaterialNodeAttribute(bpy.types.Node, NLActionNode):
 _nodes.append(NLSetMaterialNodeAttribute)
 
 
+class NLPlayMaterialSequence(bpy.types.Node, NLActionNode):
+    bl_idname = "NLPlayMaterialSequence"
+    bl_label = "Play Sequence"
+    nl_category = 'Nodes'
+    nl_subcat = 'Materials'
+
+    def init(self, context):
+        NLActionNode.init(self, context)
+        self.inputs.new(NLConditionSocket.bl_idname, "Condition")
+        self.inputs.new(NLMaterialSocket.bl_idname, 'Material')
+        self.inputs.new(NLTreeNodeSocket.bl_idname, 'Node Name')
+        self.inputs[-1].ref_index = 1
+        self.inputs.new(NLPlayActionModeSocket.bl_idname, "Mode")
+        self.inputs.new(NLVec2FieldSocket.bl_idname, "Frames")
+        self.inputs.new(NLPositiveFloatSocket.bl_idname, "FPS")
+        self.inputs[-1].value = 60
+        self.outputs.new(NLConditionSocket.bl_idname, "On Start")
+        self.outputs.new(NLConditionSocket.bl_idname, "Running")
+        self.outputs.new(NLConditionSocket.bl_idname, "On Finish")
+
+    def update_draw(self):
+        mat = self.inputs[1]
+        nde = self.inputs[2]
+        mod = self.inputs[3]
+        fra = self.inputs[4]
+        fps = self.inputs[5]
+        subs = [mod, fra, fps]
+        if (mat.value or mat.is_linked) and (nde.value or nde.is_linked):
+            for ipt in subs:
+                ipt.enabled = True
+        else:
+            for ipt in subs:
+                ipt.enabled = False
+
+    def get_netlogic_class_name(self):
+        return "bgelogic.ActionPlayMaterialSequence"
+
+    def get_input_sockets_field_names(self):
+        return [
+            "condition",
+            "mat_name",
+            'node_name',
+            'play_mode',
+            "frames",
+            'fps'
+        ]
+
+    def get_output_socket_varnames(self):
+        return ['ON_START', 'RUNNING', 'ON_FINISH']
+
+
+_nodes.append(NLPlayMaterialSequence)
+
+
 class NLToggleGameObjectGamePropertyActionNode(bpy.types.Node, NLActionNode):
     bl_idname = "NLToggleGameObjectGamePropertyActionNode"
     bl_label = "Toggle Property"
