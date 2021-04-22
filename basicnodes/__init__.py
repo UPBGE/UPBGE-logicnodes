@@ -7749,7 +7749,7 @@ class NLActionSetGameObjectVisibility(bpy.types.Node, NLActionNode):
 _nodes.append(NLActionSetGameObjectVisibility)
 
 
-class NLActionFindObjectNode(bpy.types.Node, NLActionNode):
+class NLActionFindObjectNode(bpy.types.Node, NLParameterNode):
     bl_idname = "NLActionFindObjectNode"
     bl_label = "Get Object"
     bl_icon = 'OBJECT_DATA'
@@ -7771,6 +7771,34 @@ class NLActionFindObjectNode(bpy.types.Node, NLActionNode):
 
 
 _nodes.append(NLActionFindObjectNode)
+
+
+class NLActionSendMessage(bpy.types.Node, NLActionNode):
+    bl_idname = "NLActionSendMessage"
+    bl_label = "Send Message"
+    bl_icon = 'OBJECT_DATA'
+    nl_category = "Objects"
+
+    def init(self, context):
+        NLActionNode.init(self, context)
+        self.inputs.new(NLConditionSocket.bl_idname, "Condition")
+        self.inputs.new(NLGameObjectSocket.bl_idname, "From")
+        self.inputs.new(NLGameObjectNameSocket.bl_idname, "To")
+        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Subject")
+        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Body")
+        self.outputs.new(NLConditionSocket.bl_idname, "Done")
+
+    def get_netlogic_class_name(self):
+        return "bgelogic.ActionSendMessage"
+
+    def get_input_sockets_field_names(self):
+        return ['condition', 'from_obj', 'to_obj', 'subject', 'body']
+
+    def get_output_socket_varnames(self):
+        return [OUTCELL]
+
+
+_nodes.append(NLActionSendMessage)
 
 
 class NLActionSetActiveCamera(bpy.types.Node, NLActionNode):
