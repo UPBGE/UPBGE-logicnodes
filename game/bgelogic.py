@@ -1159,7 +1159,7 @@ class ConditionValueChanged(ConditionCell):
 
     def evaluate(self):
         curr = self.get_parameter_value(self.current_value)
-        if curr is LogicNetworkCell.STATUS_WAITING:
+        if is_waiting(curr):
             return
         self._set_ready()
         if self.initialize:
@@ -1265,7 +1265,7 @@ class ActionLoadGame(ActionCell):
             return
         self._set_ready()
         slot = self.get_parameter_value(self.slot)
-        if slot is LogicNetworkCell.STATUS_WAITING:
+        if is_waiting(slot):
             return
         cust_path = self.get_custom_path(self.path)
 
@@ -1391,7 +1391,7 @@ class ActionSaveGame(ActionCell):
         if not_met(condition):
             return
         slot = self.get_parameter_value(self.slot)
-        if slot is LogicNetworkCell.STATUS_WAITING:
+        if is_waiting(slot):
             return
         self._set_ready()
         cust_path = self.get_custom_path(self.path)
@@ -1554,7 +1554,7 @@ class ConditionMousePressed(ConditionCell):
 
     def evaluate(self):
         mouse_button = self.get_parameter_value(self.mouse_button_code)
-        if mouse_button is LogicNetworkCell.STATUS_WAITING:
+        if is_waiting(mouse_button)
             return
         self._set_ready()
         mstat = self.network.mouse_events[mouse_button]
@@ -1618,7 +1618,7 @@ class ConditionMouseReleased(ConditionCell):
 
     def evaluate(self):
         mouse_button = self.get_parameter_value(self.mouse_button_code)
-        if mouse_button is LogicNetworkCell.STATUS_WAITING:
+        if is_waiting(mouse_button):
             return
         self._set_ready()
         mstat = self.network.mouse_events[mouse_button]
@@ -1648,7 +1648,7 @@ class ActionSetMouseCursorVisibility(ActionCell):
         if not_met(condition):
             return
         visibility_status = self.get_parameter_value(self.visibility_status)
-        if visibility_status is LogicNetworkCell.STATUS_WAITING:
+        if is_waiting(visibility_status):
             return
         self._set_ready()
         logic.mouse.visible = visibility_status
@@ -1688,8 +1688,8 @@ class ActionMouseLook(ActionCell):
 
     def get_x_obj(self):
         game_object_x = self.get_parameter_value(self.game_object_x)
-        if game_object_x is LogicNetworkCell.STATUS_WAITING:
-            return None
+        if is_waiting(game_object_x):
+            return
         return game_object_x
 
     def get_y_obj(self):
@@ -1836,7 +1836,7 @@ class ConditionMouseTargeting(ConditionCell):
 
     def evaluate(self):
         game_object = self.get_parameter_value(self.game_object)
-        if game_object is LogicNetworkCell.STATUS_WAITING:
+        if is_waiting(game_object):
             return
         self._set_ready()
         if is_invalid(game_object):
@@ -1917,9 +1917,7 @@ class ActionSetMousePosition(ActionCell):
             return
         screen_x = self.get_parameter_value(self.screen_x)
         screen_y = self.get_parameter_value(self.screen_y)
-        if screen_x is LogicNetworkCell.STATUS_WAITING:
-            return
-        if screen_y is LogicNetworkCell.STATUS_WAITING:
+        if is_waiting(screen_x, screen_y):
             return
         self._set_ready()
         self.network.set_mouse_position(screen_x, screen_y)
@@ -1974,7 +1972,7 @@ class ConditionMouseScrolled(ConditionCell):
 
     def evaluate(self):
         wd = self.get_parameter_value(self.wheel_direction)
-        if wd is LogicNetworkCell.STATUS_WAITING:
+        if is_waiting(wd):
             return
         self._set_ready()
         if wd is None:
@@ -2231,7 +2229,7 @@ class ConditionKeyPressed(ConditionCell):
 
     def evaluate(self):
         keycode = self.get_parameter_value(self.key_code)
-        if keycode is LogicNetworkCell.STATUS_WAITING:
+        if is_waiting(keycode):
             return
         self._set_ready()
         keystat = self.network.keyboard_events[keycode]
@@ -2945,7 +2943,7 @@ class SensorValue(ParameterCell):
             debug('Get Sensor Node: No Sensor selected!')
             return
         field = self.get_parameter_value(self.field)
-        if field is LogicNetworkCell.STATUS_WAITING:
+        if is_waiting(field):
             return
         self._set_ready()
         self.val = getattr(game_obj.sensors[self.sens_name], field)
@@ -3235,9 +3233,7 @@ class ParameterObjectAttribute(ParameterCell):
     def evaluate(self):
         game_object = self.get_parameter_value(self.game_object)
         attribute_name = self.get_parameter_value(self.attribute_name)
-        if game_object is LogicNetworkCell.STATUS_WAITING:
-            return
-        if attribute_name is LogicNetworkCell.STATUS_WAITING:
+        if is_waiting(game_object, attribute_name):
             return
         self._set_ready()
         if is_invalid(game_object):
@@ -3265,9 +3261,7 @@ class ClampValue(ParameterCell):
     def evaluate(self):
         value = self.get_parameter_value(self.value)
         range_ft = self.get_parameter_value(self.range)
-        if value is LogicNetworkCell.STATUS_WAITING:
-            return
-        if range_ft is LogicNetworkCell.STATUS_WAITING:
+        if is_waiting(range_ft):
             return
         if is_invalid(value):
             return
@@ -3359,9 +3353,7 @@ class ParameterArithmeticOp(ParameterCell):
     def evaluate(self):
         a = self.get_parameter_value(self.operand_a)
         b = self.get_parameter_value(self.operand_b)
-        if a is LogicNetworkCell.STATUS_WAITING:
-            return
-        if b is LogicNetworkCell.STATUS_WAITING:
+        if is_waiting(a, b):
             return
         self._set_ready()
         if (a is None) or (b is None):
@@ -3406,9 +3398,7 @@ class Threshold(ParameterCell):
         v = self.get_parameter_value(self.value)
         e = self.get_parameter_value(self.else_z)
         t = self.get_parameter_value(self.threshold)
-        if v is LogicNetworkCell.STATUS_WAITING:
-            return
-        if t is LogicNetworkCell.STATUS_WAITING:
+        if is_waiting(v, t):
             return
         value = self.calc_threshold(self.operator, v, t, e)
         self._set_ready()
@@ -3439,9 +3429,7 @@ class RangedThreshold(ParameterCell):
     def evaluate(self):
         v = self.get_parameter_value(self.value)
         t = self.get_parameter_value(self.threshold)
-        if v is LogicNetworkCell.STATUS_WAITING:
-            return
-        if t is LogicNetworkCell.STATUS_WAITING:
+        if is_waiting(v, t):
             return
         value = self.calc_threshold(self.operator, v, t)
         self._set_ready()
@@ -3472,9 +3460,7 @@ class WithinRange(ParameterCell):
     def evaluate(self):
         v = self.get_parameter_value(self.value)
         r = self.get_parameter_value(self.range)
-        if v is LogicNetworkCell.STATUS_WAITING:
-            return
-        if r is LogicNetworkCell.STATUS_WAITING:
+        if is_waiting(v, r):
             return
         value = self.calc_range(self.operator, v, r)
         self._set_ready()
@@ -3590,9 +3576,7 @@ class ParameterActionStatus(ParameterCell):
     def evaluate(self):
         game_object = self.get_parameter_value(self.game_object)
         action_layer = self.get_parameter_value(self.action_layer)
-        if game_object is LogicNetworkCell.STATUS_WAITING:
-            return
-        if action_layer is LogicNetworkCell.STATUS_WAITING:
+        if is_waiting(game_object, action_layer):
             return
         self._set_ready()
         if is_invalid(game_object):
@@ -4080,9 +4064,7 @@ class ParameterFindChildByName(ParameterCell):
         if (child is None) or (child == ""):
             return
 
-        if parent is LogicNetworkCell.STATUS_WAITING:
-            return
-        if child is LogicNetworkCell.STATUS_WAITING:
+        if is_waiting(parent, child):
             return
         elif not is_invalid(parent):
             # find from parent
@@ -4170,9 +4152,7 @@ class ConditionLNStatus(ConditionCell):
     def evaluate(self):
         game_object = self.get_parameter_value(self.game_object)
         tree_name = self.get_parameter_value(self.tree_name)
-        if game_object is LogicNetworkCell.STATUS_WAITING:
-            return
-        if tree_name is LogicNetworkCell.STATUS_WAITING:
+        if is_waiting(game_object, tree_name):
             return
         self._set_ready()
         self._running = False
@@ -4343,9 +4323,7 @@ class ConditionAnd(ConditionCell):
     def evaluate(self):
         ca = self.get_parameter_value(self.condition_a)
         cb = self.get_parameter_value(self.condition_b)
-        if ca is LogicNetworkCell.STATUS_WAITING:
-            return
-        if cb is LogicNetworkCell.STATUS_WAITING:
+        if is_waiting(ca, cb):
             return
         self._set_ready()
         self._set_value(ca and cb)
@@ -4361,9 +4339,7 @@ class ConditionAndNot(ConditionCell):
     def evaluate(self):
         ca = self.get_parameter_value(self.condition_a)
         cb = not self.get_parameter_value(self.condition_b)
-        if ca is LogicNetworkCell.STATUS_WAITING:
-            return
-        if cb is LogicNetworkCell.STATUS_WAITING:
+        if is_waiting(ca, cb):
             return
         self._set_ready()
         self._set_value(ca and cb)
@@ -4378,7 +4354,7 @@ class ConditionNotNone(ConditionCell):
 
     def evaluate(self):
         value = self.get_parameter_value(self.checked_value)
-        if value is LogicNetworkCell.STATUS_WAITING:
+        if is_waiting(value):
             return
         self._set_ready()
         self._set_value(value is not None)
@@ -4415,10 +4391,8 @@ class ConditionOr(ConditionCell):
     def evaluate(self):
         ca = self.get_parameter_value(self.condition_a)
         cb = self.get_parameter_value(self.condition_b)
-        if ca is LogicNetworkCell.STATUS_WAITING:
-            ca = False
-        if cb is LogicNetworkCell.STATUS_WAITING:
-            cb = False
+        if is_waiting(ca, cb):
+            return
         self._set_ready()
         self._set_value(ca or cb)
 
@@ -4565,7 +4539,7 @@ class ConditionTimeElapsed(ConditionCell):
     def evaluate(self):
         condition = self.get_parameter_value(self.condition)
         delta_time = self.get_parameter_value(self.delta_time)
-        if delta_time is LogicNetworkCell.STATUS_WAITING:
+        if is_waiting(delta_time):
             return
         self._set_ready()
         now = self.network.timeline
@@ -4591,7 +4565,7 @@ class ConditionKeyReleased(ConditionCell):
 
     def evaluate(self):
         keycode = self.get_parameter_value(self.key_code)
-        if keycode is LogicNetworkCell.STATUS_WAITING:
+        if is_waiting(keycode):
             return
         self._set_ready()
         keystat = self.network.keyboard_events[keycode]
@@ -4624,7 +4598,7 @@ class ConditionMouseLeft(ConditionCell):
 
     def evaluate(self):
         repeat = self.get_parameter_value(self.repeat)
-        if repeat is LogicNetworkCell.STATUS_WAITING:
+        if is_waiting(repeat):
             return
         self._set_ready()
         dx = self.network.mouse_motion_delta[0]
@@ -4652,7 +4626,7 @@ class ConditionMouseRight(ConditionCell):
 
     def evaluate(self):
         repeat = self.get_parameter_value(self.repeat)
-        if repeat is LogicNetworkCell.STATUS_WAITING:
+        if is_waiting(repeat):
             return
         self._set_ready()
         dx = self.network.mouse_motion_delta[0]
@@ -4795,7 +4769,7 @@ class ConditionCollision(ConditionCell):
         last_target = self._target
         game_object = self.get_parameter_value(self.game_object)
         self._reset_last_monitored_object(game_object)
-        if game_object is LogicNetworkCell.STATUS_WAITING:
+        if is_waiting(game_object):
             return
         self._set_ready()
         collision = self._collision_triggered
@@ -5477,31 +5451,25 @@ class ActionCreateVehicle(ActionCell):
 
     def evaluate(self):
         self.done = False
-        condition_value = self.get_parameter_value(self.condition)
-        if condition_value is LogicNetworkCell.STATUS_WAITING:
-            return
-        if not condition_value:
+        condition = self.get_parameter_value(self.condition)
+        if not_met(condition):
             return
         game_object = self.get_parameter_value(self.game_object)
-        if game_object is LogicNetworkCell.STATUS_WAITING:
-            return
         wheels_steering = self.get_parameter_value(self.wheels_steering)
-        if wheels_steering is LogicNetworkCell.STATUS_WAITING:
-            return
         wheels = self.get_parameter_value(self.wheels)
-        if wheels is LogicNetworkCell.STATUS_WAITING:
-            return
         suspension = self.get_parameter_value(self.suspension)
-        if suspension is LogicNetworkCell.STATUS_WAITING:
-            return
         stiffness = self.get_parameter_value(self.stiffness)
-        if stiffness is LogicNetworkCell.STATUS_WAITING:
-            return
         damping = self.get_parameter_value(self.damping)
-        if damping is LogicNetworkCell.STATUS_WAITING:
-            return
         friction = self.get_parameter_value(self.friction)
-        if friction is LogicNetworkCell.STATUS_WAITING:
+        if is_waiting(
+            game_object, 
+            wheels_steering,
+            wheels,
+            suspension,
+            stiffness,
+            damping,
+            friction
+        ):
             return
         self._set_ready()
         orig_ori = game_object.worldOrientation
@@ -5693,20 +5661,15 @@ class VehicleApplyBraking(ActionCell):
     def evaluate(self):
         self.done = False
         condition_value = self.get_parameter_value(self.condition)
-        if condition_value is LogicNetworkCell.STATUS_WAITING:
+        if is_waiting(condition_value):
             return
         constraint = self.get_parameter_value(self.constraint)
-        if constraint is LogicNetworkCell.STATUS_WAITING:
-            return
         value_type = self.get_parameter_value(self.value_type)
-        if value_type is LogicNetworkCell.STATUS_WAITING:
-            return
         wheelcount = self.get_parameter_value(self.wheelcount)
-        if wheelcount is LogicNetworkCell.STATUS_WAITING:
-            return
         power = self.get_parameter_value(self.power)
-        if power is LogicNetworkCell.STATUS_WAITING:
+        if is_waiting(Constraint, value_type, wheelcount, power):
             return
+
         if not condition_value:
             if self._reset:
                 for wheel in range(constraint.getNumWheels()):
@@ -5745,21 +5708,12 @@ class VehicleApplySteering(ActionCell):
     def evaluate(self):
         self.done = False
         condition_value = self.get_parameter_value(self.condition)
-        if condition_value is LogicNetworkCell.STATUS_WAITING:
-            return
-        if not condition_value:
-            return
+        if not_met(condition_value)
         constraint = self.get_parameter_value(self.constraint)
-        if constraint is LogicNetworkCell.STATUS_WAITING:
-            return
         value_type = self.get_parameter_value(self.value_type)
-        if value_type is LogicNetworkCell.STATUS_WAITING:
-            return
         wheelcount = self.get_parameter_value(self.wheelcount)
-        if wheelcount is LogicNetworkCell.STATUS_WAITING:
-            return
         power = self.get_parameter_value(self.power)
-        if power is LogicNetworkCell.STATUS_WAITING:
+        if is_waiting(Constraint, value_type, wheelcount, power):
             return
         if is_invalid(constraint):
             return
@@ -5810,19 +5764,13 @@ class VehicleSetAttributes(ActionCell):
     def evaluate(self):
         self.done = False
         condition_value = self.get_parameter_value(self.condition)
-        if condition_value is LogicNetworkCell.STATUS_WAITING:
-            return
-        if not condition_value:
-            return
+        if not_met(condition_value)
         constraint = self.get_parameter_value(self.constraint)
-        if constraint is LogicNetworkCell.STATUS_WAITING:
-            return
         value_type = self.get_parameter_value(self.value_type)
-        if value_type is LogicNetworkCell.STATUS_WAITING:
-            return
         wheelcount = self.get_parameter_value(self.wheelcount)
-        if wheelcount is LogicNetworkCell.STATUS_WAITING:
+        if is_waiting(constraint, value_type, wheelcount):
             return
+
         attrs_to_set = [
             self.get_parameter_value(self.set_suspension_compression),
             self.get_parameter_value(self.set_suspension_stiffness),
