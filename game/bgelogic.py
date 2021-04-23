@@ -1554,7 +1554,7 @@ class ConditionMousePressed(ConditionCell):
 
     def evaluate(self):
         mouse_button = self.get_parameter_value(self.mouse_button_code)
-        if is_waiting(mouse_button)
+        if is_waiting(mouse_button):
             return
         self._set_ready()
         mstat = self.network.mouse_events[mouse_button]
@@ -5133,7 +5133,7 @@ class ActionPlayMaterialSequence(ActionCell):
         stops = [3, 4, 5]
 
         start_cond = (frame > start_frame) if inverted else (frame < start_frame)
-        run_cond = (frame > end_frame) if inverted else (frame < end_frame)
+        run_cond = (frame > end_frame + 1) if inverted else (frame < end_frame - 1)
 
         if not condition and play_mode in stops:
             if running:
@@ -5708,7 +5708,8 @@ class VehicleApplySteering(ActionCell):
     def evaluate(self):
         self.done = False
         condition_value = self.get_parameter_value(self.condition)
-        if not_met(condition_value)
+        if not_met(condition_value):
+            return
         constraint = self.get_parameter_value(self.constraint)
         value_type = self.get_parameter_value(self.value_type)
         wheelcount = self.get_parameter_value(self.wheelcount)
@@ -5764,7 +5765,8 @@ class VehicleSetAttributes(ActionCell):
     def evaluate(self):
         self.done = False
         condition_value = self.get_parameter_value(self.condition)
-        if not_met(condition_value)
+        if not_met(condition_value):
+            return
         constraint = self.get_parameter_value(self.constraint)
         value_type = self.get_parameter_value(self.value_type)
         wheelcount = self.get_parameter_value(self.wheelcount)
