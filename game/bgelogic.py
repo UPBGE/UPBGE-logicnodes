@@ -5125,7 +5125,7 @@ class ActionPlayMaterialSequence(ActionCell):
         reset_cond = (frame <= end_frame) if inverted else (frame >= end_frame)
         if not running:
             if not play_continue and play_mode > 2 or reset_cond:
-                player.frame_offset = start_frame if inverted else 0
+                player.frame_offset = start_frame if inverted else end_frame
             if not play_continue:
                 self.reverse = False
             self.on_start = True
