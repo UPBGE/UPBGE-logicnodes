@@ -5133,31 +5133,29 @@ class ActionPlayMaterialSequence(ActionCell):
         stops = [3, 4, 5]
 
         start_cond = (frame > start_frame) if inverted else (frame < start_frame)
-        run_cond = (frame > end_frame) if inverted else (frame < end_frame)
 
         if not condition and play_mode in stops:
-            if running:
-                self.on_finish = True
+            self.on_finish = True
             self.running = False
             return
         if start_cond:
-            if not running:
-                self.running = True
+            self.running = True
             player.frame_offset = start_frame
+        frame = player.frame_offset
+        run_cond = (frame > end_frame) if inverted else (frame < end_frame)
         if run_cond:
-            if not running:
-                self.running = True
+            self.running = True
             s = round(speed)
             if inverted:
-                if frame + speed < end_frame:
+                if frame - s < end_frame:
                     player.frame_offset = end_frame
                 else:
-                    player.frame_offset -= round(speed)
+                    player.frame_offset -= s
             else:
-                if frame + speed > end_frame:
+                if frame + s > end_frame:
                     player.frame_offset = end_frame
                 else:
-                    player.frame_offset += round(speed)
+                    player.frame_offset += s
         elif play_mode == 1 and condition:
             player.frame_offset = start_frame
         elif play_mode == 4:
