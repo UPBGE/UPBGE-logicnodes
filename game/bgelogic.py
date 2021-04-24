@@ -5133,7 +5133,7 @@ class ActionPlayMaterialSequence(ActionCell):
         stops = [3, 4, 5]
 
         start_cond = (frame > start_frame) if inverted else (frame < start_frame)
-        run_cond = (frame > end_frame + 1) if inverted else (frame < end_frame - 1)
+        run_cond = (frame > end_frame) if inverted else (frame < end_frame)
 
         if not condition and play_mode in stops:
             if running:
@@ -5147,10 +5147,17 @@ class ActionPlayMaterialSequence(ActionCell):
         if run_cond:
             if not running:
                 self.running = True
+            s = round(speed)
             if inverted:
-                player.frame_offset -= round(speed)
+                if frame + speed < end_frame:
+                    player.frame_offset = end_frame
+                else:
+                    player.frame_offset -= round(speed)
             else:
-                player.frame_offset += round(speed)
+                if frame + speed > end_frame:
+                    player.frame_offset = end_frame
+                else:
+                    player.frame_offset += round(speed)
         elif play_mode == 1 and condition:
             player.frame_offset = start_frame
         elif play_mode == 4:
@@ -5895,11 +5902,11 @@ class ActionInstalSubNetwork(ActionCell):
         target_object = self.get_parameter_value(self.target_object)
         tree_name = self.get_parameter_value(self.tree_name)
         initial_status = self.get_parameter_value(self.initial_status)
-        if target_object is LogicNetworkCell.STATUS_WAITING:
-            return
-        if tree_name is LogicNetworkCell.STATUS_WAITING:
-            return
-        if initial_status is LogicNetworkCell.STATUS_WAITING:
+        if is_waiting(
+            target_object,
+            tree_name,
+            initial_status
+        ):
             return
         self._set_ready()
         if is_invalid(target_object):
@@ -5971,10 +5978,8 @@ class ActionStartLogicNetwork(ActionCell):
         if not_met(condition):
             return
         game_object = self.get_parameter_value(self.game_object)
-        if game_object is LogicNetworkCell.STATUS_WAITING:
-            return
         logic_network_name = self.get_parameter_value(self.logic_network_name)
-        if logic_network_name is LogicNetworkCell.STATUS_WAITING:
+        if is_waiting(game_object, logic_network_name):
             return
         self._set_ready()
         if is_invalid(game_object):
@@ -6003,10 +6008,8 @@ class ActionStopLogicNetwork(ActionCell):
         if not_met(condition):
             return
         game_object = self.get_parameter_value(self.game_object)
-        if game_object is LogicNetworkCell.STATUS_WAITING:
-            return
         logic_network_name = self.get_parameter_value(self.logic_network_name)
-        if logic_network_name is LogicNetworkCell.STATUS_WAITING:
+        if is_waiting(game_object, logic_network_name):
             return
         self._set_ready()
         if is_invalid(game_object):
@@ -6058,29 +6061,6 @@ class ActionSendMessage(ActionCell):
         else:
             from_obj.sendMessage(subject)
         self._set_value(True)
-
-
-class ActionFindObjectFromScene(ActionCell):
-    def __init__(self):
-        ActionCell.__init__(self)
-        self.condition = None
-        self.scene = None
-        self.game_object = None
-
-    def evaluate(self):
-        self._set_ready()
-        condition = self.get_parameter_value(self.condition)
-        if not_met(condition):
-            # if no condition, early out
-            return self._value
-        self._set_value(None)  # remove invalid objects, if any
-        scene = self.get_parameter_value(self.scene)
-        game_object = self.get_parameter_value(self.game_object, scene=scene)
-        if game_object is LogicNetworkCell.STATUS_WAITING:
-            return
-        if not is_invalid(scene):
-            # find from scene
-            self._set_value(game_object)
 
 
 class ActionSetGameObjectVisibility(ActionCell):
@@ -6275,11 +6255,7 @@ class ActionMousePick(ActionCell):
         property_name = self.get_parameter_value(self.property)
         xray = self.get_parameter_value(self.xray)
         camera = self.get_parameter_value(self.camera)
-        if distance is LogicNetworkCell.STATUS_WAITING:
-            return
-        if property_name is LogicNetworkCell.STATUS_WAITING:
-            return
-        if camera is LogicNetworkCell.STATUS_WAITING:
+        if is_waiting(distance, property_name, xray, camera):
             return
         self._set_ready()
         if not condition:
@@ -6342,13 +6318,7 @@ class ActionCameraPick(ActionCell):
         property_name = self.get_parameter_value(self.property_name)
         xray = self.get_parameter_value(self.xray)
         distance = self.get_parameter_value(self.distance)
-        if camera is LogicNetworkCell.STATUS_WAITING:
-            return
-        if aim is LogicNetworkCell.STATUS_WAITING:
-            return
-        if property_name is LogicNetworkCell.STATUS_WAITING:
-            return
-        if distance is LogicNetworkCell.STATUS_WAITING:
+        if is_waiting(camera, aim, property_name, xray, distance):
             return
         self._set_ready()
         if not condition:
@@ -6400,7 +6370,7 @@ class ActionSetActiveCamera(ActionCell):
         if not_met(condition):
             return
         camera = self.get_parameter_value(self.camera)
-        if camera is LogicNetworkCell.STATUS_WAITING:
+        if is_waiting(camera):
             return
         self._set_ready()
         if is_invalid(camera):
@@ -6428,10 +6398,8 @@ class ActionSetCameraFov(ActionCell):
         if not_met(condition):
             return
         camera = self.get_parameter_value(self.camera)
-        if camera is LogicNetworkCell.STATUS_WAITING:
-            return
         fov = self.get_parameter_value(self.fov)
-        if fov is LogicNetworkCell.STATUS_WAITING:
+        if is_waiting(camera, fov):
             return
         self._set_ready()
         if is_invalid(camera):
@@ -6458,10 +6426,8 @@ class ActionSetResolution(ActionCell):
         if not_met(condition):
             return
         x_res = self.get_parameter_value(self.x_res)
-        if x_res is LogicNetworkCell.STATUS_WAITING or not x_res:
-            return
         y_res = self.get_parameter_value(self.y_res)
-        if y_res is LogicNetworkCell.STATUS_WAITING or not y_res:
+        if is_waiting(x_res, y_res):
             return
         self._set_ready()
         bge.render.setWindowSize(x_res, y_res)
@@ -6632,7 +6598,7 @@ class ActionSetVSync(ActionCell):
         if not_met(condition):
             return
         vsync_mode = self.get_parameter_value(self.vsync_mode)
-        if vsync_mode is LogicNetworkCell.STATUS_WAITING:
+        if is_waiting(vsync_mode):
             return
         self._set_ready()
         bge.render.setVsync(vsync_mode)
@@ -6687,10 +6653,8 @@ class InitNewDict(ActionCell):
         if not_met(condition):
             return
         key = self.get_parameter_value(self.key)
-        if key is LogicNetworkCell.STATUS_WAITING:
-            return
         value = self.get_parameter_value(self.val)
-        if value is LogicNetworkCell.STATUS_WAITING:
+        if is_waiting(key, value):
             return
         if not condition:
             return
@@ -6723,13 +6687,9 @@ class SetDictKeyValue(ActionCell):
         if not_met(condition):
             return
         dictionary = self.get_parameter_value(self.dict)
-        if dictionary is LogicNetworkCell.STATUS_WAITING:
-            return
         key = self.get_parameter_value(self.key)
-        if key is LogicNetworkCell.STATUS_WAITING:
-            return
         val = self.get_parameter_value(self.val)
-        if val is LogicNetworkCell.STATUS_WAITING:
+        if is_waiting(dictionary, key, val):
             return
         self._set_ready()
         dictionary[key] = val
@@ -6760,10 +6720,8 @@ class SetDictDelKey(ActionCell):
         if not_met(condition):
             return
         dictionary = self.get_parameter_value(self.dict)
-        if dictionary is LogicNetworkCell.STATUS_WAITING:
-            return
         key = self.get_parameter_value(self.key)
-        if key is LogicNetworkCell.STATUS_WAITING:
+        if is_waiting(dictionary, key):
             return
         self._set_ready()
         if key in dictionary:
@@ -6797,7 +6755,7 @@ class InitEmptyList(ActionCell):
         if not_met(condition):
             return
         length = self.get_parameter_value(self.length)
-        if length is LogicNetworkCell.STATUS_WAITING:
+        if is_waiting(length):
             return
         self._set_ready()
         self.items = [None for x in range(length)]
@@ -6857,10 +6815,8 @@ class AppendListItem(ActionCell):
         if not_met(condition):
             return
         list_d = self.get_parameter_value(self.items)
-        if list_d is LogicNetworkCell.STATUS_WAITING:
-            return
         val = self.get_parameter_value(self.val)
-        if val is LogicNetworkCell.STATUS_WAITING:
+        if is_waiting(list_d, val):
             return
         self._set_ready()
         list_d.append(val)
@@ -7023,7 +6979,7 @@ class ActionRemoveParent(ActionCell):
         if not_met(condition):
             return
         child_object = self.get_parameter_value(self.child_object)
-        if child_object is LogicNetworkCell.STATUS_WAITING:
+        if is_waiting(child_object):
             return
         self._set_ready()
         if is_invalid(child_object):
@@ -7139,23 +7095,17 @@ class ActionEditArmatureConstraint(ActionCell):
         ik_weight = self.get_parameter_value(self.ik_weight)
         ik_distance = self.get_parameter_value(self.ik_distance)
         distance_mode = self.get_parameter_value(self.distance_mode)
-        if armature is LogicNetworkCell.STATUS_WAITING:
-            return
-        if constraint_name is LogicNetworkCell.STATUS_WAITING:
-            return
-        if enforced_factor is LogicNetworkCell.STATUS_WAITING:
-            return
-        if primary_target is LogicNetworkCell.STATUS_WAITING:
-            return
-        if secondary_target is LogicNetworkCell.STATUS_WAITING:
-            return
-        if active is LogicNetworkCell.STATUS_WAITING:
-            return
-        if ik_weight is LogicNetworkCell.STATUS_WAITING:
-            return
-        if ik_distance is LogicNetworkCell.STATUS_WAITING:
-            return
-        if distance_mode is LogicNetworkCell.STATUS_WAITING:
+        if is_waiting(
+            armature,
+            constraint_name,
+            enforced_factor,
+            primary_target,
+            secondary_target,
+            active,
+            ik_weight,
+            ik_distance,
+            distance_mode
+        ):
             return
         self._set_ready()
         if is_invalid(armature):
@@ -7249,21 +7199,16 @@ class ActionEditBone(ActionCell):
         translate = self.get_parameter_value(self.translate)
         rotate = self.get_parameter_value(self.rotate)
         scale = self.get_parameter_value(self.scale)
-        if armature is LogicNetworkCell.STATUS_WAITING:
-            return
-        if bone_name is LogicNetworkCell.STATUS_WAITING:
-            return
-        if set_translation is LogicNetworkCell.STATUS_WAITING:
-            return
-        if set_orientation is LogicNetworkCell.STATUS_WAITING:
-            return
-        if set_scale is LogicNetworkCell.STATUS_WAITING:
-            return
-        if translate is LogicNetworkCell.STATUS_WAITING:
-            return
-        if rotate is LogicNetworkCell.STATUS_WAITING:
-            return
-        if scale is LogicNetworkCell.STATUS_WAITING:
+        if is_waiting(
+            armature,
+            bone_name,
+            set_translation,
+            set_orientation,
+            set_scale,
+            translate,
+            rotate,
+            scale
+        ):
             return
         self._set_ready()
         if is_invalid(armature):
@@ -7483,7 +7428,7 @@ class ActionEndObject(ActionCell):
         game_object = self.get_parameter_value(self.game_object)
         if not_met(condition):
             return
-        if game_object is LogicNetworkCell.STATUS_WAITING:
+        if is_waiting(game_object):
             return
         self._set_ready()
         if is_invalid(game_object):
@@ -7510,7 +7455,7 @@ class ActionSetTimeScale(ActionCell):
         if not_met(condition):
             return
         timescale = self.get_parameter_value(self.timescale)
-        if timescale is LogicNetworkCell.STATUS_WAITING:
+        if is_waiting(timescale):
             return
         self._set_ready()
         if is_invalid(timescale):
@@ -7537,38 +7482,12 @@ class ActionSetGravity(ActionCell):
         if not_met(condition):
             return
         gravity = self.get_parameter_value(self.gravity)
-        if gravity is LogicNetworkCell.STATUS_WAITING:
+        if is_waiting(gravity):
             return
         self._set_ready()
         if is_invalid(gravity):
             return
         logic.setGravity(gravity)
-        self.done = True
-
-
-class ActionEndScene(ActionCell):
-    def __init__(self):
-        ActionCell.__init__(self)
-        self.condition = None
-        self.scene = None
-        self.done = None
-        self.OUT = LogicNetworkSubCell(self, self.get_done)
-
-    def get_done(self):
-        return self.done
-
-    def evaluate(self):
-        self.done = False
-        condition = self.get_parameter_value(self.condition)
-        if not_met(condition):
-            return
-        scene = self.get_parameter_value(self.scene)
-        if scene is LogicNetworkCell.STATUS_WAITING:
-            return
-        self._set_ready()
-        if is_invalid(scene):
-            return
-        scene.end()
         self.done = True
 
 
@@ -7588,20 +7507,14 @@ class ActionApplyGameObjectValue(ActionCell):
         if not_met(condition):
             return
         game_object = self.get_parameter_value(self.game_object)
-        if game_object is LogicNetworkCell.STATUS_WAITING:
+        if is_waiting(game_object):
             return
         movement = self.get_parameter_value(self.movement)
         rotation = self.get_parameter_value(self.rotation)
         force = self.get_parameter_value(self.force)
         torque = self.get_parameter_value(self.torque)
         local = self.local
-        if movement is LogicNetworkCell.STATUS_WAITING:
-            return
-        if rotation is LogicNetworkCell.STATUS_WAITING:
-            return
-        if force is LogicNetworkCell.STATUS_WAITING:
-            return
-        if torque is LogicNetworkCell.STATUS_WAITING:
+        if is_waiting(movement, rotation, force, torque, local):
             return
         self._set_ready()
         if not condition:
@@ -7639,11 +7552,9 @@ class ActionApplyLocation(ActionCell):
         if not_met(condition):
             return
         game_object = self.get_parameter_value(self.game_object)
-        if game_object is LogicNetworkCell.STATUS_WAITING:
-            return
         movement = self.get_parameter_value(self.movement)
         local = self.local
-        if movement is LogicNetworkCell.STATUS_WAITING:
+        if is_waiting(game_object, movement, local):
             return
         self._set_ready()
         if is_invalid(game_object):
@@ -7671,11 +7582,9 @@ class ActionApplyRotation(ActionCell):
         if not_met(condition):
             return
         game_object = self.get_parameter_value(self.game_object)
-        if game_object is LogicNetworkCell.STATUS_WAITING:
-            return
         rotation = self.get_parameter_value(self.rotation)
         local = self.local
-        if rotation is LogicNetworkCell.STATUS_WAITING:
+        if is_waiting(game_object, rotation, local):
             return
         self._set_ready()
         if is_invalid(game_object):
@@ -7765,7 +7674,7 @@ class ActionCharacterJump(ActionCell):
             self._set_ready()
             return
         game_object = self.get_parameter_value(self.game_object)
-        if game_object is LogicNetworkCell.STATUS_WAITING:
+        if is_waiting(game_object):
             return
         physics = bge.constraints.getCharacter(game_object)
         self._set_ready()
@@ -7820,10 +7729,8 @@ class ActionSaveVariable(ActionCell):
         if not_met(condition):
             return
         name = self.get_parameter_value(self.name)
-        if name is LogicNetworkCell.STATUS_WAITING:
-            return
         val = self.get_parameter_value(self.val)
-        if val is LogicNetworkCell.STATUS_WAITING:
+        if is_waiting(name, val):
             return
         self._set_ready()
 
@@ -7876,7 +7783,7 @@ class ActionSaveVariables(ActionCell):
         if not_met(condition):
             return
         val = self.get_parameter_value(self.val)
-        if val is LogicNetworkCell.STATUS_WAITING:
+        if is_waiting(val):
             return
         self._set_ready()
 
@@ -7936,7 +7843,7 @@ class ActionLoadVariable(ActionCell):
         if not_met(condition):
             return
         name = self.get_parameter_value(self.name)
-        if name is LogicNetworkCell.STATUS_WAITING:
+        if is_waiting(name):
             return
         self._set_ready()
         cust_path = self.get_custom_path(self.path)
@@ -8047,7 +7954,7 @@ class ActionRemoveVariable(ActionCell):
         if not_met(condition):
             return
         name = self.get_parameter_value(self.name)
-        if name is LogicNetworkCell.STATUS_WAITING:
+        if is_waiting(name):
             return
         self._set_ready()
 
@@ -8166,7 +8073,7 @@ class ActionListVariables(ActionCell):
         if not_met(condition):
             return
         print_list = self.get_parameter_value(self.print_list)
-        if print_list is LogicNetworkCell.STATUS_WAITING:
+        if is_waiting(print_list):
             return
         self._set_ready()
         cust_path = self.get_custom_path(self.path)
@@ -8200,13 +8107,13 @@ class ActionSetCharacterJump(ActionCell):
         if not_met(condition):
             return
         game_object = self.get_parameter_value(self.game_object)
-        if game_object is LogicNetworkCell.STATUS_WAITING:
-            return
-        physics = bge.constraints.getCharacter(game_object)
         max_jumps = self.get_parameter_value(self.max_jumps)
+        if is_waiting(game_object, max_jumps):
+            return
         self._set_ready()
         if is_invalid(game_object):
             return
+        physics = bge.constraints.getCharacter(game_object)
         physics.maxJumps = max_jumps
         self.done = True
 
@@ -8229,13 +8136,13 @@ class ActionSetCharacterGravity(ActionCell):
         if not_met(condition):
             return
         game_object = self.get_parameter_value(self.game_object)
-        if game_object is LogicNetworkCell.STATUS_WAITING:
-            return
-        physics = bge.constraints.getCharacter(game_object)
         gravity = self.get_parameter_value(self.gravity)
+        if is_waiting(gravity):
+            return
         self._set_ready()
         if is_invalid(game_object):
             return
+        physics = bge.constraints.getCharacter(game_object)
         physics.gravity = gravity
         self.done = True
 
@@ -8267,16 +8174,16 @@ class ActionSetCharacterWalkDir(ActionCell):
         elif not self.active:
             self.active = True
         game_object = self.get_parameter_value(self.game_object)
-        if game_object is LogicNetworkCell.STATUS_WAITING:
-            return
         local = self.local
-        physics = bge.constraints.getCharacter(game_object)
         walkDir = self.get_parameter_value(self.walkDir)
+        if is_waiting(game_object, local, walkDir):
+            return
         self._set_ready()
         if is_invalid(game_object):
             return
         if local:
             walkDir = game_object.worldOrientation @ walkDir
+        physics = bge.constraints.getCharacter(game_object)
         physics.walkDirection = walkDir
         self.done = True
 
@@ -8301,7 +8208,7 @@ class ActionSetCharacterVelocity(ActionCell):
         if not_met(condition):
             return
         game_object = self.get_parameter_value(self.game_object)
-        if game_object is LogicNetworkCell.STATUS_WAITING:
+        if is_waiting(game_object):
             return
         local = self.local
         physics = bge.constraints.getCharacter(game_object)
@@ -8383,34 +8290,6 @@ class ActionApplyTorque(ActionCell):
         self._set_ready()
         if torque:
             game_object.applyTorque(torque, local)
-        self.done = True
-
-
-class ActionAddScene(ActionCell):
-    def __init__(self):
-        ActionCell.__init__(self)
-        self.condition = None
-        self.scene_name = None
-        self.overlay = None
-        self.done = None
-        self.OUT = LogicNetworkSubCell(self, self.get_done)
-
-    def get_done(self):
-        return self.done
-
-    def evaluate(self):
-        self.done = False
-        condition = self.get_parameter_value(self.condition)
-        if not_met(condition):
-            return
-        scene_name = self.get_parameter_value(self.scene_name)
-        if scene_name is LogicNetworkCell.STATUS_WAITING:
-            return
-        self._set_ready()
-        if self.overlay is None:
-            logic.addScene(scene_name)
-        else:
-            logic.addScene(scene_name, self.overlay)
         self.done = True
 
 
@@ -8608,9 +8487,7 @@ class ActionStopAnimation(ActionCell):
             return
         game_object = self.get_parameter_value(self.game_object)
         action_layer = self.get_parameter_value(self.action_layer)
-        if game_object is LogicNetworkCell.STATUS_WAITING:
-            return
-        if action_layer is LogicNetworkCell.STATUS_WAITING:
+        if is_waiting(game_object, action_layer):
             return
         self._set_ready()
         if is_invalid(game_object):
@@ -8708,7 +8585,7 @@ class ActionFindScene(ActionCell):
         if not_met(condition):
             return
         query = self.get_parameter_value(self.query)
-        if query is LogicNetworkCell.STATUS_WAITING:
+        if is_waiting(query):
             return
         self._set_ready()
         if self.condition is None:
@@ -8981,7 +8858,7 @@ class ActionStopSound(ActionCell):
         if not_met(condition):
             return
         sound = self.get_parameter_value(self.sound)
-        if sound is LogicNetworkCell.STATUS_WAITING:
+        if is_waiting(sound):
             return
         self._set_ready()
         if sound is None:
@@ -9017,7 +8894,7 @@ class ActionPauseSound(ActionCell):
         if not_met(condition):
             return
         sound = self.get_parameter_value(self.sound)
-        if sound is LogicNetworkCell.STATUS_WAITING:
+        if is_waiting(sound):
             return
         self._set_ready()
         if sound is None:
@@ -9036,7 +8913,7 @@ class ActionResumeSound(ActionCell):
         if not_met(condition):
             return
         sound = self.get_parameter_value(self.sound)
-        if sound is LogicNetworkCell.STATUS_WAITING:
+        if is_waiting(sound):
             return
         self._set_ready()
         if sound is None:
@@ -9635,7 +9512,7 @@ class GetLightEnergy(ActionCell):
 
     def evaluate(self):
         lamp = self.get_parameter_value(self.lamp)
-        if lamp is LogicNetworkCell.STATUS_WAITING:
+        if is_waiting(lamp):
             return
         self._set_ready()
         light = lamp.blenderObject.data
@@ -9655,7 +9532,7 @@ class GetLightColor(ActionCell):
 
     def evaluate(self):
         lamp = self.get_parameter_value(self.lamp)
-        if lamp is LogicNetworkCell.STATUS_WAITING:
+        if is_waiting(lamp):
             return
         self._set_ready()
         light = lamp.blenderObject.data
@@ -10163,9 +10040,7 @@ class ParameterDistance(ParameterCell):
     def evaluate(self):
         parama = self.get_parameter_value(self.parama)
         paramb = self.get_parameter_value(self.paramb)
-        if parama is LogicNetworkCell.STATUS_WAITING:
-            return
-        if paramb is LogicNetworkCell.STATUS_WAITING:
+        if is_waiting(parama, paramb):
             return
         self._set_ready()
         self._set_value(compute_distance(parama, paramb))
