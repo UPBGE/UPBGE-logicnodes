@@ -2404,7 +2404,7 @@ class ParameterObjectProperty(ParameterCell):
             self._set_value(game_object[property_name])
 
 
-class ParameterGetGeometryNodeValue(ParameterCell):
+class ParameterGetNodeTreeNodeValue(ParameterCell):
     def __init__(self):
         ActionCell.__init__(self)
         self.tree_name = None
@@ -2431,6 +2431,39 @@ class ParameterGetGeometryNodeValue(ParameterCell):
             .inputs[input_slot]
             .default_value
         )
+
+
+class ParameterGetNodeTreeNodeAttribute(ParameterCell):
+    def __init__(self):
+        ActionCell.__init__(self)
+        self.mat_name = None
+        self.node_name = None
+        self.internal = None
+        self.attribute = None
+        self.val = False
+        self.OUT = LogicNetworkSubCell(self, self._get_val)
+
+    def _get_val(self):
+        return self.val
+
+    def evaluate(self):
+        mat_name = self.get_parameter_value(self.mat_name)
+        node_name = self.get_parameter_value(self.node_name)
+        if is_invalid(mat_name, node_name):
+            return
+        internal = self.get_parameter_value(self.internal)
+        attribute = self.get_parameter_value(self.attribute)
+        if is_waiting(mat_name):
+            return
+        self._set_ready()
+        target = (
+            bpy.data
+            .node_groups[mat_name]
+            .nodes[node_name]
+        )
+        if internal:
+            target = getattr(target, internal, target)
+        self.val = getattr(target, attribute, None)
 
 
 class ParameterGetMaterialNodeValue(ParameterCell):
@@ -4898,7 +4931,7 @@ class SetMaterial(ActionCell):
         self.done = True
 
 
-class ActionSetGeometryNodeValue(ActionCell):
+class ActionSetNodeTreeNodeValue(ActionCell):
     def __init__(self):
         ActionCell.__init__(self)
         self.condition = None
@@ -4925,6 +4958,7 @@ class ActionSetGeometryNodeValue(ActionCell):
         node_name = self.get_parameter_value(self.node_name)
         input_slot = self.get_parameter_value(self.input_slot)
         value = self.get_parameter_value(self.value)
+        print(tree_name, node_name, input_slot, value)
         if tree_name is STATUS_WAITING:
             return
         if node_name is STATUS_WAITING:
@@ -4944,6 +4978,62 @@ class ActionSetGeometryNodeValue(ActionCell):
                 .inputs[input_slot]
                 .default_value
             ) = value
+
+
+class ActionSetNodeTreeNodeAttribute(ActionCell):
+    def __init__(self):
+        ActionCell.__init__(self)
+        self.condition = None
+        self.tree_name = None
+        self.node_name = None
+        self.internal = None
+        self.attribute = None
+        self.value = None
+        self.done = False
+        self.OUT = LogicNetworkSubCell(self, self._get_done)
+
+    def _get_done(self):
+        return self.done
+
+    def evaluate(self):
+        self.done = False
+        STATUS_WAITING = LogicNetworkCell.STATUS_WAITING
+        condition_value = self.get_parameter_value(self.condition)
+        if condition_value is STATUS_WAITING:
+            return
+        if condition_value is False:
+            self._set_ready()
+            return
+        tree_name = self.get_parameter_value(self.tree_name)
+        node_name = self.get_parameter_value(self.node_name)
+        attribute = self.get_parameter_value(self.attribute)
+        internal = self.get_parameter_value(self.internal)
+        value = self.get_parameter_value(self.value)
+        if tree_name is STATUS_WAITING:
+            return
+        if node_name is STATUS_WAITING:
+            return
+        if attribute is STATUS_WAITING:
+            return
+        if internal is STATUS_WAITING:
+            return
+        if value is STATUS_WAITING:
+            return
+        if is_invalid(tree_name):
+            return
+        if condition_value:
+            self._set_ready()
+            target = (
+                bpy
+                .data
+                .node_groups[tree_name]
+                .nodes[node_name]
+            )
+            if internal:
+                target = getattr(target, internal, target)
+            if hasattr(target, attribute):
+                setattr(target, attribute, value)
+            self.done = True
 
 
 class ActionSetMaterialNodeValue(ActionCell):

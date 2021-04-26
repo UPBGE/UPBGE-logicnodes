@@ -518,6 +518,14 @@ def filter_logic_trees(self, item):
     return False
 
 
+def filter_not_logic_tree(self, item):
+    if (
+        isinstance(item, bge_netlogic.ui.BGELogicTree)
+    ):
+        return False
+    return True
+
+
 def parse_field_value(value_type, value):
     t = value_type
     v = value
@@ -1286,8 +1294,47 @@ class NLGeomNodeTreeSocket(bpy.types.NodeSocket, NetLogicSocketType):
 _sockets.append(NLGeomNodeTreeSocket)
 
 
-class NLGeomTreeNodeSocket(bpy.types.NodeSocket, NetLogicSocketType):
-    bl_idname = "NLGeomTreeNodeSocket"
+class NLNodeGroupSocket(bpy.types.NodeSocket, NetLogicSocketType):
+    bl_idname = "NLNodeGroupSocket"
+    bl_label = "Node Tree"
+    value: bpy.props.PointerProperty(
+        name='Node Tree',
+        type=bpy.types.NodeTree,
+        poll=filter_not_logic_tree,
+        update=update_tree_code
+    )
+
+    def draw_color(self, context, node):
+        return PARAM_SCENE_SOCKET_COLOR
+
+    def draw(self, context, layout, node, text):
+        if self.is_output:
+            layout.label(text=self.name)
+        elif self.is_linked:
+            layout.label(text=self.name)
+        else:
+            col = layout.column(align=False)
+            if self.name and self.is_linked:
+                col.label(text=self.name)
+            col.prop_search(
+                self,
+                'value',
+                bpy.data,
+                'node_groups',
+                icon='NONE',
+                text=''
+            )
+
+    def get_unlinked_value(self):
+        if isinstance(self.value, bpy.types.NodeTree):
+            return '"{}"'.format(self.value.name)
+
+
+_sockets.append(NLNodeGroupSocket)
+
+
+class NLNodeGroupNodeSocket(bpy.types.NodeSocket, NetLogicSocketType):
+    bl_idname = "NLNodeGroupNodeSocket"
     bl_label = "Tree Node"
     value: bpy.props.StringProperty(
         name='Tree Node',
@@ -1323,7 +1370,7 @@ class NLGeomTreeNodeSocket(bpy.types.NodeSocket, NetLogicSocketType):
         return '"{}"'.format(self.value)
 
 
-_sockets.append(NLGeomTreeNodeSocket)
+_sockets.append(NLNodeGroupNodeSocket)
 
 
 class NLMaterialSocket(bpy.types.NodeSocket, NetLogicSocketType):
@@ -3743,8 +3790,8 @@ class NLGetGeometryNodeValue(bpy.types.Node, NLParameterNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
-        self.inputs.new(NLGeomNodeTreeSocket.bl_idname, 'Material')
-        self.inputs.new(NLGeomTreeNodeSocket.bl_idname, 'Node Name')
+        self.inputs.new(NLGeomNodeTreeSocket.bl_idname, 'Tree')
+        self.inputs.new(NLNodeGroupNodeSocket.bl_idname, 'Node Name')
         self.inputs[-1].ref_index = 0
         self.inputs.new(NLPositiveIntegerFieldSocket.bl_idname, "Input")
         self.outputs.new(NLParameterSocket.bl_idname, "Value")
@@ -3770,7 +3817,7 @@ class NLGetGeometryNodeValue(bpy.types.Node, NLParameterNode):
             ipt.name = name
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ParameterGetGeometryNodeValue"
+        return "bgelogic.ParameterGetNodeTreeNodeValue"
 
     def get_input_sockets_field_names(self):
         return ["tree_name", 'node_name', "input_slot"]
@@ -3780,6 +3827,127 @@ class NLGetGeometryNodeValue(bpy.types.Node, NLParameterNode):
 
 
 _nodes.append(NLGetGeometryNodeValue)
+
+
+class NLGetGeometryNodeAttribute(bpy.types.Node, NLParameterNode):
+    bl_idname = "NLGetGeometryNodeAttribute"
+    bl_label = "Get Node Value"
+    nl_category = 'Nodes'
+    nl_subcat = 'Geometry'
+
+    def init(self, context):
+        NLActionNode.init(self, context)
+        self.inputs.new(NLGeomNodeTreeSocket.bl_idname, 'Tree')
+        self.inputs.new(NLNodeGroupNodeSocket.bl_idname, 'Node Name')
+        self.inputs[-1].ref_index = 0
+        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Internal")
+        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Attribute")
+        self.outputs.new(NLParameterSocket.bl_idname, "Value")
+
+    def update_draw(self):
+        tree = self.inputs[0]
+        nde = self.inputs[1]
+        itl = self.inputs[2]
+        att = self.inputs[3]
+        if (tree.value or tree.is_linked) and (nde.value or nde.is_linked):
+            itl.enabled = att.enabled = True
+        else:
+            itl.enabled = att.enabled = False
+
+    def get_netlogic_class_name(self):
+        return "bgelogic.ParameterGetNodeTreeNodeAttribute"
+
+    def get_input_sockets_field_names(self):
+        return ["tree_name", 'node_name', "internal", 'attribute']
+
+    def get_output_socket_varnames(self):
+        return ['OUT']
+
+
+_nodes.append(NLGetGeometryNodeAttribute)
+
+
+class NLGetNodeGroupNodeValue(bpy.types.Node, NLParameterNode):
+    bl_idname = "NLGetNodeGroupNodeValue"
+    bl_label = "Get Node Input Value"
+    nl_category = 'Nodes'
+
+    def init(self, context):
+        NLActionNode.init(self, context)
+        self.inputs.new(NLNodeGroupSocket.bl_idname, 'Tree')
+        self.inputs.new(NLNodeGroupNodeSocket.bl_idname, 'Node Name')
+        self.inputs[-1].ref_index = 0
+        self.inputs.new(NLPositiveIntegerFieldSocket.bl_idname, "Input")
+        self.outputs.new(NLParameterSocket.bl_idname, "Value")
+
+    def update_draw(self):
+        tree = self.inputs[0]
+        nde = self.inputs[1]
+        ipt = self.inputs[2]
+        if tree.is_linked or nde.is_linked:
+            ipt.name = 'Input'
+        if (tree.value or tree.is_linked) and (nde.value or nde.is_linked):
+            ipt.enabled = True
+        else:
+            ipt.enabled = False
+        if not tree.is_linked and not nde.is_linked:
+            tree_name = tree.value.name
+            node_name = nde.value
+            target = bpy.data.node_groups[tree_name].nodes[node_name]
+            limit = len(target.inputs) - 1
+            if int(ipt.value) > limit:
+                ipt.value = limit
+            name = target.inputs[ipt.value].name
+            ipt.name = name
+
+    def get_netlogic_class_name(self):
+        return "bgelogic.ParameterGetNodeTreeNodeValue"
+
+    def get_input_sockets_field_names(self):
+        return ["tree_name", 'node_name', "input_slot"]
+
+    def get_output_socket_varnames(self):
+        return ['OUT']
+
+
+_nodes.append(NLGetNodeGroupNodeValue)
+
+
+class NLGetNodeTreeNodeAttribute(bpy.types.Node, NLParameterNode):
+    bl_idname = "NLGetNodeTreeNodeAttribute"
+    bl_label = "Get Node Value"
+    nl_category = 'Nodes'
+
+    def init(self, context):
+        NLActionNode.init(self, context)
+        self.inputs.new(NLNodeGroupSocket.bl_idname, 'Tree')
+        self.inputs.new(NLNodeGroupNodeSocket.bl_idname, 'Node Name')
+        self.inputs[-1].ref_index = 0
+        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Internal")
+        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Attribute")
+        self.outputs.new(NLParameterSocket.bl_idname, "Value")
+
+    def update_draw(self):
+        tree = self.inputs[0]
+        nde = self.inputs[1]
+        itl = self.inputs[2]
+        att = self.inputs[3]
+        if (tree.value or tree.is_linked) and (nde.value or nde.is_linked):
+            itl.enabled = att.enabled = True
+        else:
+            itl.enabled = att.enabled = False
+
+    def get_netlogic_class_name(self):
+        return "bgelogic.ParameterGetNodeTreeNodeAttribute"
+
+    def get_input_sockets_field_names(self):
+        return ["tree_name", 'node_name', "internal", 'attribute']
+
+    def get_output_socket_varnames(self):
+        return ['OUT']
+
+
+_nodes.append(NLGetNodeTreeNodeAttribute)
 
 
 class NLGetMaterialNodeValue(bpy.types.Node, NLParameterNode):
@@ -4303,8 +4471,6 @@ class NLVectorMath(bpy.types.Node, NLParameterNode):
         elif vtype == 'project':
             v2.enabled = True
             fac.enabled = False
-        else:
-            print(vtype, 'normalize')
 
     def get_input_sockets_field_names(self):
         return ["vector", 'vector_2', 'factor']
@@ -6820,7 +6986,7 @@ class NLSetGeometryNodeValue(bpy.types.Node, NLActionNode):
         NLActionNode.init(self, context)
         self.inputs.new(NLConditionSocket.bl_idname, "Condition")
         self.inputs.new(NLGeomNodeTreeSocket.bl_idname, 'Tree')
-        self.inputs.new(NLGeomTreeNodeSocket.bl_idname, 'Node Name')
+        self.inputs.new(NLNodeGroupNodeSocket.bl_idname, 'Node Name')
         self.inputs[-1].ref_index = 1
         self.inputs.new(NLPositiveIntegerFieldSocket.bl_idname, "Input")
         self.inputs.new(NLFloatFieldSocket.bl_idname, 'Value')
@@ -6848,7 +7014,7 @@ class NLSetGeometryNodeValue(bpy.types.Node, NLActionNode):
             ipt.name = name
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ActionSetGeometryNodeValue"
+        return "bgelogic.ActionSetNodeTreeNodeValue"
 
     def get_input_sockets_field_names(self):
         return [
@@ -6864,6 +7030,156 @@ class NLSetGeometryNodeValue(bpy.types.Node, NLActionNode):
 
 
 _nodes.append(NLSetGeometryNodeValue)
+
+
+class NLSetNodeTreeNodeValue(bpy.types.Node, NLActionNode):
+    bl_idname = "NLSetNodeTreeNodeValue"
+    bl_label = "Set Node Input Value"
+    nl_category = 'Nodes'
+
+    def init(self, context):
+        NLActionNode.init(self, context)
+        self.inputs.new(NLConditionSocket.bl_idname, "Condition")
+        self.inputs.new(NLNodeGroupSocket.bl_idname, 'Tree')
+        self.inputs.new(NLNodeGroupNodeSocket.bl_idname, 'Node Name')
+        self.inputs[-1].ref_index = 1
+        self.inputs.new(NLPositiveIntegerFieldSocket.bl_idname, "Input")
+        self.inputs.new(NLFloatFieldSocket.bl_idname, 'Value')
+        self.outputs.new(NLConditionSocket.bl_idname, "Done")
+
+    def update_draw(self):
+        tree = self.inputs[1]
+        nde = self.inputs[2]
+        ipt = self.inputs[3]
+        val = self.inputs[4]
+        if tree.is_linked or nde.is_linked:
+            ipt.name = 'Input'
+        if (tree.value or tree.is_linked) and (nde.value or nde.is_linked):
+            ipt.enabled = val.enabled = True
+        else:
+            ipt.enabled = val.enabled = False
+        if not tree.is_linked and not nde.is_linked:
+            tree_name = tree.value.name
+            node_name = nde.value
+            target = bpy.data.node_groups[tree_name].nodes[node_name]
+            limit = len(target.inputs) - 1
+            if int(ipt.value) > limit:
+                ipt.value = limit
+            name = target.inputs[ipt.value].name
+            ipt.name = name
+
+    def get_netlogic_class_name(self):
+        return "bgelogic.ActionSetNodeTreeNodeValue"
+
+    def get_input_sockets_field_names(self):
+        return [
+            "condition",
+            "tree_name",
+            'node_name',
+            "input_slot",
+            'value'
+        ]
+
+    def get_output_socket_varnames(self):
+        return ['OUT']
+
+
+_nodes.append(NLSetNodeTreeNodeValue)
+
+
+class NLSetGeometryNodeAttribute(bpy.types.Node, NLActionNode):
+    bl_idname = "NLSetGeometryNodeAttribute"
+    bl_label = "Set Node Value"
+    nl_category = 'Nodes'
+    nl_subcat = 'Geometry'
+
+    def init(self, context):
+        NLActionNode.init(self, context)
+        self.inputs.new(NLConditionSocket.bl_idname, "Condition")
+        self.inputs.new(NLNodeGroupSocket.bl_idname, 'Tree')
+        self.inputs.new(NLNodeGroupNodeSocket.bl_idname, 'Node Name')
+        self.inputs[-1].ref_index = 1
+        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Internal")
+        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Attribute")
+        self.inputs.new(NLValueFieldSocket.bl_idname, '')
+        self.outputs.new(NLConditionSocket.bl_idname, "Done")
+
+    def update_draw(self):
+        tree = self.inputs[1]
+        nde = self.inputs[2]
+        att = self.inputs[3]
+        itl = self.inputs[4]
+        val = self.inputs[5]
+        if (tree.value or tree.is_linked) and (nde.value or nde.is_linked):
+            att.enabled = val.enabled = itl.enabled = True
+        else:
+            att.enabled = val.enabled = itl.enabled = False
+
+    def get_netlogic_class_name(self):
+        return "bgelogic.ActionSetNodeTreeNodeAttribute"
+
+    def get_input_sockets_field_names(self):
+        return [
+            "condition",
+            "tree_name",
+            'node_name',
+            'internal',
+            "attribute",
+            'value'
+        ]
+
+    def get_output_socket_varnames(self):
+        return ['OUT']
+
+
+_nodes.append(NLSetGeometryNodeAttribute)
+
+
+class NLSetNodeTreeNodeAttribute(bpy.types.Node, NLActionNode):
+    bl_idname = "NLSetNodeTreeNodeAttribute"
+    bl_label = "Set Node Value"
+    nl_category = 'Nodes'
+
+    def init(self, context):
+        NLActionNode.init(self, context)
+        self.inputs.new(NLConditionSocket.bl_idname, "Condition")
+        self.inputs.new(NLNodeGroupSocket.bl_idname, 'Tree')
+        self.inputs.new(NLNodeGroupNodeSocket.bl_idname, 'Node Name')
+        self.inputs[-1].ref_index = 1
+        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Internal")
+        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Attribute")
+        self.inputs.new(NLValueFieldSocket.bl_idname, '')
+        self.outputs.new(NLConditionSocket.bl_idname, "Done")
+
+    def update_draw(self):
+        tree = self.inputs[1]
+        nde = self.inputs[2]
+        att = self.inputs[3]
+        itl = self.inputs[4]
+        val = self.inputs[5]
+        if (tree.value or tree.is_linked) and (nde.value or nde.is_linked):
+            att.enabled = val.enabled = itl.enabled = True
+        else:
+            att.enabled = val.enabled = itl.enabled = False
+
+    def get_netlogic_class_name(self):
+        return "bgelogic.ActionSetNodeTreeNodeAttribute"
+
+    def get_input_sockets_field_names(self):
+        return [
+            "condition",
+            "tree_name",
+            'node_name',
+            'internal',
+            "attribute",
+            'value'
+        ]
+
+    def get_output_socket_varnames(self):
+        return ['OUT']
+
+
+_nodes.append(NLSetNodeTreeNodeAttribute)
 
 
 class NLSetMaterial(bpy.types.Node, NLActionNode):

@@ -324,7 +324,6 @@ def request_tree_code_writer_start(dummy):
     global _tree_code_writer_started
     _tree_code_writer_started = False
     generator = ops.tree_code_generator.TreeCodeGenerator()
-    print(getattr(bpy.context.scene.logic_node_settings, 'use_generate_on_open', False))
     if getattr(bpy.context.scene.logic_node_settings, 'use_generate_on_open', False):
         utils.debug('Writing trees on file open...')
         bpy.ops.bge_netlogic.generate_logicnetwork_all()

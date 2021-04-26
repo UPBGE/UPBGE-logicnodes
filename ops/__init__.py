@@ -1256,6 +1256,11 @@ class NLPopupTemplatesOperator(bpy.types.Operator):
             return bpy.data.texts[index]
 
 
+#################################################################################
+# Web Buttons
+#################################################################################
+
+
 class NLAddonPatreonButton(bpy.types.Operator):
     bl_idname = "bge_netlogic.donate"
     bl_label = "Become a Patreon"

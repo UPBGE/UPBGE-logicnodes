@@ -85,8 +85,8 @@ _main_menues = [
     'Time',
     'Variables',
     'Render',
-    'Utilities',
-    'Layout'
+    'Layout',
+    'Utilities'
 ]
 
 _cat_separators = [
