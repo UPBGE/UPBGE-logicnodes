@@ -7342,14 +7342,28 @@ class NLPlayMaterialSequence(bpy.types.Node, NLActionNode):
         self.inputs.new(NLTreeNodeSocket.bl_idname, 'Node Name')
         self.inputs[-1].ref_index = 1
         self.inputs.new(NLPlayActionModeSocket.bl_idname, "Mode")
+        self.inputs[-1].enabled = False
         self.inputs.new(NLBooleanSocket.bl_idname, 'Continue')
+        self.inputs[-1].enabled = False
         self.inputs.new(NLVec2FieldSocket.bl_idname, "Frames")
+        self.inputs[-1].enabled = False
         self.inputs.new(NLPositiveFloatSocket.bl_idname, "FPS")
         self.inputs[-1].value = 60
+        self.inputs[-1].enabled = False
         self.outputs.new(NLConditionSocket.bl_idname, "On Start")
         self.outputs.new(NLConditionSocket.bl_idname, "Running")
         self.outputs.new(NLConditionSocket.bl_idname, "On Finish")
         self.outputs.new(NLParameterSocket.bl_idname, "Current Frame")
+
+    def draw_buttons(self, context, layout):
+        mat = self.inputs[1].value
+        if mat:
+            nde = self.inputs[2].value
+            target = mat.node_tree.nodes.get(nde)
+            if not isinstance(target, bpy.types.ShaderNodeTexImage):
+                col = layout.column()
+                col.label(text='Selected Node', icon='ERROR')
+                col.label(text='not Image Texture!')
 
     def update_draw(self):
         mat = self.inputs[1]
@@ -7358,8 +7372,11 @@ class NLPlayMaterialSequence(bpy.types.Node, NLActionNode):
         fra = self.inputs[5]
         fps = self.inputs[6]
         subs = [mod, fra, fps]
+        if mat.value:
+            target = mat.value.node_tree.nodes.get(nde.value)
+        valid = isinstance(target, bpy.types.ShaderNodeTexImage)
         self.inputs[4].enabled = '3' in mod.value
-        if (mat.value or mat.is_linked) and (nde.value or nde.is_linked):
+        if (mat.value or mat.is_linked) and (nde.value or nde.is_linked) and valid:
             for ipt in subs:
                 ipt.enabled = True
         else:
