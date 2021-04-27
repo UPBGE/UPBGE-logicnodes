@@ -1847,7 +1847,7 @@ class NLSocketLogicOperator(bpy.types.NodeSocket, NetLogicSocketType):
     bl_idname = "NLSocketLogicOperator"
     bl_label = "Logic Operator"
     value: bpy.props.EnumProperty(
-        name='Logic Operators',
+        name='Operation',
         items=_enum_logic_operators,
         update=update_tree_code
     )
@@ -1873,7 +1873,7 @@ class NLSocketControllerButtons(bpy.types.NodeSocket, NetLogicSocketType):
     bl_idname = "NLSocketControllerButtons"
     bl_label = "Controller Buttons"
     value: bpy.props.EnumProperty(
-        name='Controller Buttons',
+        name='Button',
         items=_enum_controller_buttons_operators,
         update=update_tree_code
     )
@@ -1928,6 +1928,7 @@ class NLSocketDistanceCheck(bpy.types.NodeSocket, NetLogicSocketType):
     bl_idname = "NLSocketDistanceCheck"
     bl_label = "Distance Operator"
     value: bpy.props.EnumProperty(
+        name='Mode',
         items=_enum_distance_checks,
         update=update_tree_code
     )
@@ -1959,6 +1960,7 @@ class NLSocketLoopCount(bpy.types.NodeSocket, NetLogicSocketType):
         elif current_type == "CUSTOM":
             self.value = '{}'.format(int(self.integer_editor) - 1)
     value_type: bpy.props.EnumProperty(
+        name='Loop Count',
         items=_enum_loop_count_values,
         update=update_value
     )
@@ -2180,6 +2182,7 @@ class NLSocketIKMode(bpy.types.NodeSocket, NetLogicSocketType):
     bl_idname = "NLSocketIKMode"
     bl_label = "IK Mode"
     value: bpy.props.EnumProperty(
+        name='IK Mode',
         items=_enum_ik_mode_values,
         update=update_tree_code
     )
@@ -2411,6 +2414,7 @@ class NLValueFieldSocket(bpy.types.NodeSocket, NetLogicSocketType):
         update_tree_code(self, context)
 
     value_type: bpy.props.EnumProperty(
+        name='Type',
         items=_enum_field_value_types,
         update=on_type_changed
     )
@@ -2495,6 +2499,7 @@ class NLOptionalValueFieldSocket(bpy.types.NodeSocket, NetLogicSocketType):
         update_tree_code(self, context)
 
     value_type: bpy.props.EnumProperty(
+        name='Type',
         items=_enum_field_value_types,
         update=on_type_changed
     )
@@ -2576,6 +2581,7 @@ class NLNumericFieldSocket(bpy.types.NodeSocket, NetLogicSocketType):
     bl_label = "Value"
 
     value_type: bpy.props.EnumProperty(
+        name='Type',
         items=_enum_numeric_field_value_types,
         update=update_tree_code
     )
@@ -2627,6 +2633,7 @@ class NLOptionalRadiansFieldSocket(bpy.types.NodeSocket, NetLogicSocketType):
     float_field: bpy.props.FloatProperty(update=store_radians)
     expression_field: bpy.props.StringProperty(update=store_expression)
     input_type: bpy.props.EnumProperty(
+        name='Type',
         items=_enum_optional_float_value_types,
         update=on_type_change, default="FLOAT"
     )
@@ -2671,6 +2678,7 @@ class NLSocketReadableMemberName(bpy.types.NodeSocket, NetLogicSocketType):
             self.value = t
         bge_netlogic.update_current_tree_code()
     value_type: bpy.props.EnumProperty(
+        name='Attribute',
         items=_enum_readable_member_names,
         update=_set_value
     )
@@ -2727,6 +2735,7 @@ class NLMouseButtonSocket(bpy.types.NodeSocket, NetLogicSocketType):
     bl_idname = "NLMouseButtonSocket"
     bl_label = "Mouse Button"
     value: bpy.props.EnumProperty(
+        name='Button',
         items=_enum_mouse_buttons, default="bge.events.LEFTMOUSE",
         update=update_tree_code)
 
@@ -2749,6 +2758,7 @@ class NLVSyncSocket(bpy.types.NodeSocket, NetLogicSocketType):
     bl_idname = "NLVSyncSocket"
     bl_label = "Vsync"
     value: bpy.props.EnumProperty(
+        name='Mode',
         items=_enum_vsync_modes, default="bge.render.VSYNC_OFF",
         update=update_tree_code)
 
@@ -2772,6 +2782,7 @@ class NLPlayActionModeSocket(bpy.types.NodeSocket, NetLogicSocketType):
     bl_idname = "NLPlayActionModeSocket"
     bl_label = "Play Mode"
     value: bpy.props.EnumProperty(
+        name='Mode',
         items=_enum_play_mode_values,
         description="The play mode of the action",
         update=update_tree_code
@@ -3175,6 +3186,7 @@ class NLBlendActionModeSocket(bpy.types.NodeSocket, NetLogicSocketType):
     bl_idname = "NLBlendActionMode"
     bl_label = "Blend Mode"
     value: bpy.props.EnumProperty(
+        name='Blend Mode',
         items=_enum_blend_mode_values,
         description="The blend mode of the action",
         update=update_tree_code
@@ -3304,6 +3316,7 @@ class NLSocketMouseWheelDirection(bpy.types.NodeSocket, NetLogicSocketType):
     bl_idname = "NLSocketMouseWheelDirection"
     bl_label = "Mouse Wheel"
     value: bpy.props.EnumProperty(
+        name='Direction',
         items=_enum_mouse_wheel_direction,
         update=update_tree_code
     )
@@ -3328,6 +3341,7 @@ class NLSocketDistanceModels(bpy.types.NodeSocket, NetLogicSocketType):
     bl_idname = "NLSocketDistanceModels"
     bl_label = "Distance Model"
     value: bpy.props.EnumProperty(
+        name='Distance Model',
         items=_enum_distance_models,
         update=update_tree_code
     )
@@ -3354,6 +3368,7 @@ class NLVectorMathSocket(bpy.types.NodeSocket, NetLogicSocketType):
     bl_idname = "NLVectorMathSocket"
     bl_label = "Vector Math"
     value: bpy.props.EnumProperty(
+        name='Operation',
         items=_enum_vector_math_options,
         update=update_tree_code
     )
@@ -3378,6 +3393,7 @@ class NLTypeCastSocket(bpy.types.NodeSocket, NetLogicSocketType):
     bl_idname = "NLTypeCastSocket"
     bl_label = "Types"
     value: bpy.props.EnumProperty(
+        name='Type',
         items=_enum_type_casts,
         update=update_tree_code
     )
@@ -3402,6 +3418,7 @@ class NLConstraintTypeSocket(bpy.types.NodeSocket, NetLogicSocketType):
     bl_idname = "NLConstraintTypeSocket"
     bl_label = "Constraint Type"
     value: bpy.props.EnumProperty(
+        name='Type',
         items=_enum_constraint_types,
         update=update_tree_code
     )
@@ -3422,34 +3439,11 @@ class NLConstraintTypeSocket(bpy.types.NodeSocket, NetLogicSocketType):
 _sockets.append(NLConstraintTypeSocket)
 
 
-class NLSocketFilter3(bpy.types.NodeSocket, NetLogicSocketType):
-    bl_idname = "NLSocketFilter3"
-    bl_label = "Filter 3"
-    value: bpy.props.EnumProperty(
-        items=_enum_value_filters_3,
-        update=update_tree_code
-    )
-
-    def draw_color(self, context, node):
-        return PARAMETER_SOCKET_COLOR
-
-    def draw(self, context, layout, node, text):
-        if self.is_linked:
-            layout.label(text=text)
-        else:
-            layout.prop(self, "value", text="")
-
-    def get_unlinked_value(self):
-        return self.value
-
-
-_sockets.append(NLSocketFilter3)
-
-
 class NLSocketLocalAxis(bpy.types.NodeSocket, NetLogicSocketType):
     bl_idname = "NLSocketLocalAxis"
     bl_label = "Local Axis"
     value: bpy.props.EnumProperty(
+        name='Axis',
         items=_enum_local_axis,
         update=update_tree_code
     )
@@ -3475,6 +3469,7 @@ class NLSocketOrientedLocalAxis(bpy.types.NodeSocket, NetLogicSocketType):
     bl_idname = "NLSocketOrientedLocalAxis"
     bl_label = "Local Axis"
     value: bpy.props.EnumProperty(
+        name='Axis',
         items=_enum_local_oriented_axis,
         update=update_tree_code
     )
@@ -4434,6 +4429,7 @@ class NLVectorMath(bpy.types.Node, NLParameterNode):
     nl_category = "Math"
     nl_subcat = 'Vector Math'
     operator: bpy.props.EnumProperty(
+        name='Opertation',
         items=_enum_vector_math_options,
         update=update_tree_code
     )
@@ -4843,6 +4839,7 @@ class NLArithmeticOpParameterNode(bpy.types.Node, NLParameterNode):
     bl_label = "Math"
     nl_category = "Math"
     operator: bpy.props.EnumProperty(
+        name='Opertation',
         items=_enum_math_operations,
         update=update_tree_code
     )
@@ -4881,6 +4878,7 @@ class NLThresholdNode(bpy.types.Node, NLParameterNode):
     bl_label = "Threshold"
     nl_category = "Math"
     operator: bpy.props.EnumProperty(
+        name='Operation',
         items=_enum_greater_less,
         update=update_tree_code
     )
@@ -4959,6 +4957,7 @@ class NLWithinRangeNode(bpy.types.Node, NLParameterNode):
     bl_label = "Within Range"
     nl_category = "Math"
     operator: bpy.props.EnumProperty(
+        name='Mode',
         items=_enum_in_or_out,
         update=update_tree_code
     )
@@ -5704,6 +5703,7 @@ class NLGamepadSticksCondition(bpy.types.Node, NLParameterNode):
     nl_category = "Input"
     nl_subcat = 'Gamepad'
     axis: bpy.props.EnumProperty(
+        name='Axis',
         items=_enum_controller_stick_operators,
         description="Gamepad Sticks",
         update=update_tree_code
@@ -5751,6 +5751,7 @@ class NLGamepadTriggerCondition(bpy.types.Node, NLParameterNode):
     nl_category = "Input"
     nl_subcat = 'Gamepad'
     axis: bpy.props.EnumProperty(
+        name='Axis',
         items=_enum_controller_trigger_operators,
         description="Left or Right Trigger",
         update=update_tree_code
@@ -5796,7 +5797,7 @@ class NLGamepadButtonsCondition(bpy.types.Node, NLConditionNode):
     nl_category = "Input"
     nl_subcat = 'Gamepad'
     button: bpy.props.EnumProperty(
-        name='Gamepad Buttons',
+        name='Button',
         items=_enum_controller_buttons_operators,
         description="Controller Buttons",
         update=update_tree_code
@@ -5861,7 +5862,7 @@ class NLGamepadButtonUpCondition(bpy.types.Node, NLConditionNode):
     nl_category = "Input"
     nl_subcat = 'Gamepad'
     button: bpy.props.EnumProperty(
-        name='Gamepad Buttons',
+        name='Button',
         items=_enum_controller_buttons_operators,
         description="Controller Buttons",
         update=update_tree_code
@@ -6205,7 +6206,7 @@ class NLConditionOnceNode(bpy.types.Node, NLConditionNode):
     nl_category = "Events"
     advanced: bpy.props.BoolProperty(
         name='Offline Reset',
-        description='Show Timer for when to reset if tree is inactive',
+        description='Show Timer for when to reset if tree is inactive. Hidden sockets will not be reset',
         update=update_tree_code
     )
 
@@ -6243,6 +6244,7 @@ class NLObjectPropertyOperator(bpy.types.Node, NLConditionNode):
     nl_category = "Objects"
     nl_subcat = 'Properties'
     operator: bpy.props.EnumProperty(
+        name='Operator',
         items=_enum_logic_operators,
         update=update_tree_code
     )
@@ -6625,6 +6627,7 @@ class NLConditionLogicOperation(bpy.types.Node, NLConditionNode):
     bl_label = "Compare"
     nl_category = "Math"
     operator: bpy.props.EnumProperty(
+        name='Operator',
         items=_enum_logic_operators,
         update=update_tree_code
     )
@@ -6677,6 +6680,7 @@ class NLConditionCompareVecs(bpy.types.Node, NLConditionNode):
     nl_category = "Math"
     nl_subcat = 'Vector Math'
     operator: bpy.props.EnumProperty(
+        name='Operator',
         items=_enum_logic_operators,
         update=update_tree_code
     )
@@ -7665,6 +7669,7 @@ class NLVehicleApplyEngineForce(bpy.types.Node, NLActionNode):
     nl_category = "Physics"
     nl_subcat = 'Vehicle'
     value_type: bpy.props.EnumProperty(
+        name='Axis',
         items=_enum_vehicle_axis,
         update=update_tree_code
     )
@@ -7716,6 +7721,7 @@ class NLVehicleApplyBraking(bpy.types.Node, NLActionNode):
     nl_category = "Physics"
     nl_subcat = 'Vehicle'
     value_type: bpy.props.EnumProperty(
+        name='Axis',
         items=_enum_vehicle_axis,
         update=update_tree_code
     )
@@ -7767,6 +7773,7 @@ class NLVehicleApplySteering(bpy.types.Node, NLActionNode):
     nl_category = "Physics"
     nl_subcat = 'Vehicle'
     value_type: bpy.props.EnumProperty(
+        name='Axis',
         items=_enum_vehicle_axis,
         update=update_tree_code
     )
@@ -7817,6 +7824,7 @@ class NLVehicleSetAttributes(bpy.types.Node, NLActionNode):
     nl_category = "Physics"
     nl_subcat = 'Vehicle'
     value_type: bpy.props.EnumProperty(
+        name='Axis',
         items=_enum_vehicle_axis,
         update=update_tree_code
     )
@@ -7894,6 +7902,7 @@ class NLSetObjectAttributeActionNode(bpy.types.Node, NLActionNode):
     nl_category = "Objects"
     nl_subcat = 'Data'
     value_type: bpy.props.EnumProperty(
+        name='Attribute',
         items=_enum_writable_member_names,
         update=update_tree_code,
         default='worldPosition'
@@ -10149,7 +10158,7 @@ class NLActionPlayActionNode(bpy.types.Node, NLActionNode):
     nl_category = "Animation"
     advanced: bpy.props.BoolProperty(
         name='Advanced',
-        description='Show advanced settings for this node',
+        description='Show advanced options for this node. Hidden sockets will not be reset',
         update=update_tree_code
     )
 
@@ -10601,6 +10610,7 @@ class NLParameterAxisVector(bpy.types.Node, NLParameterNode):
     nl_category = "Objects"
     nl_subcat = 'Data'
     axis: bpy.props.EnumProperty(
+        name='Axis',
         items=_enum_local_oriented_axis,
         update=update_tree_code
     )
@@ -10836,7 +10846,7 @@ class NLActionStart3DSoundAdv(bpy.types.Node, NLActionNode):
     nl_category = "Sound"
     advanced: bpy.props.BoolProperty(
         name='Advanced Features',
-        description='Show advanced features for this sound',
+        description='Show advanced features for this sound. Hidden sockets will not be reset',
         update=update_tree_code
     )
 
@@ -11099,6 +11109,32 @@ class NLActionStartGame(bpy.types.Node, NLActionNode):
 _nodes.append(NLActionStartGame)
 
 
+class NLParameterReceiveMessage(bpy.types.Node, NLParameterNode):
+    bl_idname = "NLParameterReceiveMessage"
+    bl_label = "Catch"
+    nl_category = "Events"
+    nl_subcat = 'Custom'
+
+    def init(self, context):
+        NLParameterNode.init(self, context)
+        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Subject")
+        self.outputs.new(NLConditionSocket.bl_idname, "Received")
+        self.outputs.new(NLParameterSocket.bl_idname, "Content")
+        self.outputs.new(NLGameObjectSocket.bl_idname, "Target")
+
+    def get_input_sockets_field_names(self):
+        return ['subject']
+    
+    def get_output_socket_varnames(self):
+        return ["OUT", 'BODY', 'TARGET']
+
+    def get_netlogic_class_name(self):
+        return "bgelogic.ReceiveMessage"
+
+
+_nodes.append(NLParameterReceiveMessage)
+
+
 class NLParameterGetGlobalValue(bpy.types.Node, NLParameterNode):
     bl_idname = "NLParameterGetGlobalValue"
     bl_label = "Get Global Value"
@@ -11147,6 +11183,46 @@ class NLActionListGlobalValues(bpy.types.Node, NLActionNode):
 
 
 _nodes.append(NLActionListGlobalValues)
+
+
+class NLActionCreateMessage(bpy.types.Node, NLActionNode):
+    bl_idname = "NLActionCreateMessage"
+    bl_label = "Throw"
+    nl_category = "Events"
+    nl_subcat = 'Custom'
+    advanced: bpy.props.BoolProperty(
+        name='Advanced',
+        description='Show advanced options for this node. Hidden sockets will not be reset',
+        update=update_tree_code
+    )
+
+    def init(self, context):
+        NLActionNode.init(self, context)
+        self.inputs.new(NLConditionSocket.bl_idname, "Condition")
+        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Subject")
+        self.inputs.new(NLOptionalValueFieldSocket.bl_idname, "Content")
+        self.inputs.new(NLGameObjectSocket.bl_idname, "Target")
+        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+
+    def update_draw(self):
+        adv = [2, 3]
+        for x in adv:
+            self.inputs[x].enabled = self.advanced
+    
+    def draw_buttons(self, context, layout):
+        layout.prop(self, 'advanced', text='Advanced', icon='SETTINGS')
+
+    def get_output_socket_varnames(self):
+        return ["OUT"]
+
+    def get_input_sockets_field_names(self):
+        return ["condition", "subject", "body", 'target']
+
+    def get_netlogic_class_name(self):
+        return "bgelogic.CreateMessage"
+
+
+_nodes.append(NLActionCreateMessage)
 
 
 class NLActionSetGlobalValue(bpy.types.Node, NLActionNode):
@@ -11561,6 +11637,7 @@ class NLParameterMathFun(bpy.types.Node, NLParameterNode):
         update=update_tree_code
     )
     predefined_formulas: bpy.props.EnumProperty(
+        name='Operation',
         items=_enum_predefined_math_fun,
         update=on_fun_changed,
         default="User Defined")

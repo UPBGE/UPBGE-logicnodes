@@ -28,6 +28,7 @@ _cat_icons = {
     'Camera': 'CAMERA_DATA',
     'Character': 'GHOST_ENABLED',
     'Collections': 'OUTLINER_COLLECTION',
+    'Custom': 'INFO',
     'Data': 'CON_OBJECTSOLVER',
     'Dictionary': 'SNAP_VERTEX',
     'Events': 'RIGHTARROW_THIN',

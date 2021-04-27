@@ -169,15 +169,19 @@ class SimpleLoggingDatabase(object):
             debug("Compressing sld {}".format(file_name))
             SimpleLoggingDatabase.compress(self.fname, self.data)
 
-    def get(self, key, default_value):
+    def get(self, key, default_value=None):
         return self.data.get(key, default_value)
 
+    def clear(self):
+        self.data.clear()
+
     def put(self, key, value, persist=True):
-        old_value = self.data.get(key)
-        changed = old_value != value
         self.data[key] = value
-        if changed and persist:
-            SimpleLoggingDatabase.write_put(self.fname, key, value)
+        if persist:
+            old_value = self.data.get(key)
+            changed = old_value != value
+            if changed:
+                SimpleLoggingDatabase.write_put(self.fname, key, value)
 
 
 class StringSerializer(SimpleLoggingDatabase.Serializer):
@@ -779,6 +783,7 @@ class LogicNetwork(LogicNetworkCell):
         self._lastuid = 0
         self._owner = None
         self._max_blocking_loop_count = 0
+        self._messages = SimpleLoggingDatabase.get_or_create_shared_db('NL_MessageService')
         self.keyboard = None
         self.mouse = None
         self.keyboard_events = None
@@ -916,6 +921,9 @@ class LogicNetwork(LogicNetworkCell):
         self.stopped = True
         for cell in self._cells:
             cell.stop(self)
+        for m in self._messages.data:
+            if m[2] in self._cells:
+                self._messages.pop(m, None)
 
     def _generate_cell_uid(self):
         self._lastuid += 1
@@ -7046,7 +7054,7 @@ class ActionPerformanceProfile(ActionCell):
             )
         if check_cells_per_tick:
             self.data += 'Nodes per Tick:\t{}\n'.format(
-                len(self.network._cells) - 1
+                len(self.network._cells)
             )
         self.data += '----------------------------------End Profile'
         if print_profile:
@@ -8911,6 +8919,42 @@ class ActionResumeSound(ActionCell):
         sound.resume()
 
 
+class ReceiveMessage(ParameterCell):
+    def __init__(self):
+        ParameterCell.__init__(self)
+        self.subject = None
+        self.received = False
+        self.body = ''
+        self.target = None
+        self.OUT = LogicNetworkSubCell(self, self.get_received)
+        self.BODY = LogicNetworkSubCell(self, self.get_body)
+        self.TARGET = LogicNetworkSubCell(self, self.get_target)
+
+    def get_received(self):
+        return self.received
+    
+    def get_body(self):
+        return self.body
+    
+    def get_target(self):
+        return self.target
+
+    def evaluate(self):
+        subject = self.get_parameter_value(self.subject)
+        if is_invalid(subject):
+            return
+        self._set_ready()
+        messages = self.network._messages
+        rec = subject in messages.data
+        if rec:
+            self.received = True
+            dat = messages.data[subject]
+            self.body = dat[0]
+            self.target = dat[1]
+            return
+        self.received = False
+
+
 class ParameterGetGlobalValue(ParameterCell):
     def __init__(self):
         ParameterCell.__init__(self)
@@ -9018,6 +9062,41 @@ class ActionSetGlobalValue(ActionCell):
             db.put(key, value, persistent)
             if self.condition is None:
                 self.deactivate()
+        self.done = True
+
+
+class CreateMessage(ActionCell):
+    def __init__(self):
+        ActionCell.__init__(self)
+        self.condition = None
+        self.subject = None
+        self.body = None
+        self.target = None
+        self.done = None
+        self.OUT = LogicNetworkSubCell(self, self.get_done)
+
+    def get_done(self):
+        return self.done
+
+    def evaluate(self):
+        self.done = False
+        condition = self.get_parameter_value(self.condition)
+        subject = self.get_parameter_value(self.subject)
+        messages = self.network._messages
+        if not_met(condition):
+            if subject in messages.data:
+                if messages.data[subject][2] is self:
+                    messages.data.pop(subject, None)
+            self._set_ready()
+            return
+        body = self.get_parameter_value(self.body)
+        target = self.get_parameter_value(self.target)
+        if is_waiting(body, target):
+            return
+        if is_invalid(subject):
+            return
+        self._set_ready()
+        messages.put(subject, [body, target, self], False)
         self.done = True
 
 
