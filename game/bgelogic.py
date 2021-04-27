@@ -8612,15 +8612,20 @@ class ActionStart3DSoundAdv(ActionCell):
         self.cone_angle = None
         self.cone_outer_volume = None
         self.done = None
+        self.on_finish = False
         self._clear_sound = 1
         self._sustained = 1
         self._handle = None
         self._handles = {}
         self.DONE = LogicNetworkSubCell(self, self.get_done)
+        self.ON_FINISH = LogicNetworkSubCell(self, self.get_on_finish)
         self.HANDLE = LogicNetworkSubCell(self, self.get_handle)
 
     def get_handle(self):
         return self._handle
+    
+    def get_on_finish(self):
+        return self.on_finish
 
     def get_done(self):
         return self.done
@@ -8635,6 +8640,7 @@ class ActionStart3DSoundAdv(ActionCell):
         cone_outer_volume = self.get_parameter_value(self.cone_outer_volume)
         pitch = self.get_parameter_value(self.pitch) * logic.getTimeScale()
         attenuation = self.get_parameter_value(self.attenuation)
+        self.on_finish = False
         if handles:
             for sound in handles:
                 ind = 0
@@ -8727,7 +8733,8 @@ class ActionStart3DSoundAdv(ActionCell):
                         for handle in handles[sound]:
                             audio_system.active_sounds.remove(handle)
                             handles[sound] = []
-                        return
+                        self.on_finish = True
+                        continue
                     ind += 1
         condition = self.get_parameter_value(self.condition)
         if not_met(condition):
@@ -8793,13 +8800,18 @@ class ActionStartSound(ActionCell):
         self.pitch = None
         self.volume = None
         self.done = None
+        self.on_finish = False
         self._handle = None
         self._handles = []
         self.DONE = LogicNetworkSubCell(self, self.get_done)
+        self.ON_FINISH = LogicNetworkSubCell(self, self.get_on_finish)
         self.HANDLE = LogicNetworkSubCell(self, self.get_handle)
 
     def get_handle(self):
         return self._handle
+    
+    def get_on_finish(self):
+        return self.on_finish
 
     def get_done(self):
         return self.done
@@ -8810,11 +8822,14 @@ class ActionStartSound(ActionCell):
         handles = self._handles
         pitch = self.get_parameter_value(self.pitch)
         volume = self.get_parameter_value(self.volume)
+        self.on_finish = False
         if handles:
             for handle in handles:
                 if not handle.status and handle in audio_system.active_sounds:
                     self._handles.remove(handle)
                     audio_system.active_sounds.remove(handle)
+                    self.on_finish = True
+                    continue
                 self._set_ready()
                 handle.volume = volume
                 handle.pitch = pitch

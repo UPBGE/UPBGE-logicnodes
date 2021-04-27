@@ -368,21 +368,21 @@ class NLUpdateTreeVersionOperator(bpy.types.Operator):
         return True
 
     def execute(self, context):
+        cases = {
+            'NLConditionLogicOperation': self.update_compare_node,
+            'NLActionRayCastNode': self.update_ray_node,
+            'NLActionStart3DSoundAdv': self.update_3dsound_node,
+            'NLActionStartSound': self.update_sound_node,
+            'NLActionGetCharacterInfo': self.update_charinfo_node,
+            'NLConditionCollisionNode': self.update_collision_node,
+            'NLParameterTypeCast': self.update_typecast_node
+        }
         for tree in bpy.data.node_groups:
             if tree.bl_idname == bge_netlogic.ui.BGELogicTree.bl_idname:
                 for node in tree.nodes:
-                    if node.bl_idname == 'NLConditionLogicOperation':
-                        self.update_compare_node(tree, node)
-                    if node.bl_idname == 'NLActionRayCastNode':
-                        self.update_ray_node(tree, node)
-                    if node.bl_idname == 'NLActionStart3DSoundAdv':
-                        self.update_3dsound_node(tree, node)
-                    if node.bl_idname == 'NLActionGetCharacterInfo':
-                        self.update_charinfo_node(tree, node)
-                    if node.bl_idname == 'NLConditionCollisionNode':
-                        self.update_collision_node(tree, node)
-                    if node.bl_idname == 'NLParameterTypeCast':
-                        self.update_typecast_node(tree, node)
+                    f = cases.get(node.bl_idname, None)
+                    if f:
+                        f(tree, node)
         return {'FINISHED'}
 
     def restore_input(self, tree, node, replacer, idx, new_idx=None):
@@ -398,6 +398,15 @@ class NLUpdateTreeVersionOperator(bpy.types.Operator):
         if ipt.is_linked:
             for link in ipt.links:
                 tree.links.new(link.from_socket, new_ipt)
+
+    def restore_output(self, tree, node, replacer, idx, new_idx=None):
+        if new_idx is None:
+            new_idx = idx
+        opt = node.outputs[idx]
+        new_opt = replacer.outputs[new_idx]
+        if opt.is_linked:
+            for link in opt.links:
+                tree.links.new(new_opt, link.to_socket)
 
     def restore_inputs(self, tree, node, replacer, scope=0, start=0, offset=0):
         if scope == 0:
@@ -430,7 +439,7 @@ class NLUpdateTreeVersionOperator(bpy.types.Operator):
     
     def update_typecast_node(self, tree, node):
         if node.inputs[0].bl_idname == 'NLTypeCastSocket':
-            replacer = tree.nodes.new('NLParameterTypeCast')
+            replacer = tree.nodes.new(node.bl_idname)
             replacer.location = node.location
             replacer.label = node.label
             self.restore_input(tree, node, replacer, 0, 1)
@@ -441,7 +450,7 @@ class NLUpdateTreeVersionOperator(bpy.types.Operator):
 
     def update_collision_node(self, tree, node):
         if len(node.inputs) == 2:
-            replacer = tree.nodes.new('NLConditionCollisionNode')
+            replacer = tree.nodes.new(node.bl_idname)
             replacer.location = node.location
             replacer.label = node.label
             self.restore_input(tree, node, replacer, 0)
@@ -452,7 +461,7 @@ class NLUpdateTreeVersionOperator(bpy.types.Operator):
 
     def update_charinfo_node(self, tree, node):
         if len(node.inputs) > 1:
-            replacer = tree.nodes.new('NLActionGetCharacterInfo')
+            replacer = tree.nodes.new(node.bl_idname)
             replacer.location = node.location
             replacer.label = node.label
             self.restore_input(tree, node, replacer, 1, 0)
@@ -461,35 +470,53 @@ class NLUpdateTreeVersionOperator(bpy.types.Operator):
 
     def update_ray_node(self, tree, node):
         if len(node.inputs) == 6:
-            replacer = tree.nodes.new('NLActionRayCastNode')
+            replacer = tree.nodes.new(node.bl_idname)
             replacer.location = node.location
             replacer.label = node.label
             self.restore_inputs(tree, node, replacer)
             self.restore_outputs(tree, node, replacer)
             tree.nodes.remove(node)
 
+    def update_sound_node(self, tree, node):
+        if len(node.outputs) < 3:
+            replacer = tree.nodes.new(node.bl_idname)
+            replacer.location = node.location
+            replacer.label = node.label
+            self.restore_inputs(tree, node, replacer)
+            self.restore_output(tree, node, replacer, 0)
+            self.restore_output(tree, node, replacer, 1, 2)
+            tree.nodes.remove(node)
+
     def update_3dsound_node(self, tree, node):
-        if node.inputs[5].bl_idname == 'NLSocketAlphaFloat':
-            return
-        replacer = tree.nodes.new('NLActionStart3DSoundAdv')
-        replacer.location = node.location
-        replacer.label = node.label
-        self.restore_inputs(tree, node, replacer, scope=4)
-        self.restore_inputs(
-            tree,
-            node,
-            replacer,
-            scope=6,
-            start=7,
-            offset=8
-        )
-        self.restore_outputs(tree, node, replacer)
-        tree.nodes.remove(node)
+        if node.inputs[5].bl_idname != 'NLSocketAlphaFloat':
+            replacer = tree.nodes.new(node.bl_idname)
+            replacer.location = node.location
+            replacer.label = node.label
+            self.restore_inputs(tree, node, replacer, scope=4)
+            self.restore_inputs(
+                tree,
+                node,
+                replacer,
+                scope=6,
+                start=7,
+                offset=8
+            )
+            self.restore_output(tree, node, replacer, 0)
+            self.restore_output(tree, node, replacer, 1, 2)
+            tree.nodes.remove(node)
+        elif len(node.outputs) < 3:
+            replacer = tree.nodes.new(node.bl_idname)
+            replacer.location = node.location
+            replacer.label = node.label
+            self.restore_inputs(tree, node, replacer)
+            self.restore_output(tree, node, replacer, 0)
+            self.restore_output(tree, node, replacer, 1, 2)
+            tree.nodes.remove(node)
 
     def update_compare_node(self, tree, node):
         if node.inputs[0].bl_idname != 'NLPositiveFloatSocket':
             return
-        replacer = tree.nodes.new('NLConditionLogicOperation')
+        replacer = tree.nodes.new(node.bl_idname)
         replacer.location = node.location
         replacer.label = node.label
         replacer.operator = node.operator

@@ -10877,7 +10877,8 @@ class NLActionStart3DSoundAdv(bpy.types.Node, NLActionNode):
         self.inputs[-1].value_y = 360
         self.inputs.new(NLPosFloatFormatSocket.bl_idname, "Cone Outer Volume")
         self.inputs[-1].value = 0.0
-        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+        self.outputs.new(NLConditionSocket.bl_idname, 'On Start')
+        self.outputs.new(NLConditionSocket.bl_idname, 'On Finish')
         self.outputs.new(NLParameterSocket.bl_idname, 'Sound')
 
     def update_draw(self):
@@ -10894,7 +10895,7 @@ class NLActionStart3DSoundAdv(bpy.types.Node, NLActionNode):
         layout.prop(self, 'advanced', text='Advanced', icon='SETTINGS')
 
     def get_output_socket_varnames(self):
-        return ["DONE", "HANDLE"]
+        return ["DONE", 'ON_FINISH', "HANDLE"]
 
     def get_netlogic_class_name(self):
         return "bgelogic.ActionStart3DSoundAdv"
@@ -10936,11 +10937,12 @@ class NLActionStartSound(bpy.types.Node, NLActionNode):
         self.inputs[-1].value = 1.0
         self.inputs.new(NLSocketAlphaFloat.bl_idname, "Volume")
         self.inputs[-1].value = 1.0
-        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+        self.outputs.new(NLConditionSocket.bl_idname, 'On Start')
+        self.outputs.new(NLConditionSocket.bl_idname, 'On Finish')
         self.outputs.new(NLParameterSocket.bl_idname, 'Sound')
 
     def get_output_socket_varnames(self):
-        return ["DONE", "HANDLE"]
+        return ["DONE", 'ON_FINISH', "HANDLE"]
 
     def get_netlogic_class_name(self):
         return "bgelogic.ActionStartSound"
