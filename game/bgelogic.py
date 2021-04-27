@@ -8967,6 +8967,8 @@ class ReceiveMessage(ParameterCell):
             self.body = dat[0]
             self.target = dat[1]
             return
+        self.target = None
+        self.body = ''
         self.received = False
 
 

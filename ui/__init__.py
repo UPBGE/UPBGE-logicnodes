@@ -134,7 +134,7 @@ class BGE_PT_GlobalValuePanel(bpy.types.Panel):
     bl_label = "Globals"
     bl_space_type = "NODE_EDITOR"
     bl_region_type = "UI"
-    bl_category = "Item"
+    bl_category = "Dashboard"
 
     @classmethod
     def poll(cls, context):
@@ -207,7 +207,7 @@ class BGE_PT_GamePropertyPanel(bpy.types.Panel):
     bl_label = "Object Properties"
     bl_space_type = "NODE_EDITOR"
     bl_region_type = "UI"
-    bl_category = "Item"
+    bl_category = "Dashboard"
 
     @classmethod
     def poll(cls, context):
@@ -351,7 +351,7 @@ class BGE_PT_GamePropertyPanel3DView(bpy.types.Panel):
     bl_label = "Object Properties"
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
-    bl_category = "Item"
+    bl_category = "Dashboard"
     name: bpy.props.StringProperty()
 
     @classmethod
@@ -611,7 +611,7 @@ class BGE_PT_LogicTreeGroups(bpy.types.Panel):
     bl_label = "Tree Prefabs and Subtrees"
     bl_space_type = "NODE_EDITOR"
     bl_region_type = "UI"
-    bl_category = "Item"
+    bl_category = "Dashboard"
     _current_tree = None
     new_ver = False
 
@@ -661,7 +661,7 @@ class BGE_PT_LogicTreeOptions(bpy.types.Panel):
     bl_label = "Administration"
     bl_space_type = "NODE_EDITOR"
     bl_region_type = "UI"
-    bl_category = "Item"
+    bl_category = "Dashboard"
     _current_tree = None
 
     @classmethod
@@ -701,7 +701,7 @@ class BGE_PT_LogicTreeInfoPanel(bpy.types.Panel):
     bl_label = "Object Trees"
     bl_space_type = "NODE_EDITOR"
     bl_region_type = "UI"
-    bl_category = "Item"
+    bl_category = "Dashboard"
     _current_tree = None
     new_ver = False
 

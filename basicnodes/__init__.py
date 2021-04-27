@@ -518,12 +518,12 @@ def filter_logic_trees(self, item):
     return False
 
 
-def filter_not_logic_tree(self, item):
+def filter_node_groups(self, item):
     if (
-        isinstance(item, bge_netlogic.ui.BGELogicTree)
+        isinstance(item, bpy.types.ShaderNodeTree)
     ):
-        return False
-    return True
+        return True
+    return False
 
 
 def parse_field_value(value_type, value):
@@ -1300,7 +1300,7 @@ class NLNodeGroupSocket(bpy.types.NodeSocket, NetLogicSocketType):
     value: bpy.props.PointerProperty(
         name='Node Tree',
         type=bpy.types.NodeTree,
-        poll=filter_not_logic_tree,
+        poll=filter_node_groups,
         update=update_tree_code
     )
 
@@ -3866,6 +3866,7 @@ class NLGetNodeGroupNodeValue(bpy.types.Node, NLParameterNode):
     bl_idname = "NLGetNodeGroupNodeValue"
     bl_label = "Get Node Input Value"
     nl_category = 'Nodes'
+    nl_subcat = 'Groups'
 
     def init(self, context):
         NLActionNode.init(self, context)
@@ -3912,6 +3913,7 @@ class NLGetNodeTreeNodeAttribute(bpy.types.Node, NLParameterNode):
     bl_idname = "NLGetNodeTreeNodeAttribute"
     bl_label = "Get Node Value"
     nl_category = 'Nodes'
+    nl_subcat = 'Groups'
 
     def init(self, context):
         NLActionNode.init(self, context)
@@ -7040,6 +7042,7 @@ class NLSetNodeTreeNodeValue(bpy.types.Node, NLActionNode):
     bl_idname = "NLSetNodeTreeNodeValue"
     bl_label = "Set Node Input Value"
     nl_category = 'Nodes'
+    nl_subcat = 'Groups'
 
     def init(self, context):
         NLActionNode.init(self, context)
@@ -7143,6 +7146,7 @@ class NLSetNodeTreeNodeAttribute(bpy.types.Node, NLActionNode):
     bl_idname = "NLSetNodeTreeNodeAttribute"
     bl_label = "Set Node Value"
     nl_category = 'Nodes'
+    nl_subcat = 'Groups'
 
     def init(self, context):
         NLActionNode.init(self, context)
