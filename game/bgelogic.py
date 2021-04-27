@@ -672,6 +672,7 @@ class LogicNetworkCell(StatefulValueProducer):
         self._value = None
         self._children = []
         self.network = None
+        self.is_waiting = False
 
 #    def create_subcell(self, get_value_call):
 #        cell = LogicNetworkSubCell()
@@ -714,13 +715,15 @@ class LogicNetworkCell(StatefulValueProducer):
         else:
             return check_game_object(param.split(':')[-1], scene)
 
-    def get_parameter_value(self, param, scene=None):
+    def get_parameter_value(self, param, allow_wait=False, scene=None):
         if str(param).startswith('NLO:'):
             return self.get_game_object(param, scene)
         if isinstance(param, StatefulValueProducer):
             if param.has_status(LogicNetworkCell.STATUS_READY):
                 return param.get_value()
             else:
+                if not allow_wait:
+                    self.is_waiting = True
                 return LogicNetwork.STATUS_WAITING
         else:
             return param
@@ -1040,7 +1043,7 @@ def is_waiting(*args):
 
 def is_invalid(*a):
     for ref in a:
-        if ref is None or ref == '' or ref is LogicNetworkCell.STATUS_WAITING:
+        if ref is None or ref is LogicNetworkCell.STATUS_WAITING or ref == '' :
             return True
         if not hasattr(ref, "invalid"):
             continue
@@ -1574,12 +1577,9 @@ class ConditionMousePressedOn(ConditionCell):
         self.mouse_button = None
 
     def evaluate(self):
-        STATUS_WAITING = LogicNetworkCell.STATUS_WAITING
         mouse_button = self.get_parameter_value(self.mouse_button)
         game_object = self.get_parameter_value(self.game_object)
-        if mouse_button is STATUS_WAITING:
-            return
-        if game_object is STATUS_WAITING:
+        if is_waiting(mouse_button, game_object):
             return
         self._set_ready()
         if mouse_button is None:
@@ -3201,10 +3201,7 @@ class ParameterPythonModuleFunction(ParameterCell):
             return
         mname = self.get_parameter_value(self.module_name)
         mfun = self.get_parameter_value(self.module_func)
-        STATUS_WAITING = LogicNetworkCell.STATUS_WAITING
-        if mname is STATUS_WAITING:
-            return
-        if mfun is STATUS_WAITING:
+        if is_waiting(mname, mfun):
             return
         use_arg = self.get_parameter_value(self.use_arg)
         arg = self.get_parameter_value(self.arg)
@@ -3512,10 +3509,7 @@ class GetObInstanceAttr(ParameterCell):
     def evaluate(self):
         instance = self.get_parameter_value(self.instance)
         attr = self.get_parameter_value(self.attr)
-        STATUS_WAITING = LogicNetworkCell.STATUS_WAITING
-        if instance is STATUS_WAITING:
-            return
-        if attr is STATUS_WAITING:
+        if is_waiting(instance, attr):
             return
         if not hasattr(instance, attr):
             debug(
@@ -3563,10 +3557,7 @@ class SetObInstanceAttr(ParameterCell):
         instance = self.get_parameter_value(self.instance)
         attr = self.get_parameter_value(self.attr)
         value = self.get_parameter_value(self.value)
-        STATUS_WAITING = LogicNetworkCell.STATUS_WAITING
-        if instance is STATUS_WAITING:
-            return
-        if attr is STATUS_WAITING:
+        if is_waiting(instance, attr, value):
             return
         self._set_ready()
         setattr(instance, attr, value)
@@ -3579,8 +3570,7 @@ class NormalizeVector(ParameterCell):
 
     def evaluate(self):
         vector = self.get_parameter_value(self.vector)
-        STATUS_WAITING = LogicNetworkCell.STATUS_WAITING
-        if vector is STATUS_WAITING:
+        if is_waiting(vector):
             return
         self._set_ready()
         self._set_value(vector.normalize())
@@ -4317,16 +4307,7 @@ class ConditionDistanceCheck(ConditionCell):
         op = self.get_parameter_value(self.operator)
         dist = self.get_parameter_value(self.dist)
         hyst = self.get_parameter_value(self.hyst)
-        STATUS_WAITING = LogicNetworkCell.STATUS_WAITING
-        if a is STATUS_WAITING:
-            return
-        if b is STATUS_WAITING:
-            return
-        if op is STATUS_WAITING:
-            return
-        if dist is STATUS_WAITING:
-            return
-        if hyst is STATUS_WAITING:
+        if is_waiting(a, b, op, dist, hyst):
             return
         self._set_ready()
         if is_invalid(a):
@@ -4441,25 +4422,14 @@ class ConditionOrList(ConditionCell):
         self.cf = False
 
     def evaluate(self):
-        STATUS_WAITING = LogicNetworkCell.STATUS_WAITING
         ca = self.get_parameter_value(self.ca)
         cb = self.get_parameter_value(self.cb)
         cc = self.get_parameter_value(self.cc)
         cd = self.get_parameter_value(self.cd)
         ce = self.get_parameter_value(self.ce)
         cf = self.get_parameter_value(self.cf)
-        if ca is STATUS_WAITING:
-            ca = False
-        if cb is STATUS_WAITING:
-            cb = False
-        if cc is STATUS_WAITING:
-            cc = False
-        if cd is STATUS_WAITING:
-            cd = False
-        if ce is STATUS_WAITING:
-            ce = False
-        if cf is STATUS_WAITING:
-            cf = False
+        if is_waiting(ca, cb, cc, cd, ce, cf):
+            return
         self._set_ready()
         self._set_value(ca or cb or cc or cd or ce or cf)
 
@@ -4476,24 +4446,13 @@ class ConditionAndList(ConditionCell):
         self.cf = True
 
     def evaluate(self):
-        STATUS_WAITING = LogicNetworkCell.STATUS_WAITING
         ca = self.get_parameter_value(self.ca)
         cb = self.get_parameter_value(self.cb)
         cc = self.get_parameter_value(self.cc)
         cd = self.get_parameter_value(self.cd)
         ce = self.get_parameter_value(self.ce)
         cf = self.get_parameter_value(self.cf)
-        if ca is STATUS_WAITING:
-            return
-        if cb is STATUS_WAITING:
-            return
-        if cc is STATUS_WAITING:
-            return
-        if cd is STATUS_WAITING:
-            return
-        if ce is STATUS_WAITING:
-            return
-        if cf is STATUS_WAITING:
+        if is_waiting(ca, cb, cc, cd, ce, cf):
             return
         self._set_ready()
         self._set_value(ca and cb and cc and cd and ce and cf)
@@ -4873,21 +4832,14 @@ class ActionSetGameObjectGameProperty(ActionCell):
 
     def evaluate(self):
         self.done = False
-        STATUS_WAITING = LogicNetworkCell.STATUS_WAITING
         condition_value = self.get_parameter_value(self.condition)
-        if condition_value is STATUS_WAITING:
-            return
-        if condition_value is False:
+        if not_met(condition_value):
             self._set_ready()
             return
         game_object_value = self.get_parameter_value(self.game_object)
         property_name_value = self.get_parameter_value(self.property_name)
         property_value_value = self.get_parameter_value(self.property_value)
-        if game_object_value is STATUS_WAITING:
-            return
-        if property_name_value is STATUS_WAITING:
-            return
-        if property_value_value is STATUS_WAITING:
+        if is_waiting(property_name_value, property_value_value):
             return
         if is_invalid(game_object_value):
             return
@@ -4947,25 +4899,15 @@ class ActionSetNodeTreeNodeValue(ActionCell):
 
     def evaluate(self):
         self.done = False
-        STATUS_WAITING = LogicNetworkCell.STATUS_WAITING
         condition_value = self.get_parameter_value(self.condition)
-        if condition_value is STATUS_WAITING:
-            return
-        if condition_value is False:
+        if not_met(condition_value):
             self._set_ready()
             return
         tree_name = self.get_parameter_value(self.tree_name)
         node_name = self.get_parameter_value(self.node_name)
         input_slot = self.get_parameter_value(self.input_slot)
         value = self.get_parameter_value(self.value)
-        print(tree_name, node_name, input_slot, value)
-        if tree_name is STATUS_WAITING:
-            return
-        if node_name is STATUS_WAITING:
-            return
-        if input_slot is STATUS_WAITING:
-            return
-        if value is STATUS_WAITING:
+        if is_waiting(node_name, input_slot, value):
             return
         if is_invalid(tree_name):
             return
@@ -4999,9 +4941,7 @@ class ActionSetNodeTreeNodeAttribute(ActionCell):
         self.done = False
         STATUS_WAITING = LogicNetworkCell.STATUS_WAITING
         condition_value = self.get_parameter_value(self.condition)
-        if condition_value is STATUS_WAITING:
-            return
-        if condition_value is False:
+        if not_met(condition_value):
             self._set_ready()
             return
         tree_name = self.get_parameter_value(self.tree_name)
@@ -5009,15 +4949,7 @@ class ActionSetNodeTreeNodeAttribute(ActionCell):
         attribute = self.get_parameter_value(self.attribute)
         internal = self.get_parameter_value(self.internal)
         value = self.get_parameter_value(self.value)
-        if tree_name is STATUS_WAITING:
-            return
-        if node_name is STATUS_WAITING:
-            return
-        if attribute is STATUS_WAITING:
-            return
-        if internal is STATUS_WAITING:
-            return
-        if value is STATUS_WAITING:
+        if is_waiting(node_name, attribute, internal, value):
             return
         if is_invalid(tree_name):
             return
@@ -5052,24 +4984,15 @@ class ActionSetMaterialNodeValue(ActionCell):
 
     def evaluate(self):
         self.done = False
-        STATUS_WAITING = LogicNetworkCell.STATUS_WAITING
         condition_value = self.get_parameter_value(self.condition)
-        if condition_value is STATUS_WAITING:
-            return
-        if condition_value is False:
+        if not_met(condition_value):
             self._set_ready()
             return
         mat_name = self.get_parameter_value(self.mat_name)
         node_name = self.get_parameter_value(self.node_name)
         input_slot = self.get_parameter_value(self.input_slot)
         value = self.get_parameter_value(self.value)
-        if mat_name is STATUS_WAITING:
-            return
-        if node_name is STATUS_WAITING:
-            return
-        if input_slot is STATUS_WAITING:
-            return
-        if value is STATUS_WAITING:
+        if is_waiting(node_name, input_slot, value):
             return
         if is_invalid(mat_name):
             return
@@ -5104,9 +5027,7 @@ class ActionSetMaterialNodeAttribute(ActionCell):
         self.done = False
         STATUS_WAITING = LogicNetworkCell.STATUS_WAITING
         condition_value = self.get_parameter_value(self.condition)
-        if condition_value is STATUS_WAITING:
-            return
-        if condition_value is False:
+        if not_met(condition_value):
             self._set_ready()
             return
         mat_name = self.get_parameter_value(self.mat_name)
@@ -5114,15 +5035,7 @@ class ActionSetMaterialNodeAttribute(ActionCell):
         attribute = self.get_parameter_value(self.attribute)
         internal = self.get_parameter_value(self.internal)
         value = self.get_parameter_value(self.value)
-        if mat_name is STATUS_WAITING:
-            return
-        if node_name is STATUS_WAITING:
-            return
-        if attribute is STATUS_WAITING:
-            return
-        if internal is STATUS_WAITING:
-            return
-        if value is STATUS_WAITING:
+        if is_waiting(node_name, attribute, internal, value):
             return
         if is_invalid(mat_name):
             return
@@ -5290,17 +5203,15 @@ class ActionToggleGameObjectGameProperty(ActionCell):
         self.done = False
         STATUS_WAITING = LogicNetworkCell.STATUS_WAITING
         condition_value = self.get_parameter_value(self.condition)
-        if condition_value is STATUS_WAITING:
-            return
-        if condition_value is False:
+        if not_met(condition_value):
             self._set_ready()
             return
         game_object_value = self.get_parameter_value(self.game_object)
         property_name_value = self.get_parameter_value(self.property_name)
         property_value_value = self.get_parameter_value(self.property_value)
-        if is_invalid(game_object_value):
-            return
         if is_waiting(property_name_value, property_value_value):
+            return
+        if is_invalid(game_object_value):
             return
         self._set_ready()
         if condition_value:
@@ -6168,23 +6079,17 @@ class ActionSetGameObjectVisibility(ActionCell):
         self.done = False
         condition = self.get_parameter_value(self.condition)
         STATUS_WAITING = LogicNetworkCell.STATUS_WAITING
-        if condition is STATUS_WAITING:
-            return
-        if not condition:
+        if not_met(condition):
             self._set_ready()
             return
         game_object = self.get_parameter_value(self.game_object)
         visible = self.get_parameter_value(self.visible)
         recursive = self.get_parameter_value(self.recursive)
-        if game_object is STATUS_WAITING:
+        if is_waiting(visible, recursive):
             return
-        if visible is STATUS_WAITING:
-            return
-        if recursive is STATUS_WAITING:
-            return
-        self._set_ready()
         if is_invalid(game_object):
             return
+        self._set_ready()
         if visible is None:
             return
         if recursive is None:
@@ -7107,29 +7012,28 @@ class ActionPerformanceProfile(ActionCell):
         self.data = '----------------------------------Start Profile\n'
         STATUS_WAITING = LogicNetworkCell.STATUS_WAITING
         condition = self.get_parameter_value(self.condition)
-        if condition is STATUS_WAITING:
-            return
-        if not condition:
+        if not_met(condition):
+            self._set_ready()
             return
         print_profile = self.get_parameter_value(
             self.print_profile
         )
-        if print_profile is STATUS_WAITING:
-            return
         check_evaluated_cells = self.get_parameter_value(
             self.check_evaluated_cells
         )
-        if check_evaluated_cells is STATUS_WAITING:
-            return
         check_average_cells_per_sec = self.get_parameter_value(
             self.check_average_cells_per_sec
         )
-        if check_average_cells_per_sec is STATUS_WAITING:
-            return
         check_cells_per_tick = self.get_parameter_value(
             self.check_cells_per_tick
         )
-        if check_average_cells_per_sec is STATUS_WAITING:
+        if is_waiting(
+            print_profile,
+            check_evaluated_cells,
+            check_average_cells_per_sec,
+            check_cells_per_tick
+        ):
+            self._set_ready()
             return
         self._set_ready()
         if check_evaluated_cells:
@@ -7382,9 +7286,7 @@ class ActionTimeFilter(ActionCell):
         STATUS_WAITING = LogicNetworkCell.STATUS_WAITING
         condition = self.get_parameter_value(self.condition)
         delay = self.get_parameter_value(self.delay)
-        if condition is STATUS_WAITING:
-            return
-        if delay is STATUS_WAITING:
+        if is_waiting(condition, delay):
             return
         self._set_ready()
         self._set_value(False)
@@ -9020,12 +8922,8 @@ class ParameterGetGlobalValue(ParameterCell):
         STATUS_WAITING = LogicNetworkCell.STATUS_WAITING
         data_id = self.get_parameter_value(self.data_id)
         key = self.get_parameter_value(self.key)
-        if data_id is STATUS_WAITING:
-            return
-        if key is STATUS_WAITING:
-            return
         default = self.get_parameter_value(self.default)
-        if default is STATUS_WAITING:
+        if is_waiting(data_id, key, default):
             return
         self._set_ready()
         db = SimpleLoggingDatabase.get_or_create_shared_db(data_id)
@@ -9099,22 +8997,14 @@ class ActionSetGlobalValue(ActionCell):
         self.done = False
         STATUS_WAITING = LogicNetworkCell.STATUS_WAITING
         condition = self.get_parameter_value(self.condition)
-        if condition is STATUS_WAITING:
-            return
-        if condition is False:
+        if not_met(condition):
             self._set_ready()
             return
         data_id = self.get_parameter_value(self.data_id)
         persistent = self.get_parameter_value(self.persistent)
         key = self.get_parameter_value(self.key)
         value = self.get_parameter_value(self.value)
-        if data_id is STATUS_WAITING:
-            return
-        if key is STATUS_WAITING:
-            return
-        if persistent is STATUS_WAITING:
-            return
-        if value is STATUS_WAITING:
+        if is_waiting(data_id, persistent, key, value):
             return
         self._set_ready()
         if self.condition is None or condition:
@@ -9200,9 +9090,7 @@ class ActionTranslate(ActionCell):
     def evaluate(self):
         STATUS_WAITING = LogicNetworkCell.STATUS_WAITING
         condition = self.get_parameter_value(self.condition)
-        if condition is STATUS_WAITING:
-            return
-        if not condition:
+        if not_met(condition):
             self._set_value(False)
             return self._set_ready()
         moving_object = self.get_parameter_value(self.moving_object)
@@ -9212,21 +9100,18 @@ class ActionTranslate(ActionCell):
         dz = vect.z
         speed = self.get_parameter_value(self.speed)
         local = self.get_parameter_value(self.local)
-        if moving_object is STATUS_WAITING:
+        if is_waiting(
+            vect,
+            dx,
+            dy,
+            dz,
+            speed,
+            local
+        ):
             return
-        if dx is STATUS_WAITING:
-            return
-        if dy is STATUS_WAITING:
-            return
-        if dz is STATUS_WAITING:
-            return
-        if speed is STATUS_WAITING:
-            return
-        if local is STATUS_WAITING:
-            return
-        self._set_ready()
         if is_invalid(moving_object):
             return
+        self._set_ready()
         if dx is None:
             return
         if dy is None:
@@ -9507,14 +9392,12 @@ class SetLightEnergy(ActionCell):
         STATUS_WAITING = LogicNetworkCell.STATUS_WAITING
 
         condition = self.get_parameter_value(self.condition)
-        if condition is STATUS_WAITING:
-            return
-        if not condition:
+        if not_met(condition):
             self._set_value(False)
             return self._set_ready()
         lamp = self.get_parameter_value(self.lamp)
         energy = self.get_parameter_value(self.energy)
-        if lamp is STATUS_WAITING:
+        if is_waiting(lamp, energy):
             return
         self._set_ready()
         light = lamp.blenderObject.data
@@ -9540,14 +9423,12 @@ class SetLightShadow(ActionCell):
         STATUS_WAITING = LogicNetworkCell.STATUS_WAITING
 
         condition = self.get_parameter_value(self.condition)
-        if condition is STATUS_WAITING:
-            return
-        if not condition:
+        if not_met(condition):
             self._set_value(False)
             return self._set_ready()
         lamp = self.get_parameter_value(self.lamp)
         use_shadow = self.get_parameter_value(self.use_shadow)
-        if lamp is STATUS_WAITING:
+        if is_waiting(lamp, use_shadow):
             return
         self._set_ready()
         light = lamp.blenderObject.data
@@ -9572,9 +9453,7 @@ class SetLightColor(ActionCell):
         self.done = False
         STATUS_WAITING = LogicNetworkCell.STATUS_WAITING
         condition = self.get_parameter_value(self.condition)
-        if condition is STATUS_WAITING:
-            return
-        if not condition:
+        if not_met(condition):
             self._set_value(False)
             return self._set_ready()
         lamp = self.get_parameter_value(self.lamp)
@@ -9682,32 +9561,20 @@ class ActionTrackTo(ActionCell):
         self._set_value(False)
         STATUS_WAITING = LogicNetworkCell.STATUS_WAITING
         condition = self.get_parameter_value(self.condition)
-        if condition is STATUS_WAITING:
-            return
-        if not condition:
+        if not_met(condition):
             return self._set_ready()
         moving_object = self.get_parameter_value(self.moving_object)
         target_object = self.get_parameter_value(self.target_object)
         speed = self.get_parameter_value(self.speed)
         rot_axis = self.get_parameter_value(self.rot_axis)
         front_axis = self.get_parameter_value(self.front_axis)
-        if moving_object is STATUS_WAITING:
-            return
-        if target_object is STATUS_WAITING:
-            return
-        if speed is STATUS_WAITING:
-            return
-        if rot_axis is STATUS_WAITING:
-            return
-        if front_axis is STATUS_WAITING:
-            return
-        self._set_ready()
-        if not condition:
+        if is_waiting(speed, rot_axis, front_axis):
             return
         if is_invalid(moving_object):
             return
         if is_invalid(target_object):
             return
+        self._set_ready()
         if rot_axis is None:
             return
         if front_axis is None:
@@ -9838,9 +9705,7 @@ class ActionNavigateWithNavmesh(ActionCell):
     def evaluate(self):
         STATUS_WAITING = LogicNetworkCell.STATUS_WAITING
         condition = self.get_parameter_value(self.condition)
-        if condition is STATUS_WAITING:
-            return
-        if not condition:
+        if not_met(condition):
             self._set_ready()
             return
         moving_object = self.get_parameter_value(self.moving_object)
@@ -9854,50 +9719,22 @@ class ActionNavigateWithNavmesh(ActionCell):
         rot_axis = self.get_parameter_value(self.rot_axis)
         front_axis = self.get_parameter_value(self.front_axis)
         rot_speed = self.get_parameter_value(self.rot_speed)
-        if moving_object is STATUS_WAITING:
+        if is_invalid(
+            destination_point,
+            move_dynamic,
+            linear_speed,
+            reach_threshold,
+            look_at,
+            rot_axis,
+            front_axis,
+            rot_speed
+        ):
             return
-        if rotating_object is STATUS_WAITING:
-            return
-        if navmesh_object is STATUS_WAITING:
-            return
-        if destination_point is STATUS_WAITING:
-            return
-        if move_dynamic is STATUS_WAITING:
-            return
-        if linear_speed is STATUS_WAITING:
-            return
-        if reach_threshold is STATUS_WAITING:
-            return
-        if look_at is STATUS_WAITING:
-            return
-        if rot_axis is STATUS_WAITING:
-            return
-        if front_axis is STATUS_WAITING:
-            return
-        if rot_speed is STATUS_WAITING:
-            return
-        self._set_ready()
-        self._set_value(False)
-        if is_invalid(moving_object):
-            return
-        if is_invalid(navmesh_object):
+        if is_invalid(moving_object, navmesh_object):
             return
         if is_invalid(rotating_object):
             rotating_object = None
-        if destination_point is None:
-            return
-        if move_dynamic is None:
-            return
-        if linear_speed is None:
-            return
-        if reach_threshold is None:
-            return
-        if look_at is None:
-            return
-        if rot_axis is None:
-            return
-        if front_axis is None:
-            return
+        self._set_ready()
         if (
             (self._motion_path is None) or
             (self._motion_path.destination_changed(destination_point))
@@ -9986,9 +9823,7 @@ class ActionFollowPath(ActionCell):
         self.done = False
         STATUS_WAITING = LogicNetworkCell.STATUS_WAITING
         condition = self.get_parameter_value(self.condition)
-        if condition is STATUS_WAITING:
-            return
-        if not condition:
+        if not_met(condition):
             self._motion_path = None
             self._set_ready()
             return
@@ -10004,25 +9839,7 @@ class ActionFollowPath(ActionCell):
         front_axis = self.get_parameter_value(self.front_axis)
         rot_speed = self.get_parameter_value(self.rot_speed)
         loop = self.get_parameter_value(self.loop)
-        if moving_object is STATUS_WAITING:
-            return
-        if rotating_object is STATUS_WAITING:
-            return
-        if path_parent is STATUS_WAITING:
-            return
-        if navmesh_object is STATUS_WAITING:
-            return
-        if move_dynamic is STATUS_WAITING:
-            return
-        if linear_speed is STATUS_WAITING:
-            return
-        if reach_threshold is STATUS_WAITING:
-            return
-        if look_at is STATUS_WAITING:
-            return
-        if rot_axis is STATUS_WAITING:
-            return
-        if front_axis is STATUS_WAITING:
+        if self.is_waiting:
             return
         if is_invalid(rot_speed):
             rot_speed = 0
