@@ -5156,20 +5156,26 @@ class ActionPlayMaterialSequence(ActionCell):
             s = round(speed)
             if inverted:
                 if frame - s < end_frame:
-                    leftover = abs(frame - s - end_frame)
-                    span = start_frame - end_frame
-                    while leftover > span:
-                        leftover -= span
-                    player.frame_offset = start_frame - leftover
+                    if play_mode in [1, 4]:
+                        leftover = abs(frame - s - end_frame)
+                        span = start_frame - end_frame
+                        while leftover > span:
+                            leftover -= span
+                        player.frame_offset = start_frame - leftover
+                    else:
+                        player.frame_offset = end_frame
                 else:
                     player.frame_offset -= s
             else:
                 if frame + s > end_frame:
-                    leftover = frame + s - end_frame
-                    span = end_frame - start_frame
-                    while leftover > span:
-                        leftover -= span
-                    player.frame_offset = start_frame + leftover
+                    if play_mode in [1, 4]:
+                        leftover = frame + s - end_frame
+                        span = end_frame - start_frame
+                        while leftover > span:
+                            leftover -= span
+                        player.frame_offset = start_frame + leftover
+                    else:
+                        player.frame_offset = end_frame
                 else:
                     player.frame_offset += s
         elif play_mode == 1 and condition:
