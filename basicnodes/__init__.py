@@ -11142,7 +11142,7 @@ class NLParameterReceiveMessage(bpy.types.Node, NLParameterNode):
         self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Subject")
         self.outputs.new(NLConditionSocket.bl_idname, "Received")
         self.outputs.new(NLParameterSocket.bl_idname, "Content")
-        self.outputs.new(NLGameObjectSocket.bl_idname, "Target")
+        self.outputs.new(NLGameObjectSocket.bl_idname, "Messenger")
 
     def get_input_sockets_field_names(self):
         return ['subject']
@@ -11223,7 +11223,8 @@ class NLActionCreateMessage(bpy.types.Node, NLActionNode):
         self.inputs.new(NLConditionSocket.bl_idname, "Condition")
         self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Subject")
         self.inputs.new(NLOptionalValueFieldSocket.bl_idname, "Content")
-        self.inputs.new(NLGameObjectSocket.bl_idname, "Target")
+        self.inputs.new(NLGameObjectSocket.bl_idname, "Messenger")
+        self.inputs[-1].use_owner = True
         self.outputs.new(NLConditionSocket.bl_idname, 'Done')
 
     def update_draw(self):
