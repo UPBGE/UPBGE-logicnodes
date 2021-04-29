@@ -347,11 +347,24 @@ class BGE_PT_GamePropertyPanel(bpy.types.Panel):
         context.region.tag_redraw()
 
 
-class BGE_PT_GamePropertyPanel3DView(bpy.types.Panel):
+class BGE_PT_NLEditorPropertyPanel(BGE_PT_GamePropertyPanel):
+    bl_label = "Object Properties"
+    bl_space_type = "NODE_EDITOR"
+    bl_region_type = "UI"
+    bl_category = "Dashboard"
+
+    @classmethod
+    def poll(cls, context):
+        ob = context.active_object
+        enabled = (context.space_data.tree_type == BGELogicTree.bl_idname)
+        return ob and ob.name and enabled
+
+
+class BGE_PT_GamePropertyPanel3DView(BGE_PT_GamePropertyPanel):
     bl_label = "Object Properties"
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
-    bl_category = "Dashboard"
+    bl_category = "Item"
     name: bpy.props.StringProperty()
 
     @classmethod
@@ -359,111 +372,18 @@ class BGE_PT_GamePropertyPanel3DView(bpy.types.Panel):
         ob = context.active_object
         return ob and ob.name
 
-    def draw_tree_prop(self, prop, index, box, show_movers):
-        col = box.column()
-        name = prop.name.split('__')[-1]
-        text = 'Logic Tree'
-        opts_row = col.row()
-        opts_row.label(text=text)
-        val_row = col.row()
-        val_row.label(text=name)
-        val_row.prop(prop, 'value', text='Start')
-        if show_movers:
-            self.add_movers(index, opts_row)
-        opts_row.operator(
-                bge_netlogic.ops.NLRemoveTreeByNameOperator.bl_idname,
-                text="",
-                icon="X"
-        ).tree_name = name
 
-    def add_movers(self, index, layout):
-        movers = layout.row(align=True)
-        move_up = movers.operator(
-            bge_netlogic.ops.NLMovePropertyOperator.bl_idname,
-            text='',
-            icon='TRIA_UP'
-        )
-        move_up.direction = 'UP'
-        move_down = movers.operator(
-            bge_netlogic.ops.NLMovePropertyOperator.bl_idname,
-            text='',
-            icon='TRIA_DOWN'
-        )
-        move_down.direction = 'DOWN'
-        move_down.index = move_up.index = index
+class BGE_PT_PropertiesPanelObject(BGE_PT_GamePropertyPanel):
+    bl_label = "Game Properties"
+    bl_space_type = "PROPERTIES"
+    bl_region_type = "WINDOW"
+    bl_context = "object"
+    name: bpy.props.StringProperty()
 
-    def draw(self, context):
-        layout = self.layout
-        column = layout.column()
-        obj = bpy.context.object
-        column.operator(
-            bge_netlogic.ops.NLAddPropertyOperator.bl_idname,
-            text="Add Game Property",
-            icon='PLUS'
-        )
-        options = column.row()
-        show_hidden = context.scene.prop_filter.show_hidden
-        collapse_trees = context.scene.prop_filter.collapse_trees
-        do_filter = context.scene.prop_filter.do_filter
-        prop_type = context.scene.prop_filter.filter_by
-        prop_name = context.scene.prop_filter.filter_name
-        show_trees = context.scene.prop_filter.show_trees
-
-        hide_icon = 'HIDE_OFF' if show_hidden else 'HIDE_ON'
-        collapse_icon = 'LOCKED' if collapse_trees else 'UNLOCKED'
-        options.prop(context.scene.prop_filter, 'do_filter', icon='FILTER', text='')
-        options.prop(context.scene.prop_filter, 'show_hidden', icon=hide_icon, text='')
-        options.prop(context.scene.prop_filter, 'show_trees', icon='OUTLINER', text='')
-        options.prop(context.scene.prop_filter, 'collapse_trees', icon=collapse_icon, text='')
-
-        if do_filter:
-            column.prop(context.scene.prop_filter, 'filter_by', text='')
-        if prop_type == 'NAME' and do_filter:
-            column.prop(context.scene.prop_filter, 'filter_name', text='', icon='VIEWZOOM')
-        if not obj:
-            return
-
-        show_movers = show_hidden and show_trees and not do_filter
-
-        props = [prop for prop in obj.game.properties]
-        for prop in obj.game.properties:
-            if not show_hidden and prop.name.startswith('_'):
-                continue
-            is_tree = prop.name.startswith(utils.NLPREFIX)
-            if is_tree and not show_trees:
-                continue
-            has_name = prop_name in prop.name
-            if do_filter:
-                if prop_type == 'NAME':
-                    if not has_name:
-                        continue
-                elif prop_type == 'TREES':
-                    if not is_tree:
-                        continue
-                elif prop.type != prop_type or is_tree:
-                    continue
-            index = props.index(prop)
-            column.separator()
-            box = column.box()
-            if is_tree and collapse_trees:
-                self.draw_tree_prop(prop, index, box, show_movers)
-                continue
-            entry = box.column()
-            row_title = entry.row()
-            row_title.prop(prop, 'name', text='')
-            row_title.prop(prop, 'show_debug', text='', icon='INFO')
-            if show_movers:
-                self.add_movers(index, row_title)
-            remove = row_title.operator(
-                bge_netlogic.ops.NLRemovePropertyOperator.bl_idname,
-                text='',
-                icon='X'
-            )
-            remove.index = index
-            row_info = entry.row()
-            row_info.prop(prop, 'type', text='')
-            row_info.prop(prop, 'value', text='Value')
-        context.region.tag_redraw()
+    @classmethod
+    def poll(cls, context):
+        ob = context.active_object
+        return ob and ob.name
 
 
 class BGE_PT_LogicNodeSettingsObject(bpy.types.Panel):
@@ -486,125 +406,6 @@ class BGE_PT_LogicNodeSettingsObject(bpy.types.Panel):
         col2 = parts.column()
         col1.prop(context.active_object, 'sound_occluder', text='Sound Occluder')
         col2.prop(context.active_object, 'sound_blocking', text='Factor', slider=True)
-
-
-class BGE_PT_PropertiesPanelObject(bpy.types.Panel):
-    bl_label = "Game Properties"
-    bl_space_type = "PROPERTIES"
-    bl_region_type = "WINDOW"
-    bl_context = "object"
-    name: bpy.props.StringProperty()
-
-    @classmethod
-    def poll(cls, context):
-        ob = context.active_object
-        return ob and ob.name
-
-    def draw_tree_prop(self, prop, index, box, show_movers):
-        col = box.column()
-        name = prop.name.split('__')[-1]
-        text = 'Logic Tree'
-        opts_row = col.row()
-        opts_row.label(text=text)
-        val_row = col.row()
-        val_row.label(text=name)
-        val_row.prop(prop, 'value', text='Start')
-        if show_movers:
-            self.add_movers(index, opts_row)
-        opts_row.operator(
-                bge_netlogic.ops.NLRemoveTreeByNameOperator.bl_idname,
-                text="",
-                icon="X"
-        ).tree_name = name
-
-    def add_movers(self, index, layout):
-        movers = layout.row(align=True)
-        move_up = movers.operator(
-            bge_netlogic.ops.NLMovePropertyOperator.bl_idname,
-            text='',
-            icon='TRIA_UP'
-        )
-        move_up.direction = 'UP'
-        move_down = movers.operator(
-            bge_netlogic.ops.NLMovePropertyOperator.bl_idname,
-            text='',
-            icon='TRIA_DOWN'
-        )
-        move_down.direction = 'DOWN'
-        move_down.index = move_up.index = index
-
-    def draw(self, context):
-        layout = self.layout
-        column = layout.column()
-        obj = bpy.context.object
-        column.operator(
-            bge_netlogic.ops.NLAddPropertyOperator.bl_idname,
-            text="Add Game Property",
-            icon='PLUS'
-        )
-        options = column.row()
-        show_hidden = context.scene.prop_filter.show_hidden
-        collapse_trees = context.scene.prop_filter.collapse_trees
-        do_filter = context.scene.prop_filter.do_filter
-        prop_type = context.scene.prop_filter.filter_by
-        prop_name = context.scene.prop_filter.filter_name
-        show_trees = context.scene.prop_filter.show_trees
-
-        hide_icon = 'HIDE_OFF' if show_hidden else 'HIDE_ON'
-        collapse_icon = 'LOCKED' if collapse_trees else 'UNLOCKED'
-        options.prop(context.scene.prop_filter, 'do_filter', icon='FILTER', text='')
-        options.prop(context.scene.prop_filter, 'show_hidden', icon=hide_icon, text='')
-        options.prop(context.scene.prop_filter, 'show_trees', icon='OUTLINER', text='')
-        options.prop(context.scene.prop_filter, 'collapse_trees', icon=collapse_icon, text='')
-
-        if do_filter:
-            column.prop(context.scene.prop_filter, 'filter_by', text='')
-        if prop_type == 'NAME' and do_filter:
-            column.prop(context.scene.prop_filter, 'filter_name', text='', icon='VIEWZOOM')
-        if not obj:
-            return
-
-        show_movers = show_hidden and show_trees and not do_filter
-
-        props = [prop for prop in obj.game.properties]
-        for prop in obj.game.properties:
-            if not show_hidden and prop.name.startswith('_'):
-                continue
-            is_tree = prop.name.startswith(utils.NLPREFIX)
-            if is_tree and not show_trees:
-                continue
-            has_name = prop_name in prop.name
-            if do_filter:
-                if prop_type == 'NAME':
-                    if not has_name:
-                        continue
-                elif prop_type == 'TREES':
-                    if not is_tree:
-                        continue
-                elif prop.type != prop_type or is_tree:
-                    continue
-            index = props.index(prop)
-            column.separator()
-            box = column.box()
-            if is_tree and collapse_trees:
-                self.draw_tree_prop(prop, index, box, show_movers)
-                continue
-            entry = box.column()
-            row_title = entry.row()
-            row_title.prop(prop, 'name', text='')
-            row_title.prop(prop, 'show_debug', text='', icon='INFO')
-            if show_movers:
-                self.add_movers(index, row_title)
-            remove = row_title.operator(
-                bge_netlogic.ops.NLRemovePropertyOperator.bl_idname,
-                text='',
-                icon='X'
-            )
-            remove.index = index
-            row_info = entry.row()
-            row_info.prop(prop, 'type', text='')
-            row_info.prop(prop, 'value', text='Value')
-        context.region.tag_redraw()
 
 
 class BGE_PT_LogicTreeGroups(bpy.types.Panel):

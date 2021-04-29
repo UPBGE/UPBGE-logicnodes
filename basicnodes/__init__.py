@@ -3780,6 +3780,7 @@ _nodes.append(NLGameObjectPropertyParameterNode)
 class NLGetGeometryNodeValue(bpy.types.Node, NLParameterNode):
     bl_idname = "NLGetGeometryNodeValue"
     bl_label = "Get Node Input Value"
+    bl_icon = 'TRIA_RIGHT'
     nl_category = 'Nodes'
     nl_subcat = 'Geometry'
 
@@ -3827,6 +3828,7 @@ _nodes.append(NLGetGeometryNodeValue)
 class NLGetGeometryNodeAttribute(bpy.types.Node, NLParameterNode):
     bl_idname = "NLGetGeometryNodeAttribute"
     bl_label = "Get Node Value"
+    bl_icon = 'DRIVER_TRANSFORM'
     nl_category = 'Nodes'
     nl_subcat = 'Geometry'
 
@@ -3865,6 +3867,7 @@ _nodes.append(NLGetGeometryNodeAttribute)
 class NLGetNodeGroupNodeValue(bpy.types.Node, NLParameterNode):
     bl_idname = "NLGetNodeGroupNodeValue"
     bl_label = "Get Node Input Value"
+    bl_icon = 'TRIA_RIGHT'
     nl_category = 'Nodes'
     nl_subcat = 'Groups'
 
@@ -3912,6 +3915,7 @@ _nodes.append(NLGetNodeGroupNodeValue)
 class NLGetNodeTreeNodeAttribute(bpy.types.Node, NLParameterNode):
     bl_idname = "NLGetNodeTreeNodeAttribute"
     bl_label = "Get Node Value"
+    bl_icon = 'DRIVER_TRANSFORM'
     nl_category = 'Nodes'
     nl_subcat = 'Groups'
 
@@ -3950,6 +3954,7 @@ _nodes.append(NLGetNodeTreeNodeAttribute)
 class NLGetMaterialNodeValue(bpy.types.Node, NLParameterNode):
     bl_idname = "NLGetMaterialNodeValue"
     bl_label = "Get Node Input Value"
+    bl_icon = 'TRIA_RIGHT'
     nl_category = 'Nodes'
     nl_subcat = 'Materials'
 
@@ -3997,6 +4002,7 @@ _nodes.append(NLGetMaterialNodeValue)
 class NLGetMaterialNodeAttribute(bpy.types.Node, NLParameterNode):
     bl_idname = "NLGetMaterialNodeAttribute"
     bl_label = "Get Node Value"
+    bl_icon = 'DRIVER_TRANSFORM'
     nl_category = 'Nodes'
     nl_subcat = 'Materials'
 
@@ -6985,6 +6991,7 @@ _nodes.append(NLSetGameObjectGamePropertyActionNode)
 class NLSetGeometryNodeValue(bpy.types.Node, NLActionNode):
     bl_idname = "NLSetGeometryNodeValue"
     bl_label = "Set Node Input Value"
+    bl_icon = 'TRIA_RIGHT'
     nl_category = 'Nodes'
     nl_subcat = 'Geometry'
 
@@ -7041,6 +7048,7 @@ _nodes.append(NLSetGeometryNodeValue)
 class NLSetNodeTreeNodeValue(bpy.types.Node, NLActionNode):
     bl_idname = "NLSetNodeTreeNodeValue"
     bl_label = "Set Node Input Value"
+    bl_icon = 'TRIA_RIGHT'
     nl_category = 'Nodes'
     nl_subcat = 'Groups'
 
@@ -7097,6 +7105,7 @@ _nodes.append(NLSetNodeTreeNodeValue)
 class NLSetGeometryNodeAttribute(bpy.types.Node, NLActionNode):
     bl_idname = "NLSetGeometryNodeAttribute"
     bl_label = "Set Node Value"
+    bl_icon = 'DRIVER_TRANSFORM'
     nl_category = 'Nodes'
     nl_subcat = 'Geometry'
 
@@ -7145,6 +7154,7 @@ _nodes.append(NLSetGeometryNodeAttribute)
 class NLSetNodeTreeNodeAttribute(bpy.types.Node, NLActionNode):
     bl_idname = "NLSetNodeTreeNodeAttribute"
     bl_label = "Set Node Value"
+    bl_icon = 'DRIVER_TRANSFORM'
     nl_category = 'Nodes'
     nl_subcat = 'Groups'
 
@@ -7232,6 +7242,7 @@ _nodes.append(NLSetMaterial)
 class NLSetMaterialNodeValue(bpy.types.Node, NLActionNode):
     bl_idname = "NLSetMaterialNodeValue"
     bl_label = "Set Node Input Value"
+    bl_icon = 'TRIA_RIGHT'
     nl_category = 'Nodes'
     nl_subcat = 'Materials'
 
@@ -7288,6 +7299,7 @@ _nodes.append(NLSetMaterialNodeValue)
 class NLSetMaterialNodeAttribute(bpy.types.Node, NLActionNode):
     bl_idname = "NLSetMaterialNodeAttribute"
     bl_label = "Set Node Value"
+    bl_icon = 'DRIVER_TRANSFORM'
     nl_category = 'Nodes'
     nl_subcat = 'Materials'
 
