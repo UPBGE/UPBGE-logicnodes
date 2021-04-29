@@ -719,22 +719,20 @@ class LogicNetworkCell(StatefulValueProducer):
         else:
             return check_game_object(param.split(':')[-1], scene)
 
-    def get_parameter_value(self, param, allow_wait=False, scene=None):
+    def get_socket_value(self, param, scene=None):
         if str(param).startswith('NLO:'):
             return self.get_game_object(param, scene)
         if isinstance(param, StatefulValueProducer):
             if param.has_status(LogicNetworkCell.STATUS_READY):
                 return param.get_value()
             else:
-                if not allow_wait:
-                    self.is_waiting = True
-                return LogicNetwork.STATUS_WAITING
+                return LogicNetworkCell.STATUS_WAITING
         else:
             return param
 
     def reset(self):
         """
-        Resets the status of the cell to LogicNetwork.STATUS_WAITING.
+        Resets the status of the cell to LogicNetworkCell.STATUS_WAITING.
         A cell may override this to reset other states
         or to keep the value at STATUS_READY if evaluation is required
         to happen only once (or never at all)
@@ -834,7 +832,8 @@ class LogicNetwork(LogicNetworkCell):
                     val = getattr(v , dat.get(v.value_type, 'FLOAT'), 0)
                     db.put(v.name, val, v.persistent)
 
-            debug(f'Globals Initialized:{msg[:-1]}')
+            if msg:
+                debug(f'Globals Initialized:{msg[:-1]}')
             bpy.types.Scene.nl_globals_initialized = True
 
     def ray_cast(
@@ -1097,7 +1096,7 @@ class ConditionCell(LogicNetworkCell):
 ###############################################################################
 
 
-class GEOnInit(ConditionCell):
+class GE_OnInit(ConditionCell):
     def __init__(self):
         ConditionCell.__init__(self)
         self._set_status(LogicNetworkCell.STATUS_READY)
@@ -1118,7 +1117,7 @@ class OnNextFrame(ConditionCell):
         self._activated = 0
 
     def evaluate(self):
-        input_condition = self.get_parameter_value(self.input_condition)
+        input_condition = self.get_socket_value(self.input_condition)
         self._set_ready()
         if self._activated == 1:
             self._set_value(True)
@@ -1169,7 +1168,7 @@ class ConditionValueChanged(ConditionCell):
         self._previous_value = self._current_value
 
     def evaluate(self):
-        curr = self.get_parameter_value(self.current_value)
+        curr = self.get_socket_value(self.current_value)
         if is_waiting(curr):
             return
         self._set_ready()
@@ -1190,8 +1189,8 @@ class ConditionValueTrigger(ConditionCell):
         self._last_value = LogicNetworkCell.NO_VALUE
 
     def evaluate(self):
-        monitored_value = self.get_parameter_value(self.monitored_value)
-        trigger_value = self.get_parameter_value(self.trigger_value)
+        monitored_value = self.get_socket_value(self.monitored_value)
+        trigger_value = self.get_socket_value(self.trigger_value)
         if is_waiting(monitored_value, trigger_value):
             return
         self._set_ready()
@@ -1220,9 +1219,9 @@ class ConditionOnce(ConditionCell):
         self.time = 0.0
 
     def evaluate(self):
-        condition = self.get_parameter_value(self.input_condition)
-        repeat = self.get_parameter_value(self.repeat)
-        reset_time = self.get_parameter_value(self.reset_time)
+        condition = self.get_socket_value(self.input_condition)
+        repeat = self.get_socket_value(self.repeat)
+        reset_time = self.get_socket_value(self.reset_time)
         if is_waiting(repeat, reset_time):
             return
         network = self.network
@@ -1271,11 +1270,11 @@ class ActionLoadGame(ActionCell):
 
     def evaluate(self):
         self.done = False
-        condition = self.get_parameter_value(self.condition)
+        condition = self.get_socket_value(self.condition)
         if not_met(condition):
             return
         self._set_ready()
-        slot = self.get_parameter_value(self.slot)
+        slot = self.get_socket_value(self.slot)
         if is_waiting(slot):
             return
         cust_path = self.get_custom_path(self.path)
@@ -1348,7 +1347,7 @@ class ActionEndGame(ActionCell):
 
     def evaluate(self):
         self._set_ready()
-        condition = self.get_parameter_value(self.condition)
+        condition = self.get_socket_value(self.condition)
         if not_met(condition):
             return
         logic.endGame()
@@ -1368,7 +1367,7 @@ class ActionRestartGame(ActionCell):
     def evaluate(self):
         self.done = False
         self._set_ready()
-        condition = self.get_parameter_value(self.condition)
+        condition = self.get_socket_value(self.condition)
         if condition:
             logic.restartGame()
         self.done = True
@@ -1398,10 +1397,10 @@ class ActionSaveGame(ActionCell):
 
     def evaluate(self):
         self.done = False
-        condition = self.get_parameter_value(self.condition)
+        condition = self.get_socket_value(self.condition)
         if not_met(condition):
             return
-        slot = self.get_parameter_value(self.slot)
+        slot = self.get_socket_value(self.slot)
         if is_waiting(slot):
             return
         self._set_ready()
@@ -1545,8 +1544,8 @@ class ActionStartGame(ActionCell):
     def evaluate(self):
         self.done = False
         self._set_ready()
-        condition = self.get_parameter_value(self.condition)
-        file_name = self.get_parameter_value(self.file_name)
+        condition = self.get_socket_value(self.condition)
+        file_name = self.get_socket_value(self.file_name)
         if condition:
             logic.startGame(file_name)
         self.done = True
@@ -1564,7 +1563,7 @@ class ConditionMousePressed(ConditionCell):
         self.mouse_button_code = None
 
     def evaluate(self):
-        mouse_button = self.get_parameter_value(self.mouse_button_code)
+        mouse_button = self.get_socket_value(self.mouse_button_code)
         if is_waiting(mouse_button):
             return
         self._set_ready()
@@ -1585,8 +1584,8 @@ class ConditionMousePressedOn(ConditionCell):
         self.mouse_button = None
 
     def evaluate(self):
-        mouse_button = self.get_parameter_value(self.mouse_button)
-        game_object = self.get_parameter_value(self.game_object)
+        mouse_button = self.get_socket_value(self.mouse_button)
+        game_object = self.get_socket_value(self.game_object)
         if is_waiting(mouse_button, game_object):
             return
         self._set_ready()
@@ -1625,7 +1624,7 @@ class ConditionMouseReleased(ConditionCell):
         self.network = network
 
     def evaluate(self):
-        mouse_button = self.get_parameter_value(self.mouse_button_code)
+        mouse_button = self.get_socket_value(self.mouse_button_code)
         if is_waiting(mouse_button):
             return
         self._set_ready()
@@ -1652,10 +1651,10 @@ class ActionSetMouseCursorVisibility(ActionCell):
 
     def evaluate(self):
         self.done = False
-        condition = self.get_parameter_value(self.condition)
+        condition = self.get_socket_value(self.condition)
         if not_met(condition):
             return
-        visibility_status = self.get_parameter_value(self.visibility_status)
+        visibility_status = self.get_socket_value(self.visibility_status)
         if is_waiting(visibility_status):
             return
         self._set_ready()
@@ -1695,13 +1694,13 @@ class ActionMouseLook(ActionCell):
         return (fac * b) + ((1-fac) * a)
 
     def get_x_obj(self):
-        game_object_x = self.get_parameter_value(self.game_object_x)
+        game_object_x = self.get_socket_value(self.game_object_x)
         if is_waiting(game_object_x):
             return
         return game_object_x
 
     def get_y_obj(self):
-        game_object_y = self.get_parameter_value(self.game_object_y)
+        game_object_y = self.get_socket_value(self.game_object_y)
         if is_invalid(game_object_y):
             game_object_y = self.get_x_obj()
         elif game_object_y is not self.get_x_obj():
@@ -1721,22 +1720,22 @@ class ActionMouseLook(ActionCell):
     def evaluate(self):
         self.done = False
         self.get_data()
-        condition = self.get_parameter_value(self.condition)
+        condition = self.get_socket_value(self.condition)
         if not_met(condition):
             return
         game_object_x = self.get_x_obj()
         game_object_y = self.get_y_obj()
-        sensitivity = self.get_parameter_value(self.sensitivity) * 1000
-        use_cap_z = self.get_parameter_value(self.use_cap_z)
-        use_cap_y = self.get_parameter_value(self.use_cap_y)
-        cap_z = self.get_parameter_value(self.cap_z)
+        sensitivity = self.get_socket_value(self.sensitivity) * 1000
+        use_cap_z = self.get_socket_value(self.use_cap_z)
+        use_cap_y = self.get_socket_value(self.use_cap_y)
+        cap_z = self.get_socket_value(self.cap_z)
         lowercapX = -cap_z.y
         uppercapX = cap_z.x
-        cap_y = self.get_parameter_value(self.cap_y)
+        cap_y = self.get_socket_value(self.cap_y)
         lowercapY = -cap_y.x
         uppercapY = cap_y.y
-        inverted = self.get_parameter_value(self.inverted)
-        smooth = 1 - (self.get_parameter_value(self.smooth) * .99)
+        inverted = self.get_socket_value(self.inverted)
+        smooth = 1 - (self.get_socket_value(self.smooth) * .99)
         self._set_ready()
 
         if is_invalid(game_object_x):
@@ -1843,7 +1842,7 @@ class ConditionMouseTargeting(ConditionCell):
         return self._normal
 
     def evaluate(self):
-        game_object = self.get_parameter_value(self.game_object)
+        game_object = self.get_socket_value(self.game_object)
         if is_waiting(game_object):
             return
         self._set_ready()
@@ -1920,11 +1919,11 @@ class ActionSetMousePosition(ActionCell):
 
     def evaluate(self):
         self.done = False
-        condition = self.get_parameter_value(self.condition)
+        condition = self.get_socket_value(self.condition)
         if not_met(condition):
             return
-        screen_x = self.get_parameter_value(self.screen_x)
-        screen_y = self.get_parameter_value(self.screen_y)
+        screen_x = self.get_socket_value(self.screen_x)
+        screen_y = self.get_socket_value(self.screen_y)
         if is_waiting(screen_x, screen_y):
             return
         self._set_ready()
@@ -1979,7 +1978,7 @@ class ConditionMouseScrolled(ConditionCell):
         self.wheel_direction = None
 
     def evaluate(self):
-        wd = self.get_parameter_value(self.wheel_direction)
+        wd = self.get_socket_value(self.wheel_direction)
         if is_waiting(wd):
             return
         self._set_ready()
@@ -2003,16 +2002,16 @@ class ConditionGamepadButtons(ConditionCell):
         self.pulse = pulse
         self.button = button
         self.index = None
-        self._button_value = None
+        self._button = None
         self.BUTTON = LogicNetworkSubCell(self, self.get_button)
         self.initialized = False
 
     def get_button(self):
-        return self._button_value
+        return self._button
 
     def evaluate(self):
         self._set_ready()
-        index = self.get_parameter_value(self.index)
+        index = self.get_socket_value(self.index)
         if logic.joysticks[index]:
             joystick = logic.joysticks[index]
         else:
@@ -2023,14 +2022,14 @@ class ConditionGamepadButtons(ConditionCell):
 
         if self.button in joystick.activeButtons:
             if not self.initialized:
-                self._button_value = True
+                self._button = True
             else:
-                self._button_value = False
+                self._button = False
             if not self.pulse:
                 self.initialized = True
 
         else:
-            self._button_value = False
+            self._button = False
             self.initialized = False
 
 
@@ -2050,7 +2049,7 @@ class ConditionGamepadButtonUp(ConditionCell):
 
     def evaluate(self):
         self._set_ready()
-        index = self.get_parameter_value(self.index)
+        index = self.get_socket_value(self.index)
         if logic.joysticks[index]:
             joystick = logic.joysticks[index]
         else:
@@ -2095,14 +2094,14 @@ class ConditionGamepadSticks(ConditionCell):
 
     def evaluate(self):
         self._set_ready()
-        axis = self.get_parameter_value(self.axis)
+        axis = self.get_socket_value(self.axis)
         if is_invalid(axis):
             debug('Gamepad Sticks Node: Invalid Controller Stick!')
             return
-        inverted = self.get_parameter_value(self.inverted)
-        index = self.get_parameter_value(self.index)
-        sensitivity = self.get_parameter_value(self.sensitivity)
-        threshold = self.get_parameter_value(self.threshold)
+        inverted = self.get_socket_value(self.inverted)
+        index = self.get_socket_value(self.index)
+        sensitivity = self.get_socket_value(self.sensitivity)
+        threshold = self.get_socket_value(self.threshold)
         if logic.joysticks[index]:
             joystick = logic.joysticks[index]
         else:
@@ -2145,13 +2144,13 @@ class ConditionGamepadTrigger(ConditionCell):
 
     def evaluate(self):
         self._set_ready()
-        axis = self.get_parameter_value(self.axis)
+        axis = self.get_socket_value(self.axis)
         if is_invalid(axis):
             debug('Gamepad Trigger Node: Invalid Controller Trigger!')
             return
-        index = self.get_parameter_value(self.index)
-        sensitivity = self.get_parameter_value(self.sensitivity)
-        threshold = self.get_parameter_value(self.threshold)
+        index = self.get_socket_value(self.index)
+        sensitivity = self.get_socket_value(self.sensitivity)
+        threshold = self.get_socket_value(self.threshold)
         if logic.joysticks[index]:
             joystick = logic.joysticks[index]
         else:
@@ -2184,13 +2183,13 @@ class GEGamepadVibration(ConditionCell):
 
     def evaluate(self):
         self._set_ready()
-        condition = self.get_parameter_value(self.condition)
+        condition = self.get_socket_value(self.condition)
         if not_met(condition):
             return
-        index = self.get_parameter_value(self.index)
-        left = self.get_parameter_value(self.left)
-        right = self.get_parameter_value(self.right)
-        time = self.get_parameter_value(self.time)
+        index = self.get_socket_value(self.index)
+        left = self.get_socket_value(self.left)
+        right = self.get_socket_value(self.right)
+        time = self.get_socket_value(self.time)
         if is_waiting(index, left, right, time):
             return
 
@@ -2221,7 +2220,7 @@ class ParameterKeyboardKeyCode(ParameterCell):
 
     def evaluate(self):
         self._set_ready()
-        key_code = self.get_parameter_value(self.key_code)
+        key_code = self.get_socket_value(self.key_code)
         self._set_value(key_code)
 
 
@@ -2236,7 +2235,7 @@ class ConditionKeyPressed(ConditionCell):
         self.network = network
 
     def evaluate(self):
-        keycode = self.get_parameter_value(self.key_code)
+        keycode = self.get_socket_value(self.key_code)
         if is_waiting(keycode):
             return
         self._set_ready()
@@ -2297,8 +2296,8 @@ class ParameterBoneStatus(ParameterCell):
         return self._rot
 
     def evaluate(self):
-        armature = self.get_parameter_value(self.armature)
-        bone_name = self.get_parameter_value(self.bone_name)
+        armature = self.get_socket_value(self.armature)
+        bone_name = self.get_socket_value(self.bone_name)
         if is_invalid(armature, bone_name):
             return
         self._set_ready()
@@ -2342,7 +2341,7 @@ class ParameterParentGameObject(ParameterCell):
 
     def evaluate(self):
         self._set_ready()
-        game_object = self.get_parameter_value(self.game_object)
+        game_object = self.get_socket_value(self.game_object)
         if is_invalid(game_object):
             return
         self._set_value(game_object.parent)
@@ -2354,7 +2353,7 @@ class ParameterAxisVector(ParameterCell):
         self.game_object = None
 
     def evaluate(self):
-        obj = self.get_parameter_value(self.game_object)
+        obj = self.get_socket_value(self.game_object)
         front_vector = LO_AXIS_TO_VECTOR[self.axis]
         if is_invalid(obj, front_vector):
             return
@@ -2371,21 +2370,21 @@ class ParameterSwitchValue(ParameterCell):
         self.FALSE = LogicNetworkSubCell(self, self.get_false_value)
 
     def get_true_value(self):
-        state = self.get_parameter_value(self.state)
+        state = self.get_socket_value(self.state)
         if state:
             return True
         else:
             return False
 
     def get_false_value(self):
-        state = self.get_parameter_value(self.state)
+        state = self.get_socket_value(self.state)
         if state:
             return False
         else:
             return True
 
     def evaluate(self):
-        state = self.get_parameter_value(self.state)
+        state = self.get_socket_value(self.state)
         if is_waiting(state):
             return
         self._set_ready()
@@ -2401,8 +2400,8 @@ class ParameterObjectProperty(ParameterCell):
         self.property_name = None
 
     def evaluate(self):
-        game_object = self.get_parameter_value(self.game_object)
-        property_name = self.get_parameter_value(self.property_name)
+        game_object = self.get_socket_value(self.game_object)
+        property_name = self.get_socket_value(self.property_name)
         if is_invalid(game_object, property_name):
             return
         self._set_ready()
@@ -2425,11 +2424,11 @@ class ParameterGetNodeTreeNodeValue(ParameterCell):
         return self.val
 
     def evaluate(self):
-        tree_name = self.get_parameter_value(self.tree_name)
-        node_name = self.get_parameter_value(self.node_name)
+        tree_name = self.get_socket_value(self.tree_name)
+        node_name = self.get_socket_value(self.node_name)
         if is_invalid(tree_name, node_name):
             return
-        input_slot = self.get_parameter_value(self.input_slot)
+        input_slot = self.get_socket_value(self.input_slot)
         if is_waiting(tree_name):
             return
         self._set_ready()
@@ -2455,12 +2454,12 @@ class ParameterGetNodeTreeNodeAttribute(ParameterCell):
         return self.val
 
     def evaluate(self):
-        mat_name = self.get_parameter_value(self.mat_name)
-        node_name = self.get_parameter_value(self.node_name)
+        mat_name = self.get_socket_value(self.mat_name)
+        node_name = self.get_socket_value(self.node_name)
         if is_invalid(mat_name, node_name):
             return
-        internal = self.get_parameter_value(self.internal)
-        attribute = self.get_parameter_value(self.attribute)
+        internal = self.get_socket_value(self.internal)
+        attribute = self.get_socket_value(self.attribute)
         if is_waiting(mat_name):
             return
         self._set_ready()
@@ -2487,11 +2486,11 @@ class ParameterGetMaterialNodeValue(ParameterCell):
         return self.val
 
     def evaluate(self):
-        mat_name = self.get_parameter_value(self.mat_name)
-        node_name = self.get_parameter_value(self.node_name)
+        mat_name = self.get_socket_value(self.mat_name)
+        node_name = self.get_socket_value(self.node_name)
         if is_invalid(mat_name, node_name):
             return
-        input_slot = self.get_parameter_value(self.input_slot)
+        input_slot = self.get_socket_value(self.input_slot)
         if is_waiting(mat_name):
             return
         self._set_ready()
@@ -2518,12 +2517,12 @@ class ParameterGetMaterialNodeAttribute(ParameterCell):
         return self.val
 
     def evaluate(self):
-        mat_name = self.get_parameter_value(self.mat_name)
-        node_name = self.get_parameter_value(self.node_name)
+        mat_name = self.get_socket_value(self.mat_name)
+        node_name = self.get_socket_value(self.node_name)
         if is_invalid(mat_name, node_name):
             return
-        internal = self.get_parameter_value(self.internal)
-        attribute = self.get_parameter_value(self.attribute)
+        internal = self.get_socket_value(self.internal)
+        attribute = self.get_socket_value(self.attribute)
         if is_waiting(mat_name):
             return
         self._set_ready()
@@ -2549,8 +2548,8 @@ class ParameterGetMaterialNode(ParameterCell):
         return self.val
 
     def evaluate(self):
-        mat_name = self.get_parameter_value(self.mat_name)
-        node_name = self.get_parameter_value(self.node_name)
+        mat_name = self.get_socket_value(self.mat_name)
+        node_name = self.get_socket_value(self.node_name)
         if is_invalid(mat_name, node_name):
             return
         self._set_ready()
@@ -2568,8 +2567,8 @@ class ParameterObjectHasProperty(ParameterCell):
         self.property_name = None
 
     def evaluate(self):
-        game_object = self.get_parameter_value(self.game_object)
-        property_name = self.get_parameter_value(self.property_name)
+        game_object = self.get_socket_value(self.game_object)
+        property_name = self.get_socket_value(self.property_name)
         if is_invalid(game_object, property_name):
             debug('Has Property Node: Object or Property Name invalid!')
             return
@@ -2587,8 +2586,8 @@ class ParameterDictionaryValue(ParameterCell):
         self.key = None
 
     def evaluate(self):
-        dictionary = self.get_parameter_value(self.dict)
-        key = self.get_parameter_value(self.key)
+        dictionary = self.get_socket_value(self.dict)
+        key = self.get_socket_value(self.key)
         if is_invalid(dictionary, key):
             return
         self._set_ready()
@@ -2605,8 +2604,8 @@ class ParameterListIndex(ParameterCell):
         self.index = None
 
     def evaluate(self):
-        list_d = self.get_parameter_value(self.items)
-        index = self.get_parameter_value(self.index)
+        list_d = self.get_socket_value(self.items)
+        index = self.get_socket_value(self.index)
         if is_invalid(list_d):
             return
         if is_waiting(index):
@@ -2625,10 +2624,10 @@ class ParameterRandomListIndex(ParameterCell):
         self.items = None
 
     def evaluate(self):
-        condition = self.get_parameter_value(self.condition)
+        condition = self.get_socket_value(self.condition)
         if not_met(condition):
             return
-        list_d = self.get_parameter_value(self.items)
+        list_d = self.get_socket_value(self.items)
         if is_invalid(list_d):
             return
         self._set_ready()
@@ -2642,7 +2641,7 @@ class DuplicateList(ParameterCell):
         self.items = None
 
     def evaluate(self):
-        list_d = self.get_parameter_value(self.items)
+        list_d = self.get_socket_value(self.items)
         if is_invalid(list_d):
             return
         self._set_ready()
@@ -2665,7 +2664,7 @@ class GetActuator(ParameterCell):
         self.act_name = None
 
     def evaluate(self):
-        game_obj = self.get_parameter_value(self.obj_name)
+        game_obj = self.get_socket_value(self.obj_name)
         if is_invalid(game_obj, self.act_name):
             return
         self._set_ready()
@@ -2679,7 +2678,7 @@ class GetActuatorByName(ParameterCell):
         self.act_name = None
 
     def evaluate(self):
-        act_name = self.get_parameter_value(self.act_name)
+        act_name = self.get_socket_value(self.act_name)
         cont = logic.getCurrentController()
         if is_invalid(act_name):
             return
@@ -2698,8 +2697,8 @@ class GetActuatorValue(ParameterCell):
         self.field = None
 
     def evaluate(self):
-        actuator = self.get_parameter_value(self.actuator)
-        field = self.get_parameter_value(self.field)
+        actuator = self.get_socket_value(self.actuator)
+        field = self.get_socket_value(self.field)
         if is_invalid(actuator, field):
             return
         self._set_ready()
@@ -2720,7 +2719,7 @@ class ActivateActuator(ParameterCell):
 
     def evaluate(self):
         self.done = False
-        actuator = str(self.get_parameter_value(self.actuator))
+        actuator = str(self.get_socket_value(self.actuator))
         self._set_ready()
         if is_invalid(actuator):
             return
@@ -2728,7 +2727,7 @@ class ActivateActuator(ParameterCell):
         if actuator not in controller.actuators:
             debug(f'Controller "{controller}" has no actuator "{actuator}"')
             return
-        condition = self.get_parameter_value(self.condition)
+        condition = self.get_socket_value(self.condition)
         if not_met(condition):
             controller.deactivate(actuator)
             return
@@ -2750,10 +2749,10 @@ class DeactivateActuator(ParameterCell):
 
     def evaluate(self):
         self.done = False
-        condition = self.get_parameter_value(self.condition)
+        condition = self.get_socket_value(self.condition)
         if not_met(condition):
             return
-        actuator = str(self.get_parameter_value(self.actuator))
+        actuator = str(self.get_socket_value(self.actuator))
         if is_invalid(actuator):
             return
         controller = logic.getCurrentController()
@@ -2778,14 +2777,14 @@ class ActivateActuatorByName(ParameterCell):
 
     def evaluate(self):
         self.done = False
-        actuator = str(self.get_parameter_value(self.actuator))
+        actuator = str(self.get_socket_value(self.actuator))
         if is_invalid(actuator):
             return
         controller = logic.getCurrentController()
         if actuator not in controller.actuators:
             debug(f'Controller "{controller}" has no actuator "{actuator}"')
             return
-        condition = self.get_parameter_value(self.condition)
+        condition = self.get_socket_value(self.condition)
         self._set_ready()
         if not_met(condition):
             controller.deactivate(actuator)
@@ -2808,10 +2807,10 @@ class DeactivateActuatorByName(ParameterCell):
 
     def evaluate(self):
         self.done = False
-        actuator = str(self.get_parameter_value(self.actuator))
+        actuator = str(self.get_socket_value(self.actuator))
         if is_invalid(actuator):
             return
-        condition = self.get_parameter_value(self.condition)
+        condition = self.get_socket_value(self.condition)
         controller = logic.getCurrentController()
         if actuator not in controller.actuators:
             return
@@ -2838,15 +2837,15 @@ class SetActuatorValue(ParameterCell):
 
     def evaluate(self):
         self.done = False
-        actuator = self.get_parameter_value(self.actuator)
+        actuator = self.get_socket_value(self.actuator)
         if is_invalid(actuator):
             return
-        condition = self.get_parameter_value(self.condition)
+        condition = self.get_socket_value(self.condition)
         if not_met(condition):
             return
         self._set_ready()
-        field = self.get_parameter_value(self.field)
-        value = self.get_parameter_value(self.value)
+        field = self.get_socket_value(self.field)
+        value = self.get_socket_value(self.value)
         if is_waiting(field, value):
             return
         setattr(actuator, field, value)
@@ -2869,7 +2868,7 @@ class GetController(ParameterCell):
         self.cont_name = None
 
     def evaluate(self):
-        game_obj = self.get_parameter_value(self.obj_name)
+        game_obj = self.get_socket_value(self.obj_name)
         if is_invalid(game_obj):
             debug('Get Controller Node: No Game Object selected!')
             return
@@ -2906,7 +2905,7 @@ class GetSensor(ParameterCell):
         self.sens_name = None
 
     def evaluate(self):
-        game_obj = self.get_parameter_value(self.obj_name)
+        game_obj = self.get_socket_value(self.obj_name)
         if is_invalid(game_obj):
             debug('Get Sensor Node: No Game Object selected!')
             return
@@ -2925,8 +2924,8 @@ class GetSensorByName(ParameterCell):
         self.name = None
 
     def evaluate(self):
-        obj = self.get_parameter_value(self.obj)
-        name = self.get_parameter_value(self.name)
+        obj = self.get_socket_value(self.obj)
+        name = self.get_socket_value(self.name)
         if name in obj.sensors:
             self._set_ready()
             self._set_value(obj.sensors[name].positive)
@@ -2944,9 +2943,9 @@ class GetSensorValueByName(ParameterCell):
         self.field = None
 
     def evaluate(self):
-        obj = self.get_parameter_value(self.obj)
-        name = self.get_parameter_value(self.name)
-        field = self.get_parameter_value(self.field)
+        obj = self.get_socket_value(self.obj)
+        name = self.get_socket_value(self.name)
+        field = self.get_socket_value(self.field)
         if name in obj.sensors:
             self._set_ready()
             self._set_value(getattr(obj.sensors[name], field))
@@ -2976,14 +2975,14 @@ class SensorValue(ParameterCell):
         return self.val
 
     def evaluate(self):
-        game_obj = self.get_parameter_value(self.obj_name)
+        game_obj = self.get_socket_value(self.obj_name)
         if is_invalid(game_obj):
             debug('Get Sensor Node: No Game Object selected!')
             return
         if is_invalid(self.sens_name):
             debug('Get Sensor Node: No Sensor selected!')
             return
-        field = self.get_parameter_value(self.field)
+        field = self.get_socket_value(self.field)
         if is_waiting(field):
             return
         self._set_ready()
@@ -2998,7 +2997,7 @@ class SensorPositive(ParameterCell):
         self.done = None
 
     def evaluate(self):
-        sens = self.get_parameter_value(self.sensor)
+        sens = self.get_socket_value(self.sensor)
         if is_invalid(sens):
             return
         self._set_ready()
@@ -3035,7 +3034,7 @@ class GetCollection(ParameterCell):
         self.collection = None
 
     def evaluate(self):
-        collection = self.get_parameter_value(self.collection)
+        collection = self.get_socket_value(self.collection)
         if is_invalid(collection):
             return
         self._set_ready()
@@ -3048,7 +3047,7 @@ class GetCollectionObjects(ParameterCell):
         self.collection = None
 
     def evaluate(self):
-        collection = self.get_parameter_value(self.collection)
+        collection = self.get_socket_value(self.collection)
         if is_invalid(collection):
             return
         self._set_ready()
@@ -3067,7 +3066,7 @@ class GetCollectionObjectNames(ParameterCell):
         self.collection = None
 
     def evaluate(self):
-        collection = self.get_parameter_value(self.collection)
+        collection = self.get_socket_value(self.collection)
         if is_invalid(collection):
             return
         self._set_ready()
@@ -3099,8 +3098,8 @@ class ParameterScreenPosition(ParameterCell):
 
     def evaluate(self):
         self._set_ready()
-        game_object = self.get_parameter_value(self.game_object)
-        camera = self.get_parameter_value(self.camera)
+        game_object = self.get_socket_value(self.game_object)
+        camera = self.get_socket_value(self.camera)
         if is_invalid(game_object) or is_invalid(camera):
             self._xpos = None
             self._ypos = None
@@ -3122,10 +3121,10 @@ class ParameterWorldPosition(ParameterCell):
 
     def evaluate(self):
         self._set_ready()
-        camera = self.get_parameter_value(self.camera)
-        screen_x = self.get_parameter_value(self.screen_x)
-        screen_y = self.get_parameter_value(self.screen_y)
-        world_z = self.get_parameter_value(self.world_z)
+        camera = self.get_socket_value(self.camera)
+        screen_x = self.get_socket_value(self.screen_x)
+        screen_y = self.get_socket_value(self.screen_y)
+        world_z = self.get_socket_value(self.world_z)
         if (
             is_invalid(camera) or
             (screen_x is None) or
@@ -3157,9 +3156,9 @@ class GECursorBehavior(ActionCell):
         self.done = False
         self._set_ready()
         camera = logic.getCurrentScene().active_camera
-        condition = self.get_parameter_value(self.condition)
-        cursor_object = self.get_parameter_value(self.cursor_object)
-        world_z = self.get_parameter_value(self.world_z)
+        condition = self.get_socket_value(self.condition)
+        cursor_object = self.get_socket_value(self.cursor_object)
+        world_z = self.get_socket_value(self.world_z)
         if is_invalid(cursor_object):
             return
         if not_met(condition):
@@ -3204,15 +3203,15 @@ class ParameterPythonModuleFunction(ParameterCell):
 
     def evaluate(self):
         self.done = False
-        condition = self.get_parameter_value(self.condition)
+        condition = self.get_socket_value(self.condition)
         if not_met(condition):
             return
-        mname = self.get_parameter_value(self.module_name)
-        mfun = self.get_parameter_value(self.module_func)
+        mname = self.get_socket_value(self.module_name)
+        mfun = self.get_socket_value(self.module_func)
         if is_waiting(mname, mfun):
             return
-        use_arg = self.get_parameter_value(self.use_arg)
-        arg = self.get_parameter_value(self.arg)
+        use_arg = self.get_socket_value(self.use_arg)
+        arg = self.get_socket_value(self.arg)
         self._set_ready()
         if mname and (self._old_mod_name != mname):
             exec("import {}".format(mname))
@@ -3269,8 +3268,8 @@ class ParameterObjectAttribute(ParameterCell):
         self.attribute_name = None
 
     def evaluate(self):
-        game_object = self.get_parameter_value(self.game_object)
-        attribute_name = self.get_parameter_value(self.attribute_name)
+        game_object = self.get_socket_value(self.game_object)
+        attribute_name = self.get_socket_value(self.attribute_name)
         if is_waiting(game_object, attribute_name):
             return
         self._set_ready()
@@ -3297,8 +3296,8 @@ class ClampValue(ParameterCell):
         self.range = None
 
     def evaluate(self):
-        value = self.get_parameter_value(self.value)
-        range_ft = self.get_parameter_value(self.range)
+        value = self.get_socket_value(self.value)
+        range_ft = self.get_socket_value(self.range)
         if is_waiting(range_ft):
             return
         if is_invalid(value):
@@ -3323,9 +3322,9 @@ class InterpolateValue(ParameterCell):
         self.factor = None
 
     def evaluate(self):
-        value_a = self.get_parameter_value(self.value_a)
-        value_b = self.get_parameter_value(self.value_b)
-        factor = self.get_parameter_value(self.factor)
+        value_a = self.get_socket_value(self.value_a)
+        value_b = self.get_socket_value(self.value_b)
+        factor = self.get_socket_value(self.factor)
         if is_invalid(value_a, value_b, factor):
             return
         self._set_ready()
@@ -3389,8 +3388,8 @@ class ParameterArithmeticOp(ParameterCell):
             )
 
     def evaluate(self):
-        a = self.get_parameter_value(self.operand_a)
-        b = self.get_parameter_value(self.operand_b)
+        a = self.get_socket_value(self.operand_a)
+        b = self.get_socket_value(self.operand_b)
         if is_waiting(a, b):
             return
         self._set_ready()
@@ -3433,9 +3432,9 @@ class Threshold(ParameterCell):
             return v if v < t else (0 if e else t)
 
     def evaluate(self):
-        v = self.get_parameter_value(self.value)
-        e = self.get_parameter_value(self.else_z)
-        t = self.get_parameter_value(self.threshold)
+        v = self.get_socket_value(self.value)
+        e = self.get_socket_value(self.else_z)
+        t = self.get_socket_value(self.threshold)
         if is_waiting(v, t):
             return
         value = self.calc_threshold(self.operator, v, t, e)
@@ -3465,8 +3464,8 @@ class RangedThreshold(ParameterCell):
             return v if (t.x < v < t.y) else 0
 
     def evaluate(self):
-        v = self.get_parameter_value(self.value)
-        t = self.get_parameter_value(self.threshold)
+        v = self.get_socket_value(self.value)
+        t = self.get_socket_value(self.threshold)
         if is_waiting(v, t):
             return
         value = self.calc_threshold(self.operator, v, t)
@@ -3496,8 +3495,8 @@ class WithinRange(ParameterCell):
             return True if (r.x < v < r.y) else False
 
     def evaluate(self):
-        v = self.get_parameter_value(self.value)
-        r = self.get_parameter_value(self.range)
+        v = self.get_socket_value(self.value)
+        r = self.get_socket_value(self.range)
         if is_waiting(v, r):
             return
         value = self.calc_range(self.operator, v, r)
@@ -3515,8 +3514,8 @@ class GetObInstanceAttr(ParameterCell):
         self.attr = None
 
     def evaluate(self):
-        instance = self.get_parameter_value(self.instance)
-        attr = self.get_parameter_value(self.attr)
+        instance = self.get_socket_value(self.instance)
+        attr = self.get_socket_value(self.attr)
         if is_waiting(instance, attr):
             return
         if not hasattr(instance, attr):
@@ -3559,12 +3558,12 @@ class SetObInstanceAttr(ParameterCell):
         self.value = None
 
     def evaluate(self):
-        condition = self.get_parameter_value(self.condition)
+        condition = self.get_socket_value(self.condition)
         if not_met(condition):
             return
-        instance = self.get_parameter_value(self.instance)
-        attr = self.get_parameter_value(self.attr)
-        value = self.get_parameter_value(self.value)
+        instance = self.get_socket_value(self.instance)
+        attr = self.get_socket_value(self.attr)
+        value = self.get_socket_value(self.value)
         if is_waiting(instance, attr, value):
             return
         self._set_ready()
@@ -3577,7 +3576,7 @@ class NormalizeVector(ParameterCell):
         self.vector = None
 
     def evaluate(self):
-        vector = self.get_parameter_value(self.vector)
+        vector = self.get_socket_value(self.vector)
         if is_waiting(vector):
             return
         self._set_ready()
@@ -3605,8 +3604,8 @@ class ParameterActionStatus(ParameterCell):
         return not self.get_value()
 
     def evaluate(self):
-        game_object = self.get_parameter_value(self.game_object)
-        action_layer = self.get_parameter_value(self.action_layer)
+        game_object = self.get_socket_value(self.game_object)
+        action_layer = self.get_socket_value(self.action_layer)
         if is_waiting(game_object, action_layer):
             return
         self._set_ready()
@@ -3626,7 +3625,7 @@ class ParameterSimpleValue(ParameterCell):
         self.value = None
 
     def evaluate(self):
-        value = self.get_parameter_value(self.value)
+        value = self.get_socket_value(self.value)
         self._set_ready()
         self._set_value(value)
 
@@ -3648,8 +3647,8 @@ class ParameterTypeCast(ParameterCell):
             return float(value)
 
     def evaluate(self):
-        value = self.get_parameter_value(self.value)
-        to_type = self.get_parameter_value(self.to_type)
+        value = self.get_socket_value(self.value)
+        to_type = self.get_socket_value(self.to_type)
         if is_waiting(to_type, value):
             return
         self._set_ready()
@@ -3681,10 +3680,10 @@ class ParameterVectorMath(ParameterCell):
         return matvec
 
     def evaluate(self):
-        op = self.get_parameter_value(self.op)
-        vector = self.get_parameter_value(self.vector)
-        vector_2 = self.get_parameter_value(self.vector_2)
-        factor = self.get_parameter_value(self.factor)
+        op = self.get_socket_value(self.op)
+        vector = self.get_socket_value(self.vector)
+        vector_2 = self.get_socket_value(self.vector_2)
+        factor = self.get_socket_value(self.factor)
         if op is None:
             return
         if vector is None:
@@ -3719,10 +3718,10 @@ class ParameterVector(ParameterCell):
 
     def evaluate(self):
         self._set_ready()
-        x = self.get_parameter_value(self.input_x)
-        y = self.get_parameter_value(self.input_y)
-        z = self.get_parameter_value(self.input_z)
-        v = self.get_parameter_value(self.input_vector)
+        x = self.get_socket_value(self.input_x)
+        y = self.get_socket_value(self.input_y)
+        z = self.get_socket_value(self.input_z)
+        v = self.get_socket_value(self.input_vector)
         # TODO: zero vector if v is None?
         if not is_invalid(v):
             self.output_vector[:] = v
@@ -3748,8 +3747,8 @@ class ParameterVector2Simple(ParameterCell):
 
     def evaluate(self):
         self._set_ready()
-        x = self.get_parameter_value(self.input_x)
-        y = self.get_parameter_value(self.input_y)
+        x = self.get_socket_value(self.input_x)
+        y = self.get_socket_value(self.input_y)
         if not is_invalid(x):
             self.output_vector.x = x
         if not is_invalid(y):
@@ -3770,7 +3769,7 @@ class ParameterVector2Split(ParameterCell):
 
     def evaluate(self):
         self._set_ready()
-        vec = self.get_parameter_value(self.input_v)
+        vec = self.get_socket_value(self.input_v)
         if vec is not None:
             self.output_v = vec
         self._set_value(vec)
@@ -3791,7 +3790,7 @@ class ParameterVector3Split(ParameterCell):
 
     def evaluate(self):
         self._set_ready()
-        vec = self.get_parameter_value(self.input_v)
+        vec = self.get_socket_value(self.input_v)
         if vec is not None:
             self.output_v = vec
         self._set_value(vec)
@@ -3808,7 +3807,7 @@ class ParameterAbsVector3(ParameterCell):
 
     def evaluate(self):
         self._set_ready()
-        vec = self.get_parameter_value(self.input_v)
+        vec = self.get_socket_value(self.input_v)
         vec.x = abs(vec.x)
         vec.y = abs(vec.y)
         vec.z = abs(vec.z)
@@ -3829,7 +3828,7 @@ class ParameterEulerToMatrix(ParameterCell):
 
     def evaluate(self):
         self._set_ready()
-        vec = self.get_parameter_value(self.input_e)
+        vec = self.get_socket_value(self.input_e)
         if isinstance(vec, mathutils.Vector):
             vec = mathutils.Euler((vec.x, vec.y, vec.z), 'XYZ')
         self.matrix = vec.to_matrix()
@@ -3847,7 +3846,7 @@ class ParameterMatrixToEuler(ParameterCell):
 
     def evaluate(self):
         self._set_ready()
-        matrix = self.get_parameter_value(self.input_m)
+        matrix = self.get_socket_value(self.input_m)
         self.euler = matrix.to_euler()
 
 
@@ -3863,7 +3862,7 @@ class ParameterMatrixToVector(ParameterCell):
 
     def evaluate(self):
         self._set_ready()
-        matrix = self.get_parameter_value(self.input_m)
+        matrix = self.get_socket_value(self.input_m)
         e = matrix.to_euler()
         self.vec = mathutils.Vector((e.x, e.y, e.z))
 
@@ -3885,9 +3884,9 @@ class ParameterVector3Simple(ParameterCell):
 
     def evaluate(self):
         self._set_ready()
-        x = self.get_parameter_value(self.input_x)
-        y = self.get_parameter_value(self.input_y)
-        z = self.get_parameter_value(self.input_z)
+        x = self.get_socket_value(self.input_x)
+        y = self.get_socket_value(self.input_y)
+        z = self.get_socket_value(self.input_z)
         if is_invalid(x):
             return
         self.output_vector.x = x
@@ -3911,10 +3910,10 @@ class ParameterVector4Simple(ParameterCell):
 
     def evaluate(self):
         self._set_ready()
-        x = self.get_parameter_value(self.input_x)
-        y = self.get_parameter_value(self.input_y)
-        z = self.get_parameter_value(self.input_z)
-        w = self.get_parameter_value(self.input_w)
+        x = self.get_socket_value(self.input_x)
+        y = self.get_socket_value(self.input_y)
+        z = self.get_socket_value(self.input_z)
+        w = self.get_socket_value(self.input_w)
         if is_invalid(x, y, z, w):
             return
         self.output_vector.x = x
@@ -3939,7 +3938,7 @@ class ParameterColor(ParameterCell):
 
     def evaluate(self):
         self._set_ready()
-        c = self.get_parameter_value(self.color)
+        c = self.get_socket_value(self.color)
         if is_waiting(c):
             return
         self.output_vector = c
@@ -3960,7 +3959,7 @@ class ParameterColorAlpha(ParameterCell):
 
     def evaluate(self):
         self._set_ready()
-        c = self.get_parameter_value(self.color)
+        c = self.get_socket_value(self.color)
         if is_waiting(c):
             return
         self.output_vector = c
@@ -3983,9 +3982,9 @@ class ParameterEulerSimple(ParameterCell):
 
     def evaluate(self):
         self._set_ready()
-        x = self.get_parameter_value(self.input_x)
-        y = self.get_parameter_value(self.input_y)
-        z = self.get_parameter_value(self.input_z)
+        x = self.get_socket_value(self.input_x)
+        y = self.get_socket_value(self.input_y)
+        z = self.get_socket_value(self.input_z)
         if x is not None:
             self.output_euler.x = x
         if y is not None:
@@ -4029,12 +4028,12 @@ class ParameterVector4(ParameterCell):
     def _get_out_vec(self):
         return self.out_vec.copy()
 
-    def get_parameter_value(self, param, default_value):
+    def get_socket_value(self, param, default_value):
         if param is None:
             return default_value
         elif hasattr(param, "get_value"):
             value = param.get_value()
-            if(value is LogicNetwork.STATUS_WAITING):
+            if is_waiting(value):
                 raise "Unexpected error in tree"
             else:
                 return value
@@ -4043,11 +4042,11 @@ class ParameterVector4(ParameterCell):
 
     def evaluate(self):
         self._set_ready()
-        x = self.get_parameter_value(self.in_x, None)
-        y = self.get_parameter_value(self.in_y, None)
-        z = self.get_parameter_value(self.in_z, None)
-        w = self.get_parameter_value(self.in_w, None)
-        vec = self.get_parameter_value(self.in_vec, None)
+        x = self.get_socket_value(self.in_x, None)
+        y = self.get_socket_value(self.in_y, None)
+        z = self.get_socket_value(self.in_z, None)
+        w = self.get_socket_value(self.in_w, None)
+        vec = self.get_socket_value(self.in_vec, None)
         if(vec is not None):
             # out is vec with vec components replaced by non null x,y,z,w
             self.out_x = vec.x if x is None else x
@@ -4077,8 +4076,8 @@ class ParameterFindChildByName(ParameterCell):
         self.CHILD = LogicNetworkSubCell(self, self.get_child)
 
     def get_child(self):
-        parent = self.get_parameter_value(self.from_parent)
-        childName = self.get_parameter_value(self.child)
+        parent = self.get_socket_value(self.from_parent)
+        childName = self.get_socket_value(self.child)
         for x in parent.children:
             if x.name == childName:
                 return x
@@ -4089,8 +4088,8 @@ class ParameterFindChildByName(ParameterCell):
         self._set_ready()
         self._set_value(None)
 
-        parent = self.get_parameter_value(self.from_parent)
-        child = self.get_parameter_value(self.child)
+        parent = self.get_socket_value(self.from_parent)
+        child = self.get_socket_value(self.child)
 
         if (child is None) or (child == ""):
             return
@@ -4133,10 +4132,10 @@ class ObjectPropertyOperator(ConditionCell):
         return self.val
 
     def evaluate(self):
-        game_object = self.get_parameter_value(self.game_object)
-        property_name = self.get_parameter_value(self.property_name)
-        compare_value = self.get_parameter_value(self.compare_value)
-        operator = self.get_parameter_value(self.operator)
+        game_object = self.get_socket_value(self.game_object)
+        property_name = self.get_socket_value(self.property_name)
+        compare_value = self.get_socket_value(self.compare_value)
+        operator = self.get_socket_value(self.operator)
         if is_waiting(property_name, compare_value):
             return
         if is_invalid(game_object):
@@ -4157,7 +4156,7 @@ class ConditionNot(ConditionCell):
         self.condition = None
 
     def evaluate(self):
-        condition = self.get_parameter_value(self.condition)
+        condition = self.get_socket_value(self.condition)
         if is_waiting(condition):
             return
         self._set_ready()
@@ -4181,8 +4180,8 @@ class ConditionLNStatus(ConditionCell):
         return self._stopped
 
     def evaluate(self):
-        game_object = self.get_parameter_value(self.game_object)
-        tree_name = self.get_parameter_value(self.tree_name)
+        game_object = self.get_socket_value(self.game_object)
+        tree_name = self.get_socket_value(self.tree_name)
         if is_waiting(game_object, tree_name):
             return
         self._set_ready()
@@ -4206,10 +4205,10 @@ class ConditionLogicOp(ConditionCell):
         self.threshold = None
 
     def evaluate(self):
-        a = self.get_parameter_value(self.param_a)
-        b = self.get_parameter_value(self.param_b)
-        threshold = self.get_parameter_value(self.threshold)
-        operator = self.get_parameter_value(self.operator)
+        a = self.get_socket_value(self.param_a)
+        b = self.get_socket_value(self.param_b)
+        threshold = self.get_socket_value(self.threshold)
+        operator = self.get_socket_value(self.operator)
         self._set_ready()
         if operator > 1:  # eq and neq are valid for None
             if a is None:
@@ -4244,11 +4243,11 @@ class ConditionCompareVecs(ConditionCell):
         return True
 
     def evaluate(self):
-        a = self.get_parameter_value(self.param_a)
-        b = self.get_parameter_value(self.param_b)
-        all_values = self.get_parameter_value(self.all)
-        operator = self.get_parameter_value(self.operator)
-        threshold = self.get_parameter_value(self.threshold)
+        a = self.get_socket_value(self.param_a)
+        b = self.get_socket_value(self.param_b)
+        all_values = self.get_socket_value(self.all)
+        operator = self.get_socket_value(self.operator)
+        threshold = self.get_socket_value(self.threshold)
         if is_waiting(a, b, all_values, operator, threshold):
             return
         if (
@@ -4310,11 +4309,11 @@ class ConditionDistanceCheck(ConditionCell):
                 self._set_value(False)
 
     def evaluate(self):
-        a = self.get_parameter_value(self.param_a)
-        b = self.get_parameter_value(self.param_b)
-        op = self.get_parameter_value(self.operator)
-        dist = self.get_parameter_value(self.dist)
-        hyst = self.get_parameter_value(self.hyst)
+        a = self.get_socket_value(self.param_a)
+        b = self.get_socket_value(self.param_b)
+        op = self.get_socket_value(self.operator)
+        dist = self.get_socket_value(self.dist)
+        hyst = self.get_socket_value(self.hyst)
         if is_waiting(a, b, op, dist, hyst):
             return
         self._set_ready()
@@ -4343,8 +4342,8 @@ class ConditionAnd(ConditionCell):
         self.condition_b = None
 
     def evaluate(self):
-        ca = self.get_parameter_value(self.condition_a)
-        cb = self.get_parameter_value(self.condition_b)
+        ca = self.get_socket_value(self.condition_a)
+        cb = self.get_socket_value(self.condition_b)
         if is_waiting(ca, cb):
             return
         self._set_ready()
@@ -4359,8 +4358,8 @@ class ConditionAndNot(ConditionCell):
         self.condition_b = None
 
     def evaluate(self):
-        ca = self.get_parameter_value(self.condition_a)
-        cb = not self.get_parameter_value(self.condition_b)
+        ca = self.get_socket_value(self.condition_a)
+        cb = not self.get_socket_value(self.condition_b)
         if is_waiting(ca, cb):
             return
         self._set_ready()
@@ -4375,7 +4374,7 @@ class ConditionNotNone(ConditionCell):
         self.checked_value = None
 
     def evaluate(self):
-        value = self.get_parameter_value(self.checked_value)
+        value = self.get_socket_value(self.checked_value)
         if is_waiting(value):
             return
         self._set_ready()
@@ -4389,7 +4388,7 @@ class ConditionNone(ConditionCell):
 
     def evaluate(self):
         self._set_ready()
-        value = self.get_parameter_value(self.checked_value)
+        value = self.get_socket_value(self.checked_value)
         self._set_value(value is None)
 
 
@@ -4400,7 +4399,7 @@ class ConditionValueValid(ConditionCell):
 
     def evaluate(self):
         self._set_ready()
-        value = self.get_parameter_value(self.checked_value)
+        value = self.get_socket_value(self.checked_value)
         self._set_value(not is_invalid(value))
 
 
@@ -4411,8 +4410,8 @@ class ConditionOr(ConditionCell):
         self.condition_b = True
 
     def evaluate(self):
-        ca = self.get_parameter_value(self.condition_a)
-        cb = self.get_parameter_value(self.condition_b)
+        ca = self.get_socket_value(self.condition_a)
+        cb = self.get_socket_value(self.condition_b)
         if is_waiting(ca, cb):
             return
         self._set_ready()
@@ -4430,12 +4429,12 @@ class ConditionOrList(ConditionCell):
         self.cf = False
 
     def evaluate(self):
-        ca = self.get_parameter_value(self.ca)
-        cb = self.get_parameter_value(self.cb)
-        cc = self.get_parameter_value(self.cc)
-        cd = self.get_parameter_value(self.cd)
-        ce = self.get_parameter_value(self.ce)
-        cf = self.get_parameter_value(self.cf)
+        ca = self.get_socket_value(self.ca)
+        cb = self.get_socket_value(self.cb)
+        cc = self.get_socket_value(self.cc)
+        cd = self.get_socket_value(self.cd)
+        ce = self.get_socket_value(self.ce)
+        cf = self.get_socket_value(self.cf)
         if is_waiting(ca, cb, cc, cd, ce, cf):
             return
         self._set_ready()
@@ -4454,12 +4453,12 @@ class ConditionAndList(ConditionCell):
         self.cf = True
 
     def evaluate(self):
-        ca = self.get_parameter_value(self.ca)
-        cb = self.get_parameter_value(self.cb)
-        cc = self.get_parameter_value(self.cc)
-        cd = self.get_parameter_value(self.cd)
-        ce = self.get_parameter_value(self.ce)
-        cf = self.get_parameter_value(self.cf)
+        ca = self.get_socket_value(self.ca)
+        cb = self.get_socket_value(self.cb)
+        cc = self.get_socket_value(self.cc)
+        cd = self.get_socket_value(self.cd)
+        ce = self.get_socket_value(self.ce)
+        cf = self.get_socket_value(self.cf)
         if is_waiting(ca, cb, cc, cd, ce, cf):
             return
         self._set_ready()
@@ -4495,7 +4494,7 @@ class ActionKeyLogger(ActionCell):
 
     def evaluate(self):
         self._set_ready()
-        condition = self.get_parameter_value(self.condition)
+        condition = self.get_socket_value(self.condition)
         if not condition:
             return
         network = self.network
@@ -4537,8 +4536,8 @@ class ConditionTimeElapsed(ConditionCell):
         self.network = network
 
     def evaluate(self):
-        condition = self.get_parameter_value(self.condition)
-        delta_time = self.get_parameter_value(self.delta_time)
+        condition = self.get_socket_value(self.condition)
+        delta_time = self.get_socket_value(self.delta_time)
         if is_waiting(delta_time):
             return
         self._set_ready()
@@ -4564,7 +4563,7 @@ class ConditionKeyReleased(ConditionCell):
         self.network = network
 
     def evaluate(self):
-        keycode = self.get_parameter_value(self.key_code)
+        keycode = self.get_socket_value(self.key_code)
         if is_waiting(keycode):
             return
         self._set_ready()
@@ -4597,7 +4596,7 @@ class ConditionMouseLeft(ConditionCell):
             ConditionCell.reset(self)
 
     def evaluate(self):
-        repeat = self.get_parameter_value(self.repeat)
+        repeat = self.get_socket_value(self.repeat)
         if is_waiting(repeat):
             return
         self._set_ready()
@@ -4625,7 +4624,7 @@ class ConditionMouseRight(ConditionCell):
             ConditionCell.reset(self)
 
     def evaluate(self):
-        repeat = self.get_parameter_value(self.repeat)
+        repeat = self.get_socket_value(self.repeat)
         if is_waiting(repeat):
             return
         self._set_ready()
@@ -4650,10 +4649,10 @@ class ActionRepeater(ActionCell):
 
     def evaluate(self):
         self._set_ready()
-        condition = self.get_parameter_value(self.condition)
+        condition = self.get_socket_value(self.condition)
         if not condition:
             return
-        input_value = self.get_parameter_value(self.input_value)
+        input_value = self.get_socket_value(self.input_value)
         if isinstance(input_value, numbers.Number):
             for e in range(0, input_value):
                 self._set_value(e)
@@ -4711,9 +4710,9 @@ class ConditionCollision(ConditionCell):
         self._point = point
         self._normal = normal
         self._objects.append(obj)
-        use_mat = self.get_parameter_value(self.use_mat)
+        use_mat = self.get_socket_value(self.use_mat)
         if use_mat:
-            material = self.get_parameter_value(self.material)
+            material = self.get_socket_value(self.material)
             if material:
                 for obj in self._objects:
                     bo = obj.blenderObject
@@ -4723,7 +4722,7 @@ class ConditionCollision(ConditionCell):
                 self._collision_triggered = False
                 return
         else:
-            prop = self.get_parameter_value(self.prop)
+            prop = self.get_socket_value(self.prop)
             if prop:
                 for obj in self._objects:
                     if prop in obj:
@@ -4738,12 +4737,12 @@ class ConditionCollision(ConditionCell):
         self._collision_triggered = False
         self._objects = []
 
-    def _reset_last_monitored_object(self, new_monitored_object_value):
-        if is_invalid(new_monitored_object_value):
-            new_monitored_object_value = None
-        if self._last_monitored_object == new_monitored_object_value:
+    def _reset_last_monitored_object(self, new_monitored_object):
+        if is_invalid(new_monitored_object):
+            new_monitored_object = None
+        if self._last_monitored_object == new_monitored_object:
             return
-        if not isinstance(new_monitored_object_value, bge.types.KX_GameObject):
+        if not isinstance(new_monitored_object, bge.types.KX_GameObject):
             if self._last_monitored_object is not None:
                 self._last_monitored_object.collisionCallbacks.remove(
                     self._collision_callback
@@ -4754,11 +4753,11 @@ class ConditionCollision(ConditionCell):
                 self._last_monitored_object.collisionCallbacks.remove(
                     self._collision_callback
                 )
-            if new_monitored_object_value is not None:
-                new_monitored_object_value.collisionCallbacks.append(
+            if new_monitored_object is not None:
+                new_monitored_object.collisionCallbacks.append(
                     self._collision_callback
                 )
-                self._last_monitored_object = new_monitored_object_value
+                self._last_monitored_object = new_monitored_object
         self._set_value(False)
         self._target = None
         self._point = None
@@ -4767,7 +4766,7 @@ class ConditionCollision(ConditionCell):
 
     def evaluate(self):
         last_target = self._target
-        game_object = self.get_parameter_value(self.game_object)
+        game_object = self.get_socket_value(self.game_object)
         self._reset_last_monitored_object(game_object)
         if is_waiting(game_object):
             return
@@ -4811,13 +4810,13 @@ class ActionAddObject(ActionCell):
 
     def evaluate(self):
         self.done = False
-        condition = self.get_parameter_value(self.condition)
+        condition = self.get_socket_value(self.condition)
         if not_met(condition):
             return
-        life = self.get_parameter_value(self.life)
-        name = self.get_parameter_value(self.name)
+        life = self.get_socket_value(self.life)
+        name = self.get_socket_value(self.name)
         self._set_ready()
-        reference = self.get_parameter_value(self.reference)
+        reference = self.get_socket_value(self.reference)
         scene = logic.getCurrentScene()
         if is_invalid(life, name, reference, scene):
             return
@@ -4840,21 +4839,21 @@ class ActionSetGameObjectGameProperty(ActionCell):
 
     def evaluate(self):
         self.done = False
-        condition_value = self.get_parameter_value(self.condition)
-        if not_met(condition_value):
+        condition = self.get_socket_value(self.condition)
+        if not_met(condition):
             self._set_ready()
             return
-        game_object_value = self.get_parameter_value(self.game_object)
-        property_name_value = self.get_parameter_value(self.property_name)
-        property_value_value = self.get_parameter_value(self.property_value)
-        if is_waiting(property_name_value, property_value_value):
+        game_object = self.get_socket_value(self.game_object)
+        property_name = self.get_socket_value(self.property_name)
+        property_value = self.get_socket_value(self.property_value)
+        if is_waiting(property_name, property_value):
             return
-        if is_invalid(game_object_value):
+        if is_invalid(game_object):
             return
-        if condition_value:
+        if condition:
             self.done = True
             self._set_ready()
-            game_object_value[property_name_value] = property_value_value
+            game_object[property_name] = property_value
 
 
 class SetMaterial(ActionCell):
@@ -4872,10 +4871,10 @@ class SetMaterial(ActionCell):
 
     def evaluate(self):
         self.done = False
-        condition = self.get_parameter_value(self.condition)
-        game_object = self.get_parameter_value(self.game_object)
-        slot = self.get_parameter_value(self.slot) - 1
-        mat_name = self.get_parameter_value(self.mat_name)
+        condition = self.get_socket_value(self.condition)
+        game_object = self.get_socket_value(self.game_object)
+        slot = self.get_socket_value(self.slot) - 1
+        mat_name = self.get_socket_value(self.mat_name)
         if not_met(condition):
             return
         if is_invalid(game_object):
@@ -4907,19 +4906,19 @@ class ActionSetNodeTreeNodeValue(ActionCell):
 
     def evaluate(self):
         self.done = False
-        condition_value = self.get_parameter_value(self.condition)
-        if not_met(condition_value):
+        condition = self.get_socket_value(self.condition)
+        if not_met(condition):
             self._set_ready()
             return
-        tree_name = self.get_parameter_value(self.tree_name)
-        node_name = self.get_parameter_value(self.node_name)
-        input_slot = self.get_parameter_value(self.input_slot)
-        value = self.get_parameter_value(self.value)
+        tree_name = self.get_socket_value(self.tree_name)
+        node_name = self.get_socket_value(self.node_name)
+        input_slot = self.get_socket_value(self.input_slot)
+        value = self.get_socket_value(self.value)
         if is_waiting(node_name, input_slot, value):
             return
         if is_invalid(tree_name):
             return
-        if condition_value:
+        if condition:
             self.done = True
             self._set_ready()
             (
@@ -4947,21 +4946,20 @@ class ActionSetNodeTreeNodeAttribute(ActionCell):
 
     def evaluate(self):
         self.done = False
-        STATUS_WAITING = LogicNetworkCell.STATUS_WAITING
-        condition_value = self.get_parameter_value(self.condition)
-        if not_met(condition_value):
+        condition = self.get_socket_value(self.condition)
+        if not_met(condition):
             self._set_ready()
             return
-        tree_name = self.get_parameter_value(self.tree_name)
-        node_name = self.get_parameter_value(self.node_name)
-        attribute = self.get_parameter_value(self.attribute)
-        internal = self.get_parameter_value(self.internal)
-        value = self.get_parameter_value(self.value)
+        tree_name = self.get_socket_value(self.tree_name)
+        node_name = self.get_socket_value(self.node_name)
+        attribute = self.get_socket_value(self.attribute)
+        internal = self.get_socket_value(self.internal)
+        value = self.get_socket_value(self.value)
         if is_waiting(node_name, attribute, internal, value):
             return
         if is_invalid(tree_name):
             return
-        if condition_value:
+        if condition:
             self._set_ready()
             target = (
                 bpy
@@ -4992,19 +4990,19 @@ class ActionSetMaterialNodeValue(ActionCell):
 
     def evaluate(self):
         self.done = False
-        condition_value = self.get_parameter_value(self.condition)
-        if not_met(condition_value):
+        condition = self.get_socket_value(self.condition)
+        if not_met(condition):
             self._set_ready()
             return
-        mat_name = self.get_parameter_value(self.mat_name)
-        node_name = self.get_parameter_value(self.node_name)
-        input_slot = self.get_parameter_value(self.input_slot)
-        value = self.get_parameter_value(self.value)
+        mat_name = self.get_socket_value(self.mat_name)
+        node_name = self.get_socket_value(self.node_name)
+        input_slot = self.get_socket_value(self.input_slot)
+        value = self.get_socket_value(self.value)
         if is_waiting(node_name, input_slot, value):
             return
         if is_invalid(mat_name):
             return
-        if condition_value:
+        if condition:
             self.done = True
             self._set_ready()
             (
@@ -5033,21 +5031,20 @@ class ActionSetMaterialNodeAttribute(ActionCell):
 
     def evaluate(self):
         self.done = False
-        STATUS_WAITING = LogicNetworkCell.STATUS_WAITING
-        condition_value = self.get_parameter_value(self.condition)
-        if not_met(condition_value):
+        condition = self.get_socket_value(self.condition)
+        if not_met(condition):
             self._set_ready()
             return
-        mat_name = self.get_parameter_value(self.mat_name)
-        node_name = self.get_parameter_value(self.node_name)
-        attribute = self.get_parameter_value(self.attribute)
-        internal = self.get_parameter_value(self.internal)
-        value = self.get_parameter_value(self.value)
+        mat_name = self.get_socket_value(self.mat_name)
+        node_name = self.get_socket_value(self.node_name)
+        attribute = self.get_socket_value(self.attribute)
+        internal = self.get_socket_value(self.internal)
+        value = self.get_socket_value(self.value)
         if is_waiting(node_name, attribute, internal, value):
             return
         if is_invalid(mat_name):
             return
-        if condition_value:
+        if condition:
             self._set_ready()
             target = (
                 bpy.data.materials[mat_name]
@@ -5100,16 +5097,16 @@ class ActionPlayMaterialSequence(ActionCell):
         self.on_finish = False
         self.on_start = False
         running = self.running
-        condition = self.get_parameter_value(self.condition)
-        play_continue = self.get_parameter_value(self.play_continue)
+        condition = self.get_socket_value(self.condition)
+        play_continue = self.get_socket_value(self.play_continue)
         if not_met(condition) and not running:
             return
         self.time += self.network.time_per_frame
-        mat_name = self.get_parameter_value(self.mat_name)
-        node_name = self.get_parameter_value(self.node_name)
-        play_mode = self.get_parameter_value(self.play_mode)
-        frames = self.get_parameter_value(self.frames)
-        fps = self.get_parameter_value(self.fps)
+        mat_name = self.get_socket_value(self.mat_name)
+        node_name = self.get_socket_value(self.node_name)
+        play_mode = self.get_socket_value(self.play_mode)
+        frames = self.get_socket_value(self.frames)
+        fps = self.get_socket_value(self.fps)
         if is_waiting(
             mat_name,
             node_name,
@@ -5159,12 +5156,26 @@ class ActionPlayMaterialSequence(ActionCell):
             s = round(speed)
             if inverted:
                 if frame - s < end_frame:
-                    player.frame_offset = end_frame
+                    if play_mode in [1, 4]:
+                        leftover = abs(frame - s - end_frame)
+                        span = start_frame - end_frame
+                        while leftover > span:
+                            leftover -= span
+                        player.frame_offset = start_frame - leftover
+                    else:
+                        player.frame_offset = end_frame
                 else:
                     player.frame_offset -= s
             else:
                 if frame + s > end_frame:
-                    player.frame_offset = end_frame
+                    if play_mode in [1, 4]:
+                        leftover = frame + s - end_frame
+                        span = end_frame - start_frame
+                        while leftover > span:
+                            leftover -= span
+                        player.frame_offset = start_frame + leftover
+                    else:
+                        player.frame_offset = end_frame
                 else:
                     player.frame_offset += s
         elif play_mode == 1 and condition:
@@ -5200,7 +5211,6 @@ class ActionToggleGameObjectGameProperty(ActionCell):
         self.condition = None
         self.game_object = None
         self.property_name = None
-        self.property_value = None
         self.done = False
         self.OUT = LogicNetworkSubCell(self, self._get_done)
 
@@ -5209,22 +5219,20 @@ class ActionToggleGameObjectGameProperty(ActionCell):
 
     def evaluate(self):
         self.done = False
-        STATUS_WAITING = LogicNetworkCell.STATUS_WAITING
-        condition_value = self.get_parameter_value(self.condition)
-        if not_met(condition_value):
+        condition = self.get_socket_value(self.condition)
+        if not_met(condition):
             self._set_ready()
             return
-        game_object_value = self.get_parameter_value(self.game_object)
-        property_name_value = self.get_parameter_value(self.property_name)
-        property_value_value = self.get_parameter_value(self.property_value)
-        if is_waiting(property_name_value, property_value_value):
+        game_object = self.get_socket_value(self.game_object)
+        property_name = self.get_socket_value(self.property_name)
+        if is_waiting(property_name):
             return
-        if is_invalid(game_object_value):
+        if is_invalid(game_object):
             return
         self._set_ready()
-        if condition_value:
-            value = game_object_value[property_name_value]
-            game_object_value[property_name_value] = not value
+        if condition:
+            value = game_object[property_name]
+            game_object[property_name] = not value
         self.done = True
 
 
@@ -5243,12 +5251,12 @@ class ActionAddToGameObjectGameProperty(ActionCell):
 
     def evaluate(self):
         self.done = False
-        condition = self.get_parameter_value(self.condition)
+        condition = self.get_socket_value(self.condition)
         if not_met(condition):
             return
-        game_object = self.get_parameter_value(self.game_object)
-        property_name = self.get_parameter_value(self.property_name)
-        property_value = self.get_parameter_value(self.property_value)
+        game_object = self.get_socket_value(self.game_object)
+        property_name = self.get_socket_value(self.property_name)
+        property_value = self.get_socket_value(self.property_value)
         if is_waiting(property_name, property_value):
             return
         if is_invalid(game_object):
@@ -5276,14 +5284,14 @@ class CopyPropertyFromObject(ActionCell):
 
     def evaluate(self):
         self.done = False
-        condition = self.get_parameter_value(self.condition)
+        condition = self.get_socket_value(self.condition)
         if not_met(condition):
             return
-        from_object = self.get_parameter_value(self.from_object)
-        to_object = self.get_parameter_value(self.to_object)
+        from_object = self.get_socket_value(self.from_object)
+        to_object = self.get_socket_value(self.to_object)
         if is_invalid(from_object, to_object):
             return
-        property_name = self.get_parameter_value(self.property_name)
+        property_name = self.get_socket_value(self.property_name)
         if is_waiting(property_name):
             return
         self._set_ready()
@@ -5309,15 +5317,15 @@ class ActionClampedAddToGameObjectGameProperty(ActionCell):
 
     def evaluate(self):
         self.done = False
-        condition = self.get_parameter_value(self.condition)
-        game_object = self.get_parameter_value(self.game_object)
+        condition = self.get_socket_value(self.condition)
+        game_object = self.get_socket_value(self.game_object)
         if not_met(condition):
             return
         if is_invalid(game_object):
             return
-        property_name = self.get_parameter_value(self.property_name)
-        property_value = self.get_parameter_value(self.property_value)
-        val_range = self.get_parameter_value(self.range)
+        property_name = self.get_socket_value(self.property_name)
+        property_value = self.get_socket_value(self.property_value)
+        val_range = self.get_socket_value(self.range)
         if is_waiting(property_name, property_value):
             return
         self._set_ready()
@@ -5346,9 +5354,9 @@ class ValueSwitch(ActionCell):
         return self.out_value
 
     def evaluate(self):
-        condition = self.get_parameter_value(self.condition)
-        val_a = self.get_parameter_value(self.val_a)
-        val_b = self.get_parameter_value(self.val_b)
+        condition = self.get_socket_value(self.condition)
+        val_a = self.get_socket_value(self.val_a)
+        val_b = self.get_socket_value(self.val_b)
         self._set_ready()
         self.out_value = (
             val_a if condition is True else val_b
@@ -5366,7 +5374,7 @@ class InvertBool(ActionCell):
         return self.out_value
 
     def evaluate(self):
-        value = self.get_parameter_value(self.value)
+        value = self.get_socket_value(self.value)
         if is_invalid(value):
             debug('Inver Bool Node: Value invalid, defaulting to "False"')
             self.out_value = False
@@ -5386,7 +5394,7 @@ class InvertValue(ActionCell):
         return self.out_value
 
     def evaluate(self):
-        value = self.get_parameter_value(self.value)
+        value = self.get_socket_value(self.value)
         if is_invalid(value):
             debug('Inver Value Node: Value invalid, defaulting to 0')
             self.out_value = 0
@@ -5408,7 +5416,7 @@ class AbsoluteValue(ActionCell):
     def evaluate(self):
         if is_invalid(self.value):
             return
-        value = self.get_parameter_value(self.value)
+        value = self.get_socket_value(self.value)
         self._set_ready()
         self.out_value = math.fabs(value)
 
@@ -5427,10 +5435,10 @@ class ActionPrint(ActionCell):
 
     def evaluate(self):
         self.done = False
-        condition = self.get_parameter_value(self.condition)
+        condition = self.get_socket_value(self.condition)
         if not_met(condition):
             return
-        value = self.get_parameter_value(self.value)
+        value = self.get_socket_value(self.value)
         self._set_ready()
         print(value)
         self.done = True
@@ -5465,16 +5473,16 @@ class ActionCreateVehicle(ActionCell):
 
     def evaluate(self):
         self.done = False
-        condition = self.get_parameter_value(self.condition)
+        condition = self.get_socket_value(self.condition)
         if not_met(condition):
             return
-        game_object = self.get_parameter_value(self.game_object)
-        wheels_steering = self.get_parameter_value(self.wheels_steering)
-        wheels = self.get_parameter_value(self.wheels)
-        suspension = self.get_parameter_value(self.suspension)
-        stiffness = self.get_parameter_value(self.stiffness)
-        damping = self.get_parameter_value(self.damping)
-        friction = self.get_parameter_value(self.friction)
+        game_object = self.get_socket_value(self.game_object)
+        wheels_steering = self.get_socket_value(self.wheels_steering)
+        wheels = self.get_socket_value(self.wheels)
+        suspension = self.get_socket_value(self.suspension)
+        stiffness = self.get_socket_value(self.stiffness)
+        damping = self.get_socket_value(self.damping)
+        friction = self.get_socket_value(self.friction)
         if is_waiting(
             game_object, 
             wheels_steering,
@@ -5552,16 +5560,16 @@ class ActionCreateVehicleFromParent(ActionCell):
 
     def evaluate(self):
         self.done = False
-        game_object = self.get_parameter_value(self.game_object)
-        if not_met(self.get_parameter_value(self.condition)):
+        game_object = self.get_socket_value(self.game_object)
+        if not_met(self.get_socket_value(self.condition)):
             if game_object.get('vehicle_constraint'):
                 self._set_ready()
                 self.vehicle = game_object['vehicle_constraint']
             return
-        suspension = self.get_parameter_value(self.suspension)
-        stiffness = self.get_parameter_value(self.stiffness)
-        damping = self.get_parameter_value(self.damping)
-        friction = self.get_parameter_value(self.friction)
+        suspension = self.get_socket_value(self.suspension)
+        stiffness = self.get_socket_value(self.stiffness)
+        damping = self.get_socket_value(self.damping)
+        friction = self.get_socket_value(self.friction)
         if is_waiting(game_object, suspension, stiffness, damping, friction):
             return
         self._set_ready()
@@ -5624,15 +5632,15 @@ class VehicleApplyForce(ActionCell):
 
     def evaluate(self):
         self.done = False
-        condition = self.get_parameter_value(self.condition)
-        constraint = self.get_parameter_value(self.constraint)
+        condition = self.get_socket_value(self.condition)
+        constraint = self.get_socket_value(self.constraint)
         if not_met(condition):
             return
         if is_invalid(constraint):
             return
-        value = self.get_parameter_value(self.value_type)
-        wheelcount = self.get_parameter_value(self.wheelcount)
-        power = self.get_parameter_value(self.power)
+        value = self.get_socket_value(self.value_type)
+        wheelcount = self.get_socket_value(self.wheelcount)
+        power = self.get_socket_value(self.power)
         if is_waiting(value, wheelcount, power):
             return
         if not condition:
@@ -5674,17 +5682,17 @@ class VehicleApplyBraking(ActionCell):
 
     def evaluate(self):
         self.done = False
-        condition_value = self.get_parameter_value(self.condition)
-        if is_waiting(condition_value):
+        condition = self.get_socket_value(self.condition)
+        if is_waiting(condition):
             return
-        constraint = self.get_parameter_value(self.constraint)
-        value_type = self.get_parameter_value(self.value_type)
-        wheelcount = self.get_parameter_value(self.wheelcount)
-        power = self.get_parameter_value(self.power)
+        constraint = self.get_socket_value(self.constraint)
+        value_type = self.get_socket_value(self.value_type)
+        wheelcount = self.get_socket_value(self.wheelcount)
+        power = self.get_socket_value(self.power)
         if is_waiting(Constraint, value_type, wheelcount, power):
             return
 
-        if not condition_value:
+        if not condition:
             if self._reset:
                 for wheel in range(constraint.getNumWheels()):
                     constraint.applyBraking(0, wheel)
@@ -5721,13 +5729,13 @@ class VehicleApplySteering(ActionCell):
 
     def evaluate(self):
         self.done = False
-        condition_value = self.get_parameter_value(self.condition)
-        if not_met(condition_value):
+        condition = self.get_socket_value(self.condition)
+        if not_met(condition):
             return
-        constraint = self.get_parameter_value(self.constraint)
-        value_type = self.get_parameter_value(self.value_type)
-        wheelcount = self.get_parameter_value(self.wheelcount)
-        power = self.get_parameter_value(self.power)
+        constraint = self.get_socket_value(self.constraint)
+        value_type = self.get_socket_value(self.value_type)
+        wheelcount = self.get_socket_value(self.wheelcount)
+        power = self.get_socket_value(self.power)
         if is_waiting(Constraint, value_type, wheelcount, power):
             return
         if is_invalid(constraint):
@@ -5778,26 +5786,26 @@ class VehicleSetAttributes(ActionCell):
 
     def evaluate(self):
         self.done = False
-        condition_value = self.get_parameter_value(self.condition)
-        if not_met(condition_value):
+        condition = self.get_socket_value(self.condition)
+        if not_met(condition):
             return
-        constraint = self.get_parameter_value(self.constraint)
-        value_type = self.get_parameter_value(self.value_type)
-        wheelcount = self.get_parameter_value(self.wheelcount)
+        constraint = self.get_socket_value(self.constraint)
+        value_type = self.get_socket_value(self.value_type)
+        wheelcount = self.get_socket_value(self.wheelcount)
         if is_waiting(constraint, value_type, wheelcount):
             return
 
         attrs_to_set = [
-            self.get_parameter_value(self.set_suspension_compression),
-            self.get_parameter_value(self.set_suspension_stiffness),
-            self.get_parameter_value(self.set_suspension_damping),
-            self.get_parameter_value(self.set_tyre_friction)
+            self.get_socket_value(self.set_suspension_compression),
+            self.get_socket_value(self.set_suspension_stiffness),
+            self.get_socket_value(self.set_suspension_damping),
+            self.get_socket_value(self.set_tyre_friction)
         ]
         values_to_set = [
-            self.get_parameter_value(self.suspension_compression),
-            self.get_parameter_value(self.suspension_stiffness),
-            self.get_parameter_value(self.suspension_damping),
-            self.get_parameter_value(self.tyre_friction)
+            self.get_socket_value(self.suspension_compression),
+            self.get_socket_value(self.suspension_stiffness),
+            self.get_socket_value(self.suspension_damping),
+            self.get_socket_value(self.tyre_friction)
         ]
         if is_invalid(constraint):
             return
@@ -5846,13 +5854,13 @@ class ActionSetObjectAttribute(ActionCell):
 
     def evaluate(self):
         self.done = False
-        condition = self.get_parameter_value(self.condition)
+        condition = self.get_socket_value(self.condition)
         if not_met(condition):
             return
-        xyz = self.get_parameter_value(self.xyz)
-        game_object = self.get_parameter_value(self.game_object)
-        attribute = self.get_parameter_value(self.value_type)
-        value = self.get_parameter_value(self.attribute_value)
+        xyz = self.get_socket_value(self.xyz)
+        game_object = self.get_socket_value(self.game_object)
+        attribute = self.get_socket_value(self.value_type)
+        value = self.get_socket_value(self.attribute_value)
         if is_waiting(xyz, game_object, attribute, value):
             return
 
@@ -5903,12 +5911,12 @@ class ActionInstalSubNetwork(ActionCell):
 
     def evaluate(self):
         self.done = False
-        condition = self.get_parameter_value(self.condition)
+        condition = self.get_socket_value(self.condition)
         if not_met(condition):
             return
-        target_object = self.get_parameter_value(self.target_object)
-        tree_name = self.get_parameter_value(self.tree_name)
-        initial_status = self.get_parameter_value(self.initial_status)
+        target_object = self.get_socket_value(self.target_object)
+        tree_name = self.get_socket_value(self.tree_name)
+        initial_status = self.get_socket_value(self.initial_status)
         if is_waiting(
             target_object,
             tree_name,
@@ -5944,9 +5952,9 @@ class ActionExecuteNetwork(ActionCell):
 
     def evaluate(self):
         self.done = False
-        condition = self.get_parameter_value(self.condition)
-        target_object = self.get_parameter_value(self.target_object)
-        tree_name = self.get_parameter_value(self.tree_name)
+        condition = self.get_socket_value(self.condition)
+        target_object = self.get_socket_value(self.target_object)
+        tree_name = self.get_socket_value(self.tree_name)
         self._set_ready()
         if is_invalid(target_object):
             return
@@ -5981,11 +5989,11 @@ class ActionStartLogicNetwork(ActionCell):
 
     def evaluate(self):
         self.done = False
-        condition = self.get_parameter_value(self.condition)
+        condition = self.get_socket_value(self.condition)
         if not_met(condition):
             return
-        game_object = self.get_parameter_value(self.game_object)
-        logic_network_name = self.get_parameter_value(self.logic_network_name)
+        game_object = self.get_socket_value(self.game_object)
+        logic_network_name = self.get_socket_value(self.logic_network_name)
         if is_waiting(game_object, logic_network_name):
             return
         self._set_ready()
@@ -6011,11 +6019,11 @@ class ActionStopLogicNetwork(ActionCell):
 
     def evaluate(self):
         self.done = False
-        condition = self.get_parameter_value(self.condition)
+        condition = self.get_socket_value(self.condition)
         if not_met(condition):
             return
-        game_object = self.get_parameter_value(self.game_object)
-        logic_network_name = self.get_parameter_value(self.logic_network_name)
+        game_object = self.get_socket_value(self.game_object)
+        logic_network_name = self.get_socket_value(self.logic_network_name)
         if is_waiting(game_object, logic_network_name):
             return
         self._set_ready()
@@ -6033,7 +6041,7 @@ class ActionFindObject(ParameterCell):
 
     def evaluate(self):
         self._set_ready()
-        game_object = self.get_parameter_value(self.game_object)
+        game_object = self.get_socket_value(self.game_object)
         self._set_value(game_object)
 
 
@@ -6047,15 +6055,15 @@ class ActionSendMessage(ActionCell):
         self.body = None
 
     def evaluate(self):
-        condition = self.get_parameter_value(self.condition)
+        condition = self.get_socket_value(self.condition)
         if not_met(condition):
             self._set_ready()
             self._set_value(False)
             return
-        from_obj = self.get_parameter_value(self.from_obj)
-        to_obj = self.get_parameter_value(self.to_obj)
-        subject = self.get_parameter_value(self.subject)
-        body = self.get_parameter_value(self.body)
+        from_obj = self.get_socket_value(self.from_obj)
+        to_obj = self.get_socket_value(self.to_obj)
+        subject = self.get_socket_value(self.subject)
+        body = self.get_socket_value(self.body)
         if is_waiting(from_obj, to_obj, subject, body):
             return
         self._set_ready()
@@ -6085,14 +6093,13 @@ class ActionSetGameObjectVisibility(ActionCell):
 
     def evaluate(self):
         self.done = False
-        condition = self.get_parameter_value(self.condition)
-        STATUS_WAITING = LogicNetworkCell.STATUS_WAITING
+        condition = self.get_socket_value(self.condition)
         if not_met(condition):
             self._set_ready()
             return
-        game_object = self.get_parameter_value(self.game_object)
-        visible = self.get_parameter_value(self.visible)
-        recursive = self.get_parameter_value(self.recursive)
+        game_object = self.get_socket_value(self.game_object)
+        visible = self.get_socket_value(self.visible)
+        recursive = self.get_socket_value(self.recursive)
         if is_waiting(visible, recursive):
             return
         if is_invalid(game_object):
@@ -6152,19 +6159,19 @@ class ActionRayPick(ActionCell):
         return d
 
     def evaluate(self):
-        condition = self.get_parameter_value(self.condition)
+        condition = self.get_socket_value(self.condition)
         if not_met(condition):
             self._set_value(False)
             self._out_normal = None
             self._out_object = None
             self._out_point = None
             return
-        origin = self.get_parameter_value(self.origin)
-        destination = self.get_parameter_value(self.destination)
-        property_name = self.get_parameter_value(self.property_name)
-        xray = self.get_parameter_value(self.xray)
-        distance = self.get_parameter_value(self.distance)
-        visualize = self.get_parameter_value(self.visualize)
+        origin = self.get_socket_value(self.origin)
+        destination = self.get_socket_value(self.destination)
+        property_name = self.get_socket_value(self.property_name)
+        xray = self.get_socket_value(self.xray)
+        distance = self.get_socket_value(self.distance)
+        visualize = self.get_socket_value(self.visualize)
 
         if is_waiting(origin, destination, property_name, distance):
             return
@@ -6249,13 +6256,13 @@ class ActionMousePick(ActionCell):
         return self._out_point
 
     def evaluate(self):
-        condition = self.get_parameter_value(self.condition)
+        condition = self.get_socket_value(self.condition)
         if not_met(condition):
             return
-        distance = self.get_parameter_value(self.distance)
-        property_name = self.get_parameter_value(self.property)
-        xray = self.get_parameter_value(self.xray)
-        camera = self.get_parameter_value(self.camera)
+        distance = self.get_socket_value(self.distance)
+        property_name = self.get_socket_value(self.property)
+        xray = self.get_socket_value(self.xray)
+        camera = self.get_socket_value(self.camera)
         if is_waiting(distance, property_name, xray, camera):
             return
         self._set_ready()
@@ -6311,14 +6318,14 @@ class ActionCameraPick(ActionCell):
         return self._picked_normal
 
     def evaluate(self):
-        condition = self.get_parameter_value(self.condition)
+        condition = self.get_socket_value(self.condition)
         if not_met(condition):
             return
-        camera = self.get_parameter_value(self.camera)
-        aim = self.get_parameter_value(self.aim)
-        property_name = self.get_parameter_value(self.property_name)
-        xray = self.get_parameter_value(self.xray)
-        distance = self.get_parameter_value(self.distance)
+        camera = self.get_socket_value(self.camera)
+        aim = self.get_socket_value(self.aim)
+        property_name = self.get_socket_value(self.property_name)
+        xray = self.get_socket_value(self.xray)
+        distance = self.get_socket_value(self.distance)
         if is_waiting(camera, aim, property_name, xray, distance):
             return
         self._set_ready()
@@ -6367,10 +6374,10 @@ class ActionSetActiveCamera(ActionCell):
 
     def evaluate(self):
         self.done = False
-        condition = self.get_parameter_value(self.condition)
+        condition = self.get_socket_value(self.condition)
         if not_met(condition):
             return
-        camera = self.get_parameter_value(self.camera)
+        camera = self.get_socket_value(self.camera)
         if is_waiting(camera):
             return
         self._set_ready()
@@ -6395,11 +6402,11 @@ class ActionSetCameraFov(ActionCell):
 
     def evaluate(self):
         self.done = False
-        condition = self.get_parameter_value(self.condition)
+        condition = self.get_socket_value(self.condition)
         if not_met(condition):
             return
-        camera = self.get_parameter_value(self.camera)
-        fov = self.get_parameter_value(self.fov)
+        camera = self.get_socket_value(self.camera)
+        fov = self.get_socket_value(self.fov)
         if is_waiting(camera, fov):
             return
         self._set_ready()
@@ -6423,11 +6430,11 @@ class ActionSetResolution(ActionCell):
 
     def evaluate(self):
         self.done = False
-        condition = self.get_parameter_value(self.condition)
+        condition = self.get_socket_value(self.condition)
         if not_met(condition):
             return
-        x_res = self.get_parameter_value(self.x_res)
-        y_res = self.get_parameter_value(self.y_res)
+        x_res = self.get_socket_value(self.x_res)
+        y_res = self.get_socket_value(self.y_res)
         if is_waiting(x_res, y_res):
             return
         self._set_ready()
@@ -6448,10 +6455,10 @@ class ActionSetFullscreen(ActionCell):
 
     def evaluate(self):
         self.done = False
-        condition = self.get_parameter_value(self.condition)
+        condition = self.get_socket_value(self.condition)
         if not_met(condition):
             return
-        use_fullscreen = self.get_parameter_value(self.use_fullscreen)
+        use_fullscreen = self.get_socket_value(self.use_fullscreen)
         if is_waiting(use_fullscreen):
             return
         self._set_ready()
@@ -6472,10 +6479,10 @@ class GESetProfile(ActionCell):
 
     def evaluate(self):
         self.done = False
-        condition = self.get_parameter_value(self.condition)
+        condition = self.get_socket_value(self.condition)
         if not_met(condition):
             return
-        use_profile = self.get_parameter_value(self.use_profile)
+        use_profile = self.get_socket_value(self.use_profile)
         if is_waiting(use_profile):
             return
         self._set_ready()
@@ -6496,10 +6503,10 @@ class GEShowFramerate(ActionCell):
 
     def evaluate(self):
         self.done = False
-        condition = self.get_parameter_value(self.condition)
+        condition = self.get_socket_value(self.condition)
         if not_met(condition):
             return
-        use_framerate = self.get_parameter_value(self.use_framerate)
+        use_framerate = self.get_socket_value(self.use_framerate)
         if is_waiting(use_framerate):
             return
         self._set_ready()
@@ -6533,12 +6540,12 @@ class GEDrawLine(ActionCell):
         self.to_point = None
 
     def evaluate(self):
-        condition = self.get_parameter_value(self.condition)
+        condition = self.get_socket_value(self.condition)
         if not_met(condition):
             return
-        from_point = self.get_parameter_value(self.from_point)
-        to_point = self.get_parameter_value(self.to_point)
-        color = self.get_parameter_value(self.color)
+        from_point = self.get_socket_value(self.from_point)
+        to_point = self.get_socket_value(self.to_point)
+        color = self.get_socket_value(self.color)
         if is_invalid(from_point, to_point, color):
             return
         self._set_ready()
@@ -6595,10 +6602,10 @@ class ActionSetVSync(ActionCell):
 
     def evaluate(self):
         self.done = False
-        condition = self.get_parameter_value(self.condition)
+        condition = self.get_socket_value(self.condition)
         if not_met(condition):
             return
-        vsync_mode = self.get_parameter_value(self.vsync_mode)
+        vsync_mode = self.get_socket_value(self.vsync_mode)
         if is_waiting(vsync_mode):
             return
         self._set_ready()
@@ -6623,7 +6630,7 @@ class InitEmptyDict(ActionCell):
 
     def evaluate(self):
         self.done = False
-        condition = self.get_parameter_value(self.condition)
+        condition = self.get_socket_value(self.condition)
         if not_met(condition):
             return
         self._set_ready()
@@ -6650,11 +6657,11 @@ class InitNewDict(ActionCell):
 
     def evaluate(self):
         self.done = False
-        condition = self.get_parameter_value(self.condition)
+        condition = self.get_socket_value(self.condition)
         if not_met(condition):
             return
-        key = self.get_parameter_value(self.key)
-        value = self.get_parameter_value(self.val)
+        key = self.get_socket_value(self.key)
+        value = self.get_socket_value(self.val)
         if is_waiting(key, value):
             return
         if not condition:
@@ -6684,12 +6691,12 @@ class SetDictKeyValue(ActionCell):
 
     def evaluate(self):
         self.done = False
-        condition = self.get_parameter_value(self.condition)
+        condition = self.get_socket_value(self.condition)
         if not_met(condition):
             return
-        dictionary = self.get_parameter_value(self.dict)
-        key = self.get_parameter_value(self.key)
-        val = self.get_parameter_value(self.val)
+        dictionary = self.get_socket_value(self.dict)
+        key = self.get_socket_value(self.key)
+        val = self.get_socket_value(self.val)
         if is_waiting(dictionary, key, val):
             return
         self._set_ready()
@@ -6717,11 +6724,11 @@ class SetDictDelKey(ActionCell):
 
     def evaluate(self):
         self.done = False
-        condition = self.get_parameter_value(self.condition)
+        condition = self.get_socket_value(self.condition)
         if not_met(condition):
             return
-        dictionary = self.get_parameter_value(self.dict)
-        key = self.get_parameter_value(self.key)
+        dictionary = self.get_socket_value(self.dict)
+        key = self.get_socket_value(self.key)
         if is_waiting(dictionary, key):
             return
         self._set_ready()
@@ -6752,10 +6759,10 @@ class InitEmptyList(ActionCell):
 
     def evaluate(self):
         self.done = False
-        condition = self.get_parameter_value(self.condition)
+        condition = self.get_socket_value(self.condition)
         if not_met(condition):
             return
-        length = self.get_parameter_value(self.length)
+        length = self.get_socket_value(self.length)
         if is_waiting(length):
             return
         self._set_ready()
@@ -6779,12 +6786,12 @@ class InitNewList(ActionCell):
         return self.items
 
     def evaluate(self):
-        value = self.get_parameter_value(self.value)
-        value2 = self.get_parameter_value(self.value2)
-        value3 = self.get_parameter_value(self.value3)
-        value4 = self.get_parameter_value(self.value4)
-        value5 = self.get_parameter_value(self.value5)
-        value6 = self.get_parameter_value(self.value6)
+        value = self.get_socket_value(self.value)
+        value2 = self.get_socket_value(self.value2)
+        value3 = self.get_socket_value(self.value3)
+        value4 = self.get_socket_value(self.value4)
+        value5 = self.get_socket_value(self.value5)
+        value6 = self.get_socket_value(self.value6)
         values = [value, value2, value3, value4, value5, value6]
         self.items = []
         self._set_ready()
@@ -6812,11 +6819,11 @@ class AppendListItem(ActionCell):
 
     def evaluate(self):
         self.done = False
-        condition = self.get_parameter_value(self.condition)
+        condition = self.get_socket_value(self.condition)
         if not_met(condition):
             return
-        list_d = self.get_parameter_value(self.items)
-        val = self.get_parameter_value(self.val)
+        list_d = self.get_socket_value(self.items)
+        val = self.get_socket_value(self.val)
         if is_waiting(list_d, val):
             return
         self._set_ready()
@@ -6845,12 +6852,12 @@ class SetListIndex(ActionCell):
 
     def evaluate(self):
         self.done = False
-        condition = self.get_parameter_value(self.condition)
+        condition = self.get_socket_value(self.condition)
         if not_met(condition):
             return
-        list_d = self.get_parameter_value(self.items)
-        index = self.get_parameter_value(self.index)
-        val = self.get_parameter_value(self.val)
+        list_d = self.get_socket_value(self.items)
+        index = self.get_socket_value(self.index)
+        val = self.get_socket_value(self.val)
         if is_invalid(list_d, index, val):
             return
         self._set_ready()
@@ -6878,11 +6885,11 @@ class RemoveListValue(ActionCell):
 
     def evaluate(self):
         self.done = False
-        condition = self.get_parameter_value(self.condition)
+        condition = self.get_socket_value(self.condition)
         if not_met(condition):
             return
-        list_d = self.get_parameter_value(self.items)
-        val = self.get_parameter_value(self.val)
+        list_d = self.get_socket_value(self.items)
+        val = self.get_socket_value(self.val)
         if is_invalid(list_d, val):
             return
         self._set_ready()
@@ -6914,11 +6921,11 @@ class RemoveListIndex(ActionCell):
 
     def evaluate(self):
         self.done = False
-        condition = self.get_parameter_value(self.condition)
+        condition = self.get_socket_value(self.condition)
         if not_met(condition):
             return
-        list_d = self.get_parameter_value(self.items)
-        idx = self.get_parameter_value(self.idx)
+        list_d = self.get_socket_value(self.items)
+        idx = self.get_socket_value(self.idx)
         if is_invalid(list_d, idx):
             return
         self._set_ready()
@@ -6947,13 +6954,13 @@ class ActionSetParent(ActionCell):
 
     def evaluate(self):
         self.done = False
-        condition = self.get_parameter_value(self.condition)
+        condition = self.get_socket_value(self.condition)
         if not_met(condition):
             return
-        child_object = self.get_parameter_value(self.child_object)
-        parent_object = self.get_parameter_value(self.parent_object)
-        compound = self.get_parameter_value(self.compound)
-        ghost = self.get_parameter_value(self.ghost)
+        child_object = self.get_socket_value(self.child_object)
+        parent_object = self.get_socket_value(self.parent_object)
+        compound = self.get_socket_value(self.compound)
+        ghost = self.get_socket_value(self.ghost)
         self._set_ready()
         if is_invalid(child_object, parent_object, compound, ghost):
             return
@@ -6976,10 +6983,10 @@ class ActionRemoveParent(ActionCell):
 
     def evaluate(self):
         self.done = False
-        condition = self.get_parameter_value(self.condition)
+        condition = self.get_socket_value(self.condition)
         if not_met(condition):
             return
-        child_object = self.get_parameter_value(self.child_object)
+        child_object = self.get_socket_value(self.child_object)
         if is_waiting(child_object):
             return
         self._set_ready()
@@ -7018,21 +7025,20 @@ class ActionPerformanceProfile(ActionCell):
     def evaluate(self):
         self.done = False
         self.data = '----------------------------------Start Profile\n'
-        STATUS_WAITING = LogicNetworkCell.STATUS_WAITING
-        condition = self.get_parameter_value(self.condition)
+        condition = self.get_socket_value(self.condition)
         if not_met(condition):
             self._set_ready()
             return
-        print_profile = self.get_parameter_value(
+        print_profile = self.get_socket_value(
             self.print_profile
         )
-        check_evaluated_cells = self.get_parameter_value(
+        check_evaluated_cells = self.get_socket_value(
             self.check_evaluated_cells
         )
-        check_average_cells_per_sec = self.get_parameter_value(
+        check_average_cells_per_sec = self.get_socket_value(
             self.check_average_cells_per_sec
         )
-        check_cells_per_tick = self.get_parameter_value(
+        check_cells_per_tick = self.get_socket_value(
             self.check_cells_per_tick
         )
         if is_waiting(
@@ -7083,18 +7089,18 @@ class ActionEditArmatureConstraint(ActionCell):
 
     def evaluate(self):
         self.done = False
-        condition = self.get_parameter_value(self.condition)
+        condition = self.get_socket_value(self.condition)
         if not_met(condition):
             return
-        armature = self.get_parameter_value(self.armature)
-        constraint_name = self.get_parameter_value(self.constraint_name)
-        enforced_factor = self.get_parameter_value(self.enforced_factor)
-        primary_target = self.get_parameter_value(self.primary_target)
-        secondary_target = self.get_parameter_value(self.secondary_target)
-        active = self.get_parameter_value(self.active)
-        ik_weight = self.get_parameter_value(self.ik_weight)
-        ik_distance = self.get_parameter_value(self.ik_distance)
-        distance_mode = self.get_parameter_value(self.distance_mode)
+        armature = self.get_socket_value(self.armature)
+        constraint_name = self.get_socket_value(self.constraint_name)
+        enforced_factor = self.get_socket_value(self.enforced_factor)
+        primary_target = self.get_socket_value(self.primary_target)
+        secondary_target = self.get_socket_value(self.secondary_target)
+        active = self.get_socket_value(self.active)
+        ik_weight = self.get_socket_value(self.ik_weight)
+        ik_distance = self.get_socket_value(self.ik_distance)
+        distance_mode = self.get_socket_value(self.distance_mode)
         if is_waiting(
             armature,
             constraint_name,
@@ -7188,17 +7194,17 @@ class ActionEditBone(ActionCell):
 
     def evaluate(self):
         self.done = False
-        condition = self.get_parameter_value(self.condition)
+        condition = self.get_socket_value(self.condition)
         if not_met(condition):
             return
-        armature = self.get_parameter_value(self.armature)
-        bone_name = self.get_parameter_value(self.bone_name)
-        set_translation = self.get_parameter_value(self.set_translation)
-        set_orientation = self.get_parameter_value(self.set_orientation)
-        set_scale = self.get_parameter_value(self.set_scale)
-        translate = self.get_parameter_value(self.translate)
-        rotate = self.get_parameter_value(self.rotate)
-        scale = self.get_parameter_value(self.scale)
+        armature = self.get_socket_value(self.armature)
+        bone_name = self.get_socket_value(self.bone_name)
+        set_translation = self.get_socket_value(self.set_translation)
+        set_orientation = self.get_socket_value(self.set_orientation)
+        set_scale = self.get_socket_value(self.set_scale)
+        translate = self.get_socket_value(self.translate)
+        rotate = self.get_socket_value(self.rotate)
+        scale = self.get_socket_value(self.scale)
         if is_waiting(
             armature,
             bone_name,
@@ -7254,12 +7260,12 @@ class ActionSetBonePos(ActionCell):
 
     def evaluate(self):
         self.done = False
-        condition = self.get_parameter_value(self.condition)
+        condition = self.get_socket_value(self.condition)
         if not_met(condition):
             return
-        armature = self.get_parameter_value(self.armature)
-        bone_name = self.get_parameter_value(self.bone_name)
-        set_translation = self.get_parameter_value(self.set_translation)
+        armature = self.get_socket_value(self.armature)
+        bone_name = self.get_socket_value(self.bone_name)
+        set_translation = self.get_socket_value(self.set_translation)
         self._set_ready()
         if is_invalid(armature, bone_name, set_translation):
             return
@@ -7291,9 +7297,8 @@ class ActionTimeFilter(ActionCell):
             if delta < self._trigger_delay:
                 self._set_value(False)
                 return
-        STATUS_WAITING = LogicNetworkCell.STATUS_WAITING
-        condition = self.get_parameter_value(self.condition)
-        delay = self.get_parameter_value(self.delay)
+        condition = self.get_socket_value(self.condition)
+        delay = self.get_socket_value(self.delay)
         if is_waiting(condition, delay):
             return
         self._set_ready()
@@ -7321,8 +7326,8 @@ class GEBarrier(ActionCell):
         self.trigger = 0
 
     def evaluate(self):
-        condition = self.get_parameter_value(self.condition)
-        time = self.get_parameter_value(self.time)
+        condition = self.get_socket_value(self.condition)
+        time = self.get_socket_value(self.time)
         if is_waiting(time):
             return
 
@@ -7354,8 +7359,8 @@ class ActionTimeDelay(ActionCell):
         self.triggers = []
 
     def evaluate(self):
-        condition = self.get_parameter_value(self.condition)
-        delay = self.get_parameter_value(self.delay)
+        condition = self.get_socket_value(self.condition)
+        delay = self.get_socket_value(self.delay)
         if is_invalid(delay):
             return
         self._set_ready()
@@ -7390,12 +7395,12 @@ class ActionSetDynamics(ActionCell):
 
     def evaluate(self):
         self.done = False
-        condition = self.get_parameter_value(self.condition)
+        condition = self.get_socket_value(self.condition)
         if not_met(condition):
             return
-        game_object = self.get_parameter_value(self.game_object)
-        ghost = self.get_parameter_value(self.ghost)
-        activate = self.get_parameter_value(self.activate)
+        game_object = self.get_socket_value(self.game_object)
+        ghost = self.get_socket_value(self.ghost)
+        activate = self.get_socket_value(self.activate)
         if is_waiting(game_object, ghost, activate):
             return
         self._set_ready()
@@ -7422,8 +7427,8 @@ class ActionEndObject(ActionCell):
 
     def evaluate(self):
         self.done = False
-        condition = self.get_parameter_value(self.condition)
-        game_object = self.get_parameter_value(self.game_object)
+        condition = self.get_socket_value(self.condition)
+        game_object = self.get_socket_value(self.game_object)
         if not_met(condition):
             return
         if is_waiting(game_object):
@@ -7449,10 +7454,10 @@ class ActionSetTimeScale(ActionCell):
 
     def evaluate(self):
         self.done = False
-        condition = self.get_parameter_value(self.condition)
+        condition = self.get_socket_value(self.condition)
         if not_met(condition):
             return
-        timescale = self.get_parameter_value(self.timescale)
+        timescale = self.get_socket_value(self.timescale)
         if is_waiting(timescale):
             return
         self._set_ready()
@@ -7476,10 +7481,10 @@ class ActionSetGravity(ActionCell):
 
     def evaluate(self):
         self.done = False
-        condition = self.get_parameter_value(self.condition)
+        condition = self.get_socket_value(self.condition)
         if not_met(condition):
             return
-        gravity = self.get_parameter_value(self.gravity)
+        gravity = self.get_socket_value(self.gravity)
         if is_waiting(gravity):
             return
         self._set_ready()
@@ -7501,16 +7506,16 @@ class ActionApplyGameObjectValue(ActionCell):
         self.local = False
 
     def evaluate(self):
-        condition = self.get_parameter_value(self.condition)
+        condition = self.get_socket_value(self.condition)
         if not_met(condition):
             return
-        game_object = self.get_parameter_value(self.game_object)
+        game_object = self.get_socket_value(self.game_object)
         if is_waiting(game_object):
             return
-        movement = self.get_parameter_value(self.movement)
-        rotation = self.get_parameter_value(self.rotation)
-        force = self.get_parameter_value(self.force)
-        torque = self.get_parameter_value(self.torque)
+        movement = self.get_socket_value(self.movement)
+        rotation = self.get_socket_value(self.rotation)
+        force = self.get_socket_value(self.force)
+        torque = self.get_socket_value(self.torque)
         local = self.local
         if is_waiting(movement, rotation, force, torque, local):
             return
@@ -7546,11 +7551,11 @@ class ActionApplyLocation(ActionCell):
 
     def evaluate(self):
         self.done = False
-        condition = self.get_parameter_value(self.condition)
+        condition = self.get_socket_value(self.condition)
         if not_met(condition):
             return
-        game_object = self.get_parameter_value(self.game_object)
-        movement = self.get_parameter_value(self.movement)
+        game_object = self.get_socket_value(self.game_object)
+        movement = self.get_socket_value(self.movement)
         local = self.local
         if is_waiting(game_object, movement, local):
             return
@@ -7576,11 +7581,11 @@ class ActionApplyRotation(ActionCell):
 
     def evaluate(self):
         self.done = False
-        condition = self.get_parameter_value(self.condition)
+        condition = self.get_socket_value(self.condition)
         if not_met(condition):
             return
-        game_object = self.get_parameter_value(self.game_object)
-        rotation = self.get_parameter_value(self.rotation)
+        game_object = self.get_socket_value(self.game_object)
+        rotation = self.get_socket_value(self.rotation)
         local = self.local
         if is_waiting(game_object, rotation, local):
             return
@@ -7609,11 +7614,11 @@ class ActionApplyForce(ActionCell):
 
     def evaluate(self):
         self.done = False
-        condition = self.get_parameter_value(self.condition)
+        condition = self.get_socket_value(self.condition)
         if not_met(condition):
             return
-        game_object = self.get_parameter_value(self.game_object)
-        force = self.get_parameter_value(self.force)
+        game_object = self.get_socket_value(self.game_object)
+        force = self.get_socket_value(self.force)
         local = self.local
         if is_waiting(game_object, force):
             return
@@ -7637,12 +7642,12 @@ class ActionApplyImpulse(ActionCell):
 
     def evaluate(self):
         self.done = False
-        condition = self.get_parameter_value(self.condition)
+        condition = self.get_socket_value(self.condition)
         if not_met(condition):
             return
-        game_object = self.get_parameter_value(self.game_object)
-        point = self.get_parameter_value(self.point)
-        impulse = self.get_parameter_value(self.impulse)
+        game_object = self.get_socket_value(self.game_object)
+        point = self.get_socket_value(self.point)
+        impulse = self.get_socket_value(self.impulse)
         local = self.local
         if hasattr(point, 'worldPosition'):
             point = point.worldPosition
@@ -7667,11 +7672,11 @@ class ActionCharacterJump(ActionCell):
 
     def evaluate(self):
         self.done = False
-        condition = self.get_parameter_value(self.condition)
+        condition = self.get_socket_value(self.condition)
         if not_met(condition):
             self._set_ready()
             return
-        game_object = self.get_parameter_value(self.game_object)
+        game_object = self.get_socket_value(self.game_object)
         if is_waiting(game_object):
             return
         physics = bge.constraints.getCharacter(game_object)
@@ -7723,11 +7728,11 @@ class ActionSaveVariable(ActionCell):
 
     def evaluate(self):
         self.done = False
-        condition = self.get_parameter_value(self.condition)
+        condition = self.get_socket_value(self.condition)
         if not_met(condition):
             return
-        name = self.get_parameter_value(self.name)
-        val = self.get_parameter_value(self.val)
+        name = self.get_socket_value(self.name)
+        val = self.get_socket_value(self.val)
         if is_waiting(name, val):
             return
         self._set_ready()
@@ -7777,10 +7782,10 @@ class ActionSaveVariables(ActionCell):
 
     def evaluate(self):
         self.done = False
-        condition = self.get_parameter_value(self.condition)
+        condition = self.get_socket_value(self.condition)
         if not_met(condition):
             return
-        val = self.get_parameter_value(self.val)
+        val = self.get_socket_value(self.val)
         if is_waiting(val):
             return
         self._set_ready()
@@ -7837,10 +7842,10 @@ class ActionLoadVariable(ActionCell):
 
     def evaluate(self):
         self.done = False
-        condition = self.get_parameter_value(self.condition)
+        condition = self.get_socket_value(self.condition)
         if not_met(condition):
             return
-        name = self.get_parameter_value(self.name)
+        name = self.get_socket_value(self.name)
         if is_waiting(name):
             return
         self._set_ready()
@@ -7894,7 +7899,7 @@ class ActionLoadVariables(ActionCell):
 
     def evaluate(self):
         self.done = False
-        condition = self.get_parameter_value(self.condition)
+        condition = self.get_socket_value(self.condition)
         if not_met(condition):
             return
         self._set_ready()
@@ -7948,10 +7953,10 @@ class ActionRemoveVariable(ActionCell):
 
     def evaluate(self):
         self.done = False
-        condition = self.get_parameter_value(self.condition)
+        condition = self.get_socket_value(self.condition)
         if not_met(condition):
             return
-        name = self.get_parameter_value(self.name)
+        name = self.get_socket_value(self.name)
         if is_waiting(name):
             return
         self._set_ready()
@@ -8004,7 +8009,7 @@ class ActionClearVariables(ActionCell):
 
     def evaluate(self):
         self.done = False
-        condition = self.get_parameter_value(self.condition)
+        condition = self.get_socket_value(self.condition)
         if not_met(condition):
             return
         self._set_ready()
@@ -8067,10 +8072,10 @@ class ActionListVariables(ActionCell):
 
     def evaluate(self):
         self.done = False
-        condition = self.get_parameter_value(self.condition)
+        condition = self.get_socket_value(self.condition)
         if not_met(condition):
             return
-        print_list = self.get_parameter_value(self.print_list)
+        print_list = self.get_socket_value(self.print_list)
         if is_waiting(print_list):
             return
         self._set_ready()
@@ -8101,11 +8106,11 @@ class ActionSetCharacterJump(ActionCell):
 
     def evaluate(self):
         self.done = False
-        condition = self.get_parameter_value(self.condition)
+        condition = self.get_socket_value(self.condition)
         if not_met(condition):
             return
-        game_object = self.get_parameter_value(self.game_object)
-        max_jumps = self.get_parameter_value(self.max_jumps)
+        game_object = self.get_socket_value(self.game_object)
+        max_jumps = self.get_socket_value(self.max_jumps)
         if is_waiting(game_object, max_jumps):
             return
         self._set_ready()
@@ -8130,11 +8135,11 @@ class ActionSetCharacterGravity(ActionCell):
 
     def evaluate(self):
         self.done = False
-        condition = self.get_parameter_value(self.condition)
+        condition = self.get_socket_value(self.condition)
         if not_met(condition):
             return
-        game_object = self.get_parameter_value(self.game_object)
-        gravity = self.get_parameter_value(self.gravity)
+        game_object = self.get_socket_value(self.game_object)
+        gravity = self.get_socket_value(self.gravity)
         if is_waiting(gravity):
             return
         self._set_ready()
@@ -8161,19 +8166,19 @@ class ActionSetCharacterWalkDir(ActionCell):
 
     def evaluate(self):
         self.done = False
-        condition = self.get_parameter_value(self.condition)
+        condition = self.get_socket_value(self.condition)
         if not_met(condition):
             if self.active:
-                game_object = self.get_parameter_value(self.game_object)
+                game_object = self.get_socket_value(self.game_object)
                 physics = bge.constraints.getCharacter(game_object)
                 physics.walkDirection = mathutils.Vector((0, 0, 0))
                 self.active = False
             return
         elif not self.active:
             self.active = True
-        game_object = self.get_parameter_value(self.game_object)
+        game_object = self.get_socket_value(self.game_object)
         local = self.local
-        walkDir = self.get_parameter_value(self.walkDir)
+        walkDir = self.get_socket_value(self.walkDir)
         if is_waiting(game_object, local, walkDir):
             return
         self._set_ready()
@@ -8202,16 +8207,16 @@ class ActionSetCharacterVelocity(ActionCell):
 
     def evaluate(self):
         self.done = False
-        condition = self.get_parameter_value(self.condition)
+        condition = self.get_socket_value(self.condition)
         if not_met(condition):
             return
-        game_object = self.get_parameter_value(self.game_object)
+        game_object = self.get_socket_value(self.game_object)
         if is_waiting(game_object):
             return
         local = self.local
         physics = bge.constraints.getCharacter(game_object)
-        vel = self.get_parameter_value(self.vel)
-        time = self.get_parameter_value(self.time)
+        vel = self.get_socket_value(self.vel)
+        time = self.get_socket_value(self.time)
         self._set_ready()
         if is_invalid(game_object):
             return
@@ -8250,7 +8255,7 @@ class ParameterGetCharacterInfo(ParameterCell):
         return self.on_ground
 
     def evaluate(self):
-        game_object = self.get_parameter_value(self.game_object)
+        game_object = self.get_socket_value(self.game_object)
         if is_invalid(game_object):
             return
         physics = bge.constraints.getCharacter(game_object)
@@ -8277,11 +8282,11 @@ class ActionApplyTorque(ActionCell):
 
     def evaluate(self):
         self.done = False
-        condition = self.get_parameter_value(self.condition)
+        condition = self.get_socket_value(self.condition)
         if not_met(condition):
             return
-        game_object = self.get_parameter_value(self.game_object)
-        torque = self.get_parameter_value(self.torque)
+        game_object = self.get_socket_value(self.game_object)
+        torque = self.get_socket_value(self.torque)
         local = self.local
         if is_waiting(game_object, torque):
             return
@@ -8348,18 +8353,18 @@ class ActionPlayAction(ActionCell):
             self._finished = False
 
     def evaluate(self):
-        condition = self.get_parameter_value(self.condition)
-        game_object = self.get_parameter_value(self.game_object)
-        action_name = self.get_parameter_value(self.action_name)
-        start_frame = self.get_parameter_value(self.start_frame)
-        end_frame = self.get_parameter_value(self.end_frame)
-        layer = self.get_parameter_value(self.layer)
-        priority = self.get_parameter_value(self.priority)
-        play_mode = self.get_parameter_value(self.play_mode)
-        layer_weight = self.get_parameter_value(self.layer_weight)
-        speed = self.get_parameter_value(self.speed)
-        blendin = self.get_parameter_value(self.blendin)
-        blend_mode = self.get_parameter_value(self.blend_mode)
+        condition = self.get_socket_value(self.condition)
+        game_object = self.get_socket_value(self.game_object)
+        action_name = self.get_socket_value(self.action_name)
+        start_frame = self.get_socket_value(self.start_frame)
+        end_frame = self.get_socket_value(self.end_frame)
+        layer = self.get_socket_value(self.layer)
+        priority = self.get_socket_value(self.priority)
+        play_mode = self.get_socket_value(self.play_mode)
+        layer_weight = self.get_socket_value(self.layer_weight)
+        speed = self.get_socket_value(self.speed)
+        blendin = self.get_socket_value(self.blendin)
+        blend_mode = self.get_socket_value(self.blend_mode)
         if is_waiting(
             game_object,
             action_name,
@@ -8479,12 +8484,12 @@ class ActionStopAnimation(ActionCell):
 
     def evaluate(self):
         self.done = False
-        condition = self.get_parameter_value(self.condition)
+        condition = self.get_socket_value(self.condition)
         if not condition:
             self._set_ready()
             return
-        game_object = self.get_parameter_value(self.game_object)
-        action_layer = self.get_parameter_value(self.action_layer)
+        game_object = self.get_socket_value(self.game_object)
+        action_layer = self.get_socket_value(self.action_layer)
         if is_waiting(game_object, action_layer):
             return
         self._set_ready()
@@ -8513,16 +8518,16 @@ class ActionSetAnimationFrame(ActionCell):
 
     def evaluate(self):
         self.done = False
-        condition = self.get_parameter_value(self.condition)
+        condition = self.get_socket_value(self.condition)
         if not condition:
             self._set_ready()
             return
-        game_object = self.get_parameter_value(self.game_object)
-        action_layer = self.get_parameter_value(self.action_layer)
-        action_frame = self.get_parameter_value(self.action_frame)
-        freeze = self.get_parameter_value(self.freeze)
-        action_name = self.get_parameter_value(self.action_name)
-        layer_weight = self.get_parameter_value(self.layer_weight)
+        game_object = self.get_socket_value(self.game_object)
+        action_layer = self.get_socket_value(self.action_layer)
+        action_frame = self.get_socket_value(self.action_frame)
+        freeze = self.get_socket_value(self.freeze)
+        action_name = self.get_socket_value(self.action_name)
+        layer_weight = self.get_socket_value(self.layer_weight)
         self._set_ready()
         if is_invalid(
             game_object,
@@ -8579,10 +8584,10 @@ class ActionFindScene(ActionCell):
 
     def evaluate(self):
         self.done = False
-        condition = self.get_parameter_value(self.condition)
+        condition = self.get_socket_value(self.condition)
         if not_met(condition):
             return
-        query = self.get_parameter_value(self.query)
+        query = self.get_socket_value(self.query)
         if is_waiting(query):
             return
         self._set_ready()
@@ -8633,22 +8638,22 @@ class ActionStart3DSoundAdv(ActionCell):
     def evaluate(self):
         self.done = False
         audio_system = self.network.audio_system
-        speaker = self.get_parameter_value(self.speaker)
+        speaker = self.get_socket_value(self.speaker)
         handles = self._handles
-        occlusion = self.get_parameter_value(self.occlusion)
-        volume = self.get_parameter_value(self.volume)
-        cone_outer_volume = self.get_parameter_value(self.cone_outer_volume)
-        pitch = self.get_parameter_value(self.pitch) * logic.getTimeScale()
-        attenuation = self.get_parameter_value(self.attenuation)
+        occlusion = self.get_socket_value(self.occlusion)
+        volume = self.get_socket_value(self.volume)
+        cone_outer_volume = self.get_socket_value(self.cone_outer_volume)
+        pitch = self.get_socket_value(self.pitch) * logic.getTimeScale()
+        attenuation = self.get_socket_value(self.attenuation)
         self.on_finish = False
         if handles:
             for sound in handles:
                 ind = 0
                 for handle in handles[sound]:
+                    if len(handles[sound]) <= ind:
+                        continue
                     if handle.status:
                         self._set_ready()
-                        if ind == 0:
-                            self._handle = handle
                         handle.pitch = pitch
                         handle.location = speaker.worldPosition
                         handle.orientation = (
@@ -8663,7 +8668,7 @@ class ActionStart3DSoundAdv(ActionCell):
                                 mathutils.Vector((0, 0, 0))
                             )
                         if occlusion:
-                            transition = self.get_parameter_value(
+                            transition = self.get_socket_value(
                                 self.transition
                             )
                             cam = bge.logic.getCurrentScene().active_camera
@@ -8734,17 +8739,20 @@ class ActionStart3DSoundAdv(ActionCell):
                             audio_system.active_sounds.remove(handle)
                             handles[sound] = []
                         self.on_finish = True
+                        ind = 0
                         continue
                     ind += 1
-        condition = self.get_parameter_value(self.condition)
+        else:
+            self._handle = None
+        condition = self.get_socket_value(self.condition)
         if not_met(condition):
             return
-        cutoff = self.get_parameter_value(self.cutoff)
-        sound = self.get_parameter_value(self.sound)
-        device = self.get_parameter_value(self.device)
-        loop_count = self.get_parameter_value(self.loop_count)
-        distance_ref = self.get_parameter_value(self.distance_ref)
-        cone_angle = self.get_parameter_value(self.cone_angle)
+        cutoff = self.get_socket_value(self.cutoff)
+        sound = self.get_socket_value(self.sound)
+        device = self.get_socket_value(self.device)
+        loop_count = self.get_socket_value(self.loop_count)
+        distance_ref = self.get_socket_value(self.distance_ref)
+        cone_angle = self.get_socket_value(self.cone_angle)
         cone_inner_angle = cone_angle.x
         cone_outer_angle = cone_angle.y
         self._set_ready()
@@ -8820,8 +8828,8 @@ class ActionStartSound(ActionCell):
         self.done = False
         audio_system = self.network.audio_system
         handles = self._handles
-        pitch = self.get_parameter_value(self.pitch)
-        volume = self.get_parameter_value(self.volume)
+        pitch = self.get_socket_value(self.pitch)
+        volume = self.get_socket_value(self.volume)
         self.on_finish = False
         if handles:
             for handle in handles:
@@ -8834,11 +8842,11 @@ class ActionStartSound(ActionCell):
                 handle.volume = volume
                 handle.pitch = pitch
             self._handle = handles[-1]
-        condition = self.get_parameter_value(self.condition)
+        condition = self.get_socket_value(self.condition)
         if not_met(condition):
             return
-        sound = self.get_parameter_value(self.sound)
-        loop_count = self.get_parameter_value(self.loop_count)
+        sound = self.get_socket_value(self.sound)
+        loop_count = self.get_socket_value(self.loop_count)
         self._set_ready()
 
         if is_invalid(sound):
@@ -8867,10 +8875,10 @@ class ActionStopSound(ActionCell):
         self.sound = None
 
     def evaluate(self):
-        condition = self.get_parameter_value(self.condition)
+        condition = self.get_socket_value(self.condition)
         if not_met(condition):
             return
-        sound = self.get_parameter_value(self.sound)
+        sound = self.get_socket_value(self.sound)
         if is_waiting(sound):
             return
         self._set_ready()
@@ -8885,7 +8893,7 @@ class ActionStopAllSounds(ActionCell):
         self.condition = None
 
     def evaluate(self):
-        condition = self.get_parameter_value(self.condition)
+        condition = self.get_socket_value(self.condition)
         if not_met(condition):
             return
         if not hasattr(bpy.types.Scene, 'nl_aud_devices'):
@@ -8903,10 +8911,10 @@ class ActionPauseSound(ActionCell):
         self.sound = None
 
     def evaluate(self):
-        condition = self.get_parameter_value(self.condition)
+        condition = self.get_socket_value(self.condition)
         if not_met(condition):
             return
-        sound = self.get_parameter_value(self.sound)
+        sound = self.get_socket_value(self.sound)
         if is_waiting(sound):
             return
         self._set_ready()
@@ -8922,10 +8930,10 @@ class ActionResumeSound(ActionCell):
         self.sound = None
 
     def evaluate(self):
-        condition = self.get_parameter_value(self.condition)
+        condition = self.get_socket_value(self.condition)
         if not_met(condition):
             return
-        sound = self.get_parameter_value(self.sound)
+        sound = self.get_socket_value(self.sound)
         if is_waiting(sound):
             return
         self._set_ready()
@@ -8955,7 +8963,7 @@ class ReceiveMessage(ParameterCell):
         return self.target
 
     def evaluate(self):
-        subject = self.get_parameter_value(self.subject)
+        subject = self.get_socket_value(self.subject)
         if is_invalid(subject):
             return
         self._set_ready()
@@ -8980,10 +8988,9 @@ class ParameterGetGlobalValue(ParameterCell):
         self.default = None
 
     def evaluate(self):
-        STATUS_WAITING = LogicNetworkCell.STATUS_WAITING
-        data_id = self.get_parameter_value(self.data_id)
-        key = self.get_parameter_value(self.key)
-        default = self.get_parameter_value(self.default)
+        data_id = self.get_socket_value(self.data_id)
+        key = self.get_socket_value(self.key)
+        default = self.get_socket_value(self.default)
         if is_waiting(data_id, key, default):
             return
         self._set_ready()
@@ -8999,11 +9006,11 @@ class ActionListGlobalValues(ParameterCell):
         self.print_d = None
 
     def evaluate(self):
-        condition = self.get_parameter_value(self.condition)
+        condition = self.get_socket_value(self.condition)
         if not_met(condition):
             return
-        data_id = self.get_parameter_value(self.data_id)
-        print_d = self.get_parameter_value(self.print_d)
+        data_id = self.get_socket_value(self.data_id)
+        print_d = self.get_socket_value(self.print_d)
         if is_waiting(data_id, print_d):
             return
         self._set_ready()
@@ -9026,11 +9033,11 @@ class ParameterFormattedString(ParameterCell):
         self.value_d = None
 
     def evaluate(self):
-        format_string = self.get_parameter_value(self.format_string)
-        value_a = self.get_parameter_value(self.value_a)
-        value_b = self.get_parameter_value(self.value_b)
-        value_c = self.get_parameter_value(self.value_c)
-        value_d = self.get_parameter_value(self.value_d)
+        format_string = self.get_socket_value(self.format_string)
+        value_a = self.get_socket_value(self.value_a)
+        value_b = self.get_socket_value(self.value_b)
+        value_c = self.get_socket_value(self.value_c)
+        value_d = self.get_socket_value(self.value_d)
         if is_waiting(format_string, value_a, value_b, value_c, value_d):
             return
         self._set_ready()
@@ -9056,15 +9063,14 @@ class ActionSetGlobalValue(ActionCell):
 
     def evaluate(self):
         self.done = False
-        STATUS_WAITING = LogicNetworkCell.STATUS_WAITING
-        condition = self.get_parameter_value(self.condition)
+        condition = self.get_socket_value(self.condition)
         if not_met(condition):
             self._set_ready()
             return
-        data_id = self.get_parameter_value(self.data_id)
-        persistent = self.get_parameter_value(self.persistent)
-        key = self.get_parameter_value(self.key)
-        value = self.get_parameter_value(self.value)
+        data_id = self.get_socket_value(self.data_id)
+        persistent = self.get_socket_value(self.persistent)
+        key = self.get_socket_value(self.key)
+        value = self.get_socket_value(self.value)
         if is_waiting(data_id, persistent, key, value):
             return
         self._set_ready()
@@ -9097,8 +9103,8 @@ class CreateMessage(ActionCell):
 
     def evaluate(self):
         self.done = False
-        condition = self.get_parameter_value(self.condition)
-        subject = self.get_parameter_value(self.subject)
+        condition = self.get_socket_value(self.condition)
+        subject = self.get_socket_value(self.subject)
         messages = self.network._messages
         if not_met(condition):
             if subject in messages.data:
@@ -9106,8 +9112,8 @@ class CreateMessage(ActionCell):
                     messages.data.pop(subject, None)
             self._set_ready()
             return
-        body = self.get_parameter_value(self.body)
-        target = self.get_parameter_value(self.target)
+        body = self.get_socket_value(self.body)
+        target = self.get_socket_value(self.target)
         if is_waiting(body, target):
             return
         if is_invalid(subject):
@@ -9128,8 +9134,8 @@ class ActionRandomInt(ActionCell):
         return self._output
 
     def evaluate(self):
-        min_value = self.get_parameter_value(self.min_value)
-        max_value = self.get_parameter_value(self.max_value)
+        min_value = self.get_socket_value(self.min_value)
+        max_value = self.get_socket_value(self.max_value)
         if is_waiting(max_value, min_value):
             return
         if min_value > max_value:
@@ -9155,8 +9161,8 @@ class ActionRandomFloat(ActionCell):
         return self._output
 
     def evaluate(self):
-        min_value = self.get_parameter_value(self.min_value)
-        max_value = self.get_parameter_value(self.max_value)
+        min_value = self.get_socket_value(self.min_value)
+        max_value = self.get_socket_value(self.max_value)
         if is_waiting(min_value, max_value):
             return
         if min_value > max_value:
@@ -9184,18 +9190,17 @@ class ActionTranslate(ActionCell):
         self._old_values = None
 
     def evaluate(self):
-        STATUS_WAITING = LogicNetworkCell.STATUS_WAITING
-        condition = self.get_parameter_value(self.condition)
+        condition = self.get_socket_value(self.condition)
         if not_met(condition):
             self._set_value(False)
             return self._set_ready()
-        moving_object = self.get_parameter_value(self.moving_object)
-        vect = self.get_parameter_value(self.vect)
+        moving_object = self.get_socket_value(self.moving_object)
+        vect = self.get_socket_value(self.vect)
         dx = vect.x
         dy = vect.y
         dz = vect.z
-        speed = self.get_parameter_value(self.speed)
-        local = self.get_parameter_value(self.local)
+        speed = self.get_socket_value(self.speed)
+        local = self.get_socket_value(self.local)
         if is_waiting(
             vect,
             dx,
@@ -9270,10 +9275,10 @@ class SetGamma(ActionCell):
 
     def evaluate(self):
         self.done = False
-        condition = self.get_parameter_value(self.condition)
+        condition = self.get_socket_value(self.condition)
         if not_met(condition):
             return
-        value = self.get_parameter_value(self.value)
+        value = self.get_socket_value(self.value)
         if is_invalid(value):
             return
         self._set_ready()
@@ -9298,10 +9303,10 @@ class SetExposure(ActionCell):
 
     def evaluate(self):
         self.done = False
-        condition = self.get_parameter_value(self.condition)
+        condition = self.get_socket_value(self.condition)
         if not_met(condition):
             return
-        value = self.get_parameter_value(self.value)
+        value = self.get_socket_value(self.value)
         if is_invalid(value):
             return
         self._set_ready()
@@ -9326,10 +9331,10 @@ class SetEeveeAO(ActionCell):
 
     def evaluate(self):
         self.done = False
-        condition = self.get_parameter_value(self.condition)
+        condition = self.get_socket_value(self.condition)
         if not_met(condition):
             return
-        value = self.get_parameter_value(self.value)
+        value = self.get_socket_value(self.value)
         if is_invalid(value):
             return
         self._set_ready()
@@ -9352,10 +9357,10 @@ class SetEeveeBloom(ActionCell):
 
     def evaluate(self):
         self.done = False
-        condition = self.get_parameter_value(self.condition)
+        condition = self.get_socket_value(self.condition)
         if not_met(condition):
             return
-        value = self.get_parameter_value(self.value)
+        value = self.get_socket_value(self.value)
         if is_invalid(value):
             return
         self._set_ready()
@@ -9378,10 +9383,10 @@ class SetEeveeSSR(ActionCell):
 
     def evaluate(self):
         self.done = False
-        condition = self.get_parameter_value(self.condition)
+        condition = self.get_socket_value(self.condition)
         if not_met(condition):
             return
-        value = self.get_parameter_value(self.value)
+        value = self.get_socket_value(self.value)
         if is_invalid(value):
             return
         self._set_ready()
@@ -9404,10 +9409,10 @@ class SetEeveeVolumetrics(ActionCell):
 
     def evaluate(self):
         self.done = False
-        condition = self.get_parameter_value(self.condition)
+        condition = self.get_socket_value(self.condition)
         if not_met(condition):
             return
-        value = self.get_parameter_value(self.value)
+        value = self.get_socket_value(self.value)
         if is_invalid(value):
             return
         self._set_ready()
@@ -9432,10 +9437,10 @@ class SetEeveeSMAA(ActionCell):
 
     def evaluate(self):
         self.done = False
-        condition = self.get_parameter_value(self.condition)
+        condition = self.get_socket_value(self.condition)
         if not_met(condition):
             return
-        value = self.get_parameter_value(self.value)
+        value = self.get_socket_value(self.value)
         if is_invalid(value):
             return
         self._set_ready()
@@ -9458,10 +9463,10 @@ class SetEeveeSMAAQuality(ActionCell):
 
     def evaluate(self):
         self.done = False
-        condition = self.get_parameter_value(self.condition)
+        condition = self.get_socket_value(self.condition)
         if not_met(condition):
             return
-        value = self.get_parameter_value(self.value)
+        value = self.get_socket_value(self.value)
         if is_invalid(value):
             return
         self._set_ready()
@@ -9485,14 +9490,12 @@ class SetLightEnergy(ActionCell):
 
     def evaluate(self):
         self.done = False
-        STATUS_WAITING = LogicNetworkCell.STATUS_WAITING
-
-        condition = self.get_parameter_value(self.condition)
+        condition = self.get_socket_value(self.condition)
         if not_met(condition):
             self._set_value(False)
             return self._set_ready()
-        lamp = self.get_parameter_value(self.lamp)
-        energy = self.get_parameter_value(self.energy)
+        lamp = self.get_socket_value(self.lamp)
+        energy = self.get_socket_value(self.energy)
         if is_waiting(lamp, energy):
             return
         self._set_ready()
@@ -9516,14 +9519,12 @@ class SetLightShadow(ActionCell):
 
     def evaluate(self):
         self.done = False
-        STATUS_WAITING = LogicNetworkCell.STATUS_WAITING
-
-        condition = self.get_parameter_value(self.condition)
+        condition = self.get_socket_value(self.condition)
         if not_met(condition):
             self._set_value(False)
             return self._set_ready()
-        lamp = self.get_parameter_value(self.lamp)
-        use_shadow = self.get_parameter_value(self.use_shadow)
+        lamp = self.get_socket_value(self.lamp)
+        use_shadow = self.get_socket_value(self.use_shadow)
         if is_waiting(lamp, use_shadow):
             return
         self._set_ready()
@@ -9547,13 +9548,12 @@ class SetLightColor(ActionCell):
 
     def evaluate(self):
         self.done = False
-        STATUS_WAITING = LogicNetworkCell.STATUS_WAITING
-        condition = self.get_parameter_value(self.condition)
+        condition = self.get_socket_value(self.condition)
         if not_met(condition):
             self._set_value(False)
             return self._set_ready()
-        lamp = self.get_parameter_value(self.lamp)
-        color = self.get_parameter_value(self.color)
+        lamp = self.get_socket_value(self.lamp)
+        color = self.get_socket_value(self.color)
         if is_waiting(lamp, color):
             return
         self._set_ready()
@@ -9574,7 +9574,7 @@ class GetLightEnergy(ActionCell):
         return self.energy
 
     def evaluate(self):
-        lamp = self.get_parameter_value(self.lamp)
+        lamp = self.get_socket_value(self.lamp)
         if is_waiting(lamp):
             return
         self._set_ready()
@@ -9594,7 +9594,7 @@ class GetLightColor(ActionCell):
         return self.color
 
     def evaluate(self):
-        lamp = self.get_parameter_value(self.lamp)
+        lamp = self.get_socket_value(self.lamp)
         if is_waiting(lamp):
             return
         self._set_ready()
@@ -9616,14 +9616,14 @@ class ActionMoveTo(ActionCell):
         self.distance = None
 
     def evaluate(self):  # the actual execution of this cell
-        condition = self.get_parameter_value(self.condition)
+        condition = self.get_socket_value(self.condition)
         if not_met(condition):
             return
-        moving_object = self.get_parameter_value(self.moving_object)
-        destination_point = self.get_parameter_value(self.destination_point)
-        speed = self.get_parameter_value(self.speed)
-        distance = self.get_parameter_value(self.distance)
-        dynamic = self.get_parameter_value(self.dynamic)
+        moving_object = self.get_socket_value(self.moving_object)
+        destination_point = self.get_socket_value(self.destination_point)
+        speed = self.get_socket_value(self.speed)
+        distance = self.get_socket_value(self.distance)
+        dynamic = self.get_socket_value(self.dynamic)
         if hasattr(destination_point, 'worldPosition'):
             destination_point = destination_point.worldPosition
         if is_waiting(
@@ -9655,15 +9655,14 @@ class ActionTrackTo(ActionCell):
 
     def evaluate(self):
         self._set_value(False)
-        STATUS_WAITING = LogicNetworkCell.STATUS_WAITING
-        condition = self.get_parameter_value(self.condition)
+        condition = self.get_socket_value(self.condition)
         if not_met(condition):
             return self._set_ready()
-        moving_object = self.get_parameter_value(self.moving_object)
-        target_object = self.get_parameter_value(self.target_object)
-        speed = self.get_parameter_value(self.speed)
-        rot_axis = self.get_parameter_value(self.rot_axis)
-        front_axis = self.get_parameter_value(self.front_axis)
+        moving_object = self.get_socket_value(self.moving_object)
+        target_object = self.get_socket_value(self.target_object)
+        speed = self.get_socket_value(self.speed)
+        rot_axis = self.get_socket_value(self.rot_axis)
+        front_axis = self.get_socket_value(self.front_axis)
         if is_waiting(speed, rot_axis, front_axis):
             return
         if is_invalid(moving_object):
@@ -9717,15 +9716,15 @@ class ActionRotateTo(ActionCell):
 
     def evaluate(self):
         self._set_value(False)
-        condition = self.get_parameter_value(self.condition)
+        condition = self.get_socket_value(self.condition)
         if not_met(condition):
             return
-        moving_object = self.get_parameter_value(self.moving_object)
-        target_point = self.get_parameter_value(self.target_point)
+        moving_object = self.get_socket_value(self.moving_object)
+        target_point = self.get_socket_value(self.target_point)
         if hasattr(target_point, 'worldPosition'):
             target_point = target_point.worldPosition
-        rot_axis = self.get_parameter_value(self.rot_axis)
-        front_axis = self.get_parameter_value(self.front_axis)
+        rot_axis = self.get_socket_value(self.rot_axis)
+        front_axis = self.get_socket_value(self.front_axis)
         if is_waiting(moving_object, target_point, rot_axis, front_axis):
             return
         self._set_ready()
@@ -9799,22 +9798,21 @@ class ActionNavigateWithNavmesh(ActionCell):
         self._motion_path = None
 
     def evaluate(self):
-        STATUS_WAITING = LogicNetworkCell.STATUS_WAITING
-        condition = self.get_parameter_value(self.condition)
+        condition = self.get_socket_value(self.condition)
         if not_met(condition):
             self._set_ready()
             return
-        moving_object = self.get_parameter_value(self.moving_object)
-        rotating_object = self.get_parameter_value(self.rotating_object)
-        navmesh_object = self.get_parameter_value(self.navmesh_object)
-        destination_point = self.get_parameter_value(self.destination_point)
-        move_dynamic = self.get_parameter_value(self.move_dynamic)
-        linear_speed = self.get_parameter_value(self.linear_speed)
-        reach_threshold = self.get_parameter_value(self.reach_threshold)
-        look_at = self.get_parameter_value(self.look_at)
-        rot_axis = self.get_parameter_value(self.rot_axis)
-        front_axis = self.get_parameter_value(self.front_axis)
-        rot_speed = self.get_parameter_value(self.rot_speed)
+        moving_object = self.get_socket_value(self.moving_object)
+        rotating_object = self.get_socket_value(self.rotating_object)
+        navmesh_object = self.get_socket_value(self.navmesh_object)
+        destination_point = self.get_socket_value(self.destination_point)
+        move_dynamic = self.get_socket_value(self.move_dynamic)
+        linear_speed = self.get_socket_value(self.linear_speed)
+        reach_threshold = self.get_socket_value(self.reach_threshold)
+        look_at = self.get_socket_value(self.look_at)
+        rot_axis = self.get_socket_value(self.rot_axis)
+        front_axis = self.get_socket_value(self.front_axis)
+        rot_speed = self.get_socket_value(self.rot_speed)
         if is_invalid(
             destination_point,
             move_dynamic,
@@ -9917,50 +9915,44 @@ class ActionFollowPath(ActionCell):
 
     def evaluate(self):
         self.done = False
-        STATUS_WAITING = LogicNetworkCell.STATUS_WAITING
-        condition = self.get_parameter_value(self.condition)
+        condition = self.get_socket_value(self.condition)
         if not_met(condition):
             self._motion_path = None
             self._set_ready()
             return
-        moving_object = self.get_parameter_value(self.moving_object)
-        rotating_object = self.get_parameter_value(self.rotating_object)
-        path_parent = self.get_parameter_value(self.path_parent)
-        navmesh_object = self.get_parameter_value(self.navmesh_object)
-        move_dynamic = self.get_parameter_value(self.move_dynamic)
-        linear_speed = self.get_parameter_value(self.linear_speed)
-        reach_threshold = self.get_parameter_value(self.reach_threshold)
-        look_at = self.get_parameter_value(self.look_at)
-        rot_axis = self.get_parameter_value(self.rot_axis)
-        front_axis = self.get_parameter_value(self.front_axis)
-        rot_speed = self.get_parameter_value(self.rot_speed)
-        loop = self.get_parameter_value(self.loop)
-        if self.is_waiting:
+        moving_object = self.get_socket_value(self.moving_object)
+        rotating_object = self.get_socket_value(self.rotating_object)
+        path_parent = self.get_socket_value(self.path_parent)
+        navmesh_object = self.get_socket_value(self.navmesh_object)
+        move_dynamic = self.get_socket_value(self.move_dynamic)
+        linear_speed = self.get_socket_value(self.linear_speed)
+        reach_threshold = self.get_socket_value(self.reach_threshold)
+        look_at = self.get_socket_value(self.look_at)
+        rot_axis = self.get_socket_value(self.rot_axis)
+        front_axis = self.get_socket_value(self.front_axis)
+        rot_speed = self.get_socket_value(self.rot_speed)
+        loop = self.get_socket_value(self.loop)
+        if is_invalid(
+            path_parent,
+            move_dynamic,
+            linear_speed,
+            reach_threshold,
+            look_at,
+            rot_axis,
+            front_axis,
+            loop
+        ):
             return
         if is_invalid(rot_speed):
             rot_speed = 0
         if loop is None:
             return
-        self._set_ready()
-        self._set_value(False)
         if is_invalid(moving_object):
             return
         if is_invalid(navmesh_object):
             navmesh_object = None
-        if is_invalid(path_parent):
-            return
-        if move_dynamic is None:
-            return
-        if linear_speed is None:
-            return
-        if reach_threshold is None:
-            return
-        if look_at is None:
-            return
-        if rot_axis is None:
-            return
-        if front_axis is None:
-            return
+        self._set_ready()
+        self._set_value(False)
         if (self._motion_path is None) or (self._motion_path.loop != loop):
             self.generate_path(
                 moving_object.worldPosition,
@@ -10039,8 +10031,8 @@ class ParameterDistance(ParameterCell):
         self.paramb = None
 
     def evaluate(self):
-        parama = self.get_parameter_value(self.parama)
-        paramb = self.get_parameter_value(self.paramb)
+        parama = self.get_socket_value(self.parama)
+        paramb = self.get_socket_value(self.paramb)
         if is_waiting(parama, paramb):
             return
         self._set_ready()
@@ -10063,14 +10055,14 @@ class ActionReplaceMesh(ActionCell):
 
     def evaluate(self):
         self.done = False
-        condition = self.get_parameter_value(self.condition)
+        condition = self.get_socket_value(self.condition)
         self._set_ready()
         if not condition:
             return
-        target = self.get_parameter_value(self.target_game_object)
-        mesh = self.get_parameter_value(self.new_mesh_name)
-        display = self.get_parameter_value(self.use_display)
-        physics = self.get_parameter_value(self.use_physics)
+        target = self.get_socket_value(self.target_game_object)
+        mesh = self.get_socket_value(self.new_mesh_name)
+        display = self.get_socket_value(self.use_display)
+        physics = self.get_socket_value(self.use_physics)
         if is_invalid(target):
             return
         if mesh is None:
@@ -10099,13 +10091,13 @@ class RemovePhysicsConstraint(ActionCell):
 
     def evaluate(self):
         self.done = False
-        condition = self.get_parameter_value(self.condition)
+        condition = self.get_socket_value(self.condition)
         if not condition:
             return
-        obj = self.get_parameter_value(self.object)
+        obj = self.get_socket_value(self.object)
         if is_invalid(obj):
             return
-        name = self.get_parameter_value(self.name)
+        name = self.get_socket_value(self.name)
         if is_invalid(name):
             return
         self._set_ready()
@@ -10134,18 +10126,18 @@ class AddPhysicsConstraint(ActionCell):
 
     def evaluate(self):
         self.done = False
-        condition = self.get_parameter_value(self.condition)
+        condition = self.get_socket_value(self.condition)
         if not_met(condition):
             return
-        target = self.get_parameter_value(self.target)
-        child = self.get_parameter_value(self.child)
-        name = self.get_parameter_value(self.name)
-        constraint = self.get_parameter_value(self.constraint)
-        pivot = self.get_parameter_value(self.pivot)
-        use_limit = self.get_parameter_value(self.use_limit)
-        use_world = self.get_parameter_value(self.use_world)
-        axis_limits = self.get_parameter_value(self.axis_limits)
-        linked_col = self.get_parameter_value(self.linked_col)
+        target = self.get_socket_value(self.target)
+        child = self.get_socket_value(self.child)
+        name = self.get_socket_value(self.name)
+        constraint = self.get_socket_value(self.constraint)
+        pivot = self.get_socket_value(self.pivot)
+        use_limit = self.get_socket_value(self.use_limit)
+        use_world = self.get_socket_value(self.use_world)
+        axis_limits = self.get_socket_value(self.axis_limits)
+        linked_col = self.get_socket_value(self.linked_col)
         if is_invalid(
             target,
             child,
@@ -10205,14 +10197,14 @@ class ActionAlignAxisToVector(ActionCell):
 
     def evaluate(self):
         self.done = False
-        condition = self.get_parameter_value(self.condition)
+        condition = self.get_socket_value(self.condition)
         self._set_ready()
         if not_met(condition):
             return
-        game_object = self.get_parameter_value(self.game_object)
-        v = self.get_parameter_value(self.vector)
-        axis = self.get_parameter_value(self.axis)
-        factor = self.get_parameter_value(self.factor)
+        game_object = self.get_socket_value(self.game_object)
+        v = self.get_socket_value(self.vector)
+        axis = self.get_socket_value(self.axis)
+        factor = self.get_socket_value(self.factor)
         if is_invalid(game_object):
             return
         if axis is None:
@@ -10246,13 +10238,13 @@ class ActionUpdateBitmapFontQuads(ActionCell):
 
     def evaluate(self):  # no status waiting, test
         self.done = False
-        condition = self.get_parameter_value(self.condition)
+        condition = self.get_socket_value(self.condition)
         if not condition:
             return self._set_ready()
         self._set_ready()
-        game_object = self.get_parameter_value(self.game_object)
-        text = eval(self.get_parameter_value(self.text))
-        grid_size = self.get_parameter_value(self.grid_size)
+        game_object = self.get_socket_value(self.game_object)
+        text = eval(self.get_socket_value(self.text))
+        grid_size = self.get_socket_value(self.grid_size)
         if is_invalid(game_object):
             return
         if text is None:
@@ -10306,11 +10298,11 @@ class ActionSetCurrentScene(ActionCell):
 
     def evaluate(self):
         self.done = False
-        condition = self.get_parameter_value(self.condition)
+        condition = self.get_socket_value(self.condition)
         self._set_ready()
         if not condition:
             return
-        scene_name = self.get_parameter_value(self.scene_name)
+        scene_name = self.get_socket_value(self.scene_name)
         if scene_name is None:
             return
         current_scene = logic.getCurrentScene()
@@ -10332,11 +10324,11 @@ class ActionStringOp(ActionCell):
 
     def evaluate(self):
         self._set_ready()
-        code = self.get_parameter_value(self.opcode)
-        condition = self.get_parameter_value(self.condition)
-        input_string = self.get_parameter_value(self.input_string)
-        input_param_a = self.get_parameter_value(self.input_param_a)
-        input_param_b = self.get_parameter_value(self.input_param_b)
+        code = self.get_socket_value(self.opcode)
+        condition = self.get_socket_value(self.condition)
+        input_string = self.get_socket_value(self.input_string)
+        input_param_a = self.get_socket_value(self.input_param_a)
+        input_param_b = self.get_socket_value(self.input_param_b)
         if not condition:
             return
         if input_string is None:
@@ -10446,8 +10438,8 @@ class ParameterMathFun(ParameterCell):
 
     def evaluate(self):
         self._set_ready()
-        a = self.get_parameter_value(self.a)
-        b = self.get_parameter_value(self.b)
+        a = self.get_socket_value(self.a)
+        b = self.get_socket_value(self.b)
         olds = self._previous_values
         do_update = (
             (a != olds[0]) or

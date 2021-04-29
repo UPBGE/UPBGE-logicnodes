@@ -5636,7 +5636,7 @@ class NLOnInitConditionNode(bpy.types.Node, NLConditionNode):
         self.outputs.new(NLConditionSocket.bl_idname, "Init")
 
     def get_netlogic_class_name(self):
-        return "bgelogic.GEOnInit"
+        return "bgelogic.GE_OnInit"
 
     def init_cell_fields(self, cell_varname, uids, line_writer):
         NetLogicStatementGenerator.init_cell_fields(
@@ -7442,8 +7442,7 @@ class NLToggleGameObjectGamePropertyActionNode(bpy.types.Node, NLActionNode):
         return [
             "condition",
             "game_object",
-            "property_name",
-            "property_value"
+            "property_name"
         ]
 
     def get_output_socket_varnames(self):
@@ -11155,7 +11154,7 @@ class NLParameterReceiveMessage(bpy.types.Node, NLParameterNode):
         self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Subject")
         self.outputs.new(NLConditionSocket.bl_idname, "Received")
         self.outputs.new(NLParameterSocket.bl_idname, "Content")
-        self.outputs.new(NLGameObjectSocket.bl_idname, "Target")
+        self.outputs.new(NLGameObjectSocket.bl_idname, "Messenger")
 
     def get_input_sockets_field_names(self):
         return ['subject']
@@ -11236,7 +11235,8 @@ class NLActionCreateMessage(bpy.types.Node, NLActionNode):
         self.inputs.new(NLConditionSocket.bl_idname, "Condition")
         self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Subject")
         self.inputs.new(NLOptionalValueFieldSocket.bl_idname, "Content")
-        self.inputs.new(NLGameObjectSocket.bl_idname, "Target")
+        self.inputs.new(NLGameObjectSocket.bl_idname, "Messenger")
+        self.inputs[-1].use_owner = True
         self.outputs.new(NLConditionSocket.bl_idname, 'Done')
 
     def update_draw(self):
