@@ -4840,8 +4840,8 @@ class ActionSetGameObjectGameProperty(ActionCell):
 
     def evaluate(self):
         self.done = False
-        condition_value = self.get_parameter_value(self.condition)
-        if not_met(condition_value):
+        condition = self.get_parameter_value(self.condition)
+        if not_met(condition):
             self._set_ready()
             return
         game_object_value = self.get_parameter_value(self.game_object)
@@ -4851,7 +4851,7 @@ class ActionSetGameObjectGameProperty(ActionCell):
             return
         if is_invalid(game_object_value):
             return
-        if condition_value:
+        if condition:
             self.done = True
             self._set_ready()
             game_object_value[property_name_value] = property_value_value
@@ -4907,8 +4907,8 @@ class ActionSetNodeTreeNodeValue(ActionCell):
 
     def evaluate(self):
         self.done = False
-        condition_value = self.get_parameter_value(self.condition)
-        if not_met(condition_value):
+        condition = self.get_parameter_value(self.condition)
+        if not_met(condition):
             self._set_ready()
             return
         tree_name = self.get_parameter_value(self.tree_name)
@@ -4919,7 +4919,7 @@ class ActionSetNodeTreeNodeValue(ActionCell):
             return
         if is_invalid(tree_name):
             return
-        if condition_value:
+        if condition:
             self.done = True
             self._set_ready()
             (
@@ -4947,8 +4947,8 @@ class ActionSetNodeTreeNodeAttribute(ActionCell):
 
     def evaluate(self):
         self.done = False
-        condition_value = self.get_parameter_value(self.condition)
-        if not_met(condition_value):
+        condition = self.get_parameter_value(self.condition)
+        if not_met(condition):
             self._set_ready()
             return
         tree_name = self.get_parameter_value(self.tree_name)
@@ -4960,7 +4960,7 @@ class ActionSetNodeTreeNodeAttribute(ActionCell):
             return
         if is_invalid(tree_name):
             return
-        if condition_value:
+        if condition:
             self._set_ready()
             target = (
                 bpy
@@ -4991,8 +4991,8 @@ class ActionSetMaterialNodeValue(ActionCell):
 
     def evaluate(self):
         self.done = False
-        condition_value = self.get_parameter_value(self.condition)
-        if not_met(condition_value):
+        condition = self.get_parameter_value(self.condition)
+        if not_met(condition):
             self._set_ready()
             return
         mat_name = self.get_parameter_value(self.mat_name)
@@ -5003,7 +5003,7 @@ class ActionSetMaterialNodeValue(ActionCell):
             return
         if is_invalid(mat_name):
             return
-        if condition_value:
+        if condition:
             self.done = True
             self._set_ready()
             (
@@ -5032,8 +5032,8 @@ class ActionSetMaterialNodeAttribute(ActionCell):
 
     def evaluate(self):
         self.done = False
-        condition_value = self.get_parameter_value(self.condition)
-        if not_met(condition_value):
+        condition = self.get_parameter_value(self.condition)
+        if not_met(condition):
             self._set_ready()
             return
         mat_name = self.get_parameter_value(self.mat_name)
@@ -5045,7 +5045,7 @@ class ActionSetMaterialNodeAttribute(ActionCell):
             return
         if is_invalid(mat_name):
             return
-        if condition_value:
+        if condition:
             self._set_ready()
             target = (
                 bpy.data.materials[mat_name]
@@ -5207,8 +5207,8 @@ class ActionToggleGameObjectGameProperty(ActionCell):
 
     def evaluate(self):
         self.done = False
-        condition_value = self.get_parameter_value(self.condition)
-        if not_met(condition_value):
+        condition = self.get_parameter_value(self.condition)
+        if not_met(condition):
             self._set_ready()
             return
         game_object_value = self.get_parameter_value(self.game_object)
@@ -5219,7 +5219,7 @@ class ActionToggleGameObjectGameProperty(ActionCell):
         if is_invalid(game_object_value):
             return
         self._set_ready()
-        if condition_value:
+        if condition:
             value = game_object_value[property_name_value]
             game_object_value[property_name_value] = not value
         self.done = True
@@ -5671,8 +5671,8 @@ class VehicleApplyBraking(ActionCell):
 
     def evaluate(self):
         self.done = False
-        condition_value = self.get_parameter_value(self.condition)
-        if is_waiting(condition_value):
+        condition = self.get_parameter_value(self.condition)
+        if is_waiting(condition):
             return
         constraint = self.get_parameter_value(self.constraint)
         value_type = self.get_parameter_value(self.value_type)
@@ -5681,7 +5681,7 @@ class VehicleApplyBraking(ActionCell):
         if is_waiting(Constraint, value_type, wheelcount, power):
             return
 
-        if not condition_value:
+        if not condition:
             if self._reset:
                 for wheel in range(constraint.getNumWheels()):
                     constraint.applyBraking(0, wheel)
@@ -5718,8 +5718,8 @@ class VehicleApplySteering(ActionCell):
 
     def evaluate(self):
         self.done = False
-        condition_value = self.get_parameter_value(self.condition)
-        if not_met(condition_value):
+        condition = self.get_parameter_value(self.condition)
+        if not_met(condition):
             return
         constraint = self.get_parameter_value(self.constraint)
         value_type = self.get_parameter_value(self.value_type)
@@ -5775,8 +5775,8 @@ class VehicleSetAttributes(ActionCell):
 
     def evaluate(self):
         self.done = False
-        condition_value = self.get_parameter_value(self.condition)
-        if not_met(condition_value):
+        condition = self.get_parameter_value(self.condition)
+        if not_met(condition):
             return
         constraint = self.get_parameter_value(self.constraint)
         value_type = self.get_parameter_value(self.value_type)
