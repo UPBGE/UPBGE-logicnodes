@@ -4947,7 +4947,6 @@ class ActionSetNodeTreeNodeAttribute(ActionCell):
 
     def evaluate(self):
         self.done = False
-        STATUS_WAITING = LogicNetworkCell.STATUS_WAITING
         condition_value = self.get_parameter_value(self.condition)
         if not_met(condition_value):
             self._set_ready()
@@ -5033,7 +5032,6 @@ class ActionSetMaterialNodeAttribute(ActionCell):
 
     def evaluate(self):
         self.done = False
-        STATUS_WAITING = LogicNetworkCell.STATUS_WAITING
         condition_value = self.get_parameter_value(self.condition)
         if not_met(condition_value):
             self._set_ready()
@@ -5209,7 +5207,6 @@ class ActionToggleGameObjectGameProperty(ActionCell):
 
     def evaluate(self):
         self.done = False
-        STATUS_WAITING = LogicNetworkCell.STATUS_WAITING
         condition_value = self.get_parameter_value(self.condition)
         if not_met(condition_value):
             self._set_ready()
@@ -6086,7 +6083,6 @@ class ActionSetGameObjectVisibility(ActionCell):
     def evaluate(self):
         self.done = False
         condition = self.get_parameter_value(self.condition)
-        STATUS_WAITING = LogicNetworkCell.STATUS_WAITING
         if not_met(condition):
             self._set_ready()
             return
@@ -7018,7 +7014,6 @@ class ActionPerformanceProfile(ActionCell):
     def evaluate(self):
         self.done = False
         self.data = '----------------------------------Start Profile\n'
-        STATUS_WAITING = LogicNetworkCell.STATUS_WAITING
         condition = self.get_parameter_value(self.condition)
         if not_met(condition):
             self._set_ready()
@@ -7291,7 +7286,6 @@ class ActionTimeFilter(ActionCell):
             if delta < self._trigger_delay:
                 self._set_value(False)
                 return
-        STATUS_WAITING = LogicNetworkCell.STATUS_WAITING
         condition = self.get_parameter_value(self.condition)
         delay = self.get_parameter_value(self.delay)
         if is_waiting(condition, delay):
@@ -8980,7 +8974,6 @@ class ParameterGetGlobalValue(ParameterCell):
         self.default = None
 
     def evaluate(self):
-        STATUS_WAITING = LogicNetworkCell.STATUS_WAITING
         data_id = self.get_parameter_value(self.data_id)
         key = self.get_parameter_value(self.key)
         default = self.get_parameter_value(self.default)
@@ -9056,7 +9049,6 @@ class ActionSetGlobalValue(ActionCell):
 
     def evaluate(self):
         self.done = False
-        STATUS_WAITING = LogicNetworkCell.STATUS_WAITING
         condition = self.get_parameter_value(self.condition)
         if not_met(condition):
             self._set_ready()
@@ -9184,7 +9176,6 @@ class ActionTranslate(ActionCell):
         self._old_values = None
 
     def evaluate(self):
-        STATUS_WAITING = LogicNetworkCell.STATUS_WAITING
         condition = self.get_parameter_value(self.condition)
         if not_met(condition):
             self._set_value(False)
@@ -9485,8 +9476,6 @@ class SetLightEnergy(ActionCell):
 
     def evaluate(self):
         self.done = False
-        STATUS_WAITING = LogicNetworkCell.STATUS_WAITING
-
         condition = self.get_parameter_value(self.condition)
         if not_met(condition):
             self._set_value(False)
@@ -9516,8 +9505,6 @@ class SetLightShadow(ActionCell):
 
     def evaluate(self):
         self.done = False
-        STATUS_WAITING = LogicNetworkCell.STATUS_WAITING
-
         condition = self.get_parameter_value(self.condition)
         if not_met(condition):
             self._set_value(False)
@@ -9547,7 +9534,6 @@ class SetLightColor(ActionCell):
 
     def evaluate(self):
         self.done = False
-        STATUS_WAITING = LogicNetworkCell.STATUS_WAITING
         condition = self.get_parameter_value(self.condition)
         if not_met(condition):
             self._set_value(False)
@@ -9655,7 +9641,6 @@ class ActionTrackTo(ActionCell):
 
     def evaluate(self):
         self._set_value(False)
-        STATUS_WAITING = LogicNetworkCell.STATUS_WAITING
         condition = self.get_parameter_value(self.condition)
         if not_met(condition):
             return self._set_ready()
@@ -9799,7 +9784,6 @@ class ActionNavigateWithNavmesh(ActionCell):
         self._motion_path = None
 
     def evaluate(self):
-        STATUS_WAITING = LogicNetworkCell.STATUS_WAITING
         condition = self.get_parameter_value(self.condition)
         if not_met(condition):
             self._set_ready()
@@ -9917,7 +9901,6 @@ class ActionFollowPath(ActionCell):
 
     def evaluate(self):
         self.done = False
-        STATUS_WAITING = LogicNetworkCell.STATUS_WAITING
         condition = self.get_parameter_value(self.condition)
         if not_met(condition):
             self._motion_path = None
@@ -9935,32 +9918,27 @@ class ActionFollowPath(ActionCell):
         front_axis = self.get_parameter_value(self.front_axis)
         rot_speed = self.get_parameter_value(self.rot_speed)
         loop = self.get_parameter_value(self.loop)
-        if self.is_waiting:
+        if is_invalid(
+            path_parent,
+            move_dynamic,
+            linear_speed,
+            reach_threshold,
+            look_at,
+            rot_axis,
+            front_axis,
+            loop
+        ):
             return
         if is_invalid(rot_speed):
             rot_speed = 0
         if loop is None:
             return
-        self._set_ready()
-        self._set_value(False)
         if is_invalid(moving_object):
             return
         if is_invalid(navmesh_object):
             navmesh_object = None
-        if is_invalid(path_parent):
-            return
-        if move_dynamic is None:
-            return
-        if linear_speed is None:
-            return
-        if reach_threshold is None:
-            return
-        if look_at is None:
-            return
-        if rot_axis is None:
-            return
-        if front_axis is None:
-            return
+        self._set_ready()
+        self._set_value(False)
         if (self._motion_path is None) or (self._motion_path.loop != loop):
             self.generate_path(
                 moving_object.worldPosition,
