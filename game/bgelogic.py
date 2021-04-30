@@ -7440,6 +7440,8 @@ class ActionEndObject(ActionCell):
         self._set_ready()
         if is_invalid(game_object):
             return
+        if game_object is self.network._owner:
+            self.network.clear_events()
         game_object.endObject()
         self.done = True
 

@@ -5205,6 +5205,7 @@ _nodes.append(NLParameterPythonModuleFunction)
 class NLParameterBooleanValue(bpy.types.Node, NLParameterNode):
     bl_idname = "NLParameterBooleanValue"
     bl_label = "Boolean"
+    bl_icon = 'CHECKBOX_HLT'
     nl_category = "Values"
     nl_subcat = 'Simple'
 
@@ -5281,6 +5282,7 @@ _nodes.append(NLParameterIntValue)
 
 class NLParameterStringValue(bpy.types.Node, NLParameterNode):
     bl_idname = "NLParameterStringValue"
+    bl_icon = 'FONT_DATA'
     bl_label = "String"
     nl_category = "Values"
     nl_subcat = 'Simple'

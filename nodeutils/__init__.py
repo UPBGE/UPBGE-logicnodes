@@ -55,6 +55,7 @@ _cat_icons = {
     'Ray Casts': 'TRACKING_FORWARDS_SINGLE',
     'Render': 'SCENE',
     'Scene': 'SCENE_DATA',
+    'Simple': 'CON_TRANSFORM',
     'Sound': 'OUTLINER_DATA_SPEAKER',
     'Time': 'TIME',
     'Transformation': 'VIEW3D',
@@ -198,7 +199,7 @@ def register_node_categories(identifier, cat_list):
         for cat in li:
             layout.menu(
                 "NODE_MT_category_%s" % cat.identifier,
-                icon=_cat_icons.get(cat.identifier, 'X')
+                icon=_cat_icons.get(cat.identifier, 'DISCLOSURE_TRI_RIGHT')
             )
             if cat.identifier in _cat_separators:
                 layout.separator()
