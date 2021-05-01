@@ -1153,6 +1153,7 @@ class NLGamePropertySocket(bpy.types.NodeSocket, NetLogicSocketType):
         update=update_tree_code
     )
     ref_index: bpy.props.IntProperty(default=0)
+    use_custom: bpy.props.BoolProperty(default=True, name='Free Edit')
 
     def draw_color(self, context, node):
         return PARAMETER_SOCKET_COLOR
@@ -1179,9 +1180,10 @@ class NLGamePropertySocket(bpy.types.NodeSocket, NetLogicSocketType):
             if self.name:
                 row = col.row()
                 row.label(text=self.name)
+                row.prop(self, 'use_custom', text='', icon='GREASEPENCIL')
             if game_object or game_obj_socket.is_linked:
                 # game_object = bpy.data.objects[game_object.split('NLO:')[-1]]
-                if not game_obj_socket.is_linked:
+                if not game_obj_socket.is_linked and not self.use_custom:
                     game = game_object.game
                     col.prop_search(
                         self,
@@ -7670,6 +7672,8 @@ class NLCreateVehicleFromParent(bpy.types.Node, NLActionNode):
         self.inputs[-1].value = 5
         self.inputs.new(NLFloatFieldSocket.bl_idname, "Friction")
         self.inputs[-1].value = 2
+        self.inputs.new(NLPositiveFloatSocket.bl_idname, "Wheel Modifier")
+        self.inputs[-1].value = 1
         self.outputs.new(NLConditionSocket.bl_idname, 'Done')
         self.outputs.new(NLParameterSocket.bl_idname, 'Vehicle Constraint')
         self.outputs.new(NLListSocket.bl_idname, 'Wheels')
@@ -7687,12 +7691,12 @@ class NLCreateVehicleFromParent(bpy.types.Node, NLActionNode):
             'suspension',
             'stiffness',
             'damping',
-            'friction'
+            'friction',
+            'wheel_size'
         ]
 
 
-if not TOO_OLD:
-    _nodes.append(NLCreateVehicleFromParent)
+_nodes.append(NLCreateVehicleFromParent)
 
 
 class NLVehicleApplyEngineForce(bpy.types.Node, NLActionNode):
@@ -7709,12 +7713,15 @@ class NLVehicleApplyEngineForce(bpy.types.Node, NLActionNode):
     def init(self, context):
         NLActionNode.init(self, context)
         self.inputs.new(NLConditionSocket.bl_idname, "Condition")
-        self.inputs.new(NLParameterSocket.bl_idname, "Vehicle Constraint")
+        self.inputs.new(NLGameObjectSocket.bl_idname, "Vehicle")
         self.inputs.new(NLPositiveIntegerFieldSocket.bl_idname, "Wheels")
         self.inputs[-1].value = 2
         self.inputs.new(NLPositiveFloatSocket.bl_idname, "Power")
         self.inputs[-1].value = 1
         self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+
+    def update_draw(self):
+        self.inputs[2].enabled = self.value_type != 'ALL'
 
     def get_output_socket_varnames(self):
         return ["OUT"]
@@ -7726,7 +7733,7 @@ class NLVehicleApplyEngineForce(bpy.types.Node, NLActionNode):
         return "bgelogic.VehicleApplyForce"
 
     def get_input_sockets_field_names(self):
-        return ["condition", "constraint", "wheelcount", 'power']
+        return ["condition", "vehicle", "wheelcount", 'power']
 
     def init_cell_fields(self, cell_varname, uids, line_writer):
         NetLogicStatementGenerator.init_cell_fields(
@@ -7743,8 +7750,7 @@ class NLVehicleApplyEngineForce(bpy.types.Node, NLActionNode):
         )
 
 
-if not TOO_OLD:
-    _nodes.append(NLVehicleApplyEngineForce)
+_nodes.append(NLVehicleApplyEngineForce)
 
 
 class NLVehicleApplyBraking(bpy.types.Node, NLActionNode):
@@ -7761,12 +7767,15 @@ class NLVehicleApplyBraking(bpy.types.Node, NLActionNode):
     def init(self, context):
         NLActionNode.init(self, context)
         self.inputs.new(NLConditionSocket.bl_idname, "Condition")
-        self.inputs.new(NLParameterSocket.bl_idname, "Vehicle Constraint")
+        self.inputs.new(NLGameObjectSocket.bl_idname, "Vehicle")
         self.inputs.new(NLPositiveIntegerFieldSocket.bl_idname, "Wheels")
         self.inputs[-1].value = 2
         self.inputs.new(NLPositiveFloatSocket.bl_idname, "Power")
         self.inputs[-1].value = 1
         self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+
+    def update_draw(self):
+        self.inputs[2].enabled = self.value_type != 'ALL'
 
     def get_output_socket_varnames(self):
         return ["OUT"]
@@ -7778,7 +7787,7 @@ class NLVehicleApplyBraking(bpy.types.Node, NLActionNode):
         return "bgelogic.VehicleApplyBraking"
 
     def get_input_sockets_field_names(self):
-        return ["condition", "constraint", "wheelcount", 'power']
+        return ["condition", "vehicle", "wheelcount", 'power']
 
     def init_cell_fields(self, cell_varname, uids, line_writer):
         NetLogicStatementGenerator.init_cell_fields(
@@ -7795,8 +7804,7 @@ class NLVehicleApplyBraking(bpy.types.Node, NLActionNode):
         )
 
 
-if not TOO_OLD:
-    _nodes.append(NLVehicleApplyBraking)
+_nodes.append(NLVehicleApplyBraking)
 
 
 class NLVehicleApplySteering(bpy.types.Node, NLActionNode):
@@ -7813,11 +7821,14 @@ class NLVehicleApplySteering(bpy.types.Node, NLActionNode):
     def init(self, context):
         NLActionNode.init(self, context)
         self.inputs.new(NLConditionSocket.bl_idname, "Condition")
-        self.inputs.new(NLParameterSocket.bl_idname, "Vehicle Constraint")
+        self.inputs.new(NLGameObjectSocket.bl_idname, "Vehicle")
         self.inputs.new(NLPositiveIntegerFieldSocket.bl_idname, "Wheels")
         self.inputs[-1].value = 2
         self.inputs.new(NLFloatFieldSocket.bl_idname, "Steer")
         self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+
+    def update_draw(self):
+        self.inputs[2].enabled = self.value_type != 'ALL'
 
     def get_output_socket_varnames(self):
         return ["OUT"]
@@ -7829,7 +7840,7 @@ class NLVehicleApplySteering(bpy.types.Node, NLActionNode):
         return "bgelogic.VehicleApplySteering"
 
     def get_input_sockets_field_names(self):
-        return ["condition", "constraint", "wheelcount", 'power']
+        return ["condition", "vehicle", "wheelcount", 'power']
 
     def init_cell_fields(self, cell_varname, uids, line_writer):
         NetLogicStatementGenerator.init_cell_fields(
@@ -7846,8 +7857,7 @@ class NLVehicleApplySteering(bpy.types.Node, NLActionNode):
         )
 
 
-if not TOO_OLD:
-    _nodes.append(NLVehicleApplySteering)
+_nodes.append(NLVehicleApplySteering)
 
 
 class NLVehicleSetAttributes(bpy.types.Node, NLActionNode):
@@ -7878,6 +7888,7 @@ class NLVehicleSetAttributes(bpy.types.Node, NLActionNode):
         self.outputs.new(NLConditionSocket.bl_idname, 'Done')
 
     def update_draw(self):
+        self.inputs[2].enabled = self.value_type != 'ALL'
         ipts = self.inputs
         ipts[4].enabled = ipts[3].value
         ipts[6].enabled = ipts[5].value
@@ -7923,8 +7934,7 @@ class NLVehicleSetAttributes(bpy.types.Node, NLActionNode):
         )
 
 
-if not TOO_OLD:
-    _nodes.append(NLVehicleSetAttributes)
+_nodes.append(NLVehicleSetAttributes)
 
 
 class NLSetObjectAttributeActionNode(bpy.types.Node, NLActionNode):
@@ -10666,6 +10676,28 @@ class NLParameterAxisVector(bpy.types.Node, NLParameterNode):
 
 
 _nodes.append(NLParameterAxisVector)
+
+
+class NLGetObjectDataName(bpy.types.Node, NLParameterNode):
+    bl_idname = "NLGetObjectDataName"
+    bl_label = "Get Unique Name"
+    bl_icon = 'FONT_DATA'
+    nl_category = "Objects"
+    nl_subcat = 'Data'
+
+    def init(self, context):
+        NLParameterNode.init(self, context)
+        self.inputs.new(NLGameObjectSocket.bl_idname, "Object")
+        self.outputs.new(NLParameterSocket.bl_idname, "Name")
+
+    def get_netlogic_class_name(self):
+        return "bgelogic.GetObjectDataName"
+
+    def get_input_sockets_field_names(self):
+        return ["game_object"]
+
+
+_nodes.append(NLGetObjectDataName)
 
 
 class NLActionEditArmatureConstraint(bpy.types.Node, NLActionNode):

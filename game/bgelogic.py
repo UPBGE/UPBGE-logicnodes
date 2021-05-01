@@ -2361,6 +2361,19 @@ class ParameterAxisVector(ParameterCell):
         self._set_value(obj.getAxisVect(front_vector))
 
 
+class GetObjectDataName(ParameterCell):
+    def __init__(self):
+        ParameterCell.__init__(self)
+        self.game_object = None
+
+    def evaluate(self):
+        obj = self.get_socket_value(self.game_object)
+        if is_invalid(obj):
+            return
+        self._set_ready()
+        self._set_value(obj.blenderObject.name)
+
+
 class ParameterSwitchValue(ParameterCell):
     def __init__(self):
         ParameterCell.__init__(self)
@@ -5542,6 +5555,7 @@ class ActionCreateVehicleFromParent(ActionCell):
         self.stiffness = None
         self.damping = None
         self.friction = None
+        self.wheel_size = None
         self.done = None
         self.vehicle = None
         self.wheels = None
@@ -5562,15 +5576,23 @@ class ActionCreateVehicleFromParent(ActionCell):
         self.done = False
         game_object = self.get_socket_value(self.game_object)
         if not_met(self.get_socket_value(self.condition)):
-            if game_object.get('vehicle_constraint'):
+            if game_object.get('_vconst'):
                 self._set_ready()
-                self.vehicle = game_object['vehicle_constraint']
+                self.vehicle = game_object['_vconst']
             return
         suspension = self.get_socket_value(self.suspension)
         stiffness = self.get_socket_value(self.stiffness)
         damping = self.get_socket_value(self.damping)
         friction = self.get_socket_value(self.friction)
-        if is_waiting(game_object, suspension, stiffness, damping, friction):
+        wheel_size = self.get_socket_value(self.wheel_size)
+        if is_waiting(
+            game_object,
+            suspension,
+            stiffness,
+            damping,
+            friction,
+            wheel_size
+        ):
             return
         self._set_ready()
         orig_ori = game_object.localOrientation.copy()
@@ -5590,7 +5612,7 @@ class ActionCreateVehicleFromParent(ActionCell):
                     down,
                     axle_dir,
                     suspension,
-                    abs(c.worldScale.x/2),
+                    abs(c.worldScale.x/2) * wheel_size,
                     True
                 )
                 wheels.append(c)
@@ -5602,7 +5624,7 @@ class ActionCreateVehicleFromParent(ActionCell):
                     down,
                     axle_dir,
                     suspension,
-                    abs(c.worldScale.x/2),
+                    abs(c.worldScale.x/2) * wheel_size,
                     False
                 )
                 wheels.append(c)
@@ -5611,7 +5633,7 @@ class ActionCreateVehicleFromParent(ActionCell):
             car.setSuspensionDamping(damping, wheel)
             car.setTyreFriction(friction, wheel)
         game_object.localOrientation = orig_ori
-        self.vehicle = game_object['vehicle_constraint'] = car
+        self.vehicle = game_object['_vconst'] = car
         self.wheels = wheels
         self.done = True
 
@@ -5621,7 +5643,7 @@ class VehicleApplyForce(ActionCell):
         ActionCell.__init__(self)
         self.value_type = str(value_type)
         self.condition = None
-        self.constraint = None
+        self.vehicle = None
         self.wheelcount = None
         self._reset = False
         self.power = None
@@ -5633,23 +5655,22 @@ class VehicleApplyForce(ActionCell):
     def evaluate(self):
         self.done = False
         condition = self.get_socket_value(self.condition)
-        constraint = self.get_socket_value(self.constraint)
+        vehicle = self.get_socket_value(self.vehicle)
+        if is_invalid(vehicle):
+            return
+        constraint = vehicle.get('_vconst', None)
+        if not constraint:
+            return
         if not_met(condition):
-            return
-        if is_invalid(constraint):
-            return
-        value = self.get_socket_value(self.value_type)
-        wheelcount = self.get_socket_value(self.wheelcount)
-        power = self.get_socket_value(self.power)
-        if is_waiting(value, wheelcount, power):
-            return
-        if not condition:
             if self._reset:
                 for wheel in range(constraint.getNumWheels()):
                     constraint.applyEngineForce(0, wheel)
                 self._reset = False
             return
-        if is_invalid(constraint):
+        value = self.get_socket_value(self.value_type)
+        wheelcount = self.get_socket_value(self.wheelcount)
+        power = self.get_socket_value(self.power)
+        if is_waiting(value, wheelcount, power):
             return
         self._reset = True
         self._set_ready()
@@ -5671,7 +5692,7 @@ class VehicleApplyBraking(ActionCell):
         ActionCell.__init__(self)
         self.value_type = str(value_type)
         self.condition = None
-        self.constraint = None
+        self.vehicle = None
         self.wheelcount = None
         self._reset = False
         self.power = None
@@ -5683,23 +5704,24 @@ class VehicleApplyBraking(ActionCell):
     def evaluate(self):
         self.done = False
         condition = self.get_socket_value(self.condition)
-        if is_waiting(condition):
+        vehicle = self.get_socket_value(self.vehicle)
+        if is_invalid(vehicle):
             return
-        constraint = self.get_socket_value(self.constraint)
-        value_type = self.get_socket_value(self.value_type)
-        wheelcount = self.get_socket_value(self.wheelcount)
-        power = self.get_socket_value(self.power)
-        if is_waiting(Constraint, value_type, wheelcount, power):
+        constraint = vehicle.get('_vconst', None)
+        if not constraint:
             return
-
-        if not condition:
+        if not_met(condition):
             if self._reset:
                 for wheel in range(constraint.getNumWheels()):
                     constraint.applyBraking(0, wheel)
                 self._reset = False
             return
-        if is_invalid(constraint):
+        value_type = self.get_socket_value(self.value_type)
+        wheelcount = self.get_socket_value(self.wheelcount)
+        power = self.get_socket_value(self.power)
+        if is_waiting(value_type, wheelcount, power):
             return
+        self._reset = True
         self._set_ready()
         if value_type == 'FRONT':
             for wheel in range(wheelcount):
@@ -5719,7 +5741,7 @@ class VehicleApplySteering(ActionCell):
         ActionCell.__init__(self)
         self.value_type = str(value_type)
         self.condition = None
-        self.constraint = None
+        self.vehicle = None
         self.wheelcount = None
         self.power = None
         self.OUT = LogicNetworkSubCell(self, self.get_done)
@@ -5730,16 +5752,24 @@ class VehicleApplySteering(ActionCell):
     def evaluate(self):
         self.done = False
         condition = self.get_socket_value(self.condition)
-        if not_met(condition):
+        vehicle = self.get_socket_value(self.vehicle)
+        if is_invalid(vehicle):
             return
-        constraint = self.get_socket_value(self.constraint)
+        constraint = vehicle.get('_vconst', None)
+        if not constraint:
+            return
+        if not_met(condition):
+            if self._reset:
+                for wheel in range(constraint.getNumWheels()):
+                    constraint.setSteeringValue(0, wheel)
+                self._reset = False
+            return
         value_type = self.get_socket_value(self.value_type)
         wheelcount = self.get_socket_value(self.wheelcount)
         power = self.get_socket_value(self.power)
-        if is_waiting(Constraint, value_type, wheelcount, power):
+        if is_waiting(value_type, wheelcount, power):
             return
-        if is_invalid(constraint):
-            return
+        self._reset = True
         self._set_ready()
         if value_type == 'FRONT':
             for wheel in range(wheelcount):
@@ -5759,7 +5789,7 @@ class VehicleSetAttributes(ActionCell):
         ActionCell.__init__(self)
         self.value_type = str(value_type)
         self.condition = None
-        self.constraint = None
+        self.vehicle = None
         self.wheelcount = None
         self.set_suspension_compression = False
         self.suspension_compression = False
@@ -5789,12 +5819,13 @@ class VehicleSetAttributes(ActionCell):
         condition = self.get_socket_value(self.condition)
         if not_met(condition):
             return
-        constraint = self.get_socket_value(self.constraint)
+        vehicle = self.get_socket_value(self.vehicle)
         value_type = self.get_socket_value(self.value_type)
         wheelcount = self.get_socket_value(self.wheelcount)
-        if is_waiting(constraint, value_type, wheelcount):
+        if is_waiting(value_type, wheelcount):
             return
-
+        if is_invalid(vehicle):
+            return
         attrs_to_set = [
             self.get_socket_value(self.set_suspension_compression),
             self.get_socket_value(self.set_suspension_stiffness),
@@ -5807,7 +5838,8 @@ class VehicleSetAttributes(ActionCell):
             self.get_socket_value(self.suspension_damping),
             self.get_socket_value(self.tyre_friction)
         ]
-        if is_invalid(constraint):
+        constraint = vehicle.get('_vconst', None)
+        if not constraint:
             return
         self._set_ready()
         if value_type == 'FRONT':
