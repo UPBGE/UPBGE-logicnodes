@@ -920,13 +920,16 @@ class LogicNetwork(LogicNetworkCell):
         self.stopped = True
         for cell in self._cells:
             cell.stop(self)
-        for m in self._messages.data:
-            if m[2] in self._cells:
-                self._messages.pop(m, None)
+        self.clear_events()
 
     def _generate_cell_uid(self):
         self._lastuid += 1
         return self._lastuid
+
+    def clear_events(self):
+        for m in self._messages.data:
+            if m[2] in self._cells:
+                self._messages.pop(m, None)
 
     def add_cell(self, cell):
         self._cells.append(cell)
@@ -944,6 +947,7 @@ class LogicNetwork(LogicNetworkCell):
         self.timeline += dtime
         self.time_per_frame = dtime
         if self._owner.invalid:
+            self.clear_events()
             debug("Network Owner removed from game. Shutting down the network")
             return True
         self.keyboard = logic.keyboard
@@ -7468,6 +7472,8 @@ class ActionEndObject(ActionCell):
         self._set_ready()
         if is_invalid(game_object):
             return
+        if game_object is self.network._owner:
+            self.network.clear_events()
         game_object.endObject()
         self.done = True
 
