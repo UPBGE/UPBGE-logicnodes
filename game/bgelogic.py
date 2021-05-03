@@ -7419,6 +7419,7 @@ class ActionTimeDelay(ActionCell):
 
 class ActionSetDynamics(ActionCell):
     def __init__(self):
+        ActionCell.__init__(self)
         self.condition = None
         self.game_object = None
         self.activate = False
@@ -7443,9 +7444,73 @@ class ActionSetDynamics(ActionCell):
         if is_invalid(game_object):
             return
         if activate:
-            game_object.suspendDynamics(ghost)
-        else:
             game_object.restoreDynamics()
+        else:
+            game_object.suspendDynamics(ghost)
+        self.done = True
+
+
+class ActionSetPhysics(ActionCell):
+    def __init__(self):
+        ActionCell.__init__(self)
+        self.condition = None
+        self.game_object = None
+        self.activate = False
+        self.free_const = None
+        self.done = None
+        self.OUT = LogicNetworkSubCell(self, self.get_done)
+
+    def get_done(self):
+        return self.done
+
+    def evaluate(self):
+        self.done = False
+        condition = self.get_socket_value(self.condition)
+        if not_met(condition):
+            return
+        game_object = self.get_socket_value(self.game_object)
+        activate = self.get_socket_value(self.activate)
+        free_const = self.get_socket_value(self.free_const)
+        if is_waiting(game_object, free_const, activate):
+            return
+        self._set_ready()
+        if is_invalid(game_object):
+            return
+        if activate:
+            game_object.restorePhysics()
+        else:
+            game_object.suspendPhysics(free_const)
+        self.done = True
+
+
+class ActionSetRigidBody(ActionCell):
+    def __init__(self):
+        ActionCell.__init__(self)
+        self.condition = None
+        self.game_object = None
+        self.activate = False
+        self.done = None
+        self.OUT = LogicNetworkSubCell(self, self.get_done)
+
+    def get_done(self):
+        return self.done
+
+    def evaluate(self):
+        self.done = False
+        condition = self.get_socket_value(self.condition)
+        if not_met(condition):
+            return
+        game_object = self.get_socket_value(self.game_object)
+        activate = self.get_socket_value(self.activate)
+        if is_waiting(game_object, activate):
+            return
+        if is_invalid(game_object):
+            return
+        self._set_ready()
+        if activate:
+            game_object.enableRigidBody()
+        else:
+            game_object.disableRigidBody()
         self.done = True
 
 

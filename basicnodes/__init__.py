@@ -10822,16 +10822,15 @@ _nodes.append(NLActionEditBoneNode)
 
 class NLActionSetDynamicsNode(bpy.types.Node, NLActionNode):
     bl_idname = "NLActionSetDynamicsNode"
-    bl_label = "Set Dynamics (Physics)"
+    bl_label = "Set Dynamics"
     bl_icon = 'FORCE_LENNARDJONES'
-    nl_category = "Objects"
-    nl_subcat = 'Data'
+    nl_category = "Physics"
 
     def init(self, context):
         NLActionNode.init(self, context)
         self.inputs.new(NLConditionSocket.bl_idname, "Condition")
         self.inputs.new(NLGameObjectSocket.bl_idname, "Object")
-        self.inputs.new(NLBooleanSocket.bl_idname, "Suspend")
+        self.inputs.new(NLBooleanSocket.bl_idname, "Active")
         self.inputs.new(NLBooleanSocket.bl_idname, "Ghost")
         self.inputs[-1].value = False
         self.inputs[-1].enabled = False
@@ -10848,6 +10847,61 @@ class NLActionSetDynamicsNode(bpy.types.Node, NLActionNode):
 
 
 _nodes.append(NLActionSetDynamicsNode)
+
+
+class NLActionSetPhysicsNode(bpy.types.Node, NLActionNode):
+    bl_idname = "NLActionSetPhysicsNode"
+    bl_label = "Set Physics"
+    bl_icon = 'FORCE_LENNARDJONES'
+    nl_category = "Physics"
+
+    def init(self, context):
+        NLActionNode.init(self, context)
+        self.inputs.new(NLConditionSocket.bl_idname, "Condition")
+        self.inputs.new(NLGameObjectSocket.bl_idname, "Object")
+        self.inputs.new(NLBooleanSocket.bl_idname, "Active")
+        self.inputs.new(NLBooleanSocket.bl_idname, "Cut Constraints")
+        self.inputs[-1].value = False
+        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+
+    def get_output_socket_varnames(self):
+        return ["OUT"]
+
+    def get_netlogic_class_name(self):
+        return "bgelogic.ActionSetPhysics"
+
+    def get_input_sockets_field_names(self):
+        return ["condition", "game_object", "activate", 'free_const']
+
+
+_nodes.append(NLActionSetPhysicsNode)
+
+
+class NLSetRigidBody(bpy.types.Node, NLActionNode):
+    bl_idname = "NLSetRigidBody"
+    bl_label = "Set Rigid Body"
+    bl_icon = 'FORCE_LENNARDJONES'
+    nl_category = "Physics"
+
+    def init(self, context):
+        NLActionNode.init(self, context)
+        self.inputs.new(NLConditionSocket.bl_idname, "Condition")
+        self.inputs.new(NLGameObjectSocket.bl_idname, "Object")
+        self.inputs.new(NLBooleanSocket.bl_idname, "Enabled")
+        self.inputs[-1].value = True
+        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+
+    def get_output_socket_varnames(self):
+        return ["OUT"]
+
+    def get_netlogic_class_name(self):
+        return "bgelogic.ActionSetRigidBody"
+
+    def get_input_sockets_field_names(self):
+        return ["condition", "game_object", "activate"]
+
+
+_nodes.append(NLSetRigidBody)
 
 
 class NLActionSetMousePosition(bpy.types.Node, NLActionNode):
