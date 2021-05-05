@@ -7999,7 +7999,7 @@ class NLActionRayCastNode(bpy.types.Node, NLActionNode):
         NLActionNode.init(self, context)
         self.inputs.new(NLConditionSocket.bl_idname, "Condition")
         self.inputs.new(NLVec3FieldSocket.bl_idname, "Origin")
-        self.inputs.new(NLVec3FieldSocket.bl_idname, "Destination")
+        self.inputs.new(NLVec3FieldSocket.bl_idname, "Aim")
         self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Property")
         self.inputs.new(NLBooleanSocket.bl_idname, 'X-Ray')
         self.inputs.new(NLPositiveFloatSocket.bl_idname, "Distance")
@@ -10981,7 +10981,7 @@ class NLActionStart3DSoundAdv(bpy.types.Node, NLActionNode):
         self.inputs.new(NLSocketAlphaFloat.bl_idname, 'Cutoff')
         self.inputs[-1].value = .1
         self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Type")
-        self.inputs[-1].value = 'default3D'
+        self.inputs[-1].value = '3D'
         self.inputs[-1].enabled = False
         self.inputs.new(NLSocketLoopCount.bl_idname, "Mode")
         self.inputs.new(NLPositiveFloatSocket.bl_idname, "Pitch")

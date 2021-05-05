@@ -605,15 +605,15 @@ class AudioSystem(object):
         self.old_lis_pos = self.listener.worldPosition.copy()
         bpy.types.Scene.nl_aud_system = self
         if not hasattr(bpy.types.Scene, 'nl_aud_devices'):
-            debug('Opening Sound Devices: default3D, default')
+            debug('Opening Sound Devices: 3D, 2D')
             bpy.types.Scene.nl_aud_devices = self.devices = {
-                'default3D': aud.Device(),
-                'default': aud.Device()
+                '3D': aud.Device(),
+                '2D': aud.Device()
             }
         else:
             self.devices = bpy.types.Scene.nl_aud_devices
-        self.device3D = self.devices['default3D']
-        self.device = self.devices['default']
+        self.device3D = self.devices['3D']
+        self.device = self.devices['2D']
         self.device.distance_model = aud.DISTANCE_MODEL_INVALID
         self.device3D.distance_model = self.get_distance_model(
             bpy.context.scene.audio_distance_model
