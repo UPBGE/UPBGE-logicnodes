@@ -3407,7 +3407,7 @@ class ParameterArithmeticOp(ParameterCell):
     def evaluate(self):
         a = self.get_socket_value(self.operand_a)
         b = self.get_socket_value(self.operand_b)
-        if is_waiting(a, b):
+        if is_invalid(a, b):
             return
         self._set_ready()
         if (a is None) or (b is None):
@@ -5501,7 +5501,7 @@ class ActionCreateVehicle(ActionCell):
         damping = self.get_socket_value(self.damping)
         friction = self.get_socket_value(self.friction)
         if is_waiting(
-            game_object, 
+            game_object,
             wheels_steering,
             wheels,
             suspension,
@@ -5747,6 +5747,7 @@ class VehicleApplySteering(ActionCell):
         self.condition = None
         self.vehicle = None
         self.wheelcount = None
+        self._reset = False
         self.power = None
         self.OUT = LogicNetworkSubCell(self, self.get_done)
 
@@ -6968,7 +6969,7 @@ class RemoveListIndex(ActionCell):
         if len(list_d) > idx:
             del list_d[idx]
         else:
-            debug("List Index exceeds length!".format(val))
+            debug("List Index exceeds length!")
             return
         self.new_list = list_d
         self.done = True

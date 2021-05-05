@@ -1149,6 +1149,7 @@ class NLAddPropertyOperator(bpy.types.Operator):
 
     def execute(self, context):
         bpy.ops.object.game_property_new()
+        print(context)
         bge_netlogic.update_current_tree_code()
         return {'FINISHED'}
 

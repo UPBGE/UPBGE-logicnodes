@@ -1153,7 +1153,7 @@ class NLGamePropertySocket(bpy.types.NodeSocket, NetLogicSocketType):
         update=update_tree_code
     )
     ref_index: bpy.props.IntProperty(default=0)
-    use_custom: bpy.props.BoolProperty(default=True, name='Free Edit')
+    use_custom: bpy.props.BoolProperty(name='Free Edit')
 
     def draw_color(self, context, node):
         return PARAMETER_SOCKET_COLOR
@@ -2543,7 +2543,7 @@ class NLOptionalValueFieldSocket(bpy.types.NodeSocket, NetLogicSocketType):
         return PARAMETER_SOCKET_COLOR
 
     def get_unlinked_value(self):
-        return socket_field(self) if self.use_value else None
+        return socket_field(self) if self.use_value else 'None'
 
     def draw(self, context, layout, node, text):
         if self.is_linked or self.is_output:
