@@ -161,7 +161,14 @@ class SimpleLoggingDatabase(object):
         self.fname = file_name
         self.data = {}
 
-        filter(lambda a: a is not remove_globals, bpy.app.handlers.game_post)
+        filter(lambda a: a.__name__ == 'remove_globals', bpy.app.handlers.game_post)
+        remove_f = []
+        for f in bpy.app.handlers.game_post:
+            if f.__name__ == 'remove_globals':
+                remove_f.append(f)
+        for f in remove_f:
+            bpy.app.handlers.game_post.remove(f)
+        print(bpy.app.handlers.game_post)
         bpy.app.handlers.game_post.append(remove_globals)
 
         log_size = SimpleLoggingDatabase.read(self.fname, self.data)
@@ -499,14 +506,10 @@ def project_vector3(v, xi, yi):
 
 
 def stop_all_sounds(a, b):
+    print('Heres something wrong')
     if not hasattr(bpy.types.Scene, 'nl_aud_system'):
         return
-    closed_devs = ''
-    for dev in bpy.types.Scene.nl_aud_devices:
-        bpy.types.Scene.nl_aud_devices[dev].stopAll()
-        closed_devs += ' {},'.format(dev)
-    debug('Closing Sound Devices:{}'.format(closed_devs[:-1]))
-    delattr(bpy.types.Scene, 'nl_aud_devices')
+    bpy.types.Scene.nl_aud_system.device.stopAll()
     delattr(bpy.types.Scene, 'nl_aud_system')
 
 
@@ -604,24 +607,19 @@ class AudioSystem(object):
         self.listener = logic.getCurrentScene().active_camera
         self.old_lis_pos = self.listener.worldPosition.copy()
         bpy.types.Scene.nl_aud_system = self
-        if not hasattr(bpy.types.Scene, 'nl_aud_devices'):
-            debug('Opening Sound Devices: 3D, 2D')
-            bpy.types.Scene.nl_aud_devices = self.devices = {
-                '3D': aud.Device(),
-                '2D': aud.Device()
-            }
-        else:
-            self.devices = bpy.types.Scene.nl_aud_devices
-        self.device3D = self.devices['3D']
-        self.device = self.devices['2D']
-        self.device.distance_model = aud.DISTANCE_MODEL_INVALID
-        self.device3D.distance_model = self.get_distance_model(
-            bpy.context.scene.audio_distance_model
-        )
-        self.device3D.speed_of_sound = bpy.context.scene.audio_doppler_speed
-        self.device3D.doppler_factor = bpy.context.scene.audio_doppler_factor
+        self.device = aud.Device()
+        self.device.distance_model = aud.DISTANCE_MODEL_INVERSE_CLAMPED
+        self.device.speed_of_sound = bpy.context.scene.audio_doppler_speed
+        self.device.doppler_factor = bpy.context.scene.audio_doppler_factor
 
-        filter(lambda a: a is not stop_all_sounds, bpy.app.handlers.game_post)
+        filter(lambda a: a.__name__ == 'stop_all_sounds', bpy.app.handlers.game_post)
+        remove_f = []
+        for f in bpy.app.handlers.game_post:
+            if f.__name__ == 'stop_all_sounds':
+                remove_f.append(f)
+        for f in remove_f:
+            bpy.app.handlers.game_post.remove(f)
+        print(bpy.app.handlers.game_post)
         bpy.app.handlers.game_post.append(stop_all_sounds)
 
     def get_distance_model(self, name):
@@ -644,13 +642,13 @@ class AudioSystem(object):
         if not self.active_sounds:
             return  # do not update if no sound has been installed
         # update the listener data
-        devs = self.devices
+        for s in self.active_sounds:
+            print(s.status)
+        dev = self.device
         listener_vel = self.compute_listener_velocity(c)
-        for d in devs:
-            dev = devs[d]
-            dev.listener_location = c.worldPosition
-            dev.listener_orientation = c.worldOrientation.to_quaternion()
-            dev.listener_velocity = listener_vel
+        dev.listener_location = c.worldPosition
+        dev.listener_orientation = c.worldOrientation.to_quaternion()
+        dev.listener_velocity = listener_vel
 
 
 class StatefulValueProducer(object):
@@ -1011,6 +1009,9 @@ class LogicNetwork(LogicNetworkCell):
             cell.reset()
             if cell.has_status(LogicNetworkCell.STATUS_WAITING):
                 cells.append(cell)
+        print([s.status for s in self.audio_system.active_sounds])
+        for s in self.audio_system.active_sounds:
+            print(str(s.status) + ' Pre-Check')
         # update the sound system
         if self.aud_system_owner:
             self.audio_system.update(self)
@@ -8732,7 +8733,7 @@ class ActionStart3DSoundAdv(ActionCell):
 
     def get_handle(self):
         return self._handle
-    
+
     def get_on_finish(self):
         return self.on_finish
 
@@ -8851,9 +8852,10 @@ class ActionStart3DSoundAdv(ActionCell):
         condition = self.get_socket_value(self.condition)
         if not_met(condition):
             return
+        if not self.device:
+            self.device = audio_system.device
         cutoff = self.get_socket_value(self.cutoff)
         sound = self.get_socket_value(self.sound)
-        device = self.get_socket_value(self.device)
         loop_count = self.get_socket_value(self.loop_count)
         distance_ref = self.get_socket_value(self.distance_ref)
         cone_angle = self.get_socket_value(self.cone_angle)
@@ -8863,20 +8865,12 @@ class ActionStart3DSoundAdv(ActionCell):
 
         if is_invalid(sound):
             return
-        if not hasattr(bpy.types.Scene, 'nl_aud_devices'):
-            debug('No Audio Devices initialized!')
-            return
-        else:
-            devs = bpy.types.Scene.nl_aud_devices
         soundpath = logic.expandPath(sound)
-        soundfile = aud.Sound.file(soundpath)
-        if device not in devs.keys():
-            debug(f'Opening Sound Device: {device}')
-            devs[device] = aud.Device()
-        handle = self._handle = devs[device].play(soundfile)
+        soundfile = aud.Sound(soundpath)
+        handle = self._handle = self.device.play(soundfile)
         if occlusion:
             soundlow = aud.Sound.lowpass(soundfile, 4000*cutoff, .5)
-            handlelow = devs[device].play(soundlow)
+            handlelow = self.device.play(soundlow)
             self._handles[soundfile] = [handle, handlelow]
         else:
             self._handles[soundfile] = [handle]
@@ -8912,6 +8906,7 @@ class ActionStartSound(ActionCell):
         self.pitch = None
         self.volume = None
         self.done = None
+        self.device = None
         self.on_finish = False
         self._handle = None
         self._handles = []
@@ -8921,7 +8916,7 @@ class ActionStartSound(ActionCell):
 
     def get_handle(self):
         return self._handle
-    
+
     def get_on_finish(self):
         return self.on_finish
 
@@ -8930,45 +8925,51 @@ class ActionStartSound(ActionCell):
 
     def evaluate(self):
         self.done = False
+        self.on_finish = False
         audio_system = self.network.audio_system
+        if not self.device:
+            self.device = audio_system.device
         handles = self._handles
         pitch = self.get_socket_value(self.pitch)
         volume = self.get_socket_value(self.volume)
-        self.on_finish = False
+        # print(self.device)
+        # print(handles)
+        self._set_ready()
         if handles:
             for handle in handles:
+                print(handle)
+                print(handle.status)
                 if not handle.status and handle in audio_system.active_sounds:
+                    print("I'm removing this because of stupidity")
                     self._handles.remove(handle)
                     audio_system.active_sounds.remove(handle)
                     self.on_finish = True
-                    continue
-                self._set_ready()
+                    return
                 handle.volume = volume
                 handle.pitch = pitch
-            self._handle = handles[-1]
+            if handles:
+                self._handle = handles[-1]
+            else:
+                self._handle = None
         condition = self.get_socket_value(self.condition)
         if not_met(condition):
             return
         sound = self.get_socket_value(self.sound)
         loop_count = self.get_socket_value(self.loop_count)
-        self._set_ready()
+        #  self._set_ready()
 
         if is_invalid(sound):
             return
-        if not hasattr(bpy.types.Scene, 'nl_aud_devices'):
-            debug('No Audio Devices initialized!')
-            return
-        else:
-            devs = bpy.types.Scene.nl_aud_devices
-        soundpath = logic.expandPath(sound)
-        soundfile = aud.Sound.file(soundpath)
-        handle = self._handle = devs['default'].play(soundfile)
-        self._handles.append(handle)
+        soundpath = bge.logic.expandPath("//")+sound
+        soundfile = aud.Sound(soundpath)
+        handle = self.device.play(soundfile)
         handle.relative = True
         handle.pitch = pitch
         handle.loop_count = loop_count
         handle.volume = volume
         audio_system.active_sounds.append(handle)
+        self._handles.append(handle)
+        self._handle = handle
         self.done = True
 
 
@@ -9000,12 +9001,12 @@ class ActionStopAllSounds(ActionCell):
         condition = self.get_socket_value(self.condition)
         if not_met(condition):
             return
-        if not hasattr(bpy.types.Scene, 'nl_aud_devices'):
-            debug('No Audio Devices to close.')
+        if not hasattr(bpy.types.Scene, 'nl_aud_system'):
+            debug('No Audio System to close.')
             return
         self._set_ready()
-        for dev in bpy.types.Scene.nl_aud_devices:
-            bpy.types.Scene.nl_aud_devices[dev].stopAll()
+        print('Stopping All Sounds')
+        bpy.types.Scene.nl_aud_system.device.stopAll()
 
 
 class ActionPauseSound(ActionCell):

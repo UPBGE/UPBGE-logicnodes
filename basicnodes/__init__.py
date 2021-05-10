@@ -10981,14 +10981,14 @@ class NLActionStart3DSoundAdv(bpy.types.Node, NLActionNode):
         self.inputs.new(NLSocketAlphaFloat.bl_idname, 'Cutoff')
         self.inputs[-1].value = .1
         self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Type")
-        self.inputs[-1].value = '3D'
+        self.inputs[-1].value = 'default3D'
         self.inputs[-1].enabled = False
         self.inputs.new(NLSocketLoopCount.bl_idname, "Mode")
         self.inputs.new(NLPositiveFloatSocket.bl_idname, "Pitch")
         self.inputs[-1].value = 1.0
         self.inputs.new(NLPositiveFloatSocket.bl_idname, "Volume")
         self.inputs[-1].value = 1.0
-        self.inputs.new(NLPosFloatFormatSocket.bl_idname, "Attenuation")
+        self.inputs.new(NLPositiveFloatSocket.bl_idname, "Attenuation")
         self.inputs[-1].value = 1.0
         self.inputs.new(NLPosFloatFormatSocket.bl_idname, "Reference Distance")
         self.inputs[-1].value = 1.0
@@ -11028,7 +11028,7 @@ class NLActionStart3DSoundAdv(bpy.types.Node, NLActionNode):
             'occlusion',
             'transition',
             'cutoff',
-            "device",
+            "device_custom",
             "loop_count",
             "pitch",
             "volume",

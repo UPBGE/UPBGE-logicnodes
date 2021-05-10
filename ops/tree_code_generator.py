@@ -4,7 +4,29 @@ import shutil
 import bge_netlogic
 import bge_netlogic.utilities as utils
 from bge_netlogic.ops.file_text_buffer import FileTextBuffer
+from bge_netlogic.ops.abstract_text_buffer import AbstractTextBuffer
 from bge_netlogic.ops.uid_map import UIDMap
+
+
+class BLTextWrapper(AbstractTextBuffer):
+    _indent = ''
+
+    def __init__(self, name):
+        text = bpy.data.texts.get(name)
+        if text is None:
+            bpy.ops.text.new()
+            text = bpy.data.texts[-1]
+            text.name = name
+        self.text = text
+
+    def clear(self):
+        self.text.clear()
+
+    def write_line(self, string, *args):
+        self.text.write(f'{self._indent}{string}\n'.format(*args))
+
+    def close(self):
+        pass
 
 
 class TreeCodeGenerator(object):
@@ -33,9 +55,50 @@ class TreeCodeGenerator(object):
         return FileTextBuffer(file_path)
 
     def write_code_for_tree(self, tree):
-        buffer_name = utils.py_module_filename_for_tree(tree)
         if getattr(bpy.context.scene.logic_node_settings, 'use_node_debug', False):
             utils.notify("Generating code for tree {}".format(tree.name))
+        if tree.mode:
+            writer = self.write_to_text(tree)
+        else:
+            writer = self.write_to_file(tree)
+        self.write_init_content(tree, writer)
+        indent = self.write_pulse_line(tree, writer)
+        self.write_pulse_content(tree, writer, indent)
+
+    def write_to_text(self, tree):
+        tree_name = utils.make_valid_name(tree.name)
+        line_writer = BLTextWrapper(f'nl_{tree_name.lower()}.py')
+        line_writer.clear()
+        line_writer.write_line("# MACHINE GENERATED")
+        line_writer.write_line("import bge")
+        line_writer.write_line("import mathutils")
+        line_writer.write_line("import math")
+        line_writer.write_line("from collections import OrderedDict")
+        user_modules = self.list_user_modules_needed_by_tree(tree)
+        for module in user_modules:
+            line_writer.write_line('{} = bgelogic.load_user_logic("{}")', module, module)
+        line_writer.write_line('')
+        line_writer.write_line(f'class {tree_name}(bge.types.KX_PythonComponent):')
+        line_writer.write_line('')
+        line_writer.set_indent_level(1)
+        line_writer.write_line('consumed = False')
+        line_writer.write_line('condition = ""')
+        line_writer.write_line('args = OrderedDict([')
+        line_writer.set_indent_level(2)
+        line_writer.write_line('("Only Run At Startup", False),')
+        line_writer.write_line('("Execution Condition", "")')
+        line_writer.set_indent_level(1)
+        line_writer.write_line('])')
+        line_writer.write_line('')
+        line_writer.write_line('def start(self, args):')
+        line_writer.set_indent_level(2)
+        line_writer.write_line("import bgelogic")
+        line_writer.write_line("self.condition = args['Execution Condition']")
+        line_writer.write_line("owner = self.object")
+        return line_writer
+
+    def write_to_file(self, tree):
+        buffer_name = utils.py_module_filename_for_tree(tree)
         line_writer = self.create_text_file("bgelogic/"+buffer_name)
         line_writer.write_line("# MACHINE GENERATED")
         line_writer.write_line("import bge")
@@ -48,6 +111,9 @@ class TreeCodeGenerator(object):
         line_writer.write_line("")
         line_writer.write_line("def _initialize(owner):")
         line_writer.set_indent_level(1)
+        return line_writer
+
+    def write_init_content(self, tree, line_writer):
         line_writer.write_line("network = bgelogic.LogicNetwork()")
         cell_var_names, uid_map = self._write_tree(tree, line_writer)
         for varname in self._sort_cellvarnames(cell_var_names, uid_map):
@@ -57,21 +123,47 @@ class TreeCodeGenerator(object):
         line_writer.write_line("network._owner = owner")
         line_writer.write_line("network.setup()")
         line_writer.write_line("network.stopped = not owner.get('{}')", utils.get_key_network_initial_status_for_tree(tree))
+        if isinstance(line_writer, BLTextWrapper):
+            line_writer.write_line("if args['Only Run At Startup']:")
+            line_writer.set_indent_level(line_writer._indent_level + 1)
+            line_writer.write_line("self.consumed = True")
+            line_writer.write_line("network.evaluate()")
+            line_writer.set_indent_level(line_writer._indent_level - 1)
         line_writer.write_line("return network")
-        line_writer.set_indent_level(0)
+
+    def write_pulse_line(self, tree, line_writer):
+        line_writer.set_indent_level(line_writer._indent_level - 1)
         line_writer.write_line("")
-        line_writer.write_line("def pulse_network(controller):")
-        line_writer.set_indent_level(1)
-        line_writer.write_line("owner = controller.owner")
+        if isinstance(line_writer, BLTextWrapper):
+            line_writer.write_line('def update(self):')
+            line_writer.set_indent_level(2)
+            line_writer.write_line("if self.consumed:")
+            line_writer.set_indent_level(3)
+            line_writer.write_line("return")
+            line_writer.set_indent_level(2)
+            line_writer.write_line("owner = self.object")
+            line_writer.write_line("if self.condition:")
+            line_writer.set_indent_level(3)
+            line_writer.write_line("cond = owner[self.condition]")
+            line_writer.write_line("if not cond: return")
+            line_writer.set_indent_level(2)
+        else:
+            line_writer.write_line('def pulse_network(controller):')
+            line_writer.set_indent_level(1)
+            line_writer.write_line("owner = controller.owner")
+        return line_writer._indent_level
+
+    def write_pulse_content(self, tree, line_writer, indent):
         line_writer.write_line('network = owner.get("IGNLTree_{}")', tree.name)
-        line_writer.write_line("if network is None:")
-        line_writer.set_indent_level(2)
-        line_writer.write_line("network = _initialize(owner)")
-        line_writer.set_indent_level(1)
+        if not isinstance(line_writer, BLTextWrapper):
+            line_writer.write_line("if network is None:")
+            line_writer.set_indent_level(indent + 1)
+            line_writer.write_line("network = _initialize(owner)")
+        line_writer.set_indent_level(indent)
         line_writer.write_line("if network.stopped: return")
         line_writer.write_line("shutdown = network.evaluate()")
         line_writer.write_line("if shutdown is True:")
-        line_writer.set_indent_level(2)
+        line_writer.set_indent_level(indent + 1)
         line_writer.write_line("controller.sensors[0].repeat = False")
         line_writer.close()
         # write the bgelogic.py module source in the directory of the current blender file

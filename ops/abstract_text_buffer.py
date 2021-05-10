@@ -8,7 +8,6 @@ class AbstractTextBuffer(object):
     def set_indent_level(self, int_value):
         self._indent_level = int_value
         self._indent = " " * int(4 * int_value)
-        pass
 
     def write(self, string, *args):
         if not args:

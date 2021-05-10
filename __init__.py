@@ -80,6 +80,27 @@ def update_tree_name(tree, old_name):
                 ob, old_name, new_name
             )
             gs = ob.game
+            idx = 0
+            check_name = utils.make_valid_name(old_name)
+            comp_name = f'nl_{check_name.lower()}'
+            clsname = utils.make_valid_name(new_name)
+            new_comp_name = f'nl_{clsname.lower()}.{clsname}'
+            for c in gs.components:
+                if c.module == comp_name:
+                    try:
+                        ops.tree_code_generator.TreeCodeGenerator().write_code_for_tree(tree)
+                    except Exception:
+                        utils.error(f"Couldn't compile tree {tree.name}!")
+                    text = bpy.data.texts.get(f'{comp_name}.py')
+                    if text:
+                        bpy.data.texts.remove(text)
+                    active_object = bpy.context.object
+                    bpy.context.view_layer.objects.active = ob
+                    bpy.ops.logic.python_component_remove(index=idx)
+                    bpy.ops.logic.python_component_register(component_name=new_comp_name)
+                    bpy.context.view_layer.objects.active = active_object
+                idx += 1
+            
             for sensor in gs.sensors:
                 if old_name_code in sensor.name:
                     sensor.name = sensor.name.replace(
@@ -505,6 +526,7 @@ _registered_classes.extend([
     ui.BGE_PT_GlobalValuePanel,
     ui.BGE_PT_NLEditorPropertyPanel,
     ui.BGE_PT_HelpPanel,
+    ui.BGE_PT_GameComponentPanel,
     ui.BGE_PT_LogicNodeSettingsObject,
     ui.BGE_PT_LogicTreeOptions,
     ui.BGE_PT_GamePropertyPanel3DView,

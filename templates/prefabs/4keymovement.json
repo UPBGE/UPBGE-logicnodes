@@ -317,17 +317,12 @@
             "x": 880,
             "y": -180,
             "label": "Move Object",
-            "node_type": "NLSetObjectAttributeActionNode",
-            "links": [[20, 0, 0], [19, 0, 3]],
+            "node_type": "NLActionApplyLocation",
+            "links": [[20, 0, 0], [19, 0, 2]],
             "values": [
                 {
-                    "index": "value_type",
-                    "value": "localLinearVelocity"
-                },
-                {
-                    "index": 1,
-                    "type": "z",
-                    "value": false
+                    "index": "local",
+                    "value": true
                 },
                 {
                     "index": 2,

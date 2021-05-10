@@ -204,7 +204,7 @@ class BGE_PT_GlobalValuePanel(bpy.types.Panel):
 
 
 class BGE_PT_GamePropertyPanel(bpy.types.Panel):
-    bl_label = "Object Properties"
+    bl_label = "Game Properties"
     bl_space_type = "NODE_EDITOR"
     bl_region_type = "UI"
     bl_category = "Dashboard"
@@ -348,7 +348,7 @@ class BGE_PT_GamePropertyPanel(bpy.types.Panel):
 
 
 class BGE_PT_NLEditorPropertyPanel(BGE_PT_GamePropertyPanel):
-    bl_label = "Object Properties"
+    bl_label = "Game Properties"
     bl_space_type = "NODE_EDITOR"
     bl_region_type = "UI"
     bl_category = "Dashboard"
@@ -361,7 +361,7 @@ class BGE_PT_NLEditorPropertyPanel(BGE_PT_GamePropertyPanel):
 
 
 class BGE_PT_GamePropertyPanel3DView(BGE_PT_GamePropertyPanel):
-    bl_label = "Object Properties"
+    bl_label = "Game Properties"
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
     bl_category = "Item"
@@ -486,6 +486,10 @@ class BGE_PT_LogicTreeOptions(bpy.types.Panel):
             icon='PREFERENCES'
         ).owner = "BGE_PT_LogicPanel"
         code = layout.box()
+        r = code.row()
+        r.label(text='Compile Mode:')
+        tree = context.space_data.edit_tree
+        r.prop(tree, 'mode', toggle=True, text='Component' if tree.mode else 'Bricks')
         code.operator(
             bge_netlogic.ops.NLGenerateLogicNetworkOperator.bl_idname,
             text=context.scene.logic_node_settings.tree_compiled,
@@ -639,11 +643,60 @@ class BGE_PT_HelpPanel(bpy.types.Panel):
         )
 
 
+def update_tree_mode(self, context):
+    tree = context.space_data.edit_tree
+    if not isinstance(tree, BGELogicTree):
+        return
+
+
+class BGE_PT_GameComponentPanel(bpy.types.Panel):
+    bl_label = "Components"
+    bl_space_type = "VIEW_3D"
+    bl_region_type = "UI"
+    bl_category = "Item"
+    # module = bpy.StringProperty()
+
+    @classmethod
+    def poll(cls, context):
+        ob = context.active_object
+        return ob and ob.name
+
+    def draw(self, context):
+        layout = self.layout
+
+        ob = context.active_object
+        game = ob.game
+
+        row = layout.row()
+        row.operator("logic.python_component_register", text="Register", icon="PLUS")
+        row.operator("logic.python_component_create", text="Create", icon="PLUS")
+
+        for i, c in enumerate(game.components):
+            box = layout.box()
+            row = box.row()
+            row.prop(c, "show_expanded", text="", emboss=False)
+            row.label(text=c.name)
+            row.operator("logic.python_component_reload", text="", icon='RECOVER_LAST').index = i
+            row.operator("logic.python_component_remove", text="", icon='X').index = i
+
+            if c.show_expanded and len(c.properties) > 0:
+                box = box.box()
+                for prop in c.properties:
+                    row = box.row()
+                    row.label(text=prop.name)
+                    col = row.column()
+                    col.prop(prop, "value", text="")
+
+
 class BGELogicTree(bpy.types.NodeTree):
     bl_idname = "BGELogicTree"
     bl_label = "Logic Node Editor"
     bl_icon = "OUTLINER"
     bl_category = "Scripting"
+    mode: bpy.props.BoolProperty(
+        name='Compile Mode',
+        update=update_tree_mode
+    )
 
     @classmethod
     def poll(cls, context):

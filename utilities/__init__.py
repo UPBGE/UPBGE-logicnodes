@@ -243,6 +243,17 @@ def success(message):
         print(f'[Logic Nodes][{ansicol.GREEN}SUCCESS{ansicol.END}] ' + message)
 
 
+def make_valid_name(name):
+    valid_characters = (
+        "abcdefghijklmnopqrstuvwxyz1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+    )
+    clsname = name.replace(' ', '_')
+    stripped_name = "".join(
+        [c for c in clsname if c in valid_characters]
+    )
+    return stripped_name
+
+
 def get_global_category():
     scene = bpy.context.scene
     return (

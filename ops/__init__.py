@@ -315,7 +315,14 @@ class NLRemoveTreeByNameOperator(bpy.types.Operator):
             )
         ]
         for ob in objs:
+            tree_name = utils.make_valid_name(self.tree_name)
+            module = f'nl_{tree_name.lower()}'
             gs = ob.game
+            idx = 0
+            for c in gs.components:
+                if c.module == module:
+                    bpy.ops.logic.python_component_remove(index=idx)
+                idx += 1
             controllers = [
                 c for c in gs.controllers if py_module_name in c.name
             ]
@@ -436,7 +443,7 @@ class NLUpdateTreeVersionOperator(bpy.types.Operator):
                         replacer.outputs[idx+offset],
                         link.from_socket
                     )
-    
+
     def update_typecast_node(self, tree, node):
         if node.inputs[0].bl_idname == 'NLTypeCastSocket':
             replacer = tree.nodes.new(node.bl_idname)
@@ -446,7 +453,6 @@ class NLUpdateTreeVersionOperator(bpy.types.Operator):
             self.restore_input(tree, node, replacer, 1, 0)
             self.restore_outputs(tree, node, replacer)
             tree.nodes.remove(node)
-
 
     def update_collision_node(self, tree, node):
         if len(node.inputs) == 2:
@@ -804,6 +810,10 @@ class NLApplyLogicOperator(bpy.types.Operator):
         initial_status = bge_netlogic.utilities.compute_initial_status_of_tree(
             tree.name, selected_objects
         )
+        try:
+            tree_code_generator.TreeCodeGenerator().write_code_for_tree(tree)
+        except Exception:
+            utils.error(f"Couldn't compile tree {tree.name}!")
         initial_status = True if initial_status is None else False
         for obj in selected_objects:
             utils.success(
@@ -812,9 +822,17 @@ class NLApplyLogicOperator(bpy.types.Operator):
                     obj.name
                 )
             )
-            self._setup_logic_bricks_for_object(
-                tree, py_module_name, obj, context
-            )
+            if tree.mode:
+                tree_name = utils.make_valid_name(tree.name)
+                module = f'nl_{tree_name.lower()}'
+                name = f'{module}.{tree_name}'
+                comps = [c.module for c in obj.game.components]
+                if module not in comps:
+                    bpy.ops.logic.python_component_register(component_name=name)
+            else:
+                self._setup_logic_bricks_for_object(
+                    tree, py_module_name, obj, context
+                )
             tree_collection = obj.bgelogic_treelist
             contains = False
             for t in tree_collection:
