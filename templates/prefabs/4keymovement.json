@@ -1,16 +1,4 @@
 {
-    "globals": {
-        "movement": {
-            "x": {
-                "value_type": "FLOAT",
-                "float_val": 0
-            },
-            "y": {
-                "value_type": "FLOAT",
-                "float_val": 0
-            }
-        }
-    },
     "nodes": [
         {
             "x": 0,
@@ -75,231 +63,140 @@
         }, {
             "x": 220,
             "y": 0,
-            "label": "Set Forward",
-            "node_type": "NLActionSetGlobalValue",
-            "links": [[0, 0, 0]],
-            "values": [
-                {
-                    "index": 1,
-                    "value": "movement"
-                }, {
-                    "index": 2,
-                    "value": "x"
-                }, {
-                    "index": 3,
-                    "type": "value_type",
-                    "value": "INTEGER"
-                }, {
-                    "index": 3,
-                    "type": "int_editor",
-                    "value": 1
-                }
-            ]
+            "label": "W or S Pressed",
+            "node_type": "NLConditionOrNode",
+            "links": [[0, 0, 0], [1, 0, 1]],
+            "values": []
         }, {
             "x": 220,
             "y": -40,
-            "label": "Set Backward",
-            "node_type": "NLActionSetGlobalValue",
+            "label": "Forward/Back",
+            "node_type": "NLValueSwitch",
             "links": [[1, 0, 0]],
             "values": [
                 {
                     "index": 1,
-                    "value": "movement"
-                }, {
-                    "index": 2,
-                    "value": "x"
-                }, {
-                    "index": 3,
                     "type": "value_type",
                     "value": "INTEGER"
                 }, {
-                    "index": 3,
+                    "index": 1,
                     "type": "int_editor",
                     "value": -1
+                }, {
+                    "index": 2,
+                    "type": "value_type",
+                    "value": "INTEGER"
+                }, {
+                    "index": 2,
+                    "type": "int_editor",
+                    "value": 1
                 }
             ]
         }, {
             "x": 220,
             "y": -80,
-            "label": "Set Left",
-            "node_type": "NLActionSetGlobalValue",
-            "links": [[2, 0, 0]],
+            "label": "A or D Pressed",
+            "node_type": "NLConditionOrNode",
+            "links": [[2, 0, 0], [3, 0, 1]],
+            "values": []
+        }, {
+            "x": 220,
+            "y": -120,
+            "label": "Left/Right",
+            "node_type": "NLValueSwitch",
+            "links": [[3, 0, 0]],
             "values": [
                 {
                     "index": 1,
-                    "value": "movement"
-                }, {
-                    "index": 2,
-                    "value": "y"
-                }, {
-                    "index": 3,
                     "type": "value_type",
                     "value": "INTEGER"
                 }, {
-                    "index": 3,
+                    "index": 1,
+                    "type": "int_editor",
+                    "value": -1
+                }, {
+                    "index": 2,
+                    "type": "value_type",
+                    "value": "INTEGER"
+                }, {
+                    "index": 2,
                     "type": "int_editor",
                     "value": 1
                 }
             ]
         }, {
-            "x": 220,
-            "y": -120,
-            "label": "Set Right",
-            "node_type": "NLActionSetGlobalValue",
-            "links": [[3, 0, 0]],
-            "values": [
-                {
-                    "index": 1,
-                    "value": "movement"
-                }, {
-                    "index": 2,
-                    "value": "y"
-                }, {
-                    "index": 3,
-                    "type": "value_type",
-                    "value": "INTEGER"
-                }, {
-                    "index": 3,
-                    "type": "int_editor",
-                    "value": -1
-                }
-            ]
-        }, {
             "x": 440,
-            "y": -20,
-            "label": "W or S Pressed",
-            "node_type": "NLConditionOrNode",
+            "y": -40,
+            "label": "Is Moving",
+            "node_type": "NLValueSwitch",
             "links": [[4, 0, 0], [5, 0, 1]],
-            "values": []
+            "values": [
+                {
+                    "index": 2,
+                    "type": "value_type",
+                    "value": "INTEGER"
+                }, {
+                    "index": 2,
+                    "type": "int_editor",
+                    "value": 0
+                }
+            ]
         }, {
             "x": 440,
-            "y": -100,
-            "label": "A or D Pressed",
-            "node_type": "NLConditionOrNode",
+            "y": -80,
+            "label": "Is Moving",
+            "node_type": "NLValueSwitch",
             "links": [[6, 0, 0], [7, 0, 1]],
-            "values": []
-        }, {
-            "x": 660,
-            "y": -20,
-            "label": "If Not",
-            "node_type": "NLInvertBoolNode",
-            "links": [[8, 0, 0]],
-            "values": []
-        }, {
-            "x": 660,
-            "y": -100,
-            "label": "If Not",
-            "node_type": "NLInvertBoolNode",
-            "links": [[9, 0, 0]],
-            "values": []
-        }, {
-            "x": 880,
-            "y": -20,
-            "label": "Cancel X Movement",
-            "node_type": "NLActionSetGlobalValue",
-            "links": [[10, 0, 0]],
             "values": [
                 {
-                    "index": 1,
-                    "value": "movement"
-                }, {
                     "index": 2,
-                    "value": "x"
-                }, {
-                    "index": 3,
                     "type": "value_type",
                     "value": "INTEGER"
                 }, {
-                    "index": 3,
+                    "index": 2,
                     "type": "int_editor",
                     "value": 0
                 }
             ]
         }, {
-            "x": 880,
-            "y": -100,
-            "label": "Cancel Y Movement",
-            "node_type": "NLActionSetGlobalValue",
-            "links": [[11, 0, 0]],
-            "values": [
-                {
-                    "index": 1,
-                    "value": "movement"
-                }, {
-                    "index": 2,
-                    "value": "y"
-                }, {
-                    "index": 3,
-                    "type": "value_type",
-                    "value": "INTEGER"
-                }, {
-                    "index": 3,
-                    "type": "int_editor",
-                    "value": 0
-                }
-            ]
-        }, {
-            "x": 0,
-            "y": -160,
-            "label": "Get X",
-            "node_type": "NLParameterGetGlobalValue",
-            "links": [],
-            "values": [
-                {
-                    "index": 0,
-                    "value": "movement"
-                }, {
-                    "index": 1,
-                    "value": "x"
-                }
-            ]
-        }, {
-            "x": 0,
-            "y": -200,
-            "label": "Get Y",
-            "node_type": "NLParameterGetGlobalValue",
-            "links": [],
-            "values": [
-                {
-                    "index": 0,
-                    "value": "movement"
-                }, {
-                    "index": 1,
-                    "value": "y"
-                }
-            ]
-        }, {
-            "x": 220,
-            "y": -160,
+            "x": 660,
+            "y": -60,
             "label": "Build Vector",
-            "node_type": "NLParameterVector3SimpleNode",
-            "links": [[14, 0, 0], [15, 0, 1]],
+            "node_type": "NLParameterVector2SimpleNode",
+            "links": [[8, 0, 0], [9, 0, 1]],
             "values": []
         }, {
-            "x": 440,
-            "y": -160,
+            "x": 880,
+            "y": -60,
             "label": "Normalize",
             "node_type": "NLVectorMath",
-            "links": [[16, 0, 0]],
+            "links": [[10, 0, 0]],
             "values": []
         }, {
-            "x": 440,
-            "y": -200,
+            "x": 880,
+            "y": -100,
             "label": "Speed",
             "node_type": "NLParameterFloatValue",
             "links": [],
             "values": [
                 {
-                    "value": 5,
+                    "value": 0.1,
                     "index": 0
                 }
             ]
         }, {
-            "x": 660,
-            "y": -200,
+            "x": 1100,
+            "y": -40,
+            "label": "On Update",
+            "node_type": "NLOnUpdateConditionNode",
+            "links": [],
+            "values": []
+        }, {
+            "x": 1100,
+            "y": -80,
             "label": "Calc Speed",
             "node_type": "NLArithmeticOpParameterNode",
-            "links": [[17, 0, 0], [18, 0, 1]],
+            "links": [[11, 0, 0], [12, 0, 1]],
             "values": [
                 {
                     "index": "operator",
@@ -307,25 +204,18 @@
                 }
             ]
         }, {
-            "x": 660,
-            "y": -160,
-            "label": "WASD Pressed",
-            "node_type": "NLConditionOrNode",
-            "links": [[8, 0, 0], [9, 0, 1]],
-            "values": []
-        }, {
-            "x": 880,
-            "y": -180,
+            "x": 1320,
+            "y": -60,
             "label": "Move Object",
             "node_type": "NLActionApplyLocation",
-            "links": [[20, 0, 0], [19, 0, 2]],
+            "links": [[13, 0, 0], [14, 0, 2]],
             "values": [
                 {
                     "index": "local",
                     "value": true
                 },
                 {
-                    "index": 2,
+                    "index": 1,
                     "type": "use_owner",
                     "value": true
                 }

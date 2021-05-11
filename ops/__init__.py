@@ -724,7 +724,6 @@ class NLAdd4KeyTemplateOperator(bpy.types.Operator):
         utils.debug('Adding template...')
         tree = context.space_data.edit_tree
         jf = json.load(open(self.get_template_path()))
-        globs = jf['globals']
         content = jf['nodes']
 
         if tree is None:
@@ -732,18 +731,6 @@ class NLAdd4KeyTemplateOperator(bpy.types.Operator):
             return {'FINISHED'}
         for node in tree.nodes:
             node.select = False
-
-        for g in globs.keys():
-            db = context.scene.nl_global_categories
-            if g not in db:
-                cat = db.add()
-                cat.name = g
-            for v in globs[g].keys():
-                if v not in db[g].content:
-                    val = db[g].content.add()
-                    val.name = v
-                    for entry in globs[g][v]:
-                        setattr(val, entry, globs[g][v][entry])
 
         nodes = []
         for c in content:
@@ -910,7 +897,7 @@ class NLGenerateLogicNetworkOperatorAll(bpy.types.Operator):
     bl_idname = "bge_netlogic.generate_logicnetwork_all"
     bl_label = "Generate LogicNetwork"
     bl_options = {'REGISTER', 'UNDO'}
-    bl_description = "Create the code needed to execute the all logic trees"
+    bl_description = "Create the code needed to execute all logic trees"
 
     @classmethod
     def poll(cls, context):

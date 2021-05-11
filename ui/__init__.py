@@ -477,19 +477,19 @@ class BGE_PT_LogicTreeOptions(bpy.types.Panel):
 
     def draw(self, context):
         layout = self.layout
-        apply_col = layout.column()
+        apply = layout.box()
+        apply_col = apply.column()
         apply_col.scale_y = 1.4
-        apply = apply_col.box()
-        apply.operator(
+        apply_col.operator(
             bge_netlogic.ops.NLApplyLogicOperator.bl_idname,
             text="Apply To Selected",
             icon='PREFERENCES'
         ).owner = "BGE_PT_LogicPanel"
-        code = layout.box()
-        r = code.row()
-        r.label(text='Compile Mode:')
+        r = apply.row()
+        r.label(text='Apply As:')
         tree = context.space_data.edit_tree
         r.prop(tree, 'mode', toggle=True, text='Component' if tree.mode else 'Bricks')
+        code = layout.box()
         code.operator(
             bge_netlogic.ops.NLGenerateLogicNetworkOperator.bl_idname,
             text=context.scene.logic_node_settings.tree_compiled,
@@ -695,6 +695,7 @@ class BGELogicTree(bpy.types.NodeTree):
     bl_category = "Scripting"
     mode: bpy.props.BoolProperty(
         name='Compile Mode',
+        description='Whether to apply this tree using bricks or as a component.\nNOTE: Changing this value does not remove already applied trees',
         update=update_tree_mode
     )
 
