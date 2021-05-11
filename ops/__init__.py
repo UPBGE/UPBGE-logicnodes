@@ -590,10 +590,18 @@ class NLMakeGroupOperator(bpy.types.Operator):
             for attr in dir(old_node):
                 if attr in NODE_ATTRS:
                     setattr(new_node, attr, getattr(old_node, attr))
+            for socket in old_node.outputs:
+                for link in socket.links:
+                    to_node = link.to_node
+                    if to_node not in add_nodes:
+                        msg = 'Some linked Nodes are not selected!'
+                        self.report({"ERROR"}, msg)
+                        utils.error(msg)
+                        return None
             for socket in old_node.inputs:
                 index = self._index_of(socket, old_node.inputs)
                 for attr in dir(socket):
-                    if attr in NODE_ATTRS:
+                    if attr in NODE_ATTRS or attr.startswith('slot_'):
                         try:
                             if attr != 'label':
                                 setattr(new_node.inputs[index], attr, getattr(socket, attr))

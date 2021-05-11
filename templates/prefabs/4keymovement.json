@@ -3,13 +3,13 @@
         {
             "x": 0,
             "y": 0,
-            "label": "W Pressed",
+            "label": "S Pressed",
             "node_type": "NLKeyPressedCondition",
             "links": [],
             "values": [
                 {
                     "index": 0,
-                    "value": "W"
+                    "value": "S"
                 }, {
                     "index": "pulse",
                     "value": true
@@ -18,13 +18,13 @@
         }, {
             "x": 0,
             "y": -40,
-            "label": "S Pressed",
+            "label": "W Pressed",
             "node_type": "NLKeyPressedCondition",
             "links": [],
             "values": [
                 {
                     "index": 0,
-                    "value": "S"
+                    "value": "W"
                 }, {
                     "index": "pulse",
                     "value": true
@@ -81,7 +81,7 @@
                 }, {
                     "index": 1,
                     "type": "int_editor",
-                    "value": -1
+                    "value": 1
                 }, {
                     "index": 2,
                     "type": "value_type",
@@ -89,7 +89,7 @@
                 }, {
                     "index": 2,
                     "type": "int_editor",
-                    "value": 1
+                    "value": -1
                 }
             ]
         }, {

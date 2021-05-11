@@ -695,6 +695,7 @@ class BGELogicTree(bpy.types.NodeTree):
     bl_category = "Scripting"
     mode: bpy.props.BoolProperty(
         name='Compile Mode',
+        default=False,
         description='Whether to apply this tree using bricks or as a component.\nNOTE: Changing this value does not remove already applied trees',
         update=update_tree_mode
     )

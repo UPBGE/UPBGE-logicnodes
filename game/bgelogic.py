@@ -168,7 +168,6 @@ class SimpleLoggingDatabase(object):
                 remove_f.append(f)
         for f in remove_f:
             bpy.app.handlers.game_post.remove(f)
-        print(bpy.app.handlers.game_post)
         bpy.app.handlers.game_post.append(remove_globals)
 
         log_size = SimpleLoggingDatabase.read(self.fname, self.data)
@@ -506,7 +505,7 @@ def project_vector3(v, xi, yi):
 
 
 def stop_all_sounds(a, b):
-    print('Heres something wrong')
+    # print('Heres something wrong')
     if not hasattr(bpy.types.Scene, 'nl_aud_system'):
         return
     bpy.types.Scene.nl_aud_system.device.stopAll()
@@ -619,7 +618,6 @@ class AudioSystem(object):
                 remove_f.append(f)
         for f in remove_f:
             bpy.app.handlers.game_post.remove(f)
-        print(bpy.app.handlers.game_post)
         bpy.app.handlers.game_post.append(stop_all_sounds)
 
     def get_distance_model(self, name):
@@ -642,8 +640,8 @@ class AudioSystem(object):
         if not self.active_sounds:
             return  # do not update if no sound has been installed
         # update the listener data
-        for s in self.active_sounds:
-            print(s.status)
+        # for s in self.active_sounds:
+            # print(s.status)
         dev = self.device
         listener_vel = self.compute_listener_velocity(c)
         dev.listener_location = c.worldPosition
@@ -1009,9 +1007,9 @@ class LogicNetwork(LogicNetworkCell):
             cell.reset()
             if cell.has_status(LogicNetworkCell.STATUS_WAITING):
                 cells.append(cell)
-        print([s.status for s in self.audio_system.active_sounds])
-        for s in self.audio_system.active_sounds:
-            print(str(s.status) + ' Pre-Check')
+        # print([s.status for s in self.audio_system.active_sounds])
+        # for s in self.audio_system.active_sounds:
+        #     print(str(s.status) + ' Pre-Check')
         # update the sound system
         if self.aud_system_owner:
             self.audio_system.update(self)
@@ -7793,6 +7791,66 @@ class ActionCharacterJump(ActionCell):
         self.done = True
 
 
+class SetCollisionGroup(ActionCell):
+    def __init__(self):
+        ActionCell.__init__(self)
+        self.condition = None
+        self.game_object = None
+        self.slots = None
+        self.done = None
+        self.OUT = LogicNetworkSubCell(self, self.get_done)
+
+    def get_done(self):
+        return self.done
+
+    def evaluate(self):
+        self.done = False
+        condition = self.get_socket_value(self.condition)
+        if not_met(condition):
+            self._set_ready()
+            return
+        game_object = self.get_socket_value(self.game_object)
+        slots = self.get_socket_value(self.slots)
+        if is_waiting(game_object, slots):
+            return
+        self._set_ready()
+        if is_invalid(game_object):
+            return
+        game_object.collisionGroup = slots
+
+        self.done = True
+
+
+class SetCollisionMask(ActionCell):
+    def __init__(self):
+        ActionCell.__init__(self)
+        self.condition = None
+        self.game_object = None
+        self.slots = None
+        self.done = None
+        self.OUT = LogicNetworkSubCell(self, self.get_done)
+
+    def get_done(self):
+        return self.done
+
+    def evaluate(self):
+        self.done = False
+        condition = self.get_socket_value(self.condition)
+        if not_met(condition):
+            self._set_ready()
+            return
+        game_object = self.get_socket_value(self.game_object)
+        slots = self.get_socket_value(self.slots)
+        if is_waiting(game_object, slots):
+            return
+        self._set_ready()
+        if is_invalid(game_object):
+            return
+        game_object.collisionMask = slots
+
+        self.done = True
+
+
 class ActionSaveVariable(ActionCell):
     def __init__(self):
         ActionCell.__init__(self)
@@ -8937,10 +8995,10 @@ class ActionStartSound(ActionCell):
         self._set_ready()
         if handles:
             for handle in handles:
-                print(handle)
-                print(handle.status)
+                # print(handle)
+                # print(handle.status)
                 if not handle.status and handle in audio_system.active_sounds:
-                    print("I'm removing this because of stupidity")
+                    # print("I'm removing this because of stupidity")
                     self._handles.remove(handle)
                     audio_system.active_sounds.remove(handle)
                     self.on_finish = True
@@ -9005,7 +9063,7 @@ class ActionStopAllSounds(ActionCell):
             debug('No Audio System to close.')
             return
         self._set_ready()
-        print('Stopping All Sounds')
+        # print('Stopping All Sounds')
         bpy.types.Scene.nl_aud_system.device.stopAll()
 
 

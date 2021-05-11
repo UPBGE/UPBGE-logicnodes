@@ -164,7 +164,10 @@ class TreeCodeGenerator(object):
         line_writer.write_line("shutdown = network.evaluate()")
         line_writer.write_line("if shutdown is True:")
         line_writer.set_indent_level(indent + 1)
-        line_writer.write_line("controller.sensors[0].repeat = False")
+        if not isinstance(line_writer, BLTextWrapper):
+            line_writer.write_line("controller.sensors[0].repeat = False")
+        else:
+            line_writer.write_line("self.consumed = True")
         line_writer.close()
         # write the bgelogic.py module source in the directory of the current blender file
         this_module_dir = os.path.dirname(__file__)

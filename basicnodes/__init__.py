@@ -860,6 +860,54 @@ class NLListSocket(bpy.types.NodeSocket, NetLogicSocketType):
 _sockets.append(NLListSocket)
 
 
+class NLCollisionMaskSocket(bpy.types.NodeSocket, NetLogicSocketType):
+    bl_idname = "NLCollisionMaskSocket"
+    bl_label = "Parameter"
+    slot_0: bpy.props.BoolProperty(default=True)
+    slot_1: bpy.props.BoolProperty(default=True)
+    slot_2: bpy.props.BoolProperty(default=True)
+    slot_3: bpy.props.BoolProperty(default=True)
+    slot_4: bpy.props.BoolProperty(default=True)
+    slot_5: bpy.props.BoolProperty(default=True)
+    slot_6: bpy.props.BoolProperty(default=True)
+    slot_7: bpy.props.BoolProperty(default=True)
+    slot_8: bpy.props.BoolProperty(default=True)
+    slot_9: bpy.props.BoolProperty(default=True)
+    slot_10: bpy.props.BoolProperty(default=True)
+    slot_11: bpy.props.BoolProperty(default=True)
+    slot_12: bpy.props.BoolProperty(default=True)
+    slot_13: bpy.props.BoolProperty(default=True)
+    slot_14: bpy.props.BoolProperty(default=True)
+    slot_15: bpy.props.BoolProperty(default=True)
+
+    def draw_color(self, context, node):
+        return PARAM_LIST_SOCKET_COLOR
+
+    def draw(self, context, layout, node, text):
+        if self.is_linked or self.is_output:
+            layout.label(text=text)
+        else:
+            col = layout.column(align=True)
+            col.scale_y = .8
+            row = col.row(align=True)
+            row2 = col.row(align=True)
+            idx = 0
+            while idx < 8:
+                row.prop(self, f'slot_{idx}', text='', emboss=True, icon='BLANK1')
+                idx += 1
+            while idx < 16:
+                row2.prop(self, f'slot_{idx}', text='', emboss=True, icon='BLANK1')
+                idx += 1
+
+    def get_unlinked_value(self):
+        slots = [self.get(f'slot_{idx}', 0) * (2**idx) for idx in range(15)]
+        return sum(slots)
+
+
+_sockets.append(NLCollisionMaskSocket)
+
+
+
 class NLLogicBrickSocket(bpy.types.NodeSocket, NetLogicSocketType):
     bl_idname = "NLLogicBrickSocket"
     bl_label = "Logic Brick"
@@ -3640,7 +3688,7 @@ class NLCursorBehavior(bpy.types.Node, NLParameterNode):
         self.inputs.new(NLPseudoConditionSocket.bl_idname, "Condition")
         self.inputs.new(NLGameObjectSocket.bl_idname, "Cursor")
         self.inputs.new(NLFloatFieldSocket.bl_idname, "Distance")
-        self.outputs.new(NLParameterSocket.bl_idname, "Done")
+        self.outputs.new(NLConditionSocket.bl_idname, "Done")
 
     def get_netlogic_class_name(self):
         return "bgelogic.GECursorBehavior"
@@ -8910,6 +8958,56 @@ class NLActionApplyImpulse(bpy.types.Node, NLActionNode):
 
 
 _nodes.append(NLActionApplyImpulse)
+
+
+class NLSetCollisionGroup(bpy.types.Node, NLActionNode):
+    bl_idname = "NLSetCollisionGroup"
+    bl_label = "Set Collision Group"
+    nl_category = "Physics"
+
+    def init(self, context):
+        NLActionNode.init(self, context)
+        self.inputs.new(NLConditionSocket.bl_idname, 'Condition')
+        self.inputs.new(NLGameObjectSocket.bl_idname, 'Object')
+        self.inputs.new(NLCollisionMaskSocket.bl_idname, 'Group')
+        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+
+    def get_output_socket_varnames(self):
+        return ["OUT"]
+
+    def get_netlogic_class_name(self):
+        return "bgelogic.SetCollisionGroup"
+
+    def get_input_sockets_field_names(self):
+        return ["condition", "game_object", 'slots']
+
+
+_nodes.append(NLSetCollisionGroup)
+
+
+class NLSetCollisionMask(bpy.types.Node, NLActionNode):
+    bl_idname = "NLSetCollisionMask"
+    bl_label = "Set Collision Mask"
+    nl_category = "Physics"
+
+    def init(self, context):
+        NLActionNode.init(self, context)
+        self.inputs.new(NLConditionSocket.bl_idname, 'Condition')
+        self.inputs.new(NLGameObjectSocket.bl_idname, 'Object')
+        self.inputs.new(NLCollisionMaskSocket.bl_idname, 'Mask')
+        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+
+    def get_output_socket_varnames(self):
+        return ["OUT"]
+
+    def get_netlogic_class_name(self):
+        return "bgelogic.SetCollisionMask"
+
+    def get_input_sockets_field_names(self):
+        return ["condition", "game_object", 'slots']
+
+
+_nodes.append(NLSetCollisionMask)
 
 
 class NLActionCharacterJump(bpy.types.Node, NLActionNode):
