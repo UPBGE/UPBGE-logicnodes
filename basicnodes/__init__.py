@@ -8864,7 +8864,7 @@ class NLActionApplyRotation(bpy.types.Node, NLActionNode):
             self,
             "local",
             toggle=True,
-            text="Apply Local" if self.local else "Apply Global"
+            text="Local" if self.local else "Global"
         )
 
     def get_netlogic_class_name(self):
@@ -8905,7 +8905,7 @@ class NLActionApplyForce(bpy.types.Node, NLActionNode):
             self,
             "local",
             toggle=True,
-            text="Apply Local" if self.local else "Apply Global"
+            text="Local" if self.local else "Global"
         )
 
     def get_netlogic_class_name(self):
@@ -8944,7 +8944,7 @@ class NLActionApplyImpulse(bpy.types.Node, NLActionNode):
             self,
             "local",
             toggle=True,
-            text="Apply Local" if self.local else "Apply Global"
+            text="Local" if self.local else "Global"
         )
 
     def get_netlogic_class_name(self):
@@ -9650,7 +9650,7 @@ class NLActionSetCharacterWalkDir(bpy.types.Node, NLActionNode):
             self,
             "local",
             toggle=True,
-            text="Apply Local" if self.local else "Apply Global"
+            text="Local" if self.local else "Global"
         )
 
     def get_netlogic_class_name(self):
@@ -9689,7 +9689,7 @@ class NLActionSetCharacterVelocity(bpy.types.Node, NLActionNode):
             self,
             "local",
             toggle=True,
-            text="Apply Local" if self.local else "Apply Global"
+            text="Local" if self.local else "Global"
         )
 
     def get_netlogic_class_name(self):
@@ -9729,7 +9729,7 @@ class NLActionApplyTorque(bpy.types.Node, NLActionNode):
             self,
             "local",
             toggle=True,
-            text="Apply Local" if self.local else "Apply Global"
+            text="Local" if self.local else "Global"
         )
 
     def get_netlogic_class_name(self):
@@ -10388,7 +10388,7 @@ class NLActionAlignAxisToVector(bpy.types.Node, NLActionNode):
             self,
             "local",
             toggle=True,
-            text="Apply Local" if self.local else "Apply Global"
+            text="Local" if self.local else "Global"
         )
 
     def get_output_socket_varnames(self):
