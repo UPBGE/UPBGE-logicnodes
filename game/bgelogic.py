@@ -9586,6 +9586,34 @@ class SetEeveeVolumetrics(ActionCell):
         self.done = True
 
 
+class SetEeveeFrameSamples(ActionCell):
+
+    def __init__(self):
+        ActionCell.__init__(self)
+        self.condition = None
+        self.value = None
+        self.done = None
+        self.OUT = LogicNetworkSubCell(self, self.get_done)
+
+    def get_done(self):
+        return self.done
+
+    def evaluate(self):
+        self.done = False
+        condition = self.get_socket_value(self.condition)
+        if not_met(condition):
+            return
+        value = self.get_socket_value(self.value)
+        if is_invalid(value):
+            return
+        self._set_ready()
+        scene = logic.getCurrentScene()
+        if value < 1:
+            value = 1
+        bpy.data.scenes[scene.name].game_settings.samp_per_frame = value
+        self.done = True
+
+
 class SetEeveeSMAA(ActionCell):
 
     def __init__(self):
