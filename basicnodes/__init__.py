@@ -3023,12 +3023,14 @@ class NLVec3FieldSocket(bpy.types.NodeSocket, NetLogicSocketType):
         if self.is_linked or self.is_output:
             layout.label(text=text)
         else:
-            column = layout.column(align=True)
+            cont = layout.column(align=True)
             if text != '':
-                column.label(text=text)
-            column.prop(self, "value_x", text='X')
-            column.prop(self, "value_y", text='Y')
-            column.prop(self, "value_z", text='Z')
+                cont.label(text=text)
+            if self.node.width >= 200:
+                cont = cont.row(align=True)
+            cont.prop(self, "value_x", text='X')
+            cont.prop(self, "value_y", text='Y')
+            cont.prop(self, "value_z", text='Z')
 
 
 _sockets.append(NLVec3FieldSocket)
@@ -3067,12 +3069,14 @@ class NLVec3RotationSocket(bpy.types.NodeSocket, NetLogicSocketType):
         if self.is_linked or self.is_output:
             layout.label(text=text)
         else:
-            column = layout.column(align=True)
+            cont = layout.column(align=True)
             if text != '':
-                column.label(text=text)
-            column.prop(self, "value_x", text='X')
-            column.prop(self, "value_y", text='Y')
-            column.prop(self, "value_z", text='Z')
+                cont.label(text=text)
+            if self.node.width >= 200:
+                cont = cont.row(align=True)
+            cont.prop(self, "value_x", text='X')
+            cont.prop(self, "value_y", text='Y')
+            cont.prop(self, "value_z", text='Z')
 
 
 _sockets.append(NLVec3RotationSocket)
@@ -3111,12 +3115,14 @@ class NLVelocitySocket(bpy.types.NodeSocket, NetLogicSocketType):
         if self.is_linked or self.is_output:
             layout.label(text=text)
         else:
-            column = layout.column(align=True)
+            cont = layout.column(align=True)
             if text != '':
-                column.label(text=text)
-            column.prop(self, "value_x", text='X')
-            column.prop(self, "value_y", text='Y')
-            column.prop(self, "value_z", text='Z')
+                cont.label(text=text)
+            if self.node.width >= 200:
+                cont = cont.row(align=True)
+            cont.prop(self, "value_x", text='X')
+            cont.prop(self, "value_y", text='Y')
+            cont.prop(self, "value_z", text='Z')
 
 
 _sockets.append(NLVelocitySocket)
@@ -3152,12 +3158,14 @@ class NLVec3PositiveFieldSocket(bpy.types.NodeSocket, NetLogicSocketType):
         if self.is_linked or self.is_output:
             layout.label(text=text)
         else:
-            column = layout.column()
-            # if self.title != '':
-            #     title = column.label(text=self.title)
-            column.prop(self, "value_x", text='X')
-            column.prop(self, "value_y", text='Y')
-            column.prop(self, "value_z", text='Z')
+            cont = layout.column(align=True)
+            if text != '':
+                cont.label(text=text)
+            if self.node.width >= 200:
+                cont = cont.row(align=True)
+            cont.prop(self, "value_x", text='X')
+            cont.prop(self, "value_y", text='Y')
+            cont.prop(self, "value_z", text='Z')
 
 
 _sockets.append(NLVec3PositiveFieldSocket)
@@ -8042,6 +8050,11 @@ class NLActionRayCastNode(bpy.types.Node, NLActionNode):
     bl_idname = "NLActionRayCastNode"
     bl_label = "Ray"
     nl_category = "Ray Casts"
+    advanced: bpy.props.BoolProperty(
+        name='Advanced',
+        description='Show advanced options for this node. Hidden sockets will not be reset',
+        update=update_tree_code
+    )
 
     def init(self, context):
         NLActionNode.init(self, context)
@@ -8062,7 +8075,18 @@ class NLActionRayCastNode(bpy.types.Node, NLActionNode):
         self.outputs.new(NLVec3FieldSocket.bl_idname, "Ray Direction")
 
     def update_draw(self):
-        self.inputs[7].enabled = self.inputs[6].value
+        ipts = self.inputs
+        adv = [
+            ipts[5],
+            ipts[6],
+            ipts[8]
+        ]
+        for i in adv:
+            i.enabled = self.advanced
+        self.inputs[7].enabled = self.inputs[6].value and self.advanced
+
+    def draw_buttons(self, context, layout):
+        layout.prop(self, 'advanced', text='Advanced', icon='SETTINGS')
 
     def get_netlogic_class_name(self):
         return "bgelogic.ActionRayPick"

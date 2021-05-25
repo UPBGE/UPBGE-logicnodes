@@ -6190,14 +6190,16 @@ class ActionRayPick(ActionCell):
     def _compute_direction(self, origin, dest, local, dist):
         custom_dist = self.get_socket_value(self.custom_dist)
         if hasattr(origin, "worldPosition"):
-            origin = origin.worldPosition
+            start = origin.worldPosition.copy()
         if hasattr(dest, "worldPosition"):
-            dest = dest.worldPosition
+            dest = dest.worldPosition.copy()
         if local:
-            dest = origin + dest
-        d = dest - origin
+            if hasattr(origin, 'worldOrientation'):
+                dest = origin.worldOrientation @ dest
+            dest = start + dest
+        d = dest - start
         d.normalize()
-        return d, dist if custom_dist else (origin - dest).length
+        return d, dist if custom_dist else (start - dest).length, dest
 
     def evaluate(self):
         condition = self.get_socket_value(self.condition)
@@ -6220,7 +6222,7 @@ class ActionRayPick(ActionCell):
         self._set_ready()
         caster = self.network._owner
         obj, point, normal = None, None, None
-        direction, distance = self._compute_direction(origin, destination, local, distance)
+        direction, distance, destination = self._compute_direction(origin, destination, local, distance)
         if not property_name:
             obj, point, normal = caster.rayCast(
                 destination,
