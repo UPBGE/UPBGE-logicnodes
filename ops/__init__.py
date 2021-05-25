@@ -475,13 +475,6 @@ class NLUpdateTreeVersionOperator(bpy.types.Operator):
             tree.nodes.remove(node)
 
     def update_ray_node(self, tree, node):
-        if len(node.inputs) == 6:
-            replacer = tree.nodes.new(node.bl_idname)
-            replacer.location = node.location
-            replacer.label = node.label
-            self.restore_inputs(tree, node, replacer)
-            self.restore_outputs(tree, node, replacer)
-            tree.nodes.remove(node)
         if len(node.inputs) < 8:
             replacer = tree.nodes.new(node.bl_idname)
             replacer.location = node.location

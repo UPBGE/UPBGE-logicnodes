@@ -6189,8 +6189,7 @@ class ActionRayPick(ActionCell):
 
     def _compute_direction(self, origin, dest, local, dist):
         custom_dist = self.get_socket_value(self.custom_dist)
-        if hasattr(origin, "worldPosition"):
-            start = origin.worldPosition.copy()
+        start = origin.worldPosition.copy() if hasattr(origin, "worldPosition") else origin
         if hasattr(dest, "worldPosition"):
             dest = dest.worldPosition.copy()
         if local:

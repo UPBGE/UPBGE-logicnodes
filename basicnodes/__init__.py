@@ -1228,9 +1228,9 @@ class NLGamePropertySocket(bpy.types.NodeSocket, NetLogicSocketType):
             if self.name:
                 row = col.row()
                 row.label(text=self.name)
-                row.prop(self, 'use_custom', text='', icon='GREASEPENCIL')
+                if not game_obj_socket.is_linked:
+                    row.prop(self, 'use_custom', text='', icon='GREASEPENCIL')
             if game_object or game_obj_socket.is_linked:
-                # game_object = bpy.data.objects[game_object.split('NLO:')[-1]]
                 if not game_obj_socket.is_linked and not self.use_custom:
                     game = game_object.game
                     col.prop_search(
