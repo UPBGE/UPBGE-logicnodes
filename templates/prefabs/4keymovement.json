@@ -3,13 +3,13 @@
         {
             "x": 0,
             "y": 0,
-            "label": "S Pressed",
+            "label": "W Pressed",
             "node_type": "NLKeyPressedCondition",
             "links": [],
             "values": [
                 {
                     "index": 0,
-                    "value": "S"
+                    "value": "W"
                 }, {
                     "index": "pulse",
                     "value": true
@@ -18,13 +18,13 @@
         }, {
             "x": 0,
             "y": -40,
-            "label": "W Pressed",
+            "label": "S Pressed",
             "node_type": "NLKeyPressedCondition",
             "links": [],
             "values": [
                 {
                     "index": 0,
-                    "value": "W"
+                    "value": "S"
                 }, {
                     "index": "pulse",
                     "value": true
@@ -62,118 +62,44 @@
             ]
         }, {
             "x": 220,
-            "y": 0,
-            "label": "W or S Pressed",
-            "node_type": "NLConditionOrNode",
+            "y": -40,
+            "label": "W or S pressed",
+            "node_type": "NLArithmeticOpParameterNode",
             "links": [[0, 0, 0], [1, 0, 1]],
-            "values": []
-        }, {
-            "x": 220,
-            "y": -40,
-            "label": "Forward/Back",
-            "node_type": "NLValueSwitch",
-            "links": [[1, 0, 0]],
             "values": [
                 {
-                    "index": 1,
-                    "type": "value_type",
-                    "value": "INTEGER"
-                }, {
-                    "index": 1,
-                    "type": "int_editor",
-                    "value": 1
-                }, {
-                    "index": 2,
-                    "type": "value_type",
-                    "value": "INTEGER"
-                }, {
-                    "index": 2,
-                    "type": "int_editor",
-                    "value": -1
+                    "index": "operator",
+                    "value": "SUB"
                 }
             ]
         }, {
             "x": 220,
             "y": -80,
-            "label": "A or D Pressed",
-            "node_type": "NLConditionOrNode",
+            "label": "A or D pressed",
+            "node_type": "NLArithmeticOpParameterNode",
             "links": [[2, 0, 0], [3, 0, 1]],
-            "values": []
-        }, {
-            "x": 220,
-            "y": -120,
-            "label": "Left/Right",
-            "node_type": "NLValueSwitch",
-            "links": [[3, 0, 0]],
             "values": [
                 {
-                    "index": 1,
-                    "type": "value_type",
-                    "value": "INTEGER"
-                }, {
-                    "index": 1,
-                    "type": "int_editor",
-                    "value": -1
-                }, {
-                    "index": 2,
-                    "type": "value_type",
-                    "value": "INTEGER"
-                }, {
-                    "index": 2,
-                    "type": "int_editor",
-                    "value": 1
+                    "index": "operator",
+                    "value": "SUB"
                 }
             ]
         }, {
             "x": 440,
-            "y": -40,
-            "label": "Is Moving",
-            "node_type": "NLValueSwitch",
-            "links": [[4, 0, 0], [5, 0, 1]],
-            "values": [
-                {
-                    "index": 2,
-                    "type": "value_type",
-                    "value": "INTEGER"
-                }, {
-                    "index": 2,
-                    "type": "int_editor",
-                    "value": 0
-                }
-            ]
-        }, {
-            "x": 440,
-            "y": -80,
-            "label": "Is Moving",
-            "node_type": "NLValueSwitch",
-            "links": [[6, 0, 0], [7, 0, 1]],
-            "values": [
-                {
-                    "index": 2,
-                    "type": "value_type",
-                    "value": "INTEGER"
-                }, {
-                    "index": 2,
-                    "type": "int_editor",
-                    "value": 0
-                }
-            ]
-        }, {
-            "x": 660,
             "y": -60,
             "label": "Build Vector",
             "node_type": "NLParameterVector2SimpleNode",
-            "links": [[8, 0, 0], [9, 0, 1]],
+            "links": [[4, 0, 0], [5, 0, 1]],
             "values": []
         }, {
-            "x": 880,
+            "x": 660,
             "y": -60,
             "label": "Normalize",
             "node_type": "NLVectorMath",
-            "links": [[10, 0, 0]],
+            "links": [[6, 0, 0]],
             "values": []
         }, {
-            "x": 880,
+            "x": 660,
             "y": -100,
             "label": "Speed",
             "node_type": "NLParameterFloatValue",
@@ -185,18 +111,18 @@
                 }
             ]
         }, {
-            "x": 1100,
+            "x": 880,
             "y": -40,
             "label": "On Update",
             "node_type": "NLOnUpdateConditionNode",
             "links": [],
             "values": []
         }, {
-            "x": 1100,
+            "x": 880,
             "y": -80,
             "label": "Calc Speed",
             "node_type": "NLArithmeticOpParameterNode",
-            "links": [[11, 0, 0], [12, 0, 1]],
+            "links": [[7, 0, 0], [8, 0, 1]],
             "values": [
                 {
                     "index": "operator",
@@ -204,11 +130,11 @@
                 }
             ]
         }, {
-            "x": 1320,
+            "x": 1100,
             "y": -60,
             "label": "Move Object",
             "node_type": "NLActionApplyLocation",
-            "links": [[13, 0, 0], [14, 0, 2]],
+            "links": [[9, 0, 0], [10, 0, 2]],
             "values": [
                 {
                     "index": "local",
