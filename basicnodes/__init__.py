@@ -8048,8 +8048,10 @@ class NLActionRayCastNode(bpy.types.Node, NLActionNode):
         self.inputs.new(NLConditionSocket.bl_idname, "Condition")
         self.inputs.new(NLVec3FieldSocket.bl_idname, "Origin")
         self.inputs.new(NLVec3FieldSocket.bl_idname, "Aim")
+        self.inputs.new(NLBooleanSocket.bl_idname, "Local")
         self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Property")
         self.inputs.new(NLBooleanSocket.bl_idname, 'X-Ray')
+        self.inputs.new(NLBooleanSocket.bl_idname, "Custom Distance")
         self.inputs.new(NLPositiveFloatSocket.bl_idname, "Distance")
         self.inputs[-1].value = 100.0
         self.inputs.new(NLBooleanSocket.bl_idname, 'Visualize')
@@ -8059,6 +8061,9 @@ class NLActionRayCastNode(bpy.types.Node, NLActionNode):
         self.outputs.new(NLVec3FieldSocket.bl_idname, "Picked Normal")
         self.outputs.new(NLVec3FieldSocket.bl_idname, "Ray Direction")
 
+    def update_draw(self):
+        self.inputs[7].enabled = self.inputs[6].value
+
     def get_netlogic_class_name(self):
         return "bgelogic.ActionRayPick"
 
@@ -8067,8 +8072,10 @@ class NLActionRayCastNode(bpy.types.Node, NLActionNode):
             "condition",
             "origin",
             "destination",
+            'local',
             "property_name",
             'xray',
+            'custom_dist',
             "distance",
             "visualize"
         ]
@@ -10102,35 +10109,6 @@ class NLSetEeveeVolumetrics(bpy.types.Node, NLActionNode):
 
 
 _nodes.append(NLSetEeveeVolumetrics)
-
-
-
-class NLSetEeveeFrameSamples(bpy.types.Node, NLActionNode):
-    bl_idname = "NLSetEeveeFrameSamples"
-    bl_label = "Set Samples Per Frame"
-    nl_category = 'Render'
-    nl_subcat = 'Visuals'
-
-    def init(self, context):
-        NLActionNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, 'Condition')
-        self.inputs.new(NLIntegerFieldSocket.bl_idname, 'Samples per Frame')
-        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
-
-    def get_output_socket_varnames(self):
-        return ["OUT"]
-
-    def get_netlogic_class_name(self):
-        return "bgelogic.SetEeveeFrameSamples"
-
-    def get_input_sockets_field_names(self):
-        return [
-            "condition",
-            "value"
-        ]
-
-
-_nodes.append(NLSetEeveeFrameSamples)
 
 
 class NLSetEeveeSMAA(bpy.types.Node, NLActionNode):

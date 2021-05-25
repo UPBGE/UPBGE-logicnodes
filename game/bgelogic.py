@@ -6156,8 +6156,10 @@ class ActionRayPick(ActionCell):
         self.condition = None
         self.origin = None
         self.destination = None
+        self.local = None
         self.property_name = None
         self.xray = None
+        self.custom_dist = None
         self.distance = None
         self.visualize = None
         self._picked_object = None
@@ -6185,14 +6187,17 @@ class ActionRayPick(ActionCell):
     def get_direction(self):
         return self._direction
 
-    def _compute_direction(self, origin, dest):
+    def _compute_direction(self, origin, dest, local, dist):
+        custom_dist = self.get_socket_value(self.custom_dist)
         if hasattr(origin, "worldPosition"):
             origin = origin.worldPosition
         if hasattr(dest, "worldPosition"):
             dest = dest.worldPosition
+        if local:
+            dest = origin + dest
         d = dest - origin
         d.normalize()
-        return d
+        return d, dist if custom_dist else (origin - dest).length
 
     def evaluate(self):
         condition = self.get_socket_value(self.condition)
@@ -6204,16 +6209,18 @@ class ActionRayPick(ActionCell):
             return
         origin = self.get_socket_value(self.origin)
         destination = self.get_socket_value(self.destination)
+        local = self.get_socket_value(self.local)
         property_name = self.get_socket_value(self.property_name)
         xray = self.get_socket_value(self.xray)
         distance = self.get_socket_value(self.distance)
         visualize = self.get_socket_value(self.visualize)
 
-        if is_waiting(origin, destination, property_name, distance):
+        if is_waiting(origin, destination, local, property_name, distance):
             return
         self._set_ready()
         caster = self.network._owner
         obj, point, normal = None, None, None
+        direction, distance = self._compute_direction(origin, destination, local, distance)
         if not property_name:
             obj, point, normal = caster.rayCast(
                 destination,
@@ -6229,7 +6236,6 @@ class ActionRayPick(ActionCell):
                 property_name,
                 xray=xray
             )
-        direction = self._compute_direction(origin, destination)
         if visualize:
             origin = getattr(origin, 'worldPosition', origin)
             line_dest = direction.copy()
@@ -9583,34 +9589,6 @@ class SetEeveeVolumetrics(ActionCell):
         bpy.data.scenes[
             scene.name
         ].eevee.use_volumetric_lights = value
-        self.done = True
-
-
-class SetEeveeFrameSamples(ActionCell):
-
-    def __init__(self):
-        ActionCell.__init__(self)
-        self.condition = None
-        self.value = None
-        self.done = None
-        self.OUT = LogicNetworkSubCell(self, self.get_done)
-
-    def get_done(self):
-        return self.done
-
-    def evaluate(self):
-        self.done = False
-        condition = self.get_socket_value(self.condition)
-        if not_met(condition):
-            return
-        value = self.get_socket_value(self.value)
-        if is_invalid(value):
-            return
-        self._set_ready()
-        scene = logic.getCurrentScene()
-        if value < 1:
-            value = 1
-        bpy.data.scenes[scene.name].game_settings.samp_per_frame = value
         self.done = True
 
 

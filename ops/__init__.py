@@ -415,7 +415,7 @@ class NLUpdateTreeVersionOperator(bpy.types.Operator):
             for link in opt.links:
                 tree.links.new(new_opt, link.to_socket)
 
-    def restore_inputs(self, tree, node, replacer, scope=0, start=0, offset=0):
+    def restore_inputs(self, tree, node, replacer, start=0, scope=0, offset=0):
         if scope == 0:
             scope = len(node.inputs) - 1
         for idx in range(scope):
@@ -432,7 +432,7 @@ class NLUpdateTreeVersionOperator(bpy.types.Operator):
                         replacer.inputs[idx+offset]
                     )
 
-    def restore_outputs(self, tree, node, replacer, scope=0, start=0, offset=0):
+    def restore_outputs(self, tree, node, replacer, start=0, scope=0, offset=0):
         if scope == 0:
             scope = len(node.outputs) - 1
         for idx in range(scope):
@@ -480,6 +480,15 @@ class NLUpdateTreeVersionOperator(bpy.types.Operator):
             replacer.location = node.location
             replacer.label = node.label
             self.restore_inputs(tree, node, replacer)
+            self.restore_outputs(tree, node, replacer)
+            tree.nodes.remove(node)
+        if len(node.inputs) < 8:
+            replacer = tree.nodes.new(node.bl_idname)
+            replacer.location = node.location
+            replacer.label = node.label
+            self.restore_inputs(tree, node, replacer, 0, 3)
+            self.restore_inputs(tree, node, replacer, 4, 2)
+            self.restore_input(tree, node, replacer, 6, 7)
             self.restore_outputs(tree, node, replacer)
             tree.nodes.remove(node)
 
@@ -1304,11 +1313,11 @@ class NLPopupTemplatesOperator(bpy.types.Operator):
 
 class NLAddonPatreonButton(bpy.types.Operator):
     bl_idname = "bge_netlogic.donate"
-    bl_label = "Become a Patreon"
+    bl_label = "Support this Project"
     bl_description = "Consider supporting this Add-On"
 
     def execute(self, context):
-        webbrowser.open('https://www.patreon.com/iza_zed')
+        webbrowser.open('https://www.buymeacoffee.com/izaz')
         return {"FINISHED"}
 
 
