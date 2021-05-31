@@ -505,7 +505,6 @@ def project_vector3(v, xi, yi):
 
 
 def stop_all_sounds(a, b):
-    # print('Heres something wrong')
     if not hasattr(bpy.types.Scene, 'nl_aud_system'):
         return
     bpy.types.Scene.nl_aud_system.device.stopAll()
@@ -640,8 +639,6 @@ class AudioSystem(object):
         if not self.active_sounds:
             return  # do not update if no sound has been installed
         # update the listener data
-        # for s in self.active_sounds:
-            # print(s.status)
         dev = self.device
         listener_vel = self.compute_listener_velocity(c)
         dev.listener_location = c.worldPosition
@@ -1007,9 +1004,6 @@ class LogicNetwork(LogicNetworkCell):
             cell.reset()
             if cell.has_status(LogicNetworkCell.STATUS_WAITING):
                 cells.append(cell)
-        # print([s.status for s in self.audio_system.active_sounds])
-        # for s in self.audio_system.active_sounds:
-        #     print(str(s.status) + ' Pre-Check')
         # update the sound system
         if self.aud_system_owner:
             self.audio_system.update(self)
@@ -8403,6 +8397,7 @@ class ParameterGetCharacterInfo(ParameterCell):
         self.gravity = None
         self.walk_dir = None
         self.on_ground = None
+        self.local = False
         self.MAX_JUMPS = LogicNetworkSubCell(self, self.get_max_jumps)
         self.CUR_JUMP = LogicNetworkSubCell(self, self.get_current_jump)
         self.GRAVITY = LogicNetworkSubCell(self, self.get_gravity)
@@ -8429,12 +8424,14 @@ class ParameterGetCharacterInfo(ParameterCell):
         if is_invalid(game_object):
             return
         physics = bge.constraints.getCharacter(game_object)
+        local = self.local
         self._set_ready()
         self.max_jumps = physics.maxJumps
         self.cur_jump = physics.jumpCount
         self.gravity = physics.gravity
-        self.walk_dir = physics.walkDirection
+        self.walk_dir = physics.walkDirection @ game_object.worldOrientation if local else physics.walkDirection
         self.on_ground = physics.onGround
+
 
 
 class ActionApplyTorque(ActionCell):
@@ -8997,15 +8994,10 @@ class ActionStartSound(ActionCell):
         handles = self._handles
         pitch = self.get_socket_value(self.pitch)
         volume = self.get_socket_value(self.volume)
-        # print(self.device)
-        # print(handles)
         self._set_ready()
         if handles:
             for handle in handles:
-                # print(handle)
-                # print(handle.status)
                 if not handle.status and handle in audio_system.active_sounds:
-                    # print("I'm removing this because of stupidity")
                     self._handles.remove(handle)
                     audio_system.active_sounds.remove(handle)
                     self.on_finish = True
@@ -9025,7 +9017,7 @@ class ActionStartSound(ActionCell):
 
         if is_invalid(sound):
             return
-        soundpath = bge.logic.expandPath("//")+sound
+        soundpath = bge.logic.expandPath(sound)
         soundfile = aud.Sound(soundpath)
         handle = self.device.play(soundfile)
         handle.relative = True
@@ -9070,7 +9062,6 @@ class ActionStopAllSounds(ActionCell):
             debug('No Audio System to close.')
             return
         self._set_ready()
-        # print('Stopping All Sounds')
         bpy.types.Scene.nl_aud_system.device.stopAll()
 
 

@@ -4748,6 +4748,7 @@ class NLActionGetCharacterInfo(bpy.types.Node, NLParameterNode):
     bl_label = "Get Physics Info"
     nl_category = "Physics"
     nl_subcat = 'Character'
+    local: bpy.props.BoolProperty(default=True, update=update_tree_code)
 
     def init(self, context):
         NLActionNode.init(self, context)
@@ -4758,11 +4759,22 @@ class NLActionGetCharacterInfo(bpy.types.Node, NLParameterNode):
         self.outputs.new(NLVec3FieldSocket.bl_idname, 'Walk Direction')
         self.outputs.new(NLBooleanSocket.bl_idname, 'On Ground')
 
+    def draw_buttons(self, context, layout):
+        layout.prop(
+            self,
+            "local",
+            toggle=True,
+            text="Local" if self.local else "Global"
+        )
+
     def get_netlogic_class_name(self):
         return "bgelogic.ParameterGetCharacterInfo"
 
     def get_input_sockets_field_names(self):
         return ["game_object"]
+
+    def get_nonsocket_fields(self):
+        return [("local", lambda: "True" if self.local else "False")]
 
     def get_output_socket_varnames(self):
         return ["MAX_JUMPS", "CUR_JUMP", "GRAVITY", 'WALKDIR', 'ON_GROUND']
