@@ -3655,6 +3655,7 @@ class ParameterTypeCast(ParameterCell):
             return str(value)
         elif t == 'float':
             return float(value)
+        return value
 
     def evaluate(self):
         value = self.get_socket_value(self.value)

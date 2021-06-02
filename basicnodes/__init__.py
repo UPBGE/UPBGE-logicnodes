@@ -5384,7 +5384,7 @@ class NLParameterTypeCast(bpy.types.Node, NLParameterNode):
         return "bgelogic.ParameterTypeCast"
 
     def get_input_sockets_field_names(self):
-        return ['value', "to_type"]
+        return ["to_type", 'value']
 
 
 _nodes.append(NLParameterTypeCast)
