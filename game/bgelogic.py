@@ -6188,8 +6188,8 @@ class ActionRayPick(ActionCell):
         if hasattr(dest, "worldPosition"):
             dest = dest.worldPosition.copy()
         if local:
-            if hasattr(origin, 'worldOrientation'):
-                dest = origin.worldOrientation @ dest
+            # if hasattr(origin, 'worldOrientation'):
+            #     dest = origin.worldOrientation @ dest
             dest = start + dest
         d = dest - start
         d.normalize()
