@@ -4357,9 +4357,10 @@ class ConditionAnd(ConditionCell):
     def evaluate(self):
         ca = self.get_socket_value(self.condition_a)
         cb = self.get_socket_value(self.condition_b)
-        if is_waiting(ca, cb):
-            return
         self._set_ready()
+        if is_waiting(ca, cb):
+            self._set_value(False)
+            return
         self._set_value(ca and cb)
     pass
 
@@ -4373,9 +4374,10 @@ class ConditionAndNot(ConditionCell):
     def evaluate(self):
         ca = self.get_socket_value(self.condition_a)
         cb = not self.get_socket_value(self.condition_b)
-        if is_waiting(ca, cb):
-            return
         self._set_ready()
+        if is_waiting(ca, cb):
+            self._set_value(False)
+            return
         self._set_value(ca and cb)
     pass
 
@@ -4388,8 +4390,6 @@ class ConditionNotNone(ConditionCell):
 
     def evaluate(self):
         value = self.get_socket_value(self.checked_value)
-        if is_waiting(value):
-            return
         self._set_ready()
         self._set_value(value is not None)
 
@@ -4425,8 +4425,10 @@ class ConditionOr(ConditionCell):
     def evaluate(self):
         ca = self.get_socket_value(self.condition_a)
         cb = self.get_socket_value(self.condition_b)
-        if is_waiting(ca, cb):
-            return
+        if is_waiting(ca):
+            ca = False
+        if is_waiting(cb):
+            cb = False
         self._set_ready()
         self._set_value(ca or cb)
 
@@ -4448,8 +4450,9 @@ class ConditionOrList(ConditionCell):
         cd = self.get_socket_value(self.cd)
         ce = self.get_socket_value(self.ce)
         cf = self.get_socket_value(self.cf)
-        if is_waiting(ca, cb, cc, cd, ce, cf):
-            return
+        for c in [ca, cb, cc, cd, ce, cf]:
+            if c is LogicNetworkCell.STATUS_WAITING:
+                c = False
         self._set_ready()
         self._set_value(ca or cb or cc or cd or ce or cf)
 
@@ -4472,9 +4475,10 @@ class ConditionAndList(ConditionCell):
         cd = self.get_socket_value(self.cd)
         ce = self.get_socket_value(self.ce)
         cf = self.get_socket_value(self.cf)
-        if is_waiting(ca, cb, cc, cd, ce, cf):
-            return
         self._set_ready()
+        if is_waiting(ca, cb, cc, cd, ce, cf):
+            self._set_value(False)
+            return
         self._set_value(ca and cb and cc and cd and ce and cf)
 
 
