@@ -4220,6 +4220,8 @@ class ConditionLogicOp(ConditionCell):
         b = self.get_socket_value(self.param_b)
         threshold = self.get_socket_value(self.threshold)
         operator = self.get_socket_value(self.operator)
+        if is_waiting(a, b, threshold):
+            return
         self._set_ready()
         if operator > 1:  # eq and neq are valid for None
             if a is None:
