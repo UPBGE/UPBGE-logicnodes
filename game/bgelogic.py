@@ -6587,18 +6587,17 @@ class GEDrawLine(ActionCell):
         if is_invalid(from_point, to_point, color):
             return
         self._set_ready()
-        self._set_value(
-            bge.render.drawLine(
-                from_point,
-                to_point,
-                [
-                    color.x,
-                    color.y,
-                    color.z,
-                    1
-                ]
-            )
+        bge.render.drawLine(
+            from_point,
+            to_point,
+            [
+                color.x,
+                color.y,
+                color.z,
+                1
+            ]
         )
+        self._set_value(True)
 
 
 class GetResolution(ActionCell):
