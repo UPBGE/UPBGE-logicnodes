@@ -4835,7 +4835,7 @@ class ActionAddObject(ActionCell):
         self._set_ready()
         reference = self.get_socket_value(self.reference)
         scene = logic.getCurrentScene()
-        if is_invalid(life, name, reference, scene):
+        if is_waiting(life, name, reference, scene):
             return
         self.obj = scene.addObject(name, reference, life)
         self.done = True
