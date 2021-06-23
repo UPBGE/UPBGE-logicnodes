@@ -11769,6 +11769,7 @@ class NLActionNavigate(bpy.types.Node, NLActionNode):
         self.inputs.new(NLSocketOrientedLocalAxis.bl_idname, "Front")
         self.inputs.new(NLFloatFieldSocket.bl_idname, "Rot Speed")
         self.inputs[-1].value = 1.0
+        self.inputs.new(NLBooleanSocket.bl_idname, "Visualize")
         self.outputs.new(NLConditionSocket.bl_idname, "When Reached")
 
     def get_netlogic_class_name(self):
@@ -11787,7 +11788,8 @@ class NLActionNavigate(bpy.types.Node, NLActionNode):
             "look_at",
             "rot_axis",
             "front_axis",
-            "rot_speed"
+            "rot_speed",
+            'visualize'
         ]
 
 
