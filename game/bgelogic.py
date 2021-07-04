@@ -347,7 +347,7 @@ def xrot_to(
         if abs_angle < 0.01:
             return True
         angle_sign = (signed_angle > 0) - (signed_angle < 0)
-        drot = angle_sign * speed * time_per_frame
+        drot = angle_sign * abs_angle * speed * time_per_frame
         eulers = rotating_object.localOrientation.to_euler()
         eulers[0] += drot
         rotating_object.localOrientation = eulers
@@ -384,7 +384,7 @@ def yrot_to(
         if abs_angle < 0.01:
             return True
         angle_sign = (signed_angle > 0) - (signed_angle < 0)
-        drot = angle_sign * speed * time_per_frame
+        drot = angle_sign * abs_angle * speed * time_per_frame
         eulers = rotating_object.localOrientation.to_euler()
         eulers[1] += drot
         rotating_object.localOrientation = eulers
@@ -423,7 +423,7 @@ def zrot_to(
         if abs_angle < 0.01:
             return True
         angle_sign = (signed_angle > 0) - (signed_angle < 0)
-        drot = angle_sign * speed * time_per_frame
+        drot = angle_sign * abs_angle * speed * time_per_frame
         eulers = rotating_object.localOrientation.to_euler()
         eulers[2] += drot
         rotating_object.localOrientation = eulers
@@ -9960,6 +9960,7 @@ class ActionNavigateWithNavmesh(ActionCell):
         self.rot_axis = None
         self.front_axis = None
         self.rot_speed = None
+        self.visualize = None
         self._motion_path = None
 
     def evaluate(self):
@@ -9978,6 +9979,7 @@ class ActionNavigateWithNavmesh(ActionCell):
         rot_axis = self.get_socket_value(self.rot_axis)
         front_axis = self.get_socket_value(self.front_axis)
         rot_speed = self.get_socket_value(self.rot_speed)
+        visualize = self.get_socket_value(self.visualize)
         if is_invalid(
             destination_point,
             move_dynamic,
@@ -9986,7 +9988,8 @@ class ActionNavigateWithNavmesh(ActionCell):
             look_at,
             rot_axis,
             front_axis,
-            rot_speed
+            rot_speed,
+            visualize
         ):
             return
         if is_invalid(moving_object, navmesh_object):
@@ -10007,6 +10010,15 @@ class ActionNavigateWithNavmesh(ActionCell):
             motion_path.destination = destination_point
             self._motion_path = motion_path
         next_point = self._motion_path.next_point()
+        if visualize:
+            points = [moving_object.worldPosition.copy()]
+            points.extend(self._motion_path.points[self._motion_path.cursor:])
+            points.append(self._motion_path.destination)
+            for i, p in enumerate(points):
+                if i < len(points) - 1:
+                    bge.render.drawLine(
+                        p, points[i + 1], [1, 0, 0, 1]
+                    )
         if next_point:
             tpf = self.network.time_per_frame
             if look_at and (rotating_object is not None):
@@ -10018,13 +10030,14 @@ class ActionNavigateWithNavmesh(ActionCell):
                     rot_speed,
                     tpf
                 )
+            ths = reach_threshold if next_point == self._motion_path.destination else .1
             reached = move_to(
                 moving_object,
                 next_point,
                 linear_speed,
                 tpf,
                 move_dynamic,
-                reach_threshold
+                ths
             )
             if reached:
                 has_more = self._motion_path.advance()
