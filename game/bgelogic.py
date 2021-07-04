@@ -3643,8 +3643,8 @@ class ParameterSimpleValue(ParameterCell):
 class ParameterTypeCast(ParameterCell):
     def __init__(self):
         ParameterCell.__init__(self)
-        self.to_type = None
         self.value = None
+        self.to_type = None
 
     def typecast_value(self, value, t):
         if t == 'int':
@@ -4835,7 +4835,7 @@ class ActionAddObject(ActionCell):
         self._set_ready()
         reference = self.get_socket_value(self.reference)
         scene = logic.getCurrentScene()
-        if is_waiting(life, name, reference, scene):
+        if is_waiting(life, name, reference):
             return
         self.obj = scene.addObject(name, reference, life)
         self.done = True
@@ -5393,7 +5393,6 @@ class InvertBool(ActionCell):
     def evaluate(self):
         value = self.get_socket_value(self.value)
         if is_invalid(value):
-            debug('Inver Bool Node: Value invalid, defaulting to "False"')
             self.out_value = False
             return
         self._set_ready()
@@ -5413,7 +5412,6 @@ class InvertValue(ActionCell):
     def evaluate(self):
         value = self.get_socket_value(self.value)
         if is_invalid(value):
-            debug('Inver Value Node: Value invalid, defaulting to 0')
             self.out_value = 0
             return
         self._set_ready()
