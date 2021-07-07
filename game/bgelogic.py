@@ -8314,7 +8314,10 @@ class ActionSetCharacterGravity(ActionCell):
         if is_invalid(game_object):
             return
         physics = bge.constraints.getCharacter(game_object)
-        physics.gravity = gravity
+        if physics:
+            physics.gravity = gravity
+        else:
+            game_object.gravity = gravity
         self.done = True
 
 

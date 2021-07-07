@@ -3013,10 +3013,15 @@ class NLVec3FieldSocket(bpy.types.NodeSocket, NetLogicSocketType):
         return PARAM_VECTOR_SOCKET_COLOR
 
     def get_unlinked_value(self):
-        return "mathutils.Vector(({}, {}, {}))".format(
+        vec =  "mathutils.Vector(({}, {}, {}))".format(
             self.value_x,
             self.value_y,
             self.value_z
+        )
+        return getattr(
+            self.value,
+            'worldPosition',
+            vec
         )
 
     def draw(self, context, layout, node, text):
@@ -7526,7 +7531,7 @@ _nodes.append(NLToggleGameObjectGamePropertyActionNode)
 
 class NLAddToGameObjectGamePropertyActionNode(bpy.types.Node, NLActionNode):
     bl_idname = "NLAddToGameObjectGamePropertyActionNode"
-    bl_label = "Add To Property"
+    bl_label = "Modify Property"
     bl_icon = 'ADD'
     nl_category = "Objects"
     nl_subcat = 'Properties'
@@ -9648,7 +9653,6 @@ class NLActionSetCharacterGravity(bpy.types.Node, NLActionNode):
     bl_idname = "NLActionSetCharacterGravity"
     bl_label = "Set Gravity"
     nl_category = "Physics"
-    nl_subcat = 'Character'
 
     def init(self, context):
         NLActionNode.init(self, context)
