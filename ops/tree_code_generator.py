@@ -179,22 +179,22 @@ class TreeCodeGenerator(object):
         #     print('This wont do yo')
         #     pass
 
-        # game_dir = os.path.join(bge_netlogic_dir, "game", 'windows')
-        # bgelogic_input_file = os.path.join(game_dir, "bgelogic.pyd")
-        # target_path = os.path.join(bpy.path.abspath("//bgelogic"), "__init__.pyd")
-        # print(bgelogic_input_file)
-        # print(target_path)
-        # shutil.copyfile(bgelogic_input_file, target_path)
+        game_dir = os.path.join(bge_netlogic_dir, "game", 'windows')
+        bgelogic_input_file = os.path.join(game_dir, "game.cp37-win_amd64.pyd")
+        target_path = os.path.join(bpy.path.abspath("//bgelogic"), "__init__.pyd")
+        print(bgelogic_input_file)
+        print(target_path)
+        shutil.copyfile(bgelogic_input_file, target_path)
 
-        game_dir = os.path.join(bge_netlogic_dir, "game")
-        bgelogic_input_file = os.path.join(game_dir, "bgelogic.py")
-        bgelogic_source_code = None
-        with open(bgelogic_input_file, "r") as f:
-            bgelogic_source_code = f.read()
-        assert (bgelogic_source_code is not None)
-        bgelogic_output_writer = self.create_text_file("bgelogic/__init__.py")
-        bgelogic_output_writer.write_line(bgelogic_source_code)
-        bgelogic_output_writer.close()
+        # game_dir = os.path.join(bge_netlogic_dir, "game")
+        # bgelogic_input_file = os.path.join(game_dir, "bgelogic.py")
+        # bgelogic_source_code = None
+        # with open(bgelogic_input_file, "r") as f:
+        #     bgelogic_source_code = f.read()
+        # assert (bgelogic_source_code is not None)
+        # bgelogic_output_writer = self.create_text_file("bgelogic/__init__.py")
+        # bgelogic_output_writer.write_line(bgelogic_source_code)
+        # bgelogic_output_writer.close()
 
     def _write_tree(self, tree, line_writer):
         uid_map = UIDMap()
