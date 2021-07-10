@@ -9760,7 +9760,6 @@ class NLActionSetCharacterGravity(bpy.types.Node, NLActionNode):
     bl_idname = "NLActionSetCharacterGravity"
     bl_label = "Set Gravity"
     nl_category = "Physics"
-    nl_subcat = 'Character'
 
     def init(self, context):
         NLActionNode.init(self, context)
