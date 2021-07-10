@@ -3695,16 +3695,69 @@ class ParameterVectorMath(ParameterCell):
         vector = self.get_socket_value(self.vector)
         vector_2 = self.get_socket_value(self.vector_2)
         factor = self.get_socket_value(self.factor)
-        if op is None:
+        if is_waiting(
+            op,
+            factor
+        ):
             return
-        if vector is None:
-            return
-        if vector_2 is None:
-            return
-        if factor is None:
+        if is_invalid(
+            vector,
+            vector_2
+        ):
             return
         self._set_ready()
         self._set_value(self.calc_output_vector(op, vector, vector_2, factor))
+
+
+class VectorAngle(ParameterCell):
+    def __init__(self):
+        ParameterCell.__init__(self)
+        self.op = None
+        self.vector = None
+        self.vector_2 = None
+
+    def evaluate(self):
+        vector = self.get_socket_value(self.vector)
+        vector_2 = self.get_socket_value(self.vector_2)
+        if is_invalid(
+            vector,
+            vector_2
+        ):
+            return
+        self._set_ready()
+        rad = math.acos(vector.dot(vector_2))
+        deg = rad * 180/math.pi
+        self._set_value(deg)
+
+
+class VectorAngleCheck(ParameterCell):
+    def __init__(self):
+        ParameterCell.__init__(self)
+        self.op = None
+        self.vector = None
+        self.vector_2 = None
+        self.value = None
+
+    def evaluate(self):
+        op = self.get_socket_value(self.op)
+        vector = self.get_socket_value(self.vector)
+        vector_2 = self.get_socket_value(self.vector_2)
+        value = self.get_socket_value(self.value)
+        if is_waiting(
+            op
+        ):
+            return
+        if is_invalid(
+            vector,
+            vector_2
+        ):
+            return
+        self._set_ready()
+        rad = math.acos(vector.dot(vector_2))
+        deg = rad * 180/math.pi
+        print(op)
+        self._set_value(LOGIC_OPERATORS[int(op)](deg, value))
+
 
 
 class ParameterVector(ParameterCell):
@@ -6192,8 +6245,6 @@ class ActionRayPick(ActionCell):
         if hasattr(dest, "worldPosition"):
             dest = dest.worldPosition.copy()
         if local:
-            # if hasattr(origin, 'worldOrientation'):
-            #     dest = origin.worldOrientation @ dest
             dest = start + dest
         d = dest - start
         d.normalize()
@@ -6269,6 +6320,100 @@ class ActionRayPick(ActionCell):
         self._point = point
         self._normal = normal
         self._direction = direction
+
+
+class ProjectileRayCast(ActionCell):
+
+    def __init__(self):
+        ActionCell.__init__(self)
+        self.condition = None
+        self.origin = None
+        self.destination = None
+        self.power = None
+        self.resolution = None
+        self.property_name = None
+        self.xray = None
+        self.distance = None
+        self.visualize = None
+        self._picked_object = None
+        self._point = None
+        self._normal = None
+        self.PICKED_OBJECT = LogicNetworkSubCell(self, self.get_picked_object)
+        self.POINT = LogicNetworkSubCell(self, self.get_point)
+        self.NORMAL = LogicNetworkSubCell(self, self.get_normal)
+        self.network = None
+
+    def setup(self, network):
+        self.network = network
+
+    def get_picked_object(self):
+        return self._picked_object
+
+    def get_point(self):
+        return self._point
+
+    def get_normal(self):
+        return self._normal
+
+    def calc_projectile(self, t, vel, pos):
+        half = logic.getCurrentScene().gravity.z * (.5 * t * t)
+        vel = vel * t
+        return mathutils.Vector((0,0, half)) + vel + pos
+
+    def evaluate(self):
+        condition = self.get_socket_value(self.condition)
+        if not_met(condition):
+            self._set_value(False)
+            self._out_normal = None
+            self._out_object = None
+            self._out_point = None
+            return
+        origin = self.get_socket_value(self.origin)
+        power = self.get_socket_value(self.power)
+        destination = self.get_socket_value(self.destination)
+        resolution = 1 - (self.get_socket_value(self.resolution) * .99)
+        property_name = self.get_socket_value(self.property_name)
+        xray = self.get_socket_value(self.xray)
+        distance = self.get_socket_value(self.distance)
+        visualize = self.get_socket_value(self.visualize)
+
+        if is_waiting(origin, destination, property_name, distance):
+            return
+        destination.normalize(); destination *= power
+        origin = getattr(origin, 'worldPosition', origin)
+
+
+        points = []
+        color = [1, 0, 0]
+        idx = 0
+        total_dist = 0
+        found = False
+        owner = self.network._owner
+
+        self._set_ready()
+
+        while total_dist < distance:
+            target = (self.calc_projectile(idx, destination, origin))
+            start = origin if not points else points[-1]
+            obj, point, normal = owner.rayCast(start, target, prop=property_name, xray=xray)
+            total_dist += (target-start).length
+            if not obj:
+                points.append(target)
+            else:
+                points.append(point)
+                color = [0, 1, 0]
+                found = True
+                break
+            idx += resolution
+        if visualize:
+            for i, p in enumerate(points):
+                if i < len(points) - 1:
+                    bge.render.drawLine(p, points[i+1], color)
+        self._set_value(points[-1] if found else None)
+        self._picked_object = obj
+        self._point = point
+        self._normal = normal
+
 
 
 class ActionMousePick(ActionCell):
