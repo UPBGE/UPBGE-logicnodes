@@ -510,6 +510,14 @@ def filter_armatures(self, item):
     return False
 
 
+def filter_curves(self, item):
+    if (
+        isinstance(item.data, bpy.types.Curve)
+    ):
+        return True
+    return False
+
+
 def filter_logic_trees(self, item):
     if (
         isinstance(item, bge_netlogic.ui.BGELogicTree)
@@ -1192,6 +1200,59 @@ class NLArmatureObjectSocket(bpy.types.NodeSocket, NetLogicSocketType):
 
 
 _sockets.append(NLArmatureObjectSocket)
+
+
+class NLCurveObjectSocket(bpy.types.NodeSocket, NetLogicSocketType):
+    bl_idname = "NLCurveObjectSocket"
+    bl_label = "Curve"
+    value: bpy.props.PointerProperty(
+        name='Armature',
+        type=bpy.types.Curve,
+        poll=filter_curves,
+        update=update_tree_code
+    )
+    use_owner: bpy.props.BoolProperty(
+        name='Use Owner',
+        update=update_tree_code,
+        description='Use the owner of this tree'
+    )
+
+    def draw_color(self, context, node):
+        return PARAM_OBJ_SOCKET_COLOR
+
+    def draw(self, context, layout, node, text):
+        if self.is_output:
+            layout.label(text=self.name)
+        elif self.is_linked:
+            layout.label(text=self.name)
+        else:
+            if not self.use_owner:
+                col = layout.column(align=False)
+                row = col.row()
+                if self.name:
+                    row.label(text=self.name)
+                row.prop(self, 'use_owner', icon='USER', text='')
+                col.prop_search(
+                    self,
+                    'value',
+                    bpy.context.scene,
+                    'objects',
+                    icon='NONE',
+                    text=''
+                )
+            else:
+                row = layout.row()
+                row.label(text=self.name)
+                row.prop(self, 'use_owner', icon='USER', text='')
+
+    def get_unlinked_value(self):
+        if self.use_owner:
+            return '"NLO:U_O"'
+        if isinstance(self.value, bpy.types.Curve):
+            return '"NLO:{}"'.format(self.value.name)
+
+
+_sockets.append(NLCurveObjectSocket)
 
 
 class NLGamePropertySocket(bpy.types.NodeSocket, NetLogicSocketType):
@@ -8211,6 +8272,7 @@ class NLProjectileRayCast(bpy.types.Node, NLActionNode):
         self.outputs.new(NLGameObjectSocket.bl_idname, "Picked Object")
         self.outputs.new(NLVec3FieldSocket.bl_idname, "Picked Point")
         self.outputs.new(NLVec3FieldSocket.bl_idname, "Picked Normal")
+        self.outputs.new(NLListSocket.bl_idname, "Parabola")
 
     def get_netlogic_class_name(self):
         return "bgelogic.ProjectileRayCast"
@@ -8229,7 +8291,7 @@ class NLProjectileRayCast(bpy.types.Node, NLActionNode):
         ]
 
     def get_output_socket_varnames(self):
-        return [OUTCELL, "PICKED_OBJECT", "POINT", "NORMAL"]
+        return [OUTCELL, "PICKED_OBJECT", "POINT", "NORMAL", 'PARABOLA']
 
 
 _nodes.append(NLProjectileRayCast)
@@ -8318,6 +8380,32 @@ class NLActionSetGameObjectVisibility(bpy.types.Node, NLActionNode):
 
 
 _nodes.append(NLActionSetGameObjectVisibility)
+
+
+class NLSetCurvePoints(bpy.types.Node, NLActionNode):
+    bl_idname = "NLSetCurvePoints"
+    bl_label = "Set Curve Points"
+    bl_icon = 'OUTLINER_DATA_CURVE'
+    nl_category = "Objects"
+
+    def init(self, context):
+        NLActionNode.init(self, context)
+        self.inputs.new(NLConditionSocket.bl_idname, "Condition")
+        self.inputs.new(NLCurveObjectSocket.bl_idname, "Curve")
+        self.inputs.new(NLListSocket.bl_idname, "Points")
+        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+
+    def get_output_socket_varnames(self):
+        return ["OUT"]
+
+    def get_netlogic_class_name(self):
+        return "bgelogic.SetCurvePoints"
+
+    def get_input_sockets_field_names(self):
+        return ["condition", "curve_object", "points"]
+
+
+_nodes.append(NLSetCurvePoints)
 
 
 class NLActionFindObjectNode(bpy.types.Node, NLParameterNode):

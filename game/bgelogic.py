@@ -6170,9 +6170,9 @@ class ActionSetGameObjectVisibility(ActionCell):
         ActionCell.__init__(self)
         self.condition = None
         self.game_object = None
-        self.visible = None
-        self.recursive = None
-        self.done = None
+        self.visible: bool = None
+        self.recursive: bool = None
+        self.done: bool = None
         self.OUT = LogicNetworkSubCell(self, self.get_done)
 
     def get_done(self):
@@ -6185,8 +6185,8 @@ class ActionSetGameObjectVisibility(ActionCell):
             self._set_ready()
             return
         game_object = self.get_socket_value(self.game_object)
-        visible = self.get_socket_value(self.visible)
-        recursive = self.get_socket_value(self.recursive)
+        visible: bool = self.get_socket_value(self.visible)
+        recursive: bool = self.get_socket_value(self.recursive)
         if is_waiting(visible, recursive):
             return
         if is_invalid(game_object):
@@ -6197,6 +6197,44 @@ class ActionSetGameObjectVisibility(ActionCell):
         if recursive is None:
             return
         game_object.setVisible(visible, recursive)
+        self.done = True
+
+
+class SetCurvePoints(ActionCell):
+    def __init__(self):
+        ActionCell.__init__(self)
+        self.condition = None
+        self.curve_object = None
+        self.points: list = None
+        self.done: bool = None
+        self.OUT = LogicNetworkSubCell(self, self.get_done)
+
+    def get_done(self):
+        return self.done
+
+    def evaluate(self):
+        self.done = False
+        condition = self.get_socket_value(self.condition)
+        if not_met(condition):
+            self._set_ready()
+            return
+        curve_object = self.get_socket_value(self.curve_object)
+        points = self.get_socket_value(self.points)
+        if is_waiting(points):
+            return
+        if is_invalid(curve_object):
+            return
+        self._set_ready()
+        if not points:
+            return
+        curve = curve_object.blenderObject.data
+        for spline in curve.splines:
+            curve.splines.remove(spline)
+        spline = curve.splines.new('NURBS')
+        pos = curve_object.worldPosition
+        spline.points.add(len(points))
+        for p, new_co in zip(spline.points, points):
+            p.co = ([new_co.x - pos.x, new_co.y - pos.y, new_co.z - pos.z] + [1.0])
         self.done = True
 
 
@@ -6337,9 +6375,11 @@ class ProjectileRayCast(ActionCell):
         self._picked_object = None
         self._point = None
         self._normal = None
+        self._parabola = None
         self.PICKED_OBJECT = LogicNetworkSubCell(self, self.get_picked_object)
         self.POINT = LogicNetworkSubCell(self, self.get_point)
         self.NORMAL = LogicNetworkSubCell(self, self.get_normal)
+        self.PARABOLA = LogicNetworkSubCell(self, self.get_parabola)
         self.network = None
 
     def setup(self, network):
@@ -6347,6 +6387,9 @@ class ProjectileRayCast(ActionCell):
 
     def get_picked_object(self):
         return self._picked_object
+
+    def get_parabola(self):
+        return self._parabola
 
     def get_point(self):
         return self._point
@@ -6411,6 +6454,7 @@ class ProjectileRayCast(ActionCell):
         self._picked_object = obj
         self._point = point
         self._normal = normal
+        self._parabola = points
 
 
 
