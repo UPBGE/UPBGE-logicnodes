@@ -8663,7 +8663,7 @@ class ActionSetCharacterWalkDir(ActionCell):
         if local:
             walkDir = game_object.worldOrientation @ walkDir
         physics = bge.constraints.getCharacter(game_object)
-        physics.walkDirection = walkDir
+        physics.walkDirection = walkDir / bpy.data.scenes[bge.logic.getCurrentScene().name].game_settings.physics_step_sub
         self.done = True
 
 
