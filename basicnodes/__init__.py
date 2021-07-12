@@ -2226,6 +2226,27 @@ class NLPositiveFloatSocket(bpy.types.NodeSocket, NetLogicSocketType):
 _sockets.append(NLPositiveFloatSocket)
 
 
+class NLPositiveStepFloat(bpy.types.NodeSocket, NetLogicSocketType):
+    bl_idname = "NLPositiveStepFloat"
+    bl_label = "Float"
+    value: bpy.props.FloatProperty(min=1, default=1, update=update_tree_code)
+
+    def draw_color(self, context, node):
+        return PARAMETER_SOCKET_COLOR
+
+    def draw(self, context, layout, node, text):
+        if self.is_linked or self.is_output:
+            layout.label(text=text)
+        else:
+            layout.prop(self, "value", text=text)
+
+    def get_unlinked_value(self):
+        return '{}'.format(self.value)
+
+
+_sockets.append(NLPositiveStepFloat)
+
+
 class NLPosFloatFormatSocket(bpy.types.NodeSocket, NetLogicSocketType):
     bl_idname = "NLPosFloatFormatSocket"
     bl_label = "Positive Float"
@@ -9201,6 +9222,83 @@ class NLActionApplyImpulse(bpy.types.Node, NLActionNode):
 
 
 _nodes.append(NLActionApplyImpulse)
+
+
+class NLGamepadLook(bpy.types.Node, NLActionNode):
+    bl_idname = "NLGamepadLook"
+    bl_label = "Look"
+    nl_category = "Input"
+    nl_subcat = 'Gamepad'
+    axis: bpy.props.EnumProperty(
+        name='Axis',
+        items=_enum_controller_stick_operators,
+        description="Gamepad Sticks",
+        update=update_tree_code
+    )
+
+    def init(self, context):
+        NLActionNode.init(self, context)
+        self.inputs.new(NLConditionSocket.bl_idname, 'Condition')
+        self.inputs.new(NLGameObjectSocket.bl_idname, 'Main Object')
+        self.inputs.new(NLGameObjectSocket.bl_idname, 'Head Object (Optional)')
+        self.inputs.new(NLInvertedXYSocket.bl_idname, 'Inverted')
+        self.inputs[-1].x = True
+        self.inputs.new(NLPositiveIntCentSocket.bl_idname, 'Index')
+        self.inputs.new(NLPositiveFloatSocket.bl_idname, 'Sensitivity')
+        self.inputs[-1].value = .25
+        self.inputs.new(NLPositiveStepFloat.bl_idname, 'Exponent')
+        self.inputs[-1].value = 2.3
+        self.inputs.new(NLBooleanSocket.bl_idname, 'Cap Left / Right')
+        self.inputs.new(NLAngleLimitSocket.bl_idname, '')
+        self.inputs.new(NLBooleanSocket.bl_idname, 'Cap Up / Down')
+        self.inputs.new(NLAngleLimitSocket.bl_idname, '')
+        self.inputs[-1].value_x = math.radians(89)
+        self.inputs[-1].value_y = math.radians(89)
+        self.inputs.new(NLPositiveFloatSocket.bl_idname, 'Threshold')
+        self.inputs[-1].value = 0.1
+        self.outputs.new(NLConditionSocket.bl_idname, "Done")
+
+    def update_draw(self):
+        ipts = self.inputs
+        ipts[8].enabled = ipts[7].value
+        ipts[10].enabled = ipts[9].value
+
+    def draw_buttons(self, context, layout):
+        layout.prop(self, "axis", text='')
+
+    def get_netlogic_class_name(self):
+        return "bgelogic.GamepadLook"
+
+    def get_input_sockets_field_names(self):
+        return [
+            'condition',
+            'main_obj',
+            'head_obj',
+            'inverted',
+            "index",
+            'sensitivity',
+            'exponent',
+            'use_cap_x',
+            'cap_x',
+            'use_cap_y',
+            'cap_y',
+            'threshold'
+        ]
+
+    def get_output_socket_varnames(self):
+        return ["DONE"]
+
+    def init_cell_fields(self, cell_varname, uids, line_writer):
+        NetLogicStatementGenerator.init_cell_fields(
+            self,
+            cell_varname,
+            uids,
+            line_writer
+        )
+        line_writer.write_line("{}.{} = {}", cell_varname, "axis", self.axis)
+
+
+_nodes.append(NLGamepadLook)
 
 
 class NLSetCollisionGroup(bpy.types.Node, NLActionNode):
