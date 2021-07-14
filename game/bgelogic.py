@@ -4778,9 +4778,6 @@ class ConditionCollision(ConditionCell):
         return self._objects
 
     def _collision_callback(self, obj, point, normal):
-        self._target = obj
-        self._point = point
-        self._normal = normal
         self._objects.append(obj)
         use_mat = self.get_socket_value(self.use_mat)
         if use_mat:
@@ -4788,8 +4785,13 @@ class ConditionCollision(ConditionCell):
             if material:
                 for obj in self._objects:
                     bo = obj.blenderObject
-                    if material in [slot.material.name for slot in bo.material_slots]:
+                    if material not in [slot.material.name for slot in bo.material_slots]:
+                        self._objects.remove(obj)
+                    else:
                         self._collision_triggered = True
+                        self._target = obj
+                        self._point = point
+                        self._normal = normal
                         return
                 self._collision_triggered = False
                 return
@@ -4797,12 +4799,20 @@ class ConditionCollision(ConditionCell):
             prop = self.get_socket_value(self.prop)
             if prop:
                 for obj in self._objects:
-                    if prop in obj:
+                    if prop not in obj:
+                        self._objects.remove(obj)
+                    else:
                         self._collision_triggered = True
+                        self._target = obj
+                        self._point = point
+                        self._normal = normal
                         return
                 self._collision_triggered = False
                 return
         self._collision_triggered = True
+        self._target = obj
+        self._point = point
+        self._normal = normal
 
     def reset(self):
         LogicNetworkCell.reset(self)
@@ -4846,12 +4856,9 @@ class ConditionCollision(ConditionCell):
         collision = self._collision_triggered
         if last_target is not self._target:
             self._consumed = False
-        if self._consumed:
-            self._set_value(False)
-            return
-        if not self.pulse and collision:
+        if collision and not self.pulse:
+            self._set_value(collision and not self._consumed)
             self._consumed = True
-            self._set_value(collision)
         elif self.pulse:
             self._set_value(collision)
         else:
