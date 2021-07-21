@@ -1226,8 +1226,10 @@ class ConditionOnce(ConditionCell):
         tl = network.timeline
 
         self._set_ready()
-        if tl - self.time > reset_time and repeat:
+        if abs(tl - self.time) > reset_time and repeat:
             self._consumed = False
+        print(abs(tl - self.time))
+        print(tl)
         self.time = tl
         if condition and self._consumed is False:
             self._consumed = True
@@ -3324,6 +3326,21 @@ class ClampValue(ParameterCell):
         if value > range_ft.y:
             value = range_ft.y
         self._set_value(value)
+
+
+class GetSound(ParameterCell):
+
+    def __init__(self):
+        ParameterCell.__init__(self)
+        self.sound = None
+
+    def evaluate(self):
+        sound = self.get_socket_value(self.sound)
+        if is_invalid(sound):
+            return
+        self._set_ready()
+        self._set_value(sound)
+
 
 
 class InterpolateValue(ParameterCell):

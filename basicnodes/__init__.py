@@ -5238,6 +5238,29 @@ class NLClampValueNode(bpy.types.Node, NLParameterNode):
 _nodes.append(NLClampValueNode)
 
 
+class NLGetSound(bpy.types.Node, NLParameterNode):
+    bl_idname = "NLGetSound"
+    bl_label = "Get Sound"
+    bl_icon = 'FILE_SOUND'
+    nl_category = "Sound"
+
+    def init(self, context):
+        NLParameterNode.init(self, context)
+        self.inputs.new(NLSoundFileSocket.bl_idname, "Sound File")
+        self.outputs.new(NLSoundFileSocket.bl_idname, 'Sound File')
+
+    def get_netlogic_class_name(self):
+        return "bgelogic.GetSound"
+
+    def get_input_sockets_field_names(self):
+        return [
+            "sound"
+        ]
+
+
+_nodes.append(NLGetSound)
+
+
 class NLInterpolateValueNode(bpy.types.Node, NLParameterNode):
     bl_idname = "NLInterpolateValueNode"
     bl_label = "Interpolate"

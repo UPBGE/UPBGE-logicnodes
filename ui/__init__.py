@@ -485,10 +485,11 @@ class BGE_PT_LogicTreeOptions(bpy.types.Panel):
             text="Apply To Selected",
             icon='PREFERENCES'
         ).owner = "BGE_PT_LogicPanel"
-        r = apply.row()
-        r.label(text='Apply As:')
         tree = context.space_data.edit_tree
-        r.prop(tree, 'mode', toggle=True, text='Component' if tree.mode else 'Bricks')
+        if tree:
+            r = apply.row()
+            r.label(text='Apply As:')
+            r.prop(tree, 'mode', toggle=True, text='Component' if tree.mode else 'Bricks')
         code = layout.box()
         code.operator(
             bge_netlogic.ops.NLGenerateLogicNetworkOperator.bl_idname,
