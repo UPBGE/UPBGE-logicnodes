@@ -510,6 +510,14 @@ def filter_armatures(self, item):
     return False
 
 
+def filter_curves(self, item):
+    if (
+        isinstance(item.data, bpy.types.Curve)
+    ):
+        return True
+    return False
+
+
 def filter_logic_trees(self, item):
     if (
         isinstance(item, bge_netlogic.ui.BGELogicTree)
@@ -1192,6 +1200,59 @@ class NLArmatureObjectSocket(bpy.types.NodeSocket, NetLogicSocketType):
 
 
 _sockets.append(NLArmatureObjectSocket)
+
+
+class NLCurveObjectSocket(bpy.types.NodeSocket, NetLogicSocketType):
+    bl_idname = "NLCurveObjectSocket"
+    bl_label = "Curve"
+    value: bpy.props.PointerProperty(
+        name='Armature',
+        type=bpy.types.Curve,
+        poll=filter_curves,
+        update=update_tree_code
+    )
+    use_owner: bpy.props.BoolProperty(
+        name='Use Owner',
+        update=update_tree_code,
+        description='Use the owner of this tree'
+    )
+
+    def draw_color(self, context, node):
+        return PARAM_OBJ_SOCKET_COLOR
+
+    def draw(self, context, layout, node, text):
+        if self.is_output:
+            layout.label(text=self.name)
+        elif self.is_linked:
+            layout.label(text=self.name)
+        else:
+            if not self.use_owner:
+                col = layout.column(align=False)
+                row = col.row()
+                if self.name:
+                    row.label(text=self.name)
+                row.prop(self, 'use_owner', icon='USER', text='')
+                col.prop_search(
+                    self,
+                    'value',
+                    bpy.context.scene,
+                    'objects',
+                    icon='NONE',
+                    text=''
+                )
+            else:
+                row = layout.row()
+                row.label(text=self.name)
+                row.prop(self, 'use_owner', icon='USER', text='')
+
+    def get_unlinked_value(self):
+        if self.use_owner:
+            return '"NLO:U_O"'
+        if isinstance(self.value, bpy.types.Curve):
+            return '"NLO:{}"'.format(self.value.name)
+
+
+_sockets.append(NLCurveObjectSocket)
 
 
 class NLGamePropertySocket(bpy.types.NodeSocket, NetLogicSocketType):
@@ -2163,6 +2224,27 @@ class NLPositiveFloatSocket(bpy.types.NodeSocket, NetLogicSocketType):
 
 
 _sockets.append(NLPositiveFloatSocket)
+
+
+class NLPositiveStepFloat(bpy.types.NodeSocket, NetLogicSocketType):
+    bl_idname = "NLPositiveStepFloat"
+    bl_label = "Float"
+    value: bpy.props.FloatProperty(min=1, default=1, update=update_tree_code)
+
+    def draw_color(self, context, node):
+        return PARAMETER_SOCKET_COLOR
+
+    def draw(self, context, layout, node, text):
+        if self.is_linked or self.is_output:
+            layout.label(text=text)
+        else:
+            layout.prop(self, "value", text=text)
+
+    def get_unlinked_value(self):
+        return '{}'.format(self.value)
+
+
+_sockets.append(NLPositiveStepFloat)
 
 
 class NLPosFloatFormatSocket(bpy.types.NodeSocket, NetLogicSocketType):
@@ -4506,7 +4588,7 @@ class NLVectorMath(bpy.types.Node, NLParameterNode):
         self.inputs.new(NLVec3FieldSocket.bl_idname, "Vector 2")
         self.inputs.new(NLSocketAlphaFloat.bl_idname, "Factor")
         self.inputs[-1].value = 1.0
-        self.outputs.new(NLParameterSocket.bl_idname, 'Vector')
+        self.outputs.new(NLParameterSocket.bl_idname, 'Result')
 
     def get_netlogic_class_name(self):
         return "bgelogic.ParameterVectorMath"
@@ -4555,6 +4637,72 @@ class NLVectorMath(bpy.types.Node, NLParameterNode):
 
 
 _nodes.append(NLVectorMath)
+
+
+class NLVectorAngle(bpy.types.Node, NLParameterNode):
+    bl_idname = "NLVectorAngle"
+    bl_label = "Angle"
+    nl_category = "Math"
+    nl_subcat = 'Vector Math'
+
+    def init(self, context):
+        NLParameterNode.init(self, context)
+        self.inputs.new(NLVec3FieldSocket.bl_idname, "Vector 1")
+        self.inputs.new(NLVec3FieldSocket.bl_idname, "Vector 2")
+        self.outputs.new(NLConditionSocket.bl_idname, 'If True')
+
+    def get_netlogic_class_name(self):
+        return "bgelogic.VectorAngle"
+
+    def get_input_sockets_field_names(self):
+        return ["vector", 'vector_2', 'value']
+
+
+_nodes.append(NLVectorAngle)
+
+
+class NLVectorAngleCheck(bpy.types.Node, NLParameterNode):
+    bl_idname = "NLVectorAngleCheck"
+    bl_label = "Check Angle"
+    nl_category = "Math"
+    nl_subcat = 'Vector Math'
+    operator: bpy.props.EnumProperty(
+        name='Opertation',
+        items=_enum_logic_operators,
+        update=update_tree_code
+    )
+
+    def init(self, context):
+        NLParameterNode.init(self, context)
+        self.inputs.new(NLVec3FieldSocket.bl_idname, "Vector 1")
+        self.inputs.new(NLVec3FieldSocket.bl_idname, "Vector 2")
+        self.inputs.new(NLFloatFieldSocket.bl_idname, "Value")
+        self.outputs.new(NLConditionSocket.bl_idname, 'If True')
+
+    def get_netlogic_class_name(self):
+        return "bgelogic.VectorAngleCheck"
+
+    def get_input_sockets_field_names(self):
+        return ["vector", 'vector_2', 'value']
+
+    def draw_buttons(self, context, layout):
+        layout.prop(
+            self,
+            'operator',
+            text=''
+        )
+
+    def init_cell_fields(self, cell_varname, uids, line_writer):
+        NetLogicStatementGenerator.init_cell_fields(
+            self,
+            cell_varname,
+            uids,
+            line_writer
+        )
+        line_writer.write_line("{}.{} = '{}'", cell_varname, "op", self.operator)
+
+
+_nodes.append(NLVectorAngleCheck)
 
 
 class NLGetSensorNode(bpy.types.Node, NLParameterNode):
@@ -5088,6 +5236,29 @@ class NLClampValueNode(bpy.types.Node, NLParameterNode):
 
 
 _nodes.append(NLClampValueNode)
+
+
+class NLGetSound(bpy.types.Node, NLParameterNode):
+    bl_idname = "NLGetSound"
+    bl_label = "Get Sound"
+    bl_icon = 'FILE_SOUND'
+    nl_category = "Sound"
+
+    def init(self, context):
+        NLParameterNode.init(self, context)
+        self.inputs.new(NLSoundFileSocket.bl_idname, "Sound File")
+        self.outputs.new(NLSoundFileSocket.bl_idname, 'Sound File')
+
+    def get_netlogic_class_name(self):
+        return "bgelogic.GetSound"
+
+    def get_input_sockets_field_names(self):
+        return [
+            "sound"
+        ]
+
+
+_nodes.append(NLGetSound)
 
 
 class NLInterpolateValueNode(bpy.types.Node, NLParameterNode):
@@ -8090,8 +8261,7 @@ class NLActionRayCastNode(bpy.types.Node, NLActionNode):
         ipts = self.inputs
         adv = [
             ipts[5],
-            ipts[6],
-            ipts[8]
+            ipts[6]
         ]
         for i in adv:
             i.enabled = self.advanced
@@ -8121,6 +8291,54 @@ class NLActionRayCastNode(bpy.types.Node, NLActionNode):
 
 
 _nodes.append(NLActionRayCastNode)
+
+
+class NLProjectileRayCast(bpy.types.Node, NLActionNode):
+    bl_idname = "NLProjectileRayCast"
+    bl_label = "Projectile Ray"
+    nl_category = "Ray Casts"
+
+    def init(self, context):
+        NLActionNode.init(self, context)
+        self.inputs.new(NLConditionSocket.bl_idname, "Condition")
+        self.inputs.new(NLVec3FieldSocket.bl_idname, "Origin")
+        self.inputs.new(NLVec3FieldSocket.bl_idname, "Aim")
+        self.inputs.new(NLPositiveFloatSocket.bl_idname, "Power")
+        self.inputs[-1].value = 10.0
+        self.inputs.new(NLPositiveFloatSocket.bl_idname, "Distance")
+        self.inputs[-1].value = 20.0
+        self.inputs.new(NLSocketAlphaFloat.bl_idname, "Resolution")
+        self.inputs[-1].value = 0.9
+        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Property")
+        self.inputs.new(NLBooleanSocket.bl_idname, 'X-Ray')
+        self.inputs.new(NLBooleanSocket.bl_idname, 'Visualize')
+        self.outputs.new(NLConditionSocket.bl_idname, "Has Result")
+        self.outputs.new(NLGameObjectSocket.bl_idname, "Picked Object")
+        self.outputs.new(NLVec3FieldSocket.bl_idname, "Picked Point")
+        self.outputs.new(NLVec3FieldSocket.bl_idname, "Picked Normal")
+        self.outputs.new(NLListSocket.bl_idname, "Parabola")
+
+    def get_netlogic_class_name(self):
+        return "bgelogic.ProjectileRayCast"
+
+    def get_input_sockets_field_names(self):
+        return [
+            "condition",
+            "origin",
+            "destination",
+            'power',
+            'distance',
+            "resolution",
+            "property_name",
+            'xray',
+            "visualize"
+        ]
+
+    def get_output_socket_varnames(self):
+        return [OUTCELL, "PICKED_OBJECT", "POINT", "NORMAL", 'PARABOLA']
+
+
+_nodes.append(NLProjectileRayCast)
 
 
 # TODO: should we reset conditions that have been consumed?
@@ -8206,6 +8424,32 @@ class NLActionSetGameObjectVisibility(bpy.types.Node, NLActionNode):
 
 
 _nodes.append(NLActionSetGameObjectVisibility)
+
+
+class NLSetCurvePoints(bpy.types.Node, NLActionNode):
+    bl_idname = "NLSetCurvePoints"
+    bl_label = "Set Curve Points"
+    bl_icon = 'OUTLINER_DATA_CURVE'
+    nl_category = "Objects"
+
+    def init(self, context):
+        NLActionNode.init(self, context)
+        self.inputs.new(NLConditionSocket.bl_idname, "Condition")
+        self.inputs.new(NLCurveObjectSocket.bl_idname, "Curve")
+        self.inputs.new(NLListSocket.bl_idname, "Points")
+        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+
+    def get_output_socket_varnames(self):
+        return ["OUT"]
+
+    def get_netlogic_class_name(self):
+        return "bgelogic.SetCurvePoints"
+
+    def get_input_sockets_field_names(self):
+        return ["condition", "curve_object", "points"]
+
+
+_nodes.append(NLSetCurvePoints)
 
 
 class NLActionFindObjectNode(bpy.types.Node, NLParameterNode):
@@ -9001,6 +9245,83 @@ class NLActionApplyImpulse(bpy.types.Node, NLActionNode):
 
 
 _nodes.append(NLActionApplyImpulse)
+
+
+class NLGamepadLook(bpy.types.Node, NLActionNode):
+    bl_idname = "NLGamepadLook"
+    bl_label = "Look"
+    nl_category = "Input"
+    nl_subcat = 'Gamepad'
+    axis: bpy.props.EnumProperty(
+        name='Axis',
+        items=_enum_controller_stick_operators,
+        description="Gamepad Sticks",
+        update=update_tree_code
+    )
+
+    def init(self, context):
+        NLActionNode.init(self, context)
+        self.inputs.new(NLConditionSocket.bl_idname, 'Condition')
+        self.inputs.new(NLGameObjectSocket.bl_idname, 'Main Object')
+        self.inputs.new(NLGameObjectSocket.bl_idname, 'Head Object (Optional)')
+        self.inputs.new(NLInvertedXYSocket.bl_idname, 'Inverted')
+        self.inputs[-1].x = True
+        self.inputs.new(NLPositiveIntCentSocket.bl_idname, 'Index')
+        self.inputs.new(NLPositiveFloatSocket.bl_idname, 'Sensitivity')
+        self.inputs[-1].value = .25
+        self.inputs.new(NLPositiveStepFloat.bl_idname, 'Exponent')
+        self.inputs[-1].value = 2.3
+        self.inputs.new(NLBooleanSocket.bl_idname, 'Cap Left / Right')
+        self.inputs.new(NLAngleLimitSocket.bl_idname, '')
+        self.inputs.new(NLBooleanSocket.bl_idname, 'Cap Up / Down')
+        self.inputs.new(NLAngleLimitSocket.bl_idname, '')
+        self.inputs[-1].value_x = math.radians(89)
+        self.inputs[-1].value_y = math.radians(89)
+        self.inputs.new(NLPositiveFloatSocket.bl_idname, 'Threshold')
+        self.inputs[-1].value = 0.1
+        self.outputs.new(NLConditionSocket.bl_idname, "Done")
+
+    def update_draw(self):
+        ipts = self.inputs
+        ipts[8].enabled = ipts[7].value
+        ipts[10].enabled = ipts[9].value
+
+    def draw_buttons(self, context, layout):
+        layout.prop(self, "axis", text='')
+
+    def get_netlogic_class_name(self):
+        return "bgelogic.GamepadLook"
+
+    def get_input_sockets_field_names(self):
+        return [
+            'condition',
+            'main_obj',
+            'head_obj',
+            'inverted',
+            "index",
+            'sensitivity',
+            'exponent',
+            'use_cap_x',
+            'cap_x',
+            'use_cap_y',
+            'cap_y',
+            'threshold'
+        ]
+
+    def get_output_socket_varnames(self):
+        return ["DONE"]
+
+    def init_cell_fields(self, cell_varname, uids, line_writer):
+        NetLogicStatementGenerator.init_cell_fields(
+            self,
+            cell_varname,
+            uids,
+            line_writer
+        )
+        line_writer.write_line("{}.{} = {}", cell_varname, "axis", self.axis)
+
+
+_nodes.append(NLGamepadLook)
 
 
 class NLSetCollisionGroup(bpy.types.Node, NLActionNode):

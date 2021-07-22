@@ -180,7 +180,7 @@ class TreeCodeGenerator(object):
         #     pass
 
         # game_dir = os.path.join(bge_netlogic_dir, "game", 'windows')
-        # bgelogic_input_file = os.path.join(game_dir, "bgelogic.pyd")
+        # bgelogic_input_file = os.path.join(game_dir, "game.cp37-win_amd64.pyd")
         # target_path = os.path.join(bpy.path.abspath("//bgelogic"), "__init__.pyd")
         # print(bgelogic_input_file)
         # print(target_path)

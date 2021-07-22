@@ -1,8 +1,9 @@
 from bge import logic
 import bge
+from bge.types import KX_GameObject as GameObject
 import bpy
 import aud
-import mathutils
+from mathutils import Vector, Euler, Matrix, Quaternion
 import math
 import numbers
 import collections
@@ -25,7 +26,7 @@ DISTANCE_MODELS = {
 }
 
 
-def interpolate(a, b, fac):
+def interpolate(a: float, b: float, fac: float):
     return (fac * b) + ((1-fac) * a)
 
 
@@ -256,7 +257,7 @@ class VectorSerializer(SimpleLoggingDatabase.Serializer):
             return None
         data = line.rstrip().split(" ")
         components = [float(d) for d in data]
-        return mathutils.Vector(components)
+        return Vector(components)
 
 
 SimpleLoggingDatabase.serializers[str(type(""))] = StringSerializer()
@@ -264,7 +265,7 @@ SimpleLoggingDatabase.serializers[str(type(1.0))] = FloatSerializer()
 SimpleLoggingDatabase.serializers[str(type(10))] = IntegerSerializer()
 SimpleLoggingDatabase.serializers[str(type([]))] = ListSerializer()
 SimpleLoggingDatabase.serializers[str(type((0, 0, 0)))] = ListSerializer()
-SimpleLoggingDatabase.serializers[str(type(mathutils.Vector()))] = (
+SimpleLoggingDatabase.serializers[str(type(Vector()))] = (
     VectorSerializer()
 )
 
@@ -276,9 +277,9 @@ LO_AXIS_TO_STRING_CODE = {
 }
 
 LO_AXIS_TO_VECTOR = {
-    0: mathutils.Vector((1, 0, 0)), 1: mathutils.Vector((0, 1, 0)),
-    2: mathutils.Vector((0, 0, 1)), 3: mathutils.Vector((-1, 0, 0)),
-    4: mathutils.Vector((0, -1, 0)), 5: mathutils.Vector((0, 0, -1)),
+    0: Vector((1, 0, 0)), 1: Vector((0, 1, 0)),
+    2: Vector((0, 0, 1)), 3: Vector((-1, 0, 0)),
+    4: Vector((0, -1, 0)), 5: Vector((0, 0, -1)),
 }
 
 LOGIC_OPERATORS = [
@@ -301,8 +302,8 @@ def compute_distance(parama, paramb):
         return parama.getDistanceTo(paramb)
     if hasattr(paramb, "getDistanceTo"):
         return paramb.getDistanceTo(parama)
-    va = mathutils.Vector(parama)
-    vb = mathutils.Vector(paramb)
+    va = Vector(parama)
+    vb = Vector(paramb)
     return (va - vb).length
 
 
@@ -501,7 +502,7 @@ def move_to(
 
 
 def project_vector3(v, xi, yi):
-    return mathutils.Vector((v[xi], v[yi]))
+    return Vector((v[xi], v[yi]))
 
 
 def stop_all_sounds(a, b):
@@ -1225,8 +1226,10 @@ class ConditionOnce(ConditionCell):
         tl = network.timeline
 
         self._set_ready()
-        if tl - self.time > reset_time and repeat:
+        if abs(tl - self.time) > reset_time and repeat:
             self._consumed = False
+        print(abs(tl - self.time))
+        print(tl)
         self.time = tl
         if condition and self._consumed is False:
             self._consumed = True
@@ -1255,7 +1258,7 @@ class ActionLoadGame(ActionCell):
         return self.done
 
     def get_game_vec(self, data):
-        return mathutils.Euler((data['x'], data['y'], data['z']))
+        return Euler((data['x'], data['y'], data['z']))
 
     def get_custom_path(self, path):
         if not path.endswith('/'):
@@ -1426,7 +1429,7 @@ class ActionSaveGame(ActionCell):
                 if prop != 'NodeTree':
                     if isinstance(obj[prop], LogicNetwork):
                         continue
-                    if isinstance(obj[prop], mathutils.Vector):
+                    if isinstance(obj[prop], Vector):
                         continue
                     prop_set = {}
                     prop_set['name'] = prop
@@ -1678,11 +1681,13 @@ class ActionMouseLook(ActionCell):
         self.use_cap_z = None
         self.cap_y = None
         self.smooth = None
+        self.initialized = False
         self._x = 0
         self._y = 0
         self.done = None
         self.OUT = LogicNetworkSubCell(self, self.get_done)
         self.use_local_head = False
+        self.get_data()
 
     def get_done(self):
         return self.done
@@ -1711,12 +1716,15 @@ class ActionMouseLook(ActionCell):
             self.x/bge.render.getWindowWidth(),
             self.y/bge.render.getWindowHeight()
         )
-        self.center = mathutils.Vector(self.screen_center)
+        self.center = Vector(self.screen_center)
         self.mouse = logic.mouse
 
     def evaluate(self):
         self.done = False
         self.get_data()
+        if not self.initialized:
+            self.mouse.position = self.screen_center
+            self.initialized = True
         condition = self.get_socket_value(self.condition)
         if not_met(condition):
             return
@@ -1739,7 +1747,7 @@ class ActionMouseLook(ActionCell):
             debug('MouseLook Node: Invalid Main Object!')
             return
 
-        mouse_position = mathutils.Vector(self.mouse.position)
+        mouse_position = Vector(self.mouse.position)
         offset = (mouse_position - self.center) * -0.002
 
         if inverted.get('y', False) is False:
@@ -1956,11 +1964,11 @@ class ParameterMouseData(ParameterCell):
 
     def getmxyz(self):
         mp = self.network._last_mouse_position
-        return mathutils.Vector((mp[0], mp[1], 0))
+        return Vector((mp[0], mp[1], 0))
 
     def getmdxyz(self):
         mp = self.network.mouse_motion_delta
-        return mathutils.Vector((mp[0], mp[1], 0))
+        return Vector((mp[0], mp[1], 0))
 
     def evaluate(self):
         self._set_ready()
@@ -2119,11 +2127,8 @@ class ConditionGamepadSticks(ConditionCell):
                 x = 0
             x *= sensitivity
             values.append((-x if inverted else x))
-
-        x_axis = values[0]
-        y_axis = values[1]
-        self._x_axis_values = x_axis
-        self._y_axis_values = y_axis
+        self._x_axis_values = values[0]
+        self._y_axis_values = values[1]
 
 
 class ConditionGamepadTrigger(ConditionCell):
@@ -2276,9 +2281,9 @@ class ParameterBoneStatus(ParameterCell):
         self._prev_armature = LogicNetworkCell.NO_VALUE
         self._prev_bone = LogicNetworkCell.NO_VALUE
         self._channel = None
-        self._pos = mathutils.Vector((0, 0, 0))
-        self._rot = mathutils.Euler((0, 0, 0), "XYZ")
-        self._sca = mathutils.Vector((0, 0, 0))
+        self._pos = Vector((0, 0, 0))
+        self._rot = Euler((0, 0, 0), "XYZ")
+        self._sca = Vector((0, 0, 0))
         self.XYZ_POS = LogicNetworkSubCell(self, self._get_pos)
         self.XYZ_ROT = LogicNetworkSubCell(self, self._get_rot)
         self.XYZ_SCA = LogicNetworkSubCell(self, self._get_sca)
@@ -2311,7 +2316,7 @@ class ParameterBoneStatus(ParameterCell):
             channel = self._channel
         if channel.rotation_mode is logic.ROT_MODE_QUAT:
             self._rot[:] = (
-                mathutils.Quaternion(channel.rotation_quaternion).to_euler()
+                Quaternion(channel.rotation_quaternion).to_euler()
             )
         else:
             self._rot[:] = channel.rotation_euler
@@ -3293,7 +3298,7 @@ class ParameterObjectAttribute(ParameterCell):
             return
         val = getattr(game_object, attribute_name)
         self._set_value(
-            val.copy() if isinstance(val, mathutils.Vector)
+            val.copy() if isinstance(val, Vector)
             else val
         )
 
@@ -3321,6 +3326,21 @@ class ClampValue(ParameterCell):
         if value > range_ft.y:
             value = range_ft.y
         self._set_value(value)
+
+
+class GetSound(ParameterCell):
+
+    def __init__(self):
+        ParameterCell.__init__(self)
+        self.sound = None
+
+    def evaluate(self):
+        sound = self.get_socket_value(self.sound)
+        if is_invalid(sound):
+            return
+        self._set_ready()
+        self._set_value(sound)
+
 
 
 class InterpolateValue(ParameterCell):
@@ -3361,7 +3381,7 @@ class ParameterArithmeticOp(ParameterCell):
 
     def get_vec_calc(self, vec, num):
         if len(vec) == 4:
-            return mathutils.Vector(
+            return Vector(
                 (
                     self.operator(vec.x, num),
                     self.operator(vec.y, num),
@@ -3370,7 +3390,7 @@ class ParameterArithmeticOp(ParameterCell):
                 )
             )
         else:
-            return mathutils.Vector(
+            return Vector(
                 (
                     self.operator(vec.x, num),
                     self.operator(vec.y, num),
@@ -3380,7 +3400,7 @@ class ParameterArithmeticOp(ParameterCell):
 
     def get_vec_vec_calc(self, vec, vec2):
         if len(vec) == 4 and len(vec2) == 4:
-            return mathutils.Vector(
+            return Vector(
                 (
                     self.operator(vec.x, vec2.x),
                     self.operator(vec.y, vec2.y),
@@ -3389,7 +3409,7 @@ class ParameterArithmeticOp(ParameterCell):
                 )
             )
         else:
-            return mathutils.Vector(
+            return Vector(
                 (
                     self.operator(vec.x, vec2.x),
                     self.operator(vec.y, vec2.y),
@@ -3407,15 +3427,15 @@ class ParameterArithmeticOp(ParameterCell):
             self._set_value(None)
         else:
             if (
-                isinstance(a, mathutils.Vector) and
-                isinstance(b, mathutils.Vector)
+                isinstance(a, Vector) and
+                isinstance(b, Vector)
             ):
                 self._set_value(self.get_vec_vec_calc(a, b))
                 return
-            elif isinstance(a, mathutils.Vector):
+            elif isinstance(a, Vector):
                 self._set_value(self.get_vec_calc(a, b))
                 return
-            elif isinstance(b, mathutils.Vector):
+            elif isinstance(b, Vector):
                 debug('Math Node: Only Second Argument is Vector! \
                     Either both or only first can be Vector!')
                 return
@@ -3695,16 +3715,68 @@ class ParameterVectorMath(ParameterCell):
         vector = self.get_socket_value(self.vector)
         vector_2 = self.get_socket_value(self.vector_2)
         factor = self.get_socket_value(self.factor)
-        if op is None:
+        if is_waiting(
+            op,
+            factor
+        ):
             return
-        if vector is None:
-            return
-        if vector_2 is None:
-            return
-        if factor is None:
+        if is_invalid(
+            vector,
+            vector_2
+        ):
             return
         self._set_ready()
         self._set_value(self.calc_output_vector(op, vector, vector_2, factor))
+
+
+class VectorAngle(ParameterCell):
+    def __init__(self):
+        ParameterCell.__init__(self)
+        self.op = None
+        self.vector: Vector = None
+        self.vector_2: Vector = None
+
+    def evaluate(self):
+        vector: Vector = self.get_socket_value(self.vector)
+        vector_2: Vector = self.get_socket_value(self.vector_2)
+        if is_invalid(
+            vector,
+            vector_2
+        ):
+            return
+        self._set_ready()
+        rad: float = math.acos(vector.dot(vector_2))
+        deg: float = rad * 180/math.pi
+        self._set_value(deg)
+
+
+class VectorAngleCheck(ParameterCell):
+    def __init__(self):
+        ParameterCell.__init__(self)
+        self.op: str = None
+        self.vector: Vector = None
+        self.vector_2: Vector = None
+        self.value = None
+
+    def evaluate(self):
+        op: str = self.get_socket_value(self.op)
+        vector: Vector = self.get_socket_value(self.vector)
+        vector_2: Vector = self.get_socket_value(self.vector_2)
+        value: float = self.get_socket_value(self.value)
+        if is_waiting(
+            op
+        ):
+            return
+        if is_invalid(
+            vector,
+            vector_2
+        ):
+            return
+        self._set_ready()
+        rad: float = math.acos(vector.dot(vector_2))
+        deg: float = rad * 180/math.pi
+        self._set_value(LOGIC_OPERATORS[int(op)](deg, value))
+
 
 
 class ParameterVector(ParameterCell):
@@ -3714,7 +3786,7 @@ class ParameterVector(ParameterCell):
         self.input_x = None
         self.input_y = None
         self.input_z = None
-        self.output_vector = mathutils.Vector()
+        self.output_vector = Vector()
         self.OUTX = LogicNetworkSubCell(self, self.get_out_x)
         self.OUTY = LogicNetworkSubCell(self, self.get_out_y)
         self.OUTZ = LogicNetworkSubCell(self, self.get_out_z)
@@ -3750,7 +3822,7 @@ class ParameterVector2Simple(ParameterCell):
         ParameterCell.__init__(self)
         self.input_x = None
         self.input_y = None
-        self.output_vector = mathutils.Vector()
+        self.output_vector = Vector()
         self.OUTV = LogicNetworkSubCell(self, self.get_out_v)
 
     def get_out_v(self): return self.output_vector.copy()
@@ -3771,7 +3843,7 @@ class ParameterVector2Split(ParameterCell):
     def __init__(self):
         ParameterCell.__init__(self)
         self.input_v = None
-        self.output_v = mathutils.Vector()
+        self.output_v = Vector()
         self.OUTX = LogicNetworkSubCell(self, self.get_out_x)
         self.OUTY = LogicNetworkSubCell(self, self.get_out_y)
 
@@ -3790,7 +3862,7 @@ class ParameterVector3Split(ParameterCell):
     def __init__(self):
         ParameterCell.__init__(self)
         self.input_v = None
-        self.output_v = mathutils.Vector()
+        self.output_v = Vector()
         self.OUTX = LogicNetworkSubCell(self, self.get_out_x)
         self.OUTY = LogicNetworkSubCell(self, self.get_out_y)
         self.OUTZ = LogicNetworkSubCell(self, self.get_out_z)
@@ -3811,7 +3883,7 @@ class ParameterAbsVector3(ParameterCell):
     def __init__(self):
         ParameterCell.__init__(self)
         self.input_v = None
-        self.output_v = mathutils.Vector()
+        self.output_v = Vector()
         self.OUTV = LogicNetworkSubCell(self, self.get_out_v)
 
     def get_out_v(self): return self.output_v
@@ -3831,7 +3903,7 @@ class ParameterEulerToMatrix(ParameterCell):
     def __init__(self):
         ParameterCell.__init__(self)
         self.input_e = None
-        self.matrix = mathutils.Matrix()
+        self.matrix = Matrix()
         self.OUT = LogicNetworkSubCell(self, self.get_matrix)
 
     def get_matrix(self):
@@ -3840,8 +3912,8 @@ class ParameterEulerToMatrix(ParameterCell):
     def evaluate(self):
         self._set_ready()
         vec = self.get_socket_value(self.input_e)
-        if isinstance(vec, mathutils.Vector):
-            vec = mathutils.Euler((vec.x, vec.y, vec.z), 'XYZ')
+        if isinstance(vec, Vector):
+            vec = Euler((vec.x, vec.y, vec.z), 'XYZ')
         self.matrix = vec.to_matrix()
 
 
@@ -3849,7 +3921,7 @@ class ParameterMatrixToEuler(ParameterCell):
     def __init__(self):
         ParameterCell.__init__(self)
         self.input_m = None
-        self.euler = mathutils.Euler()
+        self.euler = Euler()
         self.OUT = LogicNetworkSubCell(self, self.get_euler)
 
     def get_euler(self):
@@ -3865,7 +3937,7 @@ class ParameterMatrixToVector(ParameterCell):
     def __init__(self):
         ParameterCell.__init__(self)
         self.input_m = None
-        self.vec = mathutils.Vector()
+        self.vec = Vector()
         self.OUT = LogicNetworkSubCell(self, self.get_vec)
 
     def get_vec(self):
@@ -3875,7 +3947,7 @@ class ParameterMatrixToVector(ParameterCell):
         self._set_ready()
         matrix = self.get_socket_value(self.input_m)
         e = matrix.to_euler()
-        self.vec = mathutils.Vector((e.x, e.y, e.z))
+        self.vec = Vector((e.x, e.y, e.z))
 
 
 class ParameterVector3Simple(ParameterCell):
@@ -3884,7 +3956,7 @@ class ParameterVector3Simple(ParameterCell):
         self.input_x = None
         self.input_y = None
         self.input_z = None
-        self.output_vector = mathutils.Vector()
+        self.output_vector = Vector()
         self.OUTV = LogicNetworkSubCell(self, self.get_out_v)
 
     def get_out_v(self):
@@ -3913,7 +3985,7 @@ class ParameterVector4Simple(ParameterCell):
         self.input_y = None
         self.input_z = None
         self.input_w = None
-        self.output_vector = mathutils.Vector((0, 0, 0, 0))
+        self.output_vector = Vector((0, 0, 0, 0))
         self.OUTV = LogicNetworkSubCell(self, self.get_out_v)
 
     def get_out_v(self):
@@ -3982,7 +4054,7 @@ class ParameterEulerSimple(ParameterCell):
         self.input_x = None
         self.input_y = None
         self.input_z = None
-        self.output_euler = mathutils.Euler()
+        self.output_euler = Euler()
         self.OUTV = LogicNetworkSubCell(self, self.get_out_v)
 
     def get_out_x(self): return self.output_euler.x
@@ -4017,7 +4089,7 @@ class ParameterVector4(ParameterCell):
         self.out_y = 0
         self.out_z = 0
         self.out_w = 1
-        self.out_vec = mathutils.Vector((0, 0, 0, 1))
+        self.out_vec = Vector((0, 0, 0, 1))
         self.OUTX = LogicNetworkSubCell(self, self._get_out_x)
         self.OUTY = LogicNetworkSubCell(self, self._get_out_y)
         self.OUTZ = LogicNetworkSubCell(self, self._get_out_z)
@@ -4264,8 +4336,8 @@ class ConditionCompareVecs(ConditionCell):
         if is_waiting(a, b, all_values, operator, threshold):
             return
         if (
-            not isinstance(a, mathutils.Vector)
-            or not isinstance(b, mathutils.Vector)
+            not isinstance(a, Vector)
+            or not isinstance(b, Vector)
         ):
             return
         self._set_ready()
@@ -4723,9 +4795,6 @@ class ConditionCollision(ConditionCell):
         return self._objects
 
     def _collision_callback(self, obj, point, normal):
-        self._target = obj
-        self._point = point
-        self._normal = normal
         self._objects.append(obj)
         use_mat = self.get_socket_value(self.use_mat)
         if use_mat:
@@ -4733,8 +4802,13 @@ class ConditionCollision(ConditionCell):
             if material:
                 for obj in self._objects:
                     bo = obj.blenderObject
-                    if material in [slot.material.name for slot in bo.material_slots]:
+                    if material not in [slot.material.name for slot in bo.material_slots]:
+                        self._objects.remove(obj)
+                    else:
                         self._collision_triggered = True
+                        self._target = obj
+                        self._point = point
+                        self._normal = normal
                         return
                 self._collision_triggered = False
                 return
@@ -4742,12 +4816,20 @@ class ConditionCollision(ConditionCell):
             prop = self.get_socket_value(self.prop)
             if prop:
                 for obj in self._objects:
-                    if prop in obj:
+                    if prop not in obj:
+                        self._objects.remove(obj)
+                    else:
                         self._collision_triggered = True
+                        self._target = obj
+                        self._point = point
+                        self._normal = normal
                         return
                 self._collision_triggered = False
                 return
         self._collision_triggered = True
+        self._target = obj
+        self._point = point
+        self._normal = normal
 
     def reset(self):
         LogicNetworkCell.reset(self)
@@ -4791,12 +4873,9 @@ class ConditionCollision(ConditionCell):
         collision = self._collision_triggered
         if last_target is not self._target:
             self._consumed = False
-        if self._consumed:
-            self._set_value(False)
-            return
-        if not self.pulse and collision:
+        if collision and not self.pulse:
+            self._set_value(collision and not self._consumed)
             self._consumed = True
-            self._set_value(collision)
         elif self.pulse:
             self._set_value(collision)
         else:
@@ -5510,11 +5589,11 @@ class ActionCreateVehicle(ActionCell):
             return
         self._set_ready()
         orig_ori = game_object.worldOrientation
-        game_object.worldOrientation = mathutils.Euler((0, 0, 0), 'XYZ')
+        game_object.worldOrientation = Euler((0, 0, 0), 'XYZ')
         ph_id = game_object.getPhysicsId()
         car = bge.constraints.createVehicle(ph_id)
-        down = mathutils.Vector((0, 0, -1))
-        axle_dir = mathutils.Vector((0, -1, 0))
+        down = Vector((0, 0, -1))
+        axle_dir = Vector((0, -1, 0))
         wheels_steering = bpy.data.collections[wheels_steering]
         wheels = bpy.data.collections[wheels]
         for wheel in wheels_steering.objects:
@@ -5598,11 +5677,11 @@ class ActionCreateVehicleFromParent(ActionCell):
             return
         self._set_ready()
         orig_ori = game_object.localOrientation.copy()
-        game_object.localOrientation = mathutils.Euler((0, 0, 0), 'XYZ')
+        game_object.localOrientation = Euler((0, 0, 0), 'XYZ')
         ph_id = game_object.getPhysicsId()
         car = bge.constraints.createVehicle(ph_id)
-        down = mathutils.Vector((0, 0, -1))
-        axle_dir = game_object.getAxisVect(mathutils.Vector((0, -1, 0)))
+        down = Vector((0, 0, -1))
+        axle_dir = game_object.getAxisVect(Vector((0, -1, 0)))
         wheels = []
         cs = sorted(game_object.children, key=lambda c: c.name)
         for c in cs:
@@ -6118,9 +6197,9 @@ class ActionSetGameObjectVisibility(ActionCell):
         ActionCell.__init__(self)
         self.condition = None
         self.game_object = None
-        self.visible = None
-        self.recursive = None
-        self.done = None
+        self.visible: bool = None
+        self.recursive: bool = None
+        self.done: bool = None
         self.OUT = LogicNetworkSubCell(self, self.get_done)
 
     def get_done(self):
@@ -6133,8 +6212,8 @@ class ActionSetGameObjectVisibility(ActionCell):
             self._set_ready()
             return
         game_object = self.get_socket_value(self.game_object)
-        visible = self.get_socket_value(self.visible)
-        recursive = self.get_socket_value(self.recursive)
+        visible: bool = self.get_socket_value(self.visible)
+        recursive: bool = self.get_socket_value(self.recursive)
         if is_waiting(visible, recursive):
             return
         if is_invalid(game_object):
@@ -6148,6 +6227,44 @@ class ActionSetGameObjectVisibility(ActionCell):
         self.done = True
 
 
+class SetCurvePoints(ActionCell):
+    def __init__(self):
+        ActionCell.__init__(self)
+        self.condition = None
+        self.curve_object = None
+        self.points: list = None
+        self.done: bool = None
+        self.OUT = LogicNetworkSubCell(self, self.get_done)
+
+    def get_done(self):
+        return self.done
+
+    def evaluate(self):
+        self.done = False
+        condition = self.get_socket_value(self.condition)
+        if not_met(condition):
+            self._set_ready()
+            return
+        curve_object = self.get_socket_value(self.curve_object)
+        points = self.get_socket_value(self.points)
+        if is_waiting(points):
+            return
+        if is_invalid(curve_object):
+            return
+        self._set_ready()
+        if not points:
+            return
+        curve = curve_object.blenderObject.data
+        for spline in curve.splines:
+            curve.splines.remove(spline)
+        spline = curve.splines.new('NURBS')
+        pos = curve_object.worldPosition
+        spline.points.add(len(points))
+        for p, new_co in zip(spline.points, points):
+            p.co = ([new_co.x - pos.x, new_co.y - pos.y, new_co.z - pos.z] + [1.0])
+        self.done = True
+
+
 class ActionRayPick(ActionCell):
 
     def __init__(self):
@@ -6155,12 +6272,12 @@ class ActionRayPick(ActionCell):
         self.condition = None
         self.origin = None
         self.destination = None
-        self.local = None
-        self.property_name = None
-        self.xray = None
-        self.custom_dist = None
-        self.distance = None
-        self.visualize = None
+        self.local: bool = None
+        self.property_name: str = None
+        self.xray: bool = None
+        self.custom_dist: bool = None
+        self.distance: float = None
+        self.visualize: bool = None
         self._picked_object = None
         self._point = None
         self._normal = None
@@ -6192,8 +6309,6 @@ class ActionRayPick(ActionCell):
         if hasattr(dest, "worldPosition"):
             dest = dest.worldPosition.copy()
         if local:
-            # if hasattr(origin, 'worldOrientation'):
-            #     dest = origin.worldOrientation @ dest
             dest = start + dest
         d = dest - start
         d.normalize()
@@ -6209,11 +6324,11 @@ class ActionRayPick(ActionCell):
             return
         origin = self.get_socket_value(self.origin)
         destination = self.get_socket_value(self.destination)
-        local = self.get_socket_value(self.local)
-        property_name = self.get_socket_value(self.property_name)
-        xray = self.get_socket_value(self.xray)
-        distance = self.get_socket_value(self.distance)
-        visualize = self.get_socket_value(self.visualize)
+        local: bool = self.get_socket_value(self.local)
+        property_name: str = self.get_socket_value(self.property_name)
+        xray: bool = self.get_socket_value(self.xray)
+        distance: float = self.get_socket_value(self.distance)
+        visualize: bool = self.get_socket_value(self.visualize)
 
         if is_waiting(origin, destination, local, property_name, distance):
             return
@@ -6238,7 +6353,7 @@ class ActionRayPick(ActionCell):
             )
         if visualize:
             origin = getattr(origin, 'worldPosition', origin)
-            line_dest = direction.copy()
+            line_dest: Vector = direction.copy()
             line_dest.x *= distance
             line_dest.y *= distance
             line_dest.z *= distance
@@ -6269,6 +6384,105 @@ class ActionRayPick(ActionCell):
         self._point = point
         self._normal = normal
         self._direction = direction
+
+
+class ProjectileRayCast(ActionCell):
+
+    def __init__(self):
+        ActionCell.__init__(self)
+        self.condition = None
+        self.origin = None
+        self.destination = None
+        self.power: float = None
+        self.resolution: float = None
+        self.property_name: str = None
+        self.xray: bool = None
+        self.distance: float = None
+        self.visualize: bool = None
+        self._picked_object = None
+        self._point = None
+        self._normal = None
+        self._parabola = None
+        self.PICKED_OBJECT = LogicNetworkSubCell(self, self.get_picked_object)
+        self.POINT = LogicNetworkSubCell(self, self.get_point)
+        self.NORMAL = LogicNetworkSubCell(self, self.get_normal)
+        self.PARABOLA = LogicNetworkSubCell(self, self.get_parabola)
+        self.network = None
+
+    def setup(self, network):
+        self.network = network
+
+    def get_picked_object(self):
+        return self._picked_object
+
+    def get_parabola(self):
+        return self._parabola
+
+    def get_point(self):
+        return self._point
+
+    def get_normal(self):
+        return self._normal
+
+    def calc_projectile(self, t, vel, pos):
+        half: float = logic.getCurrentScene().gravity.z * (.5 * t * t)
+        vel = vel * t
+        return Vector((0,0, half)) + vel + pos
+
+    def evaluate(self):
+        condition = self.get_socket_value(self.condition)
+        if not_met(condition):
+            self._set_value(False)
+            self._out_normal = None
+            self._out_object = None
+            self._out_point = None
+            return
+        origin = self.get_socket_value(self.origin)
+        power: float = self.get_socket_value(self.power)
+        destination = self.get_socket_value(self.destination)
+        resolution: float = 1 - (self.get_socket_value(self.resolution) * .99)
+        property_name: str = self.get_socket_value(self.property_name)
+        xray: bool = self.get_socket_value(self.xray)
+        distance: float = self.get_socket_value(self.distance)
+        visualize: bool = self.get_socket_value(self.visualize)
+
+        if is_waiting(origin, destination, property_name, distance):
+            return
+        destination.normalize(); destination *= power
+        origin = getattr(origin, 'worldPosition', origin)
+
+        points: list = []
+        color: list = [1, 0, 0]
+        idx = 0
+        total_dist: float = 0
+        found: bool = False
+        owner = self.network._owner
+
+        self._set_ready()
+
+        while total_dist < distance:
+            target = (self.calc_projectile(idx, destination, origin))
+            start = origin if not points else points[-1]
+            obj, point, normal = owner.rayCast(start, target, prop=property_name, xray=xray)
+            total_dist += (target-start).length
+            if not obj:
+                points.append(target)
+            else:
+                points.append(point)
+                color = [0, 1, 0]
+                found = True
+                break
+            idx += resolution
+        if visualize:
+            for i, p in enumerate(points):
+                if i < len(points) - 1:
+                    bge.render.drawLine(p, points[i+1], color)
+        self._set_value(points[-1] if found else None)
+        self._picked_object = obj
+        self._point = point
+        self._normal = normal
+        self._parabola = points
+
 
 
 class ActionMousePick(ActionCell):
@@ -6383,7 +6597,7 @@ class ActionCameraPick(ActionCell):
             return
         obj, point, normal = None, None, None
         # assume screen coordinates
-        if isinstance(aim, mathutils.Vector) and len(aim) == 2:
+        if isinstance(aim, Vector) and len(aim) == 2:
             vec = 10 * camera.getScreenVect(aim[0], aim[1])
             ray_target = camera.worldPosition - vec
             aim = ray_target
@@ -6627,7 +6841,7 @@ class GetResolution(ActionCell):
         self._set_ready()
         self.width = bge.render.getWindowWidth()
         self.height = bge.render.getWindowHeight()
-        self.res = mathutils.Vector((self.width, self.height))
+        self.res = Vector((self.width, self.height))
 
 
 class ActionSetVSync(ActionCell):
@@ -6820,7 +7034,7 @@ class InitNewList(ActionCell):
         self.value4 = None
         self.value5 = None
         self.value6 = None
-        self.items = None
+        self.items: list = None
         self.LIST = LogicNetworkSubCell(self, self.get_list)
 
     def get_list(self):
@@ -6845,10 +7059,10 @@ class AppendListItem(ActionCell):
     def __init__(self):
         ActionCell.__init__(self)
         self.condition = None
-        self.items = None
+        self.items: list = None
         self.val = None
-        self.new_list = None
-        self.done = None
+        self.new_list: list = None
+        self.done: bool = None
         self.OUT = LogicNetworkSubCell(self, self.get_done)
         self.LIST = LogicNetworkSubCell(self, self.get_list)
 
@@ -6859,11 +7073,11 @@ class AppendListItem(ActionCell):
         return self.new_list
 
     def evaluate(self):
-        self.done = False
+        self.done: bool = False
         condition = self.get_socket_value(self.condition)
         if not_met(condition):
             return
-        list_d = self.get_socket_value(self.items)
+        list_d: list = self.get_socket_value(self.items)
         val = self.get_socket_value(self.val)
         if is_waiting(list_d, val):
             return
@@ -6877,11 +7091,11 @@ class SetListIndex(ActionCell):
     def __init__(self):
         ActionCell.__init__(self)
         self.condition = None
-        self.items = None
-        self.index = None
+        self.items: list = None
+        self.index: int = None
         self.val = None
-        self.new_list = None
-        self.done = None
+        self.new_list: list = None
+        self.done: bool = None
         self.OUT = LogicNetworkSubCell(self, self.get_done)
         self.LIST = LogicNetworkSubCell(self, self.get_list)
 
@@ -6896,8 +7110,8 @@ class SetListIndex(ActionCell):
         condition = self.get_socket_value(self.condition)
         if not_met(condition):
             return
-        list_d = self.get_socket_value(self.items)
-        index = self.get_socket_value(self.index)
+        list_d: list = self.get_socket_value(self.items)
+        index: int = self.get_socket_value(self.index)
         val = self.get_socket_value(self.val)
         if is_invalid(list_d, index, val):
             return
@@ -7201,8 +7415,8 @@ class ActionEditBone(ActionCell):
         self.translate = None
         self.rotate = None
         self.scale = None
-        self._eulers = mathutils.Euler((0, 0, 0), "XYZ")
-        self._vector = mathutils.Vector((0, 0, 0))
+        self._eulers = Euler((0, 0, 0), "XYZ")
+        self._vector = Vector((0, 0, 0))
         self.done = None
         self.OUT = LogicNetworkSubCell(self, self.get_done)
 
@@ -7228,7 +7442,7 @@ class ActionEditBone(ActionCell):
         orientation = self._convert_orientation(ch, xyzrot)
         if ch.rotation_mode is logic.ROT_MODE_QUAT:
             ch.rotation_quaternion = (
-                mathutils.Quaternion(ch.rotation_quaternion) * orientation
+                Quaternion(ch.rotation_quaternion) * orientation
             )
         else:
             ch.rotation_euler = ch.rotation_euler.rotate(orientation)
@@ -7291,8 +7505,8 @@ class ActionSetBonePos(ActionCell):
         self.armature = None
         self.bone_name = None
         self.set_translation = None
-        self._eulers = mathutils.Euler((0, 0, 0), "XYZ")
-        self._vector = mathutils.Vector((0, 0, 0))
+        self._eulers = Euler((0, 0, 0), "XYZ")
+        self._vector = Vector((0, 0, 0))
         self.done = None
         self.OUT = LogicNetworkSubCell(self, self.get_done)
 
@@ -7764,6 +7978,121 @@ class ActionApplyImpulse(ActionCell):
         self._set_ready()
         if impulse:
             game_object.applyImpulse(point, impulse, local)
+        self.done = True
+
+
+class GamepadLook(ActionCell):
+    def __init__(self, axis=0):
+        ActionCell.__init__(self)
+        self.axis: int = axis
+        self.condition = None
+        self.main_obj: GameObject = None
+        self.head_obj: GameObject = None
+        self.inverted: bool = None
+        self.index: int = None
+        self.sensitivity: float = None
+        self.exponent: float = None
+        self.use_cap_x: bool = None
+        self.cap_x: Vector = None
+        self.use_cap_y: bool = None
+        self.cap_y: Vector = None
+        self.threshold: float = None
+        self.done: bool = None
+        self.DONE = LogicNetworkSubCell(self, self.get_done)
+
+    def get_done(self):
+        return self.done
+
+    def evaluate(self):
+        self.done = False
+        axis: int = self.get_socket_value(self.axis)
+        condition: GameObject = self.get_socket_value(self.condition)
+        if not_met(condition):
+            return
+        main_obj: GameObject = self.get_socket_value(self.main_obj)
+        head_obj: GameObject = self.get_socket_value(self.head_obj)
+        if is_invalid(head_obj):
+            head_obj = main_obj
+        if is_invalid(axis):
+            debug('Gamepad Sticks Node: Invalid Controller Stick!')
+            return
+        inverted: bool = self.get_socket_value(self.inverted)
+        index: int = self.get_socket_value(self.index)
+        sensitivity: float = self.get_socket_value(self.sensitivity)
+        exponent: float = self.get_socket_value(self.exponent)
+        threshold: float = self.get_socket_value(self.threshold)
+        use_cap_x: Vector = self.get_socket_value(self.use_cap_x)
+        cap_x: Vector = self.get_socket_value(self.cap_x)
+        uppercapX: float = cap_x.x
+        lowercapX: float = -cap_x.y
+        use_cap_y: Vector = self.get_socket_value(self.use_cap_y)
+        cap_y: Vector = self.get_socket_value(self.cap_y)
+        uppercapY: float = cap_y.x
+        lowercapY: float = -cap_y.y
+
+        self._set_ready()
+        if logic.joysticks[index]:
+            joystick = logic.joysticks[index]
+        else:
+            debug('Gamepad Sticks Node: No Joystick at that Index!')
+            return
+        if is_invalid(joystick):
+            return
+        raw_values = joystick.axisValues
+        if axis == 0:
+            x, y = raw_values[0] , raw_values[1]
+        elif axis == 1:
+            x, y = raw_values[2], raw_values[3]
+        neg_x = -1 if x < 0 else 1
+        neg_y = -1 if y < 0 else 1
+
+        if -threshold < x < threshold:
+            x = 0
+        else:
+            x = abs(x) ** exponent
+
+        if -threshold < y < threshold:
+            y = 0
+        else:
+            y = abs(y) ** exponent
+        if x == y == 0:
+            self.done = True
+            return
+
+        x *= neg_x
+        y *= neg_y
+
+        x = -x if inverted['x'] else x
+        y = -y if inverted['y'] else y
+
+        x *= sensitivity
+        if use_cap_x:
+            objectRotation = main_obj.localOrientation.to_euler()
+            if objectRotation.z + x > uppercapX:
+                x = 0
+                objectRotation.z = uppercapX
+                main_obj.localOrientation = objectRotation.to_matrix()
+
+            if objectRotation.z + x < lowercapX:
+                x = 0
+                objectRotation.z = lowercapX
+                main_obj.localOrientation = objectRotation.to_matrix()
+
+        y *= sensitivity
+        if use_cap_y:
+            objectRotation = head_obj.localOrientation.to_euler()
+            if objectRotation.y + y > uppercapY:
+                y = 0
+                objectRotation.y = uppercapY
+                head_obj.localOrientation = objectRotation.to_matrix()
+
+            if objectRotation.y + y < lowercapY:
+                y = 0
+                objectRotation.y = lowercapY
+                head_obj.localOrientation = objectRotation.to_matrix()
+
+        main_obj.applyRotation(Vector((0, 0, x)), True)
+        head_obj.applyRotation(Vector((0, y, 0)), True)
         self.done = True
 
 
@@ -8342,7 +8671,7 @@ class ActionSetCharacterWalkDir(ActionCell):
             if self.active:
                 game_object = self.get_socket_value(self.game_object)
                 physics = bge.constraints.getCharacter(game_object)
-                physics.walkDirection = mathutils.Vector((0, 0, 0))
+                physics.walkDirection = Vector((0, 0, 0))
                 self.active = False
             return
         elif not self.active:
@@ -8358,7 +8687,7 @@ class ActionSetCharacterWalkDir(ActionCell):
         if local:
             walkDir = game_object.worldOrientation @ walkDir
         physics = bge.constraints.getCharacter(game_object)
-        physics.walkDirection = walkDir
+        physics.walkDirection = walkDir / bpy.data.scenes[bge.logic.getCurrentScene().name].game_settings.physics_step_sub
         self.done = True
 
 
@@ -8839,7 +9168,7 @@ class ActionStart3DSoundAdv(ActionCell):
                             handle.velocity = getattr(
                                 speaker,
                                 'worldLinearVelocity',
-                                mathutils.Vector((0, 0, 0))
+                                Vector((0, 0, 0))
                             )
                         if occlusion:
                             transition = self.get_socket_value(
@@ -8950,7 +9279,7 @@ class ActionStart3DSoundAdv(ActionCell):
                 handle.velocity = getattr(
                     speaker,
                     'worldLinearVelocity',
-                    mathutils.Vector((0, 0, 0))
+                    Vector((0, 0, 0))
                 )
             handle.attenuation = attenuation
             handle.orientation = speaker.worldOrientation.to_quaternion()
@@ -9397,7 +9726,7 @@ class ActionTranslate(ActionCell):
                 moving_object.localPosition if
                 local else moving_object.worldPosition
             )
-            end_pos = mathutils.Vector((
+            end_pos = Vector((
                 start_pos.x + dx, start_pos.y + dy, start_pos.z + dz
             ))
             distance = (start_pos - end_pos).length
@@ -10176,7 +10505,7 @@ class ActionFollowPath(ActionCell):
         points = path.points
         self._motion_path = path
         if not navmesh_object:
-            points.append(mathutils.Vector(start_position))
+            points.append(Vector(start_position))
             if loop:
                 path.loop_start = 1
             for c in children:
