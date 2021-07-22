@@ -3013,15 +3013,10 @@ class NLVec3FieldSocket(bpy.types.NodeSocket, NetLogicSocketType):
         return PARAM_VECTOR_SOCKET_COLOR
 
     def get_unlinked_value(self):
-        vec =  "mathutils.Vector(({}, {}, {}))".format(
+        return "mathutils.Vector(({}, {}, {}))".format(
             self.value_x,
             self.value_y,
             self.value_z
-        )
-        return getattr(
-            self.value,
-            'worldPosition',
-            vec
         )
 
     def draw(self, context, layout, node, text):
