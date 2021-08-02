@@ -807,7 +807,9 @@ class LogicNetwork(LogicNetworkCell):
     def init_glob_cats(self):
         if not hasattr(bpy.types.Scene, 'nl_globals_initialized'):
             scene = bge.logic.getCurrentScene()
-            cats = bpy.data.scenes[scene.name].nl_global_categories
+            cats = getattr(bpy.data.scenes[scene.name], 'nl_global_categories', None)
+            if not cats:
+                return
 
             msg = ''
 

@@ -7752,7 +7752,7 @@ _nodes.append(NLToggleGameObjectGamePropertyActionNode)
 
 class NLAddToGameObjectGamePropertyActionNode(bpy.types.Node, NLActionNode):
     bl_idname = "NLAddToGameObjectGamePropertyActionNode"
-    bl_label = "Add To Property"
+    bl_label = "Modify Property"
     bl_icon = 'ADD'
     nl_category = "Objects"
     nl_subcat = 'Properties'
