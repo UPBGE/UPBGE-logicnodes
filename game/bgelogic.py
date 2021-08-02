@@ -1221,21 +1221,19 @@ class ConditionOnce(ConditionCell):
         repeat = self.get_socket_value(self.repeat)
         reset_time = self.get_socket_value(self.reset_time)
         if is_waiting(repeat, reset_time):
+            self._set_value(False)
             return
         network = self.network
         tl = network.timeline
 
         self._set_ready()
-        if abs(tl - self.time) > reset_time and repeat:
-            self._consumed = False
-        print(abs(tl - self.time))
-        print(tl)
+        cond_f = not_met(condition)
         self.time = tl
-        if condition and self._consumed is False:
+        if not cond_f and self._consumed is False:
             self._consumed = True
             self._set_value(True)
             return
-        if not_met(condition) and repeat and self._consumed:
+        if cond_f and repeat and self._consumed:
             self._consumed = False
         self._set_value(False)
 
@@ -3326,6 +3324,20 @@ class ClampValue(ParameterCell):
         if value > range_ft.y:
             value = range_ft.y
         self._set_value(value)
+
+
+class GetImage(ParameterCell):
+
+    def __init__(self):
+        ParameterCell.__init__(self)
+        self.image = None
+
+    def evaluate(self):
+        image = self.get_socket_value(self.image)
+        if is_invalid(image):
+            return
+        self._set_ready()
+        self._set_value(bpy.data.images[image])
 
 
 class GetSound(ParameterCell):
@@ -10053,6 +10065,8 @@ class SetLightColor(ActionCell):
         color = self.get_socket_value(self.color)
         if is_waiting(lamp, color):
             return
+        if len(color) > 3:
+            color = color[:-1]
         self._set_ready()
         light = lamp.blenderObject.data
         light.color = color

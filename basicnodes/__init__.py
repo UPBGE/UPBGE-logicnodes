@@ -1846,6 +1846,38 @@ class NLSoundFileSocket(bpy.types.NodeSocket, NetLogicSocketType):
 _sockets.append(NLSoundFileSocket)
 
 
+class NLImageSocket(bpy.types.NodeSocket, NetLogicSocketType):
+    bl_idname = "NLImageSocket"
+    bl_label = "Image"
+    value: bpy.props.PointerProperty(
+        name='Image',
+        type=bpy.types.Image,
+        description='Select an Image',
+        update=update_tree_code
+    )
+
+    def draw_color(self, context, node):
+        return PARAM_SOUND_SOCKET_COLOR
+
+    def draw(self, context, layout, node, text):
+        if self.is_linked or self.is_output:
+            layout.label(text=text)
+        else:
+            col = layout.column()
+            row = col.row(align=True)
+            text = text if text else 'Sound'
+            row.label(text=text)
+            col.prop(self, "value", text='')
+
+    def get_unlinked_value(self):
+        if self.value is None:
+            return '"None"'
+        return '"{}"'.format(str(self.value.name))
+
+
+_sockets.append(NLImageSocket)
+
+
 ###############################################################################
 # String Pointer Sockets
 ###############################################################################
@@ -5238,11 +5270,34 @@ class NLClampValueNode(bpy.types.Node, NLParameterNode):
 _nodes.append(NLClampValueNode)
 
 
+class NLGetImage(bpy.types.Node, NLParameterNode):
+    bl_idname = "NLGetImage"
+    bl_label = "Get Image"
+    bl_icon = 'IMAGE_DATA'
+    nl_category = "File"
+
+    def init(self, context):
+        NLParameterNode.init(self, context)
+        self.inputs.new(NLImageSocket.bl_idname, "Image")
+        self.outputs.new(NLImageSocket.bl_idname, 'Image')
+
+    def get_netlogic_class_name(self):
+        return "bgelogic.GetImage"
+
+    def get_input_sockets_field_names(self):
+        return [
+            "image"
+        ]
+
+
+_nodes.append(NLGetImage)
+
+
 class NLGetSound(bpy.types.Node, NLParameterNode):
     bl_idname = "NLGetSound"
     bl_label = "Get Sound"
     bl_icon = 'FILE_SOUND'
-    nl_category = "Sound"
+    nl_category = "File"
 
     def init(self, context):
         NLParameterNode.init(self, context)
