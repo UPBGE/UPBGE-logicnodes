@@ -1825,13 +1825,13 @@ class NLSoundFileSocket(bpy.types.NodeSocket, NetLogicSocketType):
             row = col.row(align=True)
             text = text if text else 'Sound'
             row.label(text=text)
-            if not self.use_path:
-                row.operator(bge_netlogic.ops.NLLoadSoundOperator.bl_idname, icon='SOUND', text='')
-            row.prop(self, 'use_path', icon='FILEBROWSER', text='')
+            row2 = col.row(align=True)
             if self.use_path:
-                col.prop(self, "filepath_value", text='')
+                row2.prop(self, "filepath_value", text='')
             else:
-                col.prop(self, "sound_value", text='')
+                row2.prop(self, "sound_value", text='')
+            row2.operator(bge_netlogic.ops.NLLoadSoundOperator.bl_idname, icon='FILEBROWSER', text='')
+            # row.prop(self, 'use_path', icon='FILEBROWSER', text='')
 
     def get_unlinked_value(self):
         if not self.use_path and self.sound_value is None:
@@ -1865,9 +1865,11 @@ class NLImageSocket(bpy.types.NodeSocket, NetLogicSocketType):
         else:
             col = layout.column()
             row = col.row(align=True)
-            text = text if text else 'Sound'
+            text = text if text else 'Image'
             row.label(text=text)
-            col.prop(self, "value", text='')
+            row2 = col.row(align=True)
+            row2.prop(self, "value", text='')
+            row2.operator(bge_netlogic.ops.NLLoadImageOperator.bl_idname, icon='FILEBROWSER', text='')
 
     def get_unlinked_value(self):
         if self.value is None:
