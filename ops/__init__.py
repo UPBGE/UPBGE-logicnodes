@@ -1170,10 +1170,10 @@ class NLLoadImageOperator(bpy.types.Operator, ImportHelper):
     def execute(self, context):
         bpy.ops.image.open(
             filepath=self.filepath,
-            mono=True,
             relative_path=True,
-            filter_sound=True
+            filter_image=True
         )
+        # .value = os.path.basename(self.filepath)
         return {'FINISHED'}
 
 
