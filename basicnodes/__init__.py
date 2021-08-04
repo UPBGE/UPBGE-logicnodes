@@ -3697,6 +3697,31 @@ class NLParameterFindChildByNameNode(bpy.types.Node, NLParameterNode):
 _nodes.append(NLParameterFindChildByNameNode)
 
 
+class NLParameterFindChildByIndexNode(bpy.types.Node, NLParameterNode):
+    bl_idname = "NLParameterFindChildByIndexNode"
+    bl_label = "Get Child By Index"
+    bl_icon = 'COMMUNITY'
+    nl_category = "Objects"
+
+    def init(self, context):
+        NLParameterNode.init(self, context)
+        self.inputs.new(NLGameObjectSocket.bl_idname, "Parent")
+        self.inputs.new(NLIntegerFieldSocket.bl_idname, "Index")
+        self.outputs.new(NLGameObjectSocket.bl_idname, "Child")
+
+    def get_netlogic_class_name(self):
+        return "bgelogic.FindChildByIndex"
+
+    def get_input_sockets_field_names(self):
+        return ["from_parent", "index"]
+
+    def get_output_socket_varnames(self):
+        return [OUTCELL]
+
+
+_nodes.append(NLParameterFindChildByIndexNode)
+
+
 class NLParameterGetAttribute(bpy.types.Node, NLParameterNode):
     bl_idname = "NLParameterGetAttribute"
     bl_label = "Get Object Attribute"
