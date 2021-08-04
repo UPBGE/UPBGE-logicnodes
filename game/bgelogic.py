@@ -8223,7 +8223,7 @@ class ActionSaveVariable(ActionCell):
             f = open(file_path, 'w')
             json.dump(data, f, indent=2)
         else:
-            debug('file does not exist - creating...')
+            debug('Variables file does not exist - creating...')
             f = open(file_path, 'w')
             data = {name: val}
             json.dump(data, f, indent=2)
@@ -8964,21 +8964,26 @@ class ActionPlayAction(ActionCell):
                 if is_near_end:
                     self._notify_finished(game_object, layer)
             elif condition:  # start the animation if the condition is True
-                game_object.playAction(
-                    action_name,
-                    start_frame,
-                    end_frame,
-                    layer=layer,
-                    priority=priority,
-                    blendin=blendin,
-                    play_mode=play_mode,
-                    speed=speed,
-                    layer_weight=1 - layer_weight,
-                    blend_mode=blend_mode)
-                self._started = True
+                is_playing = game_object.isPlayingAction(layer)
+                same_action = game_object.getActionName(layer) == action_name
+                if not same_action and is_playing:
+                    game_object.stopAction(layer)
+                if not (is_playing or same_action):
+                    game_object.playAction(
+                        action_name,
+                        start_frame,
+                        end_frame,
+                        layer=layer,
+                        priority=priority,
+                        blendin=blendin,
+                        play_mode=play_mode,
+                        speed=speed,
+                        layer_weight=1-layer_weight,
+                        blend_mode=blend_mode)
+                    self._started = True
+                    self._frame = start_frame
                 self._running = True
                 self._finished = False
-                self._frame = start_frame
                 self._finish_notified = False
             else:  # game_object is existing and valid but condition is False
                 self._reset_subvalues()
