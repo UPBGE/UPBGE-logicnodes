@@ -190,6 +190,9 @@ class SimpleLoggingDatabase(object):
             if changed:
                 SimpleLoggingDatabase.write_put(self.fname, key, value)
 
+    def log(self):
+        print(self.data)
+
 
 class StringSerializer(SimpleLoggingDatabase.Serializer):
 
@@ -4169,7 +4172,6 @@ class ParameterFindChildByName(ParameterCell):
         ParameterCell.__init__(self)
         self.from_parent = None
         self.child = None
-        self.parent = None
         self.CHILD = LogicNetworkSubCell(self, self.get_child)
 
     def get_child(self):
@@ -4198,6 +4200,29 @@ class ParameterFindChildByName(ParameterCell):
             self._set_value(_name_query(parent.childrenRecursive, child))
             # return
 
+
+class FindChildByIndex(ParameterCell):
+    def __init__(self):
+        ParameterCell.__init__(self)
+        self.from_parent: GameObject = None
+        self.index: int = None
+
+    def evaluate(self):
+        self._set_ready()
+        self._set_value(None)
+
+        parent: GameObject = self.get_socket_value(self.from_parent)
+        index: int = self.get_socket_value(self.index)
+
+        if is_waiting(parent, index):
+            return
+        elif not is_invalid(parent):
+            # find from parent
+            if len(parent.children) > index:
+                self._set_value(parent.children[index])
+            else:
+                self._set_value(False)
+            # return
 
 # Condition cells
 class ConditionAlways(ConditionCell):
@@ -8935,12 +8960,13 @@ class ActionPlayAction(ActionCell):
                     layer_weight != self.old_layer_weight or
                     speed != self.old_speed
                 ):
+                    reset_frame = 0 if play_mode == bge.logic.KX_ACTION_MODE_LOOP else end_frame
                     next_frame = (
                         playing_frame + speed
                         if
                         playing_frame + speed <= end_frame
                         else
-                        0
+                        reset_frame
                     )
                     game_object.stopAction(layer)
                     game_object.playAction(
@@ -9611,6 +9637,7 @@ class CreateMessage(ActionCell):
         self.subject = None
         self.body = None
         self.target = None
+        self.old_subject = None
         self.done = None
         self.OUT = LogicNetworkSubCell(self, self.get_done)
 
@@ -9621,13 +9648,15 @@ class CreateMessage(ActionCell):
         self.done = False
         condition = self.get_socket_value(self.condition)
         subject = self.get_socket_value(self.subject)
+        osubject = self.old_subject
         messages = self.network._messages
         if not_met(condition):
-            if subject in messages.data:
-                if messages.data[subject][2] is self:
-                    messages.data.pop(subject, None)
+            if osubject in messages.data:
+                if messages.data[osubject][2] is self:
+                    messages.data.pop(osubject, None)
             self._set_ready()
             return
+        self.old_subject = subject
         body = self.get_socket_value(self.body)
         target = self.get_socket_value(self.target)
         if is_waiting(body, target):
