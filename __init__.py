@@ -239,7 +239,7 @@ def register_nodes(category_label, *cls):
     for c in cls:
         if hasattr(bpy.types, c.bl_idname):
             try:
-                print("Unregister class {}".format(c))
+                # print("Unregister class {}".format(c))
                 bpy.utils.unregister_class(getattr(bpy.types, c.bl_idname))
             except RuntimeError as ex:
                 print("Cannot unregister type {}, for some reason\n{}".format(c, ex))
@@ -488,6 +488,7 @@ _registered_classes = [
     ops.TreeCodeWriterOperator,
     ops.NLMakeGroupOperator,
     ops.NLLoadSoundOperator,
+    ops.NLLoadImageOperator,
     ops.NLSwitchInitialNetworkStatusOperator,
     ops.NLUpdateTreeVersionOperator,
     ops.NLAddPropertyOperator,
@@ -612,9 +613,8 @@ def _list_menu_nodes():
 def register():
     if _generate_on_game_start not in bpy.app.handlers.game_pre:
         bpy.app.handlers.game_pre.append(_generate_on_game_start)
-    print(bpy.app.version)
     for cls in _registered_classes:
-        print("Registering... {}".format(cls.__name__))
+        # print("Registering... {}".format(cls.__name__))
         bpy.utils.register_class(cls)
     menu_nodes = _list_menu_nodes()
     layout_items = [
@@ -659,12 +659,12 @@ def register():
 
 # blender add-on unregistration callback
 def unregister():
-    print('Removing Game Start Compile handler...')
+    utils.debug('Removing Game Start Compile handler...')
     filter(lambda a: a is not _generate_on_game_start, bpy.app.handlers.game_pre)
-    print("Unregister node category [{}]".format("NETLOGIC_NODES"))
+    # print("Unregister node category [{}]".format("NETLOGIC_NODES"))
     nodeitems_utils.unregister_node_categories("NETLOGIC_NODES")
     for cls in reversed(_registered_classes):
-        print("Unregister node class [{}]".format(cls.__name__))
+        # print("Unregister node class [{}]".format(cls.__name__))
         bpy.utils.unregister_class(cls)
     user_node_categories = set()
     for pair in _loaded_nodes:
@@ -674,7 +674,7 @@ def unregister():
         try:
             node_id = cls.__name__
             if hasattr(bpy.types, node_id):
-                print("Unregister user node [{}]".format(node_id))
+                # print("Unregister user node [{}]".format(node_id))
                 bpy.utils.unregister_class(getattr(bpy.types, node_id))
         except RuntimeError as ex:
             print("Custom node {} not unloaded [{}]".format(cls.__name__, ex))
@@ -685,12 +685,12 @@ def unregister():
         try:
             node_id = cls.__name__
             if hasattr(bpy.types, node_id):
-                print("Unregister user socket [{}]".format(node_id))
+                # print("Unregister user socket [{}]".format(node_id))
                 bpy.utils.unregister_class(getattr(bpy.types, node_id))
         except RuntimeError as ex:
             print("Custom socket {} not unloaded [{}]".format(cls.__name__, ex))
     for cat in user_node_categories:
-        print("Unregister user node category [{}]".format(cat))
+        # print("Unregister user node category [{}]".format(cat))
         try:
             nodeitems_utils.unregister_node_categories(cat)
         except RuntimeError as ex:

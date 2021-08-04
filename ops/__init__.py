@@ -1152,6 +1152,31 @@ class NLLoadSoundOperator(bpy.types.Operator, ImportHelper):
         return {'FINISHED'}
 
 
+class NLLoadImageOperator(bpy.types.Operator, ImportHelper):
+    bl_idname = "bge_netlogic.load_image"
+    bl_label = "Load Image"
+    bl_options = {'REGISTER', 'UNDO'}
+    bl_description = "Load an image file"
+
+    filter_glob: bpy.props.StringProperty(
+        default='*.jpg;*.png;',
+        options={'HIDDEN'}
+    )
+
+    @classmethod
+    def poll(cls, context):
+        return True
+
+    def execute(self, context):
+        bpy.ops.image.open(
+            filepath=self.filepath,
+            relative_path=True,
+            filter_image=True
+        )
+        # .value = os.path.basename(self.filepath)
+        return {'FINISHED'}
+
+
 class NLAddPropertyOperator(bpy.types.Operator):
     bl_idname = "bge_netlogic.add_game_prop"
     bl_label = "Add Game Property"
