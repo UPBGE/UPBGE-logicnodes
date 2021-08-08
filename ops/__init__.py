@@ -1134,7 +1134,7 @@ class NLLoadSoundOperator(bpy.types.Operator, ImportHelper):
     bl_description = "Load a sound file"
 
     filter_glob: bpy.props.StringProperty(
-        default='*.wav;*.mp3;',
+        default='*.wav;*.mp3;*.ogg*',
         options={'HIDDEN'}
     )
 
