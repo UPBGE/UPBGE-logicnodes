@@ -8960,7 +8960,7 @@ class ActionPlayAction(ActionCell):
                     layer_weight != self.old_layer_weight or
                     speed != self.old_speed
                 ):
-                    reset_frame = 0 if play_mode == bge.logic.KX_ACTION_MODE_LOOP else end_frame
+                    reset_frame = start_frame if play_mode == bge.logic.KX_ACTION_MODE_LOOP else end_frame
                     next_frame = (
                         playing_frame + speed
                         if
