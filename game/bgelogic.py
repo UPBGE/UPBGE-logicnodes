@@ -1264,11 +1264,8 @@ class ActionLoadGame(ActionCell):
         return Euler((data['x'], data['y'], data['z']))
 
     def get_custom_path(self, path):
-        if not path.endswith('/'):
+        if not path.endswith('/') and not path.endswith('json'):
             path = path + '/'
-        if path.startswith('./'):
-            path = path.split('./', 1)[-1]
-            return bpy.path.abspath('//' + path)
         return path
 
     def evaluate(self):
@@ -1389,13 +1386,8 @@ class ActionSaveGame(ActionCell):
         return self.done
 
     def get_custom_path(self, path):
-        if not path.endswith('/'):
+        if not path.endswith('/') and not path.endswith('json'):
             path = path + '/'
-        if path.startswith('//'):
-            return bpy.path.abspath(path)
-        elif path.startswith('./'):
-            path = path.split('./', 1)[-1]
-            return bpy.path.abspath('//' + path)
         return path
 
     def evaluate(self):
@@ -8231,6 +8223,7 @@ class ActionSaveVariable(ActionCell):
         self.name = None
         self.val = None
         self.path = ''
+        self.file_name = ''
         self.done = None
         self.OUT = LogicNetworkSubCell(self, self.get_done)
 
@@ -8239,27 +8232,25 @@ class ActionSaveVariable(ActionCell):
 
     def write_to_json(self, path, name, val):
         data = None
-        file_path = path + 'variables.json'
-        if os.path.isfile(file_path):
-            f = open(file_path, 'r')
+        if not path.endswith('.json'):
+            path = path + f'{self.file_name}.json'
+        if os.path.isfile(path):
+            f = open(path, 'r')
             data = json.load(f)
             data[name] = val
             f.close()
-            f = open(file_path, 'w')
+            f = open(path, 'w')
             json.dump(data, f, indent=2)
         else:
-            debug('Variables file does not exist - creating...')
-            f = open(file_path, 'w')
+            debug('Variable file does not exist - creating...')
+            f = open(path, 'w')
             data = {name: val}
             json.dump(data, f, indent=2)
         f.close()
 
     def get_custom_path(self, path):
-        if not path.endswith('/'):
+        if not path.endswith('/') and not path.endswith('json'):
             path = path + '/'
-        if path.startswith('./'):
-            path = path.split('./', 1)[-1]
-            return bpy.path.abspath('//' + path)
         return path
 
     def evaluate(self):
@@ -8279,6 +8270,7 @@ class ActionSaveVariable(ActionCell):
             if self.path == ''
             else bpy.path.abspath(cust_path)
         )
+
         os.makedirs(path, exist_ok=True)
 
         self.write_to_json(path, name, val)
@@ -8291,6 +8283,7 @@ class ActionSaveVariables(ActionCell):
         self.condition = None
         self.val = None
         self.path = ''
+        self.file_name = ''
         self.done = None
         self.OUT = LogicNetworkSubCell(self, self.get_done)
 
@@ -8298,7 +8291,8 @@ class ActionSaveVariables(ActionCell):
         return self.done
 
     def write_to_json(self, path, val):
-        path = path + 'variables.json'
+        if not path.endswith('.json'):
+            path = path + f'{self.file_name}.json'
         if os.path.isfile(path):
             f = open(path, 'w')
             json.dump(val, f, indent=2)
@@ -8309,11 +8303,8 @@ class ActionSaveVariables(ActionCell):
         f.close()
 
     def get_custom_path(self, path):
-        if not path.endswith('/'):
+        if not path.endswith('/') and not path.endswith('json'):
             path = path + '/'
-        if path.startswith('./'):
-            path = path.split('./', 1)[-1]
-            return bpy.path.abspath('//' + path)
         return path
 
     def evaluate(self):
@@ -8344,6 +8335,7 @@ class ActionLoadVariable(ActionCell):
         self.condition = None
         self.name = None
         self.path = ''
+        self.file_name = ''
         self.var = None
         self.done = None
         self.OUT = LogicNetworkSubCell(self, self.get_done)
@@ -8357,9 +8349,10 @@ class ActionLoadVariable(ActionCell):
 
     def read_from_json(self, path, name):
         self.done = False
-        file_path = path + 'variables.json'
-        if file_path:
-            f = open(file_path, 'r')
+        if not path.endswith('.json'):
+            path = path + f'{self.file_name}.json'
+        if path:
+            f = open(path, 'r')
             data = json.load(f)
             if name not in data:
                 debug('"{}" is not a saved Variabe!')
@@ -8369,11 +8362,8 @@ class ActionLoadVariable(ActionCell):
             debug('No saved variables!')
 
     def get_custom_path(self, path):
-        if not path.endswith('/'):
+        if not path.endswith('/') and not path.endswith('json'):
             path = path + '/'
-        if path.startswith('./'):
-            path = path.split('./', 1)[-1]
-            return bpy.path.abspath('//' + path)
         return path
 
     def evaluate(self):
@@ -8403,6 +8393,7 @@ class ActionLoadVariables(ActionCell):
         ActionCell.__init__(self)
         self.condition = None
         self.path = ''
+        self.file_name = ''
         self.var = None
         self.done = None
         self.OUT = LogicNetworkSubCell(self, self.get_done)
@@ -8416,7 +8407,8 @@ class ActionLoadVariables(ActionCell):
 
     def read_from_json(self, path):
         self.done = False
-        path = path + 'variables.json'
+        if not path.endswith('.json'):
+            path = path + f'{self.file_name}.json'
         if not os.path.isfile(path):
             debug('No Saved Variables!')
             return
@@ -8426,11 +8418,8 @@ class ActionLoadVariables(ActionCell):
         f.close()
 
     def get_custom_path(self, path):
-        if not path.endswith('/'):
+        if not path.endswith('/') and not path.endswith('json'):
             path = path + '/'
-        if path.startswith('./'):
-            path = path.split('./', 1)[-1]
-            return bpy.path.abspath('//' + path)
         return path
 
     def evaluate(self):
@@ -8458,6 +8447,7 @@ class ActionRemoveVariable(ActionCell):
         self.condition = None
         self.name = None
         self.path = ''
+        self.file_name = ''
         self.done = None
         self.OUT = LogicNetworkSubCell(self, self.get_done)
 
@@ -8466,25 +8456,23 @@ class ActionRemoveVariable(ActionCell):
 
     def write_to_json(self, path, name):
         data = None
-        file_path = path + 'variables.json'
-        if os.path.isfile(file_path):
-            f = open(file_path, 'r')
+        if not path.endswith('.json'):
+            path = path + f'{self.file_name}.json'
+        if os.path.isfile(path):
+            f = open(path, 'r')
             data = json.load(f)
             if name in data:
                 del data[name]
             f.close()
-            f = open(file_path, 'w')
+            f = open(path, 'w')
             json.dump(data, f, indent=2)
             f.close()
         else:
             debug('File does not exist!')
 
     def get_custom_path(self, path):
-        if not path.endswith('/'):
+        if not path.endswith('/') and not path.endswith('json'):
             path = path + '/'
-        if path.startswith('./'):
-            path = path.split('./', 1)[-1]
-            return bpy.path.abspath('//' + path)
         return path
 
     def evaluate(self):
@@ -8515,6 +8503,7 @@ class ActionClearVariables(ActionCell):
         ActionCell.__init__(self)
         self.condition = None
         self.path = ''
+        self.file_name = ''
         self.done = None
         self.OUT = LogicNetworkSubCell(self, self.get_done)
 
@@ -8523,24 +8512,22 @@ class ActionClearVariables(ActionCell):
 
     def write_to_json(self, path):
         data = None
-        file_path = path + 'variables.json'
-        if os.path.isfile(file_path):
+        if not path.endswith('.json'):
+            path = path + f'{self.file_name}.json'
+        if os.path.isfile(path):
             data = {}
-            f = open(file_path, 'w')
+            f = open(path, 'w')
             json.dump(data, f, indent=2)
         else:
             debug('File does not exist - creating...')
-            f = open(file_path, 'w')
+            f = open(path, 'w')
             data = {}
             json.dump(data, f, indent=2)
         f.close()
 
     def get_custom_path(self, path):
-        if not path.endswith('/'):
+        if not path.endswith('/') and not path.endswith('json'):
             path = path + '/'
-        if path.startswith('./'):
-            path = path.split('./', 1)[-1]
-            return bpy.path.abspath('//' + path)
         return path
 
     def evaluate(self):
@@ -8568,6 +8555,7 @@ class ActionListVariables(ActionCell):
         self.condition = None
         self.print_list = None
         self.path = ''
+        self.file_name = ''
         self.done = None
         self.items = None
         self.OUT = LogicNetworkSubCell(self, self.get_done)
@@ -8581,9 +8569,10 @@ class ActionListVariables(ActionCell):
 
     def write_to_json(self, path, p_l):
         data = None
-        file_path = path + 'variables.json'
-        if os.path.isfile(file_path):
-            f = open(file_path, 'r')
+        if not path.endswith('.json'):
+            path = path + f'{self.file_name}.json'
+        if os.path.isfile(path):
+            f = open(path, 'r')
             data = json.load(f)
             if len(data) == 0:
                 debug('There are no saved variables')
@@ -8599,11 +8588,8 @@ class ActionListVariables(ActionCell):
         f.close()
 
     def get_custom_path(self, path):
-        if not path.endswith('/'):
+        if not path.endswith('/') and not path.endswith('json'):
             path = path + '/'
-        if path.startswith('./'):
-            path = path.split('./', 1)[-1]
-            return bpy.path.abspath('//' + path)
         return path
 
     def evaluate(self):
@@ -9670,15 +9656,25 @@ class CreateMessage(ActionCell):
 
 class ActionRandomInt(ActionCell):
     def __init__(self):
+        self.condition = None
         self.max_value = None
         self.min_value = None
         self._output = 0
+        self._done = False
         self.OUT_A = LogicNetworkSubCell(self, self._get_output)
+        self.DONE = LogicNetworkSubCell(self, self._get_done)
 
     def _get_output(self):
         return self._output
 
+    def _get_done(self):
+        return self._done
+
     def evaluate(self):
+        self._done = False
+        condition = self.get_socket_value(self.condition)
+        if not_met(condition):
+            return
         min_value = self.get_socket_value(self.min_value)
         max_value = self.get_socket_value(self.max_value)
         if is_waiting(max_value, min_value):
@@ -9693,19 +9689,27 @@ class ActionRandomInt(ActionCell):
             max_value = sys.maxsize
 
         self._output = random.randint(min_value, max_value)
+        self._done = True
 
 
 class ActionRandomFloat(ActionCell):
     def __init__(self):
+        self.condition = None
         self.max_value = None
         self.min_value = None
         self._output = 0
+        self._done = False
         self.OUT_A = LogicNetworkSubCell(self, self._get_output)
+        self.DONE = LogicNetworkSubCell(self, self._get_done)
 
     def _get_output(self):
         return self._output
 
     def evaluate(self):
+        self._done = False
+        condition = self.get_socket_value(self.condition)
+        if not_met(condition):
+            return
         min_value = self.get_socket_value(self.min_value)
         max_value = self.get_socket_value(self.max_value)
         if is_waiting(min_value, max_value):
@@ -9721,6 +9725,7 @@ class ActionRandomFloat(ActionCell):
 
         delta = max_value - min_value
         self._output = min_value + (delta * random.random())
+        self._done = True
 
 
 class ActionTranslate(ActionCell):
