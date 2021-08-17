@@ -1289,7 +1289,7 @@ class NLGamePropertySocket(bpy.types.NodeSocket, NetLogicSocketType):
             if self.name:
                 row = col.row()
                 row.label(text=self.name)
-                if not game_obj_socket.is_linked:
+                if not game_obj_socket.is_linked and game_object:
                     row.prop(self, 'use_custom', text='', icon='GREASEPENCIL')
             if game_object or game_obj_socket.is_linked:
                 if not game_obj_socket.is_linked and not self.use_custom:
@@ -1304,6 +1304,8 @@ class NLGamePropertySocket(bpy.types.NodeSocket, NetLogicSocketType):
                     )
                 else:
                     col.prop(self, 'value', text='')
+            else:
+                col.prop(self, 'value', text='')
 
     def get_unlinked_value(self):
         return '"{}"'.format(self.value)
