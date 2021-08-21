@@ -3766,6 +3766,11 @@ class VectorAngleCheck(ParameterCell):
         self.vector: Vector = None
         self.vector_2: Vector = None
         self.value = None
+        self._angle = 0
+        self.ANGLE = LogicNetworkSubCell(self, self.get_angle)
+
+    def get_angle(self):
+        return self._angle
 
     def evaluate(self):
         op: str = self.get_socket_value(self.op)
@@ -3784,6 +3789,7 @@ class VectorAngleCheck(ParameterCell):
         self._set_ready()
         rad: float = math.acos(vector.dot(vector_2))
         deg: float = rad * 180/math.pi
+        self._angle = deg
         self._set_value(LOGIC_OPERATORS[int(op)](deg, value))
 
 

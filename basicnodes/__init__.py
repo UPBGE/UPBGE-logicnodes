@@ -4739,6 +4739,7 @@ class NLVectorAngleCheck(bpy.types.Node, NLParameterNode):
         self.inputs.new(NLVec3FieldSocket.bl_idname, "Vector 2")
         self.inputs.new(NLFloatFieldSocket.bl_idname, "Value")
         self.outputs.new(NLConditionSocket.bl_idname, 'If True')
+        self.outputs.new(NLFloatFieldSocket.bl_idname, "Angle")
 
     def get_netlogic_class_name(self):
         return "bgelogic.VectorAngleCheck"
@@ -4752,6 +4753,9 @@ class NLVectorAngleCheck(bpy.types.Node, NLParameterNode):
             'operator',
             text=''
         )
+    
+    def get_output_socket_varnames(self):
+        return [OUTCELL, 'ANGLE']
 
     def init_cell_fields(self, cell_varname, uids, line_writer):
         NetLogicStatementGenerator.init_cell_fields(
