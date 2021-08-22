@@ -8643,6 +8643,33 @@ class NLActionSetCameraFov(bpy.types.Node, NLActionNode):
 _nodes.append(NLActionSetCameraFov)
 
 
+class NLActionSetCameraOrthoScale(bpy.types.Node, NLActionNode):
+    bl_idname = "NLActionSetCameraOrthoScale"
+    bl_label = "Set Orthographic Scale"
+    nl_category = "Scene"
+    nl_subcat = 'Camera'
+
+    def init(self, context):
+        NLActionNode.init(self, context)
+        self.inputs.new(NLConditionSocket.bl_idname, 'Condition')
+        self.inputs.new(NLGameObjectSocket.bl_idname, 'Camera')
+        self.inputs.new(NLFloatFieldSocket.bl_idname, 'Scale')
+        self.inputs[-1].value = 1.0
+        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+
+    def get_output_socket_varnames(self):
+        return ["OUT"]
+
+    def get_netlogic_class_name(self):
+        return "bgelogic.ActionSetCameraOrthoScale"
+
+    def get_input_sockets_field_names(self):
+        return ["condition", "camera", 'scale']
+
+
+_nodes.append(NLActionSetCameraOrthoScale)
+
+
 class NLActionSetResolution(bpy.types.Node, NLActionNode):
     bl_idname = "NLActionSetResolution"
     bl_label = "Set Resolution"
@@ -11958,6 +11985,30 @@ class NLActionCreateMessage(bpy.types.Node, NLActionNode):
 
 
 _nodes.append(NLActionCreateMessage)
+
+
+class NLPrintCustomEvents(bpy.types.Node, NLActionNode):
+    bl_idname = "NLPrintCustomEvents"
+    bl_label = "Print Events"
+    nl_category = "Events"
+    nl_subcat = 'Custom'
+
+    def init(self, context):
+        NLActionNode.init(self, context)
+        self.inputs.new(NLConditionSocket.bl_idname, "Condition")
+        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+
+    def get_output_socket_varnames(self):
+        return ["OUT"]
+
+    def get_input_sockets_field_names(self):
+        return ["condition"]
+
+    def get_netlogic_class_name(self):
+        return "bgelogic.PrintCustomEvents"
+
+
+_nodes.append(NLPrintCustomEvents)
 
 
 class NLActionSetGlobalValue(bpy.types.Node, NLActionNode):

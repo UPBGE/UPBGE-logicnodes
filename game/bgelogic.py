@@ -2016,6 +2016,7 @@ class ConditionGamepadButtons(ConditionCell):
             joystick = logic.joysticks[index]
         else:
             debug('Gamepad Button Node: No Joystick at that Index!')
+            self._button = False
             return
         if is_invalid(joystick):
             return
@@ -2054,6 +2055,7 @@ class ConditionGamepadButtonUp(ConditionCell):
             joystick = logic.joysticks[index]
         else:
             debug('Gamepad Button Node: No Joystick at that Index!')
+            self._up_value = False
             return
         if is_invalid(joystick):
             return
@@ -6709,6 +6711,34 @@ class ActionSetCameraFov(ActionCell):
         self.done = True
 
 
+class ActionSetCameraOrthoScale(ActionCell):
+    def __init__(self):
+        ActionCell.__init__(self)
+        self.condition = None
+        self.camera = None
+        self.scale = None
+        self.done = None
+        self.OUT = LogicNetworkSubCell(self, self.get_done)
+
+    def get_done(self):
+        return self.done
+
+    def evaluate(self):
+        self.done = False
+        condition = self.get_socket_value(self.condition)
+        if not_met(condition):
+            return
+        camera = self.get_socket_value(self.camera)
+        scale = self.get_socket_value(self.scale)
+        if is_waiting(camera, scale):
+            return
+        self._set_ready()
+        if is_invalid(camera):
+            return
+        camera.ortho_scale = scale
+        self.done = True
+
+
 class ActionSetResolution(ActionCell):
     def __init__(self):
         ActionCell.__init__(self)
@@ -9657,6 +9687,28 @@ class CreateMessage(ActionCell):
             return
         self._set_ready()
         messages.put(subject, [body, target, self], False)
+        self.done = True
+
+
+class PrintCustomEvents(ActionCell):
+    def __init__(self):
+        ActionCell.__init__(self)
+        self.condition = None
+        self.done = None
+        self.OUT = LogicNetworkSubCell(self, self.get_done)
+
+    def get_done(self):
+        return self.done
+
+    def evaluate(self):
+        self.done = False
+        condition = self.get_socket_value(self.condition)
+        messages = self.network._messages
+        if not_met(condition):
+            self._set_ready()
+            return
+        self._set_ready()
+        print(messages.data)
         self.done = True
 
 
