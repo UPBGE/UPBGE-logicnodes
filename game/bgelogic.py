@@ -9714,6 +9714,7 @@ class PrintCustomEvents(ActionCell):
 
 class ActionRandomInt(ActionCell):
     def __init__(self):
+        ActionCell.__init__(self)
         self.condition = None
         self.max_value = None
         self.min_value = None
@@ -9738,9 +9739,7 @@ class ActionRandomInt(ActionCell):
         if is_waiting(max_value, min_value):
             return
         if min_value > max_value:
-            s = min_value
-            min_value = max_value
-            max_value = s
+            min_value, max_value = max_value, min_value
         self._set_ready()
         if min_value == max_value:
             min_value = -sys.maxsize
@@ -9752,6 +9751,7 @@ class ActionRandomInt(ActionCell):
 
 class ActionRandomFloat(ActionCell):
     def __init__(self):
+        ActionCell.__init__(self)
         self.condition = None
         self.max_value = None
         self.min_value = None
@@ -9763,6 +9763,9 @@ class ActionRandomFloat(ActionCell):
     def _get_output(self):
         return self._output
 
+    def _get_done(self):
+        return self._done
+
     def evaluate(self):
         self._done = False
         condition = self.get_socket_value(self.condition)
@@ -9773,9 +9776,7 @@ class ActionRandomFloat(ActionCell):
         if is_waiting(min_value, max_value):
             return
         if min_value > max_value:
-            s = min_value
-            min_value = max_value
-            max_value = s
+            min_value, max_value = max_value, min_value
         self._set_ready()
         if min_value == max_value:
             min_value = sys.float_info.min

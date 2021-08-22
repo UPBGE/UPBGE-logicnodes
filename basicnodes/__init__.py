@@ -12093,6 +12093,7 @@ class NLActionRandomInteger(bpy.types.Node, NLActionNode):
         self.inputs.new(NLPseudoConditionSocket.bl_idname, "Condition")
         self.inputs.new(NLIntegerFieldSocket.bl_idname, "Max")
         self.inputs.new(NLIntegerFieldSocket.bl_idname, "Min")
+        self.outputs.new(NLConditionSocket.bl_idname, "Done")
         self.outputs.new(NLParameterSocket.bl_idname, "Value")
 
     def get_input_sockets_field_names(self):
@@ -12119,6 +12120,7 @@ class NLActionRandomFloat(bpy.types.Node, NLActionNode):
         self.inputs.new(NLPseudoConditionSocket.bl_idname, "Condition")
         self.inputs.new(NLFloatFieldSocket.bl_idname, "Max")
         self.inputs.new(NLFloatFieldSocket.bl_idname, "Min")
+        self.outputs.new(NLConditionSocket.bl_idname, "Done")
         self.outputs.new(NLParameterSocket.bl_idname, "Value")
 
     def get_input_sockets_field_names(self):
