@@ -7789,6 +7789,11 @@ class NLAddToGameObjectGamePropertyActionNode(bpy.types.Node, NLActionNode):
     bl_icon = 'ADD'
     nl_category = "Objects"
     nl_subcat = 'Properties'
+    operator: bpy.props.EnumProperty(
+        name='Opertation',
+        items=_enum_math_operations,
+        update=update_tree_code
+    )
 
     def init(self, context):
         NLActionNode.init(self, context)
@@ -7801,6 +7806,19 @@ class NLAddToGameObjectGamePropertyActionNode(bpy.types.Node, NLActionNode):
 
     def get_netlogic_class_name(self):
         return "bgelogic.ActionAddToGameObjectGameProperty"
+
+    def draw_buttons(self, context, layout):
+        layout.prop(self, "operator", text="")
+
+    def get_nonsocket_fields(self):
+        return [
+                (
+                    "operator", lambda:
+                    'bgelogic.ActionAddToGameObjectGameProperty.op_by_code("{}")'.format(
+                        self.operator
+                    )
+                )
+            ]
 
     def get_input_sockets_field_names(self):
         return [
