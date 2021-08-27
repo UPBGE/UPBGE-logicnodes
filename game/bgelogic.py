@@ -1770,16 +1770,17 @@ class ActionMouseLook(ActionCell):
 
         game_object_x.applyRotation((0, 0, offset.x), self.use_local_head)
 
+        rot_axis = 1-self.axis
         if use_cap_y:
             objectRotation = game_object_y.localOrientation.to_euler()
 
-            if objectRotation.y + offset.y > uppercapY:
-                objectRotation.y = uppercapY
+            if objectRotation[rot_axis] + offset.y > uppercapY:
+                objectRotation[rot_axis] = uppercapY
                 game_object_y.localOrientation = objectRotation.to_matrix()
                 offset.y = 0
 
-            if objectRotation.y + offset.y < lowercapY:
-                objectRotation.y = lowercapY
+            if objectRotation[rot_axis] + offset.y < lowercapY:
+                objectRotation[rot_axis] = lowercapY
                 game_object_y.localOrientation = objectRotation.to_matrix()
                 offset.y = 0
 
