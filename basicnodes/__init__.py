@@ -42,6 +42,11 @@ _enum_local_axis = [
     ("2", "Z Axis", "The Local Z Axis [Integer Value 2]")
 ]
 
+_enum_look_axis = [
+    ("0", "X Axis", "The Local X Axis [Integer Value 0]"),
+    ("1", "Y Axis", "The Local Y Axis [Integer Value 1]")
+]
+
 _enum_local_oriented_axis = [
     ("0", "+X Axis", "The Local X Axis [Integer Value 0]"),
     ("1", "+Y Axis", "The Local Y Axis [Integer Value 1]"),
@@ -11025,6 +11030,12 @@ class NLActionMouseLookNode(bpy.types.Node, NLActionNode):
     bl_icon = 'CAMERA_DATA'
     nl_category = "Input"
     nl_subcat = 'Mouse'
+    axis: bpy.props.EnumProperty(
+        name='Axis',
+        items=_enum_look_axis,
+        update=update_tree_code,
+        default="1"
+    )
 
     def init(self, context):
         NLActionNode.init(self, context)
@@ -11043,6 +11054,11 @@ class NLActionMouseLookNode(bpy.types.Node, NLActionNode):
         self.inputs.new(NLSocketAlphaFloat.bl_idname, "Smoothing")
         self.outputs.new(NLConditionSocket.bl_idname, 'Done')
 
+    def draw_buttons(self, context, layout):
+        r = layout.row(align=True)
+        r.label(text="Front:")
+        r.prop(self, "axis", text="")
+
     def update_draw(self):
         if self.inputs[5].value:
             self.inputs[6].enabled = True
@@ -11058,6 +11074,9 @@ class NLActionMouseLookNode(bpy.types.Node, NLActionNode):
 
     def get_netlogic_class_name(self):
         return "bgelogic.ActionMouseLook"
+
+    def get_nonsocket_fields(self):
+        return [("axis", lambda: self.axis)]
 
     def get_input_sockets_field_names(self):
         return [

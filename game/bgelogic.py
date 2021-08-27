@@ -1666,6 +1666,7 @@ class ActionMouseLook(ActionCell):
 
     def __init__(self):
         ActionCell.__init__(self)
+        self.axis = None
         self.condition = None
         self.game_object_x = None
         self.game_object_y = None
@@ -1782,7 +1783,9 @@ class ActionMouseLook(ActionCell):
                 game_object_y.localOrientation = objectRotation.to_matrix()
                 offset.y = 0
 
-        game_object_y.applyRotation((0, (offset.y), 0), True)
+        rot = [0, 0, 0]
+        rot[1-self.axis] = offset.y
+        game_object_y.applyRotation((*rot, ), True)
         if self.mouse.position != self.screen_center:
             self.mouse.position = self.screen_center
         self.done = True
