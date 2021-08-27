@@ -3377,6 +3377,7 @@ class InterpolateValue(ParameterCell):
 
 
 class ParameterArithmeticOp(ParameterCell):
+
     @classmethod
     def op_by_code(cls, str):
         import operator
@@ -5376,12 +5377,25 @@ class ActionToggleGameObjectGameProperty(ActionCell):
 
 
 class ActionAddToGameObjectGameProperty(ActionCell):
+
+    @classmethod
+    def op_by_code(cls, str):
+        import operator
+        opmap = {
+            "ADD": operator.add,
+            "SUB": operator.sub,
+            "DIV": operator.truediv,
+            "MUL": operator.mul
+        }
+        return opmap.get(str)
+
     def __init__(self):
         ActionCell.__init__(self)
         self.condition = None
         self.game_object = None
         self.property_name = None
         self.property_value = None
+        self.operator = None
         self.done = False
         self.OUT = LogicNetworkSubCell(self, self._get_done)
 
@@ -5403,7 +5417,7 @@ class ActionAddToGameObjectGameProperty(ActionCell):
         self._set_ready()
         value = game_object[property_name]
         game_object[property_name] = (
-            value + property_value
+            self.operator(value, property_value)
         )
         self.done = True
 
