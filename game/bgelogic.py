@@ -1272,6 +1272,7 @@ class ActionLoadGame(ActionCell):
         self.done = False
         condition = self.get_socket_value(self.condition)
         if not_met(condition):
+            self._set_ready()
             return
         self._set_ready()
         slot = self.get_socket_value(self.slot)
@@ -1349,6 +1350,7 @@ class ActionEndGame(ActionCell):
         self._set_ready()
         condition = self.get_socket_value(self.condition)
         if not_met(condition):
+            self._set_ready()
             return
         logic.endGame()
 
@@ -1394,6 +1396,7 @@ class ActionSaveGame(ActionCell):
         self.done = False
         condition = self.get_socket_value(self.condition)
         if not_met(condition):
+            self._set_ready()
             return
         slot = self.get_socket_value(self.slot)
         if is_waiting(slot):
@@ -1648,6 +1651,7 @@ class ActionSetMouseCursorVisibility(ActionCell):
         self.done = False
         condition = self.get_socket_value(self.condition)
         if not_met(condition):
+            self._set_ready()
             return
         visibility_status = self.get_socket_value(self.visibility_status)
         if is_waiting(visibility_status):
@@ -1723,6 +1727,7 @@ class ActionMouseLook(ActionCell):
             self.initialized = True
         condition = self.get_socket_value(self.condition)
         if not_met(condition):
+            self._set_ready()
             return
         game_object_x = self.get_x_obj()
         game_object_y = self.get_y_obj()
@@ -1925,6 +1930,7 @@ class ActionSetMousePosition(ActionCell):
         self.done = False
         condition = self.get_socket_value(self.condition)
         if not_met(condition):
+            self._set_ready()
             return
         screen_x = self.get_socket_value(self.screen_x)
         screen_y = self.get_socket_value(self.screen_y)
@@ -2188,6 +2194,7 @@ class GEGamepadVibration(ConditionCell):
         self._set_ready()
         condition = self.get_socket_value(self.condition)
         if not_met(condition):
+            self._set_ready()
             return
         index = self.get_socket_value(self.index)
         left = self.get_socket_value(self.left)
@@ -2749,6 +2756,7 @@ class ActivateActuator(ParameterCell):
             return
         condition = self.get_socket_value(self.condition)
         if not_met(condition):
+            self._set_ready()
             controller.deactivate(actuator)
             return
         controller.activate(actuator)
@@ -2807,6 +2815,7 @@ class ActivateActuatorByName(ParameterCell):
         condition = self.get_socket_value(self.condition)
         self._set_ready()
         if not_met(condition):
+            self._set_ready()
             controller.deactivate(actuator)
             return
         controller.activate(actuator)
@@ -2836,6 +2845,7 @@ class DeactivateActuatorByName(ParameterCell):
             return
         self._set_ready()
         if not_met(condition):
+            self._set_ready()
             return
         controller.deactivate(actuator)
         self.done = True
@@ -2862,6 +2872,7 @@ class SetActuatorValue(ParameterCell):
             return
         condition = self.get_socket_value(self.condition)
         if not_met(condition):
+            self._set_ready()
             return
         self._set_ready()
         field = self.get_socket_value(self.field)
@@ -3182,6 +3193,7 @@ class GECursorBehavior(ActionCell):
         if is_invalid(cursor_object):
             return
         if not_met(condition):
+            self._set_ready()
             if cursor_object.visible:
                 cursor_object.setVisible(False, True)
             return
@@ -3225,6 +3237,7 @@ class ParameterPythonModuleFunction(ParameterCell):
         self.done = False
         condition = self.get_socket_value(self.condition)
         if not_met(condition):
+            self._set_ready()
             return
         mname = self.get_socket_value(self.module_name)
         mfun = self.get_socket_value(self.module_func)
@@ -3610,6 +3623,7 @@ class SetObInstanceAttr(ParameterCell):
     def evaluate(self):
         condition = self.get_socket_value(self.condition)
         if not_met(condition):
+            self._set_ready()
             return
         instance = self.get_socket_value(self.instance)
         attr = self.get_socket_value(self.attr)
@@ -4681,6 +4695,7 @@ class ConditionTimeElapsed(ConditionCell):
         now = self.network.timeline
 
         if not not_met(condition):
+            self._set_ready()
             self._trigger = now + delta_time
 
         if now >= self._trigger:
@@ -4956,6 +4971,7 @@ class ActionAddObject(ActionCell):
         self.done = False
         condition = self.get_socket_value(self.condition)
         if not_met(condition):
+            self._set_ready()
             return
         life = self.get_socket_value(self.life)
         name = self.get_socket_value(self.name)
@@ -5020,6 +5036,7 @@ class SetMaterial(ActionCell):
         slot = self.get_socket_value(self.slot) - 1
         mat_name = self.get_socket_value(self.mat_name)
         if not_met(condition):
+            self._set_ready()
             return
         if is_invalid(game_object):
             return
@@ -5244,6 +5261,7 @@ class ActionPlayMaterialSequence(ActionCell):
         condition = self.get_socket_value(self.condition)
         play_continue = self.get_socket_value(self.play_continue)
         if not_met(condition) and not running:
+            self._set_ready()
             return
         self.time += self.network.time_per_frame
         mat_name = self.get_socket_value(self.mat_name)
@@ -5410,6 +5428,7 @@ class ActionAddToGameObjectGameProperty(ActionCell):
         self.done = False
         condition = self.get_socket_value(self.condition)
         if not_met(condition):
+            self._set_ready()
             return
         game_object = self.get_socket_value(self.game_object)
         property_name = self.get_socket_value(self.property_name)
@@ -5443,6 +5462,7 @@ class CopyPropertyFromObject(ActionCell):
         self.done = False
         condition = self.get_socket_value(self.condition)
         if not_met(condition):
+            self._set_ready()
             return
         from_object = self.get_socket_value(self.from_object)
         to_object = self.get_socket_value(self.to_object)
@@ -5477,6 +5497,7 @@ class ActionClampedAddToGameObjectGameProperty(ActionCell):
         condition = self.get_socket_value(self.condition)
         game_object = self.get_socket_value(self.game_object)
         if not_met(condition):
+            self._set_ready()
             return
         if is_invalid(game_object):
             return
@@ -5592,6 +5613,7 @@ class ActionPrint(ActionCell):
         self.done = False
         condition = self.get_socket_value(self.condition)
         if not_met(condition):
+            self._set_ready()
             return
         value = self.get_socket_value(self.value)
         self._set_ready()
@@ -5630,6 +5652,7 @@ class ActionCreateVehicle(ActionCell):
         self.done = False
         condition = self.get_socket_value(self.condition)
         if not_met(condition):
+            self._set_ready()
             return
         game_object = self.get_socket_value(self.game_object)
         wheels_steering = self.get_socket_value(self.wheels_steering)
@@ -5804,6 +5827,7 @@ class VehicleApplyForce(ActionCell):
         if not constraint:
             return
         if not_met(condition):
+            self._set_ready()
             if self._reset:
                 for wheel in range(constraint.getNumWheels()):
                     constraint.applyEngineForce(0, wheel)
@@ -5853,6 +5877,7 @@ class VehicleApplyBraking(ActionCell):
         if not constraint:
             return
         if not_met(condition):
+            self._set_ready()
             if self._reset:
                 for wheel in range(constraint.getNumWheels()):
                     constraint.applyBraking(0, wheel)
@@ -5902,6 +5927,7 @@ class VehicleApplySteering(ActionCell):
         if not constraint:
             return
         if not_met(condition):
+            self._set_ready()
             if self._reset:
                 for wheel in range(constraint.getNumWheels()):
                     constraint.setSteeringValue(0, wheel)
@@ -5961,6 +5987,7 @@ class VehicleSetAttributes(ActionCell):
         self.done = False
         condition = self.get_socket_value(self.condition)
         if not_met(condition):
+            self._set_ready()
             return
         vehicle = self.get_socket_value(self.vehicle)
         value_type = self.get_socket_value(self.value_type)
@@ -6031,6 +6058,7 @@ class ActionSetObjectAttribute(ActionCell):
         self.done = False
         condition = self.get_socket_value(self.condition)
         if not_met(condition):
+            self._set_ready()
             return
         xyz = self.get_socket_value(self.xyz)
         game_object = self.get_socket_value(self.game_object)
@@ -6088,6 +6116,7 @@ class ActionInstalSubNetwork(ActionCell):
         self.done = False
         condition = self.get_socket_value(self.condition)
         if not_met(condition):
+            self._set_ready()
             return
         target_object = self.get_socket_value(self.target_object)
         tree_name = self.get_socket_value(self.tree_name)
@@ -6166,6 +6195,7 @@ class ActionStartLogicNetwork(ActionCell):
         self.done = False
         condition = self.get_socket_value(self.condition)
         if not_met(condition):
+            self._set_ready()
             return
         game_object = self.get_socket_value(self.game_object)
         logic_network_name = self.get_socket_value(self.logic_network_name)
@@ -6196,6 +6226,7 @@ class ActionStopLogicNetwork(ActionCell):
         self.done = False
         condition = self.get_socket_value(self.condition)
         if not_met(condition):
+            self._set_ready()
             return
         game_object = self.get_socket_value(self.game_object)
         logic_network_name = self.get_socket_value(self.logic_network_name)
@@ -6378,6 +6409,7 @@ class ActionRayPick(ActionCell):
     def evaluate(self):
         condition = self.get_socket_value(self.condition)
         if not_met(condition):
+            self._set_ready()
             self._set_value(False)
             self._out_normal = None
             self._out_object = None
@@ -6493,6 +6525,7 @@ class ProjectileRayCast(ActionCell):
     def evaluate(self):
         condition = self.get_socket_value(self.condition)
         if not_met(condition):
+            self._set_ready()
             self._set_value(False)
             self._out_normal = None
             self._out_object = None
@@ -6575,6 +6608,7 @@ class ActionMousePick(ActionCell):
     def evaluate(self):
         condition = self.get_socket_value(self.condition)
         if not_met(condition):
+            self._set_ready()
             return
         distance = self.get_socket_value(self.distance)
         property_name = self.get_socket_value(self.property)
@@ -6637,6 +6671,7 @@ class ActionCameraPick(ActionCell):
     def evaluate(self):
         condition = self.get_socket_value(self.condition)
         if not_met(condition):
+            self._set_ready()
             return
         camera = self.get_socket_value(self.camera)
         aim = self.get_socket_value(self.aim)
@@ -6693,6 +6728,7 @@ class ActionSetActiveCamera(ActionCell):
         self.done = False
         condition = self.get_socket_value(self.condition)
         if not_met(condition):
+            self._set_ready()
             return
         camera = self.get_socket_value(self.camera)
         if is_waiting(camera):
@@ -6721,6 +6757,7 @@ class ActionSetCameraFov(ActionCell):
         self.done = False
         condition = self.get_socket_value(self.condition)
         if not_met(condition):
+            self._set_ready()
             return
         camera = self.get_socket_value(self.camera)
         fov = self.get_socket_value(self.fov)
@@ -6749,6 +6786,7 @@ class ActionSetCameraOrthoScale(ActionCell):
         self.done = False
         condition = self.get_socket_value(self.condition)
         if not_met(condition):
+            self._set_ready()
             return
         camera = self.get_socket_value(self.camera)
         scale = self.get_socket_value(self.scale)
@@ -6777,6 +6815,7 @@ class ActionSetResolution(ActionCell):
         self.done = False
         condition = self.get_socket_value(self.condition)
         if not_met(condition):
+            self._set_ready()
             return
         x_res = self.get_socket_value(self.x_res)
         y_res = self.get_socket_value(self.y_res)
@@ -6802,6 +6841,7 @@ class ActionSetFullscreen(ActionCell):
         self.done = False
         condition = self.get_socket_value(self.condition)
         if not_met(condition):
+            self._set_ready()
             return
         use_fullscreen = self.get_socket_value(self.use_fullscreen)
         if is_waiting(use_fullscreen):
@@ -6826,6 +6866,7 @@ class GESetProfile(ActionCell):
         self.done = False
         condition = self.get_socket_value(self.condition)
         if not_met(condition):
+            self._set_ready()
             return
         use_profile = self.get_socket_value(self.use_profile)
         if is_waiting(use_profile):
@@ -6850,6 +6891,7 @@ class GEShowFramerate(ActionCell):
         self.done = False
         condition = self.get_socket_value(self.condition)
         if not_met(condition):
+            self._set_ready()
             return
         use_framerate = self.get_socket_value(self.use_framerate)
         if is_waiting(use_framerate):
@@ -6887,6 +6929,7 @@ class GEDrawLine(ActionCell):
     def evaluate(self):
         condition = self.get_socket_value(self.condition)
         if not_met(condition):
+            self._set_ready()
             return
         from_point = self.get_socket_value(self.from_point)
         to_point = self.get_socket_value(self.to_point)
@@ -6948,6 +6991,7 @@ class ActionSetVSync(ActionCell):
         self.done = False
         condition = self.get_socket_value(self.condition)
         if not_met(condition):
+            self._set_ready()
             return
         vsync_mode = self.get_socket_value(self.vsync_mode)
         if is_waiting(vsync_mode):
@@ -6976,6 +7020,7 @@ class InitEmptyDict(ActionCell):
         self.done = False
         condition = self.get_socket_value(self.condition)
         if not_met(condition):
+            self._set_ready()
             return
         self._set_ready()
         self.dict = {}
@@ -7003,6 +7048,7 @@ class InitNewDict(ActionCell):
         self.done = False
         condition = self.get_socket_value(self.condition)
         if not_met(condition):
+            self._set_ready()
             return
         key = self.get_socket_value(self.key)
         value = self.get_socket_value(self.val)
@@ -7037,6 +7083,7 @@ class SetDictKeyValue(ActionCell):
         self.done = False
         condition = self.get_socket_value(self.condition)
         if not_met(condition):
+            self._set_ready()
             return
         dictionary = self.get_socket_value(self.dict)
         key = self.get_socket_value(self.key)
@@ -7070,6 +7117,7 @@ class SetDictDelKey(ActionCell):
         self.done = False
         condition = self.get_socket_value(self.condition)
         if not_met(condition):
+            self._set_ready()
             return
         dictionary = self.get_socket_value(self.dict)
         key = self.get_socket_value(self.key)
@@ -7105,6 +7153,7 @@ class InitEmptyList(ActionCell):
         self.done = False
         condition = self.get_socket_value(self.condition)
         if not_met(condition):
+            self._set_ready()
             return
         length = self.get_socket_value(self.length)
         if is_waiting(length):
@@ -7165,6 +7214,7 @@ class AppendListItem(ActionCell):
         self.done: bool = False
         condition = self.get_socket_value(self.condition)
         if not_met(condition):
+            self._set_ready()
             return
         list_d: list = self.get_socket_value(self.items)
         val = self.get_socket_value(self.val)
@@ -7198,6 +7248,7 @@ class SetListIndex(ActionCell):
         self.done = False
         condition = self.get_socket_value(self.condition)
         if not_met(condition):
+            self._set_ready()
             return
         list_d: list = self.get_socket_value(self.items)
         index: int = self.get_socket_value(self.index)
@@ -7231,6 +7282,7 @@ class RemoveListValue(ActionCell):
         self.done = False
         condition = self.get_socket_value(self.condition)
         if not_met(condition):
+            self._set_ready()
             return
         list_d = self.get_socket_value(self.items)
         val = self.get_socket_value(self.val)
@@ -7267,6 +7319,7 @@ class RemoveListIndex(ActionCell):
         self.done = False
         condition = self.get_socket_value(self.condition)
         if not_met(condition):
+            self._set_ready()
             return
         list_d = self.get_socket_value(self.items)
         idx = self.get_socket_value(self.idx)
@@ -7300,6 +7353,7 @@ class ActionSetParent(ActionCell):
         self.done = False
         condition = self.get_socket_value(self.condition)
         if not_met(condition):
+            self._set_ready()
             return
         child_object = self.get_socket_value(self.child_object)
         parent_object = self.get_socket_value(self.parent_object)
@@ -7329,6 +7383,7 @@ class ActionRemoveParent(ActionCell):
         self.done = False
         condition = self.get_socket_value(self.condition)
         if not_met(condition):
+            self._set_ready()
             return
         child_object = self.get_socket_value(self.child_object)
         if is_waiting(child_object):
@@ -7435,6 +7490,7 @@ class ActionEditArmatureConstraint(ActionCell):
         self.done = False
         condition = self.get_socket_value(self.condition)
         if not_met(condition):
+            self._set_ready()
             return
         armature = self.get_socket_value(self.armature)
         constraint_name = self.get_socket_value(self.constraint_name)
@@ -7540,6 +7596,7 @@ class ActionEditBone(ActionCell):
         self.done = False
         condition = self.get_socket_value(self.condition)
         if not_met(condition):
+            self._set_ready()
             return
         armature = self.get_socket_value(self.armature)
         bone_name = self.get_socket_value(self.bone_name)
@@ -7606,6 +7663,7 @@ class ActionSetBonePos(ActionCell):
         self.done = False
         condition = self.get_socket_value(self.condition)
         if not_met(condition):
+            self._set_ready()
             return
         armature = self.get_socket_value(self.armature)
         bone_name = self.get_socket_value(self.bone_name)
@@ -7742,6 +7800,7 @@ class ActionSetDynamics(ActionCell):
         self.done = False
         condition = self.get_socket_value(self.condition)
         if not_met(condition):
+            self._set_ready()
             return
         game_object = self.get_socket_value(self.game_object)
         ghost = self.get_socket_value(self.ghost)
@@ -7775,6 +7834,7 @@ class ActionSetPhysics(ActionCell):
         self.done = False
         condition = self.get_socket_value(self.condition)
         if not_met(condition):
+            self._set_ready()
             return
         game_object = self.get_socket_value(self.game_object)
         activate = self.get_socket_value(self.activate)
@@ -7807,6 +7867,7 @@ class ActionSetRigidBody(ActionCell):
         self.done = False
         condition = self.get_socket_value(self.condition)
         if not_met(condition):
+            self._set_ready()
             return
         game_object = self.get_socket_value(self.game_object)
         activate = self.get_socket_value(self.activate)
@@ -7839,6 +7900,7 @@ class ActionEndObject(ActionCell):
         condition = self.get_socket_value(self.condition)
         game_object = self.get_socket_value(self.game_object)
         if not_met(condition):
+            self._set_ready()
             return
         if is_waiting(game_object):
             return
@@ -7867,6 +7929,7 @@ class ActionSetTimeScale(ActionCell):
         self.done = False
         condition = self.get_socket_value(self.condition)
         if not_met(condition):
+            self._set_ready()
             return
         timescale = self.get_socket_value(self.timescale)
         if is_waiting(timescale):
@@ -7894,6 +7957,7 @@ class ActionSetGravity(ActionCell):
         self.done = False
         condition = self.get_socket_value(self.condition)
         if not_met(condition):
+            self._set_ready()
             return
         gravity = self.get_socket_value(self.gravity)
         if is_waiting(gravity):
@@ -7919,6 +7983,7 @@ class ActionApplyGameObjectValue(ActionCell):
     def evaluate(self):
         condition = self.get_socket_value(self.condition)
         if not_met(condition):
+            self._set_ready()
             return
         game_object = self.get_socket_value(self.game_object)
         if is_waiting(game_object):
@@ -7964,6 +8029,7 @@ class ActionApplyLocation(ActionCell):
         self.done = False
         condition = self.get_socket_value(self.condition)
         if not_met(condition):
+            self._set_ready()
             return
         game_object = self.get_socket_value(self.game_object)
         movement = self.get_socket_value(self.movement)
@@ -7994,6 +8060,7 @@ class ActionApplyRotation(ActionCell):
         self.done = False
         condition = self.get_socket_value(self.condition)
         if not_met(condition):
+            self._set_ready()
             return
         game_object = self.get_socket_value(self.game_object)
         rotation = self.get_socket_value(self.rotation)
@@ -8027,6 +8094,7 @@ class ActionApplyForce(ActionCell):
         self.done = False
         condition = self.get_socket_value(self.condition)
         if not_met(condition):
+            self._set_ready()
             return
         game_object = self.get_socket_value(self.game_object)
         force = self.get_socket_value(self.force)
@@ -8055,6 +8123,7 @@ class ActionApplyImpulse(ActionCell):
         self.done = False
         condition = self.get_socket_value(self.condition)
         if not_met(condition):
+            self._set_ready()
             return
         game_object = self.get_socket_value(self.game_object)
         point = self.get_socket_value(self.point)
@@ -8097,6 +8166,7 @@ class GamepadLook(ActionCell):
         axis: int = self.get_socket_value(self.axis)
         condition: GameObject = self.get_socket_value(self.condition)
         if not_met(condition):
+            self._set_ready()
             return
         main_obj: GameObject = self.get_socket_value(self.main_obj)
         head_obj: GameObject = self.get_socket_value(self.head_obj)
@@ -8345,6 +8415,7 @@ class ActionSaveVariable(ActionCell):
         self.done = False
         condition = self.get_socket_value(self.condition)
         if not_met(condition):
+            self._set_ready()
             return
         name = self.get_socket_value(self.name)
         val = self.get_socket_value(self.val)
@@ -8399,6 +8470,7 @@ class ActionSaveVariables(ActionCell):
         self.done = False
         condition = self.get_socket_value(self.condition)
         if not_met(condition):
+            self._set_ready()
             return
         val = self.get_socket_value(self.val)
         if is_waiting(val):
@@ -8458,6 +8530,7 @@ class ActionLoadVariable(ActionCell):
         self.done = False
         condition = self.get_socket_value(self.condition)
         if not_met(condition):
+            self._set_ready()
             return
         name = self.get_socket_value(self.name)
         if is_waiting(name):
@@ -8514,6 +8587,7 @@ class ActionLoadVariables(ActionCell):
         self.done = False
         condition = self.get_socket_value(self.condition)
         if not_met(condition):
+            self._set_ready()
             return
         self._set_ready()
         cust_path = self.get_custom_path(self.path)
@@ -8567,6 +8641,7 @@ class ActionRemoveVariable(ActionCell):
         self.done = False
         condition = self.get_socket_value(self.condition)
         if not_met(condition):
+            self._set_ready()
             return
         name = self.get_socket_value(self.name)
         if is_waiting(name):
@@ -8622,6 +8697,7 @@ class ActionClearVariables(ActionCell):
         self.done = False
         condition = self.get_socket_value(self.condition)
         if not_met(condition):
+            self._set_ready()
             return
         self._set_ready()
         cust_path = self.get_custom_path(self.path)
@@ -8684,6 +8760,7 @@ class ActionListVariables(ActionCell):
         self.done = False
         condition = self.get_socket_value(self.condition)
         if not_met(condition):
+            self._set_ready()
             return
         print_list = self.get_socket_value(self.print_list)
         if is_waiting(print_list):
@@ -8718,6 +8795,7 @@ class ActionSetCharacterJump(ActionCell):
         self.done = False
         condition = self.get_socket_value(self.condition)
         if not_met(condition):
+            self._set_ready()
             return
         game_object = self.get_socket_value(self.game_object)
         max_jumps = self.get_socket_value(self.max_jumps)
@@ -8747,6 +8825,7 @@ class ActionSetCharacterGravity(ActionCell):
         self.done = False
         condition = self.get_socket_value(self.condition)
         if not_met(condition):
+            self._set_ready()
             return
         game_object = self.get_socket_value(self.game_object)
         gravity = self.get_socket_value(self.gravity)
@@ -8781,6 +8860,7 @@ class ActionSetCharacterWalkDir(ActionCell):
         self.done = False
         condition = self.get_socket_value(self.condition)
         if not_met(condition):
+            self._set_ready()
             if self.active:
                 game_object = self.get_socket_value(self.game_object)
                 physics = bge.constraints.getCharacter(game_object)
@@ -8822,6 +8902,7 @@ class ActionSetCharacterVelocity(ActionCell):
         self.done = False
         condition = self.get_socket_value(self.condition)
         if not_met(condition):
+            self._set_ready()
             return
         game_object = self.get_socket_value(self.game_object)
         if is_waiting(game_object):
@@ -8900,6 +8981,7 @@ class ActionApplyTorque(ActionCell):
         self.done = False
         condition = self.get_socket_value(self.condition)
         if not_met(condition):
+            self._set_ready()
             return
         game_object = self.get_socket_value(self.game_object)
         torque = self.get_socket_value(self.torque)
@@ -8997,6 +9079,7 @@ class ActionPlayAction(ActionCell):
             return
         if play_mode > 2:
             if not_met(condition):
+                self._set_ready()
                 self._notify_finished(game_object, layer)
                 return
             else:
@@ -9208,6 +9291,7 @@ class ActionFindScene(ActionCell):
         self.done = False
         condition = self.get_socket_value(self.condition)
         if not_met(condition):
+            self._set_ready()
             return
         query = self.get_socket_value(self.query)
         if is_waiting(query):
@@ -9498,6 +9582,7 @@ class ActionStopSound(ActionCell):
     def evaluate(self):
         condition = self.get_socket_value(self.condition)
         if not_met(condition):
+            self._set_ready()
             return
         sound = self.get_socket_value(self.sound)
         if is_waiting(sound):
@@ -9516,6 +9601,7 @@ class ActionStopAllSounds(ActionCell):
     def evaluate(self):
         condition = self.get_socket_value(self.condition)
         if not_met(condition):
+            self._set_ready()
             return
         if not hasattr(bpy.types.Scene, 'nl_aud_system'):
             debug('No Audio System to close.')
@@ -9533,6 +9619,7 @@ class ActionPauseSound(ActionCell):
     def evaluate(self):
         condition = self.get_socket_value(self.condition)
         if not_met(condition):
+            self._set_ready()
             return
         sound = self.get_socket_value(self.sound)
         if is_waiting(sound):
@@ -9552,6 +9639,7 @@ class ActionResumeSound(ActionCell):
     def evaluate(self):
         condition = self.get_socket_value(self.condition)
         if not_met(condition):
+            self._set_ready()
             return
         sound = self.get_socket_value(self.sound)
         if is_waiting(sound):
@@ -9628,6 +9716,7 @@ class ActionListGlobalValues(ParameterCell):
     def evaluate(self):
         condition = self.get_socket_value(self.condition)
         if not_met(condition):
+            self._set_ready()
             return
         data_id = self.get_socket_value(self.data_id)
         print_d = self.get_socket_value(self.print_d)
@@ -9944,6 +10033,7 @@ class SetGamma(ActionCell):
         self.done = False
         condition = self.get_socket_value(self.condition)
         if not_met(condition):
+            self._set_ready()
             return
         value = self.get_socket_value(self.value)
         if is_invalid(value):
@@ -9972,6 +10062,7 @@ class SetExposure(ActionCell):
         self.done = False
         condition = self.get_socket_value(self.condition)
         if not_met(condition):
+            self._set_ready()
             return
         value = self.get_socket_value(self.value)
         if is_invalid(value):
@@ -10000,6 +10091,7 @@ class SetEeveeAO(ActionCell):
         self.done = False
         condition = self.get_socket_value(self.condition)
         if not_met(condition):
+            self._set_ready()
             return
         value = self.get_socket_value(self.value)
         if is_invalid(value):
@@ -10026,6 +10118,7 @@ class SetEeveeBloom(ActionCell):
         self.done = False
         condition = self.get_socket_value(self.condition)
         if not_met(condition):
+            self._set_ready()
             return
         value = self.get_socket_value(self.value)
         if is_invalid(value):
@@ -10052,6 +10145,7 @@ class SetEeveeSSR(ActionCell):
         self.done = False
         condition = self.get_socket_value(self.condition)
         if not_met(condition):
+            self._set_ready()
             return
         value = self.get_socket_value(self.value)
         if is_invalid(value):
@@ -10078,6 +10172,7 @@ class SetEeveeVolumetrics(ActionCell):
         self.done = False
         condition = self.get_socket_value(self.condition)
         if not_met(condition):
+            self._set_ready()
             return
         value = self.get_socket_value(self.value)
         if is_invalid(value):
@@ -10106,6 +10201,7 @@ class SetEeveeSMAA(ActionCell):
         self.done = False
         condition = self.get_socket_value(self.condition)
         if not_met(condition):
+            self._set_ready()
             return
         value = self.get_socket_value(self.value)
         if is_invalid(value):
@@ -10132,6 +10228,7 @@ class SetEeveeSMAAQuality(ActionCell):
         self.done = False
         condition = self.get_socket_value(self.condition)
         if not_met(condition):
+            self._set_ready()
             return
         value = self.get_socket_value(self.value)
         if is_invalid(value):
@@ -10287,6 +10384,7 @@ class ActionMoveTo(ActionCell):
     def evaluate(self):  # the actual execution of this cell
         condition = self.get_socket_value(self.condition)
         if not_met(condition):
+            self._set_ready()
             return
         moving_object = self.get_socket_value(self.moving_object)
         destination_point = self.get_socket_value(self.destination_point)
@@ -10387,6 +10485,7 @@ class ActionRotateTo(ActionCell):
         self._set_value(False)
         condition = self.get_socket_value(self.condition)
         if not_met(condition):
+            self._set_ready()
             return
         moving_object = self.get_socket_value(self.moving_object)
         target_point = self.get_socket_value(self.target_point)
@@ -10810,6 +10909,7 @@ class AddPhysicsConstraint(ActionCell):
         self.done = False
         condition = self.get_socket_value(self.condition)
         if not_met(condition):
+            self._set_ready()
             return
         target = self.get_socket_value(self.target)
         child = self.get_socket_value(self.child)
@@ -10882,6 +10982,7 @@ class ActionAlignAxisToVector(ActionCell):
         condition = self.get_socket_value(self.condition)
         self._set_ready()
         if not_met(condition):
+            self._set_ready()
             return
         game_object = self.get_socket_value(self.game_object)
         v = self.get_socket_value(self.vector)
