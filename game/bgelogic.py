@@ -2637,17 +2637,21 @@ class ParameterRandomListIndex(ParameterCell):
     def __init__(self):
         ParameterCell.__init__(self)
         self.condition = None
+        self._item = None
         self.items = None
 
     def evaluate(self):
         condition = self.get_socket_value(self.condition)
         if not_met(condition):
+            self._set_ready()
+            self._set_value(self._item)
             return
         list_d = self.get_socket_value(self.items)
         if is_invalid(list_d):
             return
         self._set_ready()
-        self._set_value(random.choice(list_d))
+        self._item = random.choice(list_d)
+        self._set_value(self._item)
 
 
 class DuplicateList(ParameterCell):
@@ -9255,6 +9259,7 @@ class ActionStart3DSoundAdv(ActionCell):
 
     def evaluate(self):
         self.done = False
+        self.on_finish = False
         audio_system = self.network.audio_system
         speaker = self.get_socket_value(self.speaker)
         handles = self._handles
@@ -9263,107 +9268,109 @@ class ActionStart3DSoundAdv(ActionCell):
         cone_outer_volume = self.get_socket_value(self.cone_outer_volume)
         pitch = self.get_socket_value(self.pitch) * logic.getTimeScale()
         attenuation = self.get_socket_value(self.attenuation)
-        self.on_finish = False
-        if handles:
-            for sound in handles:
-                ind = 0
-                for handle in handles[sound]:
-                    if len(handles[sound]) <= ind:
-                        continue
-                    if handle.status:
-                        self._set_ready()
-                        handle.pitch = pitch
-                        handle.location = speaker.worldPosition
-                        handle.orientation = (
-                            speaker
-                            .worldOrientation
-                            .to_quaternion()
+        to_remove = []
+        for i, sound in enumerate(handles):
+            if not handles[sound][1]:
+                to_remove.append(sound)
+            for handle in handles[sound][1]:
+                if len(handles[sound][1]) <= i:
+                    continue
+                if handle.status:
+                    self._set_ready()
+                    handle.pitch = pitch
+                    hspeaker = handles[sound][0]
+                    handle.location = hspeaker.worldPosition
+                    handle.orientation = (
+                        hspeaker
+                        .worldOrientation
+                        .to_quaternion()
+                    )
+                    if hspeaker.mass:
+                        handle.velocity = getattr(
+                            hspeaker,
+                            'worldLinearVelocity',
+                            Vector((0, 0, 0))
                         )
-                        if speaker.mass:
-                            handle.velocity = getattr(
-                                speaker,
-                                'worldLinearVelocity',
-                                Vector((0, 0, 0))
+                    if occlusion:
+                        transition = self.get_socket_value(
+                            self.transition
+                        )
+                        cam = bge.logic.getCurrentScene().active_camera
+                        occluder, point, normal = cam.rayCast(
+                            hspeaker.worldPosition,
+                            cam.worldPosition,
+                            compute_distance(hspeaker, cam),
+                            xray=False
+                        )
+                        occluded = False
+                        penetration = 1
+                        while occluder:
+                            if occluder is hspeaker:
+                                break
+                            sound_occluder = occluder.blenderObject.get(
+                                'sound_occluder',
+                                True
                             )
-                        if occlusion:
-                            transition = self.get_socket_value(
-                                self.transition
-                            )
-                            cam = bge.logic.getCurrentScene().active_camera
-                            occluder, point, normal = cam.rayCast(
+                            if sound_occluder:
+                                occluded = True
+                                block = occluder.blenderObject.get(
+                                    'sound_blocking',
+                                    .1
+                                )
+                                if penetration > 0:
+                                    penetration -= block
+                                else:
+                                    penetration = 0
+                                # attenuation *= 1 + block / 2
+                            occluder, point, normal = occluder.rayCast(
                                 speaker.worldPosition,
-                                cam.worldPosition,
-                                compute_distance(speaker, cam),
+                                point,
+                                compute_distance(speaker, point),
                                 xray=False
                             )
-                            occluded = False
-                            penetration = 1
-                            while occluder:
-                                if occluder is speaker:
-                                    break
-                                sound_occluder = occluder.blenderObject.get(
-                                    'sound_occluder',
-                                    True
-                                )
-                                if sound_occluder:
-                                    occluded = True
-                                    block = occluder.blenderObject.get(
-                                        'sound_blocking',
-                                        .1
-                                    )
-                                    if penetration > 0:
-                                        penetration -= block
-                                    else:
-                                        penetration = 0
-                                    # attenuation *= 1 + block / 2
-                                occluder, point, normal = occluder.rayCast(
-                                    speaker.worldPosition,
-                                    point,
-                                    compute_distance(speaker, point),
-                                    xray=False
-                                )
-                            cs = self._clear_sound
-                            if occluded and cs > 0:
-                                self._clear_sound -= transition
-                            elif not occluded and cs < 1:
-                                self._clear_sound += transition
-                            if self._clear_sound < 0:
-                                self._clear_sound = 0
-                            sustained = self._sustained
-                            if sustained > penetration:
-                                self._sustained -= transition / 10
-                            elif sustained < penetration:
-                                self._sustained += transition / 10
-                            mult = (
-                                cs * sustained
-                                if not ind
-                                else (1 - cs) * sustained
-                            )
-                            # handles[sound][ind].attenuation = attenuation
-                            handles[sound][ind].volume = volume * mult
-                            handles[sound][ind].cone_volume_outer = (
-                                cone_outer_volume *
-                                volume *
-                                mult
-                            )
-                        else:
-                            handles[sound][ind].volume = volume
-                            handles[sound][ind].cone_volume_outer = (
-                                cone_outer_volume *
-                                volume
-                            )
-                    elif handle in audio_system.active_sounds:
-                        for handle in handles[sound]:
-                            audio_system.active_sounds.remove(handle)
-                            handles[sound] = []
-                        self.on_finish = True
-                        ind = 0
-                        continue
-                    ind += 1
+                        cs = self._clear_sound
+                        if occluded and cs > 0:
+                            self._clear_sound -= transition
+                        elif not occluded and cs < 1:
+                            self._clear_sound += transition
+                        if self._clear_sound < 0:
+                            self._clear_sound = 0
+                        sustained = self._sustained
+                        if sustained > penetration:
+                            self._sustained -= transition / 10
+                        elif sustained < penetration:
+                            self._sustained += transition / 10
+                        mult = (
+                            cs * sustained
+                            if not i
+                            else (1 - cs) * sustained
+                        )
+                        # handles[sound][ind].attenuation = attenuation
+                        handles[sound][1][i].volume = volume * mult
+                        handles[sound][1][i].cone_volume_outer = (
+                            cone_outer_volume *
+                            volume *
+                            mult
+                        )
+                    else:
+                        handles[sound][1][i].volume = volume
+                        handles[sound][1][i].cone_volume_outer = (
+                            cone_outer_volume *
+                            volume
+                        )
+                elif handle in audio_system.active_sounds:
+                    for handle in handles[sound][1]:
+                        audio_system.active_sounds.remove(handle)
+                        handles[sound][1].remove(handle)
+                    continue
         else:
             self._handle = None
+        for sound in to_remove:
+            self.on_finish = True
+            self._handles.pop(sound)
         condition = self.get_socket_value(self.condition)
         if not_met(condition):
+            self._set_ready()
             return
         if not self.device:
             self.device = audio_system.device
@@ -9384,10 +9391,10 @@ class ActionStart3DSoundAdv(ActionCell):
         if occlusion:
             soundlow = aud.Sound.lowpass(soundfile, 4000*cutoff, .5)
             handlelow = self.device.play(soundlow)
-            self._handles[soundfile] = [handle, handlelow]
+            self._handles[soundfile] = [speaker, [handle, handlelow]]
         else:
-            self._handles[soundfile] = [handle]
-        for handle in self._handles[soundfile]:
+            self._handles[soundfile] = [speaker, [handle]]
+        for handle in self._handles[soundfile][1]:
             handle.relative = False
             handle.location = speaker.worldPosition
             if speaker.mass:
@@ -9461,6 +9468,7 @@ class ActionStartSound(ActionCell):
                 self._handle = None
         condition = self.get_socket_value(self.condition)
         if not_met(condition):
+            self._set_ready()
             return
         sound = self.get_socket_value(self.sound)
         loop_count = self.get_socket_value(self.loop_count)
