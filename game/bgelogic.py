@@ -1730,10 +1730,10 @@ class ActionMouseLook(ActionCell):
         use_cap_z = self.get_socket_value(self.use_cap_z)
         use_cap_y = self.get_socket_value(self.use_cap_y)
         cap_z = self.get_socket_value(self.cap_z)
-        lowercapX = -cap_z.y
+        lowercapX = cap_z.y
         uppercapX = cap_z.x
         cap_y = self.get_socket_value(self.cap_y)
-        lowercapY = -cap_y.x
+        lowercapY = cap_y.x
         uppercapY = cap_y.y
         inverted = self.get_socket_value(self.inverted)
         smooth = 1 - (self.get_socket_value(self.smooth) * .99)
@@ -8210,6 +8210,36 @@ class ActionCharacterJump(ActionCell):
         self.done = True
 
 
+class SetCharacterJumpSpeed(ActionCell):
+    def __init__(self):
+        ActionCell.__init__(self)
+        self.condition = None
+        self.game_object = None
+        self.force = None
+        self.done = None
+        self.OUT = LogicNetworkSubCell(self, self.get_done)
+
+    def get_done(self):
+        return self.done
+
+    def evaluate(self):
+        self.done = False
+        condition = self.get_socket_value(self.condition)
+        if not_met(condition):
+            self._set_ready()
+            return
+        game_object = self.get_socket_value(self.game_object)
+        force = self.get_socket_value(self.force)
+        if is_waiting(game_object):
+            return
+        physics = bge.constraints.getCharacter(game_object)
+        self._set_ready()
+        if is_invalid(game_object):
+            return
+        physics.jumpSpeed = force
+        self.done = True
+
+
 class SetCollisionGroup(ActionCell):
     def __init__(self):
         ActionCell.__init__(self)
@@ -9751,6 +9781,7 @@ class ActionRandomInt(ActionCell):
         self._done = False
         condition = self.get_socket_value(self.condition)
         if not_met(condition):
+            self._set_ready()
             return
         min_value = self.get_socket_value(self.min_value)
         max_value = self.get_socket_value(self.max_value)
@@ -9788,6 +9819,7 @@ class ActionRandomFloat(ActionCell):
         self._done = False
         condition = self.get_socket_value(self.condition)
         if not_met(condition):
+            self._set_ready()
             return
         min_value = self.get_socket_value(self.min_value)
         max_value = self.get_socket_value(self.max_value)

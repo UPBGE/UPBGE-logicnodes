@@ -9537,6 +9537,32 @@ class NLActionCharacterJump(bpy.types.Node, NLActionNode):
 _nodes.append(NLActionCharacterJump)
 
 
+class NLSetCharacterJumpSpeed(bpy.types.Node, NLActionNode):
+    bl_idname = "NLSetCharacterJumpSpeed"
+    bl_label = "Set Jump Force"
+    nl_category = "Physics"
+    nl_subcat = 'Character'
+
+    def init(self, context):
+        NLActionNode.init(self, context)
+        self.inputs.new(NLConditionSocket.bl_idname, 'Condition')
+        self.inputs.new(NLGameObjectSocket.bl_idname, 'Object')
+        self.inputs.new(NLPositiveFloatSocket.bl_idname, 'Force')
+        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+
+    def get_output_socket_varnames(self):
+        return ["OUT"]
+
+    def get_netlogic_class_name(self):
+        return "bgelogic.SetCharacterJumpSpeed"
+
+    def get_input_sockets_field_names(self):
+        return ["condition", "game_object", "force"]
+
+
+_nodes.append(NLSetCharacterJumpSpeed)
+
+
 class NLActionSaveGame(bpy.types.Node, NLActionNode):
     bl_idname = "NLActionSaveGame"
     bl_label = "Save Game"
