@@ -11093,7 +11093,7 @@ class NLActionMouseLookNode(bpy.types.Node, NLActionNode):
         self.inputs.new(NLAngleLimitSocket.bl_idname, "")
         self.inputs.new(NLBooleanSocket.bl_idname, "Cap Up / Down")
         self.inputs.new(NLAngleLimitSocket.bl_idname, "")
-        self.inputs[-1].value_x = math.radians(89)
+        self.inputs[-1].value_x = math.radians(-89)
         self.inputs[-1].value_y = math.radians(89)
         self.inputs.new(NLSocketAlphaFloat.bl_idname, "Smoothing")
         self.outputs.new(NLConditionSocket.bl_idname, 'Done')
