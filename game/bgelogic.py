@@ -10534,7 +10534,7 @@ class ActionNavigateWithNavmesh(ActionCell):
                     rot_speed,
                     tpf
                 )
-            ths = reach_threshold if next_point == self._motion_path.destination else .1
+            ths = reach_threshold # if next_point == self._motion_path.destination else .1
             reached = move_to(
                 moving_object,
                 next_point,

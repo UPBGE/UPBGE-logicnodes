@@ -1358,7 +1358,7 @@ class NLArmatureBoneSocket(bpy.types.NodeSocket, NetLogicSocketType):
                     col.prop_search(
                         self,
                         'value',
-                        game_object.data,
+                        game_object.pose,
                         'bones',
                         icon='NONE',
                         text=''
@@ -1371,6 +1371,55 @@ class NLArmatureBoneSocket(bpy.types.NodeSocket, NetLogicSocketType):
 
 
 _sockets.append(NLArmatureBoneSocket)
+
+
+class NLBoneConstraintSocket(bpy.types.NodeSocket, NetLogicSocketType):
+    bl_idname = "NLBoneConstraintSocket"
+    bl_label = "Property"
+    value: bpy.props.StringProperty(
+        update=update_tree_code
+    )
+    ref_index: bpy.props.IntProperty(default=0)
+
+    def draw_color(self, context, node):
+        return PARAMETER_SOCKET_COLOR
+
+    def draw(self, context, layout, node, text):
+        if self.is_output:
+            layout.label(text=self.name)
+        elif self.is_linked:
+            layout.label(text=self.name)
+        else:
+            col = layout.column(align=False)
+            tree = getattr(context.space_data, 'edit_tree', None)
+            if not tree:
+                return
+            bone = None
+            bone_socket = self.node.inputs[self.ref_index]
+            armature_socket = self.node.inputs[bone_socket.ref_index]
+            armature = armature_socket.value
+            bone = armature.pose.bones[bone_socket.value]
+            if self.name:
+                row = col.row()
+                row.label(text=self.name)
+            if bone:
+                # game_object = bpy.data.objects[game_object.split('NLO:')[-1]]
+                if not bone_socket.is_linked and not armature_socket.is_linked:
+                    col.prop_search(
+                        self,
+                        'value',
+                        bone,
+                        'constraints',
+                        text=''
+                    )
+                else:
+                    col.prop(self, 'value', text='')
+
+    def get_unlinked_value(self):
+        return '"{}"'.format(self.value)
+
+
+_sockets.append(NLBoneConstraintSocket)
 
 
 class NLGeomNodeTreeSocket(bpy.types.NodeSocket, NetLogicSocketType):
@@ -1985,7 +2034,7 @@ class NLSocketAlphaFloat(bpy.types.NodeSocket, NetLogicSocketType):
         if self.is_linked or self.is_output:
             layout.label(text=text)
         else:
-            layout.prop(self, "value", text=text)
+            layout.prop(self, "value", slider=True, text=text)
         pass
 
     def get_unlinked_value(self):
@@ -11406,7 +11455,7 @@ _nodes.append(NLGetObjectDataName)
 
 class NLActionEditArmatureConstraint(bpy.types.Node, NLActionNode):
     bl_idname = "NLActionEditArmatureConstraint"
-    bl_label = "Edit Armature Constraint"
+    bl_label = "Edit Bone Constraint"
     bl_icon = 'CONSTRAINT_BONE'
     nl_category = "Animation"
     nl_subcat = 'Armature / Rig'
@@ -11415,15 +11464,25 @@ class NLActionEditArmatureConstraint(bpy.types.Node, NLActionNode):
         NLActionNode.init(self, context)
         self.inputs.new(NLConditionSocket.bl_idname, "Condition")
         self.inputs.new(NLArmatureObjectSocket.bl_idname, "Armature")
-        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Constraint Name")
-        self.inputs.new(NLSocketAlphaFloat.bl_idname, "Enforced Factor")
-        self.inputs.new(NLGameObjectSocket.bl_idname, "Primary Target")
-        self.inputs.new(NLGameObjectSocket.bl_idname, "Secondary Target")
-        self.inputs.new(NLBooleanSocket.bl_idname, "Active")
-        self.inputs.new(NLSocketAlphaFloat.bl_idname, "IK Weight")
-        self.inputs.new(NLSocketAlphaFloat.bl_idname, "IK Distance")
-        self.inputs.new(NLSocketIKMode.bl_idname, "Distance Mode")
+        self.inputs.new(NLArmatureBoneSocket.bl_idname, "")
+        self.inputs[-1].ref_index = 1
+        self.inputs.new(NLBoneConstraintSocket.bl_idname, "")
+        self.inputs[-1].ref_index = 2
+        self.inputs.new(NLGameObjectSocket.bl_idname, "Target")
+        self.inputs.new(NLSocketAlphaFloat.bl_idname, "Influence")
         self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+    
+    def update_draw(self):
+        self.inputs[2].enabled = (
+            self.inputs[1].value is not None or
+            self.inputs[1].is_linked or
+            self.inputs[1].use_owner
+        )
+        self.inputs[3].enabled = (
+            self.inputs[2].enabled and
+            (self.inputs[2].value != '' or
+            self.inputs[2].is_linked)
+        )
 
     def get_output_socket_varnames(self):
         return ["OUT"]

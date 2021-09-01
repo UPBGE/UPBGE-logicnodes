@@ -1159,7 +1159,7 @@ class NLLoadImageOperator(bpy.types.Operator, ImportHelper):
     bl_description = "Load an image file"
 
     filter_glob: bpy.props.StringProperty(
-        default='*.jpg;*.png;',
+        default='*.jpg;*.png;*.jpeg;*.JPEG;',
         options={'HIDDEN'}
     )
 
