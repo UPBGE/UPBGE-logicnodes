@@ -42,7 +42,7 @@ def alpha_move(a, b, fac):
 # Persistent maps
 
 
-class SimpleLoggingDatabase(object):
+class GlobalDB(object):
     index: int
 
     class LineBuffer(object):
@@ -78,10 +78,10 @@ class SimpleLoggingDatabase(object):
     shared_dbs = {}
 
     @classmethod
-    def get_or_create_shared_db(cls, fname):
+    def retrieve(cls, fname):
         db = cls.shared_dbs.get(fname)
         if db is None:
-            db = SimpleLoggingDatabase(fname)
+            db = GlobalDB(fname)
             cls.shared_dbs[fname] = db
         return db
 
@@ -105,14 +105,14 @@ class SimpleLoggingDatabase(object):
         lines = []
         with open(fpath, "r") as f:
             lines.extend(f.read().splitlines())
-        buffer = SimpleLoggingDatabase.LineBuffer(lines)
+        buffer = GlobalDB.LineBuffer(lines)
         log_size = 0
         while buffer.has_next():
             op = buffer.read()
             assert op == "PUT"
             key = buffer.read()
             type_id = buffer.read()
-            serializer = SimpleLoggingDatabase.serializers.get(type_id)
+            serializer = GlobalDB.serializers.get(type_id)
             value = serializer.read(buffer)
             intodic[key] = value
             log_size += 1
@@ -130,7 +130,7 @@ class SimpleLoggingDatabase(object):
             cls.get_storage_dir(),
             "{}.logdb.txt".format(fname)
         )
-        buffer = SimpleLoggingDatabase.LineBuffer()
+        buffer = GlobalDB.LineBuffer()
         cls.put_value(key, value, buffer)
         buffer.flush(fpath)
 
@@ -147,7 +147,7 @@ class SimpleLoggingDatabase(object):
 
     @classmethod
     def compress(cls, fname, data):
-        buffer = SimpleLoggingDatabase.LineBuffer()
+        buffer = GlobalDB.LineBuffer()
         for key in data:
             value = data[key]
             cls.put_value(key, value, buffer)
@@ -171,10 +171,10 @@ class SimpleLoggingDatabase(object):
             bpy.app.handlers.game_post.remove(f)
         bpy.app.handlers.game_post.append(remove_globals)
 
-        log_size = SimpleLoggingDatabase.read(self.fname, self.data)
+        log_size = GlobalDB.read(self.fname, self.data)
         if log_size > (5 * len(self.data)):
             debug("Compressing sld {}".format(file_name))
-            SimpleLoggingDatabase.compress(self.fname, self.data)
+            GlobalDB.compress(self.fname, self.data)
 
     def get(self, key, default_value=None):
         return self.data.get(key, default_value)
@@ -188,13 +188,13 @@ class SimpleLoggingDatabase(object):
             old_value = self.data.get(key)
             changed = old_value != value
             if changed:
-                SimpleLoggingDatabase.write_put(self.fname, key, value)
+                GlobalDB.write_put(self.fname, key, value)
 
     def log(self):
         print(self.data)
 
 
-class StringSerializer(SimpleLoggingDatabase.Serializer):
+class StringSerializer(GlobalDB.Serializer):
 
     def write(self, value, line_writer):
         line_writer.write(value)
@@ -204,7 +204,7 @@ class StringSerializer(SimpleLoggingDatabase.Serializer):
         return None if data == "None" else data
 
 
-class FloatSerializer(SimpleLoggingDatabase.Serializer):
+class FloatSerializer(GlobalDB.Serializer):
 
     def write(self, value, line_writer): line_writer.write(str(value))
 
@@ -213,7 +213,7 @@ class FloatSerializer(SimpleLoggingDatabase.Serializer):
         return None if data == "None" else float(data)
 
 
-class IntegerSerializer(SimpleLoggingDatabase.Serializer):
+class IntegerSerializer(GlobalDB.Serializer):
 
     def write(self, value, line_writer): line_writer.write(str(value))
 
@@ -222,13 +222,13 @@ class IntegerSerializer(SimpleLoggingDatabase.Serializer):
         return None if data == "None" else int(data)
 
 
-class ListSerializer(SimpleLoggingDatabase.Serializer):
+class ListSerializer(GlobalDB.Serializer):
 
     def write(self, value, line_writer):
         line_writer.write(str(len(value)))
         for e in value:
             tp = str(type(e))
-            serializer = SimpleLoggingDatabase.serializers.get(tp)
+            serializer = GlobalDB.serializers.get(tp)
             if serializer:
                 line_writer.write(tp)
                 serializer.write(e, line_writer)
@@ -238,13 +238,13 @@ class ListSerializer(SimpleLoggingDatabase.Serializer):
         count = int(line_reader.read())
         for i in range(0, count):
             tp = line_reader.read()
-            serializer = SimpleLoggingDatabase.serializers.get(tp)
+            serializer = GlobalDB.serializers.get(tp)
             value = serializer.read(line_reader)
             data.append(value)
         return data
 
 
-class VectorSerializer(SimpleLoggingDatabase.Serializer):
+class VectorSerializer(GlobalDB.Serializer):
     def write(self, value, line_writer):
         if value is None:
             line_writer.write("None")
@@ -263,12 +263,12 @@ class VectorSerializer(SimpleLoggingDatabase.Serializer):
         return Vector(components)
 
 
-SimpleLoggingDatabase.serializers[str(type(""))] = StringSerializer()
-SimpleLoggingDatabase.serializers[str(type(1.0))] = FloatSerializer()
-SimpleLoggingDatabase.serializers[str(type(10))] = IntegerSerializer()
-SimpleLoggingDatabase.serializers[str(type([]))] = ListSerializer()
-SimpleLoggingDatabase.serializers[str(type((0, 0, 0)))] = ListSerializer()
-SimpleLoggingDatabase.serializers[str(type(Vector()))] = (
+GlobalDB.serializers[str(type(""))] = StringSerializer()
+GlobalDB.serializers[str(type(1.0))] = FloatSerializer()
+GlobalDB.serializers[str(type(10))] = IntegerSerializer()
+GlobalDB.serializers[str(type([]))] = ListSerializer()
+GlobalDB.serializers[str(type((0, 0, 0)))] = ListSerializer()
+GlobalDB.serializers[str(type(Vector()))] = (
     VectorSerializer()
 )
 
@@ -334,7 +334,7 @@ def xrot_to(
         if front_axis_code >= 3:
             vec.negate()
             front_axis_code = front_axis_code - 3
-        if vec.x == 0 and vec.y == 0 and vec.z == 0:
+        if vec.x == vec.y == vec.z == 0:
             return
         rotating_object.alignAxisToVect(vec, front_axis_code, 1.0)
         rotating_object.alignAxisToVect(LO_AXIS_TO_VECTOR[0], 0, 1.0)
@@ -371,7 +371,7 @@ def yrot_to(
         if front_axis_code >= 3:
             vec.negate()
             front_axis_code = front_axis_code - 3
-        if vec.x == 0 and vec.y == 0 and vec.z == 0:
+        if vec.x == vec.y == vec.z == 0:
             return
         rotating_object.alignAxisToVect(vec, front_axis_code, 1.0)
         rotating_object.alignAxisToVect(LO_AXIS_TO_VECTOR[1], 1, 1.0)
@@ -409,7 +409,7 @@ def zrot_to(
         if front_axis_code >= 3:
             vec.negate()
             front_axis_code = front_axis_code - 3
-        if vec.x == 0 and vec.y == 0 and vec.z == 0:
+        if vec.x == vec.y == vec.z == 0:
             return
         rotating_object.alignAxisToVect(vec, front_axis_code, 1.0)
         rotating_object.alignAxisToVect(LO_AXIS_TO_VECTOR[2], 2, 1.0)
@@ -778,7 +778,7 @@ class LogicNetwork(LogicNetworkCell):
         self._lastuid = 0
         self._owner = None
         self._max_blocking_loop_count = 0
-        self._messages = SimpleLoggingDatabase.get_or_create_shared_db('NL_MessageService')
+        self._messages = GlobalDB.retrieve('NL_MessageService')
         self.keyboard = None
         self.mouse = None
         self.keyboard_events = None
@@ -825,7 +825,7 @@ class LogicNetwork(LogicNetworkCell):
             }
 
             for c in cats:
-                db = SimpleLoggingDatabase.get_or_create_shared_db(c.name)
+                db = GlobalDB.retrieve(c.name)
                 msg += f' {c.name},'
                 for v in c.content:
                     val = getattr(v , dat.get(v.value_type, 'FLOAT'), 0)
@@ -2375,6 +2375,36 @@ class GetObjectDataName(ParameterCell):
             return
         self._set_ready()
         self._set_value(obj.blenderObject.name)
+
+
+class GetCurvePoints(ParameterCell):
+    def __init__(self):
+        ParameterCell.__init__(self)
+        self.curve = None
+
+    def evaluate(self):
+        obj = self.get_socket_value(self.curve)
+        if is_invalid(obj):
+            return
+        self._set_ready()
+        offset = obj.worldPosition
+        self._set_value([Vector(p.co[:-1]) + offset for p in obj.blenderObject.data.splines[0].points])
+
+
+class GetObjectVertices(ParameterCell):
+    def __init__(self):
+        ParameterCell.__init__(self)
+        self.game_object = None
+
+    def evaluate(self):
+        obj = self.get_socket_value(self.game_object)
+        if is_invalid(obj):
+            return
+        self._set_ready()
+
+        offset = obj.worldPosition
+        self._set_value(sorted([Vector(v.co) + offset for v in obj.blenderObject.data.vertices]))
+
 
 
 class ParameterSwitchValue(ParameterCell):
@@ -7412,19 +7442,14 @@ class ActionPerformanceProfile(ActionCell):
         self.done = True
 
 
-class ActionEditArmatureConstraint(ActionCell):
+class GESetBoneConstraintInfluence(ActionCell):
     def __init__(self):
         ActionCell.__init__(self)
         self.condition = None
         self.armature = None
-        self.constraint_name = None
-        self.enforced_factor = None
-        self.primary_target = None
-        self.secondary_target = None
-        self.active = None
-        self.ik_weight = None
-        self.ik_distance = None
-        self.distance_mode = None
+        self.bone = None
+        self.constraint = None
+        self.influence = None
         self.done = None
         self.OUT = LogicNetworkSubCell(self, self.get_done)
 
@@ -7437,58 +7462,97 @@ class ActionEditArmatureConstraint(ActionCell):
         if not_met(condition):
             return
         armature = self.get_socket_value(self.armature)
-        constraint_name = self.get_socket_value(self.constraint_name)
-        enforced_factor = self.get_socket_value(self.enforced_factor)
-        primary_target = self.get_socket_value(self.primary_target)
-        secondary_target = self.get_socket_value(self.secondary_target)
-        active = self.get_socket_value(self.active)
-        ik_weight = self.get_socket_value(self.ik_weight)
-        ik_distance = self.get_socket_value(self.ik_distance)
-        distance_mode = self.get_socket_value(self.distance_mode)
+        bone = self.get_socket_value(self.bone)
+        constraint = self.get_socket_value(self.constraint)
+        influence = self.get_socket_value(self.influence)
         if is_waiting(
             armature,
-            constraint_name,
-            enforced_factor,
-            primary_target,
-            secondary_target,
-            active,
-            ik_weight,
-            ik_distance,
-            distance_mode
+            bone,
+            constraint,
+            influence
         ):
             return
         self._set_ready()
         if is_invalid(armature):
             return
-        if invalid(primary_target):
-            primary_target = None
-        if invalid(secondary_target):
-            secondary_target = None
-        constraint = armature.constraints[constraint_name]
-        if (
-            (enforced_factor is not None) and
-            (constraint.enforce != enforced_factor)
+        armature.blenderObject.pose.bones[bone].constraints[constraint].influence = influence
+        self.done = True
+
+
+class GESetBoneConstraintTarget(ActionCell):
+    def __init__(self):
+        ActionCell.__init__(self)
+        self.condition = None
+        self.armature = None
+        self.bone = None
+        self.constraint = None
+        self.target = None
+        self.done = None
+        self.OUT = LogicNetworkSubCell(self, self.get_done)
+
+    def get_done(self):
+        return self.done
+
+    def evaluate(self):
+        self.done = False
+        condition = self.get_socket_value(self.condition)
+        if not_met(condition):
+            return
+        armature = self.get_socket_value(self.armature)
+        bone = self.get_socket_value(self.bone)
+        constraint = self.get_socket_value(self.constraint)
+        target = self.get_socket_value(self.target)
+        if is_waiting(
+            armature,
+            bone,
+            constraint,
+            target
         ):
-            constraint.enforce = enforced_factor
-        if constraint.target != primary_target:
-            constraint.target = primary_target
-        if constraint.subtarget != secondary_target:
-            constraint.subtarget = secondary_target
-        if constraint.active != active:
-            constraint.active = active
-        if (ik_weight is not None) and (constraint.ik_weight != ik_weight):
-            constraint.ik_weight = ik_weight
-        if (
-            (ik_distance is not None) and
-            (constraint.ik_distance != ik_distance)
+            return
+        self._set_ready()
+        if is_invalid(armature):
+            return
+        armature.blenderObject.pose.bones[bone].constraints[constraint].target = target.blenderObject
+        self.done = True
+
+
+class GESetBoneConstraintAttribute(ActionCell):
+    def __init__(self):
+        ActionCell.__init__(self)
+        self.condition = None
+        self.armature = None
+        self.bone = None
+        self.constraint = None
+        self.attribute = None
+        self.value = None
+        self.done = None
+        self.OUT = LogicNetworkSubCell(self, self.get_done)
+
+    def get_done(self):
+        return self.done
+
+    def evaluate(self):
+        self.done = False
+        condition = self.get_socket_value(self.condition)
+        if not_met(condition):
+            return
+        armature = self.get_socket_value(self.armature)
+        bone = self.get_socket_value(self.bone)
+        constraint = self.get_socket_value(self.constraint)
+        attribute = self.get_socket_value(self.attribute)
+        value = self.get_socket_value(self.value)
+        if is_waiting(
+            armature,
+            bone,
+            constraint,
+            attribute,
+            value
         ):
-            constraint.ik_distance = ik_distance
-        if (
-            (distance_mode is not None) and
-            (constraint.ik_mode != distance_mode)
-        ):
-            constraint.ik_mode = distance_mode
-        armature.update()
+            return
+        self._set_ready()
+        if is_invalid(armature):
+            return
+        setattr(armature.blenderObject.pose.bones[bone].constraints[constraint], attribute, value)
         self.done = True
 
 
@@ -9614,7 +9678,7 @@ class ParameterGetGlobalValue(ParameterCell):
         if is_waiting(data_id, key, default):
             return
         self._set_ready()
-        db = SimpleLoggingDatabase.get_or_create_shared_db(data_id)
+        db = GlobalDB.retrieve(data_id)
         self._set_value(db.get(key, default))
 
 
@@ -9634,7 +9698,7 @@ class ActionListGlobalValues(ParameterCell):
         if is_waiting(data_id, print_d):
             return
         self._set_ready()
-        db = SimpleLoggingDatabase.get_or_create_shared_db(data_id)
+        db = GlobalDB.retrieve(data_id)
         if print_d:
             print(f'[Logic Nodes] Global category "{data_id}":')
             for e in db.data:
@@ -9701,7 +9765,7 @@ class ActionSetGlobalValue(ActionCell):
                 return
             if key is None:
                 return
-            db = SimpleLoggingDatabase.get_or_create_shared_db(data_id)
+            db = GlobalDB.retrieve(data_id)
             db.put(key, value, persistent)
             if self.condition is None:
                 self.deactivate()
@@ -10347,7 +10411,7 @@ class ActionTrackTo(ActionCell):
             self._set_value(
                 xrot_to(
                     moving_object,
-                    target_object,
+                    target_object.worldPosition,
                     front_axis,
                     speed,
                     self.network.time_per_frame
@@ -10357,7 +10421,7 @@ class ActionTrackTo(ActionCell):
             self._set_value(
                 yrot_to(
                     moving_object,
-                    target_object,
+                    target_object.worldPosition,
                     front_axis,
                     speed,
                     self.network.time_per_frame
@@ -10367,7 +10431,7 @@ class ActionTrackTo(ActionCell):
             self._set_value(
                 zrot_to(
                     moving_object,
-                    target_object,
+                    target_object.worldPosition,
                     front_axis,
                     speed,
                     self.network.time_per_frame
@@ -10380,6 +10444,7 @@ class ActionRotateTo(ActionCell):
         self.condition = None
         self.moving_object = None
         self.target_point = None
+        self.speed = None
         self.rot_axis = 2
         self.front_axis = 0
 
@@ -10390,11 +10455,12 @@ class ActionRotateTo(ActionCell):
             return
         moving_object = self.get_socket_value(self.moving_object)
         target_point = self.get_socket_value(self.target_point)
+        speed = self.get_socket_value(self.speed)
         if hasattr(target_point, 'worldPosition'):
             target_point = target_point.worldPosition
         rot_axis = self.get_socket_value(self.rot_axis)
         front_axis = self.get_socket_value(self.front_axis)
-        if is_waiting(moving_object, target_point, rot_axis, front_axis):
+        if is_waiting(moving_object, target_point, speed, rot_axis, front_axis):
             return
         self._set_ready()
         if rot_axis == 0:
@@ -10403,7 +10469,7 @@ class ActionRotateTo(ActionCell):
                     moving_object,
                     target_point,
                     front_axis,
-                    0,
+                    speed,
                     self.network.time_per_frame
                 )
             )
@@ -10413,7 +10479,7 @@ class ActionRotateTo(ActionCell):
                     moving_object,
                     target_point,
                     front_axis,
-                    0,
+                    speed,
                     self.network.time_per_frame
                 )
             )
@@ -10423,7 +10489,7 @@ class ActionRotateTo(ActionCell):
                     moving_object,
                     target_point,
                     front_axis,
-                    0,
+                    speed,
                     self.network.time_per_frame
                 )
             )
@@ -10578,8 +10644,9 @@ class ActionFollowPath(ActionCell):
         self.condition = None
         self.moving_object = None
         self.rotating_object = None
-        self.path_parent = None
+        self.path_points = None
         self.loop = None
+        self.path_continue = None
         self.navmesh_object = None
         self.move_dynamic = None
         self.linear_speed = None
@@ -10598,13 +10665,15 @@ class ActionFollowPath(ActionCell):
     def evaluate(self):
         self.done = False
         condition = self.get_socket_value(self.condition)
+        path_continue = self.get_socket_value(self.path_continue)
         if not_met(condition):
-            self._motion_path = None
+            if not path_continue:
+                self._motion_path = None
             self._set_ready()
             return
         moving_object = self.get_socket_value(self.moving_object)
         rotating_object = self.get_socket_value(self.rotating_object)
-        path_parent = self.get_socket_value(self.path_parent)
+        path_points = self.get_socket_value(self.path_points)
         navmesh_object = self.get_socket_value(self.navmesh_object)
         move_dynamic = self.get_socket_value(self.move_dynamic)
         linear_speed = self.get_socket_value(self.linear_speed)
@@ -10615,7 +10684,7 @@ class ActionFollowPath(ActionCell):
         rot_speed = self.get_socket_value(self.rot_speed)
         loop = self.get_socket_value(self.loop)
         if is_invalid(
-            path_parent,
+            path_points,
             move_dynamic,
             linear_speed,
             reach_threshold,
@@ -10638,7 +10707,7 @@ class ActionFollowPath(ActionCell):
         if (self._motion_path is None) or (self._motion_path.loop != loop):
             self.generate_path(
                 moving_object.worldPosition,
-                path_parent,
+                path_points,
                 navmesh_object,
                 loop
             )
@@ -10668,9 +10737,8 @@ class ActionFollowPath(ActionCell):
                     self._set_value(True)
                     self.done = True
 
-    def generate_path(self, start_position, path_parent, navmesh_object, loop):
-        children = sorted(path_parent.children, key=lambda o: o.name)
-        if not children:
+    def generate_path(self, start_position, path_points, navmesh_object, loop):
+        if not path_points:
             return self._motion_path.points.clear()
         path = ActionFollowPath.MotionPath()
         path.loop = loop
@@ -10680,28 +10748,28 @@ class ActionFollowPath(ActionCell):
             points.append(Vector(start_position))
             if loop:
                 path.loop_start = 1
-            for c in children:
-                points.append(c.worldPosition.copy())
+            for p in path_points:
+                points.append(Vector(p))
         else:
-            last = children[-1]
+            last = path_points[-1]
             mark_loop_position = loop
-            for c in children:
+            for p in path_points:
                 subpath = navmesh_object.findPath(
                     start_position,
-                    c.worldPosition
+                    Vector(p)
                 )
-                if c is last:
+                if p is last:
                     points.extend(subpath)
                 else:
                     points.extend(subpath[:-1])
                 if mark_loop_position:
                     path.loop_start = len(points)
                     mark_loop_position = False
-                start_position = c.worldPosition
+                start_position = Vector(p)
             if loop:
                 subpath = navmesh_object.findPath(
-                    last.worldPosition,
-                    children[0].worldPosition
+                    Vector(last),
+                    Vector(path_points[0])
                 )
                 points.extend(subpath[1:])
 
