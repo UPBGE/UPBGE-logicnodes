@@ -2388,7 +2388,12 @@ class GetCurvePoints(ParameterCell):
             return
         self._set_ready()
         offset = obj.worldPosition
-        self._set_value([Vector(p.co[:-1]) + offset for p in obj.blenderObject.data.splines[0].points])
+        o = obj.blenderObject.data.splines[0]
+        if o.type == 'BEZIER':
+            self._set_value([Vector(p.co) + offset for p in o.bezier_points])
+        else:
+            self._set_value([Vector(p.co[:-1]) + offset for p in o.points])
+            
 
 
 class GetObjectVertices(ParameterCell):

@@ -383,7 +383,7 @@ _enum_quality_levels = [
 
 _enum_math_operations = [
     ("ADD", "Add", "Sum A and B"),
-    ("SUB", "Substract", "Subtract B from A"),
+    ("SUB", "Subtract", "Subtract B from A"),
     ("DIV", "Divide", "Divide A by B"),
     ("MUL", "Multiply", "Multiply A by B")
 ]
@@ -4691,7 +4691,7 @@ class NLVectorMath(bpy.types.Node, NLParameterNode):
     nl_category = "Math"
     nl_subcat = 'Vector Math'
     operator: bpy.props.EnumProperty(
-        name='Opertation',
+        name='Operation',
         items=_enum_vector_math_options,
         update=update_tree_code
     )
@@ -4781,7 +4781,7 @@ class NLVectorAngleCheck(bpy.types.Node, NLParameterNode):
     nl_category = "Math"
     nl_subcat = 'Vector Math'
     operator: bpy.props.EnumProperty(
-        name='Opertation',
+        name='Operation',
         items=_enum_logic_operators,
         update=update_tree_code
     )
@@ -5183,7 +5183,7 @@ class NLArithmeticOpParameterNode(bpy.types.Node, NLParameterNode):
     bl_label = "Math"
     nl_category = "Math"
     operator: bpy.props.EnumProperty(
-        name='Opertation',
+        name='Operation',
         items=_enum_math_operations,
         update=update_tree_code
     )
@@ -7843,7 +7843,7 @@ class NLAddToGameObjectGamePropertyActionNode(bpy.types.Node, NLActionNode):
     nl_category = "Objects"
     nl_subcat = 'Properties'
     operator: bpy.props.EnumProperty(
-        name='Opertation',
+        name='Operation',
         items=_enum_math_operations,
         update=update_tree_code
     )
