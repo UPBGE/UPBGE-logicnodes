@@ -2393,7 +2393,6 @@ class GetCurvePoints(ParameterCell):
             self._set_value([Vector(p.co) + offset for p in o.bezier_points])
         else:
             self._set_value([Vector(p.co[:-1]) + offset for p in o.points])
-            
 
 
 class GetObjectVertices(ParameterCell):
@@ -2409,7 +2408,6 @@ class GetObjectVertices(ParameterCell):
 
         offset = obj.worldPosition
         self._set_value(sorted([Vector(v.co) + offset for v in obj.blenderObject.data.vertices]))
-
 
 
 class ParameterSwitchValue(ParameterCell):
@@ -3559,6 +3557,45 @@ class RangedThreshold(ParameterCell):
             self._set_value(None)
         else:
             self._set_value(value)
+
+
+class GELimitRange(ParameterCell):
+
+    @classmethod
+    def op_by_code(cls, op):
+        return op
+
+    def __init__(self):
+        ParameterCell.__init__(self)
+        self.value = None
+        self.threshold = Vector((0, 0))
+        self.operator = None
+        self.last_val = 0
+
+    def calc_threshold(self, op, v, t):
+        l = self.last_val
+        if op == 'OUTSIDE':
+            if (v < t.x or v > t.y):
+                self.last_val = v
+            else:
+                self.last_val = t.x if l <= t.x else t.y
+        if op == 'INSIDE':
+            if (t.x < v < t.y):
+                self.last_val = v
+            else:
+                self.last_val = t.x if v <= t.x else t.y
+
+    def evaluate(self):
+        v = self.get_socket_value(self.value)
+        t = self.get_socket_value(self.threshold)
+        if is_waiting(v, t):
+            return
+        self.calc_threshold(self.operator, v, t)
+        self._set_ready()
+        if (v is None) or (t is None):
+            self._set_value(None)
+        else:
+            self._set_value(self.last_val)
 
 
 class WithinRange(ParameterCell):
@@ -9911,6 +9948,42 @@ class ActionRandomFloat(ActionCell):
 
         delta = max_value - min_value
         self._output = min_value + (delta * random.random())
+        self._done = True
+
+
+class GERandomVect(ActionCell):
+    def __init__(self):
+        ActionCell.__init__(self)
+        self.condition = None
+        self.xyz = None
+        self._output = None
+        self._done = False
+        self.OUT_A = LogicNetworkSubCell(self, self._get_output)
+        self.DONE = LogicNetworkSubCell(self, self._get_done)
+
+    def _get_output(self):
+        return self._output
+
+    def _get_done(self):
+        return self._done
+
+    def evaluate(self):
+        self._done = False
+        condition = self.get_socket_value(self.condition)
+        if not_met(condition):
+            self._set_ready()
+            return
+        xyz = self.get_socket_value(self.xyz)
+        if is_waiting(xyz):
+            return
+        self._set_ready()
+        vmin, vmax = -999999999, 999999999
+        delta = vmax - vmin
+        x = vmin + (delta * random.random()) if xyz['x'] else 0
+        y = vmin + (delta * random.random()) if xyz['y'] else 0
+        z = vmin + (delta * random.random()) if xyz['z'] else 0
+        self._output = Vector((x, y, z))
+            
         self._done = True
 
 

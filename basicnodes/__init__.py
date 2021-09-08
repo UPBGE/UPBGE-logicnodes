@@ -5296,6 +5296,44 @@ class NLRangedThresholdNode(bpy.types.Node, NLParameterNode):
 _nodes.append(NLRangedThresholdNode)
 
 
+class NLLimitRange(bpy.types.Node, NLParameterNode):
+    bl_idname = "NLLimitRange"
+    bl_label = "Limit Range"
+    nl_category = "Math"
+    operator: bpy.props.EnumProperty(
+        items=_enum_in_or_out,
+        update=update_tree_code
+    )
+
+    def init(self, context):
+        NLParameterNode.init(self, context)
+        self.inputs.new(NLFloatFieldSocket.bl_idname, "Value")
+        self.inputs.new(NLVec2FieldSocket.bl_idname, "Threshold")
+        self.outputs.new(NLParameterSocket.bl_idname, "Value")
+
+    def draw_buttons(self, context, layout):
+        layout.prop(self, "operator", text="")
+
+    def get_nonsocket_fields(self):
+        return [
+                (
+                    "operator", lambda:
+                    'bgelogic.RangedThreshold.op_by_code("{}")'.format(
+                        self.operator
+                    )
+                )
+            ]
+
+    def get_netlogic_class_name(self):
+        return "bgelogic.GELimitRange"
+
+    def get_input_sockets_field_names(self):
+        return ["value", "threshold"]
+
+
+_nodes.append(NLLimitRange)
+
+
 class NLWithinRangeNode(bpy.types.Node, NLParameterNode):
     bl_idname = "NLWithinRangeNode"
     bl_label = "Within Range"
@@ -12392,6 +12430,32 @@ class NLActionRandomFloat(bpy.types.Node, NLActionNode):
 
 
 _nodes.append(NLActionRandomFloat)
+
+
+class NLRandomVect(bpy.types.Node, NLActionNode):
+    bl_idname = "NLRandomVect"
+    bl_label = "Random Vector"
+    nl_category = "Values"
+    nl_subcat = 'Random'
+
+    def init(self, context):
+        NLActionNode.init(self, context)
+        self.inputs.new(NLPseudoConditionSocket.bl_idname, "Condition")
+        self.inputs.new(NLXYZSocket.bl_idname, "")
+        self.outputs.new(NLConditionSocket.bl_idname, "Done")
+        self.outputs.new(NLVectorSocket.bl_idname, "Vector")
+
+    def get_input_sockets_field_names(self):
+        return ["condition", 'xyz']
+
+    def get_netlogic_class_name(self):
+        return "bgelogic.GERandomVect"
+
+    def get_output_socket_varnames(self):
+        return ["DONE", "OUT_A"]
+
+
+_nodes.append(NLRandomVect)
 
 
 class NLParameterDistance(bpy.types.Node, NLParameterNode):
