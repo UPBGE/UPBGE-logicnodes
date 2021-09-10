@@ -10865,6 +10865,34 @@ class NLSetLightEnergyAction(bpy.types.Node, NLActionNode):
 _nodes.append(NLSetLightEnergyAction)
 
 
+class NLMakeUniqueLight(bpy.types.Node, NLActionNode):
+    bl_idname = "NLMakeUniqueLight"
+    bl_label = "Make Unique"
+    nl_category = "Lights"
+
+    def init(self, context):
+        NLActionNode.init(self, context)
+        self.inputs.new(NLConditionSocket.bl_idname, 'Condition')
+        self.inputs.new(NLLightObjectSocket.bl_idname, 'Light Object')
+        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+        self.outputs.new(NLLightObjectSocket.bl_idname, 'Light')
+
+    def get_output_socket_varnames(self):
+        return ["OUT", 'LIGHT']
+
+    def get_netlogic_class_name(self):
+        return "bgelogic.GEMakeUniqueLight"
+
+    def get_input_sockets_field_names(self):
+        return [
+            "condition",
+            "light",
+        ]
+
+
+_nodes.append(NLMakeUniqueLight)
+
+
 class NLSetLightShadowAction(bpy.types.Node, NLActionNode):
     bl_idname = "NLSetLightShadowAction"
     bl_label = "Set Light Shadow"

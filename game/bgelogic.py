@@ -10313,6 +10313,102 @@ class SetLightEnergy(ActionCell):
         self.done = True
 
 
+class GEMakeUniqueLight(ActionCell):
+
+    def __init__(self):
+        ActionCell.__init__(self)
+        self.condition = None
+        self.light = None
+        self.done = None
+        self._light = None
+        self.OUT = LogicNetworkSubCell(self, self.get_done)
+        self.LIGHT = LogicNetworkSubCell(self, self.get_light)
+
+    def get_done(self):
+        return self.done
+
+    def get_light(self):
+        return self._light
+
+    def evaluate(self):
+        self.done = False
+        condition = self.get_socket_value(self.condition)
+        if not_met(condition):
+            self._set_value(False)
+            return self._set_ready()
+        old_lamp_ge = self.get_socket_value(self.light)
+        if is_waiting(old_lamp_ge):
+            return
+        self._set_ready()
+
+        scene = logic.getCurrentScene()
+        name = old_lamp_ge.name
+        old_lamp = old_lamp_ge.blenderObject
+        old_lamp.name = 'OLD_LAMP'
+
+        settings = [
+            'color',
+            'energy',
+            'diffuse_factor',
+            'specular_factor',
+            'volume_factor',
+            'shadow_soft_size',
+            'use_custom_distance',
+            'cutoff_distance',
+            'spot_size',
+            'spot_blend',
+            'show_cone',
+            'angle',
+            'shape',
+            'size',
+            'size_y'
+            'use_shadow',
+            'shadow_buffer_clip_start',
+            'shadow_buffer_bias',
+            'use_soft_shadows',
+            'use_contact_shadow',
+            'contact_shadow_distance',
+            'contact_shadow_bias',
+            'contact_shadow_thickness',
+            'shadow_cascade_count',
+            'shadow_cascade_fade',
+            'shadow_cascade_max_distance',
+            'shadow_cascade_exponent',
+        ]
+
+        types = {
+            'POINT': 'Point',
+            'AREA': 'Area',
+            'SPOT': 'Spot',
+            'SUN': 'Sun'
+        }
+
+        light_type = old_lamp.data.type
+        bpy.ops.object.light_add(type=light_type, location=old_lamp_ge.worldPosition, rotation=old_lamp_ge.worldOrientation.to_euler())
+        index = 1
+        light = None
+        while light is None:
+            if types[light_type] in bpy.data.objects[-index].name:
+                light = bpy.data.objects[-index]
+            index += 1
+        for attr in settings:
+            try:
+                setattr(light.data, attr, getattr(old_lamp.data, attr))
+            except:
+                pass
+        old_lamp_ge.endObject()
+        real_name = light.name
+        light.name = name
+        scene.convertBlenderObject(light)
+        light.name = real_name
+
+        light = scene.getGameObjectFromObject(light)
+        if old_lamp_ge.parent:
+            light.setParent(old_lamp_ge.parent)
+
+        self.done = True
+
+
 class SetLightShadow(ActionCell):
 
     def __init__(self):
