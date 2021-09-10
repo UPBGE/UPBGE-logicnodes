@@ -2762,7 +2762,7 @@ class NLOptionalValueFieldSocket(bpy.types.NodeSocket, NetLogicSocketType):
         return PARAMETER_SOCKET_COLOR
 
     def get_unlinked_value(self):
-        return socket_field(self) if self.use_value else 'None'
+        return socket_field(self) if self.use_value or self.is_linked else "bgelogic.Invalid()"
 
     def draw(self, context, layout, node, text):
         if self.is_linked or self.is_output:
@@ -5598,22 +5598,15 @@ class NLParameterPythonModuleFunction(bpy.types.Node, NLActionNode):
         self.inputs.new(NLPseudoConditionSocket.bl_idname, "Condition")
         self.inputs.new(NLTextIDSocket.bl_idname, "Module Name")
         self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Function")
-        self.inputs.new(NLBooleanSocket.bl_idname, 'Use Argument')
-        self.inputs.new(NLValueFieldSocket.bl_idname, "")
+        self.inputs.new(NLOptionalValueFieldSocket.bl_idname, 'Argument')
         self.outputs.new(NLConditionSocket.bl_idname, "Done")
         self.outputs.new(NLParameterSocket.bl_idname, "Returned Value")
-
-    def update_draw(self):
-        if self.inputs[3].value:
-            self.inputs[4].enabled = True
-        else:
-            self.inputs[4].enabled = False
 
     def get_netlogic_class_name(self):
         return "bgelogic.ParameterPythonModuleFunction"
 
     def get_input_sockets_field_names(self):
-        return ['condition', "module_name", "module_func", 'use_arg', 'arg']
+        return ['condition', "module_name", "module_func", 'arg']
 
     def get_output_socket_varnames(self):
         return ["OUT", "VAL"]

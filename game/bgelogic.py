@@ -1,3 +1,4 @@
+import utilities
 from bge import logic
 import bge
 from bge.types import KX_GameObject as GameObject
@@ -39,8 +40,11 @@ def alpha_move(a, b, fac):
         return a
 
 
-# Persistent maps
+class Invalid():
+    pass
 
+
+# Persistent maps
 
 class GlobalDB(object):
     index: int
@@ -1718,11 +1722,13 @@ class ActionMouseLook(ActionCell):
     def evaluate(self):
         self.done = False
         self.get_data()
+        condition = self.get_socket_value(self.condition)
+        if not_met(condition):
+            self.initialized = False
+            return
         if not self.initialized:
             self.mouse.position = self.screen_center
             self.initialized = True
-        condition = self.get_socket_value(self.condition)
-        if not_met(condition):
             return
         game_object_x = self.get_x_obj()
         game_object_y = self.get_y_obj()
@@ -3238,7 +3244,6 @@ class ParameterPythonModuleFunction(ParameterCell):
         self.condition = None
         self.module_name = None
         self.module_func = None
-        self.use_arg = None
         self.arg = None
         self.val = None
         self.OUT = LogicNetworkSubCell(self, self.get_done)
@@ -3263,7 +3268,6 @@ class ParameterPythonModuleFunction(ParameterCell):
         mfun = self.get_socket_value(self.module_func)
         if is_waiting(mname, mfun):
             return
-        use_arg = self.get_socket_value(self.use_arg)
         arg = self.get_socket_value(self.arg)
         self._set_ready()
         if mname and (self._old_mod_name != mname):
@@ -3273,7 +3277,7 @@ class ParameterPythonModuleFunction(ParameterCell):
         if self._old_mod_fun != mfun:
             self._modfun = getattr(self._module, mfun)
             self._old_mod_fun = mfun
-        if use_arg:
+        if not isinstance(arg, Invalid):
             self.val = self._modfun(arg)
         else:
             self.val = self._modfun()
@@ -9717,6 +9721,8 @@ class ParameterGetGlobalValue(ParameterCell):
         data_id = self.get_socket_value(self.data_id)
         key = self.get_socket_value(self.key)
         default = self.get_socket_value(self.default)
+        if isinstance(default, Invalid):
+            default = None
         if is_waiting(data_id, key, default):
             return
         self._set_ready()
@@ -9842,6 +9848,8 @@ class CreateMessage(ActionCell):
             return
         self.old_subject = subject
         body = self.get_socket_value(self.body)
+        if isinstance(body, Invalid):
+            body = None
         target = self.get_socket_value(self.target)
         if is_waiting(body, target):
             return
