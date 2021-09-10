@@ -1725,8 +1725,7 @@ class ActionMouseLook(ActionCell):
         condition = self.get_socket_value(self.condition)
         if not_met(condition):
             self.initialized = False
-            return
-        if not self.initialized:
+        elif not self.initialized:
             self.mouse.position = self.screen_center
             self.initialized = True
             return
@@ -1749,8 +1748,11 @@ class ActionMouseLook(ActionCell):
             debug('MouseLook Node: Invalid Main Object!')
             return
 
-        mouse_position = Vector(self.mouse.position)
-        offset = (mouse_position - self.center) * -0.002
+        if condition:
+            mouse_position = Vector(self.mouse.position)
+            offset = (mouse_position - self.center) * -0.002
+        else:
+            offset = Vector((0, 0))
 
         if inverted.get('y', False) is False:
             offset.y = -offset.y
@@ -1793,7 +1795,7 @@ class ActionMouseLook(ActionCell):
         rot = [0, 0, 0]
         rot[1-self.axis] = offset.y
         game_object_y.applyRotation((*rot, ), True)
-        if self.mouse.position != self.screen_center:
+        if self.mouse.position != self.screen_center and condition:
             self.mouse.position = self.screen_center
         self.done = True
 
