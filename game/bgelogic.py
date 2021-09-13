@@ -3964,6 +3964,8 @@ class ParameterMatrixToVector(ParameterCell):
     def evaluate(self):
         self._set_ready()
         matrix = self.get_socket_value(self.input_m)
+        if is_waiting(matrix):
+            return
         e = matrix.to_euler()
         self.vec = Vector((e.x, e.y, e.z))
 
@@ -3989,6 +3991,8 @@ class ParameterVector3Simple(ParameterCell):
         y = self.get_socket_value(self.input_y)
         z = self.get_socket_value(self.input_z)
         if is_invalid(x):
+            return
+        if is_waiting(x, y, z):
             return
         self.output_vector.x = x
         self.output_vector.y = y
