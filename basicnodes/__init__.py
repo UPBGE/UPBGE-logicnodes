@@ -42,6 +42,11 @@ _enum_local_axis = [
     ("2", "Z Axis", "The Local Z Axis [Integer Value 2]")
 ]
 
+_enum_look_axis = [
+    ("0", "X Axis", "The Local X Axis [Integer Value 0]"),
+    ("1", "Y Axis", "The Local Y Axis [Integer Value 1]")
+]
+
 _enum_local_oriented_axis = [
     ("0", "+X Axis", "The Local X Axis [Integer Value 0]"),
     ("1", "+Y Axis", "The Local Y Axis [Integer Value 1]"),
@@ -378,7 +383,7 @@ _enum_quality_levels = [
 
 _enum_math_operations = [
     ("ADD", "Add", "Sum A and B"),
-    ("SUB", "Substract", "Subtract B from A"),
+    ("SUB", "Subtract", "Subtract B from A"),
     ("DIV", "Divide", "Divide A by B"),
     ("MUL", "Multiply", "Multiply A by B")
 ]
@@ -1248,8 +1253,7 @@ class NLCurveObjectSocket(bpy.types.NodeSocket, NetLogicSocketType):
     def get_unlinked_value(self):
         if self.use_owner:
             return '"NLO:U_O"'
-        if isinstance(self.value, bpy.types.Curve):
-            return '"NLO:{}"'.format(self.value.name)
+        return '"NLO:{}"'.format(self.value.name)
 
 
 _sockets.append(NLCurveObjectSocket)
@@ -1347,25 +1351,74 @@ class NLArmatureBoneSocket(bpy.types.NodeSocket, NetLogicSocketType):
             if self.name:
                 row = col.row()
                 row.label(text=self.name)
-            if game_object:
-                # game_object = bpy.data.objects[game_object.split('NLO:')[-1]]
+            if game_object and isinstance(game_object.data, bpy.types.Armature):
                 if not game_obj_socket.is_linked:
                     col.prop_search(
                         self,
                         'value',
-                        game_object.data,
+                        game_object.pose,
                         'bones',
                         icon='NONE',
                         text=''
                     )
-                else:
-                    col.prop(self, 'value', text='')
+                    return
+            col.prop(self, 'value', text='')
 
     def get_unlinked_value(self):
         return '"{}"'.format(self.value)
 
 
 _sockets.append(NLArmatureBoneSocket)
+
+
+class NLBoneConstraintSocket(bpy.types.NodeSocket, NetLogicSocketType):
+    bl_idname = "NLBoneConstraintSocket"
+    bl_label = "Property"
+    value: bpy.props.StringProperty(
+        update=update_tree_code
+    )
+    ref_index: bpy.props.IntProperty(default=0)
+
+    def draw_color(self, context, node):
+        return PARAMETER_SOCKET_COLOR
+
+    def draw(self, context, layout, node, text):
+        if self.is_output:
+            layout.label(text=self.name)
+        elif self.is_linked:
+            layout.label(text=self.name)
+        else:
+            col = layout.column(align=False)
+            tree = getattr(context.space_data, 'edit_tree', None)
+            if not tree:
+                return
+            bone = None
+            bone_socket = self.node.inputs[self.ref_index]
+            armature_socket = self.node.inputs[bone_socket.ref_index]
+            if not armature_socket.is_linked and not armature_socket.use_owner:
+                armature = armature_socket.value
+                bone = armature.pose.bones[bone_socket.value]
+            if self.name:
+                row = col.row()
+                row.label(text=self.name)
+            if bone and not armature_socket.use_owner:
+                if not bone_socket.is_linked and not armature_socket.is_linked:
+                    col.prop_search(
+                        self,
+                        'value',
+                        bone,
+                        'constraints',
+                        text=''
+                    )
+                    return
+            else:
+                col.prop(self, 'value', text='')
+
+    def get_unlinked_value(self):
+        return '"{}"'.format(self.value)
+
+
+_sockets.append(NLBoneConstraintSocket)
 
 
 class NLGeomNodeTreeSocket(bpy.types.NodeSocket, NetLogicSocketType):
@@ -1980,7 +2033,7 @@ class NLSocketAlphaFloat(bpy.types.NodeSocket, NetLogicSocketType):
         if self.is_linked or self.is_output:
             layout.label(text=text)
         else:
-            layout.prop(self, "value", text=text)
+            layout.prop(self, "value", slider=True, text=text)
         pass
 
     def get_unlinked_value(self):
@@ -2709,7 +2762,7 @@ class NLOptionalValueFieldSocket(bpy.types.NodeSocket, NetLogicSocketType):
         return PARAMETER_SOCKET_COLOR
 
     def get_unlinked_value(self):
-        return socket_field(self) if self.use_value else 'None'
+        return socket_field(self) if self.use_value or self.is_linked else "bgelogic.Invalid()"
 
     def draw(self, context, layout, node, text):
         if self.is_linked or self.is_output:
@@ -4638,7 +4691,7 @@ class NLVectorMath(bpy.types.Node, NLParameterNode):
     nl_category = "Math"
     nl_subcat = 'Vector Math'
     operator: bpy.props.EnumProperty(
-        name='Opertation',
+        name='Operation',
         items=_enum_vector_math_options,
         update=update_tree_code
     )
@@ -4728,7 +4781,7 @@ class NLVectorAngleCheck(bpy.types.Node, NLParameterNode):
     nl_category = "Math"
     nl_subcat = 'Vector Math'
     operator: bpy.props.EnumProperty(
-        name='Opertation',
+        name='Operation',
         items=_enum_logic_operators,
         update=update_tree_code
     )
@@ -5130,7 +5183,7 @@ class NLArithmeticOpParameterNode(bpy.types.Node, NLParameterNode):
     bl_label = "Math"
     nl_category = "Math"
     operator: bpy.props.EnumProperty(
-        name='Opertation',
+        name='Operation',
         items=_enum_math_operations,
         update=update_tree_code
     )
@@ -5241,6 +5294,44 @@ class NLRangedThresholdNode(bpy.types.Node, NLParameterNode):
 
 
 _nodes.append(NLRangedThresholdNode)
+
+
+class NLLimitRange(bpy.types.Node, NLParameterNode):
+    bl_idname = "NLLimitRange"
+    bl_label = "Limit Range"
+    nl_category = "Math"
+    operator: bpy.props.EnumProperty(
+        items=_enum_in_or_out,
+        update=update_tree_code
+    )
+
+    def init(self, context):
+        NLParameterNode.init(self, context)
+        self.inputs.new(NLFloatFieldSocket.bl_idname, "Value")
+        self.inputs.new(NLVec2FieldSocket.bl_idname, "Threshold")
+        self.outputs.new(NLParameterSocket.bl_idname, "Value")
+
+    def draw_buttons(self, context, layout):
+        layout.prop(self, "operator", text="")
+
+    def get_nonsocket_fields(self):
+        return [
+                (
+                    "operator", lambda:
+                    'bgelogic.RangedThreshold.op_by_code("{}")'.format(
+                        self.operator
+                    )
+                )
+            ]
+
+    def get_netlogic_class_name(self):
+        return "bgelogic.GELimitRange"
+
+    def get_input_sockets_field_names(self):
+        return ["value", "threshold"]
+
+
+_nodes.append(NLLimitRange)
 
 
 class NLWithinRangeNode(bpy.types.Node, NLParameterNode):
@@ -5472,7 +5563,7 @@ _nodes.append(NLMouseDataParameter)
 
 class NLParameterBoneStatus(bpy.types.Node, NLParameterNode):
     bl_idname = "NLParameterBoneStatus"
-    bl_label = "Armature Bone Status"
+    bl_label = "Bone Status"
     nl_category = 'Animation'
     nl_subcat = 'Armature / Rig'
 
@@ -5507,22 +5598,15 @@ class NLParameterPythonModuleFunction(bpy.types.Node, NLActionNode):
         self.inputs.new(NLPseudoConditionSocket.bl_idname, "Condition")
         self.inputs.new(NLTextIDSocket.bl_idname, "Module Name")
         self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Function")
-        self.inputs.new(NLBooleanSocket.bl_idname, 'Use Argument')
-        self.inputs.new(NLValueFieldSocket.bl_idname, "")
+        self.inputs.new(NLOptionalValueFieldSocket.bl_idname, 'Argument')
         self.outputs.new(NLConditionSocket.bl_idname, "Done")
         self.outputs.new(NLParameterSocket.bl_idname, "Returned Value")
-
-    def update_draw(self):
-        if self.inputs[3].value:
-            self.inputs[4].enabled = True
-        else:
-            self.inputs[4].enabled = False
 
     def get_netlogic_class_name(self):
         return "bgelogic.ParameterPythonModuleFunction"
 
     def get_input_sockets_field_names(self):
-        return ['condition', "module_name", "module_func", 'use_arg', 'arg']
+        return ['condition', "module_name", "module_func", 'arg']
 
     def get_output_socket_varnames(self):
         return ["OUT", "VAL"]
@@ -7790,7 +7874,7 @@ class NLAddToGameObjectGamePropertyActionNode(bpy.types.Node, NLActionNode):
     nl_category = "Objects"
     nl_subcat = 'Properties'
     operator: bpy.props.EnumProperty(
-        name='Opertation',
+        name='Operation',
         items=_enum_math_operations,
         update=update_tree_code
     )
@@ -9532,6 +9616,32 @@ class NLActionCharacterJump(bpy.types.Node, NLActionNode):
 _nodes.append(NLActionCharacterJump)
 
 
+class NLSetCharacterJumpSpeed(bpy.types.Node, NLActionNode):
+    bl_idname = "NLSetCharacterJumpSpeed"
+    bl_label = "Set Jump Force"
+    nl_category = "Physics"
+    nl_subcat = 'Character'
+
+    def init(self, context):
+        NLActionNode.init(self, context)
+        self.inputs.new(NLConditionSocket.bl_idname, 'Condition')
+        self.inputs.new(NLGameObjectSocket.bl_idname, 'Object')
+        self.inputs.new(NLPositiveFloatSocket.bl_idname, 'Force')
+        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+
+    def get_output_socket_varnames(self):
+        return ["OUT"]
+
+    def get_netlogic_class_name(self):
+        return "bgelogic.SetCharacterJumpSpeed"
+
+    def get_input_sockets_field_names(self):
+        return ["condition", "game_object", "force"]
+
+
+_nodes.append(NLSetCharacterJumpSpeed)
+
+
 class NLActionSaveGame(bpy.types.Node, NLActionNode):
     bl_idname = "NLActionSaveGame"
     bl_label = "Save Game"
@@ -10748,6 +10858,34 @@ class NLSetLightEnergyAction(bpy.types.Node, NLActionNode):
 _nodes.append(NLSetLightEnergyAction)
 
 
+class NLMakeUniqueLight(bpy.types.Node, NLActionNode):
+    bl_idname = "NLMakeUniqueLight"
+    bl_label = "Make Unique"
+    nl_category = "Lights"
+
+    def init(self, context):
+        NLActionNode.init(self, context)
+        self.inputs.new(NLConditionSocket.bl_idname, 'Condition')
+        self.inputs.new(NLLightObjectSocket.bl_idname, 'Light Object')
+        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+        self.outputs.new(NLLightObjectSocket.bl_idname, 'Light')
+
+    def get_output_socket_varnames(self):
+        return ["OUT", 'LIGHT']
+
+    def get_netlogic_class_name(self):
+        return "bgelogic.GEMakeUniqueLight"
+
+    def get_input_sockets_field_names(self):
+        return [
+            "condition",
+            "light",
+        ]
+
+
+_nodes.append(NLMakeUniqueLight)
+
+
 class NLSetLightShadowAction(bpy.types.Node, NLActionNode):
     bl_idname = "NLSetLightShadowAction"
     bl_label = "Set Light Shadow"
@@ -11043,6 +11181,12 @@ class NLActionMouseLookNode(bpy.types.Node, NLActionNode):
     bl_icon = 'CAMERA_DATA'
     nl_category = "Input"
     nl_subcat = 'Mouse'
+    axis: bpy.props.EnumProperty(
+        name='Axis',
+        items=_enum_look_axis,
+        update=update_tree_code,
+        default="1"
+    )
 
     def init(self, context):
         NLActionNode.init(self, context)
@@ -11056,10 +11200,15 @@ class NLActionMouseLookNode(bpy.types.Node, NLActionNode):
         self.inputs.new(NLAngleLimitSocket.bl_idname, "")
         self.inputs.new(NLBooleanSocket.bl_idname, "Cap Up / Down")
         self.inputs.new(NLAngleLimitSocket.bl_idname, "")
-        self.inputs[-1].value_x = math.radians(89)
+        self.inputs[-1].value_x = math.radians(-89)
         self.inputs[-1].value_y = math.radians(89)
         self.inputs.new(NLSocketAlphaFloat.bl_idname, "Smoothing")
         self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+
+    def draw_buttons(self, context, layout):
+        r = layout.row(align=True)
+        r.label(text="Front:")
+        r.prop(self, "axis", text="")
 
     def update_draw(self):
         if self.inputs[5].value:
@@ -11076,6 +11225,9 @@ class NLActionMouseLookNode(bpy.types.Node, NLActionNode):
 
     def get_netlogic_class_name(self):
         return "bgelogic.ActionMouseLook"
+
+    def get_nonsocket_fields(self):
+        return [("axis", lambda: self.axis)]
 
     def get_input_sockets_field_names(self):
         return [
@@ -11359,49 +11511,196 @@ class NLGetObjectDataName(bpy.types.Node, NLParameterNode):
 _nodes.append(NLGetObjectDataName)
 
 
-class NLActionEditArmatureConstraint(bpy.types.Node, NLActionNode):
-    bl_idname = "NLActionEditArmatureConstraint"
-    bl_label = "Edit Armature Constraint"
+class NLGetCurvePoints(bpy.types.Node, NLParameterNode):
+    bl_idname = "NLGetCurvePoints"
+    bl_label = "Get Curve Points"
+    bl_icon = 'OUTLINER_DATA_CURVE'
+    nl_category = "Objects"
+
+    def init(self, context):
+        NLParameterNode.init(self, context)
+        self.inputs.new(NLCurveObjectSocket.bl_idname, "Curve")
+        self.outputs.new(NLListSocket.bl_idname, "Points")
+
+    def get_netlogic_class_name(self):
+        return "bgelogic.GetCurvePoints"
+
+    def get_input_sockets_field_names(self):
+        return ["curve"]
+
+
+_nodes.append(NLGetCurvePoints)
+
+
+class NLGetObjectVertices(bpy.types.Node, NLParameterNode):
+    bl_idname = "NLGetObjectVertices"
+    bl_label = "Get Object Vertices"
+    bl_icon = 'OUTLINER_DATA_MESH'
+    nl_category = "Objects"
+    nl_subcat = 'Data'
+
+    def init(self, context):
+        NLParameterNode.init(self, context)
+        self.inputs.new(NLGameObjectSocket.bl_idname, "Object")
+        self.outputs.new(NLListSocket.bl_idname, "Vertices")
+
+    def get_netlogic_class_name(self):
+        return "bgelogic.GetObjectVertices"
+
+    def get_input_sockets_field_names(self):
+        return ["game_object"]
+
+
+_nodes.append(NLGetObjectVertices)
+
+
+class NLSetBoneConstraintInfluence(bpy.types.Node, NLActionNode):
+    bl_idname = "NLSetBoneConstraintInfluence"
+    bl_label = "Set Influence"
     bl_icon = 'CONSTRAINT_BONE'
     nl_category = "Animation"
-    nl_subcat = 'Armature / Rig'
+    nl_subcat = 'Bone Constraints'
 
     def init(self, context):
         NLActionNode.init(self, context)
         self.inputs.new(NLConditionSocket.bl_idname, "Condition")
         self.inputs.new(NLArmatureObjectSocket.bl_idname, "Armature")
-        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Constraint Name")
-        self.inputs.new(NLSocketAlphaFloat.bl_idname, "Enforced Factor")
-        self.inputs.new(NLGameObjectSocket.bl_idname, "Primary Target")
-        self.inputs.new(NLGameObjectSocket.bl_idname, "Secondary Target")
-        self.inputs.new(NLBooleanSocket.bl_idname, "Active")
-        self.inputs.new(NLSocketAlphaFloat.bl_idname, "IK Weight")
-        self.inputs.new(NLSocketAlphaFloat.bl_idname, "IK Distance")
-        self.inputs.new(NLSocketIKMode.bl_idname, "Distance Mode")
+        self.inputs.new(NLArmatureBoneSocket.bl_idname, "")
+        self.inputs[-1].ref_index = 1
+        self.inputs.new(NLBoneConstraintSocket.bl_idname, "")
+        self.inputs[-1].ref_index = 2
+        self.inputs.new(NLSocketAlphaFloat.bl_idname, "Influence")
         self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+
+    def update_draw(self):
+        self.inputs[2].enabled = (
+            self.inputs[1].value is not None or
+            self.inputs[1].is_linked or
+            self.inputs[1].use_owner
+        )
+        self.inputs[3].enabled = (
+            self.inputs[2].enabled and
+            (self.inputs[2].value != '' or
+            self.inputs[2].is_linked)
+        )
 
     def get_output_socket_varnames(self):
         return ["OUT"]
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ActionEditArmatureConstraint"
+        return "bgelogic.GESetBoneConstraintInfluence"
 
     def get_input_sockets_field_names(self):
         return [
             "condition",
             "armature",
-            "constraint_name",
-            "enforced_factor",
-            "primary_target",
-            "secondary_target",
-            "active",
-            "ik_weight",
-            "ik_distance",
-            "distance_mode"
+            "bone",
+            "constraint",
+            "influence"
         ]
 
 
-_nodes.append(NLActionEditArmatureConstraint)
+_nodes.append(NLSetBoneConstraintInfluence)
+
+
+class NLSetBoneConstraintTarget(bpy.types.Node, NLActionNode):
+    bl_idname = "NLSetBoneConstraintTarget"
+    bl_label = "Set Target"
+    bl_icon = 'CONSTRAINT_BONE'
+    nl_category = "Animation"
+    nl_subcat = 'Bone Constraints'
+
+    def init(self, context):
+        NLActionNode.init(self, context)
+        self.inputs.new(NLConditionSocket.bl_idname, "Condition")
+        self.inputs.new(NLArmatureObjectSocket.bl_idname, "Armature")
+        self.inputs.new(NLArmatureBoneSocket.bl_idname, "")
+        self.inputs[-1].ref_index = 1
+        self.inputs.new(NLBoneConstraintSocket.bl_idname, "")
+        self.inputs[-1].ref_index = 2
+        self.inputs.new(NLGameObjectSocket.bl_idname, "Target")
+        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+
+    def update_draw(self):
+        self.inputs[2].enabled = (
+            self.inputs[1].value is not None or
+            self.inputs[1].is_linked or
+            self.inputs[1].use_owner
+        )
+        self.inputs[3].enabled = (
+            self.inputs[2].enabled and
+            (self.inputs[2].value != '' or
+            self.inputs[2].is_linked)
+        )
+
+    def get_output_socket_varnames(self):
+        return ["OUT"]
+
+    def get_netlogic_class_name(self):
+        return "bgelogic.GESetBoneConstraintTarget"
+
+    def get_input_sockets_field_names(self):
+        return [
+            "condition",
+            "armature",
+            "bone",
+            "constraint",
+            "target"
+        ]
+
+
+_nodes.append(NLSetBoneConstraintTarget)
+
+
+class NLSetBoneConstraintAttribute(bpy.types.Node, NLActionNode):
+    bl_idname = "NLSetBoneConstraintAttribute"
+    bl_label = "Set Attribute"
+    bl_icon = 'CONSTRAINT_BONE'
+    nl_category = "Animation"
+    nl_subcat = 'Bone Constraints'
+
+    def init(self, context):
+        NLActionNode.init(self, context)
+        self.inputs.new(NLConditionSocket.bl_idname, "Condition")
+        self.inputs.new(NLArmatureObjectSocket.bl_idname, "Armature")
+        self.inputs.new(NLArmatureBoneSocket.bl_idname, "")
+        self.inputs[-1].ref_index = 1
+        self.inputs.new(NLBoneConstraintSocket.bl_idname, "")
+        self.inputs[-1].ref_index = 2
+        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Attribute")
+        self.inputs.new(NLValueFieldSocket.bl_idname, "")
+        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+
+    def update_draw(self):
+        self.inputs[2].enabled = (
+            self.inputs[1].value is not None or
+            self.inputs[1].is_linked or
+            self.inputs[1].use_owner
+        )
+        self.inputs[3].enabled = (
+            self.inputs[2].enabled and
+            (self.inputs[2].value != '' or
+            self.inputs[2].is_linked)
+        )
+
+    def get_output_socket_varnames(self):
+        return ["OUT"]
+
+    def get_netlogic_class_name(self):
+        return "bgelogic.GESetBoneConstraintAttribute"
+
+    def get_input_sockets_field_names(self):
+        return [
+            "condition",
+            "armature",
+            "bone",
+            "constraint",
+            "attribute",
+            "value",
+        ]
+
+
+_nodes.append(NLSetBoneConstraintAttribute)
 
 
 class NLActionSetBonePos(bpy.types.Node, NLActionNode):
@@ -11435,7 +11734,7 @@ _nodes.append(NLActionSetBonePos)
 
 class NLActionEditBoneNode(bpy.types.Node, NLActionNode):
     bl_idname = "NLActionEditBoneNode"
-    bl_label = "Edit Armature Bone"
+    bl_label = "Edit Bone"
     bl_icon = 'BONE_DATA'
     nl_category = 'Animation'
     nl_subcat = 'Armature / Rig'
@@ -12154,6 +12453,32 @@ class NLActionRandomFloat(bpy.types.Node, NLActionNode):
 _nodes.append(NLActionRandomFloat)
 
 
+class NLRandomVect(bpy.types.Node, NLActionNode):
+    bl_idname = "NLRandomVect"
+    bl_label = "Random Vector"
+    nl_category = "Values"
+    nl_subcat = 'Random'
+
+    def init(self, context):
+        NLActionNode.init(self, context)
+        self.inputs.new(NLPseudoConditionSocket.bl_idname, "Condition")
+        self.inputs.new(NLXYZSocket.bl_idname, "")
+        self.outputs.new(NLConditionSocket.bl_idname, "Done")
+        self.outputs.new(NLVectorSocket.bl_idname, "Vector")
+
+    def get_input_sockets_field_names(self):
+        return ["condition", 'xyz']
+
+    def get_netlogic_class_name(self):
+        return "bgelogic.GERandomVect"
+
+    def get_output_socket_varnames(self):
+        return ["DONE", "OUT_A"]
+
+
+_nodes.append(NLRandomVect)
+
+
 class NLParameterDistance(bpy.types.Node, NLParameterNode):
     bl_idname = "NLParameterDistance"
     bl_label = "Distance"
@@ -12269,6 +12594,7 @@ class NLActionRotateTo(bpy.types.Node, NLActionNode):
         self.inputs.new(NLConditionSocket.bl_idname, "Condition")
         self.inputs.new(NLGameObjectSocket.bl_idname, "Object")
         self.inputs.new(NLVec3FieldSocket.bl_idname, "Target")
+        self.inputs.new(NLPositiveFloatSocket.bl_idname, "Speed")
         self.inputs.new(NLSocketLocalAxis.bl_idname, "Rot Axis")
         self.inputs.new(NLSocketOrientedLocalAxis.bl_idname, "Front")
         self.outputs.new(NLConditionSocket.bl_idname, "When Done")
@@ -12278,6 +12604,7 @@ class NLActionRotateTo(bpy.types.Node, NLActionNode):
             "condition",
             "moving_object",
             "target_point",
+            "speed",
             "rot_axis",
             "front_axis"
         ]
@@ -12351,11 +12678,9 @@ class NLActionFollowPath(bpy.types.Node, NLActionNode):
         self.inputs.new(NLConditionSocket.bl_idname, "Condition")
         self.inputs.new(NLGameObjectSocket.bl_idname, "Moving Object")
         self.inputs.new(NLGameObjectSocket.bl_idname, "Rotating Object")
-        self.inputs.new(
-            NLGameObjectSocket.bl_idname,
-            "Path (Parent of a set of Empties)"
-        )
+        self.inputs.new(NLListSocket.bl_idname,"Path Points")
         self.inputs.new(NLBooleanSocket.bl_idname, "Loop")
+        self.inputs.new(NLBooleanSocket.bl_idname, "Continue")
         self.inputs.new(NLGameObjectSocket.bl_idname, "Optional Navmesh")
         self.inputs.new(NLBooleanSocket.bl_idname, "Move as Dynamic")
         self.inputs.new(NLPositiveFloatSocket.bl_idname, "Lin Speed")
@@ -12380,8 +12705,9 @@ class NLActionFollowPath(bpy.types.Node, NLActionNode):
             "condition",
             "moving_object",
             "rotating_object",
-            "path_parent",
+            "path_points",
             "loop",
+            "path_continue",
             "navmesh_object",
             "move_dynamic",
             "linear_speed",

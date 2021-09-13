@@ -25,6 +25,7 @@ _cat_icons = {
     'Animation': 'ARMATURE_DATA',
     'Armature / Rig': 'GROUP_BONE',
     'Bricks': 'LOGIC',
+    'Bone Constraints': 'CONSTRAINT_BONE',
     'Camera': 'CAMERA_DATA',
     'Character': 'GHOST_ENABLED',
     'Collections': 'OUTLINER_COLLECTION',

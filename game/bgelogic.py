@@ -1,3 +1,4 @@
+import utilities
 from bge import logic
 import bge
 from bge.types import KX_GameObject as GameObject
@@ -39,10 +40,13 @@ def alpha_move(a, b, fac):
         return a
 
 
+class Invalid():
+    pass
+
+
 # Persistent maps
 
-
-class SimpleLoggingDatabase(object):
+class GlobalDB(object):
     index: int
 
     class LineBuffer(object):
@@ -78,10 +82,10 @@ class SimpleLoggingDatabase(object):
     shared_dbs = {}
 
     @classmethod
-    def get_or_create_shared_db(cls, fname):
+    def retrieve(cls, fname):
         db = cls.shared_dbs.get(fname)
         if db is None:
-            db = SimpleLoggingDatabase(fname)
+            db = GlobalDB(fname)
             cls.shared_dbs[fname] = db
         return db
 
@@ -105,14 +109,14 @@ class SimpleLoggingDatabase(object):
         lines = []
         with open(fpath, "r") as f:
             lines.extend(f.read().splitlines())
-        buffer = SimpleLoggingDatabase.LineBuffer(lines)
+        buffer = GlobalDB.LineBuffer(lines)
         log_size = 0
         while buffer.has_next():
             op = buffer.read()
             assert op == "PUT"
             key = buffer.read()
             type_id = buffer.read()
-            serializer = SimpleLoggingDatabase.serializers.get(type_id)
+            serializer = GlobalDB.serializers.get(type_id)
             value = serializer.read(buffer)
             intodic[key] = value
             log_size += 1
@@ -130,7 +134,7 @@ class SimpleLoggingDatabase(object):
             cls.get_storage_dir(),
             "{}.logdb.txt".format(fname)
         )
-        buffer = SimpleLoggingDatabase.LineBuffer()
+        buffer = GlobalDB.LineBuffer()
         cls.put_value(key, value, buffer)
         buffer.flush(fpath)
 
@@ -147,7 +151,7 @@ class SimpleLoggingDatabase(object):
 
     @classmethod
     def compress(cls, fname, data):
-        buffer = SimpleLoggingDatabase.LineBuffer()
+        buffer = GlobalDB.LineBuffer()
         for key in data:
             value = data[key]
             cls.put_value(key, value, buffer)
@@ -171,10 +175,10 @@ class SimpleLoggingDatabase(object):
             bpy.app.handlers.game_post.remove(f)
         bpy.app.handlers.game_post.append(remove_globals)
 
-        log_size = SimpleLoggingDatabase.read(self.fname, self.data)
+        log_size = GlobalDB.read(self.fname, self.data)
         if log_size > (5 * len(self.data)):
             debug("Compressing sld {}".format(file_name))
-            SimpleLoggingDatabase.compress(self.fname, self.data)
+            GlobalDB.compress(self.fname, self.data)
 
     def get(self, key, default_value=None):
         return self.data.get(key, default_value)
@@ -188,13 +192,13 @@ class SimpleLoggingDatabase(object):
             old_value = self.data.get(key)
             changed = old_value != value
             if changed:
-                SimpleLoggingDatabase.write_put(self.fname, key, value)
+                GlobalDB.write_put(self.fname, key, value)
 
     def log(self):
         print(self.data)
 
 
-class StringSerializer(SimpleLoggingDatabase.Serializer):
+class StringSerializer(GlobalDB.Serializer):
 
     def write(self, value, line_writer):
         line_writer.write(value)
@@ -204,7 +208,7 @@ class StringSerializer(SimpleLoggingDatabase.Serializer):
         return None if data == "None" else data
 
 
-class FloatSerializer(SimpleLoggingDatabase.Serializer):
+class FloatSerializer(GlobalDB.Serializer):
 
     def write(self, value, line_writer): line_writer.write(str(value))
 
@@ -213,7 +217,7 @@ class FloatSerializer(SimpleLoggingDatabase.Serializer):
         return None if data == "None" else float(data)
 
 
-class IntegerSerializer(SimpleLoggingDatabase.Serializer):
+class IntegerSerializer(GlobalDB.Serializer):
 
     def write(self, value, line_writer): line_writer.write(str(value))
 
@@ -222,13 +226,13 @@ class IntegerSerializer(SimpleLoggingDatabase.Serializer):
         return None if data == "None" else int(data)
 
 
-class ListSerializer(SimpleLoggingDatabase.Serializer):
+class ListSerializer(GlobalDB.Serializer):
 
     def write(self, value, line_writer):
         line_writer.write(str(len(value)))
         for e in value:
             tp = str(type(e))
-            serializer = SimpleLoggingDatabase.serializers.get(tp)
+            serializer = GlobalDB.serializers.get(tp)
             if serializer:
                 line_writer.write(tp)
                 serializer.write(e, line_writer)
@@ -238,13 +242,13 @@ class ListSerializer(SimpleLoggingDatabase.Serializer):
         count = int(line_reader.read())
         for i in range(0, count):
             tp = line_reader.read()
-            serializer = SimpleLoggingDatabase.serializers.get(tp)
+            serializer = GlobalDB.serializers.get(tp)
             value = serializer.read(line_reader)
             data.append(value)
         return data
 
 
-class VectorSerializer(SimpleLoggingDatabase.Serializer):
+class VectorSerializer(GlobalDB.Serializer):
     def write(self, value, line_writer):
         if value is None:
             line_writer.write("None")
@@ -263,12 +267,12 @@ class VectorSerializer(SimpleLoggingDatabase.Serializer):
         return Vector(components)
 
 
-SimpleLoggingDatabase.serializers[str(type(""))] = StringSerializer()
-SimpleLoggingDatabase.serializers[str(type(1.0))] = FloatSerializer()
-SimpleLoggingDatabase.serializers[str(type(10))] = IntegerSerializer()
-SimpleLoggingDatabase.serializers[str(type([]))] = ListSerializer()
-SimpleLoggingDatabase.serializers[str(type((0, 0, 0)))] = ListSerializer()
-SimpleLoggingDatabase.serializers[str(type(Vector()))] = (
+GlobalDB.serializers[str(type(""))] = StringSerializer()
+GlobalDB.serializers[str(type(1.0))] = FloatSerializer()
+GlobalDB.serializers[str(type(10))] = IntegerSerializer()
+GlobalDB.serializers[str(type([]))] = ListSerializer()
+GlobalDB.serializers[str(type((0, 0, 0)))] = ListSerializer()
+GlobalDB.serializers[str(type(Vector()))] = (
     VectorSerializer()
 )
 
@@ -334,7 +338,7 @@ def xrot_to(
         if front_axis_code >= 3:
             vec.negate()
             front_axis_code = front_axis_code - 3
-        if vec.x == 0 and vec.y == 0 and vec.z == 0:
+        if vec.x == vec.y == vec.z == 0:
             return
         rotating_object.alignAxisToVect(vec, front_axis_code, 1.0)
         rotating_object.alignAxisToVect(LO_AXIS_TO_VECTOR[0], 0, 1.0)
@@ -371,7 +375,7 @@ def yrot_to(
         if front_axis_code >= 3:
             vec.negate()
             front_axis_code = front_axis_code - 3
-        if vec.x == 0 and vec.y == 0 and vec.z == 0:
+        if vec.x == vec.y == vec.z == 0:
             return
         rotating_object.alignAxisToVect(vec, front_axis_code, 1.0)
         rotating_object.alignAxisToVect(LO_AXIS_TO_VECTOR[1], 1, 1.0)
@@ -409,7 +413,7 @@ def zrot_to(
         if front_axis_code >= 3:
             vec.negate()
             front_axis_code = front_axis_code - 3
-        if vec.x == 0 and vec.y == 0 and vec.z == 0:
+        if vec.x == vec.y == vec.z == 0:
             return
         rotating_object.alignAxisToVect(vec, front_axis_code, 1.0)
         rotating_object.alignAxisToVect(LO_AXIS_TO_VECTOR[2], 2, 1.0)
@@ -778,7 +782,7 @@ class LogicNetwork(LogicNetworkCell):
         self._lastuid = 0
         self._owner = None
         self._max_blocking_loop_count = 0
-        self._messages = SimpleLoggingDatabase.get_or_create_shared_db('NL_MessageService')
+        self._messages = GlobalDB.retrieve('NL_MessageService')
         self.keyboard = None
         self.mouse = None
         self.keyboard_events = None
@@ -825,7 +829,7 @@ class LogicNetwork(LogicNetworkCell):
             }
 
             for c in cats:
-                db = SimpleLoggingDatabase.get_or_create_shared_db(c.name)
+                db = GlobalDB.retrieve(c.name)
                 msg += f' {c.name},'
                 for v in c.content:
                     val = getattr(v , dat.get(v.value_type, 'FLOAT'), 0)
@@ -1666,6 +1670,7 @@ class ActionMouseLook(ActionCell):
 
     def __init__(self):
         ActionCell.__init__(self)
+        self.axis = None
         self.condition = None
         self.game_object_x = None
         self.game_object_y = None
@@ -1717,11 +1722,12 @@ class ActionMouseLook(ActionCell):
     def evaluate(self):
         self.done = False
         self.get_data()
-        if not self.initialized:
-            self.mouse.position = self.screen_center
-            self.initialized = True
         condition = self.get_socket_value(self.condition)
         if not_met(condition):
+            self.initialized = False
+        elif not self.initialized:
+            self.mouse.position = self.screen_center
+            self.initialized = True
             return
         game_object_x = self.get_x_obj()
         game_object_y = self.get_y_obj()
@@ -1729,10 +1735,10 @@ class ActionMouseLook(ActionCell):
         use_cap_z = self.get_socket_value(self.use_cap_z)
         use_cap_y = self.get_socket_value(self.use_cap_y)
         cap_z = self.get_socket_value(self.cap_z)
-        lowercapX = -cap_z.y
+        lowercapX = cap_z.y
         uppercapX = cap_z.x
         cap_y = self.get_socket_value(self.cap_y)
-        lowercapY = -cap_y.x
+        lowercapY = cap_y.x
         uppercapY = cap_y.y
         inverted = self.get_socket_value(self.inverted)
         smooth = 1 - (self.get_socket_value(self.smooth) * .99)
@@ -1742,8 +1748,11 @@ class ActionMouseLook(ActionCell):
             debug('MouseLook Node: Invalid Main Object!')
             return
 
-        mouse_position = Vector(self.mouse.position)
-        offset = (mouse_position - self.center) * -0.002
+        if condition:
+            mouse_position = Vector(self.mouse.position)
+            offset = (mouse_position - self.center) * -0.002
+        else:
+            offset = Vector((0, 0))
 
         if inverted.get('y', False) is False:
             offset.y = -offset.y
@@ -1769,21 +1778,24 @@ class ActionMouseLook(ActionCell):
 
         game_object_x.applyRotation((0, 0, offset.x), self.use_local_head)
 
+        rot_axis = 1-self.axis
         if use_cap_y:
             objectRotation = game_object_y.localOrientation.to_euler()
 
-            if objectRotation.y + offset.y > uppercapY:
-                objectRotation.y = uppercapY
+            if objectRotation[rot_axis] + offset.y > uppercapY:
+                objectRotation[rot_axis] = uppercapY
                 game_object_y.localOrientation = objectRotation.to_matrix()
                 offset.y = 0
 
-            if objectRotation.y + offset.y < lowercapY:
-                objectRotation.y = lowercapY
+            if objectRotation[rot_axis] + offset.y < lowercapY:
+                objectRotation[rot_axis] = lowercapY
                 game_object_y.localOrientation = objectRotation.to_matrix()
                 offset.y = 0
 
-        game_object_y.applyRotation((0, (offset.y), 0), True)
-        if self.mouse.position != self.screen_center:
+        rot = [0, 0, 0]
+        rot[1-self.axis] = offset.y
+        game_object_y.applyRotation((*rot, ), True)
+        if self.mouse.position != self.screen_center and condition:
             self.mouse.position = self.screen_center
         self.done = True
 
@@ -2373,6 +2385,39 @@ class GetObjectDataName(ParameterCell):
         self._set_value(obj.blenderObject.name)
 
 
+class GetCurvePoints(ParameterCell):
+    def __init__(self):
+        ParameterCell.__init__(self)
+        self.curve = None
+
+    def evaluate(self):
+        obj = self.get_socket_value(self.curve)
+        if is_invalid(obj):
+            return
+        self._set_ready()
+        offset = obj.worldPosition
+        o = obj.blenderObject.data.splines[0]
+        if o.type == 'BEZIER':
+            self._set_value([Vector(p.co) + offset for p in o.bezier_points])
+        else:
+            self._set_value([Vector(p.co[:-1]) + offset for p in o.points])
+
+
+class GetObjectVertices(ParameterCell):
+    def __init__(self):
+        ParameterCell.__init__(self)
+        self.game_object = None
+
+    def evaluate(self):
+        obj = self.get_socket_value(self.game_object)
+        if is_invalid(obj):
+            return
+        self._set_ready()
+
+        offset = obj.worldPosition
+        self._set_value(sorted([Vector(v.co) + offset for v in obj.blenderObject.data.vertices]))
+
+
 class ParameterSwitchValue(ParameterCell):
     def __init__(self):
         ParameterCell.__init__(self)
@@ -2633,17 +2678,21 @@ class ParameterRandomListIndex(ParameterCell):
     def __init__(self):
         ParameterCell.__init__(self)
         self.condition = None
+        self._item = None
         self.items = None
 
     def evaluate(self):
         condition = self.get_socket_value(self.condition)
         if not_met(condition):
+            self._set_ready()
+            self._set_value(self._item)
             return
         list_d = self.get_socket_value(self.items)
         if is_invalid(list_d):
             return
         self._set_ready()
-        self._set_value(random.choice(list_d))
+        self._item = random.choice(list_d)
+        self._set_value(self._item)
 
 
 class DuplicateList(ParameterCell):
@@ -3197,7 +3246,6 @@ class ParameterPythonModuleFunction(ParameterCell):
         self.condition = None
         self.module_name = None
         self.module_func = None
-        self.use_arg = None
         self.arg = None
         self.val = None
         self.OUT = LogicNetworkSubCell(self, self.get_done)
@@ -3222,7 +3270,6 @@ class ParameterPythonModuleFunction(ParameterCell):
         mfun = self.get_socket_value(self.module_func)
         if is_waiting(mname, mfun):
             return
-        use_arg = self.get_socket_value(self.use_arg)
         arg = self.get_socket_value(self.arg)
         self._set_ready()
         if mname and (self._old_mod_name != mname):
@@ -3232,7 +3279,7 @@ class ParameterPythonModuleFunction(ParameterCell):
         if self._old_mod_fun != mfun:
             self._modfun = getattr(self._module, mfun)
             self._old_mod_fun = mfun
-        if use_arg:
+        if not isinstance(arg, Invalid):
             self.val = self._modfun(arg)
         else:
             self.val = self._modfun()
@@ -3516,6 +3563,45 @@ class RangedThreshold(ParameterCell):
             self._set_value(None)
         else:
             self._set_value(value)
+
+
+class GELimitRange(ParameterCell):
+
+    @classmethod
+    def op_by_code(cls, op):
+        return op
+
+    def __init__(self):
+        ParameterCell.__init__(self)
+        self.value = None
+        self.threshold = Vector((0, 0))
+        self.operator = None
+        self.last_val = 0
+
+    def calc_threshold(self, op, v, t):
+        l = self.last_val
+        if op == 'OUTSIDE':
+            if (v < t.x or v > t.y):
+                self.last_val = v
+            else:
+                self.last_val = t.x if l <= t.x else t.y
+        if op == 'INSIDE':
+            if (t.x < v < t.y):
+                self.last_val = v
+            else:
+                self.last_val = t.x if v <= t.x else t.y
+
+    def evaluate(self):
+        v = self.get_socket_value(self.value)
+        t = self.get_socket_value(self.threshold)
+        if is_waiting(v, t):
+            return
+        self.calc_threshold(self.operator, v, t)
+        self._set_ready()
+        if (v is None) or (t is None):
+            self._set_value(None)
+        else:
+            self._set_value(self.last_val)
 
 
 class WithinRange(ParameterCell):
@@ -7408,19 +7494,14 @@ class ActionPerformanceProfile(ActionCell):
         self.done = True
 
 
-class ActionEditArmatureConstraint(ActionCell):
+class GESetBoneConstraintInfluence(ActionCell):
     def __init__(self):
         ActionCell.__init__(self)
         self.condition = None
         self.armature = None
-        self.constraint_name = None
-        self.enforced_factor = None
-        self.primary_target = None
-        self.secondary_target = None
-        self.active = None
-        self.ik_weight = None
-        self.ik_distance = None
-        self.distance_mode = None
+        self.bone = None
+        self.constraint = None
+        self.influence = None
         self.done = None
         self.OUT = LogicNetworkSubCell(self, self.get_done)
 
@@ -7433,58 +7514,97 @@ class ActionEditArmatureConstraint(ActionCell):
         if not_met(condition):
             return
         armature = self.get_socket_value(self.armature)
-        constraint_name = self.get_socket_value(self.constraint_name)
-        enforced_factor = self.get_socket_value(self.enforced_factor)
-        primary_target = self.get_socket_value(self.primary_target)
-        secondary_target = self.get_socket_value(self.secondary_target)
-        active = self.get_socket_value(self.active)
-        ik_weight = self.get_socket_value(self.ik_weight)
-        ik_distance = self.get_socket_value(self.ik_distance)
-        distance_mode = self.get_socket_value(self.distance_mode)
+        bone = self.get_socket_value(self.bone)
+        constraint = self.get_socket_value(self.constraint)
+        influence = self.get_socket_value(self.influence)
         if is_waiting(
             armature,
-            constraint_name,
-            enforced_factor,
-            primary_target,
-            secondary_target,
-            active,
-            ik_weight,
-            ik_distance,
-            distance_mode
+            bone,
+            constraint,
+            influence
         ):
             return
         self._set_ready()
         if is_invalid(armature):
             return
-        if invalid(primary_target):
-            primary_target = None
-        if invalid(secondary_target):
-            secondary_target = None
-        constraint = armature.constraints[constraint_name]
-        if (
-            (enforced_factor is not None) and
-            (constraint.enforce != enforced_factor)
+        armature.blenderObject.pose.bones[bone].constraints[constraint].influence = influence
+        self.done = True
+
+
+class GESetBoneConstraintTarget(ActionCell):
+    def __init__(self):
+        ActionCell.__init__(self)
+        self.condition = None
+        self.armature = None
+        self.bone = None
+        self.constraint = None
+        self.target = None
+        self.done = None
+        self.OUT = LogicNetworkSubCell(self, self.get_done)
+
+    def get_done(self):
+        return self.done
+
+    def evaluate(self):
+        self.done = False
+        condition = self.get_socket_value(self.condition)
+        if not_met(condition):
+            return
+        armature = self.get_socket_value(self.armature)
+        bone = self.get_socket_value(self.bone)
+        constraint = self.get_socket_value(self.constraint)
+        target = self.get_socket_value(self.target)
+        if is_waiting(
+            armature,
+            bone,
+            constraint,
+            target
         ):
-            constraint.enforce = enforced_factor
-        if constraint.target != primary_target:
-            constraint.target = primary_target
-        if constraint.subtarget != secondary_target:
-            constraint.subtarget = secondary_target
-        if constraint.active != active:
-            constraint.active = active
-        if (ik_weight is not None) and (constraint.ik_weight != ik_weight):
-            constraint.ik_weight = ik_weight
-        if (
-            (ik_distance is not None) and
-            (constraint.ik_distance != ik_distance)
+            return
+        self._set_ready()
+        if is_invalid(armature):
+            return
+        armature.blenderObject.pose.bones[bone].constraints[constraint].target = target.blenderObject
+        self.done = True
+
+
+class GESetBoneConstraintAttribute(ActionCell):
+    def __init__(self):
+        ActionCell.__init__(self)
+        self.condition = None
+        self.armature = None
+        self.bone = None
+        self.constraint = None
+        self.attribute = None
+        self.value = None
+        self.done = None
+        self.OUT = LogicNetworkSubCell(self, self.get_done)
+
+    def get_done(self):
+        return self.done
+
+    def evaluate(self):
+        self.done = False
+        condition = self.get_socket_value(self.condition)
+        if not_met(condition):
+            return
+        armature = self.get_socket_value(self.armature)
+        bone = self.get_socket_value(self.bone)
+        constraint = self.get_socket_value(self.constraint)
+        attribute = self.get_socket_value(self.attribute)
+        value = self.get_socket_value(self.value)
+        if is_waiting(
+            armature,
+            bone,
+            constraint,
+            attribute,
+            value
         ):
-            constraint.ik_distance = ik_distance
-        if (
-            (distance_mode is not None) and
-            (constraint.ik_mode != distance_mode)
-        ):
-            constraint.ik_mode = distance_mode
-        armature.update()
+            return
+        self._set_ready()
+        if is_invalid(armature):
+            return
+        setattr(armature.blenderObject.pose.bones[bone].constraints[constraint], attribute, value)
         self.done = True
 
 
@@ -8207,6 +8327,36 @@ class ActionCharacterJump(ActionCell):
             return
         physics.jump()
 
+        self.done = True
+
+
+class SetCharacterJumpSpeed(ActionCell):
+    def __init__(self):
+        ActionCell.__init__(self)
+        self.condition = None
+        self.game_object = None
+        self.force = None
+        self.done = None
+        self.OUT = LogicNetworkSubCell(self, self.get_done)
+
+    def get_done(self):
+        return self.done
+
+    def evaluate(self):
+        self.done = False
+        condition = self.get_socket_value(self.condition)
+        if not_met(condition):
+            self._set_ready()
+            return
+        game_object = self.get_socket_value(self.game_object)
+        force = self.get_socket_value(self.force)
+        if is_waiting(game_object):
+            return
+        physics = bge.constraints.getCharacter(game_object)
+        self._set_ready()
+        if is_invalid(game_object):
+            return
+        physics.jumpSpeed = force
         self.done = True
 
 
@@ -9225,6 +9375,7 @@ class ActionStart3DSoundAdv(ActionCell):
 
     def evaluate(self):
         self.done = False
+        self.on_finish = False
         audio_system = self.network.audio_system
         speaker = self.get_socket_value(self.speaker)
         handles = self._handles
@@ -9233,107 +9384,109 @@ class ActionStart3DSoundAdv(ActionCell):
         cone_outer_volume = self.get_socket_value(self.cone_outer_volume)
         pitch = self.get_socket_value(self.pitch) * logic.getTimeScale()
         attenuation = self.get_socket_value(self.attenuation)
-        self.on_finish = False
-        if handles:
-            for sound in handles:
-                ind = 0
-                for handle in handles[sound]:
-                    if len(handles[sound]) <= ind:
-                        continue
-                    if handle.status:
-                        self._set_ready()
-                        handle.pitch = pitch
-                        handle.location = speaker.worldPosition
-                        handle.orientation = (
-                            speaker
-                            .worldOrientation
-                            .to_quaternion()
+        to_remove = []
+        for i, sound in enumerate(handles):
+            if not handles[sound][1]:
+                to_remove.append(sound)
+            for handle in handles[sound][1]:
+                if len(handles[sound][1]) <= i:
+                    continue
+                if handle.status:
+                    self._set_ready()
+                    handle.pitch = pitch
+                    hspeaker = handles[sound][0]
+                    handle.location = hspeaker.worldPosition
+                    handle.orientation = (
+                        hspeaker
+                        .worldOrientation
+                        .to_quaternion()
+                    )
+                    if hspeaker.mass:
+                        handle.velocity = getattr(
+                            hspeaker,
+                            'worldLinearVelocity',
+                            Vector((0, 0, 0))
                         )
-                        if speaker.mass:
-                            handle.velocity = getattr(
-                                speaker,
-                                'worldLinearVelocity',
-                                Vector((0, 0, 0))
+                    if occlusion:
+                        transition = self.get_socket_value(
+                            self.transition
+                        )
+                        cam = bge.logic.getCurrentScene().active_camera
+                        occluder, point, normal = cam.rayCast(
+                            hspeaker.worldPosition,
+                            cam.worldPosition,
+                            compute_distance(hspeaker, cam),
+                            xray=False
+                        )
+                        occluded = False
+                        penetration = 1
+                        while occluder:
+                            if occluder is hspeaker:
+                                break
+                            sound_occluder = occluder.blenderObject.get(
+                                'sound_occluder',
+                                True
                             )
-                        if occlusion:
-                            transition = self.get_socket_value(
-                                self.transition
-                            )
-                            cam = bge.logic.getCurrentScene().active_camera
-                            occluder, point, normal = cam.rayCast(
+                            if sound_occluder:
+                                occluded = True
+                                block = occluder.blenderObject.get(
+                                    'sound_blocking',
+                                    .1
+                                )
+                                if penetration > 0:
+                                    penetration -= block
+                                else:
+                                    penetration = 0
+                                # attenuation *= 1 + block / 2
+                            occluder, point, normal = occluder.rayCast(
                                 speaker.worldPosition,
-                                cam.worldPosition,
-                                compute_distance(speaker, cam),
+                                point,
+                                compute_distance(speaker, point),
                                 xray=False
                             )
-                            occluded = False
-                            penetration = 1
-                            while occluder:
-                                if occluder is speaker:
-                                    break
-                                sound_occluder = occluder.blenderObject.get(
-                                    'sound_occluder',
-                                    True
-                                )
-                                if sound_occluder:
-                                    occluded = True
-                                    block = occluder.blenderObject.get(
-                                        'sound_blocking',
-                                        .1
-                                    )
-                                    if penetration > 0:
-                                        penetration -= block
-                                    else:
-                                        penetration = 0
-                                    # attenuation *= 1 + block / 2
-                                occluder, point, normal = occluder.rayCast(
-                                    speaker.worldPosition,
-                                    point,
-                                    compute_distance(speaker, point),
-                                    xray=False
-                                )
-                            cs = self._clear_sound
-                            if occluded and cs > 0:
-                                self._clear_sound -= transition
-                            elif not occluded and cs < 1:
-                                self._clear_sound += transition
-                            if self._clear_sound < 0:
-                                self._clear_sound = 0
-                            sustained = self._sustained
-                            if sustained > penetration:
-                                self._sustained -= transition / 10
-                            elif sustained < penetration:
-                                self._sustained += transition / 10
-                            mult = (
-                                cs * sustained
-                                if not ind
-                                else (1 - cs) * sustained
-                            )
-                            # handles[sound][ind].attenuation = attenuation
-                            handles[sound][ind].volume = volume * mult
-                            handles[sound][ind].cone_volume_outer = (
-                                cone_outer_volume *
-                                volume *
-                                mult
-                            )
-                        else:
-                            handles[sound][ind].volume = volume
-                            handles[sound][ind].cone_volume_outer = (
-                                cone_outer_volume *
-                                volume
-                            )
-                    elif handle in audio_system.active_sounds:
-                        for handle in handles[sound]:
-                            audio_system.active_sounds.remove(handle)
-                            handles[sound] = []
-                        self.on_finish = True
-                        ind = 0
-                        continue
-                    ind += 1
+                        cs = self._clear_sound
+                        if occluded and cs > 0:
+                            self._clear_sound -= transition
+                        elif not occluded and cs < 1:
+                            self._clear_sound += transition
+                        if self._clear_sound < 0:
+                            self._clear_sound = 0
+                        sustained = self._sustained
+                        if sustained > penetration:
+                            self._sustained -= transition / 10
+                        elif sustained < penetration:
+                            self._sustained += transition / 10
+                        mult = (
+                            cs * sustained
+                            if not i
+                            else (1 - cs) * sustained
+                        )
+                        # handles[sound][ind].attenuation = attenuation
+                        handles[sound][1][i].volume = volume * mult
+                        handles[sound][1][i].cone_volume_outer = (
+                            cone_outer_volume *
+                            volume *
+                            mult
+                        )
+                    else:
+                        handles[sound][1][i].volume = volume
+                        handles[sound][1][i].cone_volume_outer = (
+                            cone_outer_volume *
+                            volume
+                        )
+                elif handle in audio_system.active_sounds:
+                    for handle in handles[sound][1]:
+                        audio_system.active_sounds.remove(handle)
+                        handles[sound][1].remove(handle)
+                    continue
         else:
             self._handle = None
+        for sound in to_remove:
+            self.on_finish = True
+            self._handles.pop(sound)
         condition = self.get_socket_value(self.condition)
         if not_met(condition):
+            self._set_ready()
             return
         if not self.device:
             self.device = audio_system.device
@@ -9354,10 +9507,10 @@ class ActionStart3DSoundAdv(ActionCell):
         if occlusion:
             soundlow = aud.Sound.lowpass(soundfile, 4000*cutoff, .5)
             handlelow = self.device.play(soundlow)
-            self._handles[soundfile] = [handle, handlelow]
+            self._handles[soundfile] = [speaker, [handle, handlelow]]
         else:
-            self._handles[soundfile] = [handle]
-        for handle in self._handles[soundfile]:
+            self._handles[soundfile] = [speaker, [handle]]
+        for handle in self._handles[soundfile][1]:
             handle.relative = False
             handle.location = speaker.worldPosition
             if speaker.mass:
@@ -9431,6 +9584,7 @@ class ActionStartSound(ActionCell):
                 self._handle = None
         condition = self.get_socket_value(self.condition)
         if not_met(condition):
+            self._set_ready()
             return
         sound = self.get_socket_value(self.sound)
         loop_count = self.get_socket_value(self.loop_count)
@@ -9573,10 +9727,12 @@ class ParameterGetGlobalValue(ParameterCell):
         data_id = self.get_socket_value(self.data_id)
         key = self.get_socket_value(self.key)
         default = self.get_socket_value(self.default)
+        if isinstance(default, Invalid):
+            default = None
         if is_waiting(data_id, key, default):
             return
         self._set_ready()
-        db = SimpleLoggingDatabase.get_or_create_shared_db(data_id)
+        db = GlobalDB.retrieve(data_id)
         self._set_value(db.get(key, default))
 
 
@@ -9596,7 +9752,7 @@ class ActionListGlobalValues(ParameterCell):
         if is_waiting(data_id, print_d):
             return
         self._set_ready()
-        db = SimpleLoggingDatabase.get_or_create_shared_db(data_id)
+        db = GlobalDB.retrieve(data_id)
         if print_d:
             print(f'[Logic Nodes] Global category "{data_id}":')
             for e in db.data:
@@ -9663,7 +9819,7 @@ class ActionSetGlobalValue(ActionCell):
                 return
             if key is None:
                 return
-            db = SimpleLoggingDatabase.get_or_create_shared_db(data_id)
+            db = GlobalDB.retrieve(data_id)
             db.put(key, value, persistent)
             if self.condition is None:
                 self.deactivate()
@@ -9698,6 +9854,8 @@ class CreateMessage(ActionCell):
             return
         self.old_subject = subject
         body = self.get_socket_value(self.body)
+        if isinstance(body, Invalid):
+            body = None
         target = self.get_socket_value(self.target)
         if is_waiting(body, target):
             return
@@ -9751,6 +9909,7 @@ class ActionRandomInt(ActionCell):
         self._done = False
         condition = self.get_socket_value(self.condition)
         if not_met(condition):
+            self._set_ready()
             return
         min_value = self.get_socket_value(self.min_value)
         max_value = self.get_socket_value(self.max_value)
@@ -9788,6 +9947,7 @@ class ActionRandomFloat(ActionCell):
         self._done = False
         condition = self.get_socket_value(self.condition)
         if not_met(condition):
+            self._set_ready()
             return
         min_value = self.get_socket_value(self.min_value)
         max_value = self.get_socket_value(self.max_value)
@@ -9802,6 +9962,42 @@ class ActionRandomFloat(ActionCell):
 
         delta = max_value - min_value
         self._output = min_value + (delta * random.random())
+        self._done = True
+
+
+class GERandomVect(ActionCell):
+    def __init__(self):
+        ActionCell.__init__(self)
+        self.condition = None
+        self.xyz = None
+        self._output = None
+        self._done = False
+        self.OUT_A = LogicNetworkSubCell(self, self._get_output)
+        self.DONE = LogicNetworkSubCell(self, self._get_done)
+
+    def _get_output(self):
+        return self._output
+
+    def _get_done(self):
+        return self._done
+
+    def evaluate(self):
+        self._done = False
+        condition = self.get_socket_value(self.condition)
+        if not_met(condition):
+            self._set_ready()
+            return
+        xyz = self.get_socket_value(self.xyz)
+        if is_waiting(xyz):
+            return
+        self._set_ready()
+        vmin, vmax = -999999999, 999999999
+        delta = vmax - vmin
+        x = vmin + (delta * random.random()) if xyz['x'] else 0
+        y = vmin + (delta * random.random()) if xyz['y'] else 0
+        z = vmin + (delta * random.random()) if xyz['z'] else 0
+        self._output = Vector((x, y, z))
+            
         self._done = True
 
 
@@ -10131,6 +10327,102 @@ class SetLightEnergy(ActionCell):
         self.done = True
 
 
+class GEMakeUniqueLight(ActionCell):
+
+    def __init__(self):
+        ActionCell.__init__(self)
+        self.condition = None
+        self.light = None
+        self.done = None
+        self._light = None
+        self.OUT = LogicNetworkSubCell(self, self.get_done)
+        self.LIGHT = LogicNetworkSubCell(self, self.get_light)
+
+    def get_done(self):
+        return self.done
+
+    def get_light(self):
+        return self._light
+
+    def evaluate(self):
+        self.done = False
+        condition = self.get_socket_value(self.condition)
+        if not_met(condition):
+            self._set_value(False)
+            return self._set_ready()
+        old_lamp_ge = self.get_socket_value(self.light)
+        if is_waiting(old_lamp_ge):
+            return
+        self._set_ready()
+
+        scene = logic.getCurrentScene()
+        name = old_lamp_ge.name
+        old_lamp = old_lamp_ge.blenderObject
+        old_lamp.name = 'OLD_LAMP'
+
+        settings = [
+            'color',
+            'energy',
+            'diffuse_factor',
+            'specular_factor',
+            'volume_factor',
+            'shadow_soft_size',
+            'use_custom_distance',
+            'cutoff_distance',
+            'spot_size',
+            'spot_blend',
+            'show_cone',
+            'angle',
+            'shape',
+            'size',
+            'size_y'
+            'use_shadow',
+            'shadow_buffer_clip_start',
+            'shadow_buffer_bias',
+            'use_soft_shadows',
+            'use_contact_shadow',
+            'contact_shadow_distance',
+            'contact_shadow_bias',
+            'contact_shadow_thickness',
+            'shadow_cascade_count',
+            'shadow_cascade_fade',
+            'shadow_cascade_max_distance',
+            'shadow_cascade_exponent',
+        ]
+
+        types = {
+            'POINT': 'Point',
+            'AREA': 'Area',
+            'SPOT': 'Spot',
+            'SUN': 'Sun'
+        }
+
+        light_type = old_lamp.data.type
+        bpy.ops.object.light_add(type=light_type, location=old_lamp_ge.worldPosition, rotation=old_lamp_ge.worldOrientation.to_euler())
+        index = 1
+        light = None
+        while light is None:
+            if types[light_type] in bpy.data.objects[-index].name:
+                light = bpy.data.objects[-index]
+            index += 1
+        for attr in settings:
+            try:
+                setattr(light.data, attr, getattr(old_lamp.data, attr))
+            except:
+                pass
+        old_lamp_ge.endObject()
+        real_name = light.name
+        light.name = name
+        scene.convertBlenderObject(light)
+        light.name = real_name
+
+        light = scene.getGameObjectFromObject(light)
+        if old_lamp_ge.parent:
+            light.setParent(old_lamp_ge.parent)
+
+        self.done = True
+
+
 class SetLightShadow(ActionCell):
 
     def __init__(self):
@@ -10307,7 +10599,7 @@ class ActionTrackTo(ActionCell):
             self._set_value(
                 xrot_to(
                     moving_object,
-                    target_object,
+                    target_object.worldPosition,
                     front_axis,
                     speed,
                     self.network.time_per_frame
@@ -10317,7 +10609,7 @@ class ActionTrackTo(ActionCell):
             self._set_value(
                 yrot_to(
                     moving_object,
-                    target_object,
+                    target_object.worldPosition,
                     front_axis,
                     speed,
                     self.network.time_per_frame
@@ -10327,7 +10619,7 @@ class ActionTrackTo(ActionCell):
             self._set_value(
                 zrot_to(
                     moving_object,
-                    target_object,
+                    target_object.worldPosition,
                     front_axis,
                     speed,
                     self.network.time_per_frame
@@ -10340,6 +10632,7 @@ class ActionRotateTo(ActionCell):
         self.condition = None
         self.moving_object = None
         self.target_point = None
+        self.speed = None
         self.rot_axis = 2
         self.front_axis = 0
 
@@ -10350,11 +10643,12 @@ class ActionRotateTo(ActionCell):
             return
         moving_object = self.get_socket_value(self.moving_object)
         target_point = self.get_socket_value(self.target_point)
+        speed = self.get_socket_value(self.speed)
         if hasattr(target_point, 'worldPosition'):
             target_point = target_point.worldPosition
         rot_axis = self.get_socket_value(self.rot_axis)
         front_axis = self.get_socket_value(self.front_axis)
-        if is_waiting(moving_object, target_point, rot_axis, front_axis):
+        if is_waiting(moving_object, target_point, speed, rot_axis, front_axis):
             return
         self._set_ready()
         if rot_axis == 0:
@@ -10363,7 +10657,7 @@ class ActionRotateTo(ActionCell):
                     moving_object,
                     target_point,
                     front_axis,
-                    0,
+                    speed,
                     self.network.time_per_frame
                 )
             )
@@ -10373,7 +10667,7 @@ class ActionRotateTo(ActionCell):
                     moving_object,
                     target_point,
                     front_axis,
-                    0,
+                    speed,
                     self.network.time_per_frame
                 )
             )
@@ -10383,7 +10677,7 @@ class ActionRotateTo(ActionCell):
                     moving_object,
                     target_point,
                     front_axis,
-                    0,
+                    speed,
                     self.network.time_per_frame
                 )
             )
@@ -10494,7 +10788,7 @@ class ActionNavigateWithNavmesh(ActionCell):
                     rot_speed,
                     tpf
                 )
-            ths = reach_threshold if next_point == self._motion_path.destination else .1
+            ths = reach_threshold # if next_point == self._motion_path.destination else .1
             reached = move_to(
                 moving_object,
                 next_point,
@@ -10538,8 +10832,9 @@ class ActionFollowPath(ActionCell):
         self.condition = None
         self.moving_object = None
         self.rotating_object = None
-        self.path_parent = None
+        self.path_points = None
         self.loop = None
+        self.path_continue = None
         self.navmesh_object = None
         self.move_dynamic = None
         self.linear_speed = None
@@ -10558,13 +10853,15 @@ class ActionFollowPath(ActionCell):
     def evaluate(self):
         self.done = False
         condition = self.get_socket_value(self.condition)
+        path_continue = self.get_socket_value(self.path_continue)
         if not_met(condition):
-            self._motion_path = None
+            if not path_continue:
+                self._motion_path = None
             self._set_ready()
             return
         moving_object = self.get_socket_value(self.moving_object)
         rotating_object = self.get_socket_value(self.rotating_object)
-        path_parent = self.get_socket_value(self.path_parent)
+        path_points = self.get_socket_value(self.path_points)
         navmesh_object = self.get_socket_value(self.navmesh_object)
         move_dynamic = self.get_socket_value(self.move_dynamic)
         linear_speed = self.get_socket_value(self.linear_speed)
@@ -10575,7 +10872,7 @@ class ActionFollowPath(ActionCell):
         rot_speed = self.get_socket_value(self.rot_speed)
         loop = self.get_socket_value(self.loop)
         if is_invalid(
-            path_parent,
+            path_points,
             move_dynamic,
             linear_speed,
             reach_threshold,
@@ -10598,7 +10895,7 @@ class ActionFollowPath(ActionCell):
         if (self._motion_path is None) or (self._motion_path.loop != loop):
             self.generate_path(
                 moving_object.worldPosition,
-                path_parent,
+                path_points,
                 navmesh_object,
                 loop
             )
@@ -10628,9 +10925,8 @@ class ActionFollowPath(ActionCell):
                     self._set_value(True)
                     self.done = True
 
-    def generate_path(self, start_position, path_parent, navmesh_object, loop):
-        children = sorted(path_parent.children, key=lambda o: o.name)
-        if not children:
+    def generate_path(self, start_position, path_points, navmesh_object, loop):
+        if not path_points:
             return self._motion_path.points.clear()
         path = ActionFollowPath.MotionPath()
         path.loop = loop
@@ -10640,28 +10936,28 @@ class ActionFollowPath(ActionCell):
             points.append(Vector(start_position))
             if loop:
                 path.loop_start = 1
-            for c in children:
-                points.append(c.worldPosition.copy())
+            for p in path_points:
+                points.append(Vector(p))
         else:
-            last = children[-1]
+            last = path_points[-1]
             mark_loop_position = loop
-            for c in children:
+            for p in path_points:
                 subpath = navmesh_object.findPath(
                     start_position,
-                    c.worldPosition
+                    Vector(p)
                 )
-                if c is last:
+                if p is last:
                     points.extend(subpath)
                 else:
                     points.extend(subpath[:-1])
                 if mark_loop_position:
                     path.loop_start = len(points)
                     mark_loop_position = False
-                start_position = c.worldPosition
+                start_position = Vector(p)
             if loop:
                 subpath = navmesh_object.findPath(
-                    last.worldPosition,
-                    children[0].worldPosition
+                    Vector(last),
+                    Vector(path_points[0])
                 )
                 points.extend(subpath[1:])
 
