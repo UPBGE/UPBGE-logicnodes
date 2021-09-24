@@ -507,6 +507,18 @@ def filter_lights(self, item):
     return False
 
 
+def filter_navmesh(self, item):
+    if item.game.physics_type == 'NAVMESH':
+        return True
+    return False
+
+
+def filter_camera(self, item):
+    if isinstance(item.data, bpy.types.Camera):
+        return True
+    return False
+
+
 def filter_armatures(self, item):
     if (
         isinstance(item.data, bpy.types.Armature)
@@ -1099,6 +1111,99 @@ class NLGameObjectSocket(bpy.types.NodeSocket, NetLogicSocketType):
 
 
 _sockets.append(NLGameObjectSocket)
+
+
+class NLCameraSocket(bpy.types.NodeSocket, NetLogicSocketType):
+    bl_idname = "NLCameraSocket"
+    bl_label = "Camera"
+    value: bpy.props.PointerProperty(
+        name='Object',
+        type=bpy.types.Object,
+        poll=filter_camera,
+        update=update_tree_code
+    )
+
+    def draw_color(self, context, node):
+        return PARAM_OBJ_SOCKET_COLOR
+
+    def draw(self, context, layout, node, text):
+        if self.is_output:
+            layout.label(text=self.name)
+        elif self.is_linked:
+            layout.label(text=self.name)
+        else:
+            col = layout.column(align=False)
+            row = col.row()
+            if self.name:
+                row.label(text=self.name)
+            col.prop_search(
+                self,
+                'value',
+                bpy.context.scene,
+                'objects',
+                icon='NONE',
+                text=''
+            )
+
+    def get_unlinked_value(self):
+        if isinstance(self.value, bpy.types.Object):
+            return '"NLO:{}"'.format(self.value.name)
+
+
+_sockets.append(NLCameraSocket)
+
+
+class NLNavMeshSocket(bpy.types.NodeSocket, NetLogicSocketType):
+    bl_idname = "NLNavMeshSocket"
+    bl_label = "Object"
+    value: bpy.props.PointerProperty(
+        name='Object',
+        type=bpy.types.Object,
+        poll=filter_navmesh,
+        update=update_tree_code
+    )
+    use_owner: bpy.props.BoolProperty(
+        name='Use Owner',
+        update=update_tree_code,
+        description='Use the owner of this tree'
+    )
+
+    def draw_color(self, context, node):
+        return PARAM_OBJ_SOCKET_COLOR
+
+    def draw(self, context, layout, node, text):
+        if self.is_output:
+            layout.label(text=self.name)
+        elif self.is_linked:
+            layout.label(text=self.name)
+        else:
+            if not self.use_owner:
+                col = layout.column(align=False)
+                row = col.row()
+                if self.name:
+                    row.label(text=self.name)
+                row.prop(self, 'use_owner', icon='USER', text='')
+                col.prop_search(
+                    self,
+                    'value',
+                    bpy.context.scene,
+                    'objects',
+                    icon='NONE',
+                    text=''
+                )
+            else:
+                row = layout.row()
+                row.label(text=self.name)
+                row.prop(self, 'use_owner', icon='USER', text='')
+
+    def get_unlinked_value(self):
+        if self.use_owner:
+            return '"NLO:U_O"'
+        if isinstance(self.value, bpy.types.Object):
+            return '"NLO:{}"'.format(self.value.name)
+
+
+_sockets.append(NLNavMeshSocket)
 
 
 class NLLightObjectSocket(bpy.types.NodeSocket, NetLogicSocketType):
@@ -2472,7 +2577,7 @@ class NLQuotedStringFieldSocket(bpy.types.NodeSocket, NetLogicSocketType):
                 row2 = col.row()
                 row2.prop(self, 'value', text='')
             else:
-                parts = layout.split()
+                parts = layout.split(factor=.4)
                 parts.label(text=text)
                 parts.prop(self, "value", text='')
 
@@ -2762,7 +2867,7 @@ class NLOptionalValueFieldSocket(bpy.types.NodeSocket, NetLogicSocketType):
         return PARAMETER_SOCKET_COLOR
 
     def get_unlinked_value(self):
-        return socket_field(self) if self.use_value or self.is_linked else "bgelogic.Invalid()"
+        return socket_field(self) if self.use_value or self.is_linked else "definitions.Invalid()"
 
     def draw(self, context, layout, node, text):
         if self.is_linked or self.is_output:
@@ -3742,7 +3847,7 @@ class NLParameterFindChildByNameNode(bpy.types.Node, NLParameterNode):
         self.outputs.new(NLGameObjectSocket.bl_idname, "Child")
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ParameterFindChildByName"
+        return "definitions.ParameterFindChildByName"
 
     def get_input_sockets_field_names(self):
         return ["from_parent", "child"]
@@ -3767,7 +3872,7 @@ class NLParameterFindChildByIndexNode(bpy.types.Node, NLParameterNode):
         self.outputs.new(NLGameObjectSocket.bl_idname, "Child")
 
     def get_netlogic_class_name(self):
-        return "bgelogic.FindChildByIndex"
+        return "definitions.FindChildByIndex"
 
     def get_input_sockets_field_names(self):
         return ["from_parent", "index"]
@@ -3791,7 +3896,7 @@ class NLParameterGetAttribute(bpy.types.Node, NLParameterNode):
         self.outputs.new(NLParameterSocket.bl_idname, "Value")
 
     def get_netlogic_class_name(self):
-        return "bgelogic.GetObInstanceAttr"
+        return "definitions.GetObInstanceAttr"
 
     def get_input_sockets_field_names(self):
         return ['instance', 'attr']
@@ -3810,7 +3915,7 @@ class NLGetScene(bpy.types.Node, NLParameterNode):
         self.outputs.new(NLPythonSocket.bl_idname, "Scene")
 
     def get_netlogic_class_name(self):
-        return "bgelogic.GetScene"
+        return "definitions.GetScene"
 
 
 _nodes.append(NLGetScene)
@@ -3826,7 +3931,7 @@ class NLParameterGetTimeScale(bpy.types.Node, NLParameterNode):
         self.outputs.new(NLParameterSocket.bl_idname, "Timescale")
 
     def get_netlogic_class_name(self):
-        return "bgelogic.GetTimeScale"
+        return "definitions.GetTimeScale"
 
 
 _nodes.append(NLParameterGetTimeScale)
@@ -3846,7 +3951,7 @@ class NLParameterScreenPosition(bpy.types.Node, NLParameterNode):
         self.outputs.new(NLParameterSocket.bl_idname, "Screen Y")
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ParameterScreenPosition"
+        return "definitions.ParameterScreenPosition"
 
     def get_input_sockets_field_names(self):
         return ["game_object", "camera"]
@@ -3873,7 +3978,7 @@ class NLParameterWorldPosition(bpy.types.Node, NLParameterNode):
         self.outputs.new(NLParameterSocket.bl_idname, "World Position")
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ParameterWorldPosition"
+        return "definitions.ParameterWorldPosition"
 
     def get_input_sockets_field_names(self):
         return ["camera", "screen_x", "screen_y", "world_z"]
@@ -3895,7 +4000,7 @@ class NLCursorBehavior(bpy.types.Node, NLParameterNode):
         self.outputs.new(NLConditionSocket.bl_idname, "Done")
 
     def get_netlogic_class_name(self):
-        return "bgelogic.GECursorBehavior"
+        return "definitions.GECursorBehavior"
 
     def get_output_socket_varnames(self):
         return ["OUT"]
@@ -3922,7 +4027,7 @@ class NLOwnerGameObjectParameterNode(bpy.types.Node, NLParameterNode):
         self.outputs.new(NLGameObjectSocket.bl_idname, "Owner Object")
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ParamOwnerObject"
+        return "definitions.ParamOwnerObject"
 
 
 _nodes.append(NLOwnerGameObjectParameterNode)
@@ -3938,7 +4043,7 @@ class NLGetVsyncNode(bpy.types.Node, NLParameterNode):
         self.outputs.new(NLParameterSocket.bl_idname, "Mode")
 
     def get_netlogic_class_name(self):
-        return "bgelogic.GetVSync"
+        return "definitions.GetVSync"
 
 
 _nodes.append(NLGetVsyncNode)
@@ -3954,7 +4059,7 @@ class NLGetFullscreen(bpy.types.Node, NLParameterNode):
         self.outputs.new(NLParameterSocket.bl_idname, "Fullscreen")
 
     def get_netlogic_class_name(self):
-        return "bgelogic.GetFullscreen"
+        return "definitions.GetFullscreen"
 
 
 _nodes.append(NLGetFullscreen)
@@ -3977,7 +4082,7 @@ class NLDrawLine(bpy.types.Node, NLParameterNode):
         return ['condition', 'color', 'from_point', 'to_point']
 
     def get_netlogic_class_name(self):
-        return "bgelogic.GEDrawLine"
+        return "definitions.GEDrawLine"
 
 
 _nodes.append(NLDrawLine)
@@ -3995,7 +4100,7 @@ class NLGetResolution(bpy.types.Node, NLParameterNode):
         self.outputs.new(NLVec2FieldSocket.bl_idname, "Resolution")
 
     def get_netlogic_class_name(self):
-        return "bgelogic.GetResolution"
+        return "definitions.GetResolution"
 
     def get_output_socket_varnames(self):
         return ['WIDTH', 'HEIGHT', 'RES']
@@ -4019,7 +4124,7 @@ class NLGameObjectPropertyParameterNode(bpy.types.Node, NLParameterNode):
         self.outputs.new(NLParameterSocket.bl_idname, "Property Value")
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ParameterObjectProperty"
+        return "definitions.ParameterObjectProperty"
 
     def get_input_sockets_field_names(self):
         return ["game_object", "property_name"]
@@ -4067,7 +4172,7 @@ class NLGetGeometryNodeValue(bpy.types.Node, NLParameterNode):
             ipt.name = name
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ParameterGetNodeTreeNodeValue"
+        return "definitions.ParameterGetNodeTreeNodeValue"
 
     def get_input_sockets_field_names(self):
         return ["tree_name", 'node_name', "input_slot"]
@@ -4106,7 +4211,7 @@ class NLGetGeometryNodeAttribute(bpy.types.Node, NLParameterNode):
             itl.enabled = att.enabled = False
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ParameterGetNodeTreeNodeAttribute"
+        return "definitions.ParameterGetNodeTreeNodeAttribute"
 
     def get_input_sockets_field_names(self):
         return ["tree_name", 'node_name', "internal", 'attribute']
@@ -4154,7 +4259,7 @@ class NLGetNodeGroupNodeValue(bpy.types.Node, NLParameterNode):
             ipt.name = name
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ParameterGetNodeTreeNodeValue"
+        return "definitions.ParameterGetNodeTreeNodeValue"
 
     def get_input_sockets_field_names(self):
         return ["tree_name", 'node_name', "input_slot"]
@@ -4193,7 +4298,7 @@ class NLGetNodeTreeNodeAttribute(bpy.types.Node, NLParameterNode):
             itl.enabled = att.enabled = False
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ParameterGetNodeTreeNodeAttribute"
+        return "definitions.ParameterGetNodeTreeNodeAttribute"
 
     def get_input_sockets_field_names(self):
         return ["tree_name", 'node_name', "internal", 'attribute']
@@ -4241,7 +4346,7 @@ class NLGetMaterialNodeValue(bpy.types.Node, NLParameterNode):
             ipt.name = name
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ParameterGetMaterialNodeValue"
+        return "definitions.ParameterGetMaterialNodeValue"
 
     def get_input_sockets_field_names(self):
         return ["mat_name", 'node_name', "input_slot"]
@@ -4280,7 +4385,7 @@ class NLGetMaterialNodeAttribute(bpy.types.Node, NLParameterNode):
             itl.enabled = att.enabled = False
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ParameterGetMaterialNodeAttribute"
+        return "definitions.ParameterGetMaterialNodeAttribute"
 
     def get_input_sockets_field_names(self):
         return ["mat_name", 'node_name', "internal", 'attribute']
@@ -4306,7 +4411,7 @@ class NLGetMaterialNode(bpy.types.Node, NLParameterNode):
         self.outputs.new(NLParameterSocket.bl_idname, "Node")
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ParameterGetMaterialNode"
+        return "definitions.ParameterGetMaterialNode"
 
     def get_input_sockets_field_names(self):
         return ["mat_name", 'node_name']
@@ -4333,7 +4438,7 @@ class NLGameObjectHasPropertyParameterNode(bpy.types.Node, NLParameterNode):
         self.outputs.new(NLConditionSocket.bl_idname, "If True")
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ParameterObjectHasProperty"
+        return "definitions.ParameterObjectHasProperty"
 
     def get_input_sockets_field_names(self):
         return ["game_object", "property_name"]
@@ -4359,7 +4464,7 @@ class NLGetDictKeyNode(bpy.types.Node, NLParameterNode):
         self.outputs.new(NLParameterSocket.bl_idname, "Property Value")
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ParameterDictionaryValue"
+        return "definitions.ParameterDictionaryValue"
 
     def get_input_sockets_field_names(self):
         return ["dict", "key"]
@@ -4384,7 +4489,7 @@ class NLGetRandomListIndex(bpy.types.Node, NLParameterNode):
         self.outputs.new(NLParameterSocket.bl_idname, "Value")
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ParameterRandomListIndex"
+        return "definitions.ParameterRandomListIndex"
 
     def get_input_sockets_field_names(self):
         return ["condition", "items"]
@@ -4409,7 +4514,7 @@ class NLDuplicateList(bpy.types.Node, NLParameterNode):
         self.outputs.new(NLListSocket.bl_idname, "List")
 
     def get_netlogic_class_name(self):
-        return "bgelogic.DuplicateList"
+        return "definitions.DuplicateList"
 
     def get_input_sockets_field_names(self):
         return ["items"]
@@ -4434,7 +4539,7 @@ class NLGetListIndexNode(bpy.types.Node, NLParameterNode):
         self.outputs.new(NLParameterSocket.bl_idname, "Value")
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ParameterListIndex"
+        return "definitions.ParameterListIndex"
 
     def get_input_sockets_field_names(self):
         return ["items", "index"]
@@ -4462,7 +4567,7 @@ class NLGetActuatorNode(bpy.types.Node, NLParameterNode):
         NLParameterNode.init(self, context)
         self.outputs.new(NLLogicBrickSocket.bl_idname, "Actuator")
 
-    def get_netlogic_class_name(self): return "bgelogic.GetActuator"
+    def get_netlogic_class_name(self): return "definitions.GetActuator"
 
     def draw_buttons(self, context, layout):
         col = layout.column()
@@ -4493,12 +4598,12 @@ class NLGetActuatorNode(bpy.types.Node, NLParameterNode):
     def get_nonsocket_fields(self):
         return [
             (
-                "obj_name", lambda: 'bgelogic.GetActuator.obj("{}")'.format(
+                "obj_name", lambda: 'definitions.GetActuator.obj("{}")'.format(
                     'NLO:{}'.format(self.obj.name)
                 )
             ),
             (
-                "act_name", lambda: 'bgelogic.GetActuator.act("{}")'.format(
+                "act_name", lambda: 'definitions.GetActuator.act("{}")'.format(
                     self.actuator
                 )
             )
@@ -4523,7 +4628,7 @@ class NLGetActuatorNameNode(bpy.types.Node, NLParameterNode):
         self.outputs.new(NLLogicBrickSocket.bl_idname, "Actuator")
 
     def get_netlogic_class_name(self):
-        return "bgelogic.GetActuatorByName"
+        return "definitions.GetActuatorByName"
 
     def get_input_sockets_field_names(self):
         return ["act_name"]
@@ -4548,7 +4653,7 @@ class NLGetActuatorValue(bpy.types.Node, NLParameterNode):
         self.outputs.new(NLParameterSocket.bl_idname, "Value")
 
     def get_netlogic_class_name(self):
-        return "bgelogic.GetActuatorValue"
+        return "definitions.GetActuatorValue"
 
     def get_input_sockets_field_names(self):
         return ["actuator", 'field']
@@ -4576,7 +4681,7 @@ class NLRunActuatorNode(bpy.types.Node, NLActionNode):
         return ["OUT"]
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ActivateActuator"
+        return "definitions.ActivateActuator"
 
     def get_input_sockets_field_names(self):
         return ["condition", 'actuator']
@@ -4600,7 +4705,7 @@ class NLDisableActuatorNode(bpy.types.Node, NLActionNode):
     def get_output_socket_varnames(self):
         return ["OUT"]
 
-    def get_netlogic_class_name(self): return "bgelogic.DeactivateActuator"
+    def get_netlogic_class_name(self): return "definitions.DeactivateActuator"
 
     def get_input_sockets_field_names(self):
         return ["condition", 'actuator']
@@ -4625,7 +4730,7 @@ class NLRunActuatorByNameNode(bpy.types.Node, NLActionNode):
         return ["OUT"]
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ActivateActuatorByName"
+        return "definitions.ActivateActuatorByName"
 
     def get_input_sockets_field_names(self):
         return ["condition", 'actuator']
@@ -4650,7 +4755,7 @@ class NLDisableActuatorByNameNode(bpy.types.Node, NLActionNode):
         return ["OUT"]
 
     def get_netlogic_class_name(self):
-        return "bgelogic.DeactivateActuatorByName"
+        return "definitions.DeactivateActuatorByName"
 
     def get_input_sockets_field_names(self):
         return ["condition", 'actuator']
@@ -4676,7 +4781,7 @@ class NLSetActuatorValueNode(bpy.types.Node, NLActionNode):
     def get_output_socket_varnames(self):
         return ["OUT"]
 
-    def get_netlogic_class_name(self): return "bgelogic.SetActuatorValue"
+    def get_netlogic_class_name(self): return "definitions.SetActuatorValue"
 
     def get_input_sockets_field_names(self):
         return ["condition", 'actuator', 'field', 'value']
@@ -4705,7 +4810,7 @@ class NLVectorMath(bpy.types.Node, NLParameterNode):
         self.outputs.new(NLParameterSocket.bl_idname, 'Result')
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ParameterVectorMath"
+        return "definitions.ParameterVectorMath"
 
     def update_draw(self):
         vtype = self.operator
@@ -4766,7 +4871,7 @@ class NLVectorAngle(bpy.types.Node, NLParameterNode):
         self.outputs.new(NLConditionSocket.bl_idname, 'If True')
 
     def get_netlogic_class_name(self):
-        return "bgelogic.VectorAngle"
+        return "definitions.VectorAngle"
 
     def get_input_sockets_field_names(self):
         return ["vector", 'vector_2', 'value']
@@ -4795,7 +4900,7 @@ class NLVectorAngleCheck(bpy.types.Node, NLParameterNode):
         self.outputs.new(NLFloatFieldSocket.bl_idname, "Angle")
 
     def get_netlogic_class_name(self):
-        return "bgelogic.VectorAngleCheck"
+        return "definitions.VectorAngleCheck"
 
     def get_input_sockets_field_names(self):
         return ["vector", 'vector_2', 'value']
@@ -4840,7 +4945,7 @@ class NLGetSensorNode(bpy.types.Node, NLParameterNode):
         self.outputs.new(NLConditionSocket.bl_idname, "If positive")
 
     def get_netlogic_class_name(self):
-        return "bgelogic.GetSensor"
+        return "definitions.GetSensor"
 
     def draw_buttons(self, context, layout):
         col = layout.column()
@@ -4871,12 +4976,12 @@ class NLGetSensorNode(bpy.types.Node, NLParameterNode):
     def get_nonsocket_fields(self):
         return [
             (
-                "obj_name", lambda: 'bgelogic.GetSensor.obj("{}")'.format(
+                "obj_name", lambda: 'definitions.GetSensor.obj("{}")'.format(
                     'NLO:{}'.format(self.obj.name)
                 )
             ),
             (
-                "sens_name", lambda: 'bgelogic.GetSensor.sens("{}")'.format(
+                "sens_name", lambda: 'definitions.GetSensor.sens("{}")'.format(
                     self.sensor
                 )
             )
@@ -4905,7 +5010,7 @@ class NLGetSensorNameNode(bpy.types.Node, NLParameterNode):
         return ["obj", "name"]
 
     def get_netlogic_class_name(self):
-        return "bgelogic.GetSensorByName"
+        return "definitions.GetSensorByName"
 
     def get_output_socket_varnames(self):
         return [OUTCELL]
@@ -4931,7 +5036,7 @@ class NLGetSensorValueNameNode(bpy.types.Node, NLParameterNode):
         return ["obj", "name", 'field']
 
     def get_netlogic_class_name(self):
-        return "bgelogic.GetSensorValueByName"
+        return "definitions.GetSensorValueByName"
 
     def get_output_socket_varnames(self):
         return [OUTCELL]
@@ -4957,7 +5062,7 @@ class NLSensorValueNode(bpy.types.Node, NLParameterNode):
         self.inputs.new(NLQuotedStringFieldSocket.bl_idname, 'Field')
         self.outputs.new(NLParameterSocket.bl_idname, "Value")
 
-    def get_netlogic_class_name(self): return "bgelogic.SensorValue"
+    def get_netlogic_class_name(self): return "definitions.SensorValue"
 
     def get_input_sockets_field_names(self):
         return ["field"]
@@ -4991,12 +5096,12 @@ class NLSensorValueNode(bpy.types.Node, NLParameterNode):
     def get_nonsocket_fields(self):
         return [
             (
-                "obj_name", lambda: 'bgelogic.SensorValue.obj("{}")'.format(
+                "obj_name", lambda: 'definitions.SensorValue.obj("{}")'.format(
                     'NLO:{}'.format(self.obj.name)
                 )
             ),
             (
-                "sens_name", lambda: 'bgelogic.SensorValue.sens("{}")'.format(
+                "sens_name", lambda: 'definitions.SensorValue.sens("{}")'.format(
                     self.sensor
                 )
             )
@@ -5034,7 +5139,7 @@ class NLActionGetCharacterInfo(bpy.types.Node, NLParameterNode):
         )
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ParameterGetCharacterInfo"
+        return "definitions.ParameterGetCharacterInfo"
 
     def get_input_sockets_field_names(self):
         return ["game_object"]
@@ -5072,7 +5177,7 @@ class NLObjectAttributeParameterNode(bpy.types.Node, NLParameterNode):
             self.outputs[0].color = PARAM_VECTOR_SOCKET_COLOR
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ParameterObjectAttribute"
+        return "definitions.ParameterObjectAttribute"
 
     def get_input_sockets_field_names(self):
         return ["game_object", "attribute_name"]
@@ -5092,7 +5197,7 @@ class NLActiveCameraParameterNode(bpy.types.Node, NLParameterNode):
         self.outputs.new(NLGameObjectSocket.bl_idname, "Camera")
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ParameterActiveCamera"
+        return "definitions.ParameterActiveCamera"
 
 
 _nodes.append(NLActiveCameraParameterNode)
@@ -5108,7 +5213,7 @@ class NLGetGravityNode(bpy.types.Node, NLParameterNode):
         self.outputs.new(NLVec3FieldSocket.bl_idname, "Gravity")
 
     def get_netlogic_class_name(self):
-        return "bgelogic.GetGravity"
+        return "definitions.GetGravity"
 
 
 _nodes.append(NLGetGravityNode)
@@ -5130,7 +5235,7 @@ class NLGetCollectionNode(bpy.types.Node, NLParameterNode):
         return ['collection']
 
     def get_netlogic_class_name(self):
-        return "bgelogic.GetCollection"
+        return "definitions.GetCollection"
 
 
 _nodes.append(NLGetCollectionNode)
@@ -5151,7 +5256,7 @@ class NLGetCollectionObjectsNode(bpy.types.Node, NLParameterNode):
         return ['collection']
 
     def get_netlogic_class_name(self):
-        return "bgelogic.GetCollectionObjects"
+        return "definitions.GetCollectionObjects"
 
 
 _nodes.append(NLGetCollectionObjectsNode)
@@ -5172,10 +5277,55 @@ class NLGetCollectionObjectNamesNode(bpy.types.Node, NLParameterNode):
         return ['collection']
 
     def get_netlogic_class_name(self):
-        return "bgelogic.GetCollectionObjectNames"
+        return "definitions.GetCollectionObjectNames"
 
 
 _nodes.append(NLGetCollectionObjectNamesNode)
+
+
+class NLSetOverlayCollection(bpy.types.Node, NLParameterNode):
+    bl_idname = "NLSetOverlayCollection"
+    bl_label = "Set Overlay Collection"
+    nl_category = "Scene"
+    nl_subcat = 'Collections'
+
+    def init(self, context):
+        NLParameterNode.init(self, context)
+        self.inputs.new(NLConditionSocket.bl_idname, 'Condition')
+        self.inputs.new(NLCameraSocket.bl_idname, 'Camera')
+        self.inputs.new(NLCollectionSocket.bl_idname, 'Collection')
+        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+
+    def get_input_sockets_field_names(self):
+        return ['condition', 'camera', 'collection']
+
+    def get_netlogic_class_name(self):
+        return "definitions.GESetOverlayCollection"
+
+
+_nodes.append(NLSetOverlayCollection)
+
+
+class NLRemoveOverlayCollection(bpy.types.Node, NLParameterNode):
+    bl_idname = "NLRemoveOverlayCollection"
+    bl_label = "Remove Overlay Collection"
+    nl_category = "Scene"
+    nl_subcat = 'Collections'
+
+    def init(self, context):
+        NLParameterNode.init(self, context)
+        self.inputs.new(NLConditionSocket.bl_idname, 'Condition')
+        self.inputs.new(NLCollectionSocket.bl_idname, 'Collection')
+        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+
+    def get_input_sockets_field_names(self):
+        return ['condition', 'collection']
+
+    def get_netlogic_class_name(self):
+        return "definitions.GERemoveOverlayCollection"
+
+
+_nodes.append(NLRemoveOverlayCollection)
 
 
 class NLArithmeticOpParameterNode(bpy.types.Node, NLParameterNode):
@@ -5201,14 +5351,14 @@ class NLArithmeticOpParameterNode(bpy.types.Node, NLParameterNode):
         return [
                 (
                     "operator", lambda:
-                    'bgelogic.ParameterArithmeticOp.op_by_code("{}")'.format(
+                    'definitions.ParameterArithmeticOp.op_by_code("{}")'.format(
                         self.operator
                     )
                 )
             ]
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ParameterArithmeticOp"
+        return "definitions.ParameterArithmeticOp"
 
     def get_input_sockets_field_names(self):
         return ["operand_a", "operand_b"]
@@ -5242,14 +5392,14 @@ class NLThresholdNode(bpy.types.Node, NLParameterNode):
         return [
                 (
                     "operator", lambda:
-                    'bgelogic.Threshold.op_by_code("{}")'.format(
+                    'definitions.Threshold.op_by_code("{}")'.format(
                         self.operator
                     )
                 )
             ]
 
     def get_netlogic_class_name(self):
-        return "bgelogic.Threshold"
+        return "definitions.Threshold"
 
     def get_input_sockets_field_names(self):
         return ['else_z', "value", "threshold"]
@@ -5280,14 +5430,14 @@ class NLRangedThresholdNode(bpy.types.Node, NLParameterNode):
         return [
                 (
                     "operator", lambda:
-                    'bgelogic.RangedThreshold.op_by_code("{}")'.format(
+                    'definitions.RangedThreshold.op_by_code("{}")'.format(
                         self.operator
                     )
                 )
             ]
 
     def get_netlogic_class_name(self):
-        return "bgelogic.RangedThreshold"
+        return "definitions.RangedThreshold"
 
     def get_input_sockets_field_names(self):
         return ["value", "threshold"]
@@ -5318,14 +5468,14 @@ class NLLimitRange(bpy.types.Node, NLParameterNode):
         return [
                 (
                     "operator", lambda:
-                    'bgelogic.RangedThreshold.op_by_code("{}")'.format(
+                    'definitions.RangedThreshold.op_by_code("{}")'.format(
                         self.operator
                     )
                 )
             ]
 
     def get_netlogic_class_name(self):
-        return "bgelogic.GELimitRange"
+        return "definitions.GELimitRange"
 
     def get_input_sockets_field_names(self):
         return ["value", "threshold"]
@@ -5357,14 +5507,14 @@ class NLWithinRangeNode(bpy.types.Node, NLParameterNode):
         return [
                 (
                     "operator", lambda:
-                    'bgelogic.WithinRange.op_by_code("{}")'.format(
+                    'definitions.WithinRange.op_by_code("{}")'.format(
                         self.operator
                     )
                 )
             ]
 
     def get_netlogic_class_name(self):
-        return "bgelogic.WithinRange"
+        return "definitions.WithinRange"
 
     def get_input_sockets_field_names(self):
         return ["value", "range"]
@@ -5385,7 +5535,7 @@ class NLClampValueNode(bpy.types.Node, NLParameterNode):
         self.outputs.new(NLParameterSocket.bl_idname, "Value")
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ClampValue"
+        return "definitions.ClampValue"
 
     def get_input_sockets_field_names(self):
         return ["value", "range"]
@@ -5406,7 +5556,7 @@ class NLGetImage(bpy.types.Node, NLParameterNode):
         self.outputs.new(NLImageSocket.bl_idname, 'Image')
 
     def get_netlogic_class_name(self):
-        return "bgelogic.GetImage"
+        return "definitions.GetImage"
 
     def get_input_sockets_field_names(self):
         return [
@@ -5429,7 +5579,7 @@ class NLGetSound(bpy.types.Node, NLParameterNode):
         self.outputs.new(NLSoundFileSocket.bl_idname, 'Sound File')
 
     def get_netlogic_class_name(self):
-        return "bgelogic.GetSound"
+        return "definitions.GetSound"
 
     def get_input_sockets_field_names(self):
         return [
@@ -5453,7 +5603,7 @@ class NLInterpolateValueNode(bpy.types.Node, NLParameterNode):
         self.outputs.new(NLParameterSocket.bl_idname, "Value")
 
     def get_netlogic_class_name(self):
-        return "bgelogic.InterpolateValue"
+        return "definitions.InterpolateValue"
 
     def get_input_sockets_field_names(self):
         return ["value_a", "value_b", "factor", "range"]
@@ -5477,7 +5627,7 @@ class NLParameterActionStatus(bpy.types.Node, NLParameterNode):
         self.outputs.new(NLParameterSocket.bl_idname, "Action Frame")
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ParameterActionStatus"
+        return "definitions.ParameterActionStatus"
 
     def get_input_sockets_field_names(self):
         return ["game_object", "action_layer"]
@@ -5501,7 +5651,7 @@ class NLParameterSwitchValue(bpy.types.Node, NLParameterNode):
         self.outputs.new(NLPseudoConditionSocket.bl_idname, "False")
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ParameterSwitchValue"
+        return "definitions.ParameterSwitchValue"
 
     def get_input_sockets_field_names(self):
         return ["state"]
@@ -5528,7 +5678,7 @@ class NLParameterTimeNode(bpy.types.Node, NLParameterNode):
         return ["FPS", "TIME_PER_FRAME", "TIMELINE"]
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ParameterTime"
+        return "definitions.ParameterTime"
 
 
 _nodes.append(NLParameterTimeNode)
@@ -5552,7 +5702,7 @@ class NLMouseDataParameter(bpy.types.Node, NLParameterNode):
         self.outputs.new(NLParameterSocket.bl_idname, "Wheel Difference")
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ParameterMouseData"
+        return "definitions.ParameterMouseData"
 
     def get_output_socket_varnames(self):
         return ["MXY0", "MDXY0", "MX", "MY", "MDX", "MDY", "MDWHEEL"]
@@ -5576,7 +5726,7 @@ class NLParameterBoneStatus(bpy.types.Node, NLParameterNode):
         self.outputs.new(NLParameterSocket.bl_idname, "Scale")
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ParameterBoneStatus"
+        return "definitions.ParameterBoneStatus"
 
     def get_input_sockets_field_names(self):
         return ["armature", "bone_name"]
@@ -5603,7 +5753,7 @@ class NLParameterPythonModuleFunction(bpy.types.Node, NLActionNode):
         self.outputs.new(NLParameterSocket.bl_idname, "Returned Value")
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ParameterPythonModuleFunction"
+        return "definitions.ParameterPythonModuleFunction"
 
     def get_input_sockets_field_names(self):
         return ['condition', "module_name", "module_func", 'arg']
@@ -5628,7 +5778,7 @@ class NLParameterBooleanValue(bpy.types.Node, NLParameterNode):
         self.outputs.new(NLParameterSocket.bl_idname, "Bool")
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ParameterSimpleValue"
+        return "definitions.ParameterSimpleValue"
 
     def get_input_sockets_field_names(self):
         return ["value"]
@@ -5648,7 +5798,7 @@ class NLParameterFileValue(bpy.types.Node, NLParameterNode):
         self.outputs.new(NLParameterSocket.bl_idname, "Path")
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ParameterSimpleValue"
+        return "definitions.ParameterSimpleValue"
 
     def get_input_sockets_field_names(self):
         return ["value"]
@@ -5668,7 +5818,7 @@ class NLParameterFloatValue(bpy.types.Node, NLParameterNode):
         self.inputs.new(NLFloatFieldSocket.bl_idname, "")
         self.outputs.new(NLParameterSocket.bl_idname, "Float")
 
-    def get_netlogic_class_name(self): return "bgelogic.ParameterSimpleValue"
+    def get_netlogic_class_name(self): return "definitions.ParameterSimpleValue"
     def get_input_sockets_field_names(self): return ["value"]
 
 
@@ -5686,7 +5836,7 @@ class NLParameterIntValue(bpy.types.Node, NLParameterNode):
         self.inputs.new(NLIntegerFieldSocket.bl_idname, "")
         self.outputs.new(NLParameterSocket.bl_idname, "Int")
 
-    def get_netlogic_class_name(self): return "bgelogic.ParameterSimpleValue"
+    def get_netlogic_class_name(self): return "definitions.ParameterSimpleValue"
     def get_input_sockets_field_names(self): return ["value"]
 
 
@@ -5705,7 +5855,7 @@ class NLParameterStringValue(bpy.types.Node, NLParameterNode):
         self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "")
         self.outputs.new(NLParameterSocket.bl_idname, "String")
 
-    def get_netlogic_class_name(self): return "bgelogic.ParameterSimpleValue"
+    def get_netlogic_class_name(self): return "definitions.ParameterSimpleValue"
     def get_input_sockets_field_names(self): return ["value"]
 
 
@@ -5724,7 +5874,7 @@ class NLParameterTypeCast(bpy.types.Node, NLParameterNode):
         self.outputs.new(NLParameterSocket.bl_idname, "Value")
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ParameterTypeCast"
+        return "definitions.ParameterTypeCast"
 
     def get_input_sockets_field_names(self):
         return ["value", 'to_type']
@@ -5749,7 +5899,7 @@ class NLParameterVector2SimpleNode(bpy.types.Node, NLParameterNode):
         self.outputs.new(NLVectorSocket.bl_idname, "Vector")
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ParameterVector2Simple"
+        return "definitions.ParameterVector2Simple"
 
     def get_output_socket_varnames(self):
         return ["OUTV"]
@@ -5776,7 +5926,7 @@ class NLParameterVector2SplitNode(bpy.types.Node, NLParameterNode):
         self.outputs.new(NLFloatFieldSocket.bl_idname, "X")
         self.outputs.new(NLFloatFieldSocket.bl_idname, "Y")
 
-    def get_netlogic_class_name(self): return "bgelogic.ParameterVector2Split"
+    def get_netlogic_class_name(self): return "definitions.ParameterVector2Split"
     def get_output_socket_varnames(self): return ["OUTX", "OUTY"]
     def get_input_sockets_field_names(self): return ["input_v"]
 
@@ -5801,7 +5951,7 @@ class NLParameterVector3SplitNode(bpy.types.Node, NLParameterNode):
         self.outputs.new(NLFloatFieldSocket.bl_idname, "Z")
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ParameterVector3Split"
+        return "definitions.ParameterVector3Split"
 
     def get_output_socket_varnames(self):
         return ["OUTX", "OUTY", 'OUTZ']
@@ -5828,7 +5978,7 @@ class NLParameterAbsVector3Node(bpy.types.Node, NLParameterNode):
         self.outputs.new(NLVec3FieldSocket.bl_idname, "Vector")
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ParameterAbsVector3"
+        return "definitions.ParameterAbsVector3"
 
     def get_output_socket_varnames(self):
         return ["OUTV"]
@@ -5857,7 +6007,7 @@ class NLParameterVector3SimpleNode(bpy.types.Node, NLParameterNode):
         self.outputs.new(NLVectorSocket.bl_idname, "Vector")
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ParameterVector3Simple"
+        return "definitions.ParameterVector3Simple"
 
     def get_output_socket_varnames(self):
         return ["OUTV"]
@@ -5884,7 +6034,7 @@ class NLParameterVector4SimpleNode(bpy.types.Node, NLParameterNode):
         self.outputs.new(NLVectorSocket.bl_idname, "Vector")
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ParameterVector4Simple"
+        return "definitions.ParameterVector4Simple"
 
     def get_output_socket_varnames(self):
         return ["OUTV"]
@@ -5908,7 +6058,7 @@ class NLParameterRGBNode(bpy.types.Node, NLParameterNode):
         self.outputs.new(NLColorSocket.bl_idname, "Color")
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ParameterColor"
+        return "definitions.ParameterColor"
 
     def get_output_socket_varnames(self):
         return ["OUTV"]
@@ -5932,7 +6082,7 @@ class NLParameterRGBANode(bpy.types.Node, NLParameterNode):
         self.outputs.new(NLColorAlphaSocket.bl_idname, "Color")
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ParameterColorAlpha"
+        return "definitions.ParameterColorAlpha"
 
     def get_output_socket_varnames(self):
         return ["OUTV"]
@@ -5961,7 +6111,7 @@ class NLParameterEulerSimpleNode(bpy.types.Node, NLParameterNode):
         self.outputs.new(NLParameterSocket.bl_idname, "Euler")
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ParameterEulerSimple"
+        return "definitions.ParameterEulerSimple"
 
     def get_output_socket_varnames(self):
         return ["OUTV"]
@@ -5984,7 +6134,7 @@ class NLParameterEulerToMatrixNode(bpy.types.Node, NLParameterNode):
         self.inputs.new(NLParameterSocket.bl_idname, 'Euler')
         self.outputs.new(NLParameterSocket.bl_idname, "Matrix")
 
-    def get_netlogic_class_name(self): return "bgelogic.ParameterEulerToMatrix"
+    def get_netlogic_class_name(self): return "definitions.ParameterEulerToMatrix"
     def get_output_socket_varnames(self): return ["OUT"]
     def get_input_sockets_field_names(self): return ["input_e"]
 
@@ -6004,7 +6154,7 @@ class NLParameterMatrixToEulerNode(bpy.types.Node, NLParameterNode):
         self.outputs.new(NLParameterSocket.bl_idname, "Euler")
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ParameterMatrixToEuler"
+        return "definitions.ParameterMatrixToEuler"
 
     def get_output_socket_varnames(self):
         return ["OUT"]
@@ -6028,7 +6178,7 @@ class NLParameterMatrixToVectorNode(bpy.types.Node, NLParameterNode):
         self.outputs.new(NLVec3FieldSocket.bl_idname, "Vector")
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ParameterMatrixToVector"
+        return "definitions.ParameterMatrixToVector"
 
     def get_output_socket_varnames(self):
         return ["OUT"]
@@ -6051,7 +6201,7 @@ class NLOnInitConditionNode(bpy.types.Node, NLConditionNode):
         self.outputs.new(NLConditionSocket.bl_idname, "Init")
 
     def get_netlogic_class_name(self):
-        return "bgelogic.GE_OnInit"
+        return "definitions.GE_OnInit"
 
     def init_cell_fields(self, cell_varname, uids, line_writer):
         NetLogicStatementGenerator.init_cell_fields(
@@ -6077,7 +6227,7 @@ class NLOnUpdateConditionNode(bpy.types.Node, NLConditionNode):
         self.outputs.new(NLConditionSocket.bl_idname, "On Update")
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ConditionOnUpdate"
+        return "definitions.ConditionOnUpdate"
 
     def init_cell_fields(self, cell_varname, uids, line_writer):
         NetLogicStatementGenerator.init_cell_fields(
@@ -6108,7 +6258,7 @@ class NLGamepadVibration(bpy.types.Node, NLParameterNode):
         self.outputs.new(NLConditionSocket.bl_idname, "Done")
 
     def get_netlogic_class_name(self):
-        return "bgelogic.GEGamepadVibration"
+        return "definitions.GEGamepadVibration"
 
     def get_input_sockets_field_names(self):
         return ['condition', 'index', 'left', 'right', 'time']
@@ -6147,7 +6297,7 @@ class NLGamepadSticksCondition(bpy.types.Node, NLParameterNode):
         layout.prop(self, "axis", text='')
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ConditionGamepadSticks"
+        return "definitions.ConditionGamepadSticks"
 
     def get_input_sockets_field_names(self):
         return ['inverted', "index", 'sensitivity', 'threshold']
@@ -6193,7 +6343,7 @@ class NLGamepadTriggerCondition(bpy.types.Node, NLParameterNode):
         layout.prop(self, "axis", text='')
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ConditionGamepadTrigger"
+        return "definitions.ConditionGamepadTrigger"
 
     def get_input_sockets_field_names(self):
         return ["index", 'sensitivity', 'threshold']
@@ -6212,6 +6362,30 @@ class NLGamepadTriggerCondition(bpy.types.Node, NLParameterNode):
 
 
 _nodes.append(NLGamepadTriggerCondition)
+
+
+class NLGamepadActive(bpy.types.Node, NLConditionNode):
+    bl_idname = "NLGamepadActive"
+    bl_label = "Active"
+    nl_category = "Input"
+    nl_subcat = 'Gamepad'
+
+    def init(self, context):
+        NLConditionNode.init(self, context)
+        self.inputs.new(NLPositiveIntCentSocket.bl_idname, 'Index')
+        self.outputs.new(NLConditionSocket.bl_idname, 'Active')
+
+    def get_netlogic_class_name(self):
+        return "definitions.GEGamepadActive"
+
+    def get_input_sockets_field_names(self):
+        return ["index"]
+
+    def get_output_socket_varnames(self):
+        return [OUTCELL]
+
+
+_nodes.append(NLGamepadActive)
 
 
 class NLGamepadButtonsCondition(bpy.types.Node, NLConditionNode):
@@ -6248,7 +6422,7 @@ class NLGamepadButtonsCondition(bpy.types.Node, NLConditionNode):
         layout.prop(self, "button", text='')
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ConditionGamepadButtons"
+        return "definitions.ConditionGamepadButtons"
 
     def get_input_sockets_field_names(self):
         return ["index"]
@@ -6313,7 +6487,7 @@ class NLGamepadButtonUpCondition(bpy.types.Node, NLConditionNode):
         layout.prop(self, "button", text='')
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ConditionGamepadButtonUp"
+        return "definitions.ConditionGamepadButtonUp"
 
     def get_input_sockets_field_names(self):
         return ["index"]
@@ -6344,6 +6518,29 @@ class NLGamepadButtonUpCondition(bpy.types.Node, NLConditionNode):
 _nodes.append(NLGamepadButtonUpCondition)
 
 
+class NLKeyboardActive(bpy.types.Node, NLConditionNode):
+    bl_idname = "NLKeyboardActive"
+    bl_label = "Active"
+    nl_category = "Input"
+    nl_subcat = 'Keyboard'
+
+    def init(self, context):
+        NLConditionNode.init(self, context)
+        self.outputs.new(NLConditionSocket.bl_idname, 'Active')
+
+    def get_netlogic_class_name(self):
+        return "definitions.GEKeyboardActive"
+
+    def get_input_sockets_field_names(self):
+        return ["index"]
+
+    def get_output_socket_varnames(self):
+        return [OUTCELL]
+
+
+_nodes.append(NLKeyboardActive)
+
+
 class NLKeyPressedCondition(bpy.types.Node, NLConditionNode):
     bl_idname = "NLKeyPressedCondition"
     bl_label = "Key Down"
@@ -6370,7 +6567,7 @@ class NLKeyPressedCondition(bpy.types.Node, NLConditionNode):
         )
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ConditionKeyPressed"
+        return "definitions.ConditionKeyPressed"
 
     def get_input_sockets_field_names(self):
         return ["key_code"]
@@ -6416,7 +6613,7 @@ class NLKeyLoggerAction(bpy.types.Node, NLActionNode):
         )
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ActionKeyLogger"
+        return "definitions.ActionKeyLogger"
 
     def get_input_sockets_field_names(self):
         return ["condition"]
@@ -6464,7 +6661,7 @@ class NLKeyReleasedCondition(bpy.types.Node, NLConditionNode):
         )
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ConditionKeyReleased"
+        return "definitions.ConditionKeyReleased"
 
     def get_input_sockets_field_names(self):
         return ["key_code"]
@@ -6511,7 +6708,7 @@ class NLMousePressedCondition(bpy.types.Node, NLConditionNode):
         )
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ConditionMousePressed"
+        return "definitions.ConditionMousePressed"
 
     def get_input_sockets_field_names(self):
         return ["mouse_button_code"]
@@ -6557,7 +6754,7 @@ class NLMouseMovedCondition(bpy.types.Node, NLConditionNode):
         )
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ConditionMouseMoved"
+        return "definitions.ConditionMouseMoved"
 
     def get_input_sockets_field_names(self):
         return ["mouse_button_code"]
@@ -6604,7 +6801,7 @@ class NLMouseReleasedCondition(bpy.types.Node, NLConditionNode):
         )
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ConditionMouseReleased"
+        return "definitions.ConditionMouseReleased"
 
     def get_input_sockets_field_names(self):
         return ["mouse_button_code"]
@@ -6651,7 +6848,7 @@ class NLConditionOnceNode(bpy.types.Node, NLConditionNode):
             self.inputs[2].enabled = False
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ConditionOnce"
+        return "definitions.ConditionOnce"
 
     def get_input_sockets_field_names(self):
         return ["input_condition", 'repeat', 'reset_time']
@@ -6697,7 +6894,7 @@ class NLObjectPropertyOperator(bpy.types.Node, NLConditionNode):
         self.outputs.new(NLConditionSocket.bl_idname, 'If True')
         self.outputs.new(NLParameterSocket.bl_idname, 'Value')
 
-    def get_netlogic_class_name(self): return "bgelogic.ObjectPropertyOperator"
+    def get_netlogic_class_name(self): return "definitions.ObjectPropertyOperator"
 
     def get_input_sockets_field_names(self):
         return [
@@ -6725,7 +6922,7 @@ class NLConditionNextFrameNode(bpy.types.Node, NLConditionNode):
         utils.register_outputs(self, NLConditionSocket, "Next Tick")
 
     def get_netlogic_class_name(self):
-        return "bgelogic.OnNextFrame"
+        return "definitions.OnNextFrame"
 
     def get_input_sockets_field_names(self):
         return ["input_condition"]
@@ -6748,7 +6945,7 @@ class NLConditionMousePressedOn(bpy.types.Node, NLConditionNode):
         self.outputs.new(NLConditionSocket.bl_idname, "When Pressed On")
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ConditionMousePressedOn"
+        return "definitions.ConditionMousePressedOn"
 
     def get_input_sockets_field_names(self):
         return ["mouse_button", "game_object"]
@@ -6770,7 +6967,7 @@ class NLConditionMouseWheelMoved(bpy.types.Node, NLConditionNode):
         self.outputs.new(NLConditionSocket.bl_idname, "When Scrolled")
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ConditionMouseScrolled"
+        return "definitions.ConditionMouseScrolled"
 
     def get_input_sockets_field_names(self):
         return ["wheel_direction"]
@@ -6811,7 +7008,7 @@ class NLConditionCollisionNode(bpy.types.Node, NLConditionNode):
         )
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ConditionCollision"
+        return "definitions.ConditionCollision"
 
     def get_input_sockets_field_names(self):
         return ["game_object", 'use_mat', 'prop', 'material']
@@ -6849,7 +7046,7 @@ class NLConditionMouseTargetingNode(bpy.types.Node, NLConditionNode):
         self.outputs.new(NLParameterSocket.bl_idname, "Normal")
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ConditionMouseTargeting"
+        return "definitions.ConditionMouseTargeting"
 
     def get_input_sockets_field_names(self):
         return ["game_object"]
@@ -6879,7 +7076,7 @@ class NLConditionAndNode(bpy.types.Node, NLConditionNode):
         self.outputs.new(NLConditionSocket.bl_idname, "If A and B")
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ConditionAnd"
+        return "definitions.ConditionAnd"
 
     def get_input_sockets_field_names(self):
         return ["condition_a", "condition_b"]
@@ -6900,7 +7097,7 @@ class NLConditionAndNotNode(bpy.types.Node, NLConditionNode):
         self.outputs.new(NLConditionSocket.bl_idname, "If A and not B")
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ConditionAndNot"
+        return "definitions.ConditionAndNot"
 
     def get_input_sockets_field_names(self):
         return ["condition_a", "condition_b"]
@@ -6921,7 +7118,7 @@ class NLConditionOrNode(bpy.types.Node, NLConditionNode):
         self.outputs.new(NLConditionSocket.bl_idname, 'A or B')
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ConditionOr"
+        return "definitions.ConditionOr"
 
     def get_input_sockets_field_names(self):
         return ["condition_a", "condition_b"]
@@ -6956,7 +7153,7 @@ class NLConditionOrList(bpy.types.Node, NLConditionNode):
             self.inputs[-1].enabled = True
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ConditionOrList"
+        return "definitions.ConditionOrList"
 
     def get_input_sockets_field_names(self):
         return [
@@ -7004,7 +7201,7 @@ class NLConditionAndList(bpy.types.Node, NLConditionNode):
             self.inputs[-1].enabled = True
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ConditionAndList"
+        return "definitions.ConditionAndList"
 
     def get_input_sockets_field_names(self):
         return [
@@ -7036,7 +7233,7 @@ class NLConditionValueTriggerNode(bpy.types.Node, NLConditionNode):
         self.outputs.new(NLConditionSocket.bl_idname, "When Changed To")
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ConditionValueTrigger"
+        return "definitions.ConditionValueTrigger"
 
     def get_input_sockets_field_names(self):
         return ["monitored_value", "trigger_value"]
@@ -7074,7 +7271,7 @@ class NLConditionLogicOperation(bpy.types.Node, NLConditionNode):
         )
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ConditionLogicOp"
+        return "definitions.ConditionLogicOp"
 
     def get_input_sockets_field_names(self):
         return ["param_a", "param_b", 'threshold']
@@ -7120,7 +7317,7 @@ class NLConditionCompareVecs(bpy.types.Node, NLConditionNode):
         self.outputs.new(NLConditionSocket.bl_idname, "If True")
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ConditionCompareVecs"
+        return "definitions.ConditionCompareVecs"
 
     def get_input_sockets_field_names(self):
         return ['all', 'threshold', "param_a", "param_b"]
@@ -7158,7 +7355,7 @@ class NLConditionDistanceCheck(bpy.types.Node, NLConditionNode):
         self.outputs.new(NLConditionSocket.bl_idname, "Out")
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ConditionDistanceCheck"
+        return "definitions.ConditionDistanceCheck"
 
     def get_input_sockets_field_names(self):
         return ["operator", "param_a", "param_b", "dist", "hyst"]
@@ -7196,7 +7393,7 @@ class NLConditionValueChanged(bpy.types.Node, NLConditionNode):
         )
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ConditionValueChanged"
+        return "definitions.ConditionValueChanged"
 
     def get_input_sockets_field_names(self):
         return ["current_value"]
@@ -7223,7 +7420,7 @@ class NLConditionTimeElapsed(bpy.types.Node, NLConditionNode):
         self.outputs.new(NLConditionSocket.bl_idname, "When Elapsed")
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ConditionTimeElapsed"
+        return "definitions.ConditionTimeElapsed"
 
     def get_input_sockets_field_names(self):
         return ["condition", "delta_time"]
@@ -7243,7 +7440,7 @@ class NLConditionNotNoneNode(bpy.types.Node, NLConditionNode):
         utils.register_outputs(self, NLConditionSocket, "If Not None")
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ConditionNotNone"
+        return "definitions.ConditionNotNone"
 
     def get_input_sockets_field_names(self):
         return ["checked_value"]
@@ -7263,7 +7460,7 @@ class NLConditionNoneNode(bpy.types.Node, NLConditionNode):
         self.outputs.new(NLConditionSocket.bl_idname, "If None")
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ConditionNone"
+        return "definitions.ConditionNone"
 
     def get_input_sockets_field_names(self):
         return ["checked_value"]
@@ -7283,7 +7480,7 @@ class NLConditionValueValidNode(bpy.types.Node, NLConditionNode):
         self.outputs.new(NLConditionSocket.bl_idname, "If Valid")
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ConditionValueValid"
+        return "definitions.ConditionValueValid"
 
     def get_input_sockets_field_names(self):
         return ["checked_value"]
@@ -7303,7 +7500,7 @@ class NLConditionNotNode(bpy.types.Node, NLConditionNode):
         self.outputs.new(NLConditionSocket.bl_idname, "If Not")
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ConditionNot"
+        return "definitions.ConditionNot"
 
     def get_input_sockets_field_names(self):
         return ["condition"]
@@ -7326,7 +7523,7 @@ class NLConditionLogicNetworkStatusNode(bpy.types.Node, NLConditionNode):
         self.outputs.new(NLConditionSocket.bl_idname, "If Stopped")
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ConditionLNStatus"
+        return "definitions.ConditionLNStatus"
 
     def get_input_sockets_field_names(self):
         return ["game_object", "tree_name"]
@@ -7357,7 +7554,7 @@ class NLAddObjectActionNode(bpy.types.Node, NLActionNode):
         self.outputs.new(NLGameObjectSocket.bl_idname, "Added Object")
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ActionAddObject"
+        return "definitions.ActionAddObject"
 
     def get_input_sockets_field_names(self):
         return ["condition", "name", 'reference', "life"]
@@ -7386,7 +7583,7 @@ class NLSetGameObjectGamePropertyActionNode(bpy.types.Node, NLActionNode):
         self.outputs.new(NLConditionSocket.bl_idname, "Done")
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ActionSetGameObjectGameProperty"
+        return "definitions.ActionSetGameObjectGameProperty"
 
     def get_input_sockets_field_names(self):
         return [
@@ -7442,7 +7639,7 @@ class NLSetGeometryNodeValue(bpy.types.Node, NLActionNode):
             ipt.name = name
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ActionSetNodeTreeNodeValue"
+        return "definitions.ActionSetNodeTreeNodeValue"
 
     def get_input_sockets_field_names(self):
         return [
@@ -7499,7 +7696,7 @@ class NLSetNodeTreeNodeValue(bpy.types.Node, NLActionNode):
             ipt.name = name
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ActionSetNodeTreeNodeValue"
+        return "definitions.ActionSetNodeTreeNodeValue"
 
     def get_input_sockets_field_names(self):
         return [
@@ -7547,7 +7744,7 @@ class NLSetGeometryNodeAttribute(bpy.types.Node, NLActionNode):
             att.enabled = val.enabled = itl.enabled = False
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ActionSetNodeTreeNodeAttribute"
+        return "definitions.ActionSetNodeTreeNodeAttribute"
 
     def get_input_sockets_field_names(self):
         return [
@@ -7596,7 +7793,7 @@ class NLSetNodeTreeNodeAttribute(bpy.types.Node, NLActionNode):
             att.enabled = val.enabled = itl.enabled = False
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ActionSetNodeTreeNodeAttribute"
+        return "definitions.ActionSetNodeTreeNodeAttribute"
 
     def get_input_sockets_field_names(self):
         return [
@@ -7630,7 +7827,7 @@ class NLSetMaterial(bpy.types.Node, NLActionNode):
         self.outputs.new(NLConditionSocket.bl_idname, "Done")
 
     def get_netlogic_class_name(self):
-        return "bgelogic.SetMaterial"
+        return "definitions.SetMaterial"
 
     def update_draw(self):
         obj_socket = self.inputs[1]
@@ -7693,7 +7890,7 @@ class NLSetMaterialNodeValue(bpy.types.Node, NLActionNode):
             ipt.name = name
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ActionSetMaterialNodeValue"
+        return "definitions.ActionSetMaterialNodeValue"
 
     def get_input_sockets_field_names(self):
         return [
@@ -7741,7 +7938,7 @@ class NLSetMaterialNodeAttribute(bpy.types.Node, NLActionNode):
             att.enabled = val.enabled = itl.enabled = False
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ActionSetMaterialNodeAttribute"
+        return "definitions.ActionSetMaterialNodeAttribute"
 
     def get_input_sockets_field_names(self):
         return [
@@ -7815,7 +8012,7 @@ class NLPlayMaterialSequence(bpy.types.Node, NLActionNode):
                 ipt.enabled = False
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ActionPlayMaterialSequence"
+        return "definitions.ActionPlayMaterialSequence"
 
     def get_input_sockets_field_names(self):
         return [
@@ -7851,7 +8048,7 @@ class NLToggleGameObjectGamePropertyActionNode(bpy.types.Node, NLActionNode):
         self.outputs.new(NLConditionSocket.bl_idname, "Done")
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ActionToggleGameObjectGameProperty"
+        return "definitions.ActionToggleGameObjectGameProperty"
 
     def get_input_sockets_field_names(self):
         return [
@@ -7889,7 +8086,7 @@ class NLAddToGameObjectGamePropertyActionNode(bpy.types.Node, NLActionNode):
         self.outputs.new(NLConditionSocket.bl_idname, "Done")
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ActionAddToGameObjectGameProperty"
+        return "definitions.ActionAddToGameObjectGameProperty"
 
     def draw_buttons(self, context, layout):
         layout.prop(self, "operator", text="")
@@ -7898,7 +8095,7 @@ class NLAddToGameObjectGamePropertyActionNode(bpy.types.Node, NLActionNode):
         return [
                 (
                     "operator", lambda:
-                    'bgelogic.ActionAddToGameObjectGameProperty.op_by_code("{}")'.format(
+                    'definitions.ActionAddToGameObjectGameProperty.op_by_code("{}")'.format(
                         self.operator
                     )
                 )
@@ -7936,7 +8133,7 @@ class NLCopyPropertyFromObject(bpy.types.Node, NLActionNode):
         self.outputs.new(NLConditionSocket.bl_idname, "Done")
 
     def get_netlogic_class_name(self):
-        return "bgelogic.CopyPropertyFromObject"
+        return "definitions.CopyPropertyFromObject"
 
     def get_input_sockets_field_names(self):
         return [
@@ -7971,7 +8168,7 @@ class NLClampedModifyProperty(bpy.types.Node, NLActionNode):
         self.outputs.new(NLConditionSocket.bl_idname, "Done")
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ActionClampedAddToGameObjectGameProperty"
+        return "definitions.ActionClampedAddToGameObjectGameProperty"
 
     def get_input_sockets_field_names(self):
         return [
@@ -8004,7 +8201,7 @@ class NLValueSwitch(bpy.types.Node, NLParameterNode):
         self.outputs.new(NLParameterSocket.bl_idname, "A or B")
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ValueSwitch"
+        return "definitions.ValueSwitch"
 
     def get_input_sockets_field_names(self):
         return ["condition", 'val_a', 'val_b']
@@ -8027,7 +8224,7 @@ class NLInvertBoolNode(bpy.types.Node, NLActionNode):
         self.outputs.new(NLParameterSocket.bl_idname, "Value")
 
     def get_netlogic_class_name(self):
-        return "bgelogic.InvertBool"
+        return "definitions.InvertBool"
 
     def get_input_sockets_field_names(self):
         return ["value"]
@@ -8050,7 +8247,7 @@ class NLInvertValueNode(bpy.types.Node, NLActionNode):
         self.outputs.new(NLParameterSocket.bl_idname, "Value")
 
     def get_netlogic_class_name(self):
-        return "bgelogic.InvertValue"
+        return "definitions.InvertValue"
 
     def get_input_sockets_field_names(self):
         return ["value"]
@@ -8073,7 +8270,7 @@ class NLAbsoluteValue(bpy.types.Node, NLActionNode):
         self.outputs.new(NLParameterSocket.bl_idname, "Value")
 
     def get_netlogic_class_name(self):
-        return "bgelogic.AbsoluteValue"
+        return "definitions.AbsoluteValue"
 
     def get_input_sockets_field_names(self):
         return ["value"]
@@ -8113,7 +8310,7 @@ class NLCreateVehicleFromParent(bpy.types.Node, NLActionNode):
         return ["OUT", 'VEHICLE', 'WHEELS']
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ActionCreateVehicleFromParent"
+        return "definitions.ActionCreateVehicleFromParent"
 
     def get_input_sockets_field_names(self):
         return [
@@ -8161,7 +8358,7 @@ class NLVehicleApplyEngineForce(bpy.types.Node, NLActionNode):
         layout.prop(self, "value_type", text='')
 
     def get_netlogic_class_name(self):
-        return "bgelogic.VehicleApplyForce"
+        return "definitions.VehicleApplyForce"
 
     def get_input_sockets_field_names(self):
         return ["condition", "vehicle", "wheelcount", 'power']
@@ -8215,7 +8412,7 @@ class NLVehicleApplyBraking(bpy.types.Node, NLActionNode):
         layout.prop(self, "value_type", text='')
 
     def get_netlogic_class_name(self):
-        return "bgelogic.VehicleApplyBraking"
+        return "definitions.VehicleApplyBraking"
 
     def get_input_sockets_field_names(self):
         return ["condition", "vehicle", "wheelcount", 'power']
@@ -8268,7 +8465,7 @@ class NLVehicleApplySteering(bpy.types.Node, NLActionNode):
         layout.prop(self, "value_type", text='')
 
     def get_netlogic_class_name(self):
-        return "bgelogic.VehicleApplySteering"
+        return "definitions.VehicleApplySteering"
 
     def get_input_sockets_field_names(self):
         return ["condition", "vehicle", "wheelcount", 'power']
@@ -8333,7 +8530,7 @@ class NLVehicleSetAttributes(bpy.types.Node, NLActionNode):
         layout.prop(self, "value_type", text='')
 
     def get_netlogic_class_name(self):
-        return "bgelogic.VehicleSetAttributes"
+        return "definitions.VehicleSetAttributes"
 
     def get_input_sockets_field_names(self):
         return [
@@ -8396,7 +8593,7 @@ class NLSetObjectAttributeActionNode(bpy.types.Node, NLActionNode):
         layout.prop(self, "value_type", text='')
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ActionSetObjectAttribute"
+        return "definitions.ActionSetObjectAttribute"
 
     def get_input_sockets_field_names(self):
         return ["condition", "xyz", "game_object", "attribute_value"]
@@ -8461,7 +8658,7 @@ class NLActionRayCastNode(bpy.types.Node, NLActionNode):
         layout.prop(self, 'advanced', text='Advanced', icon='SETTINGS')
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ActionRayPick"
+        return "definitions.ActionRayPick"
 
     def get_input_sockets_field_names(self):
         return [
@@ -8509,7 +8706,7 @@ class NLProjectileRayCast(bpy.types.Node, NLActionNode):
         self.outputs.new(NLListSocket.bl_idname, "Parabola")
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ProjectileRayCast"
+        return "definitions.ProjectileRayCast"
 
     def get_input_sockets_field_names(self):
         return [
@@ -8550,7 +8747,7 @@ class NLStartLogicNetworkActionNode(bpy.types.Node, NLActionNode):
         return ["OUT"]
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ActionStartLogicNetwork"
+        return "definitions.ActionStartLogicNetwork"
 
     def get_input_sockets_field_names(self):
         return ["condition", "game_object", "logic_network_name"]
@@ -8576,7 +8773,7 @@ class NLStopLogicNetworkActionNode(bpy.types.Node, NLActionNode):
         return ["OUT"]
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ActionStopLogicNetwork"
+        return "definitions.ActionStopLogicNetwork"
 
     def get_input_sockets_field_names(self):
         return ["condition", "game_object", "logic_network_name"]
@@ -8607,7 +8804,7 @@ class NLActionSetGameObjectVisibility(bpy.types.Node, NLActionNode):
         return ["OUT"]
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ActionSetGameObjectVisibility"
+        return "definitions.ActionSetGameObjectVisibility"
 
     def get_input_sockets_field_names(self):
         return ["condition", "game_object", "visible", "recursive"]
@@ -8633,7 +8830,7 @@ class NLSetCurvePoints(bpy.types.Node, NLActionNode):
         return ["OUT"]
 
     def get_netlogic_class_name(self):
-        return "bgelogic.SetCurvePoints"
+        return "definitions.SetCurvePoints"
 
     def get_input_sockets_field_names(self):
         return ["condition", "curve_object", "points"]
@@ -8654,7 +8851,7 @@ class NLActionFindObjectNode(bpy.types.Node, NLParameterNode):
         self.outputs.new(NLGameObjectSocket.bl_idname, "Object")
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ActionFindObject"
+        return "definitions.ActionFindObject"
 
     def get_input_sockets_field_names(self):
         return ["game_object"]
@@ -8682,7 +8879,7 @@ class NLActionSendMessage(bpy.types.Node, NLActionNode):
         self.outputs.new(NLConditionSocket.bl_idname, "Done")
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ActionSendMessage"
+        return "definitions.ActionSendMessage"
 
     def get_input_sockets_field_names(self):
         return ['condition', 'from_obj', 'to_obj', 'subject', 'body']
@@ -8710,7 +8907,7 @@ class NLActionSetActiveCamera(bpy.types.Node, NLActionNode):
         return ["OUT"]
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ActionSetActiveCamera"
+        return "definitions.ActionSetActiveCamera"
 
     def get_input_sockets_field_names(self):
         return ["condition", "camera"]
@@ -8736,7 +8933,7 @@ class NLActionSetCameraFov(bpy.types.Node, NLActionNode):
         return ["OUT"]
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ActionSetCameraFov"
+        return "definitions.ActionSetCameraFov"
 
     def get_input_sockets_field_names(self):
         return ["condition", "camera", 'fov']
@@ -8763,7 +8960,7 @@ class NLActionSetCameraOrthoScale(bpy.types.Node, NLActionNode):
         return ["OUT"]
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ActionSetCameraOrthoScale"
+        return "definitions.ActionSetCameraOrthoScale"
 
     def get_input_sockets_field_names(self):
         return ["condition", "camera", 'scale']
@@ -8790,7 +8987,7 @@ class NLActionSetResolution(bpy.types.Node, NLActionNode):
         return ["OUT"]
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ActionSetResolution"
+        return "definitions.ActionSetResolution"
 
     def get_input_sockets_field_names(self):
         return ["condition", "x_res", 'y_res']
@@ -8814,7 +9011,7 @@ class NLActionSetFullscreen(bpy.types.Node, NLActionNode):
         return ["OUT"]
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ActionSetFullscreen"
+        return "definitions.ActionSetFullscreen"
 
     def get_input_sockets_field_names(self):
         return ["condition", "use_fullscreen"]
@@ -8838,7 +9035,7 @@ class NLSetProfile(bpy.types.Node, NLActionNode):
         return ["OUT"]
 
     def get_netlogic_class_name(self):
-        return "bgelogic.GESetProfile"
+        return "definitions.GESetProfile"
 
     def get_input_sockets_field_names(self):
         return ["condition", "use_profile"]
@@ -8862,7 +9059,7 @@ class NLShowFramerate(bpy.types.Node, NLActionNode):
         return ["OUT"]
 
     def get_netlogic_class_name(self):
-        return "bgelogic.GEShowFramerate"
+        return "definitions.GEShowFramerate"
 
     def get_input_sockets_field_names(self):
         return ["condition", "use_framerate"]
@@ -8886,7 +9083,7 @@ class NLActionSetVSync(bpy.types.Node, NLActionNode):
         return ["OUT"]
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ActionSetVSync"
+        return "definitions.ActionSetVSync"
 
     def get_input_sockets_field_names(self):
         return ["condition", "vsync_mode"]
@@ -8911,7 +9108,7 @@ class NLInitEmptyDict(bpy.types.Node, NLActionNode):
         return ["OUT", 'DICT']
 
     def get_netlogic_class_name(self):
-        return "bgelogic.InitEmptyDict"
+        return "definitions.InitEmptyDict"
 
     def get_input_sockets_field_names(self):
         return ["condition"]
@@ -8938,7 +9135,7 @@ class NLInitNewDict(bpy.types.Node, NLActionNode):
         return ["OUT", 'DICT']
 
     def get_netlogic_class_name(self):
-        return "bgelogic.InitNewDict"
+        return "definitions.InitNewDict"
 
     def get_input_sockets_field_names(self):
         return ["condition", 'key', 'val']
@@ -8966,7 +9163,7 @@ class NLSetDictKeyValue(bpy.types.Node, NLActionNode):
         return ["OUT", "DICT"]
 
     def get_netlogic_class_name(self):
-        return "bgelogic.SetDictKeyValue"
+        return "definitions.SetDictKeyValue"
 
     def get_input_sockets_field_names(self):
         return ["condition", 'dict', 'key', 'val']
@@ -8993,7 +9190,7 @@ class NLSetDictDelKey(bpy.types.Node, NLActionNode):
         return ["OUT", "DICT"]
 
     def get_netlogic_class_name(self):
-        return "bgelogic.SetDictDelKey"
+        return "definitions.SetDictDelKey"
 
     def get_input_sockets_field_names(self):
         return ["condition", 'dict', 'key']
@@ -9019,7 +9216,7 @@ class NLInitEmptyList(bpy.types.Node, NLActionNode):
         return ["OUT", 'LIST']
 
     def get_netlogic_class_name(self):
-        return "bgelogic.InitEmptyList"
+        return "definitions.InitEmptyList"
 
     def get_input_sockets_field_names(self):
         return ["condition", 'length']
@@ -9058,7 +9255,7 @@ class NLInitNewList(bpy.types.Node, NLActionNode):
         return ['LIST']
 
     def get_netlogic_class_name(self):
-        return "bgelogic.InitNewList"
+        return "definitions.InitNewList"
 
     def get_input_sockets_field_names(self):
         return [
@@ -9092,7 +9289,7 @@ class NLAppendListItem(bpy.types.Node, NLActionNode):
         return ["OUT", "LIST"]
 
     def get_netlogic_class_name(self):
-        return "bgelogic.AppendListItem"
+        return "definitions.AppendListItem"
 
     def get_input_sockets_field_names(self):
         return ["condition", 'items', 'val']
@@ -9120,7 +9317,7 @@ class NLSetListIndex(bpy.types.Node, NLActionNode):
         return ["OUT", "LIST"]
 
     def get_netlogic_class_name(self):
-        return "bgelogic.SetListIndex"
+        return "definitions.SetListIndex"
 
     def get_input_sockets_field_names(self):
         return ["condition", 'items', 'index', 'val']
@@ -9147,7 +9344,7 @@ class NLRemoveListValue(bpy.types.Node, NLActionNode):
         return ["OUT", "LIST"]
 
     def get_netlogic_class_name(self):
-        return "bgelogic.RemoveListValue"
+        return "definitions.RemoveListValue"
 
     def get_input_sockets_field_names(self):
         return ["condition", 'items', 'val']
@@ -9174,7 +9371,7 @@ class NLRemoveListIndex(bpy.types.Node, NLActionNode):
         return ["OUT", "LIST"]
 
     def get_netlogic_class_name(self):
-        return "bgelogic.RemoveListIndex"
+        return "definitions.RemoveListIndex"
 
     def get_input_sockets_field_names(self):
         return ["condition", 'items', 'idx']
@@ -9202,7 +9399,7 @@ class NLActionInstallSubNetwork(bpy.types.Node, NLActionNode):
         return ["OUT"]
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ActionInstalSubNetwork"
+        return "definitions.ActionInstalSubNetwork"
 
     def get_input_sockets_field_names(self):
         return ["condition", "target_object", "tree_name", "initial_status"]
@@ -9228,7 +9425,7 @@ class NLActionExecuteNetwork(bpy.types.Node, NLActionNode):
         return ["OUT"]
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ActionExecuteNetwork"
+        return "definitions.ActionExecuteNetwork"
 
     def get_input_sockets_field_names(self):
         return ["condition", "target_object", "tree_name"]
@@ -9256,7 +9453,7 @@ class NLActionStopAnimation(bpy.types.Node, NLActionNode):
         return ["OUT"]
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ActionStopAnimation"
+        return "definitions.ActionStopAnimation"
 
     def get_input_sockets_field_names(self):
         return ["condition", "game_object", "action_layer"]
@@ -9287,7 +9484,7 @@ class NLActionSetAnimationFrame(bpy.types.Node, NLActionNode):
         return ["OUT"]
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ActionSetAnimationFrame"
+        return "definitions.ActionSetAnimationFrame"
 
     def get_input_sockets_field_names(self):
         return [
@@ -9332,7 +9529,7 @@ class NLActionApplyLocation(bpy.types.Node, NLActionNode):
         )
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ActionApplyLocation"
+        return "definitions.ActionApplyLocation"
 
     def get_input_sockets_field_names(self):
         return ["condition", "game_object", "movement"]
@@ -9372,7 +9569,7 @@ class NLActionApplyRotation(bpy.types.Node, NLActionNode):
         )
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ActionApplyRotation"
+        return "definitions.ActionApplyRotation"
 
     def get_input_sockets_field_names(self):
         return ["condition", "game_object", "rotation"]
@@ -9413,7 +9610,7 @@ class NLActionApplyForce(bpy.types.Node, NLActionNode):
         )
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ActionApplyForce"
+        return "definitions.ActionApplyForce"
 
     def get_input_sockets_field_names(self):
         return ["condition", "game_object", "force"]
@@ -9452,7 +9649,7 @@ class NLActionApplyImpulse(bpy.types.Node, NLActionNode):
         )
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ActionApplyImpulse"
+        return "definitions.ActionApplyImpulse"
 
     def get_input_sockets_field_names(self):
         return ["condition", "game_object", "point", 'impulse']
@@ -9507,7 +9704,7 @@ class NLGamepadLook(bpy.types.Node, NLActionNode):
         layout.prop(self, "axis", text='')
 
     def get_netlogic_class_name(self):
-        return "bgelogic.GamepadLook"
+        return "definitions.GamepadLook"
 
     def get_input_sockets_field_names(self):
         return [
@@ -9557,7 +9754,7 @@ class NLSetCollisionGroup(bpy.types.Node, NLActionNode):
         return ["OUT"]
 
     def get_netlogic_class_name(self):
-        return "bgelogic.SetCollisionGroup"
+        return "definitions.SetCollisionGroup"
 
     def get_input_sockets_field_names(self):
         return ["condition", "game_object", 'slots']
@@ -9582,7 +9779,7 @@ class NLSetCollisionMask(bpy.types.Node, NLActionNode):
         return ["OUT"]
 
     def get_netlogic_class_name(self):
-        return "bgelogic.SetCollisionMask"
+        return "definitions.SetCollisionMask"
 
     def get_input_sockets_field_names(self):
         return ["condition", "game_object", 'slots']
@@ -9607,7 +9804,7 @@ class NLActionCharacterJump(bpy.types.Node, NLActionNode):
         return ["OUT"]
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ActionCharacterJump"
+        return "definitions.ActionCharacterJump"
 
     def get_input_sockets_field_names(self):
         return ["condition", "game_object"]
@@ -9633,7 +9830,7 @@ class NLSetCharacterJumpSpeed(bpy.types.Node, NLActionNode):
         return ["OUT"]
 
     def get_netlogic_class_name(self):
-        return "bgelogic.SetCharacterJumpSpeed"
+        return "definitions.SetCharacterJumpSpeed"
 
     def get_input_sockets_field_names(self):
         return ["condition", "game_object", "force"]
@@ -9675,7 +9872,7 @@ class NLActionSaveGame(bpy.types.Node, NLActionNode):
             layout.prop(self, "path", text='')
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ActionSaveGame"
+        return "definitions.ActionSaveGame"
 
     def get_input_sockets_field_names(self):
         return ["condition", 'slot']
@@ -9732,7 +9929,7 @@ class NLActionLoadGame(bpy.types.Node, NLActionNode):
             layout.prop(self, "path", text='')
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ActionLoadGame"
+        return "definitions.ActionLoadGame"
 
     def get_input_sockets_field_names(self):
         return ["condition", 'slot']
@@ -9794,7 +9991,7 @@ class NLActionSaveVariable(bpy.types.Node, NLActionNode):
             layout.prop(self, "path", text='')
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ActionSaveVariable"
+        return "definitions.ActionSaveVariable"
 
     def get_input_sockets_field_names(self):
         return ["condition", 'name', 'val']
@@ -9860,7 +10057,7 @@ class NLActionSaveVariables(bpy.types.Node, NLActionNode):
             layout.prop(self, "path", text='')
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ActionSaveVariables"
+        return "definitions.ActionSaveVariables"
 
     def get_input_sockets_field_names(self):
         return ["condition", 'val']
@@ -9903,7 +10100,7 @@ class NLParameterSetAttribute(bpy.types.Node, NLActionNode):
         self.inputs.new(NLValueFieldSocket.bl_idname, "")
 
     def get_netlogic_class_name(self):
-        return "bgelogic.SetObInstanceAttr"
+        return "definitions.SetObInstanceAttr"
 
     def get_input_sockets_field_names(self):
         return ['condition', 'instance', 'attr', 'value']
@@ -9950,7 +10147,7 @@ class NLActionLoadVariable(bpy.types.Node, NLActionNode):
             layout.prop(self, "path", text='')
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ActionLoadVariable"
+        return "definitions.ActionLoadVariable"
 
     def get_input_sockets_field_names(self):
         return ["condition", 'name']
@@ -10016,7 +10213,7 @@ class NLActionLoadVariables(bpy.types.Node, NLActionNode):
             layout.prop(self, "path", text='')
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ActionLoadVariables"
+        return "definitions.ActionLoadVariables"
 
     def get_input_sockets_field_names(self):
         return ["condition", 'name']
@@ -10083,7 +10280,7 @@ class NLActionRemoveVariable(bpy.types.Node, NLActionNode):
             layout.prop(self, "path", text='')
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ActionRemoveVariable"
+        return "definitions.ActionRemoveVariable"
 
     def get_input_sockets_field_names(self):
         return ["condition", 'name']
@@ -10148,7 +10345,7 @@ class NLActionClearVariables(bpy.types.Node, NLActionNode):
             layout.prop(self, "path", text='')
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ActionClearVariables"
+        return "definitions.ActionClearVariables"
 
     def get_input_sockets_field_names(self):
         return ["condition"]
@@ -10215,7 +10412,7 @@ class NLActionListVariables(bpy.types.Node, NLActionNode):
             layout.prop(self, "path", text='')
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ActionListVariables"
+        return "definitions.ActionListVariables"
 
     def get_input_sockets_field_names(self):
         return ["condition", 'print_list']
@@ -10262,7 +10459,7 @@ class NLActionSetCharacterJump(bpy.types.Node, NLActionNode):
         return ["OUT"]
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ActionSetCharacterJump"
+        return "definitions.ActionSetCharacterJump"
 
     def get_input_sockets_field_names(self):
         return ["condition", "game_object", 'max_jumps']
@@ -10288,7 +10485,7 @@ class NLActionSetCharacterGravity(bpy.types.Node, NLActionNode):
         return ["OUT"]
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ActionSetCharacterGravity"
+        return "definitions.ActionSetCharacterGravity"
 
     def get_input_sockets_field_names(self):
         return ["condition", "game_object", 'gravity']
@@ -10323,7 +10520,7 @@ class NLActionSetCharacterWalkDir(bpy.types.Node, NLActionNode):
         )
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ActionSetCharacterWalkDir"
+        return "definitions.ActionSetCharacterWalkDir"
 
     def get_input_sockets_field_names(self):
         return ["condition", "game_object", 'walkDir']
@@ -10362,7 +10559,7 @@ class NLActionSetCharacterVelocity(bpy.types.Node, NLActionNode):
         )
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ActionSetCharacterVelocity"
+        return "definitions.ActionSetCharacterVelocity"
 
     def get_input_sockets_field_names(self):
         return ["condition", "game_object", 'vel', 'time']
@@ -10402,7 +10599,7 @@ class NLActionApplyTorque(bpy.types.Node, NLActionNode):
         )
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ActionApplyTorque"
+        return "definitions.ActionApplyTorque"
 
     def get_input_sockets_field_names(self):
         return ["condition", "game_object", "torque"]
@@ -10430,7 +10627,7 @@ class NLActionEndObjectNode(bpy.types.Node, NLActionNode):
         return ["OUT"]
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ActionEndObject"
+        return "definitions.ActionEndObject"
 
     def get_input_sockets_field_names(self):
         return ["condition", "game_object"]
@@ -10455,7 +10652,7 @@ class NLActionSetTimeScale(bpy.types.Node, NLActionNode):
         return ["OUT"]
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ActionSetTimeScale"
+        return "definitions.ActionSetTimeScale"
 
     def get_input_sockets_field_names(self):
         return ["condition", "timescale"]
@@ -10479,7 +10676,7 @@ class NLActionSetGravity(bpy.types.Node, NLActionNode):
     def get_output_socket_varnames(self):
         return ["OUT"]
 
-    def get_netlogic_class_name(self): return "bgelogic.ActionSetGravity"
+    def get_netlogic_class_name(self): return "definitions.ActionSetGravity"
     def get_input_sockets_field_names(self): return ["condition", "gravity"]
 
 
@@ -10506,7 +10703,7 @@ class NLActionReplaceMesh(bpy.types.Node, NLActionNode):
         return ["OUT"]
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ActionReplaceMesh"
+        return "definitions.ActionReplaceMesh"
 
     def get_input_sockets_field_names(self):
         return [
@@ -10538,7 +10735,7 @@ class NLActionRemovePhysicsConstraint(bpy.types.Node, NLActionNode):
         return ["OUT"]
 
     def get_netlogic_class_name(self):
-        return "bgelogic.RemovePhysicsConstraint"
+        return "definitions.RemovePhysicsConstraint"
 
     def get_input_sockets_field_names(self):
         return ["condition", "object", "name"]
@@ -10585,7 +10782,7 @@ class NLActionAddPhysicsConstraint(bpy.types.Node, NLActionNode):
         return ["OUT"]
 
     def get_netlogic_class_name(self):
-        return "bgelogic.AddPhysicsConstraint"
+        return "definitions.AddPhysicsConstraint"
 
     def get_input_sockets_field_names(self):
         return [
@@ -10621,7 +10818,7 @@ class NLSetGammaAction(bpy.types.Node, NLActionNode):
         return ["OUT"]
 
     def get_netlogic_class_name(self):
-        return "bgelogic.SetGamma"
+        return "definitions.SetGamma"
 
     def get_input_sockets_field_names(self):
         return [
@@ -10649,7 +10846,7 @@ class NLSetExposureAction(bpy.types.Node, NLActionNode):
         return ["OUT"]
 
     def get_netlogic_class_name(self):
-        return "bgelogic.SetExposure"
+        return "definitions.SetExposure"
 
     def get_input_sockets_field_names(self):
         return [
@@ -10677,7 +10874,7 @@ class NLSetEeveeAO(bpy.types.Node, NLActionNode):
         return ["OUT"]
 
     def get_netlogic_class_name(self):
-        return "bgelogic.SetEeveeAO"
+        return "definitions.SetEeveeAO"
 
     def get_input_sockets_field_names(self):
         return [
@@ -10705,7 +10902,7 @@ class NLSetEeveeBloom(bpy.types.Node, NLActionNode):
         return ["OUT"]
 
     def get_netlogic_class_name(self):
-        return "bgelogic.SetEeveeBloom"
+        return "definitions.SetEeveeBloom"
 
     def get_input_sockets_field_names(self):
         return [
@@ -10733,7 +10930,7 @@ class NLSetEeveeSSR(bpy.types.Node, NLActionNode):
         return ["OUT"]
 
     def get_netlogic_class_name(self):
-        return "bgelogic.SetEeveeSSR"
+        return "definitions.SetEeveeSSR"
 
     def get_input_sockets_field_names(self):
         return [
@@ -10761,7 +10958,7 @@ class NLSetEeveeVolumetrics(bpy.types.Node, NLActionNode):
         return ["OUT"]
 
     def get_netlogic_class_name(self):
-        return "bgelogic.SetEeveeVolumetrics"
+        return "definitions.SetEeveeVolumetrics"
 
     def get_input_sockets_field_names(self):
         return [
@@ -10789,7 +10986,7 @@ class NLSetEeveeSMAA(bpy.types.Node, NLActionNode):
         return ["OUT"]
 
     def get_netlogic_class_name(self):
-        return "bgelogic.SetEeveeSMAA"
+        return "definitions.SetEeveeSMAA"
 
     def get_input_sockets_field_names(self):
         return [
@@ -10817,7 +11014,7 @@ class NLSetEeveeSMAAQuality(bpy.types.Node, NLActionNode):
         return ["OUT"]
 
     def get_netlogic_class_name(self):
-        return "bgelogic.SetEeveeSMAAQuality"
+        return "definitions.SetEeveeSMAAQuality"
 
     def get_input_sockets_field_names(self):
         return [
@@ -10845,7 +11042,7 @@ class NLSetLightEnergyAction(bpy.types.Node, NLActionNode):
         return ["OUT"]
 
     def get_netlogic_class_name(self):
-        return "bgelogic.SetLightEnergy"
+        return "definitions.SetLightEnergy"
 
     def get_input_sockets_field_names(self):
         return [
@@ -10874,7 +11071,7 @@ class NLMakeUniqueLight(bpy.types.Node, NLActionNode):
         return ["OUT", 'LIGHT']
 
     def get_netlogic_class_name(self):
-        return "bgelogic.GEMakeUniqueLight"
+        return "definitions.GEMakeUniqueLight"
 
     def get_input_sockets_field_names(self):
         return [
@@ -10902,7 +11099,7 @@ class NLSetLightShadowAction(bpy.types.Node, NLActionNode):
         return ["OUT"]
 
     def get_netlogic_class_name(self):
-        return "bgelogic.SetLightShadow"
+        return "definitions.SetLightShadow"
 
     def get_input_sockets_field_names(self):
         return [
@@ -10932,7 +11129,7 @@ class NLSetLightColorAction(bpy.types.Node, NLActionNode):
         return ["OUT"]
 
     def get_netlogic_class_name(self):
-        return "bgelogic.SetLightColor"
+        return "definitions.SetLightColor"
 
     def get_input_sockets_field_names(self):
         return [
@@ -10959,7 +11156,7 @@ class NLGetLightEnergy(bpy.types.Node, NLParameterNode):
         return ['ENERGY']
 
     def get_netlogic_class_name(self):
-        return "bgelogic.GetLightEnergy"
+        return "definitions.GetLightEnergy"
 
     def get_input_sockets_field_names(self):
         return ["lamp"]
@@ -10982,7 +11179,7 @@ class NLGetLightColorAction(bpy.types.Node, NLParameterNode):
         return ['COLOR']
 
     def get_netlogic_class_name(self):
-        return "bgelogic.GetLightColor"
+        return "definitions.GetLightColor"
 
     def get_input_sockets_field_names(self):
         return ["lamp"]
@@ -11029,7 +11226,7 @@ class NLActionPlayActionNode(bpy.types.Node, NLActionNode):
             self.inputs[8].enabled = False
         else:
             self.inputs[8].enabled = True
-        adv = [9, 10, 11, 12]
+        adv = [8, 9, 10, 11, 12]
         for x in adv:
             self.inputs[x].enabled = self.advanced
 
@@ -11037,7 +11234,7 @@ class NLActionPlayActionNode(bpy.types.Node, NLActionNode):
         layout.prop(self, 'advanced', text='Advanced', icon='SETTINGS')
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ActionPlayAction"
+        return "definitions.ActionPlayAction"
 
     def get_input_sockets_field_names(self):
         return [
@@ -11092,7 +11289,7 @@ class NLActionAlignAxisToVector(bpy.types.Node, NLActionNode):
         return ["OUT"]
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ActionAlignAxisToVector"
+        return "definitions.ActionAlignAxisToVector"
 
     def get_input_sockets_field_names(self):
         return ["condition", "game_object", "vector", "axis", 'factor']
@@ -11118,7 +11315,7 @@ class NLActionTimeBarrier(bpy.types.Node, NLActionNode):
         self.outputs.new(NLConditionSocket.bl_idname, 'Out')
 
     def get_netlogic_class_name(self):
-        return 'bgelogic.GEBarrier'
+        return 'definitions.GEBarrier'
 
     def get_input_sockets_field_names(self):
         return ['condition', 'time']
@@ -11140,7 +11337,7 @@ class NLActionTimeDelay(bpy.types.Node, NLActionNode):
         self.outputs.new(NLConditionSocket.bl_idname, 'Out')
 
     def get_netlogic_class_name(self):
-        return 'bgelogic.ActionTimeDelay'
+        return 'definitions.ActionTimeDelay'
 
     def get_input_sockets_field_names(self):
         return ['condition', 'delay']
@@ -11166,7 +11363,7 @@ class NLActionTimeFilter(bpy.types.Node, NLActionNode):
         self.outputs.new(NLConditionSocket.bl_idname, "Out")
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ActionTimeFilter"
+        return "definitions.ActionTimeFilter"
 
     def get_input_sockets_field_names(self):
         return ["condition", "delay"]
@@ -11224,7 +11421,7 @@ class NLActionMouseLookNode(bpy.types.Node, NLActionNode):
         return ["OUT"]
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ActionMouseLook"
+        return "definitions.ActionMouseLook"
 
     def get_nonsocket_fields(self):
         return [("axis", lambda: self.axis)]
@@ -11263,7 +11460,7 @@ class NLActionPrint(bpy.types.Node, NLActionNode):
         return ["OUT"]
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ActionPrint"
+        return "definitions.ActionPrint"
 
     def get_input_sockets_field_names(self):
         return ["condition", "value"]
@@ -11292,7 +11489,7 @@ class NLActionMousePickNode(bpy.types.Node, NLActionNode):
         self.outputs.new(NLVectorSocket.bl_idname, "Picked Normal")
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ActionMousePick"
+        return "definitions.ActionMousePick"
 
     def get_input_sockets_field_names(self):
         return ["condition", "camera", "property", 'xray', "distance"]
@@ -11325,7 +11522,7 @@ class NLActionCameraPickNode(bpy.types.Node, NLActionNode):
         self.outputs.new(NLVectorSocket.bl_idname, "Picked Normal")
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ActionCameraPick"
+        return "definitions.ActionCameraPick"
 
     def get_input_sockets_field_names(self):
         return ["condition", "camera", "aim", "property_name", "xray", "distance"]
@@ -11360,7 +11557,7 @@ class NLActionSetParentNode(bpy.types.Node, NLActionNode):
         return ["OUT"]
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ActionSetParent"
+        return "definitions.ActionSetParent"
 
     def get_input_sockets_field_names(self):
         return [
@@ -11391,7 +11588,7 @@ class NLActionRemoveParentNode(bpy.types.Node, NLActionNode):
         return ["OUT"]
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ActionRemoveParent"
+        return "definitions.ActionRemoveParent"
 
     def get_input_sockets_field_names(self):
         return ["condition", "child_object"]
@@ -11420,7 +11617,7 @@ class NLActionGetPerformanceProfileNode(bpy.types.Node, NLActionNode):
         return ["OUT", "DATA"]
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ActionPerformanceProfile"
+        return "definitions.ActionPerformanceProfile"
 
     def get_input_sockets_field_names(self):
         return [
@@ -11447,7 +11644,7 @@ class NLParameterGameObjectParent(bpy.types.Node, NLParameterNode):
         self.outputs.new(NLGameObjectSocket.bl_idname, "Parent Object")
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ParameterParentGameObject"
+        return "definitions.ParameterParentGameObject"
 
     def get_input_sockets_field_names(self):
         return ["game_object"]
@@ -11477,7 +11674,7 @@ class NLParameterAxisVector(bpy.types.Node, NLParameterNode):
         layout.prop(self, 'axis', text='')
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ParameterAxisVector"
+        return "definitions.ParameterAxisVector"
 
     def get_input_sockets_field_names(self):
         return ["game_object"]
@@ -11502,7 +11699,7 @@ class NLGetObjectDataName(bpy.types.Node, NLParameterNode):
         self.outputs.new(NLParameterSocket.bl_idname, "Name")
 
     def get_netlogic_class_name(self):
-        return "bgelogic.GetObjectDataName"
+        return "definitions.GetObjectDataName"
 
     def get_input_sockets_field_names(self):
         return ["game_object"]
@@ -11523,7 +11720,7 @@ class NLGetCurvePoints(bpy.types.Node, NLParameterNode):
         self.outputs.new(NLListSocket.bl_idname, "Points")
 
     def get_netlogic_class_name(self):
-        return "bgelogic.GetCurvePoints"
+        return "definitions.GetCurvePoints"
 
     def get_input_sockets_field_names(self):
         return ["curve"]
@@ -11545,7 +11742,7 @@ class NLGetObjectVertices(bpy.types.Node, NLParameterNode):
         self.outputs.new(NLListSocket.bl_idname, "Vertices")
 
     def get_netlogic_class_name(self):
-        return "bgelogic.GetObjectVertices"
+        return "definitions.GetObjectVertices"
 
     def get_input_sockets_field_names(self):
         return ["game_object"]
@@ -11588,7 +11785,7 @@ class NLSetBoneConstraintInfluence(bpy.types.Node, NLActionNode):
         return ["OUT"]
 
     def get_netlogic_class_name(self):
-        return "bgelogic.GESetBoneConstraintInfluence"
+        return "definitions.GESetBoneConstraintInfluence"
 
     def get_input_sockets_field_names(self):
         return [
@@ -11637,7 +11834,7 @@ class NLSetBoneConstraintTarget(bpy.types.Node, NLActionNode):
         return ["OUT"]
 
     def get_netlogic_class_name(self):
-        return "bgelogic.GESetBoneConstraintTarget"
+        return "definitions.GESetBoneConstraintTarget"
 
     def get_input_sockets_field_names(self):
         return [
@@ -11687,7 +11884,7 @@ class NLSetBoneConstraintAttribute(bpy.types.Node, NLActionNode):
         return ["OUT"]
 
     def get_netlogic_class_name(self):
-        return "bgelogic.GESetBoneConstraintAttribute"
+        return "definitions.GESetBoneConstraintAttribute"
 
     def get_input_sockets_field_names(self):
         return [
@@ -11723,7 +11920,7 @@ class NLActionSetBonePos(bpy.types.Node, NLActionNode):
         return ["OUT"]
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ActionSetBonePos"
+        return "definitions.ActionSetBonePos"
 
     def get_input_sockets_field_names(self):
         return ["condition", "armature", "bone_name", "set_translation"]
@@ -11757,7 +11954,7 @@ class NLActionEditBoneNode(bpy.types.Node, NLActionNode):
         return ["OUT"]
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ActionEditBone"
+        return "definitions.ActionEditBone"
 
     def get_input_sockets_field_names(self):
         return [
@@ -11796,7 +11993,7 @@ class NLActionSetDynamicsNode(bpy.types.Node, NLActionNode):
         return ["OUT"]
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ActionSetDynamics"
+        return "definitions.ActionSetDynamics"
 
     def get_input_sockets_field_names(self):
         return ["condition", "game_object", "activate", 'ghost']
@@ -11824,7 +12021,7 @@ class NLActionSetPhysicsNode(bpy.types.Node, NLActionNode):
         return ["OUT"]
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ActionSetPhysics"
+        return "definitions.ActionSetPhysics"
 
     def get_input_sockets_field_names(self):
         return ["condition", "game_object", "activate", 'free_const']
@@ -11851,7 +12048,7 @@ class NLSetRigidBody(bpy.types.Node, NLActionNode):
         return ["OUT"]
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ActionSetRigidBody"
+        return "definitions.ActionSetRigidBody"
 
     def get_input_sockets_field_names(self):
         return ["condition", "game_object", "activate"]
@@ -11880,7 +12077,7 @@ class NLActionSetMousePosition(bpy.types.Node, NLActionNode):
         return ["OUT"]
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ActionSetMousePosition"
+        return "definitions.ActionSetMousePosition"
 
     def get_input_sockets_field_names(self):
         return ["condition", "screen_x", "screen_y"]
@@ -11906,7 +12103,7 @@ class NLActionSetMouseCursorVisibility(bpy.types.Node, NLActionNode):
         return ["OUT"]
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ActionSetMouseCursorVisibility"
+        return "definitions.ActionSetMouseCursorVisibility"
 
     def get_input_sockets_field_names(self):
         return ["condition", "visibility_status"]
@@ -11974,7 +12171,7 @@ class NLActionStart3DSoundAdv(bpy.types.Node, NLActionNode):
         return ["DONE", 'ON_FINISH', "HANDLE"]
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ActionStart3DSoundAdv"
+        return "definitions.ActionStart3DSoundAdv"
 
     def get_input_sockets_field_names(self):
         return [
@@ -12021,7 +12218,7 @@ class NLActionStartSound(bpy.types.Node, NLActionNode):
         return ["DONE", 'ON_FINISH', "HANDLE"]
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ActionStartSound"
+        return "definitions.ActionStartSound"
 
     def get_input_sockets_field_names(self):
         return [
@@ -12047,7 +12244,7 @@ class NLActionStopAllSounds(bpy.types.Node, NLActionNode):
         self.inputs.new(NLConditionSocket.bl_idname, "Condition")
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ActionStopAllSounds"
+        return "definitions.ActionStopAllSounds"
 
     def get_input_sockets_field_names(self):
         return ["condition"]
@@ -12068,7 +12265,7 @@ class NLActionStopSound(bpy.types.Node, NLActionNode):
         self.inputs.new(NLParameterSocket.bl_idname, "Sound")
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ActionStopSound"
+        return "definitions.ActionStopSound"
 
     def get_input_sockets_field_names(self):
         return ["condition", "sound"]
@@ -12089,7 +12286,7 @@ class NLActionPauseSound(bpy.types.Node, NLActionNode):
         self.inputs.new(NLParameterSocket.bl_idname, "Sound")
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ActionPauseSound"
+        return "definitions.ActionPauseSound"
 
     def get_input_sockets_field_names(self):
         return ["condition", "sound"]
@@ -12110,7 +12307,7 @@ class NLActionResumeSound(bpy.types.Node, NLActionNode):
         self.inputs.new(NLParameterSocket.bl_idname, "Sound")
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ActionResumeSound"
+        return "definitions.ActionResumeSound"
 
     def get_input_sockets_field_names(self):
         return ["condition", "sound"]
@@ -12130,7 +12327,7 @@ class NLActionEndGame(bpy.types.Node, NLActionNode):
         self.inputs.new(NLConditionSocket.bl_idname, "Condition")
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ActionEndGame"
+        return "definitions.ActionEndGame"
 
     def get_input_sockets_field_names(self):
         return ["condition"]
@@ -12154,7 +12351,7 @@ class NLActionRestartGame(bpy.types.Node, NLActionNode):
         return ["OUT"]
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ActionRestartGame"
+        return "definitions.ActionRestartGame"
 
     def get_input_sockets_field_names(self):
         return ["condition"]
@@ -12178,7 +12375,7 @@ class NLActionStartGame(bpy.types.Node, NLActionNode):
         return ["OUT"]
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ActionStartGame"
+        return "definitions.ActionStartGame"
 
     def get_input_sockets_field_names(self):
         return ["condition", "file_name"]
@@ -12207,7 +12404,7 @@ class NLParameterReceiveMessage(bpy.types.Node, NLParameterNode):
         return ["OUT", 'BODY', 'TARGET']
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ReceiveMessage"
+        return "definitions.ReceiveMessage"
 
 
 _nodes.append(NLParameterReceiveMessage)
@@ -12234,7 +12431,7 @@ class NLParameterGetGlobalValue(bpy.types.Node, NLParameterNode):
         return ["data_id", "key", 'default']
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ParameterGetGlobalValue"
+        return "definitions.ParameterGetGlobalValue"
 
 
 _nodes.append(NLParameterGetGlobalValue)
@@ -12257,7 +12454,7 @@ class NLActionListGlobalValues(bpy.types.Node, NLActionNode):
         return ['condition', "data_id", 'print_d']
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ActionListGlobalValues"
+        return "definitions.ActionListGlobalValues"
 
 
 _nodes.append(NLActionListGlobalValues)
@@ -12298,7 +12495,7 @@ class NLActionCreateMessage(bpy.types.Node, NLActionNode):
         return ["condition", "subject", "body", 'target']
 
     def get_netlogic_class_name(self):
-        return "bgelogic.CreateMessage"
+        return "definitions.CreateMessage"
 
 
 _nodes.append(NLActionCreateMessage)
@@ -12322,7 +12519,7 @@ class NLPrintCustomEvents(bpy.types.Node, NLActionNode):
         return ["condition"]
 
     def get_netlogic_class_name(self):
-        return "bgelogic.PrintCustomEvents"
+        return "definitions.PrintCustomEvents"
 
 
 _nodes.append(NLPrintCustomEvents)
@@ -12355,7 +12552,7 @@ class NLActionSetGlobalValue(bpy.types.Node, NLActionNode):
         return ["condition", "data_id", "key", "value", 'persistent']
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ActionSetGlobalValue"
+        return "definitions.ActionSetGlobalValue"
 
 
 _nodes.append(NLActionSetGlobalValue)
@@ -12393,7 +12590,7 @@ class NLParameterFormattedString(bpy.types.Node, NLParameterNode):
         return ["format_string", "value_a", "value_b", "value_c", "value_d"]
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ParameterFormattedString"
+        return "definitions.ParameterFormattedString"
 
 
 _nodes.append(NLParameterFormattedString)
@@ -12417,7 +12614,7 @@ class NLActionRandomInteger(bpy.types.Node, NLActionNode):
         return ["condition", "max_value", "min_value"]
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ActionRandomInt"
+        return "definitions.ActionRandomInt"
 
     def get_output_socket_varnames(self):
         return ["DONE", "OUT_A"]
@@ -12444,7 +12641,7 @@ class NLActionRandomFloat(bpy.types.Node, NLActionNode):
         return ["condition", "max_value", "min_value"]
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ActionRandomFloat"
+        return "definitions.ActionRandomFloat"
 
     def get_output_socket_varnames(self):
         return ["DONE", "OUT_A"]
@@ -12470,7 +12667,7 @@ class NLRandomVect(bpy.types.Node, NLActionNode):
         return ["condition", 'xyz']
 
     def get_netlogic_class_name(self):
-        return "bgelogic.GERandomVect"
+        return "definitions.GERandomVect"
 
     def get_output_socket_varnames(self):
         return ["DONE", "OUT_A"]
@@ -12494,7 +12691,7 @@ class NLParameterDistance(bpy.types.Node, NLParameterNode):
         return ["parama", "paramb"]
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ParameterDistance"
+        return "definitions.ParameterDistance"
 
 
 _nodes.append(NLParameterDistance)
@@ -12516,7 +12713,7 @@ class NLParameterKeyboardKeyCode(bpy.types.Node, NLParameterNode):
         return ["key_code"]
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ParameterKeyboardKeyCode"
+        return "definitions.ParameterKeyboardKeyCode"
 
 
 _nodes.append(NLParameterKeyboardKeyCode)
@@ -12551,7 +12748,7 @@ class NLActionMoveTo(bpy.types.Node, NLActionNode):
         ]
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ActionMoveTo"
+        return "definitions.ActionMoveTo"
 
 
 _nodes.append(NLActionMoveTo)
@@ -12577,7 +12774,7 @@ class NLActionTranslate(bpy.types.Node, NLActionNode):
         return ["condition", "moving_object", "local", "vect", "speed"]
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ActionTranslate"
+        return "definitions.ActionTranslate"
 
 
 _nodes.append(NLActionTranslate)
@@ -12610,7 +12807,7 @@ class NLActionRotateTo(bpy.types.Node, NLActionNode):
         ]
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ActionRotateTo"
+        return "definitions.ActionRotateTo"
 
 
 _nodes.append(NLActionRotateTo)
@@ -12627,7 +12824,7 @@ class NLActionNavigate(bpy.types.Node, NLActionNode):
         self.inputs.new(NLConditionSocket.bl_idname, "Condition")
         self.inputs.new(NLGameObjectSocket.bl_idname, "Moving Object")
         self.inputs.new(NLGameObjectSocket.bl_idname, "Rotating Object")
-        self.inputs.new(NLGameObjectSocket.bl_idname, "Navmesh Object")
+        self.inputs.new(NLNavMeshSocket.bl_idname, "Navmesh Object")
         self.inputs.new(NLVec3FieldSocket.bl_idname, "Destination")
         self.inputs.new(NLBooleanSocket.bl_idname, "Move as Dynamic")
         self.inputs.new(NLPositiveFloatSocket.bl_idname, "Lin Speed")
@@ -12644,7 +12841,7 @@ class NLActionNavigate(bpy.types.Node, NLActionNode):
         self.outputs.new(NLConditionSocket.bl_idname, "When Reached")
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ActionNavigateWithNavmesh"
+        return "definitions.ActionNavigateWithNavmesh"
 
     def get_input_sockets_field_names(self):
         return [
@@ -12681,7 +12878,7 @@ class NLActionFollowPath(bpy.types.Node, NLActionNode):
         self.inputs.new(NLListSocket.bl_idname,"Path Points")
         self.inputs.new(NLBooleanSocket.bl_idname, "Loop")
         self.inputs.new(NLBooleanSocket.bl_idname, "Continue")
-        self.inputs.new(NLGameObjectSocket.bl_idname, "Optional Navmesh")
+        self.inputs.new(NLNavMeshSocket.bl_idname, "Optional Navmesh")
         self.inputs.new(NLBooleanSocket.bl_idname, "Move as Dynamic")
         self.inputs.new(NLPositiveFloatSocket.bl_idname, "Lin Speed")
         self.inputs[-1].value = 1.0
@@ -12698,7 +12895,7 @@ class NLActionFollowPath(bpy.types.Node, NLActionNode):
         return ["OUT"]
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ActionFollowPath"
+        return "definitions.ActionFollowPath"
 
     def get_input_sockets_field_names(self):
         return [
@@ -12797,7 +12994,7 @@ class NLParameterMathFun(bpy.types.Node, NLParameterNode):
         return [("formula", '"{0}"'.format(self.value))]
 
     def get_netlogic_class_name(self):
-        return "bgelogic.ParameterMathFun"
+        return "definitions.ParameterMathFun"
 
 
 _nodes.append(NLParameterMathFun)

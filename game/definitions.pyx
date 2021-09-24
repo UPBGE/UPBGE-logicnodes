@@ -166,14 +166,14 @@ class GlobalDB(object):
         self.fname = file_name
         self.data = {}
 
-        filter(lambda a: a.__name__ == 'remove_globals', bpy.app.handlers.game_post)
+        filter(lambda a: a.__name__ == 'unload_nodes', bpy.app.handlers.game_post)
         remove_f = []
         for f in bpy.app.handlers.game_post:
-            if f.__name__ == 'remove_globals':
+            if f.__name__ == 'unload_nodes':
                 remove_f.append(f)
         for f in remove_f:
             bpy.app.handlers.game_post.remove(f)
-        bpy.app.handlers.game_post.append(remove_globals)
+        bpy.app.handlers.game_post.append(unload_nodes)
 
         log_size = GlobalDB.read(self.fname, self.data)
         if log_size > (5 * len(self.data)):
@@ -519,7 +519,7 @@ def stop_all_sounds(a, b):
     delattr(bpy.types.Scene, 'nl_aud_system')
 
 
-def remove_globals(a, b):
+def unload_nodes(a, b):
     if not hasattr(bpy.types.Scene, 'nl_globals_initialized'):
         return
     delattr(bpy.types.Scene, 'nl_globals_initialized')
@@ -2008,6 +2008,32 @@ class ConditionMouseScrolled(ConditionCell):
 ###############################################################################
 
 
+class GEGamepadActive(ConditionCell):
+    def __init__(self):
+        ConditionCell.__init__(self)
+        self.index = None
+    
+    def evaluate(self):
+        index = self.get_socket_value(self.index)
+        if logic.joysticks[index]:
+            joystick = logic.joysticks[index]
+        else:
+            debug('Gamepad Active Node: No Joystick at that Index!')
+            self._button = False
+            self._set_ready()
+            return
+        self._set_ready()
+        axis_active = False
+        for x in joystick.axisValues:
+            if x < -.1 or x > .1:
+                axis_active = True
+                break
+        self._set_value(
+            joystick.activeButtons or
+            axis_active
+        )
+
+
 class ConditionGamepadButtons(ConditionCell):
     def __init__(self, pulse=False, button=0):
         ConditionCell.__init__(self)
@@ -2022,14 +2048,15 @@ class ConditionGamepadButtons(ConditionCell):
         return self._button
 
     def evaluate(self):
-        self._set_ready()
         index = self.get_socket_value(self.index)
         if logic.joysticks[index]:
             joystick = logic.joysticks[index]
         else:
             debug('Gamepad Button Node: No Joystick at that Index!')
             self._button = False
+            self._set_ready()
             return
+        self._set_ready()
         if is_invalid(joystick):
             return
 
@@ -2259,6 +2286,17 @@ class ConditionKeyPressed(ConditionCell):
             )
         else:
             self._set_value(keystat.activated)
+
+
+class GEKeyboardActive(ConditionCell):
+    def __init__(self):
+        ConditionCell.__init__(self)
+    
+    def evaluate(self):
+        self._set_ready()
+        self._set_value(
+            len(self.network.active_keyboard_events) > 0
+        )
 
 
 ###############################################################################
@@ -3124,9 +3162,13 @@ class GetCollectionObjects(ParameterCell):
 class GetCollectionObjectNames(ParameterCell):
     def __init__(self):
         ParameterCell.__init__(self)
+        self.condition = None
         self.collection = None
 
     def evaluate(self):
+        condition = self.get_socket_value(self.condition)
+        if not_met(condition):
+            return
         collection = self.get_socket_value(self.collection)
         if is_invalid(collection):
             return
@@ -3139,6 +3181,46 @@ class GetCollectionObjectNames(ParameterCell):
             if not o.parent:
                 objects.append(o.name)
         self._set_value(objects)
+
+
+class GESetOverlayCollection(ParameterCell):
+    def __init__(self):
+        ParameterCell.__init__(self)
+        self.condition = None
+        self.camera = None
+        self.collection = None
+
+    def evaluate(self):
+        condition = self.get_socket_value(self.condition)
+        if not_met(condition):
+            return
+        collection = self.get_socket_value(self.collection)
+        camera = self.get_socket_value(self.camera)
+        if is_invalid(camera, collection):
+            return
+        self._set_ready()
+        col = bpy.data.collections.get(collection)
+        if not col:
+            return
+        logic.getCurrentScene().addOverlayCollection(camera, col)
+        self._set_value(True)
+
+
+class GERemoveOverlayCollection(ParameterCell):
+    def __init__(self):
+        ParameterCell.__init__(self)
+        self.collection = None
+
+    def evaluate(self):
+        collection = self.get_socket_value(self.collection)
+        if is_invalid(collection):
+            return
+        self._set_ready()
+        col = bpy.data.collections.get(collection)
+        if not col:
+            return
+        logic.getCurrentScene().removeOverlayCollection(col)
+        self._set_value(True)
 
 
 class ParameterScreenPosition(ParameterCell):
@@ -4264,11 +4346,7 @@ class ParameterFindChildByName(ParameterCell):
     def get_child(self):
         parent = self.get_socket_value(self.from_parent)
         childName = self.get_socket_value(self.child)
-        for x in parent.children:
-            if x.name == childName:
-                return x
-            else:
-                return
+        return(parent.childrenRecursive.get(childName))
 
     def evaluate(self):
         self._set_ready()
@@ -6457,9 +6535,9 @@ class ActionRayPick(ActionCell):
         condition = self.get_socket_value(self.condition)
         if not_met(condition):
             self._set_value(False)
-            self._out_normal = None
-            self._out_object = None
-            self._out_point = None
+            self._normal = None
+            self._object = None
+            # self._point = None
             return
         origin = self.get_socket_value(self.origin)
         destination = self.get_socket_value(self.destination)
@@ -9093,7 +9171,7 @@ class ActionPlayAction(ActionCell):
         speed = self.get_socket_value(self.speed)
         blendin = self.get_socket_value(self.blendin)
         blend_mode = self.get_socket_value(self.blend_mode)
-        if is_waiting(
+        if is_invalid(
             game_object,
             action_name,
             start_frame,

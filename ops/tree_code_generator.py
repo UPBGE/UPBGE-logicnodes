@@ -64,20 +64,46 @@ class TreeCodeGenerator(object):
         self.write_init_content(tree, writer)
         indent = self.write_pulse_line(tree, writer)
         self.write_pulse_content(tree, writer, indent)
+    
+    def write_unloader(self, writer):
+        writer.write_line("def unload_pyd(a, b):")
+        writer.set_indent_level(1)
+        writer.write_line("for m in sorted(sys.modules.keys()):")
+        writer.set_indent_level(2)
+        writer.write_line("if 'bge' in m:")
+        writer.set_indent_level(3)
+        writer.write_line("print(m)")
+        writer.set_indent_level(1)
+        writer.write_line("importlib.reload(bgelogic.definitions)")
+        writer.write_line("filter(lambda a: a.__name__ == 'unload_pyd', bpy.app.handlers.game_post)")
+        writer.write_line("remove_f = []")
+        writer.write_line("for f in bpy.app.handlers.game_post:")
+        writer.set_indent_level(2)
+        writer.write_line("if f.__name__ == 'unload_pyd':")
+        writer.set_indent_level(3)
+        writer.write_line("remove_f.append(f)")
+        writer.set_indent_level(1)
+        writer.write_line("for f in remove_f:")
+        writer.set_indent_level(2)
+        writer.write_line("bpy.app.handlers.game_post.remove(f)")
+        writer.write_line('')
+        writer.set_indent_level(0)
+
 
     def write_to_text(self, tree):
         tree_name = utils.make_valid_name(tree.name)
         line_writer = BLTextWrapper(f'nl_{tree_name.lower()}.py')
         line_writer.clear()
         line_writer.write_line("# MACHINE GENERATED")
-        line_writer.write_line("import bge")
+        line_writer.write_line("import bge, bpy, sys")
         line_writer.write_line("import mathutils")
         line_writer.write_line("import math")
         line_writer.write_line("from collections import OrderedDict")
-        user_modules = self.list_user_modules_needed_by_tree(tree)
-        for module in user_modules:
-            line_writer.write_line('{} = bgelogic.load_user_logic("{}")', module, module)
+        # user_modules = self.list_user_modules_needed_by_tree(tree)
+        # for module in user_modules:
+        #     line_writer.write_line('{} = bgelogic.load_user_logic("{}")', module, module)
         line_writer.write_line('')
+        # self.write_unloader(line_writer)
         line_writer.write_line(f'class {tree_name}(bge.types.KX_PythonComponent):')
         line_writer.write_line('')
         line_writer.set_indent_level(1)
@@ -101,20 +127,24 @@ class TreeCodeGenerator(object):
         buffer_name = utils.py_module_filename_for_tree(tree)
         line_writer = self.create_text_file("bgelogic/"+buffer_name)
         line_writer.write_line("# MACHINE GENERATED")
-        line_writer.write_line("import bge")
+        line_writer.write_line("import bge, bpy, sys, importlib")
         line_writer.write_line("import mathutils")
-        line_writer.write_line("import bgelogic")
+        line_writer.write_line("from bgelogic import definitions")
         line_writer.write_line("import math")
-        user_modules = self.list_user_modules_needed_by_tree(tree)
-        for module in user_modules:
-            line_writer.write_line('{} = bgelogic.load_user_logic("{}")', module, module)
+        # user_modules = self.list_user_modules_needed_by_tree(tree)
+        # for module in user_modules:
+        #     if module == 'bgelogic.game':
+        #         continue
+        #     line_writer.write_line('{} = game.load_user_logic("{}")', module, module)
         line_writer.write_line("")
+        # self.write_unloader(line_writer)
+        # line_writer.write_line("bpy.app.handlers.game_post.append(unload_pyd)")
         line_writer.write_line("def _initialize(owner):")
         line_writer.set_indent_level(1)
         return line_writer
 
     def write_init_content(self, tree, line_writer):
-        line_writer.write_line("network = bgelogic.LogicNetwork()")
+        line_writer.write_line("network = definitions.LogicNetwork()")
         cell_var_names, uid_map = self._write_tree(tree, line_writer)
         for varname in self._sort_cellvarnames(cell_var_names, uid_map):
             if not uid_map.is_removed(varname):
@@ -187,12 +217,13 @@ class TreeCodeGenerator(object):
         # shutil.copyfile(bgelogic_input_file, target_path)
 
         game_dir = os.path.join(bge_netlogic_dir, "game")
-        bgelogic_input_file = os.path.join(game_dir, "bgelogic.py")
+        bgelogic_input_file = os.path.join(game_dir, "definitions.pyx")
         bgelogic_source_code = None
         with open(bgelogic_input_file, "r") as f:
             bgelogic_source_code = f.read()
         assert (bgelogic_source_code is not None)
-        bgelogic_output_writer = self.create_text_file("bgelogic/__init__.py")
+        self.create_text_file("bgelogic/__init__.py")
+        bgelogic_output_writer = self.create_text_file("bgelogic/definitions.py")
         bgelogic_output_writer.write_line(bgelogic_source_code)
         bgelogic_output_writer.close()
 
