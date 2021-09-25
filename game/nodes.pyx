@@ -1,4 +1,3 @@
-import utilities
 from bge import logic
 import bge
 from bge.types import KX_GameObject as GameObject

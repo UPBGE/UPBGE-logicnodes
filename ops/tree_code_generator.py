@@ -50,9 +50,10 @@ class TreeCodeGenerator(object):
                     result.add(module_name)
         return result
 
-    def create_text_file(self, buffer_name):
-        file_path = bpy.path.abspath("//{}".format(buffer_name))
-        return FileTextBuffer(file_path)
+    def create_text_file(self, name, path=None):
+        if not path:
+            path = bpy.path.abspath('//bgelogic/')
+        return FileTextBuffer(os.path.join(path, name))
 
     def write_code_for_tree(self, tree):
         if getattr(bpy.context.scene.logic_node_settings, 'use_node_debug', False):
@@ -98,6 +99,7 @@ class TreeCodeGenerator(object):
         line_writer.write_line("import bge, bpy, sys")
         line_writer.write_line("import mathutils")
         line_writer.write_line("import math")
+        line_writer.write_line("from uplogic import nodes")
         line_writer.write_line("from collections import OrderedDict")
         # user_modules = self.list_user_modules_needed_by_tree(tree)
         # for module in user_modules:
@@ -125,11 +127,11 @@ class TreeCodeGenerator(object):
 
     def write_to_file(self, tree):
         buffer_name = utils.py_module_filename_for_tree(tree)
-        line_writer = self.create_text_file("bgelogic/"+buffer_name)
+        line_writer = self.create_text_file(buffer_name)
         line_writer.write_line("# MACHINE GENERATED")
         line_writer.write_line("import bge, bpy, sys, importlib")
         line_writer.write_line("import mathutils")
-        line_writer.write_line("from bgelogic import definitions")
+        line_writer.write_line("from uplogic import nodes")
         line_writer.write_line("import math")
         # user_modules = self.list_user_modules_needed_by_tree(tree)
         # for module in user_modules:
@@ -144,7 +146,7 @@ class TreeCodeGenerator(object):
         return line_writer
 
     def write_init_content(self, tree, line_writer):
-        line_writer.write_line("network = definitions.LogicNetwork()")
+        line_writer.write_line("network = nodes.LogicNetwork()")
         cell_var_names, uid_map = self._write_tree(tree, line_writer)
         for varname in self._sort_cellvarnames(cell_var_names, uid_map):
             if not uid_map.is_removed(varname):
@@ -217,13 +219,19 @@ class TreeCodeGenerator(object):
         # shutil.copyfile(bgelogic_input_file, target_path)
 
         game_dir = os.path.join(bge_netlogic_dir, "game")
-        bgelogic_input_file = os.path.join(game_dir, "definitions.pyx")
+        bgelogic_input_file = os.path.join(game_dir, "nodes.pyx")
         bgelogic_source_code = None
         with open(bgelogic_input_file, "r") as f:
             bgelogic_source_code = f.read()
         assert (bgelogic_source_code is not None)
-        self.create_text_file("bgelogic/__init__.py")
-        bgelogic_output_writer = self.create_text_file("bgelogic/definitions.py")
+        import site
+        path = os.path.join(site.getsitepackages()[-1], 'uplogic')
+        initfile = self.create_text_file("__init__.py")
+        initfile.close()
+        initfile = self.create_text_file("__init__.py", path)
+        initfile.write_line('')
+        initfile.close()
+        bgelogic_output_writer = self.create_text_file("nodes.py", path)
         bgelogic_output_writer.write_line(bgelogic_source_code)
         bgelogic_output_writer.close()
 

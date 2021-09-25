@@ -809,8 +809,9 @@ class NLApplyLogicOperator(bpy.types.Operator):
         )
         try:
             tree_code_generator.TreeCodeGenerator().write_code_for_tree(tree)
-        except Exception:
+        except Exception as e:
             utils.error(f"Couldn't compile tree {tree.name}!")
+            print(e)
         initial_status = True if initial_status is None else False
         for obj in selected_objects:
             utils.success(
@@ -950,8 +951,9 @@ class NLGenerateLogicNetworkOperatorAll(bpy.types.Operator):
             if tree.bl_idname == bge_netlogic.ui.BGELogicTree.bl_idname:
                 try:
                     tree_code_generator.TreeCodeGenerator().write_code_for_tree(tree)
-                except Exception:
+                except Exception as e:
                     utils.error(f"Couldn't compile tree {tree.name}!")
+                    utils.error(e)
         utils.set_compile_status(utils.TREE_COMPILED_ALL)
         try:
             context.region.tag_redraw()
@@ -1234,6 +1236,25 @@ class NLMovePropertyOperator(bpy.types.Operator):
     bl_options = {'REGISTER', 'UNDO'}
     index: bpy.props.IntProperty()
     direction: bpy.props.StringProperty()
+
+    @classmethod
+    def poll(cls, context):
+        return True
+
+    def execute(self, context):
+        bpy.ops.object.game_property_move(
+            index=self.index,
+            direction=self.direction
+        )
+        bge_netlogic.update_current_tree_code()
+        return {'FINISHED'}
+
+
+class NLRefreshNodeCode(bpy.types.Operator):
+    bl_idname = "bge_netlogic.refresh_node_code"
+    bl_label = "Refresh Nodes"
+    bl_description = "Update the node package installed in UPBGE python"
+    bl_options = {'REGISTER', 'UNDO'}
 
     @classmethod
     def poll(cls, context):
