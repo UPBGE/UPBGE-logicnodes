@@ -194,6 +194,9 @@ class GlobalDB(object):
             if changed:
                 GlobalDB.write_put(self.fname, key, value)
 
+    def pop(self, key, default):
+        return self.data.pop(key, None)
+
     def log(self):
         print(self.data)
 
@@ -792,6 +795,7 @@ class LogicNetwork(LogicNetworkCell):
         self.timeline = 0.0
         self._time_then = None
         self.time_per_frame = 0.0
+        self._do_remove = False
         self._last_mouse_position = [
             logic.mouse.position[0], logic.mouse.position[1]
         ]
@@ -803,6 +807,11 @@ class LogicNetwork(LogicNetworkCell):
         self.sub_networks = []  # a list of networks updated by this network
         self.capslock_pressed = False
         self.evaluated_cells = 0
+        bpy.app.handlers.depsgraph_update_post.append(self.on_scene_update)
+
+    def on_scene_update(self, a, b):
+        if self._do_remove:
+            self.clear_events()
 
     def create_aud_system(self):
         if not hasattr(bpy.types.Scene, 'nl_aud_system'):
@@ -917,22 +926,26 @@ class LogicNetwork(LogicNetworkCell):
         return self.stopped
 
     def stop(self, network=None):
+        self.clear_events()
         if self.stopped:
             return
         self._time_then = None
         self.stopped = True
         for cell in self._cells:
             cell.stop(self)
-        self.clear_events()
 
     def _generate_cell_uid(self):
         self._lastuid += 1
         return self._lastuid
 
     def clear_events(self):
+        li = []
         for m in self._messages.data:
-            if m[2] in self._cells:
-                self._messages.pop(m, None)
+            if self._messages.data[m][2] in self._cells:
+                li.append(m)
+        for m in li:
+            self._messages.pop(m, None)
+        del li
 
     def add_cell(self, cell):
         self._cells.append(cell)
@@ -1023,7 +1036,6 @@ class LogicNetwork(LogicNetworkCell):
                 self.sub_networks.remove(network)
             elif network.is_running():
                 network.evaluate()
-        pass
 
     def install_subnetwork(self, owner_object, node_tree_name, initial_status):
         # transform the tree name into a NL module name
@@ -8040,7 +8052,7 @@ class ActionEndObject(ActionCell):
         if is_invalid(game_object):
             return
         if game_object is self.network._owner:
-            self.network.clear_events()
+            self.network._do_remove = True
         game_object.endObject()
         self.done = True
 
@@ -9927,7 +9939,7 @@ class CreateMessage(ActionCell):
         if not_met(condition):
             if osubject in messages.data:
                 if messages.data[osubject][2] is self:
-                    messages.data.pop(osubject, None)
+                    messages.pop(osubject, None)
             self._set_ready()
             return
         self.old_subject = subject
@@ -10488,15 +10500,15 @@ class GEMakeUniqueLight(ActionCell):
                 setattr(light.data, attr, getattr(old_lamp.data, attr))
             except:
                 pass
+        light.name = name
+        new_lamp_ge = scene.convertBlenderObject(light)
+        for p in old_lamp_ge.getPropertyNames():
+            new_lamp_ge[p] = old_lamp_ge[p]
         old_lamp_ge.endObject()
         real_name = light.name
-        light.name = name
-        scene.convertBlenderObject(light)
         light.name = real_name
-
-        light = scene.getGameObjectFromObject(light)
         if old_lamp_ge.parent:
-            light.setParent(old_lamp_ge.parent)
+            new_lamp_ge.setParent(old_lamp_ge.parent)
 
         self.done = True
 
