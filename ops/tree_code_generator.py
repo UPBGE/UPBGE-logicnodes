@@ -226,6 +226,8 @@ class TreeCodeGenerator(object):
         assert (bgelogic_source_code is not None)
         import site
         path = os.path.join(site.getsitepackages()[-1], 'uplogic')
+        if not os.path.isdir(path):
+            os.mkdir(path)
         initfile = self.create_text_file("__init__.py")
         initfile.close()
         initfile = self.create_text_file("__init__.py", path)
