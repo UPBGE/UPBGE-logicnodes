@@ -201,9 +201,8 @@ class TreeCodeGenerator(object):
         else:
             line_writer.write_line("self.consumed = True")
         line_writer.close()
-        # write the bgelogic.py module source in the directory of the current blender file
-        this_module_dir = os.path.dirname(__file__)
-        bge_netlogic_dir = os.path.dirname(this_module_dir)
+
+        self.uppdate_package()
 
         # try:
         #     del sys.modules['mymodule']
@@ -211,19 +210,11 @@ class TreeCodeGenerator(object):
         #     print('This wont do yo')
         #     pass
 
-        # game_dir = os.path.join(bge_netlogic_dir, "game", 'windows')
-        # bgelogic_input_file = os.path.join(game_dir, "game.cp37-win_amd64.pyd")
-        # target_path = os.path.join(bpy.path.abspath("//bgelogic"), "__init__.pyd")
-        # print(bgelogic_input_file)
-        # print(target_path)
-        # shutil.copyfile(bgelogic_input_file, target_path)
-
-        game_dir = os.path.join(bge_netlogic_dir, "game")
-        bgelogic_input_file = os.path.join(game_dir, "nodes.pyx")
-        bgelogic_source_code = None
-        with open(bgelogic_input_file, "r") as f:
-            bgelogic_source_code = f.read()
-        assert (bgelogic_source_code is not None)
+    def uppdate_package(self):
+        this_module_dir = os.path.dirname(__file__)
+        bge_netlogic_dir = os.path.dirname(this_module_dir)
+        uplogic_dir = os.path.join(bge_netlogic_dir, 'uplogic')
+        node_dir = os.path.join(uplogic_dir, 'nodes')
         import site
         path = os.path.join(site.getsitepackages()[-1], 'uplogic')
         if not os.path.isdir(path):
@@ -231,11 +222,18 @@ class TreeCodeGenerator(object):
         initfile = self.create_text_file("__init__.py")
         initfile.close()
         initfile = self.create_text_file("__init__.py", path)
-        initfile.write_line('')
         initfile.close()
-        bgelogic_output_writer = self.create_text_file("nodes.py", path)
-        bgelogic_output_writer.write_line(bgelogic_source_code)
-        bgelogic_output_writer.close()
+        self.rewrite_file('nodes.py', uplogic_dir, path)
+
+    def rewrite_file(self, f, from_path, to_path):
+        writer = self.create_text_file(f, os.path.join(to_path))
+        input_f = os.path.join(from_path, f)
+        bgelogic_source_code = None
+        with open(input_f, "r") as f:
+            bgelogic_source_code = f.read()
+        assert (bgelogic_source_code is not None)
+        writer.write_line(bgelogic_source_code)
+        writer.close()
 
     def _write_tree(self, tree, line_writer):
         uid_map = UIDMap()

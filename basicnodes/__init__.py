@@ -592,7 +592,7 @@ def update_tree_code(self, context):
         return
     tree = context.space_data.edit_tree
     for node in tree.nodes:
-        if isinstance(node, NetLogicStatementGenerator) and not node.hide:
+        if isinstance(node, NetLogicStatementGenerator):
             try:
                 node.update_draw()
             except Exception:
@@ -5642,10 +5642,13 @@ _nodes.append(NLParameterActionStatus)
 class NLParameterSwitchValue(bpy.types.Node, NLParameterNode):
     bl_idname = "NLParameterSwitchValue"
     bl_label = "True / False"
+    bl_width_min = 60
+    bl_width_default = 100
     nl_category = "Logic"
 
     def init(self, context):
         NLParameterNode.init(self, context)
+        self.hide = True
         self.inputs.new(NLPseudoConditionSocket.bl_idname, "Condition")
         self.outputs.new(NLPseudoConditionSocket.bl_idname, "True")
         self.outputs.new(NLPseudoConditionSocket.bl_idname, "False")
@@ -7067,10 +7070,13 @@ _nodes.append(NLConditionMouseTargetingNode)
 class NLConditionAndNode(bpy.types.Node, NLConditionNode):
     bl_idname = "NLConditionAndNode"
     bl_label = "And"
+    bl_width_min = 60
+    bl_width_default = 80
     nl_category = "Logic"
 
     def init(self, context):
         NLConditionNode.init(self, context)
+        self.hide = True
         self.inputs.new(NLConditionSocket.bl_idname, "A")
         self.inputs.new(NLConditionSocket.bl_idname, "B")
         self.outputs.new(NLConditionSocket.bl_idname, "If A and B")
@@ -7088,10 +7094,13 @@ _nodes.append(NLConditionAndNode)
 class NLConditionAndNotNode(bpy.types.Node, NLConditionNode):
     bl_idname = "NLConditionAndNotNode"
     bl_label = "And Not"
+    bl_width_min = 60
+    bl_width_default = 100
     nl_category = "Logic"
 
     def init(self, context):
         NLConditionNode.init(self, context)
+        self.hide = True
         self.inputs.new(NLConditionSocket.bl_idname, "A")
         self.inputs.new(NLConditionSocket.bl_idname, "B")
         self.outputs.new(NLConditionSocket.bl_idname, "If A and not B")
@@ -7109,10 +7118,13 @@ _nodes.append(NLConditionAndNotNode)
 class NLConditionOrNode(bpy.types.Node, NLConditionNode):
     bl_idname = "NLConditionOrNode"
     bl_label = "Or"
+    bl_width_min = 60
+    bl_width_default = 80
     nl_category = "Logic"
 
     def init(self, context):
         NLConditionNode.init(self, context)
+        self.hide = True
         self.inputs.new(NLConditionSocket.bl_idname, 'A')
         self.inputs.new(NLConditionSocket.bl_idname, 'B')
         self.outputs.new(NLConditionSocket.bl_idname, 'A or B')
@@ -7130,10 +7142,13 @@ _nodes.append(NLConditionOrNode)
 class NLConditionOrList(bpy.types.Node, NLConditionNode):
     bl_idname = "NLConditionOrList"
     bl_label = "Or List"
+    bl_width_min = 60
+    bl_width_default = 100
     nl_category = "Logic"
 
     def init(self, context):
         NLConditionNode.init(self, context)
+        self.hide = True
         self.inputs.new(NLConditionSocket.bl_idname, "A")
         self.inputs.new(NLConditionSocket.bl_idname, "B")
         self.inputs.new(NLConditionSocket.bl_idname, "C")
@@ -7172,10 +7187,13 @@ _nodes.append(NLConditionOrList)
 class NLConditionAndList(bpy.types.Node, NLConditionNode):
     bl_idname = "NLConditionAndList"
     bl_label = "And List"
+    bl_width_min = 60
+    bl_width_default = 100
     nl_category = "Logic"
 
     def init(self, context):
         NLConditionNode.init(self, context)
+        self.hide = True
         self.inputs.new(NLConditionSocket.bl_idname, "A")
         self.inputs[-1].default_value = "True"
         self.inputs.new(NLConditionSocket.bl_idname, "B")
@@ -7432,10 +7450,13 @@ _nodes.append(NLConditionTimeElapsed)
 class NLConditionNotNoneNode(bpy.types.Node, NLConditionNode):
     bl_idname = "NLConditionNotNoneNode"
     bl_label = "Not None"
+    bl_width_min = 60
+    bl_width_default = 100
     nl_category = "Logic"
 
     def init(self, context):
         NLConditionNode.init(self, context)
+        self.hide = True
         utils.register_inputs(self, NLParameterSocket, "Value")
         utils.register_outputs(self, NLConditionSocket, "If Not None")
 
@@ -7452,10 +7473,13 @@ _nodes.append(NLConditionNotNoneNode)
 class NLConditionNoneNode(bpy.types.Node, NLConditionNode):
     bl_idname = "NLConditionNone"
     bl_label = "None"
+    bl_width_min = 60
+    bl_width_default = 80
     nl_category = "Logic"
 
     def init(self, context):
         NLConditionNode.init(self, context)
+        self.hide = True
         self.inputs.new(NLParameterSocket.bl_idname, "Value")
         self.outputs.new(NLConditionSocket.bl_idname, "If None")
 
