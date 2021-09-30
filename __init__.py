@@ -1,5 +1,6 @@
 import bpy
 # import nodeitems_utils
+from bpy.app.handlers import persistent
 from bge_netlogic import nodeutils as nodeitems_utils
 import bge_netlogic.utilities as utils
 import os
@@ -64,7 +65,17 @@ def update_tree_name(tree, old_name):
         old_status = None
         is_tree_applied_to_object = False
         for tree_item in ob.bgelogic_treelist:
-            if tree_item.tree_name == old_name:
+            if tree_item.tree_name == new_name:
+                st = tree_item.tree_initial_status
+                utils.remove_tree_item_from_object(ob, tree_item.tree_name)
+                new_entry = ob.bgelogic_treelist.add()
+                new_entry.tree_name = tree.name
+                new_entry.tree = tree
+                # this will set both new_entry.tree_initial_status and add a
+                # game property that makes the status usable at runtime
+                utils.set_network_initial_status_key(
+                    ob, tree.name, st
+                )
                 tree_item.tree_name = new_name
                 if old_status is not None:
                     raise RuntimeError(
@@ -72,8 +83,6 @@ def update_tree_name(tree, old_name):
                             ob.name
                         )
                     )
-                old_status = tree_item.tree_initial_status
-                is_tree_applied_to_object = True
         if is_tree_applied_to_object:
             utilities.rename_initial_status_game_object_property(
                 ob, old_name, new_name
@@ -118,7 +127,7 @@ def update_tree_name(tree, old_name):
                         old_name_code, new_name_code
                     )
             utils.success(f'Renamed Tree {old_name_code} to {new_name_code}')
-    bpy.ops.bge_netlogic.generate_logicnetwork()
+    # bpy.ops.bge_netlogic.generate_logicnetwork()
 
 
 def _update_all_logic_tree_code():
@@ -132,10 +141,10 @@ def _update_all_logic_tree_code():
     except Exception:
         utils.error("Unknown Error, abort generating Network code")
 
-
+@persistent
 def _generate_on_game_start(self, context):
-    if utils.is_compile_status(utils.TREE_MODIFIED):
-        bpy.ops.bge_netlogic.generate_logicnetwork_all()
+    utils.notify('Building Logic Trees on Startup...')
+    bpy.ops.bge_netlogic.generate_logicnetwork_all()
 
 
 def _consume_update_tree_code_queue():
@@ -335,11 +344,11 @@ def load_nodes_from(abs_dir):
             # TODO: reload source to refresh intermediate compilation?
 
 
-@bpy.app.handlers.persistent
+@persistent
 def refresh_custom_nodes(dummy):
     setup_user_nodes()
 
-@bpy.app.handlers.persistent
+@persistent
 def request_tree_code_writer_start(dummy):
     global _tree_code_writer_started
     _tree_code_writer_started = False
@@ -380,6 +389,7 @@ def update_node_colors(self, context):
 
 
 class NLNodeTreeReference(bpy.types.PropertyGroup):
+    tree: bpy.props.PointerProperty(type=ui.BGELogicTree)
     tree_name: bpy.props.StringProperty()
     tree_initial_status: bpy.props.BoolProperty()
 

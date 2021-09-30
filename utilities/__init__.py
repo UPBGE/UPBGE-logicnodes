@@ -21,7 +21,10 @@ NLPREFIX = 'NL__'
 
 
 def set_compile_status(status):
-    bpy.context.scene.logic_node_settings.tree_compiled = status
+    try:
+        bpy.context.scene.logic_node_settings.tree_compiled = status
+    except:
+        pass
 
 
 def is_compile_status(status):

@@ -414,16 +414,6 @@ class BGE_PT_LogicTreeGroups(bpy.types.Panel):
     bl_region_type = "UI"
     bl_category = "Dashboard"
     _current_tree = None
-    new_ver = False
-
-    if not bpy.app.version < (2, 80, 0):
-        try:
-            icons = bpy.utils.previews.new()
-            icons_directory = get_icons_directory()
-            icons.load("Icon4Keys", join(icons_directory, "Icon4Keys.png"), 'IMAGE')
-            new_ver = True
-        except Exception:
-            print('Icon can not be set, using original Buttons.')
 
     @classmethod
     def poll(cls, context):
@@ -446,16 +436,10 @@ class BGE_PT_LogicTreeGroups(bpy.types.Panel):
         title.label(text='Node Prefabs:')
         template_col = prefabs.column()
         template_col.scale_y = 1.4
-        if self.new_ver:
-            template_col.operator(
-                bge_netlogic.ops.NLAdd4KeyTemplateOperator.bl_idname,
-                icon_value=self.icons["Icon4Keys"].icon_id,
-            )
-        else:
-            template_col.operator(
-                bge_netlogic.ops.NLAdd4KeyTemplateOperator.bl_idname,
-                icon='LAYER_ACTIVE'
-            )
+        template_col.operator(
+            bge_netlogic.ops.NLAdd4KeyTemplateOperator.bl_idname,
+            icon='LAYER_ACTIVE'
+        )
 
 
 class BGE_PT_LogicTreeOptions(bpy.types.Panel):
@@ -509,16 +493,6 @@ class BGE_PT_LogicTreeInfoPanel(bpy.types.Panel):
     bl_region_type = "UI"
     bl_category = "Dashboard"
     _current_tree = None
-    new_ver = False
-
-    if not bpy.app.version < (2, 80, 0):
-        try:
-            icons = bpy.utils.previews.new()
-            icons_directory = get_icons_directory()
-            icons.load("IconApply", join(icons_directory, "IconApply.png"), 'IMAGE')
-            new_ver = True
-        except Exception:
-            print('Icon can not be set, using original Buttons.')
 
     @classmethod
     def poll(cls, context):

@@ -75,7 +75,6 @@ class TreeCodeGenerator(object):
         writer.set_indent_level(3)
         writer.write_line("print(m)")
         writer.set_indent_level(1)
-        writer.write_line("importlib.reload(bgelogic.definitions)")
         writer.write_line("filter(lambda a: a.__name__ == 'unload_pyd', bpy.app.handlers.game_post)")
         writer.write_line("remove_f = []")
         writer.write_line("for f in bpy.app.handlers.game_post:")
@@ -99,7 +98,6 @@ class TreeCodeGenerator(object):
         line_writer.write_line("import bge, bpy, sys")
         line_writer.write_line("import mathutils")
         line_writer.write_line("import math")
-        line_writer.write_line("from uplogic import nodes")
         line_writer.write_line("from collections import OrderedDict")
         # user_modules = self.list_user_modules_needed_by_tree(tree)
         # for module in user_modules:
@@ -120,7 +118,7 @@ class TreeCodeGenerator(object):
         line_writer.write_line('')
         line_writer.write_line('def start(self, args):')
         line_writer.set_indent_level(2)
-        line_writer.write_line("import bgelogic")
+        line_writer.write_line("from uplogic import nodes")
         line_writer.write_line("self.condition = args['Execution Condition']")
         line_writer.write_line("owner = self.object")
         return line_writer

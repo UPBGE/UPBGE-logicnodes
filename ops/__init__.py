@@ -840,6 +840,7 @@ class NLApplyLogicOperator(bpy.types.Operator):
             if not contains:
                 new_entry = tree_collection.add()
                 new_entry.tree_name = tree.name
+                new_entry.tree = tree
                 # this will set both new_entry.tree_initial_status and add a
                 # game property that makes the status usable at runtime
                 bge_netlogic.utilities.set_network_initial_status_key(
