@@ -5627,7 +5627,6 @@ class NLParameterActionStatus(bpy.types.Node, NLParameterNode):
         self.inputs.new(NLGameObjectSocket.bl_idname, "Object")
         self.inputs.new(NLPositiveIntegerFieldSocket.bl_idname, "Layer")
         self.outputs.new(NLConditionSocket.bl_idname, "Is Playing")
-        self.outputs.new(NLConditionSocket.bl_idname, "Not Playing")
         self.outputs.new(NLParameterSocket.bl_idname, "Action Name")
         self.outputs.new(NLParameterSocket.bl_idname, "Action Frame")
 
@@ -5638,7 +5637,7 @@ class NLParameterActionStatus(bpy.types.Node, NLParameterNode):
         return ["game_object", "action_layer"]
 
     def get_output_socket_varnames(self):
-        return [OUTCELL, "NOT_PLAYING", "ACTION_NAME", "ACTION_FRAME"]
+        return [OUTCELL, "ACTION_NAME", "ACTION_FRAME"]
 
 
 _nodes.append(NLParameterActionStatus)
@@ -6695,6 +6694,7 @@ class NLMousePressedCondition(bpy.types.Node, NLConditionNode):
     bl_icon = 'MOUSE_LMB'
     nl_category = "Input"
     nl_subcat = 'Mouse'
+    nl_module = 'mousepressed'
 
     pulse: bpy.props.BoolProperty(
         description=(
@@ -6718,7 +6718,7 @@ class NLMousePressedCondition(bpy.types.Node, NLConditionNode):
         )
 
     def get_netlogic_class_name(self):
-        return "nodes.ConditionMousePressed"
+        return "GEMousePressed"
 
     def get_input_sockets_field_names(self):
         return ["mouse_button_code"]
@@ -6732,6 +6732,8 @@ class NLMousePressedCondition(bpy.types.Node, NLConditionNode):
         )
         line_writer.write_line("{}.{} = {}", cell_varname, "pulse", self.pulse)
 
+    def get_output_socket_varnames(self):
+        return ['OUT']
 
 _nodes.append(NLMousePressedCondition)
 
@@ -6742,6 +6744,7 @@ class NLMouseMovedCondition(bpy.types.Node, NLConditionNode):
     bl_icon = 'MOUSE_MOVE'
     nl_category = "Input"
     nl_subcat = 'Mouse'
+    nl_module = 'mousemoved'
 
     pulse: bpy.props.BoolProperty(
         description=(
@@ -6764,7 +6767,7 @@ class NLMouseMovedCondition(bpy.types.Node, NLConditionNode):
         )
 
     def get_netlogic_class_name(self):
-        return "nodes.ConditionMouseMoved"
+        return "GEMouseMoved"
 
     def get_input_sockets_field_names(self):
         return ["mouse_button_code"]
@@ -6788,6 +6791,7 @@ class NLMouseReleasedCondition(bpy.types.Node, NLConditionNode):
     bl_icon = 'MOUSE_LMB'
     nl_category = "Input"
     nl_subcat = 'Mouse'
+    nl_module = 'mousereleased'
 
     pulse: bpy.props.BoolProperty(
         description=(
@@ -6811,7 +6815,7 @@ class NLMouseReleasedCondition(bpy.types.Node, NLConditionNode):
         )
 
     def get_netlogic_class_name(self):
-        return "nodes.ConditionMouseReleased"
+        return "GEMouseReleased"
 
     def get_input_sockets_field_names(self):
         return ["mouse_button_code"]
@@ -6824,6 +6828,9 @@ class NLMouseReleasedCondition(bpy.types.Node, NLConditionNode):
             line_writer
         )
         line_writer.write_line("{}.{} = {}", cell_varname, "pulse", self.pulse)
+
+    def get_output_socket_varnames(self):
+        return ['OUT']
 
 
 _nodes.append(NLMouseReleasedCondition)
@@ -6949,6 +6956,7 @@ class NLConditionMousePressedOn(bpy.types.Node, NLConditionNode):
     bl_icon = 'MOUSE_LMB'
     nl_category = "Input"
     nl_subcat = 'Mouse'
+    nl_module = 'mousepressedon'
 
     def init(self, context):
         NLConditionNode.init(self, context)
@@ -6957,10 +6965,13 @@ class NLConditionMousePressedOn(bpy.types.Node, NLConditionNode):
         self.outputs.new(NLConditionSocket.bl_idname, "When Pressed On")
 
     def get_netlogic_class_name(self):
-        return "nodes.ConditionMousePressedOn"
+        return "GEMousePressedOn"
 
     def get_input_sockets_field_names(self):
         return ["mouse_button", "game_object"]
+
+    def get_output_socket_varnames(self):
+        return ['OUT']
 
 
 _nodes.append(NLConditionMousePressedOn)
@@ -7047,6 +7058,7 @@ class NLConditionMouseTargetingNode(bpy.types.Node, NLConditionNode):
     bl_icon = 'RESTRICT_SELECT_OFF'
     nl_category = "Input"
     nl_subcat = 'Mouse'
+    nl_module = 'mouseover'
 
     def init(self, context):
         NLConditionNode.init(self, context)
@@ -7058,7 +7070,7 @@ class NLConditionMouseTargetingNode(bpy.types.Node, NLConditionNode):
         self.outputs.new(NLParameterSocket.bl_idname, "Normal")
 
     def get_netlogic_class_name(self):
-        return "nodes.ConditionMouseTargeting"
+        return "GEMouseOver"
 
     def get_input_sockets_field_names(self):
         return ["game_object"]
@@ -7261,10 +7273,13 @@ class NLConditionValueTriggerNode(bpy.types.Node, NLConditionNode):
         self.outputs.new(NLConditionSocket.bl_idname, "When Changed To")
 
     def get_netlogic_class_name(self):
-        return "ConditionValueTrigger"
+        return "GEValueChangedTo"
 
     def get_input_sockets_field_names(self):
         return ["monitored_value", "trigger_value"]
+
+    def get_output_socket_varnames(self):
+        return ['OUT']
 
 
 _nodes.append(NLConditionValueTriggerNode)
@@ -7417,7 +7432,7 @@ class NLConditionValueChanged(bpy.types.Node, NLConditionNode):
         layout.prop(
             self,
             "initialize",
-            text="Skip Startup" if self.initialize else "On Startup",
+            text="Startup" if self.initialize else "Skip Startup",
             toggle=True
         )
 
@@ -7431,7 +7446,7 @@ class NLConditionValueChanged(bpy.types.Node, NLConditionNode):
         return [("initialize", lambda: "True" if self.initialize else "False")]
 
     def get_output_socket_varnames(self):
-        return [OUTCELL, "PREVIOUS_VALUE", "CURRENT_VALUE"]
+        return ['OUT', "OLD", "NEW"]
 
 
 _nodes.append(NLConditionValueChanged)
@@ -9879,6 +9894,7 @@ class NLActionSaveGame(bpy.types.Node, NLActionNode):
     bl_label = "Save Game"
     bl_icon = 'FILE_TICK'
     nl_category = "Game"
+    nl_module = 'savegame'
     custom_path: bpy.props.BoolProperty(update=update_tree_code)
     path: bpy.props.StringProperty(
         subtype='FILE_PATH',
@@ -9907,7 +9923,7 @@ class NLActionSaveGame(bpy.types.Node, NLActionNode):
             layout.prop(self, "path", text='')
 
     def get_netlogic_class_name(self):
-        return "nodes.ActionSaveGame"
+        return "GESaveGame"
 
     def get_input_sockets_field_names(self):
         return ["condition", 'slot']
@@ -11414,6 +11430,7 @@ class NLActionMouseLookNode(bpy.types.Node, NLActionNode):
     bl_icon = 'CAMERA_DATA'
     nl_category = "Input"
     nl_subcat = 'Mouse'
+    nl_module = 'mouselook'
     axis: bpy.props.EnumProperty(
         name='Axis',
         items=_enum_look_axis,
@@ -11457,7 +11474,7 @@ class NLActionMouseLookNode(bpy.types.Node, NLActionNode):
         return ["OUT"]
 
     def get_netlogic_class_name(self):
-        return "nodes.ActionMouseLook"
+        return "GEMouseLook"
 
     def get_nonsocket_fields(self):
         return [("axis", lambda: self.axis)]
@@ -12128,6 +12145,7 @@ class NLActionSetMouseCursorVisibility(bpy.types.Node, NLActionNode):
     bl_icon = 'VIS_SEL_10'
     nl_category = "Input"
     nl_subcat = 'Mouse'
+    nl_module = 'cursorvisibility'
 
     def init(self, context):
         NLActionNode.init(self, context)
@@ -12139,7 +12157,7 @@ class NLActionSetMouseCursorVisibility(bpy.types.Node, NLActionNode):
         return ["OUT"]
 
     def get_netlogic_class_name(self):
-        return "nodes.ActionSetMouseCursorVisibility"
+        return "nodes.GESetMouseCursorVisibility"
 
     def get_input_sockets_field_names(self):
         return ["condition", "visibility_status"]
@@ -12357,13 +12375,14 @@ class NLActionEndGame(bpy.types.Node, NLActionNode):
     bl_label = "Quit Game"
     bl_icon = 'SCREEN_BACK'
     nl_category = "Game"
+    nl_module = 'endgame'
 
     def init(self, context):
         NLActionNode.init(self, context)
         self.inputs.new(NLConditionSocket.bl_idname, "Condition")
 
     def get_netlogic_class_name(self):
-        return "nodes.ActionEndGame"
+        return "GEEndGame"
 
     def get_input_sockets_field_names(self):
         return ["condition"]
@@ -12377,6 +12396,8 @@ class NLActionRestartGame(bpy.types.Node, NLActionNode):
     bl_label = "Restart Game"
     bl_icon = 'LOOP_BACK'
     nl_category = "Game"
+    nl_module = 'restartgame'
+
 
     def init(self, context):
         NLActionNode.init(self, context)
@@ -12387,7 +12408,7 @@ class NLActionRestartGame(bpy.types.Node, NLActionNode):
         return ["OUT"]
 
     def get_netlogic_class_name(self):
-        return "nodes.ActionRestartGame"
+        return "GERestartGame"
 
     def get_input_sockets_field_names(self):
         return ["condition"]
@@ -12400,6 +12421,7 @@ class NLActionStartGame(bpy.types.Node, NLActionNode):
     bl_idname = "NLActionStartGame"
     bl_label = "Start Game"
     nl_category = "Game"
+    nl_module = 'startgame'
 
     def init(self, context):
         NLActionNode.init(self, context)
@@ -12411,7 +12433,7 @@ class NLActionStartGame(bpy.types.Node, NLActionNode):
         return ["OUT"]
 
     def get_netlogic_class_name(self):
-        return "nodes.ActionStartGame"
+        return "GEStartGame"
 
     def get_input_sockets_field_names(self):
         return ["condition", "file_name"]
@@ -12502,6 +12524,7 @@ class NLActionCreateMessage(bpy.types.Node, NLActionNode):
     bl_label = "Throw"
     nl_category = "Events"
     nl_subcat = 'Custom'
+    nl_module = 'throwevent'
     advanced: bpy.props.BoolProperty(
         name='Advanced',
         description='Show advanced options for this node. Hidden sockets will not be reset',
@@ -12532,34 +12555,10 @@ class NLActionCreateMessage(bpy.types.Node, NLActionNode):
         return ["condition", "subject", "body", 'target']
 
     def get_netlogic_class_name(self):
-        return "nodes.CreateMessage"
+        return "GETrowEvent"
 
 
 _nodes.append(NLActionCreateMessage)
-
-
-class NLPrintCustomEvents(bpy.types.Node, NLActionNode):
-    bl_idname = "NLPrintCustomEvents"
-    bl_label = "Print Events"
-    nl_category = "Events"
-    nl_subcat = 'Custom'
-
-    def init(self, context):
-        NLActionNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, "Condition")
-        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
-
-    def get_output_socket_varnames(self):
-        return ["OUT"]
-
-    def get_input_sockets_field_names(self):
-        return ["condition"]
-
-    def get_netlogic_class_name(self):
-        return "nodes.PrintCustomEvents"
-
-
-_nodes.append(NLPrintCustomEvents)
 
 
 class NLActionSetGlobalValue(bpy.types.Node, NLActionNode):
@@ -12641,20 +12640,18 @@ class NLActionRandomInteger(bpy.types.Node, NLActionNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
-        self.inputs.new(NLPseudoConditionSocket.bl_idname, "Condition")
         self.inputs.new(NLIntegerFieldSocket.bl_idname, "Max")
         self.inputs.new(NLIntegerFieldSocket.bl_idname, "Min")
-        self.outputs.new(NLConditionSocket.bl_idname, "Done")
         self.outputs.new(NLParameterSocket.bl_idname, "Value")
 
     def get_input_sockets_field_names(self):
-        return ["condition", "max_value", "min_value"]
+        return ["max_value", "min_value"]
 
     def get_netlogic_class_name(self):
         return "nodes.ActionRandomInt"
 
     def get_output_socket_varnames(self):
-        return ["DONE", "OUT_A"]
+        return ["OUT_A"]
 
 
 _nodes.append(NLActionRandomInteger)
@@ -12668,20 +12665,18 @@ class NLActionRandomFloat(bpy.types.Node, NLActionNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
-        self.inputs.new(NLPseudoConditionSocket.bl_idname, "Condition")
         self.inputs.new(NLFloatFieldSocket.bl_idname, "Max")
         self.inputs.new(NLFloatFieldSocket.bl_idname, "Min")
-        self.outputs.new(NLConditionSocket.bl_idname, "Done")
         self.outputs.new(NLParameterSocket.bl_idname, "Value")
 
     def get_input_sockets_field_names(self):
-        return ["condition", "max_value", "min_value"]
+        return ["max_value", "min_value"]
 
     def get_netlogic_class_name(self):
         return "nodes.ActionRandomFloat"
 
     def get_output_socket_varnames(self):
-        return ["DONE", "OUT_A"]
+        return ["OUT_A"]
 
 
 _nodes.append(NLActionRandomFloat)
@@ -12695,9 +12690,7 @@ class NLRandomVect(bpy.types.Node, NLActionNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
-        self.inputs.new(NLPseudoConditionSocket.bl_idname, "Condition")
         self.inputs.new(NLXYZSocket.bl_idname, "")
-        self.outputs.new(NLConditionSocket.bl_idname, "Done")
         self.outputs.new(NLVectorSocket.bl_idname, "Vector")
 
     def get_input_sockets_field_names(self):
@@ -12707,7 +12700,7 @@ class NLRandomVect(bpy.types.Node, NLActionNode):
         return "nodes.GERandomVect"
 
     def get_output_socket_varnames(self):
-        return ["DONE", "OUT_A"]
+        return ["OUT_A"]
 
 
 _nodes.append(NLRandomVect)

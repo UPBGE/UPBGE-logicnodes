@@ -66,7 +66,7 @@ class TreeCodeGenerator(object):
         self.write_init_content(tree, writer)
         indent = self.write_pulse_line(tree, writer)
         self.write_pulse_content(tree, writer, indent)
-    
+
     def write_unloader(self, writer):
         writer.write_line("def unload_pyd(a, b):")
         writer.set_indent_level(1)
@@ -90,7 +90,6 @@ class TreeCodeGenerator(object):
         writer.write_line('')
         writer.set_indent_level(0)
 
-
     def write_imports(self, tree, writer):
         imp = []
         for n in tree.nodes:
@@ -101,7 +100,6 @@ class TreeCodeGenerator(object):
                     writer.write_line(f'from uplogic.nodes.{mod} import {n.get_netlogic_class_name()}')
             except Exception:
                 continue
-
 
     def write_to_text(self, tree):
         tree_name = utils.make_valid_name(tree.name)
@@ -232,7 +230,8 @@ class TreeCodeGenerator(object):
         initfile = self.create_text_file("__init__.py")
         initfile.close()
         try:
-            shutil.rmtree(uplogic_path)
+            if os.path.isdir(uplogic_path):
+                shutil.rmtree(uplogic_path)
             os.mkdir(uplogic_path)
             os.mkdir(node_path)
             initfile = self.create_text_file("__init__.py", uplogic_path)

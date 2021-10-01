@@ -1,0 +1,35 @@
+from uplogic.nodes import GEConditionNode
+from uplogic.nodes import is_waiting
+from uplogic.nodes import not_met
+
+
+class GEOnce(GEConditionNode):
+
+    def __init__(self):
+        super()
+        self.input_condition = None
+        self.repeat = None
+        self.reset_time = None
+        self._consumed = False
+        self.time = 0.0
+
+    def evaluate(self):
+        condition = self.get_socket_value(self.input_condition)
+        repeat = self.get_socket_value(self.repeat)
+        reset_time = self.get_socket_value(self.reset_time)
+        if is_waiting(repeat, reset_time):
+            self._set_value(False)
+            return
+        network = self.network
+        tl = network.timeline
+
+        self._set_ready()
+        cond_f = not_met(condition)
+        self.time = tl
+        if not cond_f and self._consumed is False:
+            self._consumed = True
+            self._set_value(True)
+            return
+        if cond_f and repeat and self._consumed:
+            self._consumed = False
+        self._set_value(False)
