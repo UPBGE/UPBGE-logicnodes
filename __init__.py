@@ -97,8 +97,9 @@ def update_tree_name(tree, old_name):
                 if c.module == comp_name:
                     try:
                         ops.tree_code_generator.TreeCodeGenerator().write_code_for_tree(tree)
-                    except Exception:
+                    except Exception as e:
                         utils.error(f"Couldn't compile tree {tree.name}!")
+                        utils.error(e)
                     text = bpy.data.texts.get(f'{comp_name}.py')
                     if text:
                         bpy.data.texts.remove(text)
@@ -149,8 +150,6 @@ def _generate_on_game_start(self, context):
 
 def _consume_update_tree_code_queue():
     edit_tree = getattr(bpy.context.space_data, "edit_tree", None)
-    if _generate_on_game_start not in bpy.app.handlers.game_pre:
-        bpy.app.handlers.game_pre.append(_generate_on_game_start)
     if edit_tree:
         # edit_tree = bpy.context.space_data.edit_tree
         old_name = _tree_to_name_map.get(edit_tree)
@@ -515,6 +514,7 @@ _registered_classes = [
     ops.NLRemoveGlobalOperator,
     ops.NLAddGlobalCatOperator,
     ops.NLRemoveGlobalCatOperator,
+    ops.NLUpdateUplogicPackage,
     NLNodeTreeReference
 ]
 
@@ -621,8 +621,7 @@ def _list_menu_nodes():
 
 # blender add-on registration callback
 def register():
-    if _generate_on_game_start not in bpy.app.handlers.game_pre:
-        bpy.app.handlers.game_pre.append(_generate_on_game_start)
+    bpy.app.handlers.game_pre.append(_generate_on_game_start)
     for cls in _registered_classes:
         # print("Registering... {}".format(cls.__name__))
         bpy.utils.register_class(cls)
@@ -670,7 +669,13 @@ def register():
 # blender add-on unregistration callback
 def unregister():
     utils.debug('Removing Game Start Compile handler...')
-    filter(lambda a: a is not _generate_on_game_start, bpy.app.handlers.game_pre)
+    remove_f = []
+    filter(lambda a: a.__name__ == '_generate_on_game_start', bpy.app.handlers.game_pre)
+    for f in bpy.app.handlers.game_pre:
+        if f.__name__ == '_generate_on_game_start':
+            remove_f.append(f)
+    for f in remove_f:
+        bpy.app.handlers.game_pre.remove(f)
     # print("Unregister node category [{}]".format("NETLOGIC_NODES"))
     nodeitems_utils.unregister_node_categories("NETLOGIC_NODES")
     for cls in reversed(_registered_classes):

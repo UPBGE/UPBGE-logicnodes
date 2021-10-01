@@ -822,7 +822,7 @@ class NLApplyLogicOperator(bpy.types.Operator):
             )
             if tree.mode:
                 tree_name = utils.make_valid_name(tree.name)
-                module = f'nl_{tree_name.lower()}'
+                module = f'.nl_{tree_name.lower()}'
                 name = f'{module}.{tree_name}'
                 comps = [c.module for c in obj.game.components]
                 if module not in comps:
@@ -960,6 +960,21 @@ class NLGenerateLogicNetworkOperatorAll(bpy.types.Operator):
             context.region.tag_redraw()
         except Exception:
             utils.warn("Couldn't redraw panel, code updated.")
+        return {"FINISHED"}
+
+
+class NLUpdateUplogicPackage(bpy.types.Operator):
+    bl_idname = "bge_netlogic.update_uplogic_package"
+    bl_label = "Update Nodes"
+    bl_options = {'REGISTER', 'UNDO'}
+    bl_description = "(Re)Write the python package containing node definitions"
+
+    @classmethod
+    def poll(cls, context):
+        return True
+
+    def execute(self, context):
+        tree_code_generator.TreeCodeGenerator().update_package()
         return {"FINISHED"}
 
 

@@ -475,14 +475,19 @@ class BGE_PT_LogicTreeOptions(bpy.types.Panel):
             r.label(text='Apply As:')
             r.prop(tree, 'mode', toggle=True, text='Component' if tree.mode else 'Bricks')
         code = layout.box()
-        code.operator(
-            bge_netlogic.ops.NLGenerateLogicNetworkOperator.bl_idname,
-            text=context.scene.logic_node_settings.tree_compiled,
-            icon=utils.STATUS_ICONS.get(context.scene.logic_node_settings.tree_compiled)
-        )
+        # code.operator(
+        #     bge_netlogic.ops.NLGenerateLogicNetworkOperator.bl_idname,
+        #     text=context.scene.logic_node_settings.tree_compiled,
+        #     icon=utils.STATUS_ICONS.get(context.scene.logic_node_settings.tree_compiled)
+        # )
         code.operator(
             bge_netlogic.ops.NLGenerateLogicNetworkOperatorAll.bl_idname,
-            text="Compile All",
+            text="Compile",
+            icon='FILE_SCRIPT'
+        )
+        code.operator(
+            bge_netlogic.ops.NLUpdateUplogicPackage.bl_idname,
+            text="Update Nodes",
             icon='FILE_SCRIPT'
         )
 

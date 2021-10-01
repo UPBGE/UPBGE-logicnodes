@@ -648,6 +648,8 @@ class NetLogicSocketType:
 
 
 class NetLogicStatementGenerator(NetLogicType):
+    nl_module = None
+
     def write_cell_declaration(self, cell_varname, line_writer):
         classname = self.get_netlogic_class_name()
         line_writer.write_line("{} = {}()", cell_varname, classname)
@@ -716,6 +718,9 @@ class NetLogicStatementGenerator(NetLogicType):
         :return: the non socket fields initializers
         """
         return []
+
+    def get_import_module(self):
+        return self.nl_module
 
     def get_input_sockets_field_names(self):
         return None
@@ -6198,13 +6203,14 @@ class NLOnInitConditionNode(bpy.types.Node, NLConditionNode):
     bl_label = "On Init"
     bl_icon = 'SORTBYEXT'
     nl_category = "Events"
+    nl_module = 'oninit'
 
     def init(self, context):
         NLConditionNode.init(self, context)
         self.outputs.new(NLConditionSocket.bl_idname, "Init")
 
     def get_netlogic_class_name(self):
-        return "nodes.GE_OnInit"
+        return "GEOnInit"
 
     def init_cell_fields(self, cell_varname, uids, line_writer):
         NetLogicStatementGenerator.init_cell_fields(
@@ -6222,6 +6228,7 @@ class NLOnUpdateConditionNode(bpy.types.Node, NLConditionNode):
     bl_label = "On Update"
     bl_icon = 'TRIA_RIGHT'
     nl_category = "Events"
+    nl_module = 'onupdate'
 
     repeat: bpy.props.BoolProperty(update=update_tree_code)
 
@@ -6230,7 +6237,7 @@ class NLOnUpdateConditionNode(bpy.types.Node, NLConditionNode):
         self.outputs.new(NLConditionSocket.bl_idname, "On Update")
 
     def get_netlogic_class_name(self):
-        return "nodes.ConditionOnUpdate"
+        return "GEOnUpdate"
 
     def init_cell_fields(self, cell_varname, uids, line_writer):
         NetLogicStatementGenerator.init_cell_fields(
@@ -6827,6 +6834,7 @@ class NLConditionOnceNode(bpy.types.Node, NLConditionNode):
     bl_label = "Once"
     bl_icon = 'FF'
     nl_category = "Events"
+    nl_module = 'once'
     advanced: bpy.props.BoolProperty(
         name='Offline Reset',
         description='Show Timer for when to reset if tree is inactive. Hidden sockets will not be reset',
@@ -6851,7 +6859,7 @@ class NLConditionOnceNode(bpy.types.Node, NLConditionNode):
             self.inputs[2].enabled = False
 
     def get_netlogic_class_name(self):
-        return "nodes.ConditionOnce"
+        return "GEOnce"
 
     def get_input_sockets_field_names(self):
         return ["input_condition", 'repeat', 'reset_time']
@@ -6918,6 +6926,7 @@ class NLConditionNextFrameNode(bpy.types.Node, NLConditionNode):
     bl_label = "On Next Tick"
     bl_icon = 'FRAME_NEXT'
     nl_category = "Events"
+    nl_module = 'onnextframe'
 
     def init(self, context):
         NLConditionNode.init(self, context)
@@ -6925,7 +6934,7 @@ class NLConditionNextFrameNode(bpy.types.Node, NLConditionNode):
         utils.register_outputs(self, NLConditionSocket, "Next Tick")
 
     def get_netlogic_class_name(self):
-        return "nodes.OnNextFrame"
+        return "GEOnNextFrame"
 
     def get_input_sockets_field_names(self):
         return ["input_condition"]
@@ -7241,6 +7250,7 @@ class NLConditionValueTriggerNode(bpy.types.Node, NLConditionNode):
     bl_label = "On Value Changed To"
     bl_icon = 'CON_TRANSLIKE'
     nl_category = "Events"
+    nl_module = 'onvaluechangedto'
 
     def init(self, context):
         NLConditionNode.init(self, context)
@@ -7251,7 +7261,7 @@ class NLConditionValueTriggerNode(bpy.types.Node, NLConditionNode):
         self.outputs.new(NLConditionSocket.bl_idname, "When Changed To")
 
     def get_netlogic_class_name(self):
-        return "nodes.ConditionValueTrigger"
+        return "ConditionValueTrigger"
 
     def get_input_sockets_field_names(self):
         return ["monitored_value", "trigger_value"]
@@ -7387,6 +7397,7 @@ class NLConditionValueChanged(bpy.types.Node, NLConditionNode):
     bl_label = "On Value Changed"
     bl_icon = 'DRIVER_TRANSFORM'
     nl_category = "Events"
+    nl_module = 'onvaluechanged'
 
     initialize: bpy.props.BoolProperty(
         description=(
@@ -7411,7 +7422,7 @@ class NLConditionValueChanged(bpy.types.Node, NLConditionNode):
         )
 
     def get_netlogic_class_name(self):
-        return "nodes.ConditionValueChanged"
+        return "GEOnValueChanged"
 
     def get_input_sockets_field_names(self):
         return ["current_value"]
@@ -9925,6 +9936,7 @@ class NLActionLoadGame(bpy.types.Node, NLActionNode):
     bl_label = "Load Game"
     bl_icon = 'FILE_FOLDER'
     nl_category = "Game"
+    nl_module = 'loadgame'
     custom_path: bpy.props.BoolProperty(update=update_tree_code)
     path: bpy.props.StringProperty(
         subtype='FILE_PATH',
@@ -9953,7 +9965,7 @@ class NLActionLoadGame(bpy.types.Node, NLActionNode):
             layout.prop(self, "path", text='')
 
     def get_netlogic_class_name(self):
-        return "nodes.ActionLoadGame"
+        return "GELoadGame"
 
     def get_input_sockets_field_names(self):
         return ["condition", 'slot']
@@ -12413,6 +12425,7 @@ class NLParameterReceiveMessage(bpy.types.Node, NLParameterNode):
     bl_label = "Catch"
     nl_category = "Events"
     nl_subcat = 'Custom'
+    nl_module = 'catchevent'
 
     def init(self, context):
         NLParameterNode.init(self, context)
@@ -12428,7 +12441,7 @@ class NLParameterReceiveMessage(bpy.types.Node, NLParameterNode):
         return ["OUT", 'BODY', 'TARGET']
 
     def get_netlogic_class_name(self):
-        return "nodes.ReceiveMessage"
+        return "GECatchEvent"
 
 
 _nodes.append(NLParameterReceiveMessage)
