@@ -324,7 +324,7 @@ class BGE_PT_GamePropertyPanel(bpy.types.Panel):
                 elif prop.type != prop_type or is_tree:
                     continue
             index = props.index(prop)
-            column.separator()
+            # column.separator()
             box = column.box()
             if is_tree and collapse_trees:
                 self.draw_tree_prop(prop, index, box, show_movers)
@@ -341,9 +341,9 @@ class BGE_PT_GamePropertyPanel(bpy.types.Panel):
                 icon='X'
             )
             remove.index = index
-            row_info = entry.row()
+            row_info = entry.split()
             row_info.prop(prop, 'type', text='')
-            row_info.prop(prop, 'value', text='Value')
+            row_info.prop(prop, 'value', text='')
         context.region.tag_redraw()
 
 
