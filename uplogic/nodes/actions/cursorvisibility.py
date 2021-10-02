@@ -8,7 +8,7 @@ from uplogic.nodes import not_met
 
 class GESetCursorVisibility(GEActionNode):
     def __init__(self):
-        super()
+        GEActionNode.__init__(self)
         self.condition = None
         self.visibility_status = None
         self.OUT = GEOutSocket(self, self.get_done)

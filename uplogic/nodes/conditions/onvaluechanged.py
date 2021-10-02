@@ -5,7 +5,7 @@ from uplogic.nodes import is_waiting
 
 class GEOnValueChanged(GEConditionNode):
     def __init__(self):
-        super()
+        GEConditionNode.__init__(self)
         self.old = None
         self.new = None
         self.current_value = None
@@ -35,8 +35,8 @@ class GEOnValueChanged(GEConditionNode):
         if is_waiting(curr):
             return
         self._set_ready()
-        if self.initialize:
+        if not self.initialize:
             self.initialize = False
-            self.old = curr
+            self.old = self.new =curr
         elif self.old != curr:
             self.new = curr

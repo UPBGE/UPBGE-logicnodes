@@ -4,7 +4,7 @@ from uplogic.nodes import GEConditionNode
 class GEOnNextFrame(GEConditionNode):
 
     def __init__(self):
-        super()
+        GEConditionNode.__init__(self)
         self.input_condition = None
         self._activated = 0
 

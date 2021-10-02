@@ -4,7 +4,7 @@ from uplogic.nodes import GEConditionNode
 
 class GEMouseMoved(GEConditionNode):
     def __init__(self):
-        super()
+        GEConditionNode.__init__(self)
         self.pulse = False
 
     def evaluate(self):

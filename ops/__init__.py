@@ -316,7 +316,10 @@ class NLRemoveTreeByNameOperator(bpy.types.Operator):
         ]
         for ob in objs:
             tree_name = utils.make_valid_name(self.tree_name)
-            module = f'nl_{tree_name.lower()}'
+            module = f'.nl_{tree_name.lower()}'
+            for text in bpy.data.texts:
+                if text.name == f'{module}.py':
+                    bpy.data.texts.remove(text)
             gs = ob.game
             idx = 0
             for c in gs.components:

@@ -2,17 +2,17 @@ from bge import constraints
 from bge import logic
 from mathutils import Vector
 from uplogic.nodes import GEActionNode
-from uplogic.nodes import GELogicTree
 from uplogic.nodes import GEOutSocket
 from uplogic.nodes import is_waiting
 from uplogic.nodes import not_met
+from uplogic.nodes.logictree import GELogicTree
 import json
 import os
 
 
 class GESaveGame(GEActionNode):
     def __init__(self):
-        super()
+        GEActionNode.__init__(self)
         self.condition = None
         self.slot = None
         self.path = ''

@@ -8,7 +8,7 @@ from uplogic.nodes import not_met
 
 class GETrowEvent(GEActionNode):
     def __init__(self):
-        super()
+        GEActionNode.__init__(self)
         self.condition = None
         self.subject = None
         self.body = None

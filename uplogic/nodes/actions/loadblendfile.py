@@ -3,11 +3,11 @@ from uplogic.nodes import GEActionNode
 from uplogic.nodes import GEOutSocket
 
 
-class GERestartGame(GEActionNode):
-
+class GELoadBlendFile(GEActionNode):
     def __init__(self):
-        super()
+        GEActionNode.__init__(self)
         self.condition = None
+        self.file_name = None
         self.done = None
         self.OUT = GEOutSocket(self, self.get_done)
 
@@ -18,6 +18,7 @@ class GERestartGame(GEActionNode):
         self.done = False
         self._set_ready()
         condition = self.get_socket_value(self.condition)
+        file_name = self.get_socket_value(self.file_name)
         if condition:
-            logic.restartGame()
+            logic.startGame(file_name)
         self.done = True

@@ -6,7 +6,7 @@ from uplogic.nodes import is_waiting
 
 class GEValueChangedTo(GEConditionNode):
     def __init__(self):
-        super()
+        GEConditionNode.__init__(self)
         self.monitored_value = None
         self.trigger_value = None
         self.changed = None

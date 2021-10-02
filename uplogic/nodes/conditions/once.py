@@ -6,7 +6,7 @@ from uplogic.nodes import not_met
 class GEOnce(GEConditionNode):
 
     def __init__(self):
-        super()
+        GEConditionNode.__init__(self)
         self.input_condition = None
         self.repeat = None
         self.reset_time = None

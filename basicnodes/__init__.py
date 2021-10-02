@@ -4026,13 +4026,14 @@ class NLOwnerGameObjectParameterNode(bpy.types.Node, NLParameterNode):
     bl_label = "Get Owner"
     bl_icon = 'USER'
     nl_category = "Objects"
+    nl_module = 'parameters'
 
     def init(self, context):
         NLParameterNode.init(self, context)
         self.outputs.new(NLGameObjectSocket.bl_idname, "Owner Object")
 
     def get_netlogic_class_name(self):
-        return "nodes.ParamOwnerObject"
+        return "GEGetOwner"
 
 
 _nodes.append(NLOwnerGameObjectParameterNode)
@@ -5697,7 +5698,7 @@ class NLMouseDataParameter(bpy.types.Node, NLParameterNode):
     bl_icon = 'OPTIONS'
     nl_category = "Input"
     nl_subcat = 'Mouse'
-    nl_module = 'mousedata'
+    nl_module = 'parameters'
 
     def init(self, context):
         NLParameterNode.init(self, context)
@@ -6203,7 +6204,7 @@ class NLOnInitConditionNode(bpy.types.Node, NLConditionNode):
     bl_label = "On Init"
     bl_icon = 'SORTBYEXT'
     nl_category = "Events"
-    nl_module = 'oninit'
+    nl_module = 'conditions'
 
     def init(self, context):
         NLConditionNode.init(self, context)
@@ -6228,7 +6229,7 @@ class NLOnUpdateConditionNode(bpy.types.Node, NLConditionNode):
     bl_label = "On Update"
     bl_icon = 'TRIA_RIGHT'
     nl_category = "Events"
-    nl_module = 'onupdate'
+    nl_module = 'conditions'
 
     repeat: bpy.props.BoolProperty(update=update_tree_code)
 
@@ -6256,6 +6257,7 @@ class NLGamepadVibration(bpy.types.Node, NLParameterNode):
     bl_label = "Vibration"
     nl_category = "Input"
     nl_subcat = 'Gamepad'
+    nl_module = 'actions'
 
     def init(self, context):
         NLParameterNode.init(self, context)
@@ -6268,7 +6270,7 @@ class NLGamepadVibration(bpy.types.Node, NLParameterNode):
         self.outputs.new(NLConditionSocket.bl_idname, "Done")
 
     def get_netlogic_class_name(self):
-        return "nodes.GEGamepadVibration"
+        return "GEGamepadVibration"
 
     def get_input_sockets_field_names(self):
         return ['condition', 'index', 'left', 'right', 'time']
@@ -6285,7 +6287,7 @@ class NLGamepadSticksCondition(bpy.types.Node, NLParameterNode):
     bl_label = "Sticks"
     nl_category = "Input"
     nl_subcat = 'Gamepad'
-    nl_module = 'gamepadsticks'
+    nl_module = 'parameters'
     axis: bpy.props.EnumProperty(
         name='Axis',
         items=_enum_controller_stick_operators,
@@ -6334,6 +6336,7 @@ class NLGamepadTriggerCondition(bpy.types.Node, NLParameterNode):
     bl_label = "Trigger"
     nl_category = "Input"
     nl_subcat = 'Gamepad'
+    nl_module = 'parameters'
     axis: bpy.props.EnumProperty(
         name='Axis',
         items=_enum_controller_trigger_operators,
@@ -6354,7 +6357,7 @@ class NLGamepadTriggerCondition(bpy.types.Node, NLParameterNode):
         layout.prop(self, "axis", text='')
 
     def get_netlogic_class_name(self):
-        return "nodes.ConditionGamepadTrigger"
+        return "GEGamepadTrigger"
 
     def get_input_sockets_field_names(self):
         return ["index", 'sensitivity', 'threshold']
@@ -6380,7 +6383,7 @@ class NLGamepadActive(bpy.types.Node, NLConditionNode):
     bl_label = "Gamepad Active"
     nl_category = "Input"
     nl_subcat = 'Gamepad'
-    nl_module = 'gamepadactive'
+    nl_module = 'conditions'
 
     def init(self, context):
         NLConditionNode.init(self, context)
@@ -6405,7 +6408,7 @@ class NLGamepadButtonsCondition(bpy.types.Node, NLConditionNode):
     bl_label = "Button Down"
     nl_category = "Input"
     nl_subcat = 'Gamepad'
-    nl_module = 'gamepadbutton'
+    nl_module = 'conditions'
 
     button: bpy.props.EnumProperty(
         name='Button',
@@ -6472,7 +6475,7 @@ class NLGamepadButtonUpCondition(bpy.types.Node, NLConditionNode):
     bl_label = "Button Up"
     nl_category = "Input"
     nl_subcat = 'Gamepad'
-    nl_module = 'gamepadbuttonup'
+    nl_module = 'conditions'
     button: bpy.props.EnumProperty(
         name='Button',
         items=_enum_controller_buttons_operators,
@@ -6538,13 +6541,14 @@ class NLKeyboardActive(bpy.types.Node, NLConditionNode):
     bl_label = "Keyboard Active"
     nl_category = "Input"
     nl_subcat = 'Keyboard'
+    nl_module = 'conditions'
 
     def init(self, context):
         NLConditionNode.init(self, context)
         self.outputs.new(NLConditionSocket.bl_idname, 'Active')
 
     def get_netlogic_class_name(self):
-        return "nodes.GEKeyboardActive"
+        return "GEKeyboardActive"
 
     def get_input_sockets_field_names(self):
         return ["index"]
@@ -6561,6 +6565,7 @@ class NLKeyPressedCondition(bpy.types.Node, NLConditionNode):
     bl_label = "Key Down"
     nl_category = "Input"
     nl_subcat = 'Keyboard'
+    nl_module = 'conditions'
     pulse: bpy.props.BoolProperty(
         description=(
             'ON: True until the key is released, '
@@ -6582,7 +6587,7 @@ class NLKeyPressedCondition(bpy.types.Node, NLConditionNode):
         )
 
     def get_netlogic_class_name(self):
-        return "nodes.ConditionKeyPressed"
+        return "GEKeyPressed"
 
     def get_input_sockets_field_names(self):
         return ["key_code"]
@@ -6700,7 +6705,7 @@ class NLMousePressedCondition(bpy.types.Node, NLConditionNode):
     bl_icon = 'MOUSE_LMB'
     nl_category = "Input"
     nl_subcat = 'Mouse'
-    nl_module = 'mousepressed'
+    nl_module = 'conditions'
 
     pulse: bpy.props.BoolProperty(
         description=(
@@ -6750,7 +6755,7 @@ class NLMouseMovedCondition(bpy.types.Node, NLConditionNode):
     bl_icon = 'MOUSE_MOVE'
     nl_category = "Input"
     nl_subcat = 'Mouse'
-    nl_module = 'mousemoved'
+    nl_module = 'conditions'
 
     pulse: bpy.props.BoolProperty(
         description=(
@@ -6797,7 +6802,7 @@ class NLMouseReleasedCondition(bpy.types.Node, NLConditionNode):
     bl_icon = 'MOUSE_LMB'
     nl_category = "Input"
     nl_subcat = 'Mouse'
-    nl_module = 'mousereleased'
+    nl_module = 'conditions'
 
     pulse: bpy.props.BoolProperty(
         description=(
@@ -6847,7 +6852,7 @@ class NLConditionOnceNode(bpy.types.Node, NLConditionNode):
     bl_label = "Once"
     bl_icon = 'FF'
     nl_category = "Events"
-    nl_module = 'once'
+    nl_module = 'conditions'
     advanced: bpy.props.BoolProperty(
         name='Offline Reset',
         description='Show Timer for when to reset if tree is inactive. Hidden sockets will not be reset',
@@ -6939,7 +6944,7 @@ class NLConditionNextFrameNode(bpy.types.Node, NLConditionNode):
     bl_label = "On Next Tick"
     bl_icon = 'FRAME_NEXT'
     nl_category = "Events"
-    nl_module = 'onnextframe'
+    nl_module = 'conditions'
 
     def init(self, context):
         NLConditionNode.init(self, context)
@@ -6962,7 +6967,7 @@ class NLConditionMousePressedOn(bpy.types.Node, NLConditionNode):
     bl_icon = 'MOUSE_LMB'
     nl_category = "Input"
     nl_subcat = 'Mouse'
-    nl_module = 'mousepressedon'
+    nl_module = 'conditions'
 
     def init(self, context):
         NLConditionNode.init(self, context)
@@ -6989,7 +6994,7 @@ class NLConditionMouseWheelMoved(bpy.types.Node, NLConditionNode):
     bl_icon = 'MOUSE_MMB'
     nl_category = "Input"
     nl_subcat = 'Mouse'
-    nl_module = 'mousescroll'
+    nl_module = 'conditions'
 
     def init(self, context):
         NLConditionNode.init(self, context)
@@ -7269,7 +7274,7 @@ class NLConditionValueTriggerNode(bpy.types.Node, NLConditionNode):
     bl_label = "On Value Changed To"
     bl_icon = 'CON_TRANSLIKE'
     nl_category = "Events"
-    nl_module = 'onvaluechangedto'
+    nl_module = 'conditions'
 
     def init(self, context):
         NLConditionNode.init(self, context)
@@ -7419,7 +7424,7 @@ class NLConditionValueChanged(bpy.types.Node, NLConditionNode):
     bl_label = "On Value Changed"
     bl_icon = 'DRIVER_TRANSFORM'
     nl_category = "Events"
-    nl_module = 'onvaluechanged'
+    nl_module = 'conditions'
 
     initialize: bpy.props.BoolProperty(
         description=(
@@ -9901,7 +9906,7 @@ class NLActionSaveGame(bpy.types.Node, NLActionNode):
     bl_label = "Save Game"
     bl_icon = 'FILE_TICK'
     nl_category = "Game"
-    nl_module = 'savegame'
+    nl_module = 'actions'
     custom_path: bpy.props.BoolProperty(update=update_tree_code)
     path: bpy.props.StringProperty(
         subtype='FILE_PATH',
@@ -9959,7 +9964,7 @@ class NLActionLoadGame(bpy.types.Node, NLActionNode):
     bl_label = "Load Game"
     bl_icon = 'FILE_FOLDER'
     nl_category = "Game"
-    nl_module = 'loadgame'
+    nl_module = 'actions'
     custom_path: bpy.props.BoolProperty(update=update_tree_code)
     path: bpy.props.StringProperty(
         subtype='FILE_PATH',
@@ -11437,7 +11442,7 @@ class NLActionMouseLookNode(bpy.types.Node, NLActionNode):
     bl_icon = 'CAMERA_DATA'
     nl_category = "Input"
     nl_subcat = 'Mouse'
-    nl_module = 'mouselook'
+    nl_module = 'actions'
     axis: bpy.props.EnumProperty(
         name='Axis',
         items=_enum_look_axis,
@@ -12123,7 +12128,7 @@ class NLActionSetMousePosition(bpy.types.Node, NLActionNode):
     bl_icon = 'RESTRICT_SELECT_OFF'
     nl_category = "Input"
     nl_subcat = 'Mouse'
-    nl_module = 'mousesetposition'
+    nl_module = 'actions'
 
     def init(self, context):
         NLActionNode.init(self, context)
@@ -12153,7 +12158,7 @@ class NLActionSetMouseCursorVisibility(bpy.types.Node, NLActionNode):
     bl_icon = 'VIS_SEL_10'
     nl_category = "Input"
     nl_subcat = 'Mouse'
-    nl_module = 'cursorvisibility'
+    nl_module = 'actions'
 
     def init(self, context):
         NLActionNode.init(self, context)
@@ -12383,7 +12388,7 @@ class NLActionEndGame(bpy.types.Node, NLActionNode):
     bl_label = "Quit Game"
     bl_icon = 'SCREEN_BACK'
     nl_category = "Game"
-    nl_module = 'endgame'
+    nl_module = 'actions'
 
     def init(self, context):
         NLActionNode.init(self, context)
@@ -12404,7 +12409,7 @@ class NLActionRestartGame(bpy.types.Node, NLActionNode):
     bl_label = "Restart Game"
     bl_icon = 'LOOP_BACK'
     nl_category = "Game"
-    nl_module = 'restartgame'
+    nl_module = 'actions'
 
 
     def init(self, context):
@@ -12427,9 +12432,9 @@ _nodes.append(NLActionRestartGame)
 
 class NLActionStartGame(bpy.types.Node, NLActionNode):
     bl_idname = "NLActionStartGame"
-    bl_label = "Start Game"
+    bl_label = "Load File"
     nl_category = "Game"
-    nl_module = 'startgame'
+    nl_module = 'actions'
 
     def init(self, context):
         NLActionNode.init(self, context)
@@ -12441,7 +12446,7 @@ class NLActionStartGame(bpy.types.Node, NLActionNode):
         return ["OUT"]
 
     def get_netlogic_class_name(self):
-        return "GEStartGame"
+        return "GELoadBlendFile"
 
     def get_input_sockets_field_names(self):
         return ["condition", "file_name"]
@@ -12455,7 +12460,7 @@ class NLParameterReceiveMessage(bpy.types.Node, NLParameterNode):
     bl_label = "Catch"
     nl_category = "Events"
     nl_subcat = 'Custom'
-    nl_module = 'catchevent'
+    nl_module = 'parameters'
 
     def init(self, context):
         NLParameterNode.init(self, context)
@@ -12532,7 +12537,7 @@ class NLActionCreateMessage(bpy.types.Node, NLActionNode):
     bl_label = "Throw"
     nl_category = "Events"
     nl_subcat = 'Custom'
-    nl_module = 'throwevent'
+    nl_module = 'actions'
     advanced: bpy.props.BoolProperty(
         name='Advanced',
         description='Show advanced options for this node. Hidden sockets will not be reset',
@@ -12740,6 +12745,7 @@ class NLParameterKeyboardKeyCode(bpy.types.Node, NLParameterNode):
     bl_label = "Key Code"
     nl_category = "Input"
     nl_subcat = 'Keyboard'
+    nl_module = 'parameters'
     value: bpy.props.StringProperty(update=update_tree_code)
 
     def init(self, context):
@@ -12751,7 +12757,7 @@ class NLParameterKeyboardKeyCode(bpy.types.Node, NLParameterNode):
         return ["key_code"]
 
     def get_netlogic_class_name(self):
-        return "nodes.ParameterKeyboardKeyCode"
+        return "GEKeyCode"
 
 
 _nodes.append(NLParameterKeyboardKeyCode)

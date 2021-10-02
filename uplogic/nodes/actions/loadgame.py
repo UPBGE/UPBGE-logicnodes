@@ -11,7 +11,7 @@ import json
 
 class GELoadGame(GEActionNode):
     def __init__(self):
-        super()
+        GEActionNode.__init__(self)
         self.condition = None
         self.slot = None
         self.path = ''

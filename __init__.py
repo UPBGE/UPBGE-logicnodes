@@ -50,6 +50,7 @@ def update_current_tree_code(*ignored):
 
 
 def update_tree_name(tree, old_name):
+    return
     utils.set_compile_status(utils.TREE_MODIFIED)
     new_name = tree.name
     _tree_to_name_map[tree] = new_name
@@ -149,15 +150,15 @@ def _generate_on_game_start(self, context):
 
 
 def _consume_update_tree_code_queue():
-    edit_tree = getattr(bpy.context.space_data, "edit_tree", None)
-    if edit_tree:
-        # edit_tree = bpy.context.space_data.edit_tree
-        old_name = _tree_to_name_map.get(edit_tree)
-        if not old_name:
-            _tree_to_name_map[edit_tree] = edit_tree.name
-        else:
-            if old_name != edit_tree.name:
-                update_tree_name(edit_tree, old_name)
+    # edit_tree = getattr(bpy.context.space_data, "edit_tree", None)
+    # if edit_tree:
+    #     # edit_tree = bpy.context.space_data.edit_tree
+    #     old_name = _tree_to_name_map.get(edit_tree)
+    #     if not old_name:
+    #         _tree_to_name_map[edit_tree] = edit_tree.name
+    #     else:
+    #         if old_name != edit_tree.name:
+    #             update_tree_name(edit_tree, old_name)
     if not _update_queue:
         return
     now = time.time()

@@ -7,7 +7,7 @@ from uplogic.nodes import is_waiting
 
 class GEMouseOver(GEConditionNode):
     def __init__(self):
-        super()
+        GEConditionNode.__init__(self)
         self.game_object = None
         self._mouse_entered_status = False
         self._mouse_exited_status = False

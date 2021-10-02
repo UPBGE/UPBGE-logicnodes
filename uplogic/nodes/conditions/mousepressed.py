@@ -6,7 +6,7 @@ from uplogic.nodes import is_waiting
 
 class GEMousePressed(GEConditionNode):
     def __init__(self):
-        super()
+        GEConditionNode.__init__(self)
         self.pulse = False
         self.mouse_button_code = None
         self.OUT = GEOutSocket(self, self.get_pressed)

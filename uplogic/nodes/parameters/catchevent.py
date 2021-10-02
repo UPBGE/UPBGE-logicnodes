@@ -5,7 +5,7 @@ from uplogic.nodes import is_invalid
 
 class GECatchEvent(GEParameterNode):
     def __init__(self):
-        super()
+        GEParameterNode.__init__(self)
         self.subject = None
         self.received = False
         self.event = [None, None]

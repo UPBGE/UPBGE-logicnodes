@@ -5,7 +5,7 @@ from uplogic.nodes import not_met
 
 class GEEndGame(GEActionNode):
     def __init__(self):
-        super()
+        GEActionNode.__init__(self)
         self.condition = None
 
     def evaluate(self):

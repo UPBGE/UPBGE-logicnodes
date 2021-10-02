@@ -1,12 +1,12 @@
 from bge import logic
-from uplogic.nodes import GEConditionNode
+from uplogic.nodes import GEParameterNode
 from uplogic.nodes import GEOutSocket
 from uplogic.nodes import is_invalid
 
 
-class GEGamepadSticks(GEConditionNode):
+class GEGamepadSticks(GEParameterNode):
     def __init__(self, axis=0):
-        GEConditionNode.__init__(self)
+        GEParameterNode.__init__(self)
         self.axis = axis
         self.inverted = None
         self.index = None

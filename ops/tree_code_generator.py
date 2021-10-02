@@ -30,6 +30,22 @@ class BLTextWrapper(AbstractTextBuffer):
         pass
 
 
+MODULE_TEMPLATE = """\
+import foo
+
+class Foo:
+
+    was auch immer
+
+    def start():
+        %(start)s
+
+    def update():
+        ...
+"""
+
+# MODULE_TEMPLATE % {'start': lines}
+
 class TreeCodeGenerator(object):
 
     def get_netlogic_module_for_node(self, node):
@@ -95,9 +111,10 @@ class TreeCodeGenerator(object):
         for n in tree.nodes:
             try:
                 mod = n.get_import_module()
-                if mod not in imp and mod:
-                    imp.append(mod)
-                    writer.write_line(f'from uplogic.nodes.{mod} import {n.get_netlogic_class_name()}')
+                clsname = n.get_netlogic_class_name()
+                if clsname not in imp and mod:
+                    imp.append(clsname)
+                    writer.write_line(f'from uplogic.nodes.{mod} import {clsname}')
             except Exception:
                 continue
 
@@ -130,6 +147,7 @@ class TreeCodeGenerator(object):
         line_writer.write_line('def start(self, args):')
         line_writer.set_indent_level(2)
         line_writer.write_line("from uplogic import nodes")
+        line_writer.write_line("from uplogic.nodes.logictree import GELogicTree")
         self.write_imports(tree, line_writer)
         line_writer.write_line("self.condition = args['Execution Condition']")
         line_writer.write_line("owner = self.object")
@@ -142,6 +160,7 @@ class TreeCodeGenerator(object):
         line_writer.write_line("import bge, bpy, sys, importlib")
         line_writer.write_line("import mathutils")
         line_writer.write_line("from uplogic import nodes")
+        line_writer.write_line("from uplogic.nodes.logictree import GELogicTree")
         self.write_imports(tree, line_writer)
         line_writer.write_line("import math")
         # user_modules = self.list_user_modules_needed_by_tree(tree)
@@ -157,7 +176,7 @@ class TreeCodeGenerator(object):
         return line_writer
 
     def write_init_content(self, tree, line_writer):
-        line_writer.write_line("network = nodes.GELogicTree()")
+        line_writer.write_line("network = GELogicTree()")
         cell_var_names, uid_map = self._write_tree(tree, line_writer)
         for varname in self._sort_cellvarnames(cell_var_names, uid_map):
             if not uid_map.is_removed(varname):
@@ -236,12 +255,21 @@ class TreeCodeGenerator(object):
             os.mkdir(node_path)
             initfile = self.create_text_file("__init__.py", uplogic_path)
             initfile.close()
-            for f in os.listdir(node_dir):
-                self.rewrite_file(f, node_dir, node_path)
+            self.recreate_dir(node_dir, node_path)
         except PermissionError:
             initfile = self.create_text_file("__init__.py")
             initfile.close()
             self.rewrite_file('nodes.py', uplogic_dir, bpy.abspath('//bgelogic/'))
+
+    def recreate_dir(self, from_dir, to_dir):
+        for f in os.listdir(from_dir):
+            entry = os.path.join(from_dir, f)
+            if os.path.isdir(entry):
+                new_dir = os.path.join(to_dir, f)
+                os.mkdir(new_dir)
+                self.recreate_dir(entry, new_dir)
+            else:
+                self.rewrite_file(f, from_dir, to_dir)
 
 
     def rewrite_file(self, f, from_path, to_path):
