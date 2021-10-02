@@ -5697,6 +5697,7 @@ class NLMouseDataParameter(bpy.types.Node, NLParameterNode):
     bl_icon = 'OPTIONS'
     nl_category = "Input"
     nl_subcat = 'Mouse'
+    nl_module = 'mousedata'
 
     def init(self, context):
         NLParameterNode.init(self, context)
@@ -5709,7 +5710,7 @@ class NLMouseDataParameter(bpy.types.Node, NLParameterNode):
         self.outputs.new(NLParameterSocket.bl_idname, "Wheel Difference")
 
     def get_netlogic_class_name(self):
-        return "nodes.ParameterMouseData"
+        return "GEMouseData"
 
     def get_output_socket_varnames(self):
         return ["MXY0", "MDXY0", "MX", "MY", "MDX", "MDY", "MDWHEEL"]
@@ -6284,6 +6285,7 @@ class NLGamepadSticksCondition(bpy.types.Node, NLParameterNode):
     bl_label = "Sticks"
     nl_category = "Input"
     nl_subcat = 'Gamepad'
+    nl_module = 'gamepadsticks'
     axis: bpy.props.EnumProperty(
         name='Axis',
         items=_enum_controller_stick_operators,
@@ -6306,7 +6308,7 @@ class NLGamepadSticksCondition(bpy.types.Node, NLParameterNode):
         layout.prop(self, "axis", text='')
 
     def get_netlogic_class_name(self):
-        return "nodes.ConditionGamepadSticks"
+        return "GEGamepadSticks"
 
     def get_input_sockets_field_names(self):
         return ['inverted', "index", 'sensitivity', 'threshold']
@@ -6375,9 +6377,10 @@ _nodes.append(NLGamepadTriggerCondition)
 
 class NLGamepadActive(bpy.types.Node, NLConditionNode):
     bl_idname = "NLGamepadActive"
-    bl_label = "Active"
+    bl_label = "Gamepad Active"
     nl_category = "Input"
     nl_subcat = 'Gamepad'
+    nl_module = 'gamepadactive'
 
     def init(self, context):
         NLConditionNode.init(self, context)
@@ -6385,7 +6388,7 @@ class NLGamepadActive(bpy.types.Node, NLConditionNode):
         self.outputs.new(NLConditionSocket.bl_idname, 'Active')
 
     def get_netlogic_class_name(self):
-        return "nodes.GEGamepadActive"
+        return "GEGamepadActive"
 
     def get_input_sockets_field_names(self):
         return ["index"]
@@ -6402,6 +6405,8 @@ class NLGamepadButtonsCondition(bpy.types.Node, NLConditionNode):
     bl_label = "Button Down"
     nl_category = "Input"
     nl_subcat = 'Gamepad'
+    nl_module = 'gamepadbutton'
+
     button: bpy.props.EnumProperty(
         name='Button',
         items=_enum_controller_buttons_operators,
@@ -6431,7 +6436,7 @@ class NLGamepadButtonsCondition(bpy.types.Node, NLConditionNode):
         layout.prop(self, "button", text='')
 
     def get_netlogic_class_name(self):
-        return "nodes.ConditionGamepadButtons"
+        return "GEGamepadButton"
 
     def get_input_sockets_field_names(self):
         return ["index"]
@@ -6467,6 +6472,7 @@ class NLGamepadButtonUpCondition(bpy.types.Node, NLConditionNode):
     bl_label = "Button Up"
     nl_category = "Input"
     nl_subcat = 'Gamepad'
+    nl_module = 'gamepadbuttonup'
     button: bpy.props.EnumProperty(
         name='Button',
         items=_enum_controller_buttons_operators,
@@ -6496,7 +6502,7 @@ class NLGamepadButtonUpCondition(bpy.types.Node, NLConditionNode):
         layout.prop(self, "button", text='')
 
     def get_netlogic_class_name(self):
-        return "nodes.ConditionGamepadButtonUp"
+        return "GEGamepadButtonUp"
 
     def get_input_sockets_field_names(self):
         return ["index"]
@@ -6529,7 +6535,7 @@ _nodes.append(NLGamepadButtonUpCondition)
 
 class NLKeyboardActive(bpy.types.Node, NLConditionNode):
     bl_idname = "NLKeyboardActive"
-    bl_label = "Active"
+    bl_label = "Keyboard Active"
     nl_category = "Input"
     nl_subcat = 'Keyboard'
 
@@ -6983,6 +6989,7 @@ class NLConditionMouseWheelMoved(bpy.types.Node, NLConditionNode):
     bl_icon = 'MOUSE_MMB'
     nl_category = "Input"
     nl_subcat = 'Mouse'
+    nl_module = 'mousescroll'
 
     def init(self, context):
         NLConditionNode.init(self, context)
@@ -6990,7 +6997,7 @@ class NLConditionMouseWheelMoved(bpy.types.Node, NLConditionNode):
         self.outputs.new(NLConditionSocket.bl_idname, "When Scrolled")
 
     def get_netlogic_class_name(self):
-        return "nodes.ConditionMouseScrolled"
+        return "GEMouseScrolled"
 
     def get_input_sockets_field_names(self):
         return ["wheel_direction"]
@@ -12116,6 +12123,7 @@ class NLActionSetMousePosition(bpy.types.Node, NLActionNode):
     bl_icon = 'RESTRICT_SELECT_OFF'
     nl_category = "Input"
     nl_subcat = 'Mouse'
+    nl_module = 'mousesetposition'
 
     def init(self, context):
         NLActionNode.init(self, context)
@@ -12130,7 +12138,7 @@ class NLActionSetMousePosition(bpy.types.Node, NLActionNode):
         return ["OUT"]
 
     def get_netlogic_class_name(self):
-        return "nodes.ActionSetMousePosition"
+        return "GESetMousePosition"
 
     def get_input_sockets_field_names(self):
         return ["condition", "screen_x", "screen_y"]
@@ -12157,7 +12165,7 @@ class NLActionSetMouseCursorVisibility(bpy.types.Node, NLActionNode):
         return ["OUT"]
 
     def get_netlogic_class_name(self):
-        return "nodes.GESetMouseCursorVisibility"
+        return "GESetCursorVisibility"
 
     def get_input_sockets_field_names(self):
         return ["condition", "visibility_status"]
