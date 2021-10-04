@@ -1,10 +1,10 @@
-from uplogic.nodes import GEConditionNode
+from uplogic.nodes import ULConditionNode
 
 
-class GEOnNextFrame(GEConditionNode):
+class ULOnNextFrame(ULConditionNode):
 
     def __init__(self):
-        GEConditionNode.__init__(self)
+        ULConditionNode.__init__(self)
         self.input_condition = None
         self._activated = 0
 

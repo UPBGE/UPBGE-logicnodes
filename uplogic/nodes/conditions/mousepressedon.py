@@ -1,17 +1,17 @@
 from bge import logic
-from uplogic.nodes import GEConditionNode
-from uplogic.nodes import GEOutSocket
+from uplogic.nodes import ULConditionNode
+from uplogic.nodes import ULOutSocket
 from uplogic.nodes import STATUS_WAITING
 from uplogic.nodes import is_invalid
 from uplogic.nodes import is_waiting
 
 
-class GEMousePressedOn(GEConditionNode):
+class ULMousePressedOn(ULConditionNode):
     def __init__(self):
-        GEConditionNode.__init__(self)
+        ULConditionNode.__init__(self)
         self.game_object = None
         self.mouse_button = None
-        self.OUT = GEOutSocket(self, self.get_changed)
+        self.OUT = ULOutSocket(self, self.get_changed)
 
     def get_changed(self):
         mouse_button = self.get_socket_value(self.mouse_button)

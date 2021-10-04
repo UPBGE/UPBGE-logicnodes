@@ -1,18 +1,18 @@
 from bge import logic
-from uplogic.nodes import GEParameterNode
-from uplogic.nodes import GEOutSocket
+from uplogic.nodes import ULParameterNode
+from uplogic.nodes import ULOutSocket
 from uplogic.nodes import is_invalid
 
 
-class GEGamepadTrigger(GEParameterNode):
+class ULGamepadTrigger(ULParameterNode):
     def __init__(self, axis=0):
-        GEParameterNode.__init__(self)
+        ULParameterNode.__init__(self)
         self.axis = axis
         self.index = None
         self.sensitivity = None
         self.threshold = None
         self._value = None
-        self.VAL = GEOutSocket(self, self.get_value)
+        self.VAL = ULOutSocket(self, self.get_value)
 
     def get_x_axis(self):
         return self._value

@@ -1,10 +1,10 @@
 from bge import events
-from uplogic.nodes import GEConditionNode
+from uplogic.nodes import ULConditionNode
 
 
-class GEMouseMoved(GEConditionNode):
+class ULMouseMoved(ULConditionNode):
     def __init__(self):
-        GEConditionNode.__init__(self)
+        ULConditionNode.__init__(self)
         self.pulse = False
 
     def evaluate(self):

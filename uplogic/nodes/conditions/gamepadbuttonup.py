@@ -1,19 +1,19 @@
 from bge import logic
-from uplogic.nodes import GEConditionNode
-from uplogic.nodes import GEOutSocket
+from uplogic.nodes import ULConditionNode
+from uplogic.nodes import ULOutSocket
 from uplogic.nodes import STATUS_WAITING
 from uplogic.nodes import is_invalid
 
 
-class GEGamepadButtonUp(GEConditionNode):
+class ULGamepadButtonUp(ULConditionNode):
     def __init__(self):
-        GEConditionNode.__init__(self)
+        ULConditionNode.__init__(self)
         self.pulse = False
         self.button = 0
         self.index = None
         self._last_value = False
         self._up_value = None
-        self.BUTTON = GEOutSocket(self, self.get_button)
+        self.BUTTON = ULOutSocket(self, self.get_button)
         self.initialized = False
 
     def get_button(self):

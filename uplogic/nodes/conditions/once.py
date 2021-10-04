@@ -1,12 +1,12 @@
-from uplogic.nodes import GEConditionNode
+from uplogic.nodes import ULConditionNode
 from uplogic.nodes import is_waiting
 from uplogic.nodes import not_met
 
 
-class GEOnce(GEConditionNode):
+class ULOnce(ULConditionNode):
 
     def __init__(self):
-        GEConditionNode.__init__(self)
+        ULConditionNode.__init__(self)
         self.input_condition = None
         self.repeat = None
         self.reset_time = None

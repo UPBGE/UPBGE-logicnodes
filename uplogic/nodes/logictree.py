@@ -1,6 +1,6 @@
-from uplogic.nodes import GELogicContainer
+from uplogic.nodes import ULLogicContainer
 from uplogic.nodes import GlobalDB
-from uplogic.audio import AudioSystem
+from uplogic.audio import ULAudioSystem
 from uplogic.nodes import STATUS_WAITING
 from uplogic.nodes import STATUS_READY
 from uplogic.nodes import debug
@@ -12,9 +12,9 @@ import collections
 import time
 
 
-class GELogicTree(GELogicContainer):
+class ULLogicTree(ULLogicContainer):
     def __init__(self):
-        GELogicContainer.__init__(self)
+        ULLogicContainer.__init__(self)
         self._cells = []
         self._iter = collections.deque()
         self._lastuid = 0
@@ -49,11 +49,11 @@ class GELogicTree(GELogicContainer):
             self.clear_events()
 
     def create_aud_system(self):
-        if not hasattr(bpy.types.Scene, 'nl_aud_system'):
+        aud_sys = GlobalDB.retrieve('.uplogic_audio').get('ln_audio_system')
+        if not aud_sys:
             self.aud_system_owner = True
-            return AudioSystem()
-        else:
-            return bpy.types.Scene.nl_aud_system
+            return ULAudioSystem('ln_audio_system')
+        return aud_sys
 
     def init_glob_cats(self):
         if not hasattr(bpy.types.Scene, 'nl_globals_initialized'):
@@ -67,7 +67,7 @@ class GELogicTree(GELogicContainer):
             dat = {
                 'STRING': 'string_val',
                 'FLOAT': 'float_val',
-                'INTEGER': 'int_val',
+                'INTEULR': 'int_val',
                 'BOOLEAN': 'bool_val',
                 'FILE_PATH': 'filepath_val'
             }

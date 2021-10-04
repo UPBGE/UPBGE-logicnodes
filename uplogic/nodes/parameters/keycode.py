@@ -1,9 +1,9 @@
-from uplogic.nodes import GEParameterNode
+from uplogic.nodes import ULParameterNode
 
 
-class GEKeyCode(GEParameterNode):
+class ULKeyCode(ULParameterNode):
     def __init__(self):
-        GEParameterNode.__init__(self)
+        ULParameterNode.__init__(self)
         self.key_code = None
 
     def evaluate(self):

@@ -1,12 +1,12 @@
 from bge import logic
-from uplogic.nodes import GEParameterNode
-from uplogic.nodes import GEOutSocket
+from uplogic.nodes import ULParameterNode
+from uplogic.nodes import ULOutSocket
 from uplogic.nodes import is_invalid
 
 
-class GEGamepadSticks(GEParameterNode):
+class ULGamepadSticks(ULParameterNode):
     def __init__(self, axis=0):
-        GEParameterNode.__init__(self)
+        ULParameterNode.__init__(self)
         self.axis = axis
         self.inverted = None
         self.index = None
@@ -14,8 +14,8 @@ class GEGamepadSticks(GEParameterNode):
         self.threshold = None
         self._x_axis_values = None
         self._y_axis_values = None
-        self.X = GEOutSocket(self, self.get_x_axis)
-        self.Y = GEOutSocket(self, self.get_y_axis)
+        self.X = ULOutSocket(self, self.get_x_axis)
+        self.Y = ULOutSocket(self, self.get_y_axis)
 
     def get_x_axis(self):
         x = self.raw_values[0]

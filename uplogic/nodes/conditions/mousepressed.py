@@ -1,15 +1,15 @@
-from uplogic.nodes import GEConditionNode
-from uplogic.nodes import GEOutSocket
+from uplogic.nodes import ULConditionNode
+from uplogic.nodes import ULOutSocket
 from uplogic.nodes import STATUS_WAITING
 from uplogic.nodes import is_waiting
 
 
-class GEMousePressed(GEConditionNode):
+class ULMousePressed(ULConditionNode):
     def __init__(self):
-        GEConditionNode.__init__(self)
+        ULConditionNode.__init__(self)
         self.pulse = False
         self.mouse_button_code = None
-        self.OUT = GEOutSocket(self, self.get_pressed)
+        self.OUT = ULOutSocket(self, self.get_pressed)
 
     def get_pressed(self):
         mouse_button = self.get_socket_value(self.mouse_button_code)

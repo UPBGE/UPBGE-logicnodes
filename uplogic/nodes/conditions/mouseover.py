@@ -1,24 +1,24 @@
 from bge import logic
-from uplogic.nodes import GEConditionNode
-from uplogic.nodes import GEOutSocket
+from uplogic.nodes import ULConditionNode
+from uplogic.nodes import ULOutSocket
 from uplogic.nodes import is_invalid
 from uplogic.nodes import is_waiting
 
 
-class GEMouseOver(GEConditionNode):
+class ULMouseOver(ULConditionNode):
     def __init__(self):
-        GEConditionNode.__init__(self)
+        ULConditionNode.__init__(self)
         self.game_object = None
         self._mouse_entered_status = False
         self._mouse_exited_status = False
         self._mouse_over_status = False
         self._point = None
         self._normal = None
-        self.MOUSE_ENTERED = GEOutSocket(self, self._get_mouse_entered)
-        self.MOUSE_EXITED = GEOutSocket(self, self._get_mouse_exited)
-        self.MOUSE_OVER = GEOutSocket(self, self._get_mouse_over)
-        self.POINT = GEOutSocket(self, self._get_point)
-        self.NORMAL = GEOutSocket(self, self._get_normal)
+        self.MOUSE_ENTERED = ULOutSocket(self, self._get_mouse_entered)
+        self.MOUSE_EXITED = ULOutSocket(self, self._get_mouse_exited)
+        self.MOUSE_OVER = ULOutSocket(self, self._get_mouse_over)
+        self.POINT = ULOutSocket(self, self._get_point)
+        self.NORMAL = ULOutSocket(self, self._get_normal)
         self._last_target = None
 
     def _get_mouse_entered(self):

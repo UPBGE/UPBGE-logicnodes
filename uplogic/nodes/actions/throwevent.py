@@ -1,21 +1,21 @@
-from uplogic.nodes import GEActionNode
-from uplogic.nodes import GEOutSocket
+from uplogic.nodes import ULActionNode
+from uplogic.nodes import ULOutSocket
 from uplogic.nodes import Invalid
 from uplogic.nodes import is_invalid
 from uplogic.nodes import is_waiting
 from uplogic.nodes import not_met
 
 
-class GETrowEvent(GEActionNode):
+class ULTrowEvent(ULActionNode):
     def __init__(self):
-        GEActionNode.__init__(self)
+        ULActionNode.__init__(self)
         self.condition = None
         self.subject = None
         self.body = None
         self.target = None
         self.old_subject = None
         self.done = None
-        self.OUT = GEOutSocket(self, self.get_done)
+        self.OUT = ULOutSocket(self, self.get_done)
 
     def get_done(self):
         return self.done

@@ -1,9 +1,9 @@
-from uplogic.nodes import GEConditionNode
+from uplogic.nodes import ULConditionNode
 
 
-class GEKeyboardActive(GEConditionNode):
+class ULKeyboardActive(ULConditionNode):
     def __init__(self):
-        GEConditionNode.__init__(self)
+        ULConditionNode.__init__(self)
 
     def evaluate(self):
         self._set_ready()

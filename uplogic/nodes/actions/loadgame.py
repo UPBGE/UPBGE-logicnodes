@@ -1,7 +1,7 @@
 from bge import logic, constraints
 from mathutils import Euler
-from uplogic.nodes import GEActionNode
-from uplogic.nodes import GEOutSocket
+from uplogic.nodes import ULActionNode
+from uplogic.nodes import ULOutSocket
 from uplogic.nodes import STATUS_WAITING
 from uplogic.nodes import debug
 from uplogic.nodes import is_waiting
@@ -9,14 +9,14 @@ from uplogic.nodes import not_met
 import json
 
 
-class GELoadGame(GEActionNode):
+class ULLoadGame(ULActionNode):
     def __init__(self):
-        GEActionNode.__init__(self)
+        ULActionNode.__init__(self)
         self.condition = None
         self.slot = None
         self.path = ''
         self.done = None
-        self.OUT = GEOutSocket(self, self.get_done)
+        self.OUT = ULOutSocket(self, self.get_done)
 
     def get_done(self):
         return self.done

@@ -1,21 +1,21 @@
-from uplogic.nodes import GEConditionNode
-from uplogic.nodes import GEOutSocket
+from uplogic.nodes import ULConditionNode
+from uplogic.nodes import ULOutSocket
 from uplogic.nodes import is_waiting
 
 
-class GEOnValueChanged(GEConditionNode):
+class ULOnValueChanged(ULConditionNode):
     def __init__(self):
-        GEConditionNode.__init__(self)
+        ULConditionNode.__init__(self)
         self.old = None
         self.new = None
         self.current_value = None
         self.initialize = False
-        self.OUT = GEOutSocket(self, self.get_changed)
-        self.OLD = GEOutSocket(
+        self.OUT = ULOutSocket(self, self.get_changed)
+        self.OLD = ULOutSocket(
             self,
             self.get_previous_value
         )
-        self.NEW = GEOutSocket(self, self.get_current_value)
+        self.NEW = ULOutSocket(self, self.get_current_value)
 
     def get_changed(self):
         return self.old != self.new
@@ -37,6 +37,6 @@ class GEOnValueChanged(GEConditionNode):
         self._set_ready()
         if not self.initialize:
             self.initialize = False
-            self.old = self.new =curr
+            self.old = self.new = curr
         elif self.old != curr:
             self.new = curr

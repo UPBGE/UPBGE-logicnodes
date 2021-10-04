@@ -1,15 +1,15 @@
 from bge import logic
-from uplogic.nodes import GEActionNode
-from uplogic.nodes import GEOutSocket
+from uplogic.nodes import ULActionNode
+from uplogic.nodes import ULOutSocket
 
 
-class GELoadBlendFile(GEActionNode):
+class ULLoadBlendFile(ULActionNode):
     def __init__(self):
-        GEActionNode.__init__(self)
+        ULActionNode.__init__(self)
         self.condition = None
         self.file_name = None
         self.done = None
-        self.OUT = GEOutSocket(self, self.get_done)
+        self.OUT = ULOutSocket(self, self.get_done)
 
     def get_done(self):
         return self.done

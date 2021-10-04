@@ -1,14 +1,14 @@
 from bge import render
 from bge import logic
 from mathutils import Vector
-from uplogic.nodes import GEActionNode
-from uplogic.nodes import GEOutSocket
+from uplogic.nodes import ULActionNode
+from uplogic.nodes import ULOutSocket
 from uplogic.nodes import is_invalid
 from uplogic.nodes import not_met
 from uplogic.nodes import interpolate
 
 
-class GEMouseLook(GEActionNode):
+class ULMouseLook(ULActionNode):
     x = None
     y = None
     screen_center = None
@@ -16,7 +16,7 @@ class GEMouseLook(GEActionNode):
     mouse = None
 
     def __init__(self):
-        GEActionNode.__init__(self)
+        ULActionNode.__init__(self)
         self.axis = None
         self.condition = None
         self.game_object_x = None
@@ -32,7 +32,7 @@ class GEMouseLook(GEActionNode):
         self._x = 0
         self._y = 0
         self.done = None
-        self.OUT = GEOutSocket(self, self.get_done)
+        self.OUT = ULOutSocket(self, self.get_done)
         self.use_local_head = False
         self.get_data()
         self.mouse.position = self.screen_center

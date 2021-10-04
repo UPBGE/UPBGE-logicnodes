@@ -1,17 +1,17 @@
-from uplogic.nodes import GEOutSocket
-from uplogic.nodes import GEParameterNode
+from uplogic.nodes import ULOutSocket
+from uplogic.nodes import ULParameterNode
 from uplogic.nodes import is_invalid
 
 
-class GECatchEvent(GEParameterNode):
+class ULCatchEvent(ULParameterNode):
     def __init__(self):
-        GEParameterNode.__init__(self)
+        ULParameterNode.__init__(self)
         self.subject = None
         self.received = False
         self.event = [None, None]
-        self.OUT = GEOutSocket(self, self.get_received)
-        self.BODY = GEOutSocket(self, self.get_body)
-        self.TARGET = GEOutSocket(self, self.get_target)
+        self.OUT = ULOutSocket(self, self.get_received)
+        self.BODY = ULOutSocket(self, self.get_body)
+        self.TARGET = ULOutSocket(self, self.get_target)
 
     def get_received(self):
         return self.received

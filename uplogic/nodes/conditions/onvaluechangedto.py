@@ -1,17 +1,17 @@
-from uplogic.nodes import GEConditionNode
-from uplogic.nodes import GEOutSocket
+from uplogic.nodes import ULConditionNode
+from uplogic.nodes import ULOutSocket
 from uplogic.nodes import STATUS_WAITING
 from uplogic.nodes import is_waiting
 
 
-class GEValueChangedTo(GEConditionNode):
+class ULValueChangedTo(ULConditionNode):
     def __init__(self):
-        GEConditionNode.__init__(self)
+        ULConditionNode.__init__(self)
         self.monitored_value = None
         self.trigger_value = None
         self.changed = None
         self.old = None
-        self.OUT = GEOutSocket(self, self.get_changed)
+        self.OUT = ULOutSocket(self, self.get_changed)
 
     def get_changed(self):
         monitored_value = self.get_socket_value(self.monitored_value)

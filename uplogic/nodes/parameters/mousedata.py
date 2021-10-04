@@ -1,19 +1,19 @@
 from mathutils import Vector
-from uplogic.nodes import GEOutSocket
-from uplogic.nodes import GEParameterNode
+from uplogic.nodes import ULOutSocket
+from uplogic.nodes import ULParameterNode
 from uplogic.nodes import STATUS_READY
 
 
-class GEMouseData(GEParameterNode):
+class ULMouseData(ULParameterNode):
     def __init__(self):
-        GEParameterNode.__init__(self)
-        self.MX = GEOutSocket(self, self.getmx)
-        self.MY = GEOutSocket(self, self.getmy)
-        self.MDX = GEOutSocket(self, self.getmdx)
-        self.MDY = GEOutSocket(self, self.getmdy)
-        self.MDWHEEL = GEOutSocket(self, self.getmdwheel)
-        self.MXY0 = GEOutSocket(self, self.getmxyz)
-        self.MDXY0 = GEOutSocket(self, self.getmdxyz)
+        ULParameterNode.__init__(self)
+        self.MX = ULOutSocket(self, self.getmx)
+        self.MY = ULOutSocket(self, self.getmy)
+        self.MDX = ULOutSocket(self, self.getmdx)
+        self.MDY = ULOutSocket(self, self.getmdy)
+        self.MDWHEEL = ULOutSocket(self, self.getmdwheel)
+        self.MXY0 = ULOutSocket(self, self.getmxyz)
+        self.MDXY0 = ULOutSocket(self, self.getmdxyz)
 
     def getmx(self):
         return self.network._last_mouse_position[0]

@@ -1,10 +1,10 @@
-from uplogic.nodes import GEConditionNode
+from uplogic.nodes import ULConditionNode
 from uplogic.nodes import is_waiting
 
 
-class GEMouseScrolled(GEConditionNode):
+class ULMouseScrolled(ULConditionNode):
     def __init__(self):
-        GEConditionNode.__init__(self)
+        ULConditionNode.__init__(self)
         self.wheel_direction = None
 
     def evaluate(self):

@@ -1,21 +1,21 @@
 from bge import logic
-from uplogic.nodes import GEActionNode
-from uplogic.nodes import GEOutSocket
+from uplogic.nodes import ULActionNode
+from uplogic.nodes import ULOutSocket
 from uplogic.nodes import not_met
 from uplogic.nodes import is_waiting
 from uplogic.nodes import debug
 
 
-class GEGamepadVibration(GEActionNode):
+class ULGamepadVibration(ULActionNode):
     def __init__(self, axis=0):
-        GEActionNode.__init__(self)
+        ULActionNode.__init__(self)
         self.condition = None
         self.index = None
         self.left = None
         self.right = None
         self.time = None
         self.done = None
-        self.DONE = GEOutSocket(self, self.get_done)
+        self.DONE = ULOutSocket(self, self.get_done)
 
     def get_done(self):
         return self.done

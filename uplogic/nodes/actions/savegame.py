@@ -1,23 +1,23 @@
 from bge import constraints
 from bge import logic
 from mathutils import Vector
-from uplogic.nodes import GEActionNode
-from uplogic.nodes import GEOutSocket
+from uplogic.nodes import ULActionNode
+from uplogic.nodes import ULOutSocket
 from uplogic.nodes import is_waiting
 from uplogic.nodes import not_met
-from uplogic.nodes.logictree import GELogicTree
+from uplogic.nodes.logictree import ULLogicTree
 import json
 import os
 
 
-class GESaveGame(GEActionNode):
+class ULSaveGame(ULActionNode):
     def __init__(self):
-        GEActionNode.__init__(self)
+        ULActionNode.__init__(self)
         self.condition = None
         self.slot = None
         self.path = ''
         self.done = None
-        self.OUT = GEOutSocket(self, self.get_done)
+        self.OUT = ULOutSocket(self, self.get_done)
 
     def get_done(self):
         return self.done
@@ -59,7 +59,7 @@ class GESaveGame(GEActionNode):
             cha = constraints.getCharacter(obj)
             for prop in props:
                 if prop != 'NodeTree':
-                    if isinstance(obj[prop], GELogicTree):
+                    if isinstance(obj[prop], ULLogicTree):
                         continue
                     if isinstance(obj[prop], Vector):
                         continue

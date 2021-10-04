@@ -1,10 +1,10 @@
-from uplogic.nodes import GEConditionNode
+from uplogic.nodes import ULConditionNode
 from uplogic.nodes import is_waiting
 
 
-class GEKeyPressed(GEConditionNode):
+class ULKeyPressed(ULConditionNode):
     def __init__(self, pulse=False, key_code=None):
-        GEConditionNode.__init__(self)
+        ULConditionNode.__init__(self)
         self.pulse = pulse
         self.key_code = key_code
         self.network = None

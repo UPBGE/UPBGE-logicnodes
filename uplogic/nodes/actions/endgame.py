@@ -1,11 +1,11 @@
 from bge import logic
-from uplogic.nodes import GEActionNode
+from uplogic.nodes import ULActionNode
 from uplogic.nodes import not_met
 
 
-class GEEndGame(GEActionNode):
+class ULEndGame(ULActionNode):
     def __init__(self):
-        GEActionNode.__init__(self)
+        ULActionNode.__init__(self)
         self.condition = None
 
     def evaluate(self):

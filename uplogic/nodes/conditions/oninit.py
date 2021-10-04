@@ -1,10 +1,10 @@
-from uplogic.nodes import GEConditionNode
+from uplogic.nodes import ULConditionNode
 from uplogic.nodes import STATUS_READY
 
 
-class GEOnInit(GEConditionNode):
+class ULOnInit(ULConditionNode):
     def __init__(self):
-        GEConditionNode.__init__(self)
+        ULConditionNode.__init__(self)
         self._set_status(STATUS_READY)
         self._value = True
 
