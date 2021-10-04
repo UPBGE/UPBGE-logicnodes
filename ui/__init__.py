@@ -405,7 +405,9 @@ class BGE_PT_LogicNodeSettingsObject(bpy.types.Panel):
         col1 = parts.column()
         col2 = parts.column()
         col1.prop(context.active_object, 'sound_occluder', text='Sound Occluder')
-        col2.prop(context.active_object, 'sound_blocking', text='Factor', slider=True)
+        block = col2.row()
+        block.prop(context.active_object, 'sound_blocking', text='Factor', slider=True)
+        block.enabled = context.active_object.sound_occluder
 
 
 class BGE_PT_LogicTreeGroups(bpy.types.Panel):

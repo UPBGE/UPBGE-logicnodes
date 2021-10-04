@@ -242,20 +242,15 @@ class TreeCodeGenerator(object):
         this_module_dir = os.path.dirname(__file__)
         bge_netlogic_dir = os.path.dirname(this_module_dir)
         uplogic_dir = os.path.join(bge_netlogic_dir, 'uplogic')
-        node_dir = os.path.join(uplogic_dir, 'nodes')
         import site
         uplogic_path = os.path.join(site.getsitepackages()[-1], 'uplogic')
-        node_path = os.path.join(uplogic_path, 'nodes')
         initfile = self.create_text_file("__init__.py")
         initfile.close()
         try:
             if os.path.isdir(uplogic_path):
                 shutil.rmtree(uplogic_path)
             os.mkdir(uplogic_path)
-            os.mkdir(node_path)
-            initfile = self.create_text_file("__init__.py", uplogic_path)
-            initfile.close()
-            self.recreate_dir(node_dir, node_path)
+            self.recreate_dir(uplogic_dir, uplogic_path)
         except PermissionError:
             initfile = self.create_text_file("__init__.py")
             initfile.close()

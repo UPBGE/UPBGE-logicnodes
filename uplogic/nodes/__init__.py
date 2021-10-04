@@ -14,6 +14,8 @@ import json
 
 
 def interpolate(a: float, b: float, fac: float):
+    if -.001 < a-b < .001:
+        return b
     return (fac * b) + ((1-fac) * a)
 
 
@@ -1951,18 +1953,18 @@ class InterpolateValue(GEParameterNode):
 
     def __init__(self):
         GEParameterNode.__init__(self)
-        self.value_a = None
-        self.value_b = None
-        self.factor = None
+        self.a = None
+        self.b = None
+        self.fac = None
 
     def evaluate(self):
-        value_a = self.get_socket_value(self.value_a)
-        value_b = self.get_socket_value(self.value_b)
-        factor = self.get_socket_value(self.factor)
-        if is_invalid(value_a, value_b, factor):
+        a = self.get_socket_value(self.a)
+        b = self.get_socket_value(self.b)
+        fac = self.get_socket_value(self.fac)
+        if is_invalid(a, b, fac):
             return
         self._set_ready()
-        self._set_value((factor * value_b) + ((1-factor) * value_a))
+        self._set_value(interpolate(a, b, fac))
 
 
 class ParameterArithmeticOp(GEParameterNode):
@@ -7535,9 +7537,9 @@ class ParameterGetCharacterInfo(GEParameterNode):
         self.max_jumps = physics.maxJumps
         self.cur_jump = physics.jumpCount
         self.gravity = physics.gravity
-        self.walk_dir = physics.walkDirection @ game_object.worldOrientation if local else physics.walkDirection
+        wdir = physics.walkDirection @ game_object.worldOrientation if local else physics.walkDirection
+        self.walk_dir = wdir * bpy.data.scenes[bge.logic.getCurrentScene().name].game_settings.physics_step_sub
         self.on_ground = physics.onGround
-
 
 
 class ActionApplyTorque(GEActionNode):

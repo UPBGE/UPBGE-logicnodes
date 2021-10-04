@@ -5612,7 +5612,7 @@ class NLInterpolateValueNode(bpy.types.Node, NLParameterNode):
         return "nodes.InterpolateValue"
 
     def get_input_sockets_field_names(self):
-        return ["value_a", "value_b", "factor", "range"]
+        return ["a", "b", "fac"]
 
 
 _nodes.append(NLInterpolateValueNode)

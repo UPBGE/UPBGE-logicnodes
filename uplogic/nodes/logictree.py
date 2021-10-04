@@ -1,6 +1,6 @@
 from uplogic.nodes import GELogicContainer
 from uplogic.nodes import GlobalDB
-from uplogic.nodes.audio import AudioSystem
+from uplogic.audio import AudioSystem
 from uplogic.nodes import STATUS_WAITING
 from uplogic.nodes import STATUS_READY
 from uplogic.nodes import debug
