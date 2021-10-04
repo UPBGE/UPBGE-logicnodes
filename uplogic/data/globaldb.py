@@ -133,7 +133,6 @@ class GlobalDB(object):
         for f in remove_f:
             bpy.app.handlers.game_post.remove(f)
         bpy.app.handlers.game_post.append(unload_nodes)
-        self.put('.uplogic_audio', {})
 
         log_size = GlobalDB.read(self.fname, self.data)
         if log_size > (5 * len(self.data)):

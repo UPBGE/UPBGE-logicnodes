@@ -261,7 +261,7 @@ class ULLogicTree(ULLogicContainer):
                 cells.append(cell)
         # update the sound system
         if self.aud_system_owner:
-            self.audio_system.update(self)
+            self.audio_system.update()
         # pulse subnetworks
         for network in self.sub_networks:
             if network._owner.invalid:

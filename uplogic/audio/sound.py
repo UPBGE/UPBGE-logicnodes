@@ -1,8 +1,12 @@
 
 from bge import logic
-from uplogic.utils import compute_distance
 from mathutils import Vector
+from uplogic.utils import compute_distance
 import aud
+
+
+class ULSound():
+    pass
 
 
 class ULSound3D():
@@ -16,8 +20,8 @@ class ULSound3D():
         self,
         file=None,
         aud_system=None,
+        speaker=logic.getCurrentController().owner,
         occlusion=False,
-        speaker=None,
         transition=.1,
         cutoff=.1,
         volume=1,
@@ -64,6 +68,7 @@ class ULSound3D():
             handle.distance_maximum = 1000
             handle.cone_angle_inner = cone_angle[0]
             handle.cone_angle_outer = cone_angle[1]
+            handle.loop_count = loop_count
             handle.cone_volume_outer = cone_outer_volume * volume
         self.aud_system.add(self)
 

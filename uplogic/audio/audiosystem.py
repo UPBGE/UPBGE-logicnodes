@@ -20,7 +20,7 @@ class ULAudioSystem(object):
         self.active_sounds = []
         self.listener = logic.getCurrentScene().active_camera
         self.old_lis_pos = self.listener.worldPosition.copy()
-        GlobalDB.retrieve('.uplogic_audio').data[name] = self
+        GlobalDB.retrieve('.uplogic_audio').put(name, self)
         self.device = aud.Device()
         self.device.distance_model = aud.DISTANCE_MODEL_INVERSE_CLAMPED
         self.device.speed_of_sound = bpy.context.scene.audio_doppler_speed
@@ -41,10 +41,9 @@ class ULAudioSystem(object):
         self.old_lis_pos = wpos
         return vel
 
-    def update(self, network):
+    def update(self):
         c = logic.getCurrentScene().active_camera
         self.listener = c
-        print(self.active_sounds)
         if not self.active_sounds:
             return  # do not update if no sound has been installed
         # update the listener data

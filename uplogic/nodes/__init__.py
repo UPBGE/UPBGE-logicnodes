@@ -1,20 +1,19 @@
 from bge import logic
-import bge
 from bge.types import KX_GameObject as GameObject
-import bpy
-import aud
 from mathutils import Vector, Euler, Matrix, Quaternion
 from uplogic.audio.sound import ULSound3D
 from uplogic.data import GlobalDB
+from uplogic.utils import debug
+import aud
+import bge
+import bpy
+import json
 import math
 import numbers
+import operator
 import os
 import random
 import sys
-import operator
-import json
-from uplogic.utils import debug
-
 
 
 def interpolate(a: float, b: float, fac: float):
@@ -7732,10 +7731,8 @@ class ActionStart3DSoundAdv(ULActionNode):
     def evaluate(self):
         self.done = False
         self.on_finish = False
-        audio_system = self.network.audio_system
         speaker = self.get_socket_value(self.speaker)
         transition = self.get_socket_value(self.transition)
-        handles = self._handles
         occlusion = self.get_socket_value(self.occlusion)
         volume = self.get_socket_value(self.volume)
         cone_outer_volume = self.get_socket_value(self.cone_outer_volume)
@@ -7744,8 +7741,6 @@ class ActionStart3DSoundAdv(ULActionNode):
         if not_met(condition):
             self._set_ready()
             return
-        if not self.device:
-            self.device = audio_system.device
         cutoff = self.get_socket_value(self.cutoff)
         file = self.get_socket_value(self.sound)
         loop_count = self.get_socket_value(self.loop_count)
@@ -7756,11 +7751,11 @@ class ActionStart3DSoundAdv(ULActionNode):
 
         if is_invalid(file):
             return
-        sound = ULSound3D(
+        ULSound3D(
             file,
-            audio_system,
-            occlusion,
+            self.network.audio_system,
             speaker,
+            occlusion,
             transition,
             cutoff,
             volume,
@@ -7768,7 +7763,8 @@ class ActionStart3DSoundAdv(ULActionNode):
             attenuation,
             distance_ref,
             [cone_angle.x, cone_angle.y],
-            cone_outer_volume
+            cone_outer_volume,
+            loop_count
         )
         self.done = True
 
