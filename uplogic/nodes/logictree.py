@@ -20,7 +20,7 @@ class ULLogicTree(ULLogicContainer):
         self._lastuid = 0
         self._owner = None
         self._max_blocking_loop_count = 0
-        self._events = GlobalDB.retrieve('NL_MessageService')
+        self._events = GlobalDB.retrieve('ULEventService')
         self.keyboard = None
         self.mouse = None
         self.keyboard_events = None

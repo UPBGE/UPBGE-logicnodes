@@ -6,7 +6,38 @@ import aud
 
 
 class ULSound():
-    pass
+    sound = None
+
+    def __init__(
+        self,
+        file=None,
+        aud_system=None,
+        volume=1,
+        pitch=1,
+        loop_count=1
+    ):
+        if not (file and aud_system):
+            return
+        self.pitch = pitch
+        self.volume = volume
+        self.aud_system = aud_system
+        soundfile = logic.expandPath(file)
+        sound = aud.Sound(soundfile)
+        device = aud_system.device
+        handle = self.sound = device.play(sound)
+        handle.relative = True
+        handle.pitch = pitch
+        handle.volume = volume
+        handle.loop_count = loop_count
+        self.aud_system.add(self)
+
+    def update(self):
+        handle = self.sound
+        if not handle.status:
+            self.aud_system.remove(self)
+            return
+        handle.pitch = self.pitch
+        handle.volume = self.volume
 
 
 class ULSound3D():
@@ -19,8 +50,8 @@ class ULSound3D():
     def __init__(
         self,
         file=None,
+        speaker=None,
         aud_system=None,
-        speaker=logic.getCurrentController().owner,
         occlusion=False,
         transition=.1,
         cutoff=.1,

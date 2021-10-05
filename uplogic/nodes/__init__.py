@@ -1,7 +1,7 @@
 from bge import logic
 from bge.types import KX_GameObject as GameObject
 from mathutils import Vector, Euler, Matrix, Quaternion
-from uplogic.audio.sound import ULSound3D
+from uplogic.audio.sound import ULSound, ULSound3D
 from uplogic.data import GlobalDB
 from uplogic.utils import debug
 import aud
@@ -7731,16 +7731,16 @@ class ActionStart3DSoundAdv(ULActionNode):
     def evaluate(self):
         self.done = False
         self.on_finish = False
+        condition = self.get_socket_value(self.condition)
+        if not_met(condition):
+            self._set_ready()
+            return
         speaker = self.get_socket_value(self.speaker)
         transition = self.get_socket_value(self.transition)
         occlusion = self.get_socket_value(self.occlusion)
         volume = self.get_socket_value(self.volume)
         cone_outer_volume = self.get_socket_value(self.cone_outer_volume)
         attenuation = self.get_socket_value(self.attenuation)
-        condition = self.get_socket_value(self.condition)
-        if not_met(condition):
-            self._set_ready()
-            return
         cutoff = self.get_socket_value(self.cutoff)
         file = self.get_socket_value(self.sound)
         loop_count = self.get_socket_value(self.loop_count)
@@ -7751,10 +7751,10 @@ class ActionStart3DSoundAdv(ULActionNode):
 
         if is_invalid(file):
             return
-        ULSound3D(
+        self.handle = ULSound3D(
             file,
-            self.network.audio_system,
             speaker,
+            self.network.audio_system,
             occlusion,
             transition,
             cutoff,
@@ -7801,44 +7801,26 @@ class ActionStartSound(ULActionNode):
         audio_system = self.network.audio_system
         if not self.device:
             self.device = audio_system.device
-        handles = self._handles
-        pitch = self.get_socket_value(self.pitch)
-        volume = self.get_socket_value(self.volume)
         self._set_ready()
-        if handles:
-            for handle in handles:
-                if not handle.status and handle in audio_system.active_sounds:
-                    self._handles.remove(handle)
-                    audio_system.active_sounds.remove(handle)
-                    self.on_finish = True
-                    return
-                handle.volume = volume
-                handle.pitch = pitch
-            if handles:
-                self._handle = handles[-1]
-            else:
-                self._handle = None
         condition = self.get_socket_value(self.condition)
         if not_met(condition):
             self._set_ready()
             return
-        sound = self.get_socket_value(self.sound)
+        pitch = self.get_socket_value(self.pitch)
+        volume = self.get_socket_value(self.volume)
+        file = self.get_socket_value(self.sound)
         loop_count = self.get_socket_value(self.loop_count)
-        #  self._set_ready()
 
-        if is_invalid(sound):
+        if is_invalid(file):
             return
-        soundpath = bge.logic.expandPath(sound)
-        soundfile = aud.Sound(soundpath)
-        handle = self.device.play(soundfile)
-        handle.relative = True
-        handle.pitch = pitch
-        handle.loop_count = loop_count
-        handle.volume = volume
-        audio_system.active_sounds.append(handle)
-        self._handles.append(handle)
-        self._handle = handle
-        self.done = True
+
+        ULSound(
+            file,
+            audio_system,
+            volume,
+            pitch,
+            loop_count
+        )
 
 
 class ActionStopSound(ULActionNode):
