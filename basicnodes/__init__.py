@@ -537,7 +537,7 @@ def filter_curves(self, item):
 
 def filter_logic_trees(self, item):
     if (
-        isinstance(item, bge_netlogic.ui.ULLogicTree)
+        isinstance(item, bge_netlogic.ui.BGELogicTree)
     ):
         return True
     return False
@@ -2872,7 +2872,7 @@ class NLOptionalValueFieldSocket(bpy.types.NodeSocket, NetLogicSocketType):
         return PARAMETER_SOCKET_COLOR
 
     def get_unlinked_value(self):
-        return socket_field(self) if self.use_value or self.is_linked else "nodes.Invalid()"
+        return socket_field(self) if self.use_value or self.is_linked else "utils.STATUS_INVALID"
 
     def draw(self, context, layout, node, text):
         if self.is_linked or self.is_output:
@@ -4121,6 +4121,7 @@ class NLGameObjectPropertyParameterNode(bpy.types.Node, NLParameterNode):
     bl_icon = 'EXPORT'
     nl_category = 'Objects'
     nl_subcat = 'Properties'
+    nl_module = 'parameters'
 
     def init(self, context):
         NLParameterNode.init(self, context)
@@ -4130,13 +4131,13 @@ class NLGameObjectPropertyParameterNode(bpy.types.Node, NLParameterNode):
         self.outputs.new(NLParameterSocket.bl_idname, "Property Value")
 
     def get_netlogic_class_name(self):
-        return "nodes.ParameterObjectProperty"
+        return "ULGetProperty"
 
     def get_input_sockets_field_names(self):
         return ["game_object", "property_name"]
 
     def get_output_socket_varnames(self):
-        return [OUTCELL]
+        return ['OUT']
 
 
 _nodes.append(NLGameObjectPropertyParameterNode)
@@ -4196,6 +4197,7 @@ class NLGetGeometryNodeAttribute(bpy.types.Node, NLParameterNode):
     bl_icon = 'DRIVER_TRANSFORM'
     nl_category = 'Nodes'
     nl_subcat = 'Geometry'
+    nl_module = 'parameters'
 
     def init(self, context):
         NLActionNode.init(self, context)
@@ -4217,7 +4219,7 @@ class NLGetGeometryNodeAttribute(bpy.types.Node, NLParameterNode):
             itl.enabled = att.enabled = False
 
     def get_netlogic_class_name(self):
-        return "nodes.ParameterGetNodeTreeNodeAttribute"
+        return "ULGetNodeAttribute"
 
     def get_input_sockets_field_names(self):
         return ["tree_name", 'node_name', "internal", 'attribute']
@@ -4322,6 +4324,7 @@ class NLGetMaterialNodeValue(bpy.types.Node, NLParameterNode):
     bl_icon = 'TRIA_RIGHT'
     nl_category = 'Nodes'
     nl_subcat = 'Materials'
+    nl_module = 'parameters'
 
     def init(self, context):
         NLActionNode.init(self, context)
@@ -4352,7 +4355,7 @@ class NLGetMaterialNodeValue(bpy.types.Node, NLParameterNode):
             ipt.name = name
 
     def get_netlogic_class_name(self):
-        return "nodes.ParameterGetMaterialNodeValue"
+        return "ULGetMaterialSocket"
 
     def get_input_sockets_field_names(self):
         return ["mat_name", 'node_name', "input_slot"]
@@ -4370,6 +4373,7 @@ class NLGetMaterialNodeAttribute(bpy.types.Node, NLParameterNode):
     bl_icon = 'DRIVER_TRANSFORM'
     nl_category = 'Nodes'
     nl_subcat = 'Materials'
+    nl_module = 'parameters'
 
     def init(self, context):
         NLActionNode.init(self, context)
@@ -4391,7 +4395,7 @@ class NLGetMaterialNodeAttribute(bpy.types.Node, NLParameterNode):
             itl.enabled = att.enabled = False
 
     def get_netlogic_class_name(self):
-        return "nodes.ParameterGetMaterialNodeAttribute"
+        return "ULGetMaterialAttribute"
 
     def get_input_sockets_field_names(self):
         return ["mat_name", 'node_name', "internal", 'attribute']
@@ -4408,6 +4412,7 @@ class NLGetMaterialNode(bpy.types.Node, NLParameterNode):
     bl_label = "Get Node"
     nl_category = 'Nodes'
     nl_subcat = 'Materials'
+    nl_module = 'parameters'
 
     def init(self, context):
         NLActionNode.init(self, context)
@@ -4417,7 +4422,7 @@ class NLGetMaterialNode(bpy.types.Node, NLParameterNode):
         self.outputs.new(NLParameterSocket.bl_idname, "Node")
 
     def get_netlogic_class_name(self):
-        return "nodes.ParameterGetMaterialNode"
+        return "ULGetMaterialNode"
 
     def get_input_sockets_field_names(self):
         return ["mat_name", 'node_name']
@@ -4435,6 +4440,7 @@ class NLGameObjectHasPropertyParameterNode(bpy.types.Node, NLParameterNode):
     bl_icon = 'QUESTION'
     nl_category = "Objects"
     nl_subcat = 'Properties'
+    nl_module = 'conditions'
 
     def init(self, context):
         NLParameterNode.init(self, context)
@@ -4444,13 +4450,13 @@ class NLGameObjectHasPropertyParameterNode(bpy.types.Node, NLParameterNode):
         self.outputs.new(NLConditionSocket.bl_idname, "If True")
 
     def get_netlogic_class_name(self):
-        return "nodes.ParameterObjectHasProperty"
+        return "ULHasProperty"
 
     def get_input_sockets_field_names(self):
         return ["game_object", "property_name"]
 
     def get_output_socket_varnames(self):
-        return [OUTCELL]
+        return ['OUT']
 
 
 _nodes.append(NLGameObjectHasPropertyParameterNode)
@@ -4461,6 +4467,7 @@ class NLGetDictKeyNode(bpy.types.Node, NLParameterNode):
     bl_label = 'Get Key'
     nl_category = "Python"
     nl_subcat = 'Dictionary'
+    nl_module = 'parameters'
 
     def init(self, context):
         NLParameterNode.init(self, context)
@@ -4470,13 +4477,13 @@ class NLGetDictKeyNode(bpy.types.Node, NLParameterNode):
         self.outputs.new(NLParameterSocket.bl_idname, "Property Value")
 
     def get_netlogic_class_name(self):
-        return "nodes.ParameterDictionaryValue"
+        return "ULDictValue"
 
     def get_input_sockets_field_names(self):
         return ["dict", "key"]
 
     def get_output_socket_varnames(self):
-        return [OUTCELL]
+        return ['OUT']
 
 
 _nodes.append(NLGetDictKeyNode)
@@ -4487,21 +4494,21 @@ class NLGetRandomListIndex(bpy.types.Node, NLParameterNode):
     bl_label = "Get Random Item"
     nl_category = "Python"
     nl_subcat = 'List'
+    nl_module = 'parameters'
 
     def init(self, context):
         NLParameterNode.init(self, context)
-        self.inputs.new(NLPseudoConditionSocket.bl_idname, 'Condition')
         self.inputs.new(NLListSocket.bl_idname, "List")
         self.outputs.new(NLParameterSocket.bl_idname, "Value")
 
     def get_netlogic_class_name(self):
-        return "nodes.ParameterRandomListIndex"
+        return "ULListIndexRandom"
 
     def get_input_sockets_field_names(self):
-        return ["condition", "items"]
+        return ["items"]
 
     def get_output_socket_varnames(self):
-        return [OUTCELL]
+        return ['OUT']
 
 
 _nodes.append(NLGetRandomListIndex)
@@ -4537,6 +4544,7 @@ class NLGetListIndexNode(bpy.types.Node, NLParameterNode):
     bl_label = "Get Index"
     nl_category = "Python"
     nl_subcat = 'List'
+    nl_module = 'parameters'
 
     def init(self, context):
         NLParameterNode.init(self, context)
@@ -4545,13 +4553,13 @@ class NLGetListIndexNode(bpy.types.Node, NLParameterNode):
         self.outputs.new(NLParameterSocket.bl_idname, "Value")
 
     def get_netlogic_class_name(self):
-        return "nodes.ParameterListIndex"
+        return "ULListIndex"
 
     def get_input_sockets_field_names(self):
         return ["items", "index"]
 
     def get_output_socket_varnames(self):
-        return [OUTCELL]
+        return ['OUT']
 
 
 _nodes.append(NLGetListIndexNode)
@@ -5644,22 +5652,23 @@ class NLParameterActionStatus(bpy.types.Node, NLParameterNode):
 _nodes.append(NLParameterActionStatus)
 
 
-class NLParameterSwitchValue(bpy.types.Node, NLParameterNode):
+class NLParameterSwitchValue(bpy.types.Node, NLConditionNode):
     bl_idname = "NLParameterSwitchValue"
     bl_label = "True / False"
     bl_width_min = 60
     bl_width_default = 100
     nl_category = "Logic"
+    nl_module = 'conditions'
 
     def init(self, context):
-        NLParameterNode.init(self, context)
+        NLConditionNode.init(self, context)
         self.hide = True
         self.inputs.new(NLPseudoConditionSocket.bl_idname, "Condition")
         self.outputs.new(NLPseudoConditionSocket.bl_idname, "True")
         self.outputs.new(NLPseudoConditionSocket.bl_idname, "False")
 
     def get_netlogic_class_name(self):
-        return "nodes.ParameterSwitchValue"
+        return "ULTrueFalse"
 
     def get_input_sockets_field_names(self):
         return ["state"]
@@ -5725,6 +5734,7 @@ class NLParameterBoneStatus(bpy.types.Node, NLParameterNode):
     bl_label = "Bone Status"
     nl_category = 'Animation'
     nl_subcat = 'Armature / Rig'
+    nl_module = 'parameters'
 
     def init(self, context):
         NLParameterNode.init(self, context)
@@ -5735,7 +5745,7 @@ class NLParameterBoneStatus(bpy.types.Node, NLParameterNode):
         self.outputs.new(NLParameterSocket.bl_idname, "Scale")
 
     def get_netlogic_class_name(self):
-        return "nodes.ParameterBoneStatus"
+        return "ULBoneStatus"
 
     def get_input_sockets_field_names(self):
         return ["armature", "bone_name"]
@@ -9292,6 +9302,7 @@ class NLInitNewList(bpy.types.Node, NLActionNode):
     bl_label = "From Items"
     nl_category = "Python"
     nl_subcat = 'List'
+    nl_module = 'parameters'
 
     def init(self, context):
         NLActionNode.init(self, context)
@@ -9317,7 +9328,7 @@ class NLInitNewList(bpy.types.Node, NLActionNode):
         return ['LIST']
 
     def get_netlogic_class_name(self):
-        return "nodes.InitNewList"
+        return "ULListFromItems"
 
     def get_input_sockets_field_names(self):
         return [
@@ -11702,6 +11713,7 @@ class NLParameterGameObjectParent(bpy.types.Node, NLParameterNode):
     bl_label = "Get Parent"
     bl_icon = 'COMMUNITY'
     nl_category = "Objects"
+    nl_module = 'parameters'
 
     def init(self, context):
         NLParameterNode.init(self, context)
@@ -11709,10 +11721,13 @@ class NLParameterGameObjectParent(bpy.types.Node, NLParameterNode):
         self.outputs.new(NLGameObjectSocket.bl_idname, "Parent Object")
 
     def get_netlogic_class_name(self):
-        return "nodes.ParameterParentGameObject"
+        return "ULGetParent"
 
     def get_input_sockets_field_names(self):
         return ["game_object"]
+
+    def get_output_socket_varnames(self):
+        return ["OUT"]
 
 
 _nodes.append(NLParameterGameObjectParent)
@@ -11724,6 +11739,8 @@ class NLParameterAxisVector(bpy.types.Node, NLParameterNode):
     bl_icon = 'EMPTY_ARROWS'
     nl_category = "Objects"
     nl_subcat = 'Data'
+    nl_module = 'parameters'
+
     axis: bpy.props.EnumProperty(
         name='Axis',
         items=_enum_local_oriented_axis,
@@ -11739,13 +11756,16 @@ class NLParameterAxisVector(bpy.types.Node, NLParameterNode):
         layout.prop(self, 'axis', text='')
 
     def get_netlogic_class_name(self):
-        return "nodes.ParameterAxisVector"
+        return "ULAxisVector"
 
     def get_input_sockets_field_names(self):
         return ["game_object"]
 
     def get_nonsocket_fields(self):
         return [("axis", lambda: self.axis)]
+
+    def get_output_socket_varnames(self):
+        return ["OUT"]
 
 
 _nodes.append(NLParameterAxisVector)
@@ -11757,6 +11777,7 @@ class NLGetObjectDataName(bpy.types.Node, NLParameterNode):
     bl_icon = 'FONT_DATA'
     nl_category = "Objects"
     nl_subcat = 'Data'
+    nl_module = 'parameters'
 
     def init(self, context):
         NLParameterNode.init(self, context)
@@ -11764,10 +11785,13 @@ class NLGetObjectDataName(bpy.types.Node, NLParameterNode):
         self.outputs.new(NLParameterSocket.bl_idname, "Name")
 
     def get_netlogic_class_name(self):
-        return "nodes.GetObjectDataName"
+        return "ULObjectDataName"
 
     def get_input_sockets_field_names(self):
         return ["game_object"]
+
+    def get_output_socket_varnames(self):
+        return ["OUT"]
 
 
 _nodes.append(NLGetObjectDataName)
@@ -11778,6 +11802,7 @@ class NLGetCurvePoints(bpy.types.Node, NLParameterNode):
     bl_label = "Get Curve Points"
     bl_icon = 'OUTLINER_DATA_CURVE'
     nl_category = "Objects"
+    nl_module = 'parameters'
 
     def init(self, context):
         NLParameterNode.init(self, context)
@@ -11785,10 +11810,13 @@ class NLGetCurvePoints(bpy.types.Node, NLParameterNode):
         self.outputs.new(NLListSocket.bl_idname, "Points")
 
     def get_netlogic_class_name(self):
-        return "nodes.GetCurvePoints"
+        return "ULGetCurvePoints"
 
     def get_input_sockets_field_names(self):
         return ["curve"]
+
+    def get_output_socket_varnames(self):
+        return ["OUT"]
 
 
 _nodes.append(NLGetCurvePoints)
@@ -11800,6 +11828,7 @@ class NLGetObjectVertices(bpy.types.Node, NLParameterNode):
     bl_icon = 'OUTLINER_DATA_MESH'
     nl_category = "Objects"
     nl_subcat = 'Data'
+    nl_module = 'parameters'
 
     def init(self, context):
         NLParameterNode.init(self, context)
@@ -11807,10 +11836,13 @@ class NLGetObjectVertices(bpy.types.Node, NLParameterNode):
         self.outputs.new(NLListSocket.bl_idname, "Vertices")
 
     def get_netlogic_class_name(self):
-        return "nodes.GetObjectVertices"
+        return "ULObjectDataVertices"
 
     def get_input_sockets_field_names(self):
         return ["game_object"]
+
+    def get_output_socket_varnames(self):
+        return ["OUT"]
 
 
 _nodes.append(NLGetObjectVertices)

@@ -3,8 +3,8 @@ from bge import logic
 from mathutils import Vector
 from uplogic.nodes import ULActionNode
 from uplogic.nodes import ULOutSocket
-from uplogic.nodes import is_waiting
-from uplogic.nodes import not_met
+from uplogic.utils import is_waiting
+from uplogic.utils import not_met
 from uplogic.nodes.logictree import ULLogicTree
 import json
 import os

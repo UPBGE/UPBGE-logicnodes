@@ -1,11 +1,13 @@
-from uplogic.audio.audiosystem import ULAudioSystem
-from uplogic.audio.sound import ULSound3D
-from uplogic.audio.sound import ULSound
+from .audiosystem import ULAudioSystem
+from .sound import ULSound2D
+from .sound import ULSound3D
+from .sound import ULSound
 from uplogic.data.globaldb import GlobalDB
 
 
-def update():
-    systems = GlobalDB.retrieve('.uplogic_audio').data
-    print(systems)
-    for system in systems:
-        systems[system].update()
+def update_sounds():
+    systems = GlobalDB.retrieve('.uplogic_audio')
+    for system in systems.data:
+        if system == 'ln_audio_system':
+            continue
+        systems.data[system].update()

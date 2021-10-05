@@ -5,6 +5,7 @@ from uplogic.nodes import STATUS_WAITING
 from uplogic.nodes import STATUS_READY
 from uplogic.nodes import debug
 from uplogic.nodes import load_user_module
+from uplogic.utils import make_valid_name
 from bge import logic
 from bge import events
 import bpy
@@ -58,7 +59,11 @@ class ULLogicTree(ULLogicContainer):
     def init_glob_cats(self):
         if not hasattr(bpy.types.Scene, 'nl_globals_initialized'):
             scene = logic.getCurrentScene()
-            cats = getattr(bpy.data.scenes[scene.name], 'nl_global_categories', None)
+            cats = getattr(
+                bpy.data.scenes[scene.name],
+                'nl_global_categories',
+                None
+            )
             if not cats:
                 return
 
@@ -76,7 +81,7 @@ class ULLogicTree(ULLogicContainer):
                 db = GlobalDB.retrieve(c.name)
                 msg += f' {c.name},'
                 for v in c.content:
-                    val = getattr(v , dat.get(v.value_type, 'FLOAT'), 0)
+                    val = getattr(v, dat.get(v.value_type, 'FLOAT'), 0)
                     db.put(v.name, val, v.persistent)
 
             if msg:
@@ -276,6 +281,8 @@ class ULLogicTree(ULLogicContainer):
         stripped_name = "".join(
             [c for c in node_tree_name if c in valid_characters]
         )
+        tree_name = make_valid_name(node_tree_name.name)
+        c_name = f'.nl_{tree_name.lower()}.py'
         if stripped_name in owner_object:
             debug("Network {} already installed for {}".format(
                     stripped_name, owner_object.name

@@ -1,8 +1,8 @@
 from bge import logic
 from uplogic.nodes import ULConditionNode
 from uplogic.nodes import ULOutSocket
-from uplogic.nodes import STATUS_WAITING
-from uplogic.nodes import is_invalid
+from uplogic.utils import STATUS_WAITING
+from uplogic.utils import is_invalid
 
 
 class ULGamepadButtonUp(ULConditionNode):

@@ -125,7 +125,10 @@ class GlobalDB(object):
         self.fname = file_name
         self.data = {}
 
-        filter(lambda a: a.__name__ == 'unload_nodes', bpy.app.handlers.game_post)
+        filter(
+            lambda a: a.__name__ == 'unload_nodes',
+            bpy.app.handlers.game_post
+        )
         remove_f = []
         for f in bpy.app.handlers.game_post:
             if f.__name__ == 'unload_nodes':
@@ -152,6 +155,9 @@ class GlobalDB(object):
             changed = old_value != value
             if changed:
                 GlobalDB.write_put(self.fname, key, value)
+
+    def check(self, key):
+        return key in self.data
 
     def pop(self, key, default):
         return self.data.pop(key, None)

@@ -1,5 +1,5 @@
 from uplogic.nodes import ULConditionNode
-from uplogic.nodes import is_waiting
+from uplogic.utils import is_waiting
 
 
 class ULMouseScrolled(ULConditionNode):

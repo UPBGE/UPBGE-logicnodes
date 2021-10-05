@@ -1,6 +1,6 @@
 from uplogic.nodes import ULOutSocket
 from uplogic.nodes import ULParameterNode
-from uplogic.nodes import is_invalid
+from uplogic.utils import is_invalid
 
 
 class ULCatchEvent(ULParameterNode):

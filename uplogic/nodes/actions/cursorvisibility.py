@@ -1,9 +1,8 @@
 from bge import logic
 from uplogic.nodes import ULActionNode
 from uplogic.nodes import ULOutSocket
-from uplogic.nodes import STATUS_WAITING
-from uplogic.nodes import is_waiting
-from uplogic.nodes import not_met
+from uplogic.utils import is_waiting
+from uplogic.utils import not_met
 
 
 class ULSetCursorVisibility(ULActionNode):
@@ -17,7 +16,7 @@ class ULSetCursorVisibility(ULActionNode):
         return self.done
 
     def evaluate(self):
-        self.done = STATUS_WAITING
+        self.done = False
         condition = self.get_socket_value(self.condition)
         if not_met(condition):
             return

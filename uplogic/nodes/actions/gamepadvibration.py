@@ -1,9 +1,9 @@
 from bge import logic
 from uplogic.nodes import ULActionNode
 from uplogic.nodes import ULOutSocket
-from uplogic.nodes import not_met
-from uplogic.nodes import is_waiting
-from uplogic.nodes import debug
+from uplogic.utils import not_met
+from uplogic.utils import is_waiting
+from uplogic.utils import debug
 
 
 class ULGamepadVibration(ULActionNode):

@@ -1,6 +1,6 @@
 from uplogic.nodes import ULConditionNode
-from uplogic.nodes import is_waiting
-from uplogic.nodes import not_met
+from uplogic.utils import is_waiting
+from uplogic.utils import not_met
 
 
 class ULOnce(ULConditionNode):

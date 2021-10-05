@@ -17,7 +17,7 @@ class BLTextWrapper(AbstractTextBuffer):
         if text is None:
             bpy.ops.text.new()
             text = bpy.data.texts[-1]
-            text.name = f'.{name}'
+            text.name = f'{name}'
         self.text = text
 
     def clear(self):
@@ -45,6 +45,7 @@ class Foo:
 """
 
 # MODULE_TEMPLATE % {'start': lines}
+
 
 class TreeCodeGenerator(object):
 
@@ -146,7 +147,7 @@ class TreeCodeGenerator(object):
         line_writer.write_line('')
         line_writer.write_line('def start(self, args):')
         line_writer.set_indent_level(2)
-        line_writer.write_line("from uplogic import nodes")
+        line_writer.write_line("from uplogic import nodes, utils")
         line_writer.write_line("from uplogic.nodes.logictree import ULLogicTree")
         self.write_imports(tree, line_writer)
         line_writer.write_line("self.condition = args['Execution Condition']")
@@ -159,7 +160,7 @@ class TreeCodeGenerator(object):
         line_writer.write_line("# MACHINE GENERATED")
         line_writer.write_line("import bge, bpy, sys, importlib")
         line_writer.write_line("import mathutils")
-        line_writer.write_line("from uplogic import nodes")
+        line_writer.write_line("from uplogic import nodes, utils")
         line_writer.write_line("from uplogic.nodes.logictree import ULLogicTree")
         self.write_imports(tree, line_writer)
         line_writer.write_line("import math")
@@ -244,8 +245,8 @@ class TreeCodeGenerator(object):
         uplogic_dir = os.path.join(bge_netlogic_dir, 'uplogic')
         import site
         uplogic_path = os.path.join(site.getsitepackages()[-1], 'uplogic')
-        initfile = self.create_text_file("__init__.py")
-        initfile.close()
+        # initfile = self.create_text_file("__init__.py")
+        # initfile.close()
         try:
             if os.path.isdir(uplogic_path):
                 shutil.rmtree(uplogic_path)
@@ -265,7 +266,6 @@ class TreeCodeGenerator(object):
                 self.recreate_dir(entry, new_dir)
             else:
                 self.rewrite_file(f, from_dir, to_dir)
-
 
     def rewrite_file(self, f, from_path, to_path):
         writer = self.create_text_file(f, os.path.join(to_path))

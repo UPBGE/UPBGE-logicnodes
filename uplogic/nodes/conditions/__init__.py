@@ -1,6 +1,8 @@
 from .gamepadactive import ULGamepadActive
 from .gamepadbutton import ULGamepadButton
 from .gamepadbuttonup import ULGamepadButtonUp
+from .keyboardactive import ULKeyboardActive
+from .keypressed import ULKeyPressed
 from .mousemoved import ULMouseMoved
 from .mouseover import ULMouseOver
 from .mousepressed import ULMousePressed
@@ -13,5 +15,5 @@ from .onnextframe import ULOnNextFrame
 from .onupdate import ULOnUpdate
 from .onvaluechanged import ULOnValueChanged
 from .onvaluechangedto import ULValueChangedTo
-from .keypressed import ULKeyPressed
-from .keyboardactive import ULKeyboardActive
+from .truefalse import ULTrueFalse
+from .hasproperty import ULHasProperty

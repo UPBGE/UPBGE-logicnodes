@@ -534,6 +534,7 @@ _registered_classes.extend([
     ui.NL_UL_glvalue,
     ui.BGE_PT_LogicPanel,
     ui.BGE_PT_LogicTreeInfoPanel,
+    ui.BGE_PT_ObjectTreeInfoPanel,
     ui.BGE_PT_GlobalValuePanel,
     ui.BGE_PT_NLEditorPropertyPanel,
     ui.BGE_PT_HelpPanel,

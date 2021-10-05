@@ -1,6 +1,6 @@
 from bge import logic
 from uplogic.nodes import ULActionNode
-from uplogic.nodes import not_met
+from uplogic.utils import not_met
 
 
 class ULEndGame(ULActionNode):

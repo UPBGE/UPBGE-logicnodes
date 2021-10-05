@@ -1,10 +1,18 @@
 from bge import logic
 from bge.types import KX_GameObject as GameObject
 from mathutils import Vector, Euler, Matrix, Quaternion
-from uplogic.audio.sound import ULSound, ULSound3D
+from uplogic.audio.sound import ULSound2D, ULSound3D
 from uplogic.data import GlobalDB
+from uplogic.utils import LO_AXIS_TO_VECTOR
+from uplogic.utils import STATUS_INVALID
+from uplogic.utils import STATUS_READY
+from uplogic.utils import STATUS_WAITING
+from uplogic.utils import compute_distance
 from uplogic.utils import debug
-import aud
+from uplogic.utils import is_invalid
+from uplogic.utils import is_waiting
+from uplogic.utils import not_met
+from uplogic.utils import interpolate
 import bge
 import bpy
 import json
@@ -16,12 +24,6 @@ import random
 import sys
 
 
-def interpolate(a: float, b: float, fac: float):
-    if -.001 < a-b < .001:
-        return b
-    return (fac * b) + ((1-fac) * a)
-
-
 def alpha_move(a, b, fac):
     if a < b:
         return a + fac
@@ -30,118 +32,6 @@ def alpha_move(a, b, fac):
     else:
         return a
 
-
-class Invalid():
-    pass
-
-
-# XXX: Move to utils
-class _Status(object):
-    def __init__(self, name):
-        self._name = name
-
-    def __repr__(self):
-        return self._name
-
-
-# XXX: Move to utils
-STATUS_WAITING = _Status("WAITING")
-STATUS_READY = _Status("READY")
-NO_VALUE = _Status("NO_VALUE")
-
-
-# Persistent maps
-
-class StringSerializer(GlobalDB.Serializer):
-
-    def write(self, value, line_writer):
-        line_writer.write(value)
-
-    def read(self, line_reader):
-        data = line_reader.read()
-        return None if data == "None" else data
-
-
-class FloatSerializer(GlobalDB.Serializer):
-
-    def write(self, value, line_writer): line_writer.write(str(value))
-
-    def read(self, line_reader):
-        data = line_reader.read()
-        return None if data == "None" else float(data)
-
-
-class IntegerSerializer(GlobalDB.Serializer):
-
-    def write(self, value, line_writer): line_writer.write(str(value))
-
-    def read(self, line_reader):
-        data = line_reader.read()
-        return None if data == "None" else int(data)
-
-
-class ListSerializer(GlobalDB.Serializer):
-
-    def write(self, value, line_writer):
-        line_writer.write(str(len(value)))
-        for e in value:
-            tp = str(type(e))
-            serializer = GlobalDB.serializers.get(tp)
-            if serializer:
-                line_writer.write(tp)
-                serializer.write(e, line_writer)
-
-    def read(self, line_reader):
-        data = []
-        count = int(line_reader.read())
-        for i in range(0, count):
-            tp = line_reader.read()
-            serializer = GlobalDB.serializers.get(tp)
-            value = serializer.read(line_reader)
-            data.append(value)
-        return data
-
-
-class VectorSerializer(GlobalDB.Serializer):
-    def write(self, value, line_writer):
-        if value is None:
-            line_writer.write("None")
-        else:
-            line = ""
-            for i in value:
-                line += str(i) + " "
-            line_writer.write(line)
-
-    def read(self, line_reader):
-        line = line_reader.read()
-        if line == "None":
-            return None
-        data = line.rstrip().split(" ")
-        components = [float(d) for d in data]
-        return Vector(components)
-
-
-GlobalDB.serializers[str(type(""))] = StringSerializer()
-GlobalDB.serializers[str(type(1.0))] = FloatSerializer()
-GlobalDB.serializers[str(type(10))] = IntegerSerializer()
-GlobalDB.serializers[str(type([]))] = ListSerializer()
-GlobalDB.serializers[str(type((0, 0, 0)))] = ListSerializer()
-GlobalDB.serializers[str(type(Vector()))] = (
-    VectorSerializer()
-)
-
-# End of persistent maps
-
-LO_AXIS_TO_STRING_CODE = {
-    0: "X", 1: "Y", 2: "Z",
-    3: "-X", 4: "-Y", 5: "-Z",
-}
-
-LO_AXIS_TO_VECTOR = {
-    0: Vector((1, 0, 0)), 1: Vector((0, 1, 0)),
-    2: Vector((0, 0, 1)), 3: Vector((-1, 0, 0)),
-    4: Vector((0, -1, 0)), 5: Vector((0, 0, -1)),
-}
 
 LOGIC_OPERATORS = [
     operator.eq,
@@ -225,7 +115,6 @@ def yrot_to(
         eulers[1] += drot
         rotating_object.localOrientation = eulers
         return False
-    pass
 
 
 def zrot_to(
@@ -350,14 +239,6 @@ def check_game_object(query, scene=None):
     if not is_invalid(scene):
         # find from scene
         return _name_query(scene.objects, query)
-
-
-def invalid(ref):
-    if ref is None:
-        return False
-    if not hasattr(ref, "invalid"):
-        return False
-    return ref.invalid
 
 
 def _name_query(named_items, query):
@@ -519,6 +400,11 @@ class ULLogicContainer(ULLogicBase):
         self.evaluate = self._skip_evaluate
 
 
+###############################################################################
+# Socket
+###############################################################################
+
+
 class ULOutSocket(ULLogicBase):
 
     def __init__(self, node, value_getter):
@@ -527,35 +413,6 @@ class ULOutSocket(ULLogicBase):
 
     def has_status(self, status):
         return self.node.has_status(status)
-
-
-def is_waiting(*args):
-    if STATUS_WAITING in args:
-        return True
-    return False
-
-
-# XXX: Deprecated, use utils.is_invalid
-def is_invalid(*a):
-    for ref in a:
-        if ref is None or ref is STATUS_WAITING or ref == '':
-            return True
-        if not hasattr(ref, "invalid"):
-            continue
-        elif ref.invalid:
-            return True
-    return False
-
-
-def not_met(*conditions):
-    for c in conditions:
-        if (
-            c is STATUS_WAITING or
-            c is None or
-            c is False
-        ):
-            return True
-    return False
 
 
 ###############################################################################
@@ -597,419 +454,6 @@ class ULConditionNode(ULLogicNode):
 ###############################################################################
 # Unordered
 ###############################################################################
-
-
-class ParameterBoneStatus(ULParameterNode):
-    def __init__(self):
-        ULParameterNode.__init__(self)
-        self.armature = None
-        self.bone_name = None
-        self._prev_armature = NO_VALUE
-        self._prev_bone = NO_VALUE
-        self._channel = None
-        self._pos = Vector((0, 0, 0))
-        self._rot = Euler((0, 0, 0), "XYZ")
-        self._sca = Vector((0, 0, 0))
-        self.XYZ_POS = ULOutSocket(self, self._get_pos)
-        self.XYZ_ROT = ULOutSocket(self, self._get_rot)
-        self.XYZ_SCA = ULOutSocket(self, self._get_sca)
-
-    def _get_pos(self):
-        return self._pos
-
-    def _get_sca(self):
-        return self._sca
-
-    def _get_rot(self):
-        return self._rot
-
-    def evaluate(self):
-        armature = self.get_socket_value(self.armature)
-        bone_name = self.get_socket_value(self.bone_name)
-        if is_invalid(armature, bone_name):
-            return
-        self._set_ready()
-        channel = None
-        if (
-            (armature is self._prev_armature) and
-            (bone_name == self._prev_bone)
-        ):
-            channel = self._channel
-        else:
-            self._prev_armature = armature
-            self._prev_bone = bone_name
-            self._channel = armature.channels[bone_name]
-            channel = self._channel
-        if channel.rotation_mode is logic.ROT_MODE_QUAT:
-            self._rot[:] = (
-                Quaternion(channel.rotation_quaternion).to_euler()
-            )
-        else:
-            self._rot[:] = channel.rotation_euler
-        self._pos[:] = channel.location
-        self._sca[:] = channel.scale
-
-
-class ParameterCurrentScene(ULParameterNode):
-    def __init__(self):
-        ULParameterNode.__init__(self)
-        self._set_ready()
-
-    def get_value(self):
-        return logic.getCurrentScene()
-
-    def reset(self): pass
-    def evaluate(self): pass
-
-
-class ParameterParentGameObject(ULParameterNode):
-    def __init__(self):
-        ULParameterNode.__init__(self)
-        self.game_object = None
-
-    def evaluate(self):
-        self._set_ready()
-        game_object = self.get_socket_value(self.game_object)
-        if is_invalid(game_object):
-            return
-        self._set_value(game_object.parent)
-
-
-class ParameterAxisVector(ULParameterNode):
-    def __init__(self):
-        ULParameterNode.__init__(self)
-        self.game_object = None
-
-    def evaluate(self):
-        obj = self.get_socket_value(self.game_object)
-        front_vector = LO_AXIS_TO_VECTOR[self.axis]
-        if is_invalid(obj, front_vector):
-            return
-        self._set_ready()
-        self._set_value(obj.getAxisVect(front_vector))
-
-
-class GetObjectDataName(ULParameterNode):
-    def __init__(self):
-        ULParameterNode.__init__(self)
-        self.game_object = None
-
-    def evaluate(self):
-        obj = self.get_socket_value(self.game_object)
-        if is_invalid(obj):
-            return
-        self._set_ready()
-        self._set_value(obj.blenderObject.name)
-
-
-class GetCurvePoints(ULParameterNode):
-    def __init__(self):
-        ULParameterNode.__init__(self)
-        self.curve = None
-
-    def evaluate(self):
-        obj = self.get_socket_value(self.curve)
-        if is_invalid(obj):
-            return
-        self._set_ready()
-        offset = obj.worldPosition
-        o = obj.blenderObject.data.splines[0]
-        if o.type == 'BEZIER':
-            self._set_value([Vector(p.co) + offset for p in o.bezier_points])
-        else:
-            self._set_value([Vector(p.co[:-1]) + offset for p in o.points])
-
-
-class GetObjectVertices(ULParameterNode):
-    def __init__(self):
-        ULParameterNode.__init__(self)
-        self.game_object = None
-
-    def evaluate(self):
-        obj = self.get_socket_value(self.game_object)
-        if is_invalid(obj):
-            return
-        self._set_ready()
-
-        offset = obj.worldPosition
-        self._set_value(sorted([Vector(v.co) + offset for v in obj.blenderObject.data.vertices]))
-
-
-class ParameterSwitchValue(ULParameterNode):
-    def __init__(self):
-        ULParameterNode.__init__(self)
-        self.state = None
-        self.outcome = False
-        self.TRUE = ULOutSocket(self, self.get_true_value)
-        self.FALSE = ULOutSocket(self, self.get_false_value)
-
-    def get_true_value(self):
-        state = self.get_socket_value(self.state)
-        if state:
-            return True
-        else:
-            return False
-
-    def get_false_value(self):
-        state = self.get_socket_value(self.state)
-        if state:
-            return False
-        else:
-            return True
-
-    def evaluate(self):
-        state = self.get_socket_value(self.state)
-        if is_waiting(state):
-            return
-        self._set_ready()
-        if state:
-            self.outcome = True
-        self._set_value(self.outcome)
-
-
-class ParameterObjectProperty(ULParameterNode):
-    def __init__(self):
-        ULParameterNode.__init__(self)
-        self.game_object = None
-        self.property_name = None
-
-    def evaluate(self):
-        game_object = self.get_socket_value(self.game_object)
-        property_name = self.get_socket_value(self.property_name)
-        if is_invalid(game_object, property_name):
-            return
-        self._set_ready()
-        if property_name not in game_object:
-            game_object[property_name] = None
-        else:
-            self._set_value(game_object[property_name])
-
-
-class ParameterGetNodeTreeNodeValue(ULParameterNode):
-    def __init__(self):
-        ULActionNode.__init__(self)
-        self.tree_name = None
-        self.node_name = None
-        self.input_slot = None
-        self.val = False
-        self.OUT = ULOutSocket(self, self._get_val)
-
-    def _get_val(self):
-        return self.val
-
-    def evaluate(self):
-        tree_name = self.get_socket_value(self.tree_name)
-        node_name = self.get_socket_value(self.node_name)
-        if is_invalid(tree_name, node_name):
-            return
-        input_slot = self.get_socket_value(self.input_slot)
-        if is_waiting(tree_name):
-            return
-        self._set_ready()
-        self.val = (
-            bpy.data.node_groups[tree_name]
-            .nodes[node_name]
-            .inputs[input_slot]
-            .default_value
-        )
-
-
-class ParameterGetNodeTreeNodeAttribute(ULParameterNode):
-    def __init__(self):
-        ULActionNode.__init__(self)
-        self.mat_name = None
-        self.node_name = None
-        self.internal = None
-        self.attribute = None
-        self.val = False
-        self.OUT = ULOutSocket(self, self._get_val)
-
-    def _get_val(self):
-        return self.val
-
-    def evaluate(self):
-        mat_name = self.get_socket_value(self.mat_name)
-        node_name = self.get_socket_value(self.node_name)
-        if is_invalid(mat_name, node_name):
-            return
-        internal = self.get_socket_value(self.internal)
-        attribute = self.get_socket_value(self.attribute)
-        if is_waiting(mat_name):
-            return
-        self._set_ready()
-        target = (
-            bpy.data
-            .node_groups[mat_name]
-            .nodes[node_name]
-        )
-        if internal:
-            target = getattr(target, internal, target)
-        self.val = getattr(target, attribute, None)
-
-
-class ParameterGetMaterialNodeValue(ULParameterNode):
-    def __init__(self):
-        ULActionNode.__init__(self)
-        self.mat_name = None
-        self.node_name = None
-        self.input_slot = None
-        self.val = False
-        self.OUT = ULOutSocket(self, self._get_val)
-
-    def _get_val(self):
-        return self.val
-
-    def evaluate(self):
-        mat_name = self.get_socket_value(self.mat_name)
-        node_name = self.get_socket_value(self.node_name)
-        if is_invalid(mat_name, node_name):
-            return
-        input_slot = self.get_socket_value(self.input_slot)
-        if is_waiting(mat_name):
-            return
-        self._set_ready()
-        self.val = (
-            bpy.data.materials[mat_name]
-            .node_tree
-            .nodes[node_name]
-            .inputs[input_slot]
-            .default_value
-        )
-
-
-class ParameterGetMaterialNodeAttribute(ULParameterNode):
-    def __init__(self):
-        ULActionNode.__init__(self)
-        self.mat_name = None
-        self.node_name = None
-        self.internal = None
-        self.attribute = None
-        self.val = False
-        self.OUT = ULOutSocket(self, self._get_val)
-
-    def _get_val(self):
-        return self.val
-
-    def evaluate(self):
-        mat_name = self.get_socket_value(self.mat_name)
-        node_name = self.get_socket_value(self.node_name)
-        if is_invalid(mat_name, node_name):
-            return
-        internal = self.get_socket_value(self.internal)
-        attribute = self.get_socket_value(self.attribute)
-        if is_waiting(mat_name):
-            return
-        self._set_ready()
-        target = (
-            bpy.data.materials[mat_name]
-            .node_tree
-            .nodes[node_name]
-        )
-        if internal:
-            target = getattr(target, internal, target)
-        self.val = getattr(target, attribute, None)
-
-
-class ParameterGetMaterialNode(ULParameterNode):
-    def __init__(self):
-        ULActionNode.__init__(self)
-        self.mat_name = None
-        self.node_name = None
-        self.val = False
-        self.OUT = ULOutSocket(self, self._get_val)
-
-    def _get_val(self):
-        return self.val
-
-    def evaluate(self):
-        mat_name = self.get_socket_value(self.mat_name)
-        node_name = self.get_socket_value(self.node_name)
-        if is_invalid(mat_name, node_name):
-            return
-        self._set_ready()
-        self.val = (
-            bpy.data.materials[mat_name]
-            .node_tree
-            .nodes[node_name]
-        )
-
-
-class ParameterObjectHasProperty(ULParameterNode):
-    def __init__(self):
-        ULParameterNode.__init__(self)
-        self.game_object = None
-        self.property_name = None
-
-    def evaluate(self):
-        game_object = self.get_socket_value(self.game_object)
-        property_name = self.get_socket_value(self.property_name)
-        if is_invalid(game_object, property_name):
-            debug('Has Property Node: Object or Property Name invalid!')
-            return
-        self._set_ready()
-        self._set_value(
-            True if property_name in game_object.getPropertyNames()
-            else False
-        )
-
-
-class ParameterDictionaryValue(ULParameterNode):
-    def __init__(self):
-        ULParameterNode.__init__(self)
-        self.dict = None
-        self.key = None
-
-    def evaluate(self):
-        dictionary = self.get_socket_value(self.dict)
-        key = self.get_socket_value(self.key)
-        if is_invalid(dictionary, key):
-            return
-        self._set_ready()
-        if key in dictionary:
-            self._set_value(dictionary[key])
-        else:
-            debug("Dict Get Value Node: Key '{}' Not In Dict!".format(key))
-
-
-class ParameterListIndex(ULParameterNode):
-    def __init__(self):
-        ULParameterNode.__init__(self)
-        self.items = None
-        self.index = None
-
-    def evaluate(self):
-        list_d = self.get_socket_value(self.items)
-        index = self.get_socket_value(self.index)
-        if is_invalid(list_d):
-            return
-        if is_waiting(index):
-            return
-        self._set_ready()
-        if index <= len(list_d) - 1:
-            self._set_value(list_d[index])
-        else:
-            debug('List Index Node: Index Out Of Range!')
-
-
-class ParameterRandomListIndex(ULParameterNode):
-    def __init__(self):
-        ULParameterNode.__init__(self)
-        self.condition = None
-        self._item = None
-        self.items = None
-
-    def evaluate(self):
-        condition = self.get_socket_value(self.condition)
-        if not_met(condition):
-            self._set_ready()
-            self._set_value(self._item)
-            return
-        list_d = self.get_socket_value(self.items)
-        if is_invalid(list_d):
-            return
-        self._set_ready()
-        self._item = random.choice(list_d)
-        self._set_value(self._item)
 
 
 class DuplicateList(ULParameterNode):
@@ -1640,10 +1084,10 @@ class ParameterPythonModuleFunction(ULParameterNode):
         if self._old_mod_fun != mfun:
             self._modfun = getattr(self._module, mfun)
             self._old_mod_fun = mfun
-        if not isinstance(arg, Invalid):
-            self.val = self._modfun(arg)
-        else:
+        if arg is STATUS_INVALID:
             self.val = self._modfun()
+        else:
+            self.val = self._modfun(arg)
         self.done = True
 
 
@@ -1939,12 +1383,12 @@ class ULLimitRange(ULParameterNode):
         self.last_val = 0
 
     def calc_threshold(self, op, v, t):
-        l = self.last_val
+        last = self.last_val
         if op == 'OUTSIDE':
             if (v < t.x or v > t.y):
                 self.last_val = v
             else:
-                self.last_val = t.x if l <= t.x else t.y
+                self.last_val = t.x if last <= t.x else t.y
         if op == 'INSIDE':
             if (t.x < v < t.y):
                 self.last_val = v
@@ -2240,7 +1684,6 @@ class VectorAngleCheck(ULParameterNode):
         deg: float = rad * 180/math.pi
         self._angle = deg
         self._set_value(LOGIC_OPERATORS[int(op)](deg, value))
-
 
 
 class ParameterVector(ULParameterNode):
@@ -2671,6 +2114,7 @@ class FindChildByIndex(ULParameterNode):
                 self._set_value(False)
             # return
 
+
 # Condition cells
 class ConditionAlways(ULConditionNode):
     def __init__(self):
@@ -3009,7 +2453,8 @@ class ConditionOrList(ULConditionNode):
         ce = self.get_socket_value(self.ce)
         cf = self.get_socket_value(self.cf)
         if is_waiting(ca, cb, cc, cd, ce, cf):
-            c = False
+            self._set_ready()
+            self._set_value(False)
         self._set_ready()
         self._set_value(ca or cb or cc or cd or ce or cf)
 
@@ -3663,13 +3108,13 @@ class ActionPlayMaterialSequence(ULActionNode):
 
     def _get_on_start(self):
         return self.on_start
-    
+
     def _get_running(self):
         return self.running
-    
+
     def _get_on_finish(self):
         return self.on_finish
-    
+
     def _get_frame(self):
         return self.frame
 
@@ -4925,7 +4370,7 @@ class ProjectileRayCast(ULActionNode):
     def calc_projectile(self, t, vel, pos):
         half: float = logic.getCurrentScene().gravity.z * (.5 * t * t)
         vel = vel * t
-        return Vector((0,0, half)) + vel + pos
+        return Vector((0, 0, half)) + vel + pos
 
     def evaluate(self):
         condition = self.get_socket_value(self.condition)
@@ -4946,7 +4391,8 @@ class ProjectileRayCast(ULActionNode):
 
         if is_waiting(origin, destination, property_name, distance):
             return
-        destination.normalize(); destination *= power
+        destination.normalize()
+        destination *= power
         origin = getattr(origin, 'worldPosition', origin)
 
         points: list = []
@@ -4980,7 +4426,6 @@ class ProjectileRayCast(ULActionNode):
         self._point = point
         self._normal = normal
         self._parabola = points
-
 
 
 class ActionMousePick(ULActionNode):
@@ -5549,36 +4994,6 @@ class InitEmptyList(ULActionNode):
         self._set_ready()
         self.items = [None for x in range(length)]
         self.done = True
-
-
-class InitNewList(ULActionNode):
-    def __init__(self):
-        ULActionNode.__init__(self)
-        self.value = None
-        self.value2 = None
-        self.value3 = None
-        self.value4 = None
-        self.value5 = None
-        self.value6 = None
-        self.items: list = None
-        self.LIST = ULOutSocket(self, self.get_list)
-
-    def get_list(self):
-        return self.items
-
-    def evaluate(self):
-        value = self.get_socket_value(self.value)
-        value2 = self.get_socket_value(self.value2)
-        value3 = self.get_socket_value(self.value3)
-        value4 = self.get_socket_value(self.value4)
-        value5 = self.get_socket_value(self.value5)
-        value6 = self.get_socket_value(self.value6)
-        values = [value, value2, value3, value4, value5, value6]
-        self.items = []
-        self._set_ready()
-        for val in values:
-            if not is_waiting(val) and not is_invalid(val):
-                self.items.append(val)
 
 
 class AppendListItem(ULActionNode):
@@ -6600,7 +6015,7 @@ class GamepadLook(ULActionNode):
             return
         raw_values = joystick.axisValues
         if axis == 0:
-            x, y = raw_values[0] , raw_values[1]
+            x, y = raw_values[0], raw_values[1]
         elif axis == 1:
             x, y = raw_values[2], raw_values[3]
         neg_x = -1 if x < 0 else 1
@@ -7723,7 +7138,12 @@ class ActionStart3DSoundAdv(ULActionNode):
         return self._handle
 
     def get_on_finish(self):
-        return self.on_finish
+        if not self._handle:
+            return False
+        if self._handle.finished:
+            self._handle = None
+            return True
+        return False
 
     def get_done(self):
         return self.done
@@ -7751,10 +7171,10 @@ class ActionStart3DSoundAdv(ULActionNode):
 
         if is_invalid(file):
             return
-        self.handle = ULSound3D(
+        self._handle = ULSound3D(
             file,
             speaker,
-            self.network.audio_system,
+            'ln_audio_system',
             occlusion,
             transition,
             cutoff,
@@ -7790,7 +7210,12 @@ class ActionStartSound(ULActionNode):
         return self._handle
 
     def get_on_finish(self):
-        return self.on_finish
+        if not self._handle:
+            return False
+        if self._handle.finished:
+            self._handle = None
+            return True
+        return False
 
     def get_done(self):
         return self.done
@@ -7798,9 +7223,6 @@ class ActionStartSound(ULActionNode):
     def evaluate(self):
         self.done = False
         self.on_finish = False
-        audio_system = self.network.audio_system
-        if not self.device:
-            self.device = audio_system.device
         self._set_ready()
         condition = self.get_socket_value(self.condition)
         if not_met(condition):
@@ -7814,9 +7236,9 @@ class ActionStartSound(ULActionNode):
         if is_invalid(file):
             return
 
-        ULSound(
+        self._handle = ULSound2D(
             file,
-            audio_system,
+            'ln_audio_system',
             volume,
             pitch,
             loop_count
@@ -7907,7 +7329,7 @@ class ParameterGetGlobalValue(ULParameterNode):
         data_id = self.get_socket_value(self.data_id)
         key = self.get_socket_value(self.key)
         default = self.get_socket_value(self.default)
-        if isinstance(default, Invalid):
+        if default is STATUS_INVALID:
             default = None
         if is_waiting(data_id, key, default):
             return
@@ -8483,7 +7905,7 @@ class ULMakeUniqueLight(ULActionNode):
         for attr in settings:
             try:
                 setattr(light.data, attr, getattr(old_lamp.data, attr))
-            except:
+            except Exception:
                 pass
         light.name = name
         new_lamp_ge = scene.convertBlenderObject(light)
@@ -8863,7 +8285,7 @@ class ActionNavigateWithNavmesh(ULActionNode):
                     rot_speed,
                     tpf
                 )
-            ths = reach_threshold # if next_point == self._motion_path.destination else .1
+            ths = reach_threshold  # if next_point == self._motion_path.destination else .1
             reached = move_to(
                 moving_object,
                 next_point,

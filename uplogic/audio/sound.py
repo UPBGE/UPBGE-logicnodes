@@ -1,29 +1,49 @@
-
 from bge import logic
+from bge.types import KX_GameObject as GameObject
 from mathutils import Vector
+from uplogic.audio import ULAudioSystem
+from uplogic.data import GlobalDB
 from uplogic.utils import compute_distance
 import aud
 
 
 class ULSound():
     sound = None
+    finished: bool
+    pitch: float
+    volume: float
+    aud_system: ULAudioSystem
+
+    def stop(self):
+        self.sound.stop()
+
+    def get_aud_sys(self, name: str):
+        aud_systems = GlobalDB.retrieve('.uplogic_audio')
+        if aud_systems.check(name):
+            return aud_systems.get(name)
+        else:
+            return ULAudioSystem(name)
+
+
+class ULSound2D(ULSound):
+    sound: aud.Sound
 
     def __init__(
         self,
-        file=None,
-        aud_system=None,
-        volume=1,
-        pitch=1,
-        loop_count=1
+        file: str = '',
+        aud_system: str = 'default',
+        volume: float = 1,
+        pitch: float = 1,
+        loop_count: int = 1
     ):
         if not (file and aud_system):
             return
         self.pitch = pitch
         self.volume = volume
-        self.aud_system = aud_system
+        self.aud_system = self.get_aud_sys(aud_system)
         soundfile = logic.expandPath(file)
         sound = aud.Sound(soundfile)
-        device = aud_system.device
+        device = self.aud_system.device
         handle = self.sound = device.play(sound)
         handle.relative = True
         handle.pitch = pitch
@@ -34,50 +54,53 @@ class ULSound():
     def update(self):
         handle = self.sound
         if not handle.status:
+            self.finished = True
             self.aud_system.remove(self)
             return
         handle.pitch = self.pitch
         handle.volume = self.volume
 
 
-class ULSound3D():
+class ULSound3D(ULSound):
     sounds = []
-    speaker = None
-    occlusion = False
-    _clear_sound = 1
-    _sustained = 1
+    speaker: GameObject
+    occlusion: bool
+    cone_outer_volume: float
+    transition: float
+    _clear_sound: float = 1
+    _sustained: float = 1
 
     def __init__(
         self,
-        file=None,
-        speaker=None,
-        aud_system=None,
-        occlusion=False,
-        transition=.1,
-        cutoff=.1,
-        volume=1,
-        pitch=1,
-        attenuation=1,
-        distance_ref=1,
-        cone_angle=[360, 360],
-        cone_outer_volume=0,
-        loop_count=1
+        file: str = '',
+        speaker: GameObject = None,
+        aud_system: str = 'default',
+        occlusion: bool = False,
+        transition_speed: float = .1,
+        cutoff_frequency: float = .1,
+        volume: float = 1,
+        pitch: float = 1,
+        attenuation: float = 1,
+        distance_ref: float = 1,
+        cone_angle: list[float] = [360, 360],
+        cone_outer_volume: float = 0,
+        loop_count: int = 1
     ):
         if not (file and aud_system and speaker):
             return
-        self.aud_system = aud_system
+        self.aud_system = self.get_aud_sys(aud_system)
         self.speaker = speaker
         self.occlusion = occlusion
         self.volume = volume
         self.pitch = pitch
         self.cone_outer_volume = cone_outer_volume
-        self.transition = transition
+        self.transition = transition_speed
         soundfile = logic.expandPath(file)
         sound = aud.Sound(soundfile)
-        device = aud_system.device
+        device = self.aud_system.device
         handle = device.play(sound)
         if occlusion:
-            soundlow = aud.Sound.lowpass(sound, 4000*cutoff, .5)
+            soundlow = aud.Sound.lowpass(sound, 4400 * cutoff_frequency, .5)
             handlelow = device.play(soundlow)
             self.handles = [speaker, [handle, handlelow]]
         else:
@@ -106,9 +129,11 @@ class ULSound3D():
     def update(self):
         speaker = self.speaker
         if not speaker:
+            self.finished = True
             self.aud_system.remove(self)
         for i, handle in enumerate(self.handles[1]):
             if not handle.status:
+                self.finished = True
                 self.aud_system.remove(self)
                 return
             handle.pitch = self.pitch
@@ -181,3 +206,7 @@ class ULSound3D():
                     self.volume *
                     mult
                 )
+
+    def stop(self):
+        for sound in self.sounds:
+            sound.stop()

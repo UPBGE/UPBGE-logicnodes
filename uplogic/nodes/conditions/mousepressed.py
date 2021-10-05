@@ -1,7 +1,7 @@
 from uplogic.nodes import ULConditionNode
 from uplogic.nodes import ULOutSocket
-from uplogic.nodes import STATUS_WAITING
-from uplogic.nodes import is_waiting
+from uplogic.utils import STATUS_WAITING
+from uplogic.utils import is_waiting
 
 
 class ULMousePressed(ULConditionNode):

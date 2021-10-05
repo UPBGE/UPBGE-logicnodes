@@ -1,9 +1,9 @@
 from uplogic.nodes import ULActionNode
 from uplogic.nodes import ULOutSocket
-from uplogic.nodes import Invalid
-from uplogic.nodes import is_invalid
-from uplogic.nodes import is_waiting
-from uplogic.nodes import not_met
+from uplogic.utils import STATUS_INVALID
+from uplogic.utils import is_invalid
+from uplogic.utils import is_waiting
+from uplogic.utils import not_met
 
 
 class ULTrowEvent(ULActionNode):
@@ -34,7 +34,7 @@ class ULTrowEvent(ULActionNode):
         subject = self.get_socket_value(self.subject)
         self.old_subject = subject
         body = self.get_socket_value(self.body)
-        if isinstance(body, Invalid):
+        if body is STATUS_INVALID:
             body = None
         target = self.get_socket_value(self.target)
         if is_waiting(body, target):

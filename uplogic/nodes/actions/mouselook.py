@@ -3,9 +3,9 @@ from bge import logic
 from mathutils import Vector
 from uplogic.nodes import ULActionNode
 from uplogic.nodes import ULOutSocket
-from uplogic.nodes import is_invalid
-from uplogic.nodes import not_met
-from uplogic.nodes import interpolate
+from uplogic.utils import is_invalid
+from uplogic.utils import not_met
+from uplogic.utils import interpolate
 
 
 class ULMouseLook(ULActionNode):

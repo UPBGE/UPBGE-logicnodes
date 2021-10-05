@@ -16,15 +16,15 @@ DISTANCE_MODELS = {
 
 
 class ULAudioSystem(object):
-    def __init__(self, name):
+    def __init__(self, name: str):
         self.active_sounds = []
         self.listener = logic.getCurrentScene().active_camera
         self.old_lis_pos = self.listener.worldPosition.copy()
-        GlobalDB.retrieve('.uplogic_audio').put(name, self)
         self.device = aud.Device()
         self.device.distance_model = aud.DISTANCE_MODEL_INVERSE_CLAMPED
         self.device.speed_of_sound = bpy.context.scene.audio_doppler_speed
         self.device.doppler_factor = bpy.context.scene.audio_doppler_factor
+        GlobalDB.retrieve('.uplogic_audio').put(name, self)
         bpy.app.handlers.game_post.append(self.shutdown)
 
     def get_distance_model(self, name):

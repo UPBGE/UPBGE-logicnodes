@@ -296,6 +296,7 @@ class NLRemoveTreeByNameOperator(bpy.types.Operator):
     bl_options = {'REGISTER', 'UNDO'}
     bl_description = "Remove the tree from the selected objects"
     tree_name: bpy.props.StringProperty()
+    from_obj_name: bpy.props.StringProperty()
 
     @classmethod
     def poll(cls, context):
@@ -308,52 +309,54 @@ class NLRemoveTreeByNameOperator(bpy.types.Operator):
             stripped_tree_name
         )
         py_module_name = py_module_name.split('NL')[-1]
-        objs = [
-            ob for ob in context.scene.objects if ob.select_get() and
-            tools.object_has_treeitem_for_treename(
-                ob, self.tree_name
-            )
-        ]
-        for ob in objs:
-            tree_name = utils.make_valid_name(self.tree_name)
-            module = f'.nl_{tree_name.lower()}'
-            for text in bpy.data.texts:
-                if text.name == f'{module}.py':
-                    bpy.data.texts.remove(text)
-            gs = ob.game
-            idx = 0
-            for c in gs.components:
-                if c.module == module:
-                    bpy.ops.logic.python_component_remove(index=idx)
-                idx += 1
-            controllers = [
-                c for c in gs.controllers if py_module_name in c.name
-            ]
-            actuators = [
-                a for a in gs.actuators if py_module_name in a.name
-            ]
-            sensors = [
-                s for s in gs.sensors if py_module_name in s.name
-            ]
-            for s in sensors:
-                bpy.ops.logic.sensor_remove(sensor=s.name, object=ob.name)
-            for c in controllers:
-                bpy.ops.logic.controller_remove(
-                    controller=c.name, object=ob.name
-                )
-            for a in actuators:
-                bpy.ops.logic.actuator_remove(actuator=a.name, object=ob.name)
+        orig_ob = bpy.context.object
+        try:
+            ob = bpy.data.objects[self.from_obj_name]
+        except Exception:
+            ob = orig_ob
 
-            bge_netlogic.utilities.remove_tree_item_from_object(
-                ob, self.tree_name
+        if not ob:
+            return {'FINISHED'}
+
+        bpy.context.view_layer.objects.active = ob
+        tree_name = utils.make_valid_name(self.tree_name)
+        module = f'nl_{tree_name.lower()}'
+        for text in bpy.data.texts:
+            if text.name == f'{module}.py':
+                bpy.data.texts.remove(text)
+        gs = ob.game
+        for idx, c in enumerate(gs.components):
+            if c.module == module:
+                bpy.ops.logic.python_component_remove(index=idx)
+        controllers = [
+            c for c in gs.controllers if py_module_name in c.name
+        ]
+        actuators = [
+            a for a in gs.actuators if py_module_name in a.name
+        ]
+        sensors = [
+            s for s in gs.sensors if py_module_name in s.name
+        ]
+        for s in sensors:
+            bpy.ops.logic.sensor_remove(sensor=s.name, object=ob.name)
+        for c in controllers:
+            bpy.ops.logic.controller_remove(
+                controller=c.name, object=ob.name
             )
-            bge_netlogic.utilities.remove_network_initial_status_key(
-                ob, self.tree_name
-            )
-            utils.success("Successfully removed tree {} from object {}.".format(
-                self.tree_name,
-                ob.name
-            ))
+        for a in actuators:
+            bpy.ops.logic.actuator_remove(actuator=a.name, object=ob.name)
+
+        bge_netlogic.utilities.remove_tree_item_from_object(
+            ob, self.tree_name
+        )
+        bge_netlogic.utilities.remove_network_initial_status_key(
+            ob, self.tree_name
+        )
+        utils.success("Successfully removed tree {} from object {}.".format(
+            self.tree_name,
+            ob.name
+        ))
+        bpy.context.view_layer.objects.active = orig_ob
         return {'FINISHED'}
 
     def remove_tree_from_object_pcoll(self, ob, treename):
@@ -825,7 +828,7 @@ class NLApplyLogicOperator(bpy.types.Operator):
             )
             if tree.mode:
                 tree_name = utils.make_valid_name(tree.name)
-                module = f'.nl_{tree_name.lower()}'
+                module = f'nl_{tree_name.lower()}'
                 name = f'{module}.{tree_name}'
                 comps = [c.module for c in obj.game.components]
                 if module not in comps:

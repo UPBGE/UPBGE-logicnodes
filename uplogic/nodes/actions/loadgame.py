@@ -2,10 +2,9 @@ from bge import logic, constraints
 from mathutils import Euler
 from uplogic.nodes import ULActionNode
 from uplogic.nodes import ULOutSocket
-from uplogic.nodes import STATUS_WAITING
-from uplogic.nodes import debug
-from uplogic.nodes import is_waiting
-from uplogic.nodes import not_met
+from uplogic.utils import debug
+from uplogic.utils import is_waiting
+from uplogic.utils import not_met
 import json
 
 
@@ -30,7 +29,7 @@ class ULLoadGame(ULActionNode):
         return path
 
     def evaluate(self):
-        self.done = STATUS_WAITING
+        self.done = False
         condition = self.get_socket_value(self.condition)
         if not_met(condition):
             return
