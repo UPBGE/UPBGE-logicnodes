@@ -104,3 +104,15 @@ def interpolate(a: float, b: float, fac: float) -> float:
     if -.001 < a-b < .001:
         return b
     return (fac * b) + ((1-fac) * a)
+
+
+def load_user_module(module_name, clsname):
+    import sys
+    order = f'import {module_name}'
+    print(order)
+    exec(order)
+    print('#######################################################')
+    for t in globals():
+        print(t)
+    print('#######################################################')
+    print(sys.modules[module_name].globals())  # {clsname}']()

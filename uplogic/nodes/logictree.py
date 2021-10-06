@@ -3,8 +3,8 @@ from uplogic.nodes import GlobalDB
 from uplogic.audio import ULAudioSystem
 from uplogic.nodes import STATUS_WAITING
 from uplogic.nodes import STATUS_READY
-from uplogic.nodes import debug
-from uplogic.nodes import load_user_module
+from uplogic.utils import debug
+from uplogic.utils import load_user_module
 from uplogic.utils import make_valid_name
 from bge import logic
 from bge import events
@@ -271,30 +271,20 @@ class ULLogicTree(ULLogicContainer):
         for network in self.sub_networks:
             if network._owner.invalid:
                 self.sub_networks.remove(network)
-            elif network.is_running():
-                network.evaluate()
+            elif not network.consumed:
+                network.update()
 
     def install_subnetwork(self, owner_object, node_tree_name, initial_status):
         # transform the tree name into a NL module name
-        valid_characters = (
-            "abcdefghijklmnopqrstuvwxyz1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ")
-        stripped_name = "".join(
-            [c for c in node_tree_name if c in valid_characters]
-        )
-        tree_name = make_valid_name(node_tree_name.name)
-        c_name = f'.nl_{tree_name.lower()}.py'
-        if stripped_name in owner_object:
-            debug("Network {} already installed for {}".format(
-                    stripped_name, owner_object.name
-                ))
+        tree_name = make_valid_name(node_tree_name)
+        mname = f'nl_{tree_name.lower()}'
+        if tree_name in owner_object:
             if(initial_status is True):
                 owner_object[f'IGNLTree_{node_tree_name}'].stopped = False
         else:
             debug("Installing sub network...")
             initial_status_key = f'NL__{node_tree_name}'
             owner_object[initial_status_key] = initial_status
-            module_name = 'bgelogic.NL{}'.format(stripped_name)
-            module = load_user_module(module_name)
-            module._initialize(owner_object)
-            subnetwork = owner_object[f'IGNLTree_{node_tree_name}']
-            self.sub_networks.append(subnetwork)
+            tree = load_user_module(mname, tree_name)
+            owner_object[f'IGNLTree_{node_tree_name}']
+            self.sub_networks.append(tree)

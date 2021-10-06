@@ -13,11 +13,11 @@ class BLTextWrapper(AbstractTextBuffer):
     _indent = ''
 
     def __init__(self, name):
-        text = bpy.data.texts.get(f'.{name}')
+        text = bpy.data.texts.get(name)
         if text is None:
             bpy.ops.text.new()
             text = bpy.data.texts[-1]
-            text.name = f'{name}'
+            text.name = name
         self.text = text
 
     def clear(self):

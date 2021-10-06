@@ -297,12 +297,6 @@ def load_user_logic(module_name):
     return loaded_value
 
 
-def load_user_module(module_name):
-    import sys
-    exec("import {}".format(module_name))
-    return sys.modules[module_name]
-
-
 class ULLogicBase(object):
     def get_value(self): pass
     def has_status(self, status): pass

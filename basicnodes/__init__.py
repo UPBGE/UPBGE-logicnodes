@@ -1890,8 +1890,7 @@ class NLSocketLogicTree(bpy.types.NodeSocket, NetLogicSocketType):
         name='Logic Tree',
         type=bpy.types.NodeTree,
         description=(
-            'Select a Logic Tree. '
-            'NOTE: Selecting a Shader Node Group will result in an error!'
+            'Select a Logic Tree.'
         ),
         poll=filter_logic_trees,
         update=update_tree_code
