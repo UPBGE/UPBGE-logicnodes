@@ -28,7 +28,7 @@ How to use:
 
 # Discord Server
 
-https://discord.gg/uuBbNmPK2Z 
+https://discord.gg/6xmPJ7ZZ69
 
 # If you want to support this project
 

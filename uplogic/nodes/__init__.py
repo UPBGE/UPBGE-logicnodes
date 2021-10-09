@@ -450,43 +450,6 @@ class ULConditionNode(ULLogicNode):
 ###############################################################################
 
 
-class DuplicateList(ULParameterNode):
-    def __init__(self):
-        ULParameterNode.__init__(self)
-        self.condition = None
-        self.items = None
-
-    def evaluate(self):
-        list_d = self.get_socket_value(self.items)
-        if is_invalid(list_d):
-            return
-        self._set_ready()
-        self._set_value(list_d.copy())
-
-
-class GetActuator(ULParameterNode):
-
-    @classmethod
-    def act(cls, actuator):
-        return actuator
-
-    @classmethod
-    def obj(cls, obj_name):
-        return obj_name
-
-    def __init__(self):
-        ULParameterNode.__init__(self)
-        self.obj_name = None
-        self.act_name = None
-
-    def evaluate(self):
-        game_obj = self.get_socket_value(self.obj_name)
-        if is_invalid(game_obj, self.act_name):
-            return
-        self._set_ready()
-        self._set_value(game_obj.actuators[self.act_name])
-
-
 class GetActuatorByName(ULParameterNode):
 
     def __init__(self):

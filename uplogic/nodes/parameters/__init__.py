@@ -19,3 +19,4 @@ from .dictvalue import ULDictValue
 from .listindex import ULListIndex
 from .listindexrandom import ULListIndexRandom
 from .listfromitems import ULListFromItems
+from .listduplicate import ULListDuplicate

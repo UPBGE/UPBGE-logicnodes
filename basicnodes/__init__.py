@@ -4519,6 +4519,7 @@ class NLDuplicateList(bpy.types.Node, NLParameterNode):
     bl_icon = 'CON_TRANSLIKE'
     nl_category = "Python"
     nl_subcat = 'List'
+    nl_module = 'parameters'
 
     def init(self, context):
         NLParameterNode.init(self, context)
@@ -4526,13 +4527,13 @@ class NLDuplicateList(bpy.types.Node, NLParameterNode):
         self.outputs.new(NLListSocket.bl_idname, "List")
 
     def get_netlogic_class_name(self):
-        return "nodes.DuplicateList"
+        return "ULListDuplicate"
 
     def get_input_sockets_field_names(self):
         return ["items"]
 
     def get_output_socket_varnames(self):
-        return [OUTCELL]
+        return ['OUT']
 
 
 _nodes.append(NLDuplicateList)
@@ -4569,61 +4570,16 @@ class NLGetActuatorNode(bpy.types.Node, NLParameterNode):
     bl_label = "Get Actuator"
     nl_category = "Logic"
     nl_subcat = 'Bricks'
-    obj: bpy.props.PointerProperty(
-        name='Object',
-        type=bpy.types.Object,
-        update=update_tree_code
-    )
-    actuator: bpy.props.StringProperty(update=update_tree_code)
 
     def init(self, context):
         NLParameterNode.init(self, context)
         self.outputs.new(NLLogicBrickSocket.bl_idname, "Actuator")
 
-    def get_netlogic_class_name(self): return "nodes.GetActuator"
-
-    def draw_buttons(self, context, layout):
-        col = layout.column()
-        row1 = col.row()
-        row2 = col.row()
-        row1.label(text='From Object')
-        row2.prop_search(
-            self,
-            "obj",
-            bpy.context.scene,
-            'objects',
-            icon='NONE',
-            text=''
-        )
-        if self.obj:
-            row3 = col.row()
-            row4 = col.row()
-            row3.label(text='Actuator')
-            row4.prop_search(
-                self,
-                "actuator",
-                self.obj.game,
-                'actuators',
-                icon='NONE',
-                text=''
-            )
-
-    def get_nonsocket_fields(self):
-        return [
-            (
-                "obj_name", lambda: 'nodes.GetActuator.obj("{}")'.format(
-                    'NLO:{}'.format(self.obj.name)
-                )
-            ),
-            (
-                "act_name", lambda: 'nodes.GetActuator.act("{}")'.format(
-                    self.actuator
-                )
-            )
-        ] if self.obj else []
+    def get_netlogic_class_name(self):
+        return "nodes.GetActuator"
 
     def get_output_socket_varnames(self):
-        return [OUTCELL]
+        return ['OUT']
 
 
 _nodes.append(NLGetActuatorNode)
