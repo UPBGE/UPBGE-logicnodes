@@ -1,0 +1,37 @@
+from uplogic.nodes import ULOutSocket
+from uplogic.nodes import ULActionNode
+from uplogic.utils import is_waiting
+from uplogic.utils import not_met
+
+
+class ULSetActuatorValue(ULActionNode):
+
+    def __init__(self):
+        ULActionNode.__init__(self)
+        self.condition = None
+        self.game_obj = None
+        self.act_name = None
+        self.field = None
+        self.value = None
+        self.done = None
+        self.OUT = ULOutSocket(self, self.get_done)
+
+    def get_done(self):
+        return self.done
+
+    def evaluate(self):
+        self.done = False
+        game_obj = self.get_socket_value(self.game_obj)
+        act_name = self.get_socket_value(self.act_name)
+        condition = self.get_socket_value(self.condition)
+        if not_met(condition):
+            return
+        if act_name in game_obj.actuators:
+            self._set_ready()
+            actuator = game_obj.actuators.act_name
+            field = self.get_socket_value(self.field)
+            value = self.get_socket_value(self.value)
+            if is_waiting(field, value):
+                return
+            setattr(actuator, field, value)
+            self.done = True
