@@ -937,19 +937,64 @@ class NLCollisionMaskSocket(bpy.types.NodeSocket, NetLogicSocketType):
 _sockets.append(NLCollisionMaskSocket)
 
 
-
 class NLLogicBrickSocket(bpy.types.NodeSocket, NetLogicSocketType):
     bl_idname = "NLLogicBrickSocket"
-    bl_label = "Logic Brick"
+    bl_label = "Property"
+    value: bpy.props.StringProperty(
+        update=update_tree_code
+    )
+    ref_index: bpy.props.IntProperty(default=0)
+    use_custom: bpy.props.BoolProperty(
+        name='Free Edit',
+        update=update_tree_code
+    )
+    brick_type: bpy.props.StringProperty(default='controllers')
 
     def draw_color(self, context, node):
-        return PARAM_LOGIC_BRICK_SOCKET_COLOR
+        return PARAMETER_SOCKET_COLOR
 
     def draw(self, context, layout, node, text):
-        layout.label(text=text)
+        if self.is_output:
+            layout.label(text=self.name)
+        elif self.is_linked:
+            layout.label(text=self.name)
+        else:
+            col = layout.column(align=False)
+            tree = getattr(context.space_data, 'edit_tree', None)
+            if not tree:
+                return
+            game_object = None
+            game_obj_socket = self.node.inputs[self.ref_index]
+            if not game_obj_socket.use_owner:
+                game_object = game_obj_socket.value
+            else:
+                for obj in bpy.data.objects:
+                    if f'{utils.NLPREFIX}{tree.name}' in obj.game.properties:
+                        game_object = obj
+                        break
+            if self.name:
+                row = col.row()
+                row.label(text=self.name)
+                if not game_obj_socket.is_linked and game_object:
+                    row.prop(self, 'use_custom', text='', icon='GREASEPENCIL')
+            if game_object or game_obj_socket.is_linked:
+                if not game_obj_socket.is_linked and not self.use_custom:
+                    game = game_object.game
+                    col.prop_search(
+                        self,
+                        'value',
+                        game,
+                        self.brick_type,
+                        icon='NONE',
+                        text=''
+                    )
+                else:
+                    col.prop(self, 'value', text='')
+            else:
+                col.prop(self, 'value', text='')
 
     def get_unlinked_value(self):
-        return "None"
+        return '"{}"'.format(self.value)
 
 
 _sockets.append(NLLogicBrickSocket)
@@ -1376,7 +1421,10 @@ class NLGamePropertySocket(bpy.types.NodeSocket, NetLogicSocketType):
         update=update_tree_code
     )
     ref_index: bpy.props.IntProperty(default=0)
-    use_custom: bpy.props.BoolProperty(name='Free Edit')
+    use_custom: bpy.props.BoolProperty(
+        name='Free Edit',
+        update=update_tree_code
+    )
 
     def draw_color(self, context, node):
         return PARAMETER_SOCKET_COLOR
@@ -4126,7 +4174,6 @@ class NLGameObjectPropertyParameterNode(bpy.types.Node, NLParameterNode):
         NLParameterNode.init(self, context)
         self.inputs.new(NLGameObjectSocket.bl_idname, "Object")
         self.inputs.new(NLGamePropertySocket.bl_idname, "Property")
-        self.inputs[-1].ref_index = 0
         self.outputs.new(NLParameterSocket.bl_idname, "Property Value")
 
     def get_netlogic_class_name(self):
@@ -4153,7 +4200,6 @@ class NLGetGeometryNodeValue(bpy.types.Node, NLParameterNode):
         NLActionNode.init(self, context)
         self.inputs.new(NLGeomNodeTreeSocket.bl_idname, 'Tree')
         self.inputs.new(NLNodeGroupNodeSocket.bl_idname, 'Node Name')
-        self.inputs[-1].ref_index = 0
         self.inputs.new(NLPositiveIntegerFieldSocket.bl_idname, "Input")
         self.outputs.new(NLParameterSocket.bl_idname, "Value")
 
@@ -4202,7 +4248,6 @@ class NLGetGeometryNodeAttribute(bpy.types.Node, NLParameterNode):
         NLActionNode.init(self, context)
         self.inputs.new(NLGeomNodeTreeSocket.bl_idname, 'Tree')
         self.inputs.new(NLNodeGroupNodeSocket.bl_idname, 'Node Name')
-        self.inputs[-1].ref_index = 0
         self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Internal")
         self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Attribute")
         self.outputs.new(NLParameterSocket.bl_idname, "Value")
@@ -4241,7 +4286,6 @@ class NLGetNodeGroupNodeValue(bpy.types.Node, NLParameterNode):
         NLActionNode.init(self, context)
         self.inputs.new(NLNodeGroupSocket.bl_idname, 'Tree')
         self.inputs.new(NLNodeGroupNodeSocket.bl_idname, 'Node Name')
-        self.inputs[-1].ref_index = 0
         self.inputs.new(NLPositiveIntegerFieldSocket.bl_idname, "Input")
         self.outputs.new(NLParameterSocket.bl_idname, "Value")
 
@@ -4289,7 +4333,6 @@ class NLGetNodeTreeNodeAttribute(bpy.types.Node, NLParameterNode):
         NLActionNode.init(self, context)
         self.inputs.new(NLNodeGroupSocket.bl_idname, 'Tree')
         self.inputs.new(NLNodeGroupNodeSocket.bl_idname, 'Node Name')
-        self.inputs[-1].ref_index = 0
         self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Internal")
         self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Attribute")
         self.outputs.new(NLParameterSocket.bl_idname, "Value")
@@ -4329,7 +4372,6 @@ class NLGetMaterialNodeValue(bpy.types.Node, NLParameterNode):
         NLActionNode.init(self, context)
         self.inputs.new(NLMaterialSocket.bl_idname, 'Material')
         self.inputs.new(NLTreeNodeSocket.bl_idname, 'Node Name')
-        self.inputs[-1].ref_index = 0
         self.inputs.new(NLPositiveIntegerFieldSocket.bl_idname, "Input")
         self.outputs.new(NLParameterSocket.bl_idname, "Value")
 
@@ -4378,7 +4420,6 @@ class NLGetMaterialNodeAttribute(bpy.types.Node, NLParameterNode):
         NLActionNode.init(self, context)
         self.inputs.new(NLMaterialSocket.bl_idname, 'Material')
         self.inputs.new(NLTreeNodeSocket.bl_idname, 'Node Name')
-        self.inputs[-1].ref_index = 0
         self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Internal")
         self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Attribute")
         self.outputs.new(NLParameterSocket.bl_idname, "Value")
@@ -4417,7 +4458,6 @@ class NLGetMaterialNode(bpy.types.Node, NLParameterNode):
         NLActionNode.init(self, context)
         self.inputs.new(NLMaterialSocket.bl_idname, 'Material')
         self.inputs.new(NLTreeNodeSocket.bl_idname, 'Node Name')
-        self.inputs[-1].ref_index = 0
         self.outputs.new(NLParameterSocket.bl_idname, "Node")
 
     def get_netlogic_class_name(self):
@@ -4570,13 +4610,20 @@ class NLGetActuatorNode(bpy.types.Node, NLParameterNode):
     bl_label = "Get Actuator"
     nl_category = "Logic"
     nl_subcat = 'Bricks'
+    nl_module = 'parameters'
 
     def init(self, context):
         NLParameterNode.init(self, context)
+        self.inputs.new(NLGameObjectSocket.bl_idname, 'Object')
+        self.inputs.new(NLLogicBrickSocket.bl_idname, 'Actuator')
+        self.inputs[-1].brick_type = 'actuators'
         self.outputs.new(NLLogicBrickSocket.bl_idname, "Actuator")
 
+    def get_input_sockets_field_names(self):
+        return ["game_obj", "act_name"]
+
     def get_netlogic_class_name(self):
-        return "nodes.GetActuator"
+        return "ULGetActuator"
 
     def get_output_socket_varnames(self):
         return ['OUT']
@@ -4585,50 +4632,29 @@ class NLGetActuatorNode(bpy.types.Node, NLParameterNode):
 _nodes.append(NLGetActuatorNode)
 
 
-class NLGetActuatorNameNode(bpy.types.Node, NLParameterNode):
-    bl_idname = "NLGetActuatorNameNode"
-    bl_label = "Get Actuator By Name"
-    nl_category = "Logic"
-    nl_subcat = 'Bricks'
-
-    def init(self, context):
-        NLParameterNode.init(self, context)
-        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Actuator Name")
-        self.outputs.new(NLLogicBrickSocket.bl_idname, "Actuator")
-
-    def get_netlogic_class_name(self):
-        return "nodes.GetActuatorByName"
-
-    def get_input_sockets_field_names(self):
-        return ["act_name"]
-
-    def get_output_socket_varnames(self):
-        return [OUTCELL]
-
-
-_nodes.append(NLGetActuatorNameNode)
-
-
 class NLGetActuatorValue(bpy.types.Node, NLParameterNode):
     bl_idname = "NLGetActuatorValue"
     bl_label = "Get Actuator Value"
     nl_category = "Logic"
     nl_subcat = 'Bricks'
+    nl_module = 'parameters'
 
     def init(self, context):
         NLParameterNode.init(self, context)
+        self.inputs.new(NLGameObjectSocket.bl_idname, "Object")
         self.inputs.new(NLLogicBrickSocket.bl_idname, "Actuator")
+        self.inputs[-1].brick_type = 'actuators'
         self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Field")
         self.outputs.new(NLParameterSocket.bl_idname, "Value")
 
     def get_netlogic_class_name(self):
-        return "nodes.GetActuatorValue"
+        return "ULGetActuatorValue"
 
     def get_input_sockets_field_names(self):
-        return ["actuator", 'field']
+        return ["game_obj", "act_name", 'field']
 
     def get_output_socket_varnames(self):
-        return [OUTCELL]
+        return ['OUT']
 
 
 _nodes.append(NLGetActuatorValue)
@@ -4636,101 +4662,60 @@ _nodes.append(NLGetActuatorValue)
 
 class NLRunActuatorNode(bpy.types.Node, NLActionNode):
     bl_idname = "NLRunActuatorNode"
-    bl_label = "Execute Actuator"
+    bl_label = "Run Actuator"
     nl_category = "Logic"
     nl_subcat = 'Bricks'
+    nl_module = 'actions'
 
     def init(self, context):
         NLActionNode.init(self, context)
         self.inputs.new(NLConditionSocket.bl_idname, "Condition")
+        self.inputs.new(NLGameObjectSocket.bl_idname, 'Object')
+        self.inputs.new(NLLogicBrickSocket.bl_idname, "From Controller")
+        self.inputs[-1].ref_index = 1
         self.inputs.new(NLLogicBrickSocket.bl_idname, "Actuator")
+        self.inputs[-1].ref_index = 1
+        self.inputs[-1].brick_type = 'actuators'
         self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+    
+    def get_controller(self):
+        tree = getattr(bpy.context.space_data, 'edit_tree', None)
+        obj_socket = self.inputs[1]
+        cont_name = self.inputs[2].value
+        if not cont_name:
+            return False
+        if not obj_socket.use_owner and obj_socket.value:
+            if cont_name in obj_socket.value.game.controllers:
+                cont = obj_socket.value.game.controllers[cont_name]
+                return isinstance(cont, bpy.types.PythonController)
+        else:
+            for sc_ob in bpy.data.objects:
+                if f'{utils.NLPREFIX}{tree.name}' in sc_ob.game.properties:
+                    if cont_name in sc_ob.game.controllers:
+                        cont = sc_ob.game.controllers[cont_name]
+                        return isinstance(cont, bpy.types.PythonController)
+        return False
+
+    def draw_buttons(self, context, layout):
+        if not self.get_controller():
+            col = layout.column()
+            col.label(text='Selected Brick', icon='ERROR')
+            col.label(text='not a Python Controller!')
+
+    def update_draw(self):
+        self.inputs[3].enabled = self.get_controller()
 
     def get_output_socket_varnames(self):
         return ["OUT"]
 
     def get_netlogic_class_name(self):
-        return "nodes.ActivateActuator"
+        return "ULRunActuator"
 
     def get_input_sockets_field_names(self):
-        return ["condition", 'actuator']
+        return ["condition", 'game_obj', 'cont_name', 'act_name']
 
 
 _nodes.append(NLRunActuatorNode)
-
-
-class NLDisableActuatorNode(bpy.types.Node, NLActionNode):
-    bl_idname = "NLDisableActuatorNode"
-    bl_label = "Stop Actuator"
-    nl_category = "Logic"
-    nl_subcat = 'Bricks'
-
-    def init(self, context):
-        NLParameterNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, "Condition")
-        self.inputs.new(NLLogicBrickSocket.bl_idname, "Actuator")
-        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
-
-    def get_output_socket_varnames(self):
-        return ["OUT"]
-
-    def get_netlogic_class_name(self): return "nodes.DeactivateActuator"
-
-    def get_input_sockets_field_names(self):
-        return ["condition", 'actuator']
-
-
-_nodes.append(NLDisableActuatorNode)
-
-
-class NLRunActuatorByNameNode(bpy.types.Node, NLActionNode):
-    bl_idname = "NLRunActuatorByNameNode"
-    bl_label = "Execute Actuator By Name"
-    nl_category = "Logic"
-    nl_subcat = 'Bricks'
-
-    def init(self, context):
-        NLActionNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, "Condition")
-        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Actuator")
-        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
-
-    def get_output_socket_varnames(self):
-        return ["OUT"]
-
-    def get_netlogic_class_name(self):
-        return "nodes.ActivateActuatorByName"
-
-    def get_input_sockets_field_names(self):
-        return ["condition", 'actuator']
-
-
-_nodes.append(NLRunActuatorByNameNode)
-
-
-class NLDisableActuatorByNameNode(bpy.types.Node, NLActionNode):
-    bl_idname = "NLDisableActuatorByNameNode"
-    bl_label = "Stop Actuator By Name"
-    nl_category = "Logic"
-    nl_subcat = 'Bricks'
-
-    def init(self, context):
-        NLActionNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, "Condition")
-        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Actuator")
-        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
-
-    def get_output_socket_varnames(self):
-        return ["OUT"]
-
-    def get_netlogic_class_name(self):
-        return "nodes.DeactivateActuatorByName"
-
-    def get_input_sockets_field_names(self):
-        return ["condition", 'actuator']
-
-
-_nodes.append(NLDisableActuatorByNameNode)
 
 
 class NLSetActuatorValueNode(bpy.types.Node, NLActionNode):
@@ -4738,11 +4723,15 @@ class NLSetActuatorValueNode(bpy.types.Node, NLActionNode):
     bl_label = "Set Actuator Value"
     nl_category = "Logic"
     nl_subcat = 'Bricks'
+    nl_module = 'actions'
 
     def init(self, context):
         NLActionNode.init(self, context)
         self.inputs.new(NLConditionSocket.bl_idname, "Condition")
+        self.inputs.new(NLGameObjectSocket.bl_idname, "Object")
         self.inputs.new(NLLogicBrickSocket.bl_idname, "Actuator")
+        self.inputs[-1].ref_index = 1
+        self.inputs[-1].brick_type = 'actuators'
         self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Field")
         self.inputs.new(NLValueFieldSocket.bl_idname, "")
         self.outputs.new(NLConditionSocket.bl_idname, 'Done')
@@ -4750,10 +4739,11 @@ class NLSetActuatorValueNode(bpy.types.Node, NLActionNode):
     def get_output_socket_varnames(self):
         return ["OUT"]
 
-    def get_netlogic_class_name(self): return "nodes.SetActuatorValue"
+    def get_netlogic_class_name(self):
+        return "ULSetActuatorValue"
 
     def get_input_sockets_field_names(self):
-        return ["condition", 'actuator', 'field', 'value']
+        return ["condition", 'game_obj', 'act_name', 'field', 'value']
 
 
 _nodes.append(NLSetActuatorValueNode)
@@ -4837,13 +4827,13 @@ class NLVectorAngle(bpy.types.Node, NLParameterNode):
         NLParameterNode.init(self, context)
         self.inputs.new(NLVec3FieldSocket.bl_idname, "Vector 1")
         self.inputs.new(NLVec3FieldSocket.bl_idname, "Vector 2")
-        self.outputs.new(NLConditionSocket.bl_idname, 'If True')
+        self.outputs.new(NLParameterSocket.bl_idname, 'Angle')
 
     def get_netlogic_class_name(self):
         return "nodes.VectorAngle"
 
     def get_input_sockets_field_names(self):
-        return ["vector", 'vector_2', 'value']
+        return ["vector", 'vector_2']
 
 
 _nodes.append(NLVectorAngle)
@@ -4897,121 +4887,28 @@ class NLVectorAngleCheck(bpy.types.Node, NLParameterNode):
 _nodes.append(NLVectorAngleCheck)
 
 
-class NLGetSensorNode(bpy.types.Node, NLParameterNode):
+class NLGetSensorNode(bpy.types.Node, NLConditionNode):
     bl_idname = "NLGetSensorNode"
     bl_label = "Sensor Positive"
     nl_category = "Logic"
     nl_subcat = 'Bricks'
-    obj: bpy.props.PointerProperty(
-        name='Object',
-        type=bpy.types.Object,
-        update=update_tree_code
-    )
-    sensor: bpy.props.StringProperty(update=update_tree_code)
+    nl_module = 'parameters'
 
     def init(self, context):
-        NLParameterNode.init(self, context)
-        self.outputs.new(NLConditionSocket.bl_idname, "If positive")
+        NLConditionNode.init(self, context)
+        self.inputs.new(NLGameObjectSocket.bl_idname, 'Object')
+        self.inputs.new(NLLogicBrickSocket.bl_idname, 'Sensor')
+        self.inputs[-1].brick_type = 'sensors'
+        self.outputs.new(NLConditionSocket.bl_idname, "Positive")
 
     def get_netlogic_class_name(self):
-        return "nodes.GetSensor"
-
-    def draw_buttons(self, context, layout):
-        col = layout.column()
-        row1 = col.row()
-        row2 = col.row()
-        row1.label(text='From Object')
-        row2.prop_search(
-            self,
-            "obj",
-            bpy.context.scene,
-            'objects',
-            icon='NONE',
-            text=''
-        )
-        if self.obj:
-            row3 = col.row()
-            row4 = col.row()
-            row3.label(text='Sensor')
-            row4.prop_search(
-                self,
-                "sensor",
-                self.obj.game,
-                'sensors',
-                icon='NONE',
-                text=''
-            )
-
-    def get_nonsocket_fields(self):
-        return [
-            (
-                "obj_name", lambda: 'nodes.GetSensor.obj("{}")'.format(
-                    'NLO:{}'.format(self.obj.name)
-                )
-            ),
-            (
-                "sens_name", lambda: 'nodes.GetSensor.sens("{}")'.format(
-                    self.sensor
-                )
-            )
-        ] if self.obj else []
+        return "ULSensorPositive"
 
     def get_output_socket_varnames(self):
-        return [OUTCELL]
+        return ['OUT']
 
 
 _nodes.append(NLGetSensorNode)
-
-
-class NLGetSensorNameNode(bpy.types.Node, NLParameterNode):
-    bl_idname = "NLGetSensorNameNode"
-    bl_label = "Sensor Positive by Name"
-    nl_category = "Logic"
-    nl_subcat = 'Bricks'
-
-    def init(self, context):
-        NLParameterNode.init(self, context)
-        self.inputs.new(NLGameObjectSocket.bl_idname, "From Object")
-        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Sensor Name")
-        self.outputs.new(NLConditionSocket.bl_idname, "If positive")
-
-    def get_input_sockets_field_names(self):
-        return ["obj", "name"]
-
-    def get_netlogic_class_name(self):
-        return "nodes.GetSensorByName"
-
-    def get_output_socket_varnames(self):
-        return [OUTCELL]
-
-
-_nodes.append(NLGetSensorNameNode)
-
-
-class NLGetSensorValueNameNode(bpy.types.Node, NLParameterNode):
-    bl_idname = "NLGetSensorValueNameNode"
-    bl_label = "Get Sensor Value by Name"
-    nl_category = "Logic"
-    nl_subcat = 'Bricks'
-
-    def init(self, context):
-        NLParameterNode.init(self, context)
-        self.inputs.new(NLGameObjectSocket.bl_idname, "From Object")
-        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Sensor Name")
-        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Field")
-        self.outputs.new(NLParameterSocket.bl_idname, "Value")
-
-    def get_input_sockets_field_names(self):
-        return ["obj", "name", 'field']
-
-    def get_netlogic_class_name(self):
-        return "nodes.GetSensorValueByName"
-
-    def get_output_socket_varnames(self):
-        return [OUTCELL]
-
-
-_nodes.append(NLGetSensorValueNameNode)
 
 
 class NLSensorValueNode(bpy.types.Node, NLParameterNode):
@@ -5019,65 +4916,24 @@ class NLSensorValueNode(bpy.types.Node, NLParameterNode):
     bl_label = "Get Sensor Value"
     nl_category = 'Logic'
     nl_subcat = 'Bricks'
-    obj: bpy.props.PointerProperty(
-        name='Object',
-        type=bpy.types.Object,
-        update=update_tree_code
-    )
-    sensor: bpy.props.StringProperty(update=update_tree_code)
+    nl_module = 'parameters'
 
     def init(self, context):
         NLParameterNode.init(self, context)
+        self.inputs.new(NLGameObjectSocket.bl_idname, 'Object')
+        self.inputs.new(NLLogicBrickSocket.bl_idname, 'Sensor')
+        self.inputs[-1].brick_type = 'sensors'
         self.inputs.new(NLQuotedStringFieldSocket.bl_idname, 'Field')
         self.outputs.new(NLParameterSocket.bl_idname, "Value")
 
-    def get_netlogic_class_name(self): return "nodes.SensorValue"
+    def get_netlogic_class_name(self):
+        return "ULGetSensorValue"
 
     def get_input_sockets_field_names(self):
-        return ["field"]
-
-    def draw_buttons(self, context, layout):
-        col = layout.column()
-        row1 = col.row()
-        row2 = col.row()
-        row1.label(text='From Object')
-        row2.prop_search(
-            self,
-            "obj",
-            bpy.context.scene,
-            'objects',
-            icon='NONE',
-            text=''
-        )
-        if self.obj:
-            row3 = col.row()
-            row4 = col.row()
-            row3.label(text='Sensor')
-            row4.prop_search(
-                self,
-                "sensor",
-                self.obj.game,
-                'sensors',
-                icon='NONE',
-                text=''
-            )
-
-    def get_nonsocket_fields(self):
-        return [
-            (
-                "obj_name", lambda: 'nodes.SensorValue.obj("{}")'.format(
-                    'NLO:{}'.format(self.obj.name)
-                )
-            ),
-            (
-                "sens_name", lambda: 'nodes.SensorValue.sens("{}")'.format(
-                    self.sensor
-                )
-            )
-        ] if self.obj else []
+        return ['game_obj', 'sens_name', "field"]
 
     def get_output_socket_varnames(self):
-        return ['VAL']
+        return ['OUT']
 
 
 _nodes.append(NLSensorValueNode)
@@ -6883,7 +6739,6 @@ class NLObjectPropertyOperator(bpy.types.Node, NLConditionNode):
         NLConditionNode.init(self, context)
         self.inputs.new(NLGameObjectSocket.bl_idname, 'Object')
         self.inputs.new(NLGamePropertySocket.bl_idname, "Property")
-        self.inputs[-1].ref_index = 0
         self.inputs.new(NLValueFieldSocket.bl_idname, '')
         self.outputs.new(NLConditionSocket.bl_idname, 'If True')
         self.outputs.new(NLParameterSocket.bl_idname, 'Value')
@@ -12479,7 +12334,6 @@ class NLParameterGetGlobalValue(bpy.types.Node, NLParameterNode):
         NLParameterNode.init(self, context)
         self.inputs.new(NLGlobalCatSocket.bl_idname, "Category")
         self.inputs.new(NLGlobalPropSocket.bl_idname, "Property")
-        self.inputs[-1].ref_index = 0
         self.inputs.new(NLOptionalValueFieldSocket.bl_idname, "Default Value")
         self.outputs.new(NLParameterSocket.bl_idname, "Value")
 
