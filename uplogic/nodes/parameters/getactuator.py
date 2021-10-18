@@ -1,17 +1,25 @@
+from uplogic.nodes import ULOutSocket
 from uplogic.nodes import ULParameterNode
+from uplogic.utils import STATUS_WAITING
 from uplogic.utils import is_invalid
 
 
-class GetActuator(ULParameterNode):
+class ULGetActuator(ULParameterNode):
 
     def __init__(self):
         ULParameterNode.__init__(self)
-        self.obj_name = None
+        self.game_obj = None
         self.act_name = None
+        self.OUT = ULOutSocket(self, self.get_actuator)
+
+    def get_actuator(self):
+        game_obj = self.get_socket_value(self.game_obj)
+        act_name = self.get_socket_value(self.act_name)
+        if is_invalid(game_obj, act_name):
+            return STATUS_WAITING
+        if act_name not in game_obj.actuators:
+            return STATUS_WAITING
+        return game_obj.actuators[act_name]
 
     def evaluate(self):
-        game_obj = self.get_socket_value(self.obj_name)
-        if is_invalid(game_obj, self.act_name):
-            return
         self._set_ready()
-        self._set_value(game_obj.actuators[self.act_name])

@@ -7,3 +7,5 @@ from .restartgame import ULRestartGame
 from .savegame import ULSaveGame
 from .loadblendfile import ULLoadBlendFile
 from .throwevent import ULTrowEvent
+from .runactuator import ULRunActuator
+from .setactuatorvalue import ULSetActuatorValue

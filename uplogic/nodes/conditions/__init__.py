@@ -17,3 +17,4 @@ from .onvaluechanged import ULOnValueChanged
 from .onvaluechangedto import ULValueChangedTo
 from .truefalse import ULTrueFalse
 from .hasproperty import ULHasProperty
+from .sensorpositive import ULSensorPositive
