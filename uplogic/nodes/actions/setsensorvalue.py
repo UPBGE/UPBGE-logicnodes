@@ -4,7 +4,7 @@ from uplogic.utils import is_waiting
 from uplogic.utils import not_met
 
 
-class ULSetActuatorValue(ULActionNode):
+class ULSetSensorValue(ULActionNode):
 
     def __init__(self):
         ULActionNode.__init__(self)
@@ -22,17 +22,17 @@ class ULSetActuatorValue(ULActionNode):
     def evaluate(self):
         self.done = False
         game_obj = self.get_socket_value(self.game_obj)
-        act_name = self.get_socket_value(self.act_name)
+        sens_name = self.get_socket_value(self.act_name)
         condition = self.get_socket_value(self.condition)
         if not_met(condition):
             return
-        actuator = game_obj.actuators.get(act_name)
-        if not actuator:
+        sensor = game_obj.sensors.get(sens_name)
+        if not sensor:
             return
         self._set_ready()
         field = self.get_socket_value(self.field)
         value = self.get_socket_value(self.value)
         if is_waiting(field, value):
             return
-        setattr(actuator, field, value)
+        setattr(sensor, field, value)
         self.done = True

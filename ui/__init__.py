@@ -15,17 +15,6 @@ _filter_prop_types = [
 ]
 
 
-def get_icons_directory():
-
-    background = bpy.context.preferences.themes['Default'].view_3d.space.panelcolors.back
-    if background[0] < 0.4:
-        icons_directory = join(dirname(__file__), "IconsBright")
-    else:
-        icons_directory = join(dirname(__file__), "IconsDark")
-
-    return icons_directory
-
-
 class BGEPropFilter(bpy.types.PropertyGroup):
     do_filter: bpy.props.BoolProperty(
         name='Filter',
@@ -38,7 +27,7 @@ class BGEPropFilter(bpy.types.PropertyGroup):
     show_hidden: bpy.props.BoolProperty(
         name='Show Hidden',
         default=True,
-        description='Show properties that start with "_"'
+        description='Show properties that start with "."'
     )
     show_trees: bpy.props.BoolProperty(
         name='Show Trees',
@@ -204,7 +193,7 @@ class BGE_PT_GlobalValuePanel(bpy.types.Panel):
 
 
 class BGE_PT_GamePropertyPanel(bpy.types.Panel):
-    bl_label = "Game Properties"
+    bl_label = "Game Properties (Advanced)"
     bl_space_type = "NODE_EDITOR"
     bl_region_type = "UI"
     bl_category = "Dashboard"
@@ -306,7 +295,7 @@ class BGE_PT_GamePropertyPanel(bpy.types.Panel):
 
         props = [prop for prop in obj.game.properties]
         for prop in obj.game.properties:
-            if not show_hidden and prop.name.startswith('_'):
+            if not show_hidden and prop.name.startswith('.'):
                 continue
             is_tree = prop.name.startswith(utils.NLPREFIX)
             if is_tree and not show_trees:
@@ -381,7 +370,7 @@ class BGE_PT_PropertiesPanelObject(BGE_PT_GamePropertyPanel):
     bl_label = "Game Properties"
     bl_space_type = "PROPERTIES"
     bl_region_type = "WINDOW"
-    bl_context = "object"
+    bl_context = "game"
     name: bpy.props.StringProperty()
 
     @classmethod

@@ -13,6 +13,8 @@ from uplogic.utils import is_invalid
 from uplogic.utils import is_waiting
 from uplogic.utils import not_met
 from uplogic.utils import interpolate
+from uplogic.utils import check_game_object
+from uplogic.utils import _name_query
 import bge
 import bpy
 import json
@@ -229,44 +231,6 @@ def project_vector3(v, xi, yi):
     return Vector((v[xi], v[yi]))
 
 
-def check_game_object(query, scene=None):
-    if not scene:
-        scene = logic.getCurrentScene()
-    else:
-        scene = scene
-    if (query is None) or (query == ""):
-        return
-    if not is_invalid(scene):
-        # find from scene
-        return _name_query(scene.objects, query)
-
-
-def _name_query(named_items, query):
-    assert len(query) > 0
-    postfix = (query[0] == "*")
-    prefix = (query[-1] == "*")
-    infix = (prefix and postfix)
-    if infix:
-        token = query[1:-1]
-        for item in named_items:
-            if token in item.name:
-                return item
-    if prefix:
-        token = query[:-1]
-        for item in named_items:
-            if item.name.startswith(token):
-                return item
-    if postfix:
-        token = query[1:]
-        for item in named_items:
-            if item.name.endswith(token):
-                return item
-    for item in named_items:
-        if item.name == query:
-            return item
-    return None
-
-
 _loaded_userlogic_files = {}
 
 
@@ -448,157 +412,6 @@ class ULConditionNode(ULLogicNode):
 ###############################################################################
 # Unordered
 ###############################################################################
-
-
-class ParameterActiveCamera(ULParameterNode):
-    def __init__(self):
-        ULParameterNode.__init__(self)
-
-    def evaluate(self):
-        scene = logic.getCurrentScene()
-        self._set_ready()
-        if is_invalid(scene):
-            debug('Active Camera Node: Invalid Scene!')
-            self._set_value(None)
-        else:
-            self._set_value(scene.active_camera)
-
-
-class GetGravity(ULParameterNode):
-    def __init__(self):
-        ULParameterNode.__init__(self)
-        self.collection = None
-
-    def evaluate(self):
-        self._set_ready()
-        self._set_value(bge.logic.getCurrentScene().gravity)
-
-
-class GetCollection(ULParameterNode):
-    def __init__(self):
-        ULParameterNode.__init__(self)
-        self.collection = None
-
-    def evaluate(self):
-        collection = self.get_socket_value(self.collection)
-        if is_invalid(collection):
-            return
-        self._set_ready()
-        self._set_value(collection)
-
-
-class GetCollectionObjects(ULParameterNode):
-    def __init__(self):
-        ULParameterNode.__init__(self)
-        self.collection = None
-
-    def evaluate(self):
-        collection = self.get_socket_value(self.collection)
-        if is_invalid(collection):
-            return
-        self._set_ready()
-        col = bpy.data.collections.get(collection)
-        if not col:
-            return
-        objects = []
-        for o in col.objects:
-            objects.append(check_game_object(o.name))
-        self._set_value(objects)
-
-
-class GetCollectionObjectNames(ULParameterNode):
-    def __init__(self):
-        ULParameterNode.__init__(self)
-        self.condition = None
-        self.collection = None
-
-    def evaluate(self):
-        condition = self.get_socket_value(self.condition)
-        if not_met(condition):
-            return
-        collection = self.get_socket_value(self.collection)
-        if is_invalid(collection):
-            return
-        self._set_ready()
-        col = bpy.data.collections.get(collection)
-        if not col:
-            return
-        objects = []
-        for o in col.objects:
-            if not o.parent:
-                objects.append(o.name)
-        self._set_value(objects)
-
-
-class ULSetOverlayCollection(ULParameterNode):
-    def __init__(self):
-        ULParameterNode.__init__(self)
-        self.condition = None
-        self.camera = None
-        self.collection = None
-
-    def evaluate(self):
-        condition = self.get_socket_value(self.condition)
-        if not_met(condition):
-            return
-        collection = self.get_socket_value(self.collection)
-        camera = self.get_socket_value(self.camera)
-        if is_invalid(camera, collection):
-            return
-        self._set_ready()
-        col = bpy.data.collections.get(collection)
-        if not col:
-            return
-        logic.getCurrentScene().addOverlayCollection(camera, col)
-        self._set_value(True)
-
-
-class ULRemoveOverlayCollection(ULParameterNode):
-    def __init__(self):
-        ULParameterNode.__init__(self)
-        self.collection = None
-
-    def evaluate(self):
-        collection = self.get_socket_value(self.collection)
-        if is_invalid(collection):
-            return
-        self._set_ready()
-        col = bpy.data.collections.get(collection)
-        if not col:
-            return
-        logic.getCurrentScene().removeOverlayCollection(col)
-        self._set_value(True)
-
-
-class ParameterScreenPosition(ULParameterNode):
-    def __init__(self):
-        ULParameterNode.__init__(self)
-        self.game_object = None
-        self.camera = None
-        self.xposition = ULOutSocket(self, self._get_xposition)
-        self.yposition = ULOutSocket(self, self._get_yposition)
-        self._xpos = None
-        self._ypos = None
-
-    def _get_xposition(self):
-        return self._xpos
-
-    def _get_yposition(self):
-        return self._ypos
-
-    def evaluate(self):
-        self._set_ready()
-        game_object = self.get_socket_value(self.game_object)
-        camera = self.get_socket_value(self.camera)
-        if is_invalid(game_object) or is_invalid(camera):
-            self._xpos = None
-            self._ypos = None
-            self._set_value(None)
-            return
-        position = camera.getScreenPosition(game_object)
-        self._set_value(position)
-        self._xpos = position[0]
-        self._ypos = position[1]
 
 
 class ParameterWorldPosition(ULParameterNode):
@@ -6428,7 +6241,7 @@ class ActionPlayAction(ULActionNode):
         self.condition = None
         self.game_object = None
         self.action_name = None
-        self.stop = None
+        self.stop_anim = None
         self.frames = None
         self.start_frame = None
         self.end_frame = None
@@ -6471,7 +6284,7 @@ class ActionPlayAction(ULActionNode):
         self._finish_notified = False
 
     def _notify_finished(self, obj, layer):
-        if not self._finish_notified and self.stop:
+        if not self._finish_notified and self.stop_anim:
             self._finish_notified = True
             self._finished = True
             obj.stopAction(layer)
@@ -6519,7 +6332,6 @@ class ActionPlayAction(ULActionNode):
             speed = 0.01
         self._set_ready()
         if is_invalid(game_object):  # can't play
-            debug("Play Action Node: Invalid Game Object!")
             self._reset_subvalues()
         else:
             # Condition might be false and the animation running
@@ -6731,144 +6543,6 @@ class ActionFindScene(ULActionNode):
         self.done = True
 
 
-class ActionStart3DSoundAdv(ULActionNode):
-    def __init__(self):
-        ULActionNode.__init__(self)
-        self.condition = None
-        self.sound = None
-        self.occlusion = None
-        self.transition = None
-        self.cutoff = None
-        self.speaker = None
-        self.device = None
-        self.loop_count = None
-        self.pitch = None
-        self.volume = None
-        self.attenuation = None
-        self.distance_ref = None
-        self.cone_angle = None
-        self.cone_outer_volume = None
-        self.done = None
-        self.on_finish = False
-        self._clear_sound = 1
-        self._sustained = 1
-        self._handle = None
-        self._handles = {}
-        self.DONE = ULOutSocket(self, self.get_done)
-        self.ON_FINISH = ULOutSocket(self, self.get_on_finish)
-        self.HANDLE = ULOutSocket(self, self.get_handle)
-
-    def get_handle(self):
-        return self._handle
-
-    def get_on_finish(self):
-        if not self._handle:
-            return False
-        if self._handle.finished:
-            self._handle = None
-            return True
-        return False
-
-    def get_done(self):
-        return self.done
-
-    def evaluate(self):
-        self.done = False
-        self.on_finish = False
-        condition = self.get_socket_value(self.condition)
-        if not_met(condition):
-            self._set_ready()
-            return
-        speaker = self.get_socket_value(self.speaker)
-        transition = self.get_socket_value(self.transition)
-        occlusion = self.get_socket_value(self.occlusion)
-        volume = self.get_socket_value(self.volume)
-        cone_outer_volume = self.get_socket_value(self.cone_outer_volume)
-        attenuation = self.get_socket_value(self.attenuation)
-        cutoff = self.get_socket_value(self.cutoff)
-        file = self.get_socket_value(self.sound)
-        loop_count = self.get_socket_value(self.loop_count)
-        distance_ref = self.get_socket_value(self.distance_ref)
-        cone_angle = self.get_socket_value(self.cone_angle)
-        pitch = self.get_socket_value(self.pitch) * logic.getTimeScale()
-        self._set_ready()
-
-        if is_invalid(file):
-            return
-        self._handle = ULSound3D(
-            file,
-            speaker,
-            'ln_audio_system',
-            occlusion,
-            transition,
-            cutoff,
-            volume,
-            pitch,
-            attenuation,
-            distance_ref,
-            [cone_angle.x, cone_angle.y],
-            cone_outer_volume,
-            loop_count
-        )
-        self.done = True
-
-
-class ActionStartSound(ULActionNode):
-    def __init__(self):
-        ULActionNode.__init__(self)
-        self.condition = None
-        self.sound = None
-        self.loop_count = None
-        self.pitch = None
-        self.volume = None
-        self.done = None
-        self.device = None
-        self.on_finish = False
-        self._handle = None
-        self._handles = []
-        self.DONE = ULOutSocket(self, self.get_done)
-        self.ON_FINISH = ULOutSocket(self, self.get_on_finish)
-        self.HANDLE = ULOutSocket(self, self.get_handle)
-
-    def get_handle(self):
-        return self._handle
-
-    def get_on_finish(self):
-        if not self._handle:
-            return False
-        if self._handle.finished:
-            self._handle = None
-            return True
-        return False
-
-    def get_done(self):
-        return self.done
-
-    def evaluate(self):
-        self.done = False
-        self.on_finish = False
-        self._set_ready()
-        condition = self.get_socket_value(self.condition)
-        if not_met(condition):
-            self._set_ready()
-            return
-        pitch = self.get_socket_value(self.pitch)
-        volume = self.get_socket_value(self.volume)
-        file = self.get_socket_value(self.sound)
-        loop_count = self.get_socket_value(self.loop_count)
-
-        if is_invalid(file):
-            return
-
-        self._handle = ULSound2D(
-            file,
-            'ln_audio_system',
-            volume,
-            pitch,
-            loop_count
-        )
-
-
 class ActionStopSound(ULActionNode):
     def __init__(self):
         ULActionNode.__init__(self)
@@ -6897,7 +6571,7 @@ class ActionStopAllSounds(ULActionNode):
         condition = self.get_socket_value(self.condition)
         if not_met(condition):
             return
-        aud_sys = GlobalDB.retrieve('.uplogic_audio').get('ln_audio_system')
+        aud_sys = GlobalDB.retrieve('.uplogic_audio').get('nl_audio_system')
         if not aud_sys:
             return
         self._set_ready()

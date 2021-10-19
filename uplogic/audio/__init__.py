@@ -8,6 +8,6 @@ from uplogic.data.globaldb import GlobalDB
 def update_sounds():
     systems = GlobalDB.retrieve('.uplogic_audio')
     for system in systems.data:
-        if system == 'ln_audio_system':
+        if system == 'nl_audio_system':
             continue
         systems.data[system].update()

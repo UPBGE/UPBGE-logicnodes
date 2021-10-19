@@ -57,7 +57,7 @@ class ULSound2D(ULSound):
             self.finished = True
             self.aud_system.remove(self)
             return
-        handle.pitch = self.pitch
+        handle.pitch = self.pitch * logic.getTimeScale()
         handle.volume = self.volume
 
 
@@ -136,7 +136,7 @@ class ULSound3D(ULSound):
                 self.finished = True
                 self.aud_system.remove(self)
                 return
-            handle.pitch = self.pitch
+            handle.pitch = self.pitch * logic.getTimeScale()
             handle.location = speaker.worldPosition
             handle.orientation = (
                 speaker

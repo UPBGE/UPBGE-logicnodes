@@ -20,6 +20,11 @@ from .listindex import ULListIndex
 from .listindexrandom import ULListIndexRandom
 from .listfromitems import ULListFromItems
 from .listduplicate import ULListDuplicate
-from .getactuator import ULGetActuator
 from .getactuatorvalue import ULGetActuatorValue
 from .getsensorvalue import ULGetSensorValue
+from .activecamera import ULActiveCamera
+from .getgravity import ULGetGravity
+from .getcollection import ULGetCollection
+from .getcollectionobjects import ULGetCollectionObjects
+from .getcollectionobjectnames import ULGetCollectionObjectNames
+from .screenposition import ULScreenPosition

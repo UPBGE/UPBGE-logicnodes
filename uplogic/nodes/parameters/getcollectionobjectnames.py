@@ -1,0 +1,29 @@
+from uplogic.nodes import ULOutSocket
+from uplogic.nodes import ULParameterNode
+from uplogic.utils import STATUS_WAITING
+from uplogic.utils import is_invalid
+import bpy
+
+
+class ULGetCollectionObjectNames(ULParameterNode):
+    def __init__(self):
+        ULParameterNode.__init__(self)
+        self.condition = None
+        self.collection = None
+        self.OUT = ULOutSocket(self, self.get_objects)
+
+    def get_objects(self):
+        collection = self.get_socket_value(self.collection)
+        if is_invalid(collection):
+            return STATUS_WAITING
+        col = bpy.data.collections.get(collection)
+        if not col:
+            return STATUS_WAITING
+        objects = []
+        for o in col.objects:
+            if not o.parent:
+                objects.append(o.name)
+        return objects
+
+    def evaluate(self):
+        self._set_ready()

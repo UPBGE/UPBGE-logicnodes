@@ -519,6 +519,12 @@ def filter_camera(self, item):
     return False
 
 
+def filter_speaker(self, item):
+    if isinstance(item.data, bpy.types.Speaker):
+        return True
+    return False
+
+
 def filter_armatures(self, item):
     if (
         isinstance(item.data, bpy.types.Armature)
@@ -1201,6 +1207,46 @@ class NLCameraSocket(bpy.types.NodeSocket, NetLogicSocketType):
 
 
 _sockets.append(NLCameraSocket)
+
+
+class NLSpeakerSocket(bpy.types.NodeSocket, NetLogicSocketType):
+    bl_idname = "NLSpeakerSocket"
+    bl_label = "Camera"
+    value: bpy.props.PointerProperty(
+        name='Object',
+        type=bpy.types.Object,
+        poll=filter_speaker,
+        update=update_tree_code
+    )
+
+    def draw_color(self, context, node):
+        return PARAM_OBJ_SOCKET_COLOR
+
+    def draw(self, context, layout, node, text):
+        if self.is_output:
+            layout.label(text=self.name)
+        elif self.is_linked:
+            layout.label(text=self.name)
+        else:
+            col = layout.column(align=False)
+            row = col.row()
+            if self.name:
+                row.label(text=self.name)
+            col.prop_search(
+                self,
+                'value',
+                bpy.context.scene,
+                'objects',
+                icon='NONE',
+                text=''
+            )
+
+    def get_unlinked_value(self):
+        if isinstance(self.value, bpy.types.Object):
+            return '"NLO:{}"'.format(self.value.name)
+
+
+_sockets.append(NLSpeakerSocket)
 
 
 class NLNavMeshSocket(bpy.types.NodeSocket, NetLogicSocketType):
@@ -3994,6 +4040,7 @@ class NLParameterScreenPosition(bpy.types.Node, NLParameterNode):
     bl_label = "Screen Position"
     nl_category = "Scene"
     nl_subcat = 'Camera'
+    nl_module = 'parameters'
 
     def init(self, context):
         NLParameterNode.init(self, context)
@@ -4003,7 +4050,7 @@ class NLParameterScreenPosition(bpy.types.Node, NLParameterNode):
         self.outputs.new(NLParameterSocket.bl_idname, "Screen Y")
 
     def get_netlogic_class_name(self):
-        return "nodes.ParameterScreenPosition"
+        return "ULScreenPosition"
 
     def get_input_sockets_field_names(self):
         return ["game_object", "camera"]
@@ -4020,6 +4067,7 @@ class NLParameterWorldPosition(bpy.types.Node, NLParameterNode):
     bl_label = "World Position"
     nl_category = "Scene"
     nl_subcat = 'Camera'
+    nl_module = 'parameters'
 
     def init(self, context):
         NLParameterNode.init(self, context)
@@ -4030,10 +4078,13 @@ class NLParameterWorldPosition(bpy.types.Node, NLParameterNode):
         self.outputs.new(NLParameterSocket.bl_idname, "World Position")
 
     def get_netlogic_class_name(self):
-        return "nodes.ParameterWorldPosition"
+        return "ULWorldPosition"
 
     def get_input_sockets_field_names(self):
         return ["camera", "screen_x", "screen_y", "world_z"]
+
+    def get_output_socket_varnames(self):
+        return ["OUT"]
 
 
 _nodes.append(NLParameterWorldPosition)
@@ -4605,33 +4656,6 @@ class NLGetListIndexNode(bpy.types.Node, NLParameterNode):
 _nodes.append(NLGetListIndexNode)
 
 
-class NLGetActuatorNode(bpy.types.Node, NLParameterNode):
-    bl_idname = "NLGetActuatorNode"
-    bl_label = "Get Actuator"
-    nl_category = "Logic"
-    nl_subcat = 'Bricks'
-    nl_module = 'parameters'
-
-    def init(self, context):
-        NLParameterNode.init(self, context)
-        self.inputs.new(NLGameObjectSocket.bl_idname, 'Object')
-        self.inputs.new(NLLogicBrickSocket.bl_idname, 'Actuator')
-        self.inputs[-1].brick_type = 'actuators'
-        self.outputs.new(NLLogicBrickSocket.bl_idname, "Actuator")
-
-    def get_input_sockets_field_names(self):
-        return ["game_obj", "act_name"]
-
-    def get_netlogic_class_name(self):
-        return "ULGetActuator"
-
-    def get_output_socket_varnames(self):
-        return ['OUT']
-
-
-_nodes.append(NLGetActuatorNode)
-
-
 class NLGetActuatorValue(bpy.types.Node, NLParameterNode):
     bl_idname = "NLGetActuatorValue"
     bl_label = "Get Actuator Value"
@@ -4718,9 +4742,9 @@ class NLRunActuatorNode(bpy.types.Node, NLActionNode):
 _nodes.append(NLRunActuatorNode)
 
 
-class NLSetActuatorValueNode(bpy.types.Node, NLActionNode):
-    bl_idname = "NLSetActuatorValueNode"
-    bl_label = "Set Actuator Value"
+class NLSetSensorValueNode(bpy.types.Node, NLActionNode):
+    bl_idname = "NLSetSensorValueNode"
+    bl_label = "Set Sensor Value"
     nl_category = "Logic"
     nl_subcat = 'Bricks'
     nl_module = 'actions'
@@ -4729,9 +4753,9 @@ class NLSetActuatorValueNode(bpy.types.Node, NLActionNode):
         NLActionNode.init(self, context)
         self.inputs.new(NLConditionSocket.bl_idname, "Condition")
         self.inputs.new(NLGameObjectSocket.bl_idname, "Object")
-        self.inputs.new(NLLogicBrickSocket.bl_idname, "Actuator")
+        self.inputs.new(NLLogicBrickSocket.bl_idname, "Sensor")
         self.inputs[-1].ref_index = 1
-        self.inputs[-1].brick_type = 'actuators'
+        self.inputs[-1].brick_type = 'sensors'
         self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Field")
         self.inputs.new(NLValueFieldSocket.bl_idname, "")
         self.outputs.new(NLConditionSocket.bl_idname, 'Done')
@@ -4740,13 +4764,13 @@ class NLSetActuatorValueNode(bpy.types.Node, NLActionNode):
         return ["OUT"]
 
     def get_netlogic_class_name(self):
-        return "ULSetActuatorValue"
+        return "ULSetSensorValue"
 
     def get_input_sockets_field_names(self):
-        return ["condition", 'game_obj', 'act_name', 'field', 'value']
+        return ["condition", 'game_obj', 'sens_name', 'field', 'value']
 
 
-_nodes.append(NLSetActuatorValueNode)
+_nodes.append(NLSetSensorValueNode)
 
 
 class NLVectorMath(bpy.types.Node, NLParameterNode):
@@ -5016,13 +5040,14 @@ class NLActiveCameraParameterNode(bpy.types.Node, NLParameterNode):
     bl_label = "Active Camera"
     nl_category = "Scene"
     nl_subcat = 'Camera'
+    nl_module = 'parameters'
 
     def init(self, context):
         NLParameterNode.init(self, context)
         self.outputs.new(NLGameObjectSocket.bl_idname, "Camera")
 
     def get_netlogic_class_name(self):
-        return "nodes.ParameterActiveCamera"
+        return "ULActiveCamera"
 
 
 _nodes.append(NLActiveCameraParameterNode)
@@ -5032,13 +5057,17 @@ class NLGetGravityNode(bpy.types.Node, NLParameterNode):
     bl_idname = "NLGetGravityNode"
     bl_label = "Get Gravity"
     nl_category = "Scene"
+    nl_module = 'parameters'
 
     def init(self, context):
         NLParameterNode.init(self, context)
         self.outputs.new(NLVec3FieldSocket.bl_idname, "Gravity")
 
     def get_netlogic_class_name(self):
-        return "nodes.GetGravity"
+        return "ULGetGravity"
+
+    def get_output_socket_varnames(self):
+        return ["OUT"]
 
 
 _nodes.append(NLGetGravityNode)
@@ -5050,6 +5079,7 @@ class NLGetCollectionNode(bpy.types.Node, NLParameterNode):
     bl_icon = 'OUTLINER_COLLECTION'
     nl_category = "Scene"
     nl_subcat = 'Collections'
+    nl_module = 'parameters'
 
     def init(self, context):
         NLParameterNode.init(self, context)
@@ -5060,7 +5090,10 @@ class NLGetCollectionNode(bpy.types.Node, NLParameterNode):
         return ['collection']
 
     def get_netlogic_class_name(self):
-        return "nodes.GetCollection"
+        return "ULGetCollection"
+
+    def get_output_socket_varnames(self):
+        return ["OUT"]
 
 
 _nodes.append(NLGetCollectionNode)
@@ -5071,6 +5104,7 @@ class NLGetCollectionObjectsNode(bpy.types.Node, NLParameterNode):
     bl_label = "Get Objects"
     nl_category = "Scene"
     nl_subcat = 'Collections'
+    nl_module = 'parameters'
 
     def init(self, context):
         NLParameterNode.init(self, context)
@@ -5081,7 +5115,10 @@ class NLGetCollectionObjectsNode(bpy.types.Node, NLParameterNode):
         return ['collection']
 
     def get_netlogic_class_name(self):
-        return "nodes.GetCollectionObjects"
+        return "ULGetCollectionObjects"
+
+    def get_output_socket_varnames(self):
+        return ["OUT"]
 
 
 _nodes.append(NLGetCollectionObjectsNode)
@@ -5092,6 +5129,7 @@ class NLGetCollectionObjectNamesNode(bpy.types.Node, NLParameterNode):
     bl_label = "Get Object Names"
     nl_category = "Scene"
     nl_subcat = 'Collections'
+    nl_module = 'parameters'
 
     def init(self, context):
         NLParameterNode.init(self, context)
@@ -5102,20 +5140,24 @@ class NLGetCollectionObjectNamesNode(bpy.types.Node, NLParameterNode):
         return ['collection']
 
     def get_netlogic_class_name(self):
-        return "nodes.GetCollectionObjectNames"
+        return "ULGetCollectionObjectNames"
+
+    def get_output_socket_varnames(self):
+        return ["OUT"]
 
 
 _nodes.append(NLGetCollectionObjectNamesNode)
 
 
-class NLSetOverlayCollection(bpy.types.Node, NLParameterNode):
+class NLSetOverlayCollection(bpy.types.Node, NLActionNode):
     bl_idname = "NLSetOverlayCollection"
     bl_label = "Set Overlay Collection"
     nl_category = "Scene"
     nl_subcat = 'Collections'
+    nl_module = 'parameters'
 
     def init(self, context):
-        NLParameterNode.init(self, context)
+        NLActionNode.init(self, context)
         self.inputs.new(NLConditionSocket.bl_idname, 'Condition')
         self.inputs.new(NLCameraSocket.bl_idname, 'Camera')
         self.inputs.new(NLCollectionSocket.bl_idname, 'Collection')
@@ -5125,20 +5167,21 @@ class NLSetOverlayCollection(bpy.types.Node, NLParameterNode):
         return ['condition', 'camera', 'collection']
 
     def get_netlogic_class_name(self):
-        return "nodes.ULSetOverlayCollection"
+        return "ULSetOverlayCollection"
 
 
 _nodes.append(NLSetOverlayCollection)
 
 
-class NLRemoveOverlayCollection(bpy.types.Node, NLParameterNode):
+class NLRemoveOverlayCollection(bpy.types.Node, NLActionNode):
     bl_idname = "NLRemoveOverlayCollection"
     bl_label = "Remove Overlay Collection"
     nl_category = "Scene"
     nl_subcat = 'Collections'
+    nl_module = 'parameters'
 
     def init(self, context):
-        NLParameterNode.init(self, context)
+        NLActionNode.init(self, context)
         self.inputs.new(NLConditionSocket.bl_idname, 'Condition')
         self.inputs.new(NLCollectionSocket.bl_idname, 'Collection')
         self.outputs.new(NLConditionSocket.bl_idname, 'Done')
@@ -5147,7 +5190,7 @@ class NLRemoveOverlayCollection(bpy.types.Node, NLParameterNode):
         return ['condition', 'collection']
 
     def get_netlogic_class_name(self):
-        return "nodes.ULRemoveOverlayCollection"
+        return "ULRemoveOverlayCollection"
 
 
 _nodes.append(NLRemoveOverlayCollection)
@@ -12026,6 +12069,7 @@ class NLActionStart3DSoundAdv(bpy.types.Node, NLActionNode):
     bl_label = "3D Sound"
     bl_icon = 'MUTE_IPO_ON'
     nl_category = "Sound"
+    nl_module = 'actions'
     advanced: bpy.props.BoolProperty(
         name='Advanced Features',
         description='Show advanced features for this sound. Hidden sockets will not be reset',
@@ -12040,11 +12084,8 @@ class NLActionStart3DSoundAdv(bpy.types.Node, NLActionNode):
         self.inputs.new(NLBooleanSocket.bl_idname, "Use Occlusion")
         self.inputs.new(NLSocketAlphaFloat.bl_idname, 'Transition')
         self.inputs[-1].value = .1
-        self.inputs.new(NLSocketAlphaFloat.bl_idname, 'Cutoff')
+        self.inputs.new(NLSocketAlphaFloat.bl_idname, 'Lowpass')
         self.inputs[-1].value = .1
-        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Type")
-        self.inputs[-1].value = 'default3D'
-        self.inputs[-1].enabled = False
         self.inputs.new(NLSocketLoopCount.bl_idname, "Mode")
         self.inputs.new(NLPositiveFloatSocket.bl_idname, "Pitch")
         self.inputs[-1].value = 1.0
@@ -12080,7 +12121,7 @@ class NLActionStart3DSoundAdv(bpy.types.Node, NLActionNode):
         return ["DONE", 'ON_FINISH', "HANDLE"]
 
     def get_netlogic_class_name(self):
-        return "nodes.ActionStart3DSoundAdv"
+        return "ULStartSound3D"
 
     def get_input_sockets_field_names(self):
         return [
@@ -12090,7 +12131,6 @@ class NLActionStart3DSoundAdv(bpy.types.Node, NLActionNode):
             'occlusion',
             'transition',
             'cutoff',
-            "device_custom",
             "loop_count",
             "pitch",
             "volume",
@@ -12104,11 +12144,56 @@ class NLActionStart3DSoundAdv(bpy.types.Node, NLActionNode):
 _nodes.append(NLActionStart3DSoundAdv)
 
 
+class ULPlaySpeaker(bpy.types.Node, NLActionNode):
+    bl_idname = "ULPlaySpeaker"
+    bl_label = "Start Speaker"
+    bl_icon = 'MUTE_IPO_ON'
+    nl_category = "Sound"
+    nl_module = 'actions'
+
+    def init(self, context):
+        NLActionNode.init(self, context)
+        self.inputs.new(NLConditionSocket.bl_idname, "Condition")
+        self.inputs.new(NLSpeakerSocket.bl_idname, "Speaker")
+        self.inputs.new(NLBooleanSocket.bl_idname, "Use Occlusion")
+        self.inputs.new(NLSocketAlphaFloat.bl_idname, 'Transition')
+        self.inputs[-1].value = .1
+        self.inputs.new(NLSocketAlphaFloat.bl_idname, 'Lowpass')
+        self.inputs[-1].value = .1
+        self.inputs.new(NLSocketLoopCount.bl_idname, "Mode")
+        self.outputs.new(NLConditionSocket.bl_idname, 'On Start')
+        self.outputs.new(NLConditionSocket.bl_idname, 'On Finish')
+        self.outputs.new(NLParameterSocket.bl_idname, 'Sound')
+
+    def update_draw(self):
+        self.inputs[3].enabled = self.inputs[4].enabled = self.inputs[2].value
+
+    def get_output_socket_varnames(self):
+        return ["DONE", 'ON_FINISH', "HANDLE"]
+
+    def get_netlogic_class_name(self):
+        return "ULStartSpeaker"
+
+    def get_input_sockets_field_names(self):
+        return [
+            "condition",
+            "speaker",
+            'occlusion',
+            'transition',
+            'cutoff',
+            "loop_count"
+        ]
+
+
+_nodes.append(ULPlaySpeaker)
+
+
 class NLActionStartSound(bpy.types.Node, NLActionNode):
     bl_idname = "NLActionStartSound"
     bl_label = "2D Sound"
     bl_icon = 'FILE_SOUND'
     nl_category = "Sound"
+    nl_module = 'actions'
 
     def init(self, context):
         NLActionNode.init(self, context)
@@ -12127,7 +12212,7 @@ class NLActionStartSound(bpy.types.Node, NLActionNode):
         return ["DONE", 'ON_FINISH', "HANDLE"]
 
     def get_netlogic_class_name(self):
-        return "nodes.ActionStartSound"
+        return "ULStartSound"
 
     def get_input_sockets_field_names(self):
         return [

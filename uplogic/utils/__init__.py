@@ -1,4 +1,5 @@
 from mathutils import Vector
+from bge import logic
 import bpy
 
 
@@ -116,3 +117,41 @@ def load_user_module(module_name, clsname):
         print(t)
     print('#######################################################')
     print(sys.modules[module_name].globals())  # {clsname}']()
+
+
+def check_game_object(query, scene=None):
+    if not scene:
+        scene = logic.getCurrentScene()
+    else:
+        scene = scene
+    if (query is None) or (query == ""):
+        return
+    if not is_invalid(scene):
+        # find from scene
+        return _name_query(scene.objects, query)
+
+
+def _name_query(named_items, query):
+    assert len(query) > 0
+    postfix = (query[0] == "*")
+    prefix = (query[-1] == "*")
+    infix = (prefix and postfix)
+    if infix:
+        token = query[1:-1]
+        for item in named_items:
+            if token in item.name:
+                return item
+    if prefix:
+        token = query[:-1]
+        for item in named_items:
+            if item.name.startswith(token):
+                return item
+    if postfix:
+        token = query[1:]
+        for item in named_items:
+            if item.name.endswith(token):
+                return item
+    for item in named_items:
+        if item.name == query:
+            return item
+    return None
