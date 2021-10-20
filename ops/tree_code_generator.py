@@ -233,20 +233,13 @@ class TreeCodeGenerator(object):
             line_writer.write_line("self.consumed = True")
         line_writer.close()
 
-        # try:
-        #     del sys.modules['mymodule']
-        # except:
-        #     print('This wont do yo')
-        #     pass
-
     def update_package(self):
         this_module_dir = os.path.dirname(__file__)
         bge_netlogic_dir = os.path.dirname(this_module_dir)
         uplogic_dir = os.path.join(bge_netlogic_dir, 'uplogic')
         import site
         uplogic_path = os.path.join(site.getsitepackages()[-1], 'uplogic')
-        # initfile = self.create_text_file("__init__.py")
-        # initfile.close()
+
         try:
             if os.path.isdir(uplogic_path):
                 shutil.rmtree(uplogic_path)

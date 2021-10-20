@@ -32,7 +32,19 @@ setup(
     author_email='lauersperg@gmx.at',
     url='https://github.com/IzaZed/Uchronian-Logic-UPBGE-Logic-Nodes',
     license='GPLv2',
-    packages=['uplogic'],
+    packages=[
+        'uplogic',
+        'uplogic.audio',
+        'uplogic.animation',
+        'uplogic.data',
+        'uplogic.events',
+        'uplogic.input',
+        'uplogic.nodes',
+        'uplogic.nodes.actions',
+        'uplogic.nodes.conditions',
+        'uplogic.nodes.parameters',
+        'uplogic.utils'
+    ],
     zip_safe=True,
     install_requires=['setuptools']
 )

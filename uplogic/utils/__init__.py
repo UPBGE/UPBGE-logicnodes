@@ -1,7 +1,16 @@
+'''TODO: Documentation
+'''
+
 from mathutils import Vector
+from bge.types import KX_GameObject as GameObject
 from bge import logic
 import bpy
+import json
 
+
+###############################################################################
+# LOGIC NODES
+###############################################################################
 
 class _Status(object):
     def __init__(self, name):
@@ -30,107 +39,6 @@ LO_AXIS_TO_VECTOR = {
 }
 
 
-def make_valid_name(name):
-    valid_characters = (
-        "abcdefghijklmnopqrstuvwxyz1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-    )
-    clsname = name.replace(' ', '_')
-    stripped_name = "".join(
-        [c for c in clsname if c in valid_characters]
-    )
-    return stripped_name
-
-
-def unload_nodes(a, b):
-    if not hasattr(bpy.types.Scene, 'nl_globals_initialized'):
-        return
-    delattr(bpy.types.Scene, 'nl_globals_initialized')
-
-
-def is_invalid(*a) -> bool:
-    for ref in a:
-        if ref is None or ref is STATUS_WAITING or ref == '':
-            return True
-        if not hasattr(ref, "invalid"):
-            continue
-        elif ref.invalid:
-            return True
-    return False
-
-
-def is_waiting(*args) -> bool:
-    if STATUS_WAITING in args:
-        return True
-    return False
-
-
-def not_met(*conditions) -> bool:
-    for c in conditions:
-        if (
-            c is STATUS_WAITING or
-            c is None or
-            c is False
-        ):
-            return True
-    return False
-
-
-# distance between objects or vectors or tuples. None if not computable
-def compute_distance(parama, paramb) -> float:
-    if is_invalid(parama):
-        return None
-    if is_invalid(paramb):
-        return None
-    if hasattr(parama, "getDistanceTo"):
-        return parama.getDistanceTo(paramb)
-    if hasattr(paramb, "getDistanceTo"):
-        return paramb.getDistanceTo(parama)
-    va = Vector(parama)
-    vb = Vector(paramb)
-    return (va - vb).length
-
-
-def debug(message: str):
-    if not hasattr(bpy.types.Scene, 'logic_node_settings'):
-        return
-    if not bpy.context or not bpy.context.scene:
-        return
-    if not bpy.context.scene.logic_node_settings.use_node_debug:
-        return
-    else:
-        print('[Logic Nodes] ' + message)
-
-
-def interpolate(a: float, b: float, fac: float) -> float:
-    if -.001 < a-b < .001:
-        return b
-    return (fac * b) + ((1-fac) * a)
-
-
-def load_user_module(module_name, clsname):
-    import sys
-    order = f'import {module_name}'
-    print(order)
-    exec(order)
-    print('#######################################################')
-    for t in globals():
-        print(t)
-    print('#######################################################')
-    print(sys.modules[module_name].globals())  # {clsname}']()
-
-
-def check_game_object(query, scene=None):
-    if not scene:
-        scene = logic.getCurrentScene()
-    else:
-        scene = scene
-    if (query is None) or (query == ""):
-        return
-    if not is_invalid(scene):
-        # find from scene
-        return _name_query(scene.objects, query)
-
-
 def _name_query(named_items, query):
     assert len(query) > 0
     postfix = (query[0] == "*")
@@ -155,3 +63,222 @@ def _name_query(named_items, query):
         if item.name == query:
             return item
     return None
+
+
+def check_game_object(query, scene=None):
+    '''TODO: Documentation
+    '''
+    if not scene:
+        scene = logic.getCurrentScene()
+    else:
+        scene = scene
+    if (query is None) or (query == ""):
+        return
+    if not is_invalid(scene):
+        # find from scene
+        return _name_query(scene.objects, query)
+
+
+def compute_distance(parama, paramb) -> float:
+    '''TODO: Documentation
+    '''
+    if is_invalid(parama):
+        return None
+    if is_invalid(paramb):
+        return None
+    if hasattr(parama, "getDistanceTo"):
+        return parama.getDistanceTo(paramb)
+    if hasattr(paramb, "getDistanceTo"):
+        return paramb.getDistanceTo(parama)
+    va = Vector(parama)
+    vb = Vector(paramb)
+    return (va - vb).length
+
+
+def debug(message: str):
+    if not hasattr(bpy.types.Scene, 'logic_node_settings'):
+        return
+    if not bpy.context or not bpy.context.scene:
+        return
+    if not bpy.context.scene.logic_node_settings.use_node_debug:
+        return
+    else:
+        print('[Logic Nodes] ' + message)
+
+
+def is_invalid(*a) -> bool:
+    for ref in a:
+        if ref is None or ref is STATUS_WAITING or ref == '':
+            return True
+        if not hasattr(ref, "invalid"):
+            continue
+        elif ref.invalid:
+            return True
+    return False
+
+
+def is_waiting(*args) -> bool:
+    if STATUS_WAITING in args:
+        return True
+    return False
+
+
+def make_valid_name(name):
+    valid_characters = (
+        "abcdefghijklmnopqrstuvwxyz1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+    )
+    clsname = name.replace(' ', '_')
+    stripped_name = "".join(
+        [c for c in clsname if c in valid_characters]
+    )
+    return stripped_name
+
+
+def not_met(*conditions) -> bool:
+    for c in conditions:
+        if (
+            c is STATUS_WAITING or
+            c is None or
+            c is False
+        ):
+            return True
+    return False
+
+
+def load_user_module(module_name, clsname):
+    import sys
+    order = f'import {module_name}'
+    print(order)
+    exec(order)
+    print('#######################################################')
+    for t in globals():
+        print(t)
+    print('#######################################################')
+    print(sys.modules[module_name].globals())  # {clsname}']()
+
+
+def unload_nodes(a, b):
+    if not hasattr(bpy.types.Scene, 'nl_globals_initialized'):
+        return
+    delattr(bpy.types.Scene, 'nl_globals_initialized')
+
+
+###############################################################################
+# DATA
+###############################################################################
+
+def load_json_as_dict(filepath):
+    if not filepath.endswith('.json'):
+        path = f'{filepath}.json'
+    if path:
+        f = open(path, 'r')
+        data = json.load(f)
+        f.close()
+        return data
+
+
+###############################################################################
+# SCENE
+###############################################################################
+
+def make_unique_light(old_lamp_ge: GameObject) -> GameObject:
+    '''TODO: Documentation
+    '''
+    scene = logic.getCurrentScene()
+    name = old_lamp_ge.name
+    old_lamp = old_lamp_ge.blenderObject
+    old_lamp.name = 'OLD_LAMP'
+
+    settings = [
+        'color',
+        'energy',
+        'diffuse_factor',
+        'specular_factor',
+        'volume_factor',
+        'shadow_soft_size',
+        'use_custom_distance',
+        'cutoff_distance',
+        'spot_size',
+        'spot_blend',
+        'show_cone',
+        'angle',
+        'shape',
+        'size',
+        'size_y',
+        'use_shadow',
+        'shadow_buffer_clip_start',
+        'shadow_buffer_bias',
+        'use_soft_shadows',
+        'use_contact_shadow',
+        'contact_shadow_distance',
+        'contact_shadow_bias',
+        'contact_shadow_thickness',
+        'shadow_cascade_count',
+        'shadow_cascade_fade',
+        'shadow_cascade_max_distance',
+        'shadow_cascade_exponent'
+    ]
+
+    types = {
+        'POINT': 'Point',
+        'AREA': 'Area',
+        'SPOT': 'Spot',
+        'SUN': 'Sun'
+    }
+
+    light_type = old_lamp.data.type
+    bpy.ops.object.light_add(type=light_type, location=old_lamp_ge.worldPosition, rotation=old_lamp_ge.worldOrientation.to_euler())
+    index = 1
+    light = None
+    while light is None:
+        if types[light_type] in bpy.data.objects[-index].name:
+            light = bpy.data.objects[-index]
+        index += 1
+    for attr in settings:
+        try:
+            setattr(light.data, attr, getattr(old_lamp.data, attr))
+        except Exception:
+            pass
+    light.name = name
+    new_lamp_ge = scene.convertBlenderObject(light)
+    for p in old_lamp_ge.getPropertyNames():
+        new_lamp_ge[p] = old_lamp_ge[p]
+    old_lamp_ge.endObject()
+    real_name = light.name
+    light.name = real_name
+    if old_lamp_ge.parent:
+        new_lamp_ge.setParent(old_lamp_ge.parent)
+    return new_lamp_ge
+
+
+def get_instance_by_distance(game_obj: GameObject, name: str):
+    '''TODO: Documentation
+    '''
+    objs = []
+    distances = {}
+    for obj in logic.getCurrentScene().objects:
+        if obj.name == name:
+            objs.append(obj)
+    for obj in objs:
+        distances[game_obj.getDistanceTo(obj)] = obj
+    return distances[min(distances.keys())]
+
+
+###############################################################################
+# MATH
+###############################################################################
+
+def interpolate(a: float, b: float, fac: float) -> float:
+    '''TODO: Documentation
+    '''
+    if -.001 < a-b < .001:
+        return b
+    return (fac * b) + ((1-fac) * a)
+
+
+def lerp(a: float, b: float, fac: float) -> float:
+    '''TODO: Documentation
+    '''
+    if -.001 < a-b < .001:
+        return b
+    return (fac * b) + ((1-fac) * a)

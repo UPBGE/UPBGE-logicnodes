@@ -21,7 +21,7 @@ class ULLogicTree(ULLogicContainer):
         self._lastuid = 0
         self._owner = None
         self._max_blocking_loop_count = 0
-        self._events = GlobalDB.retrieve('ULEventService')
+        self._events = GlobalDB.retrieve('uplogic.events')
         self.keyboard = None
         self.mouse = None
         self.keyboard_events = None
@@ -50,10 +50,10 @@ class ULLogicTree(ULLogicContainer):
             self.clear_events()
 
     def create_aud_system(self):
-        aud_sys = GlobalDB.retrieve('.uplogic_audio').get('ln_audio_system')
+        aud_sys = GlobalDB.retrieve('uplogic.audio').get('nl_audio_system')
         if not aud_sys:
             self.aud_system_owner = True
-            return ULAudioSystem('ln_audio_system')
+            return ULAudioSystem('nl_audio_system')
         return aud_sys
 
     def init_glob_cats(self):
@@ -264,9 +264,6 @@ class ULLogicTree(ULLogicContainer):
             cell.reset()
             if cell.has_status(STATUS_WAITING):
                 cells.append(cell)
-        # update the sound system
-        if self.aud_system_owner:
-            self.audio_system.update()
         # pulse subnetworks
         for network in self.sub_networks:
             if network._owner.invalid:

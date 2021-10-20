@@ -143,6 +143,23 @@ def _update_all_logic_tree_code():
     except Exception:
         utils.error("Unknown Error, abort generating Network code")
 
+
+@persistent
+def _reload_texts(self, context):
+    if not hasattr(bpy.types.Scene, 'logic_node_settings'):
+        return
+    if not bpy.context or not bpy.context.scene:
+        return
+    if not bpy.context.scene.logic_node_settings.use_reload_text:
+        return
+    else:
+        for t in bpy.data.texts:
+            if t.filepath:
+                with open(t.filepath) as f:
+                    t.clear()
+                    t.write(f.read())
+
+
 @persistent
 def _generate_on_game_start(self, context):
     utils.notify('Building Logic Trees on Startup...')
@@ -400,6 +417,7 @@ class NLAddonSettings(bpy.types.PropertyGroup):
     )
     use_node_debug: bpy.props.BoolProperty(default=True)
     use_node_notify: bpy.props.BoolProperty(default=True)
+    use_reload_text: bpy.props.BoolProperty(default=False)
     use_generate_on_open: bpy.props.BoolProperty(default=False)
     use_generate_all: bpy.props.BoolProperty(default=True)
     auto_compile: bpy.props.BoolProperty(default=False)
@@ -447,6 +465,11 @@ class LogicNodesAddonPreferences(bpy.types.AddonPreferences):
             context.scene.logic_node_settings,
             'use_custom_node_color',
             text="Dark Node Color"
+        )
+        ui_col.prop(
+            context.scene.logic_node_settings,
+            'use_reload_text',
+            text="Reload Texts on Game Start"
         )
         debug_col.prop(
             context.scene.logic_node_settings,
@@ -624,6 +647,7 @@ def _list_menu_nodes():
 # blender add-on registration callback
 def register():
     bpy.app.handlers.game_pre.append(_generate_on_game_start)
+    bpy.app.handlers.game_pre.append(_reload_texts)
     for cls in _registered_classes:
         # print("Registering... {}".format(cls.__name__))
         bpy.utils.register_class(cls)
@@ -673,8 +697,9 @@ def unregister():
     utils.debug('Removing Game Start Compile handler...')
     remove_f = []
     filter(lambda a: a.__name__ == '_generate_on_game_start', bpy.app.handlers.game_pre)
+    filter(lambda a: a.__name__ == '_reload_texts', bpy.app.handlers.game_pre)
     for f in bpy.app.handlers.game_pre:
-        if f.__name__ == '_generate_on_game_start':
+        if f.__name__ == '_generate_on_game_start' or f.__name__ == '_reload_texts':
             remove_f.append(f)
     for f in remove_f:
         bpy.app.handlers.game_pre.remove(f)

@@ -1,3 +1,6 @@
+'''TODO: Documentation
+'''
+
 from bge import logic
 import bpy
 import os
@@ -6,6 +9,8 @@ from uplogic.utils import unload_nodes
 
 
 class GlobalDB(object):
+    '''TODO: Documentation
+    '''
     index: int
 
     class LineBuffer(object):
@@ -42,6 +47,8 @@ class GlobalDB(object):
 
     @classmethod
     def retrieve(cls, fname):
+        '''TODO: Documentation
+        '''
         db = cls.shared_dbs.get(fname)
         if db is None:
             db = GlobalDB(fname)
@@ -50,10 +57,14 @@ class GlobalDB(object):
 
     @classmethod
     def get_storage_dir(cls):
+        '''TODO: Documentation
+        '''
         return cls.storage_dir
 
     @classmethod
     def put_value(cls, key, value, buffer):
+        '''TODO: Documentation
+        '''
         type_name = str(type(value))
         serializer = cls.serializers.get(type_name)
         if not serializer:
@@ -65,6 +76,8 @@ class GlobalDB(object):
 
     @classmethod
     def read_existing(cls, fpath, intodic):
+        '''TODO: Documentation
+        '''
         lines = []
         with open(fpath, "r") as f:
             lines.extend(f.read().splitlines())
@@ -83,6 +96,8 @@ class GlobalDB(object):
 
     @classmethod
     def write_put(cls, fname, key, value):
+        '''TODO: Documentation
+        '''
         type_name = str(type(value))
         serializer = cls.serializers.get(type_name)
         if not serializer:
@@ -99,6 +114,8 @@ class GlobalDB(object):
 
     @classmethod
     def read(cls, fname, intodic):
+        '''TODO: Documentation
+        '''
         fpath = os.path.join(
             cls.get_storage_dir(),
             "{}.logdb.txt".format(fname)
@@ -110,6 +127,8 @@ class GlobalDB(object):
 
     @classmethod
     def compress(cls, fname, data):
+        '''TODO: Documentation
+        '''
         buffer = GlobalDB.LineBuffer()
         for key in data:
             value = data[key]
@@ -143,12 +162,18 @@ class GlobalDB(object):
             GlobalDB.compress(self.fname, self.data)
 
     def get(self, key, default_value=None):
+        '''TODO: Documentation
+        '''
         return self.data.get(key, default_value)
 
     def clear(self):
+        '''TODO: Documentation
+        '''
         self.data.clear()
 
     def put(self, key, value, persist=False):
+        '''TODO: Documentation
+        '''
         self.data[key] = value
         if persist:
             old_value = self.data.get(key)
@@ -157,10 +182,16 @@ class GlobalDB(object):
                 GlobalDB.write_put(self.fname, key, value)
 
     def check(self, key):
+        '''TODO: Documentation
+        '''
         return key in self.data
 
     def pop(self, key, default):
+        '''TODO: Documentation
+        '''
         return self.data.pop(key, None)
 
     def log(self):
+        '''TODO: Documentation
+        '''
         print(self.data)

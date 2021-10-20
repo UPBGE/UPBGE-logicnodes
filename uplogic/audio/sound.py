@@ -1,3 +1,6 @@
+'''TODO: Documentation
+'''
+
 from bge import logic
 from bge.types import KX_GameObject as GameObject
 from mathutils import Vector
@@ -8,6 +11,9 @@ import aud
 
 
 class ULSound():
+    '''TODO: Documentation
+    '''
+
     sound = None
     finished: bool
     pitch: float
@@ -15,10 +21,14 @@ class ULSound():
     aud_system: ULAudioSystem
 
     def stop(self):
+        '''TODO: Documentation
+        '''
         self.sound.stop()
 
     def get_aud_sys(self, name: str):
-        aud_systems = GlobalDB.retrieve('.uplogic_audio')
+        '''TODO: Documentation
+        '''
+        aud_systems = GlobalDB.retrieve('uplogic.audio')
         if aud_systems.check(name):
             return aud_systems.get(name)
         else:
@@ -26,6 +36,8 @@ class ULSound():
 
 
 class ULSound2D(ULSound):
+    '''TODO: Documentation
+    '''
     sound: aud.Sound
 
     def __init__(
@@ -52,6 +64,8 @@ class ULSound2D(ULSound):
         self.aud_system.add(self)
 
     def update(self):
+        '''TODO: Documentation
+        '''
         handle = self.sound
         if not handle.status:
             self.finished = True
@@ -62,6 +76,8 @@ class ULSound2D(ULSound):
 
 
 class ULSound3D(ULSound):
+    '''TODO: Documentation
+    '''
     sounds = []
     speaker: GameObject
     occlusion: bool
@@ -127,6 +143,8 @@ class ULSound3D(ULSound):
         self.aud_system.add(self)
 
     def update(self):
+        '''TODO: Documentation
+        '''
         speaker = self.speaker
         if not speaker:
             self.finished = True
@@ -208,5 +226,7 @@ class ULSound3D(ULSound):
                 )
 
     def stop(self):
+        '''TODO: Documentation
+        '''
         for sound in self.sounds:
             sound.stop()

@@ -940,20 +940,6 @@ class NLGenerateLogicNetworkOperatorAll(bpy.types.Operator):
         return BLTextBuffer(blender_text_data)
 
     def execute(self, context):
-        # ensure that the local "bgelogic" folder exists
-        local_bgelogic_folder = bpy.path.abspath("//bgelogic")
-        if not os.path.exists(local_bgelogic_folder):
-            try:
-                os.mkdir(local_bgelogic_folder)
-            except PermissionError:
-                self.report(
-                    {"ERROR"},
-                    "Cannot generate the code because the blender file has "
-                    "not been saved or the user has no write permission for "
-                    "the containing folder."
-                )
-                utils.set_compile_status(utils.TREE_FAILED)
-                return {"FINISHED"}
         for tree in bpy.data.node_groups:
             if tree.bl_idname == bge_netlogic.ui.BGELogicTree.bl_idname:
                 try:

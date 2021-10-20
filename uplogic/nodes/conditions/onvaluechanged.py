@@ -32,8 +32,6 @@ class ULOnValueChanged(ULConditionNode):
 
     def evaluate(self):
         curr = self.get_socket_value(self.current_value)
-        if is_waiting(curr):
-            return
         self._set_ready()
         if not self.initialize:
             self.initialize = False

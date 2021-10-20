@@ -1,3 +1,6 @@
+'''TODO: Documentation
+'''
+
 from bge import logic
 from uplogic.data.globaldb import GlobalDB
 import aud
@@ -16,16 +19,20 @@ DISTANCE_MODELS = {
 
 
 class ULAudioSystem(object):
+    '''TODO: Documentation
+    '''
     def __init__(self, name: str):
         self.active_sounds = []
-        self.listener = logic.getCurrentScene().active_camera
+        scene = logic.getCurrentScene()
+        self.listener = scene.active_camera
         self.old_lis_pos = self.listener.worldPosition.copy()
         self.device = aud.Device()
         self.device.distance_model = aud.DISTANCE_MODEL_INVERSE_CLAMPED
         self.device.speed_of_sound = bpy.context.scene.audio_doppler_speed
         self.device.doppler_factor = bpy.context.scene.audio_doppler_factor
-        GlobalDB.retrieve('.uplogic_audio').put(name, self)
+        GlobalDB.retrieve('uplogic.audio').put(name, self)
         bpy.app.handlers.game_post.append(self.shutdown)
+        scene.pre_draw.append(self.update)
 
     def get_distance_model(self, name):
         return DISTANCE_MODELS.get(name, aud.DISTANCE_MODEL_INVERSE_CLAMPED)
@@ -41,16 +48,15 @@ class ULAudioSystem(object):
         self.old_lis_pos = wpos
         return vel
 
-    def update(self):
-        c = logic.getCurrentScene().active_camera
-        self.listener = c
+    def update(self, cam):
+        self.listener = cam
         if not self.active_sounds:
             return  # do not update if no sound has been installed
         # update the listener data
         dev = self.device
-        listener_vel = self.compute_listener_velocity(c)
-        dev.listener_location = c.worldPosition
-        dev.listener_orientation = c.worldOrientation.to_quaternion()
+        listener_vel = self.compute_listener_velocity(cam)
+        dev.listener_location = cam.worldPosition
+        dev.listener_orientation = cam.worldOrientation.to_quaternion()
         dev.listener_velocity = listener_vel
         for s in self.active_sounds:
             s.update()

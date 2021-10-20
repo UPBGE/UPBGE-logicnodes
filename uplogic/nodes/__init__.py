@@ -14,6 +14,7 @@ from uplogic.utils import is_waiting
 from uplogic.utils import not_met
 from uplogic.utils import interpolate
 from uplogic.utils import check_game_object
+from uplogic.utils import make_unique_light
 from uplogic.utils import _name_query
 import bge
 import bpy
@@ -412,35 +413,6 @@ class ULConditionNode(ULLogicNode):
 ###############################################################################
 # Unordered
 ###############################################################################
-
-
-class ParameterWorldPosition(ULParameterNode):
-    def __init__(self):
-        ULParameterNode.__init__(self)
-        self.camera = None
-        self.screen_x = None
-        self.screen_y = None
-        self.world_z = None
-
-    def evaluate(self):
-        self._set_ready()
-        camera = self.get_socket_value(self.camera)
-        screen_x = self.get_socket_value(self.screen_x)
-        screen_y = self.get_socket_value(self.screen_y)
-        world_z = self.get_socket_value(self.world_z)
-        if (
-            is_invalid(camera) or
-            (screen_x is None) or
-            (screen_y is None) or
-            (world_z is None)
-        ):
-            self._set_value(None)
-        else:
-            direction = camera.getScreenVect(screen_x, screen_y)
-            origin = camera.worldPosition
-            aim = direction * -world_z
-            point = origin + (aim)
-            self._set_value(point)
 
 
 class ULCursorBehavior(ULActionNode):
@@ -7150,70 +7122,7 @@ class ULMakeUniqueLight(ULActionNode):
             return
         self._set_ready()
 
-        scene = logic.getCurrentScene()
-        name = old_lamp_ge.name
-        old_lamp = old_lamp_ge.blenderObject
-        old_lamp.name = 'OLD_LAMP'
-
-        settings = [
-            'color',
-            'energy',
-            'diffuse_factor',
-            'specular_factor',
-            'volume_factor',
-            'shadow_soft_size',
-            'use_custom_distance',
-            'cutoff_distance',
-            'spot_size',
-            'spot_blend',
-            'show_cone',
-            'angle',
-            'shape',
-            'size',
-            'size_y'
-            'use_shadow',
-            'shadow_buffer_clip_start',
-            'shadow_buffer_bias',
-            'use_soft_shadows',
-            'use_contact_shadow',
-            'contact_shadow_distance',
-            'contact_shadow_bias',
-            'contact_shadow_thickness',
-            'shadow_cascade_count',
-            'shadow_cascade_fade',
-            'shadow_cascade_max_distance',
-            'shadow_cascade_exponent',
-        ]
-
-        types = {
-            'POINT': 'Point',
-            'AREA': 'Area',
-            'SPOT': 'Spot',
-            'SUN': 'Sun'
-        }
-
-        light_type = old_lamp.data.type
-        bpy.ops.object.light_add(type=light_type, location=old_lamp_ge.worldPosition, rotation=old_lamp_ge.worldOrientation.to_euler())
-        index = 1
-        light = None
-        while light is None:
-            if types[light_type] in bpy.data.objects[-index].name:
-                light = bpy.data.objects[-index]
-            index += 1
-        for attr in settings:
-            try:
-                setattr(light.data, attr, getattr(old_lamp.data, attr))
-            except Exception:
-                pass
-        light.name = name
-        new_lamp_ge = scene.convertBlenderObject(light)
-        for p in old_lamp_ge.getPropertyNames():
-            new_lamp_ge[p] = old_lamp_ge[p]
-        old_lamp_ge.endObject()
-        real_name = light.name
-        light.name = real_name
-        if old_lamp_ge.parent:
-            new_lamp_ge.setParent(old_lamp_ge.parent)
+        make_unique_light(old_lamp_ge)
 
         self.done = True
 

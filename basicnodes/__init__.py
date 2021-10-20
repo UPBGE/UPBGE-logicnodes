@@ -5049,6 +5049,8 @@ class NLActiveCameraParameterNode(bpy.types.Node, NLParameterNode):
     def get_netlogic_class_name(self):
         return "ULActiveCamera"
 
+    def get_output_socket_varnames(self):
+        return ["OUT"]
 
 _nodes.append(NLActiveCameraParameterNode)
 
@@ -12144,8 +12146,8 @@ class NLActionStart3DSoundAdv(bpy.types.Node, NLActionNode):
 _nodes.append(NLActionStart3DSoundAdv)
 
 
-class ULPlaySpeaker(bpy.types.Node, NLActionNode):
-    bl_idname = "ULPlaySpeaker"
+class NLPlaySpeaker(bpy.types.Node, NLActionNode):
+    bl_idname = "NLPlaySpeaker"
     bl_label = "Start Speaker"
     bl_icon = 'MUTE_IPO_ON'
     nl_category = "Sound"
@@ -12185,7 +12187,7 @@ class ULPlaySpeaker(bpy.types.Node, NLActionNode):
         ]
 
 
-_nodes.append(ULPlaySpeaker)
+_nodes.append(NLPlaySpeaker)
 
 
 class NLActionStartSound(bpy.types.Node, NLActionNode):
