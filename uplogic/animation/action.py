@@ -37,9 +37,9 @@ class ULAction():
     ):
         self.act_system = self.get_act_sys(self.act_system)
         self.layer = layer
-        if ULActionSystem.check_layer(self):
-            return
         self.game_object = game_object
+        ULActionSystem.check_layer(self)
+        layer = self.layer
         self.acion_name = action_name
         self.start_frame = start_frame
         self.end_frame = end_frame

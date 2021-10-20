@@ -31,7 +31,8 @@ class ULActionSystem():
     @classmethod
     def check_layer(cls, action):
         layers = cls.layers.get(action.game_object, [])
-        return action.layer in layers
+        while action.layer in layers:
+            action.layer += 1
 
     def update(self, cam):
         for action in self.actions:
