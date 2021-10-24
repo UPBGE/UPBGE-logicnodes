@@ -3,9 +3,10 @@
 
 from mathutils import Vector
 from bge.types import KX_GameObject as GameObject
-from bge import logic
+from bge import logic, render
 import bpy
 import json
+import math
 
 
 ###############################################################################
@@ -282,3 +283,78 @@ def lerp(a: float, b: float, fac: float) -> float:
     if -.001 < a-b < .001:
         return b
     return (fac * b) + ((1-fac) * a)
+
+
+def vec_abs(vec):
+    vec = vec.copy()
+    vec.x = abs(vec.x)
+    vec.y = abs(vec.y)
+    vec.z = abs(vec.z)
+    return vec
+
+
+def vec_angle(a: Vector, b: Vector) -> float:
+    rad: float = a.angle(b)
+    deg: float = rad * 180/math.pi
+    return deg
+
+
+def vec_direction(a, b, local=False):
+    start = a.worldPosition.copy() if hasattr(a, "worldPosition") else a
+    if hasattr(b, "worldPosition"):
+        b = b.worldPosition.copy()
+    if local:
+        b = start + b
+    d = b - start
+    d.normalize()
+    return d
+
+
+def ray_data(origin, dest, local, dist):
+    start = origin.worldPosition.copy() if hasattr(origin, "worldPosition") else origin
+    if hasattr(dest, "worldPosition"):
+        dest = dest.worldPosition.copy()
+    if local:
+        dest = start + dest
+    d = dest - start
+    d.normalize()
+    return d, dist if dist else (start - dest).length, dest
+
+
+def raycast(
+    caster,
+    origin,
+    dest,
+    distance=0,
+    property_name='',
+    xray=False,
+    local=False,
+    visualize=False
+):
+    direction, distance, dest = ray_data(origin, dest, local, distance)
+    obj, point, normal = caster.rayCast(
+        dest,
+        origin,
+        distance,
+        property_name,
+        xray=xray
+    )
+    if visualize:
+        origin = getattr(origin, 'worldPosition', origin)
+        line_dest: Vector = direction.copy()
+        line_dest.x *= distance
+        line_dest.y *= distance
+        line_dest.z *= distance
+        line_dest = line_dest + origin
+        render.drawLine(
+            origin,
+            line_dest,
+            [1, 0, 0, 1]
+        )
+        if obj:
+            render.drawLine(
+                origin,
+                point,
+                [0, 1, 0, 1]
+            )
+    return obj, point, normal, direction

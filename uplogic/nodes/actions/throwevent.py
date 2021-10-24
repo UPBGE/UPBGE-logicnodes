@@ -1,3 +1,4 @@
+from uplogic.events import throw
 from uplogic.nodes import ULActionNode
 from uplogic.nodes import ULOutSocket
 from uplogic.utils import STATUS_INVALID
@@ -23,16 +24,10 @@ class ULTrowEvent(ULActionNode):
     def evaluate(self):
         self.done = False
         condition = self.get_socket_value(self.condition)
-        osubject = self.old_subject
-        events = self.network._events
         if not_met(condition):
-            if osubject in events.data:
-                if events.data[osubject][2] is self:
-                    events.pop(osubject, None)
             self._set_ready()
             return
         subject = self.get_socket_value(self.subject)
-        self.old_subject = subject
         body = self.get_socket_value(self.body)
         if body is STATUS_INVALID:
             body = None
@@ -42,5 +37,5 @@ class ULTrowEvent(ULActionNode):
         if is_invalid(subject):
             return
         self._set_ready()
-        events.put(subject, [body, target, self], False)
+        throw(subject, body, target)
         self.done = True

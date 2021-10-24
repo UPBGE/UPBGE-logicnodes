@@ -43,11 +43,6 @@ class ULLogicTree(ULLogicContainer):
         self.sub_networks = []  # a list of networks updated by this network
         self.capslock_pressed = False
         self.evaluated_cells = 0
-        bpy.app.handlers.depsgraph_update_post.append(self.on_scene_update)
-
-    def on_scene_update(self, a, b):
-        if self._do_remove:
-            self.clear_events()
 
     def create_aud_system(self):
         aud_sys = GlobalDB.retrieve('uplogic.audio').get('nl_audio_system')
@@ -166,7 +161,6 @@ class ULLogicTree(ULLogicContainer):
         return self.stopped
 
     def stop(self, network=None):
-        self.clear_events()
         if self.stopped:
             return
         self._time_then = None
@@ -177,15 +171,6 @@ class ULLogicTree(ULLogicContainer):
     def _generate_cell_uid(self):
         self._lastuid += 1
         return self._lastuid
-
-    def clear_events(self):
-        li = []
-        for m in self._events.data:
-            if self._events.data[m][2] in self._cells:
-                li.append(m)
-        for m in li:
-            self._events.pop(m, None)
-        del li
 
     def add_cell(self, cell):
         self._cells.append(cell)
@@ -203,7 +188,6 @@ class ULLogicTree(ULLogicContainer):
         self.timeline += dtime
         self.time_per_frame = dtime
         if self._owner.invalid:
-            self.clear_events()
             debug("Network Owner removed from game. Shutting down the network")
             return True
         self.keyboard = logic.keyboard

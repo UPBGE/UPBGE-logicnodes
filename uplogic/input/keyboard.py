@@ -10,7 +10,18 @@ keys_active = {}
 def key_event(key):
     '''TODO: Documentation
     '''
-    return logic.keyboard.inputs[getattr(events, f'{key}KEY')]
+    return logic.keyboard.inputs[
+        getattr(
+            events, f'{key}KEY',
+            (getattr(events, f'PAD{key}', None))
+        )
+    ]
+
+
+def pad_event(key):
+    '''TODO: Documentation
+    '''
+    return logic.keyboard.inputs[getattr(events, f'PAD{key}')]
 
 
 def key_tap(key):
@@ -23,6 +34,12 @@ def key_down(key):
     '''TODO: Documentation
     '''
     return key_event(key).active
+
+
+def key_up(key):
+    '''TODO: Documentation
+    '''
+    return key_event(key).released
 
 
 def key_pulse(key, time=.4):

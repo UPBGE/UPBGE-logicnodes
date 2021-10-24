@@ -1,10 +1,26 @@
 from bge import logic
+from random import randint, random
 from bge.types import KX_GameObject as GameObject
 from uplogic.animation import ULActionSystem
 from uplogic.data import GlobalDB
 
 
+PLAY_MODES = {
+    'play': logic.KX_ACTION_MODE_PLAY,
+    'pingpong': logic.KX_ACTION_MODE_PING_PONG,
+    'loop': logic.KX_ACTION_MODE_LOOP
+}
+
+
+BLEND_MODES = {
+    'blend': logic.KX_ACTION_BLEND_BLEND,
+    'add': logic.KX_ACTION_BLEND_ADD
+}
+
+
 class ULAction():
+    '''TODO: Documentation
+    '''
     game_object = None
     act_system = 'default'
     acion_name: str
@@ -13,13 +29,13 @@ class ULAction():
     layer: int
     priority: int
     blendin: float
-    play_mode: int
+    play_mode: str
     blend_mode: int
     speed: float
     old_speed: float = 0
     layer_weight: float
     old_layer_weight: float = 0
-    frame: float
+    frame: float = 0
 
     def __init__(
         self,
@@ -27,18 +43,21 @@ class ULAction():
         action_name: str,
         start_frame: int = 0,
         end_frame: int = 250,
-        layer: int = 0,
+        layer: int = -1,
         priority: int = 0,
         blendin: float = 0,
-        play_mode: int = logic.KX_ACTION_MODE_LOOP,
+        play_mode: str = 'play',
         speed: float = 1,
         layer_weight: float = 1,
-        blend_mode: int = logic.KX_ACTION_BLEND_BLEND,
+        blend_mode: str = 'blend',
     ):
         self.act_system = self.get_act_sys(self.act_system)
         self.layer = layer
         self.game_object = game_object
-        ULActionSystem.check_layer(self)
+        if self.layer == -1:
+            ULActionSystem.find_free_layer(self)
+        elif ULActionSystem.check_layer(self):
+            return
         layer = self.layer
         self.acion_name = action_name
         self.start_frame = start_frame
@@ -58,13 +77,13 @@ class ULAction():
                 action_name,
                 start_frame,
                 end_frame,
+                play_mode=PLAY_MODES[play_mode],
+                speed=speed,
                 layer=layer,
                 priority=priority,
                 blendin=blendin,
-                play_mode=play_mode,
-                speed=speed,
                 layer_weight=1-layer_weight,
-                blend_mode=blend_mode)
+                blend_mode=BLEND_MODES[blend_mode])
             self._started = True
             self._frame = start_frame
         self.act_system.add(self)
@@ -104,7 +123,11 @@ class ULAction():
                 layer_weight != self.old_layer_weight or
                 speed != self.old_speed
             ):
-                reset_frame = start_frame if play_mode == logic.KX_ACTION_MODE_LOOP else end_frame
+                reset_frame = (
+                    start_frame if
+                    play_mode == logic.KX_ACTION_MODE_LOOP else
+                    end_frame
+                )
                 next_frame = (
                     playing_frame + speed
                     if
@@ -120,27 +143,50 @@ class ULAction():
                     layer=layer,
                     priority=priority,
                     blendin=blendin,
-                    play_mode=play_mode,
+                    play_mode=PLAY_MODES[play_mode],
                     speed=speed,
                     layer_weight=1 - layer_weight,
-                    blend_mode=blend_mode)
+                    blend_mode=BLEND_MODES[blend_mode]
+                )
                 game_object.setActionFrame(next_frame, layer)
-            if play_mode == 0:
+            if play_mode == 'play':
                 if end_frame > start_frame:  # play 0 to 100
                     is_near_end = (playing_frame >= (end_frame - 0.5))
                 else:  # play 100 to 0
                     is_near_end = (playing_frame <= (end_frame + 0.5))
                 if is_near_end:
                     self.act_system.remove(self)
+        self.frame = game_object.getActionFrame(layer)
         self.old_layer_weight = layer_weight
         self.old_speed = speed
 
     def stop(self):
         self.game_object.stopAction(self.layer)
 
+    def randomize_frame(self, min=None, max=None):
+        if min is None:
+            min = self.start_frame
+        if max is None:
+            max = self.end_frame
+        frame = randint(min, max)
+        self.frame = frame
+        self.game_object.setActionFrame(
+            frame,
+            self.layer
+        )
+
+    def randomize_speed(self, min=.9, max=1.1):
+        delta = max - min
+        self.speed = min + (delta * random())
+
+    def set_frame(self, frame):
+        self.frame = frame
+        self.game_object.setActionFrame(
+            frame,
+            self.layer
+        )
+
     def get_act_sys(self, name: str):
-        '''TODO: Documentation
-        '''
         act_systems = GlobalDB.retrieve('uplogic.animation')
         if act_systems.check(name):
             return act_systems.get(name)

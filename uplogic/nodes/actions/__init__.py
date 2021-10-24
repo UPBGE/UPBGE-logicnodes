@@ -16,3 +16,6 @@ from .startsound3d import ULStartSound3D
 from .startspeaker import ULStartSpeaker
 from .throwevent import ULTrowEvent
 from .removeoverlaycollection import ULRemoveOverlayCollection
+from .cursorbehavior import ULCursorBehavior
+from .runpython import ULRunPython
+from .setpyinstanceattr import ULSetPyInstanceAttr

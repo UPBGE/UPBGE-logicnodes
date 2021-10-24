@@ -49,10 +49,11 @@ class GlobalDB(object):
     def retrieve(cls, fname):
         '''TODO: Documentation
         '''
-        db = cls.shared_dbs.get(fname)
-        if db is None:
-            db = GlobalDB(fname)
-            cls.shared_dbs[fname] = db
+        db = cls.shared_dbs.get(fname, GlobalDB(fname))
+        # if db is None:
+        #     db = GlobalDB(fname)
+        #     cls.shared_dbs[fname] = db
+        cls.shared_dbs[fname] = db
         return db
 
     @classmethod
@@ -126,12 +127,12 @@ class GlobalDB(object):
             return 0
 
     @classmethod
-    def compress(cls, fname, data):
+    def compress(cls, fname, content):
         '''TODO: Documentation
         '''
         buffer = GlobalDB.LineBuffer()
-        for key in data:
-            value = data[key]
+        for key in content:
+            value = content[key]
             cls.put_value(key, value, buffer)
         fpath = os.path.join(
             cls.get_storage_dir(),
@@ -142,7 +143,7 @@ class GlobalDB(object):
 
     def __init__(self, file_name):
         self.fname = file_name
-        self.data = {}
+        self.content = {}
 
         filter(
             lambda a: a.__name__ == 'unload_nodes',
@@ -156,27 +157,32 @@ class GlobalDB(object):
             bpy.app.handlers.game_post.remove(f)
         bpy.app.handlers.game_post.append(unload_nodes)
 
-        log_size = GlobalDB.read(self.fname, self.data)
-        if log_size > (5 * len(self.data)):
+        log_size = GlobalDB.read(self.fname, self.content)
+        if log_size > (5 * len(self.content)):
             debug("Compressing sld {}".format(file_name))
-            GlobalDB.compress(self.fname, self.data)
+            GlobalDB.compress(self.fname, self.content)
 
     def get(self, key, default_value=None):
         '''TODO: Documentation
         '''
-        return self.data.get(key, default_value)
+        # print(f'First Here with {key.__class__} as {key}')
+        if not key:
+            # print('Key Invalid')
+            return default_value
+        # print('Then Here')
+        return self.content.get(key, default_value)
 
     def clear(self):
         '''TODO: Documentation
         '''
-        self.data.clear()
+        self.content.clear()
 
     def put(self, key, value, persist=False):
         '''TODO: Documentation
         '''
-        self.data[key] = value
+        self.content[key] = value
         if persist:
-            old_value = self.data.get(key)
+            old_value = self.content.get(key)
             changed = old_value != value
             if changed:
                 GlobalDB.write_put(self.fname, key, value)
@@ -184,14 +190,17 @@ class GlobalDB(object):
     def check(self, key):
         '''TODO: Documentation
         '''
-        return key in self.data
+        valid = key in self.content
+        return valid
 
-    def pop(self, key, default):
+    def pop(self, key, default=None):
         '''TODO: Documentation
         '''
-        return self.data.pop(key, None)
+        if not key:
+            return default
+        return self.content.pop(key, default)
 
     def log(self):
         '''TODO: Documentation
         '''
-        print(self.data)
+        print(self.content)

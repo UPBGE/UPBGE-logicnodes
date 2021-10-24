@@ -3,6 +3,8 @@ from uplogic.data import GlobalDB
 
 
 class ULActionSystem():
+    '''TODO: Documentation
+    '''
     actions: list
     weight: float = 1
     layers = {}
@@ -29,20 +31,30 @@ class ULActionSystem():
         cls.layers[action.game_object] = layers
 
     @classmethod
-    def check_layer(cls, action):
+    def find_free_layer(cls, action):
         layers = cls.layers.get(action.game_object, [])
+        action.layer = 0
         while action.layer in layers:
             action.layer += 1
+
+    @classmethod
+    def check_layer(cls, action):
+        layers = cls.layers.get(action.game_object, [])
+        return action.layer in layers
 
     def update(self, cam):
         for action in self.actions:
             action.update()
 
     def add(self, action):
+        '''TODO: Documentation
+        '''
         self.actions.append(action)
         ULActionSystem.lock_layer(action)
 
     def remove(self, action):
+        '''TODO: Documentation
+        '''
         action.stop()
         self.actions.remove(action)
         ULActionSystem.free_layer(action)

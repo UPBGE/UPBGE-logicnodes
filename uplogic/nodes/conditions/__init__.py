@@ -18,3 +18,4 @@ from .onvaluechangedto import ULValueChangedTo
 from .truefalse import ULTrueFalse
 from .hasproperty import ULHasProperty
 from .sensorpositive import ULSensorPositive
+from .catchevent import ULCatchEvent

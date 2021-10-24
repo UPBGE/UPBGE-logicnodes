@@ -43,6 +43,7 @@ setup(
         'uplogic.nodes.actions',
         'uplogic.nodes.conditions',
         'uplogic.nodes.parameters',
+        'uplogic.physics',
         'uplogic.utils'
     ],
     zip_safe=True,
