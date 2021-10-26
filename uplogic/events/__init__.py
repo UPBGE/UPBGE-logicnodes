@@ -32,7 +32,7 @@ class ULEvent():
 
     def register(self, cam):
         scene = logic.getCurrentScene()
-        if not self.register in scene.pre_draw:
+        if self.register not in scene.pre_draw:
             return
         scene.pre_draw.remove(self.register)
         self.events.put(self.name, self)
@@ -42,11 +42,8 @@ class ULEvent():
         if not self.events:
             return
         scene = logic.getCurrentScene()
-        # self.events.log()
         self.events.pop(self.name)
         scene.pre_draw.remove(self.unregister)
-        # self.events.log()
-        # print('All Done')
 
 
 def throw(name: str, content=None, messenger=None) -> None:

@@ -20,7 +20,7 @@ class ULListIndex(ULParameterNode):
         if is_waiting(index):
             return STATUS_WAITING
         if index <= len(list_d) - 1:
-            self._set_value(list_d[index])
+            return list_d[index]
         return STATUS_WAITING
 
     def evaluate(self):

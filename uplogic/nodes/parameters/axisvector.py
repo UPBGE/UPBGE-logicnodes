@@ -1,7 +1,8 @@
 from uplogic.nodes import ULOutSocket
 from uplogic.nodes import ULParameterNode
-from uplogic.utils import is_invalid
 from uplogic.utils import LO_AXIS_TO_VECTOR
+from uplogic.utils import STATUS_WAITING
+from uplogic.utils import is_invalid
 
 
 class ULAxisVector(ULParameterNode):
@@ -14,8 +15,8 @@ class ULAxisVector(ULParameterNode):
         obj = self.get_socket_value(self.game_object)
         front_vector = LO_AXIS_TO_VECTOR[self.axis]
         if is_invalid(obj, front_vector):
-            return
-        self._set_value(obj.getAxisVect(front_vector))
+            return STATUS_WAITING
+        return obj.getAxisVect(front_vector)
 
     def evaluate(self):
         self._set_ready()

@@ -1,16 +1,17 @@
 '''TODO: Documentation
 '''
 
-from mathutils import Vector
-from bge.types import KX_GameObject as GameObject
 from bge import logic, render
+from bge.types import KX_GameObject as GameObject
+from mathutils import Vector
 import bpy
 import json
 import math
+import operator
 
 
 ###############################################################################
-# LOGIC NODES
+# CONSTANTS
 ###############################################################################
 
 class _Status(object):
@@ -27,6 +28,16 @@ STATUS_READY = _Status("READY")
 STATUS_INVALID = _Status("INVALID")
 
 
+LOGIC_OPERATORS = [
+    operator.eq,
+    operator.ne,
+    operator.gt,
+    operator.lt,
+    operator.ge,
+    operator.le
+]
+
+
 LO_AXIS_TO_STRING_CODE = {
     0: "X", 1: "Y", 2: "Z",
     3: "-X", 4: "-Y", 5: "-Z",
@@ -38,6 +49,11 @@ LO_AXIS_TO_VECTOR = {
     2: Vector((0, 0, 1)), 3: Vector((-1, 0, 0)),
     4: Vector((0, -1, 0)), 5: Vector((0, 0, -1)),
 }
+
+
+###############################################################################
+# LOGIC NODES
+###############################################################################
 
 
 def _name_query(named_items, query):
@@ -228,7 +244,11 @@ def make_unique_light(old_lamp_ge: GameObject) -> GameObject:
     }
 
     light_type = old_lamp.data.type
-    bpy.ops.object.light_add(type=light_type, location=old_lamp_ge.worldPosition, rotation=old_lamp_ge.worldOrientation.to_euler())
+    bpy.ops.object.light_add(
+        type=light_type,
+        location=old_lamp_ge.worldPosition,
+        rotation=old_lamp_ge.worldOrientation.to_euler()
+    )
     index = 1
     light = None
     while light is None:
@@ -293,13 +313,14 @@ def vec_abs(vec):
     return vec
 
 
-def vec_angle(a: Vector, b: Vector) -> float:
-    rad: float = a.angle(b)
+def get_angle(a: Vector, b: Vector, up=Vector((0, 0, 1))) -> float:
+    direction = get_direction(a, b)
+    rad: float = direction.angle(up)
     deg: float = rad * 180/math.pi
     return deg
 
 
-def vec_direction(a, b, local=False):
+def get_direction(a, b, local=False):
     start = a.worldPosition.copy() if hasattr(a, "worldPosition") else a
     if hasattr(b, "worldPosition"):
         b = b.worldPosition.copy()

@@ -1,6 +1,7 @@
 from uplogic.nodes import ULParameterNode
 from uplogic.nodes import ULOutSocket
-from uplogic.utils import is_invalid
+from uplogic.utils import STATUS_WAITING, is_invalid
+from mathutils import Vector
 
 
 class ULScreenPosition(ULParameterNode):
@@ -8,27 +9,17 @@ class ULScreenPosition(ULParameterNode):
         ULParameterNode.__init__(self)
         self.game_object = None
         self.camera = None
-        self.xposition = ULOutSocket(self, self._get_xposition)
-        self.yposition = ULOutSocket(self, self._get_yposition)
-        self._xpos = None
-        self._ypos = None
+        self.pos = None
+        self.OUT = ULOutSocket(self, self.get_pos)
 
-    def _get_xposition(self):
-        return self._xpos
-
-    def _get_yposition(self):
-        return self._ypos
-
-    def evaluate(self):
-        self._set_ready()
+    def get_pos(self):
         game_object = self.get_socket_value(self.game_object)
         camera = self.get_socket_value(self.camera)
         if is_invalid(game_object) or is_invalid(camera):
-            self._xpos = None
-            self._ypos = None
-            self._set_value(None)
-            return
+            return STATUS_WAITING
         position = camera.getScreenPosition(game_object)
         self._set_value(position)
-        self._xpos = position[0]
-        self._ypos = position[1]
+        return Vector((position[0], position[1]))
+
+    def evaluate(self):
+        self._set_ready()

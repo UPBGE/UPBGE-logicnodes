@@ -4,18 +4,17 @@ from uplogic.utils import STATUS_WAITING
 from uplogic.utils import is_invalid
 
 
-class ULListDuplicate(ULParameterNode):
+class ULGetObject(ULParameterNode):
     def __init__(self):
         ULParameterNode.__init__(self)
-        self.condition = None
-        self.items = None
-        self.OUT = ULOutSocket(self, self.get_points)
+        self.game_object = None
+        self.OUT = ULOutSocket(self, self.get_obj)
 
-    def get_points(self):
-        list_d = self.get_socket_value(self.items)
-        if is_invalid(list_d):
+    def get_obj(self):
+        game_object = self.get_socket_value(self.game_object)
+        if is_invalid(game_object):
             return STATUS_WAITING
-        return list_d.copy()
+        return game_object
 
     def evaluate(self):
         self._set_ready()

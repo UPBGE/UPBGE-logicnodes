@@ -1,7 +1,8 @@
-from uplogic.nodes import ULParameterNode
 from uplogic.nodes import ULOutSocket
-from uplogic.utils import is_waiting
+from uplogic.nodes import ULParameterNode
+from uplogic.utils import STATUS_WAITING
 from uplogic.utils import is_invalid
+from uplogic.utils import is_waiting
 
 
 class ULActionStatus(ULParameterNode):
@@ -9,8 +10,8 @@ class ULActionStatus(ULParameterNode):
         ULParameterNode.__init__(self)
         self.game_object = None
         self.action_layer = None
-        self._action_name = ""
-        self._action_frame = 0.0
+        self._action_name = None
+        self._action_frame = None
         self.NOT_PLAYING = ULOutSocket(self, self.get_not_playing)
         self.ACTION_NAME = ULOutSocket(self, self.get_action_name)
         self.ACTION_FRAME = ULOutSocket(self, self.get_action_frame)
@@ -31,8 +32,8 @@ class ULActionStatus(ULParameterNode):
             return
         self._set_ready()
         if is_invalid(game_object):
-            self._action_name = ""
-            self._action_frame = 0.0
+            self._action_name = STATUS_WAITING
+            self._action_frame = STATUS_WAITING
             self._set_value(False)
         else:
             self._set_value(game_object.isPlayingAction(action_layer))
