@@ -539,6 +539,7 @@ _registered_classes = [
     ops.NLAddGlobalCatOperator,
     ops.NLRemoveGlobalCatOperator,
     ops.NLUpdateUplogicPackage,
+    ops.NLResetEmptySize,
     NLNodeTreeReference
 ]
 
@@ -644,6 +645,10 @@ def _list_menu_nodes():
     return menu_nodes
 
 
+def set_reverb_vol(*a):
+    print(a)
+
+
 # blender add-on registration callback
 def register():
     bpy.app.handlers.game_pre.append(_generate_on_game_start)
@@ -662,7 +667,7 @@ def register():
     bpy.types.Object.sound_occluder = bpy.props.BoolProperty(
         default=True,
         name='Sound Occluder',
-        description='Wether this object will dampen sound played from Logic Nodes'
+        description='Wether this object will dampen sound'
     )
     bpy.types.Object.sound_blocking = bpy.props.FloatProperty(
         min=0.0,
@@ -670,6 +675,11 @@ def register():
         default=.05,
         name='Sound Blocking',
         description='The amount of sound blocking caused by this wall. A value of 1 will block all sound'
+    )
+    bpy.types.Object.reverb_volume = bpy.props.BoolProperty(
+        default=False,
+        name='Reverb Volume',
+        description='Wether this volume will cause sound to reverberate'
     )
 
     bpy.types.Object.bgelogic_treelist = bpy.props.CollectionProperty(

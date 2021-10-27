@@ -1,6 +1,7 @@
 import os, subprocess
 import json
 import bpy
+from mathutils import Vector
 import bge_netlogic
 import bge_netlogic.utilities as utils
 from bpy_extras.io_utils import ImportHelper
@@ -967,6 +968,23 @@ class NLUpdateUplogicPackage(bpy.types.Operator):
 
     def execute(self, context):
         tree_code_generator.TreeCodeGenerator().update_package()
+        return {"FINISHED"}
+
+
+class NLResetEmptySize(bpy.types.Operator):
+    bl_idname = "bge_netlogic.reset_empty_scale"
+    bl_label = "Set Reverb Volume"
+    bl_options = {'REGISTER', 'UNDO'}
+    bl_description = "Reset the volume scale"
+
+    @classmethod
+    def poll(cls, context):
+        ob = context.active_object
+        return ob and ob.name
+
+    def execute(self, context):
+        context.active_object.scale = Vector((1, 1, 1))
+        context.active_object.empty_display_type = 'CUBE'
         return {"FINISHED"}
 
 

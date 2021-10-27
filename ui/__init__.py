@@ -383,7 +383,7 @@ class BGE_PT_PropertiesPanelObject(BGE_PT_GamePropertyPanel):
 
 
 class BGE_PT_LogicNodeSettingsObject(bpy.types.Panel):
-    bl_label = "Logic Node Settings"
+    bl_label = "Uplogic Settings"
     bl_space_type = "PROPERTIES"
     bl_region_type = "WINDOW"
     bl_context = "physics"
@@ -400,10 +400,22 @@ class BGE_PT_LogicNodeSettingsObject(bpy.types.Panel):
         parts = main_col.split()
         col1 = parts.column()
         col2 = parts.column()
-        col1.prop(context.active_object, 'sound_occluder', text='Sound Occluder')
+        row = col1.row()
+        row.prop(context.active_object, 'sound_occluder', text='Sound Occluder')
         block = col2.row()
         block.prop(context.active_object, 'sound_blocking', text='Factor', slider=True)
         block.enabled = context.active_object.sound_occluder
+        if not context.active_object.data:
+            row = col1.row()
+            row.prop(context.active_object, 'reverb_volume', text='Reverberance Volume')
+            block = col2.row(align=True)
+            block.prop(context.active_object, 'empty_display_size', text='Radius')
+            block.operator(
+                bge_netlogic.ops.NLResetEmptySize.bl_idname,
+                text="",
+                icon='FULLSCREEN_EXIT'
+            )
+            block.enabled = context.active_object.reverb_volume
 
 
 class BGE_PT_LogicTreeGroups(bpy.types.Panel):

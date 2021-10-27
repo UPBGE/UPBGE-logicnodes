@@ -30,6 +30,11 @@ class ULAudioSystem(object):
         self.device.distance_model = aud.DISTANCE_MODEL_INVERSE_CLAMPED
         self.device.speed_of_sound = bpy.context.scene.audio_doppler_speed
         self.device.doppler_factor = bpy.context.scene.audio_doppler_factor
+        self.reverb = True
+        self.reverb_volumes = []
+        for obj in scene.objects:
+            if obj.blenderObject.reverb_volume:
+                self.reverb_volumes.append(obj)
         GlobalDB.retrieve('uplogic.audio').put(name, self)
         bpy.app.handlers.game_post.append(self.shutdown)
         scene.pre_draw.append(self.update)
@@ -49,13 +54,29 @@ class ULAudioSystem(object):
         return vel
 
     def update(self, cam):
+        self.reverb = False
         self.listener = cam
         if not self.active_sounds:
             return  # do not update if no sound has been installed
         # update the listener data
         dev = self.device
+        for obj in self.reverb_volumes:
+            ob = obj.blenderObject
+            r = ob.empty_display_size
+            wpos = obj.worldPosition
+            sca = ob.scale
+            cpos = cam.worldPosition
+            in_range = (
+                wpos.x - r*sca.x < cpos.x < wpos.x + r*sca.x and
+                wpos.y - r*sca.y < cpos.y < wpos.y + r*sca.y and
+                wpos.z - r*sca.z < cpos.z < wpos.z + r*sca.z
+            )
+            # if cam.getDistanceTo(obj) < ob.empty_display_size:
+            if in_range:
+                self.reverb = True
+                break
         listener_vel = self.compute_listener_velocity(cam)
-        dev.listener_location = cam.worldPosition
+        dev.listener_location = cpos
         dev.listener_orientation = cam.worldOrientation.to_quaternion()
         dev.listener_velocity = listener_vel
         for s in self.active_sounds:
