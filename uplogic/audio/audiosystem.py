@@ -26,6 +26,7 @@ class ULAudioSystem(object):
         scene = logic.getCurrentScene()
         self.listener = scene.active_camera
         self.old_lis_pos = self.listener.worldPosition.copy()
+        self.bounces = 0
         self.device = aud.Device()
         self.device.distance_model = aud.DISTANCE_MODEL_INVERSE_CLAMPED
         self.device.speed_of_sound = bpy.context.scene.audio_doppler_speed
@@ -74,6 +75,7 @@ class ULAudioSystem(object):
             # if cam.getDistanceTo(obj) < ob.empty_display_size:
             if in_range:
                 self.reverb = True
+                self.bounces = ob.reverb_samples
                 break
         listener_vel = self.compute_listener_velocity(cam)
         dev.listener_location = cpos

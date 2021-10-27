@@ -404,11 +404,14 @@ class BGE_PT_LogicNodeSettingsObject(bpy.types.Panel):
         row.prop(context.active_object, 'sound_occluder', text='Sound Occluder')
         block = col2.row()
         block.prop(context.active_object, 'sound_blocking', text='Factor', slider=True)
+        col1.separator()
+        col2.separator()
         block.enabled = context.active_object.sound_occluder
         if not context.active_object.data:
             row = col1.row()
-            row.prop(context.active_object, 'reverb_volume', text='Reverberance Volume')
-            block = col2.row(align=True)
+            row.prop(context.active_object, 'reverb_volume', text='Reverb Volume')
+            reverb_settings = col2.column(align=True)
+            block = reverb_settings.row(align=True)
             block.prop(context.active_object, 'empty_display_size', text='Radius')
             block.operator(
                 bge_netlogic.ops.NLResetEmptySize.bl_idname,
@@ -416,6 +419,7 @@ class BGE_PT_LogicNodeSettingsObject(bpy.types.Panel):
                 icon='FULLSCREEN_EXIT'
             )
             block.enabled = context.active_object.reverb_volume
+            reverb_settings.prop(context.active_object, 'reverb_samples', text='Samples')
 
 
 class BGE_PT_LogicTreeGroups(bpy.types.Panel):

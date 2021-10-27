@@ -681,6 +681,13 @@ def register():
         name='Reverb Volume',
         description='Wether this volume will cause sound to reverberate'
     )
+    bpy.types.Object.reverb_samples = bpy.props.IntProperty(
+        min=0,
+        max=30,
+        default=10,
+        name='Reverb Bounces',
+        description='Samples used by this reverb volume'
+    )
 
     bpy.types.Object.bgelogic_treelist = bpy.props.CollectionProperty(
         type=NLNodeTreeReference

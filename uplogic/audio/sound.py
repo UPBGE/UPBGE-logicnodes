@@ -108,15 +108,15 @@ class ULSound3D(ULSound):
         cone_angle: list[float] = [360, 360],
         cone_outer_volume: float = 0,
         loop_count: int = 1,
-        reverb: bool = False,
-        bounces: float = 10
+        reverb=False,
+        bounces=10
     ):
         if not (file and aud_system and speaker):
             return
-        self.reverb = reverb
-        self.bounces = bounces
         self.aud_system = self.get_aud_sys(aud_system)
         self.speaker = speaker
+        self.reverb = reverb
+        self.bounces = bounces
         self.occlusion = occlusion
         self.volume = volume
         self.pitch = pitch
@@ -158,17 +158,23 @@ class ULSound3D(ULSound):
         '''
         aud_system = self.aud_system
         speaker = self.speaker
-        if len(self.reverbs) < self.bounces:
-            now = time.time()
-            if now - self.r_time > .03:
-                self.reverbs.append(ULReverb(
-                    aud_system,
-                    self.soundpath,
-                    self.handles[1][0],
-                    len(self.reverbs) + 1,
-                    self.bounces
-                ))
+        now = time.time()
+        if aud_system.reverb or self.reverb:
+            if len(self.reverbs) < 30:
+                if now - self.r_time > .1:
+                    self.reverbs.append(ULReverb(
+                        self,
+                        self.soundpath,
+                        self.handles[1][0],
+                        len(self.reverbs) + 1,
+                    ))
+                    self.r_time = now
+            else:
                 self.r_time = now
+        elif now - self.r_time > 1 and self.reverbs and not self.reverb:
+            for r in self.reverbs:
+                r.stop()
+            self.reverbs.clear()
         if not speaker:
             self.finished = True
             aud_system.remove(self)
@@ -260,24 +266,23 @@ class ULSound3D(ULSound):
 class ULReverb():
 
     volume = 0
+    mult = 0
 
     def __init__(
         self,
-        aud_system,
+        parent,
         sound,
         handle,
         idx,
-        bounces
     ):
         self.idx = idx
+        self.parent = parent
         self.handle = handle
-        self.bounces = bounces
-        self.sound = sound = aud_system.device.play(sound)
-        self.aud_sys = aud_system
+        self.sound = sound = parent.aud_system.device.play(sound)
         sound.relative = handle.relative
         sound.location = handle.location
         sound.velocity = handle.velocity
-        sound.position = handle.position - self.idx/30
+        sound.position = handle.position - self.idx/20
         sound.attenuation = handle.attenuation
         sound.orientation = handle.orientation
         sound.pitch = handle.pitch
@@ -290,11 +295,16 @@ class ULReverb():
         sound.cone_volume_outer = handle.cone_volume_outer
 
     def update(self):
-        self.volume = interpolate(self.volume, self.aud_sys.reverb, .1)
+        parent = self.parent
+        aud_sys = parent.aud_system
+        target_vol = 1 if parent.reverb else aud_sys.reverb
+        bounces = parent.bounces if parent.reverb else aud_sys.bounces
+        self.volume = interpolate(self.volume, target_vol, .1)
+        self.mult = interpolate(self.mult, (1-(self.idx / bounces)) if self.idx < bounces else 0, .1)
         sound = self.sound
         handle = self.handle
         loc = handle.location
-        lloc = self.aud_sys.device.listener_location
+        lloc = aud_sys.device.listener_location
         loc = (loc[0]-lloc[0], loc[1]-lloc[1], loc[2]-lloc[2])
         sound.location = (
             -(loc[0]-lloc[0]),
@@ -307,6 +317,8 @@ class ULReverb():
         sound.distance_maximum = handle.distance_maximum
         sound.cone_angle_inner = handle.cone_angle_inner
         sound.pitch = handle.pitch
-        mult = (1-(self.idx / self.bounces))
-        sound.volume = handle.volume * self.volume * .5 * (mult**2)
+        sound.volume = handle.volume * self.volume * .5 * (self.mult**2)
         sound.cone_volume_outer = handle.cone_volume_outer
+
+    def stop(self):
+        self.sound.stop()
