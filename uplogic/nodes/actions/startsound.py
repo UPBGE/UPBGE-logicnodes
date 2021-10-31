@@ -53,7 +53,7 @@ class ULStartSound(ULActionNode):
 
         self._handle = ULSound2D(
             file,
-            'nl_audio_system',
+            'default',
             volume,
             pitch,
             loop_count

@@ -45,10 +45,10 @@ class ULLogicTree(ULLogicContainer):
         self.evaluated_cells = 0
 
     def create_aud_system(self):
-        aud_sys = GlobalDB.retrieve('uplogic.audio').get('nl_audio_system')
+        aud_sys = GlobalDB.retrieve('uplogic.audio').get('default')
         if not aud_sys:
             self.aud_system_owner = True
-            return ULAudioSystem('nl_audio_system')
+            return ULAudioSystem('default')
         return aud_sys
 
     def init_glob_cats(self):

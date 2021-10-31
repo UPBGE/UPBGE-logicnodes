@@ -72,7 +72,7 @@ class ULStartSound3D(ULActionNode):
         self._handle = ULSound3D(
             file,
             speaker,
-            'nl_audio_system',
+            'default',
             occlusion,
             transition,
             cutoff,

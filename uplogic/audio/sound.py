@@ -4,12 +4,76 @@
 from bge import logic
 from bge.types import KX_GameObject as GameObject
 from mathutils import Vector
-from uplogic.audio import ULAudioSystem, audiosystem
+from uplogic.audio import ULAudioSystem
 from uplogic.data import GlobalDB
-from uplogic.utils import compute_distance
 from uplogic.utils import interpolate
 import aud
 import time
+
+
+class ULReverb():
+
+    volume = 0
+    mult = 0
+
+    def __init__(
+        self,
+        parent,
+        sound,
+        handle,
+        idx,
+    ):
+        self.idx = idx
+        self.parent = parent
+        self.handle = handle
+        self.sound = sound = parent.aud_system.device.play(sound)
+        sound.relative = handle.relative
+        sound.location = handle.location
+        sound.velocity = handle.velocity
+        sound.position = handle.position - self.idx/20
+        sound.attenuation = handle.attenuation
+        sound.orientation = handle.orientation
+        sound.pitch = handle.pitch
+        sound.volume = 0
+        sound.distance_reference = handle.distance_reference
+        sound.distance_maximum = handle.distance_maximum
+        sound.cone_angle_inner = handle.cone_angle_inner
+        sound.cone_angle_outer = handle.cone_angle_outer
+        sound.loop_count = handle.loop_count
+        sound.cone_volume_outer = handle.cone_volume_outer
+
+    def update(self):
+        if not self.sound.status:
+            self.stop()
+            self.parent.reverb_samples.remove(self)
+            return
+        parent = self.parent
+        aud_sys = parent.aud_system
+        target_vol = 1 if parent.reverb else aud_sys.reverb
+        bounces = parent.bounces if parent.reverb else aud_sys.bounces
+        self.volume = interpolate(self.volume, target_vol, .1)
+        self.mult = interpolate(self.mult, (1-(self.idx / bounces)) if self.idx < bounces else 0, .1)
+        sound = self.sound
+        handle = self.handle
+        loc = handle.location
+        lloc = aud_sys.device.listener_location
+        loc = (loc[0]-lloc[0], loc[1]-lloc[1], loc[2]-lloc[2])
+        sound.location = (
+            -(loc[0]-lloc[0]),
+            -(loc[1]-lloc[1]),
+            -(loc[2]-lloc[2])
+        )
+        sound.velocity = handle.velocity
+        sound.attenuation = handle.attenuation
+        sound.orientation = handle.orientation
+        sound.distance_maximum = handle.distance_maximum
+        sound.cone_angle_inner = handle.cone_angle_inner
+        sound.pitch = handle.pitch
+        sound.volume = handle.volume * self.volume * .5 * (self.mult**2)
+        sound.cone_volume_outer = handle.cone_volume_outer
+
+    def stop(self):
+        self.sound.stop()
 
 
 class ULSound():
@@ -80,15 +144,16 @@ class ULSound2D(ULSound):
 class ULSound3D(ULSound):
     '''TODO: Documentation
     '''
-    sounds = []
-    reverbs = []
+    sounds: list
+    reverb_samples: list
     speaker: GameObject
     occlusion: bool
+    location: Vector
     cone_outer_volume: float
     transition: float
     soundpath: str
     reverb: bool
-    room_scale: float
+    bounces: int
     r_time = time.time()
     _clear_sound: float = 1
     _sustained: float = 1
@@ -113,6 +178,8 @@ class ULSound3D(ULSound):
     ):
         if not (file and aud_system and speaker):
             return
+        self.reverb_samples = []
+        self.sounds = []
         self.aud_system = self.get_aud_sys(aud_system)
         self.speaker = speaker
         self.reverb = reverb
@@ -153,56 +220,59 @@ class ULSound3D(ULSound):
             handle.cone_volume_outer = cone_outer_volume * volume
         self.aud_system.add(self)
 
-    def update(self):
+    def update(self, rvol=Vector((0, 0, 0)), rrad=0):
         '''TODO: Documentation
         '''
         aud_system = self.aud_system
         speaker = self.speaker
+        location = speaker.worldPosition
+        reverb = self.reverb if self.reverb else (
+            aud_system.reverb and
+            speaker.getDistanceTo(rvol) < rrad
+        )
         now = time.time()
-        if aud_system.reverb or self.reverb:
-            if len(self.reverbs) < 30:
+        if reverb:
+            if len(self.reverb_samples) < 30:
                 if now - self.r_time > .1:
-                    self.reverbs.append(ULReverb(
+                    self.reverb_samples.append(ULReverb(
                         self,
                         self.soundpath,
                         self.handles[1][0],
-                        len(self.reverbs) + 1,
+                        len(self.reverb_samples) + 1,
                     ))
                     self.r_time = now
             else:
                 self.r_time = now
-        elif now - self.r_time > 1 and self.reverbs and not self.reverb:
-            for r in self.reverbs:
+        elif (self.reverb_samples and not reverb) and (now - self.r_time > 1):
+            for r in self.reverb_samples:
                 r.stop()
-            self.reverbs.clear()
+            self.reverb_samples.clear()
+            print(f'All reverbs removed from {self.speaker}')
+        # print(f'{reverb} for {self.speaker}')
         if not speaker:
             self.finished = True
             aud_system.remove(self)
+            return
         for i, handle in enumerate(self.handles[1]):
             if not handle.status:
                 self.finished = True
                 aud_system.remove(self)
                 return
             handle.pitch = self.pitch * logic.getTimeScale()
-            handle.location = speaker.worldPosition
+            handle.location = location
             handle.orientation = (
                 speaker
                 .worldOrientation
                 .to_quaternion()
             )
-            if speaker.mass:
-                handle.velocity = getattr(
-                    speaker,
-                    'worldLinearVelocity',
-                    Vector((0, 0, 0))
-                )
+            getattr(speaker, 'worldLinearVelocity', Vector((0, 0, 0)))
             if self.occlusion:
                 transition = self.transition
-                cam = logic.getCurrentScene().active_camera
+                cam = self.aud_system.listener
                 occluder, point, normal = cam.rayCast(
-                    speaker.worldPosition,
+                    location,
                     cam.worldPosition,
-                    compute_distance(speaker, cam),
+                    speaker.getDistanceTo(cam),
                     xray=False
                 )
                 occluded = False
@@ -225,9 +295,9 @@ class ULSound3D(ULSound):
                         else:
                             penetration = 0
                     occluder, point, normal = occluder.rayCast(
-                        speaker.worldPosition,
+                        location,
                         point,
-                        compute_distance(speaker, point),
+                        speaker.getDistanceTo(point),
                         xray=False
                     )
                 cs = self._clear_sound
@@ -253,72 +323,13 @@ class ULSound3D(ULSound):
                     self.volume *
                     mult
                 )
-        for r in self.reverbs:
+        # print(f'{reverb} for {self.speaker}')
+        for r in self.reverb_samples:
             r.update()
+        # print(f'{reverb} for {self.speaker}')
 
     def stop(self):
         '''TODO: Documentation
         '''
         for sound in self.sounds:
             sound.stop()
-
-
-class ULReverb():
-
-    volume = 0
-    mult = 0
-
-    def __init__(
-        self,
-        parent,
-        sound,
-        handle,
-        idx,
-    ):
-        self.idx = idx
-        self.parent = parent
-        self.handle = handle
-        self.sound = sound = parent.aud_system.device.play(sound)
-        sound.relative = handle.relative
-        sound.location = handle.location
-        sound.velocity = handle.velocity
-        sound.position = handle.position - self.idx/20
-        sound.attenuation = handle.attenuation
-        sound.orientation = handle.orientation
-        sound.pitch = handle.pitch
-        sound.volume = 0
-        sound.distance_reference = handle.distance_reference
-        sound.distance_maximum = handle.distance_maximum
-        sound.cone_angle_inner = handle.cone_angle_inner
-        sound.cone_angle_outer = handle.cone_angle_outer
-        sound.loop_count = handle.loop_count
-        sound.cone_volume_outer = handle.cone_volume_outer
-
-    def update(self):
-        parent = self.parent
-        aud_sys = parent.aud_system
-        target_vol = 1 if parent.reverb else aud_sys.reverb
-        bounces = parent.bounces if parent.reverb else aud_sys.bounces
-        self.volume = interpolate(self.volume, target_vol, .1)
-        self.mult = interpolate(self.mult, (1-(self.idx / bounces)) if self.idx < bounces else 0, .1)
-        sound = self.sound
-        handle = self.handle
-        loc = handle.location
-        lloc = aud_sys.device.listener_location
-        loc = (loc[0]-lloc[0], loc[1]-lloc[1], loc[2]-lloc[2])
-        sound.location = (
-            -(loc[0]-lloc[0]),
-            -(loc[1]-lloc[1]),
-            -(loc[2]-lloc[2])
-        )
-        sound.velocity = handle.velocity
-        sound.attenuation = handle.attenuation
-        sound.orientation = handle.orientation
-        sound.distance_maximum = handle.distance_maximum
-        sound.cone_angle_inner = handle.cone_angle_inner
-        sound.pitch = handle.pitch
-        sound.volume = handle.volume * self.volume * .5 * (self.mult**2)
-        sound.cone_volume_outer = handle.cone_volume_outer
-
-    def stop(self):
-        self.sound.stop()

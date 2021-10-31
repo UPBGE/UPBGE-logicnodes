@@ -667,7 +667,7 @@ def register():
     bpy.types.Object.sound_occluder = bpy.props.BoolProperty(
         default=True,
         name='Sound Occluder',
-        description='Wether this object will dampen sound'
+        description='Whether this object will dampen sound'
     )
     bpy.types.Object.sound_blocking = bpy.props.FloatProperty(
         min=0.0,
@@ -679,14 +679,14 @@ def register():
     bpy.types.Object.reverb_volume = bpy.props.BoolProperty(
         default=False,
         name='Reverb Volume',
-        description='Wether this volume will cause sound to reverberate'
+        description='Whether this volume will cause sound to reverberate (Range Limit: 100m)'
     )
     bpy.types.Object.reverb_samples = bpy.props.IntProperty(
         min=0,
         max=30,
         default=10,
         name='Reverb Bounces',
-        description='Samples used by this reverb volume'
+        description='Samples used by this reverb volume. More samples mean a longer reverberation'
     )
 
     bpy.types.Object.bgelogic_treelist = bpy.props.CollectionProperty(
