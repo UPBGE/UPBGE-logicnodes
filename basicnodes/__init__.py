@@ -6897,6 +6897,8 @@ class NLObjectPropertyOperator(bpy.types.Node, NLConditionNode):
     bl_icon = 'CON_TRANSLIKE'
     nl_category = "Objects"
     nl_subcat = 'Properties'
+    nl_module = 'conditions'
+
     operator: bpy.props.EnumProperty(
         name='Operator',
         items=_enum_logic_operators,
@@ -6927,7 +6929,8 @@ class NLObjectPropertyOperator(bpy.types.Node, NLConditionNode):
         self.outputs.new(NLConditionSocket.bl_idname, 'If True')
         self.outputs.new(NLParameterSocket.bl_idname, 'Value')
 
-    def get_netlogic_class_name(self): return "nodes.ObjectPropertyOperator"
+    def get_netlogic_class_name(self):
+        return "ULEvaluateProperty"
 
     def get_input_sockets_field_names(self):
         return [
@@ -6937,7 +6940,7 @@ class NLObjectPropertyOperator(bpy.types.Node, NLConditionNode):
         ]
 
     def get_output_socket_varnames(self):
-        return [OUTCELL, "VAL"]
+        return ['OUT', "VAL"]
 
 
 _nodes.append(NLObjectPropertyOperator)
@@ -7559,6 +7562,7 @@ class NLConditionNotNode(bpy.types.Node, NLConditionNode):
     bl_idname = "NLConditionNotNode"
     bl_label = "Not"
     nl_category = "Logic"
+    nl_module = 'conditions'
 
     def init(self, context):
         NLConditionNode.init(self, context)
@@ -7566,10 +7570,13 @@ class NLConditionNotNode(bpy.types.Node, NLConditionNode):
         self.outputs.new(NLConditionSocket.bl_idname, "If Not")
 
     def get_netlogic_class_name(self):
-        return "nodes.ConditionNot"
+        return "ULNot"
 
     def get_input_sockets_field_names(self):
         return ["condition"]
+
+    def get_output_socket_varnames(self):
+        return ['OUT']
 
 
 _nodes.append(NLConditionNotNode)
@@ -7580,6 +7587,7 @@ class NLConditionLogicNetworkStatusNode(bpy.types.Node, NLConditionNode):
     bl_label = "Logic Network Status"
     nl_category = "Logic"
     nl_subcat = 'Trees'
+    nl_module = 'conditions'
 
     def init(self, context):
         NLConditionNode.init(self, context)
@@ -7589,7 +7597,7 @@ class NLConditionLogicNetworkStatusNode(bpy.types.Node, NLConditionNode):
         self.outputs.new(NLConditionSocket.bl_idname, "If Stopped")
 
     def get_netlogic_class_name(self):
-        return "nodes.ConditionLNStatus"
+        return "ULLogicTreeStatus"
 
     def get_input_sockets_field_names(self):
         return ["game_object", "tree_name"]

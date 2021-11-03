@@ -19,3 +19,6 @@ from .truefalse import ULTrueFalse
 from .hasproperty import ULHasProperty
 from .sensorpositive import ULSensorPositive
 from .catchevent import ULCatchEvent
+from .evaluateproperty import ULEvaluateProperty
+from .notcond import ULNot
+from .logictreestatus import ULLogicTreeStatus
