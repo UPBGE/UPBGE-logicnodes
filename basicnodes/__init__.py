@@ -1139,9 +1139,10 @@ class NLGameObjectSocket(bpy.types.NodeSocket, NetLogicSocketType):
         update=update_tree_code,
         description='Use the owner of this tree'
     )
+    color = PARAM_OBJ_SOCKET_COLOR
 
     def draw_color(self, context, node):
-        return PARAM_OBJ_SOCKET_COLOR
+        return self.color
 
     def draw(self, context, layout, node, text):
         if self.is_output:
@@ -7799,7 +7800,7 @@ class NLSetGeometryNodeAttribute(bpy.types.Node, NLActionNode):
         NLActionNode.init(self, context)
         self.inputs.new(NLConditionSocket.bl_idname, "Condition")
         self.inputs.new(NLNodeGroupSocket.bl_idname, 'Tree')
-        self.inputs.new(NLNodeGroupNodeSocket.bl_idname, 'Node Name')
+        self.inputs.new(NLGeomNodeTreeSocket.bl_idname, 'Node Name')
         self.inputs[-1].ref_index = 1
         self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Internal")
         self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Attribute")

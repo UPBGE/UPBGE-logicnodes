@@ -738,9 +738,11 @@ class BGELogicTree(bpy.types.NodeTree):
     def poll(cls, context):
         return True
 
-    # def update(self):
-    #    if not getattr(bpy.context.scene.logic_node_settings, 'auto_compile'):
-    #        return
-    #    bge_netlogic.update_current_tree_code()
-    #     for link in self.links:
-    #         print(link.is_valid)
+    def update(self):
+        for n in self.nodes:
+            if isinstance(n, bpy.types.NodeReroute):
+                source = n.inputs[0].links[0].from_socket
+                while isinstance(source.node, bpy.types.NodeReroute):
+                    source = source.node.inputs[0].links[0].from_socket
+                n.inputs[0].type = source.type
+                n.outputs[0].type = n.inputs[0].type
