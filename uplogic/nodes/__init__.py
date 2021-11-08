@@ -329,7 +329,7 @@ class ULLogicContainer(ULLogicBase):
         """
         A logic cell implements this method to do its job. The network
         evaluates a cell until its status becomes
-         LogicNetwor.STATUS_READY. When that happens, the cell is
+         STATUS_READY. When that happens, the cell is
          removed from the update queue.
         :return:
         """
@@ -402,100 +402,6 @@ class ULConditionNode(ULLogicNode):
 ###############################################################################
 # Unordered
 ###############################################################################
-
-
-# Condition cells
-class ConditionAlways(ULConditionNode):
-    def __init__(self):
-        ULConditionNode.__init__(self)
-        self.repeat = False
-        self._set_status(STATUS_READY)
-        self._value = True
-
-    def reset(self):
-        if not self.repeat:
-            self._value = False
-
-    def evaluate(self):
-        pass
-
-
-class ObjectPropertyOperator(ULConditionNode):
-    def __init__(self, operator='EQUAL'):
-        ULActionNode.__init__(self)
-        self.game_object = None
-        self.property_name = None
-        self.operator = operator
-        self.compare_value = None
-        self.val = 0
-        self.VAL = ULOutSocket(self, self.get_val)
-
-    def get_val(self):
-        return self.val
-
-    def evaluate(self):
-        game_object = self.get_socket_value(self.game_object)
-        property_name = self.get_socket_value(self.property_name)
-        compare_value = self.get_socket_value(self.compare_value)
-        operator = self.get_socket_value(self.operator)
-        if is_waiting(property_name, compare_value):
-            return
-        if is_invalid(game_object):
-            return
-        self._set_ready()
-        value = self.val = game_object[property_name]
-        if operator > 1:  # eq and neq are valid for None
-            if is_invalid(value, compare_value):
-                return
-        if operator is None:
-            return
-        self._set_value(LOGIC_OPERATORS[operator](value, compare_value))
-
-
-class ConditionNot(ULConditionNode):
-    def __init__(self):
-        ULConditionNode.__init__(self)
-        self.condition = None
-
-    def evaluate(self):
-        condition = self.get_socket_value(self.condition)
-        if is_waiting(condition):
-            return
-        self._set_ready()
-        self._set_value(not condition)
-
-
-class ConditionLNStatus(ULConditionNode):
-    def __init__(self):
-        ULConditionNode.__init__(self)
-        self.game_object = None
-        self.tree_name = None
-        self._running = False
-        self._stopped = False
-        self.IFRUNNING = ULOutSocket(self, self.get_running)
-        self.IFSTOPPED = ULOutSocket(self, self.get_stopped)
-
-    def get_running(self):
-        return self._running
-
-    def get_stopped(self):
-        return self._stopped
-
-    def evaluate(self):
-        game_object = self.get_socket_value(self.game_object)
-        tree_name = self.get_socket_value(self.tree_name)
-        if is_waiting(game_object, tree_name):
-            return
-        self._set_ready()
-        self._running = False
-        self._stopped = False
-        if is_invalid(game_object):
-            return
-        tree = game_object.get(f'IGNLTree_{tree_name}')
-        if tree is None:
-            return
-        self._running = tree.is_running()
-        self._stopped = tree.is_stopped()
 
 
 class ConditionLogicOp(ULConditionNode):
