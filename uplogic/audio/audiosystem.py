@@ -39,7 +39,7 @@ class ULAudioSystem(object):
                 self.reverb_volumes.append(obj)
         GlobalDB.retrieve('uplogic.audio').put(name, self)
         bpy.app.handlers.game_post.append(self.shutdown)
-        # scene.pre_draw.append(self.update)
+        scene.pre_draw.append(self.update)
 
     def get_distance_model(self, name):
         return DISTANCE_MODELS.get(name, aud.DISTANCE_MODEL_INVERSE_CLAMPED)

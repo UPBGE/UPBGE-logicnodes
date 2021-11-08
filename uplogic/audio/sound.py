@@ -233,7 +233,7 @@ class ULSound3D(ULSound):
         now = time.time()
         if reverb:
             if len(self.reverb_samples) < 30:
-                if now - self.r_time > .1:
+                if now - self.r_time > .05:
                     self.reverb_samples.append(ULReverb(
                         self,
                         self.soundpath,
@@ -247,8 +247,6 @@ class ULSound3D(ULSound):
             for r in self.reverb_samples:
                 r.stop()
             self.reverb_samples.clear()
-            print(f'All reverbs removed from {self.speaker}')
-        # print(f'{reverb} for {self.speaker}')
         if not speaker:
             self.finished = True
             aud_system.remove(self)
@@ -323,10 +321,8 @@ class ULSound3D(ULSound):
                     self.volume *
                     mult
                 )
-        # print(f'{reverb} for {self.speaker}')
         for r in self.reverb_samples:
             r.update()
-        # print(f'{reverb} for {self.speaker}')
 
     def stop(self):
         '''TODO: Documentation
