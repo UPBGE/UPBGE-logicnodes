@@ -6896,9 +6896,9 @@ class NLObjectPropertyOperator(bpy.types.Node, NLConditionNode):
     bl_idname = "NLObjectPropertyOperator"
     bl_label = "Evaluate Property"
     bl_icon = 'CON_TRANSLIKE'
+    nl_module = 'conditions'
     nl_category = "Objects"
     nl_subcat = 'Properties'
-    nl_module = 'conditions'
 
     operator: bpy.props.EnumProperty(
         name='Operator',
@@ -7078,7 +7078,7 @@ class NLConditionMouseTargetingNode(bpy.types.Node, NLConditionNode):
     bl_icon = 'RESTRICT_SELECT_OFF'
     nl_category = "Input"
     nl_subcat = 'Mouse'
-    nl_module = 'mouseover'
+    nl_module = 'conditions'
 
     def init(self, context):
         NLConditionNode.init(self, context)
