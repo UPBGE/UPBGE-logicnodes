@@ -480,7 +480,7 @@ class LogicNodesAddonPreferences(bpy.types.AddonPreferences):
         link_row.operator("bge_netlogic.update_tree_version", icon='PLUGIN')
         link_row.operator("bge_netlogic.donate", icon="FUND")
         contrib_row = col.row()
-        contrib_row.label(text='Contributors: VUAIEO, L_P, p45510n')
+        contrib_row.label(text='Contributors: VUAIEO, Simon, L_P, p45510n')
 
 
 basicnodes = _abs_import("basicnodes", _abs_path("basicnodes", "__init__.py"))
