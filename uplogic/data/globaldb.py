@@ -143,6 +143,7 @@ class GlobalDB(object):
 
     def __init__(self, file_name):
         self.fname = file_name
+        self.locked = {}
         self.content = {}
 
         filter(
@@ -161,6 +162,12 @@ class GlobalDB(object):
         if log_size > (5 * len(self.content)):
             debug("Compressing sld {}".format(file_name))
             GlobalDB.compress(self.fname, self.content)
+
+    def lock(self, item):
+        self.locked[item] = 1
+
+    def unlock(self, item):
+        self.locked.pop(item)
 
     def get(self, key, default_value=None):
         '''TODO: Documentation
