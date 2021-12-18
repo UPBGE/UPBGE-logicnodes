@@ -49,13 +49,12 @@ class ULReverb():
         if len(self.samples) < 30:
             schedule_callback(self.add_sample, 1/60, sound)
 
-    def update(self, use_reverb=False):
+    def update(self):
         sample_count = self.aud_system.bounces
         use_reverb = (
             self.aud_system.reverb
-            and
-            not self.parent.occluded
         )
+        handle = self.handle
         if not use_reverb or sample_count == 0:
             if self.volume < .001:
                 return
@@ -63,8 +62,8 @@ class ULReverb():
                 self.volume = interpolate(self.volume, 0, .1)
         else:
             parent = self.parent
-            target_vol = 1 if parent.reverb else self.aud_system.reverb
-            self.volume = interpolate(self.volume, target_vol, .05)
+            target_vol = parent.volume / 10 if parent.occluded else parent.volume
+            self.volume = interpolate(self.volume, target_vol, .1)
         for idx, sample in enumerate(self.samples):
             if not sample.status:
                 sample.stop()
@@ -73,7 +72,6 @@ class ULReverb():
                 sample.volume = 0
                 continue
             mult = idx/sample_count
-            handle = self.handle
             loc = handle.location
             lloc = self.aud_system.device.listener_location
             loc = (loc[0]-lloc[0], loc[1]-lloc[1], loc[2]-lloc[2])
@@ -90,9 +88,6 @@ class ULReverb():
             sample.pitch = handle.pitch
             sample.volume = (1-(handle.volume * (mult**2)))*.5 * self.volume
             sample.cone_volume_outer = handle.cone_volume_outer
-
-    def stop(self):
-        self.sound.stop()
 
 
 class ULSound():

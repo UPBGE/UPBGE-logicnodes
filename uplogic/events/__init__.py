@@ -79,10 +79,10 @@ class ScheduledEvent():
 
 
 def schedule_callback(cb, delay=0.0, arg=None):
-    ScheduledFunction(cb, delay, arg)
+    ScheduledCallback(cb, delay, arg)
 
 
-class ScheduledFunction():
+class ScheduledCallback():
 
     def __init__(self, cb, delay=0.0, arg=None):
         self.time = time.time()

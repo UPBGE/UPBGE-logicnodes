@@ -645,10 +645,6 @@ def _list_menu_nodes():
     return menu_nodes
 
 
-def set_reverb_vol(*a):
-    print(a)
-
-
 # blender add-on registration callback
 def register():
     bpy.app.handlers.game_pre.append(_generate_on_game_start)
