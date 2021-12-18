@@ -679,7 +679,7 @@ def register():
     bpy.types.Object.reverb_volume = bpy.props.BoolProperty(
         default=False,
         name='Reverb Volume',
-        description='Whether this volume will cause sound to reverberate (Range Limit: 100m)'
+        description='Whether this volume will cause sound to reverberate (Range Limit: 50m)'
     )
     bpy.types.Object.reverb_samples = bpy.props.IntProperty(
         min=0,

@@ -32,11 +32,11 @@ class ULAudioSystem(object):
         self.device.distance_model = aud.DISTANCE_MODEL_INVERSE_CLAMPED
         self.device.speed_of_sound = bpy.context.scene.audio_doppler_speed
         self.device.doppler_factor = bpy.context.scene.audio_doppler_factor
-        self.reverb = True
         self.reverb_volumes = []
         for obj in scene.objects:
             if obj.blenderObject.reverb_volume and not obj.blenderObject.data:
                 self.reverb_volumes.append(obj)
+        self.reverb = len(self.reverb_volumes) > 0
         GlobalDB.retrieve('uplogic.audio').put(name, self)
         bpy.app.handlers.game_post.append(self.shutdown)
         scene.pre_draw.append(self.update)
@@ -61,38 +61,37 @@ class ULAudioSystem(object):
         if not self.active_sounds:
             return  # do not update if no sound has been installed
         # update the listener data
-        rvol, rrad = Vector((0, 0, 0)), 0
         cpos = cam.worldPosition
         distances = {}
-        for obj in self.reverb_volumes:
-            dist = obj.getDistanceTo(cam)
-            if dist > 50:
-                continue
-            else:
-                distances[dist] = obj
-        min_dist = distances[min(distances.keys())]
-        obj = min_dist
-        ob = obj.blenderObject
-        r = ob.empty_display_size
-        wpos = obj.worldPosition
-        sca = ob.scale
-        # if cam.getDistanceTo(obj) < ob.empty_display_size:
-        in_range = (
-            wpos.x - r*sca.x < cpos.x < wpos.x + r*sca.x and
-            wpos.y - r*sca.y < cpos.y < wpos.y + r*sca.y and
-            wpos.z - r*sca.z < cpos.z < wpos.z + r*sca.z
-        )
-        if in_range:
-            self.reverb = True
-            self.bounces = ob.reverb_samples
-            rvol, rrad = obj.worldPosition, r * 2
+        if self.reverb_volumes:
+            for obj in self.reverb_volumes:
+                dist = obj.getDistanceTo(cam)
+                if dist > 50:
+                    continue
+                else:
+                    distances[dist] = obj
+            min_dist = distances[min(distances.keys())]
+            obj = min_dist
+            ob = obj.blenderObject
+            r = ob.empty_display_size
+            wpos = obj.worldPosition
+            sca = ob.scale
+            # if cam.getDistanceTo(obj) < ob.empty_display_size:
+            in_range = (
+                wpos.x - r*sca.x < cpos.x < wpos.x + r*sca.x and
+                wpos.y - r*sca.y < cpos.y < wpos.y + r*sca.y and
+                wpos.z - r*sca.z < cpos.z < wpos.z + r*sca.z
+            )
+            if in_range:
+                self.reverb = True
+                self.bounces = ob.reverb_samples
         listener_vel = self.compute_listener_velocity(cam)
         dev = self.device
         dev.listener_location = cpos
         dev.listener_orientation = cam.worldOrientation.to_quaternion()
         dev.listener_velocity = listener_vel
         for s in self.active_sounds:
-            s.update(rvol=rvol, rrad=rrad)
+            s.update()
 
     def add(self, sound):
         self.active_sounds.append(sound)

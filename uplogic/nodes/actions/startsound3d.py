@@ -70,8 +70,8 @@ class ULStartSound3D(ULActionNode):
         if is_invalid(file):
             return
         self._handle = ULSound3D(
-            file,
             speaker,
+            file,
             'default',
             occlusion,
             transition,

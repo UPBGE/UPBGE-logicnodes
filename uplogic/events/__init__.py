@@ -3,6 +3,7 @@
 
 from bge import logic
 from uplogic.data.globaldb import GlobalDB
+import time
 
 
 class ULEventManager():
@@ -52,6 +53,52 @@ def throw(name: str, content=None, messenger=None) -> None:
     events = GlobalDB.retrieve('uplogic.events')
     if name not in events.locked:
         ULEvent(name, content, messenger, events)
+
+
+def schedule(name: str, content=None, messenger=None, delay=0.0):
+    ScheduledEvent(delay, name, content, messenger)
+
+
+class ScheduledEvent():
+
+    def __init__(self, delay, name, content, messenger):
+        self.time = time.time()
+        self.delay = self.time + delay
+        self.name = name
+        self.content = content
+        self.messenger = messenger
+        scene = self.scene = logic.getCurrentScene()
+        scene.pre_draw.append(self.throw_scheduled)
+
+    def throw_scheduled(self):
+        if time.time() >= self.delay:
+            self.scene.pre_draw.remove(self.throw_scheduled)
+            events = GlobalDB.retrieve('uplogic.events')
+            if self.name not in events.locked:
+                ULEvent(self.name, self.content, self.messenger, events)
+
+
+def schedule_callback(cb, delay=0.0, arg=None):
+    ScheduledFunction(cb, delay, arg)
+
+
+class ScheduledFunction():
+
+    def __init__(self, cb, delay=0.0, arg=None):
+        self.time = time.time()
+        self.delay = self.time + delay
+        self.callback = cb
+        self.arg = arg
+        scene = self.scene = logic.getCurrentScene()
+        scene.pre_draw.append(self.call_scheduled)
+
+    def call_scheduled(self):
+        if time.time() >= self.delay:
+            self.scene.pre_draw.remove(self.call_scheduled)
+            if self.arg:
+                self.callback(self.arg)
+            else:
+                self.callback()
 
 
 def catch(name: str):
