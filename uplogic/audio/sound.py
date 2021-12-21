@@ -3,6 +3,7 @@
 
 from bge import logic
 from bge.types import KX_GameObject as GameObject
+from bpy.types import AnyType
 from mathutils import Vector
 from uplogic.audio import ULAudioSystem
 from uplogic.data import GlobalDB

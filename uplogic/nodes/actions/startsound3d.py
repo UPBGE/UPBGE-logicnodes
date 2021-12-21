@@ -12,6 +12,7 @@ class ULStartSound3D(ULActionNode):
         self.condition = None
         self.sound = None
         self.occlusion = None
+        self.reverb = None
         self.transition = None
         self.cutoff = None
         self.speaker = None
@@ -55,6 +56,7 @@ class ULStartSound3D(ULActionNode):
             return
         speaker = self.get_socket_value(self.speaker)
         transition = self.get_socket_value(self.transition)
+        reverb = self.get_socket_value(self.reverb)
         occlusion = self.get_socket_value(self.occlusion)
         volume = self.get_socket_value(self.volume)
         cone_outer_volume = self.get_socket_value(self.cone_outer_volume)
@@ -82,6 +84,7 @@ class ULStartSound3D(ULActionNode):
             distance_ref,
             [cone_angle.x, cone_angle.y],
             cone_outer_volume,
-            loop_count
+            loop_count,
+            reverb
         )
         self.done = True

@@ -12246,6 +12246,7 @@ class NLActionStart3DSoundAdv(bpy.types.Node, NLActionNode):
         self.inputs.new(NLConditionSocket.bl_idname, "Condition")
         self.inputs.new(NLGameObjectSocket.bl_idname, "Speaker")
         self.inputs.new(NLSoundFileSocket.bl_idname, "Sound File")
+        self.inputs.new(NLBooleanSocket.bl_idname, "Enable Reverb")
         self.inputs.new(NLBooleanSocket.bl_idname, "Use Occlusion")
         self.inputs.new(NLSocketAlphaFloat.bl_idname, 'Transition')
         self.inputs[-1].value = .1
@@ -12293,6 +12294,7 @@ class NLActionStart3DSoundAdv(bpy.types.Node, NLActionNode):
             "condition",
             "speaker",
             "sound",
+            'reverb',
             'occlusion',
             'transition',
             'cutoff',

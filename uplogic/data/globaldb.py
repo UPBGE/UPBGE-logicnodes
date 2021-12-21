@@ -53,7 +53,6 @@ class GlobalDB(object):
         if db is None:
             db = GlobalDB(fname)
             cls.shared_dbs[fname] = db
-        # cls.shared_dbs[fname] = db
         return db
 
     @classmethod

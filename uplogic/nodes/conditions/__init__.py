@@ -22,3 +22,4 @@ from .catchevent import ULCatchEvent
 from .evaluateproperty import ULEvaluateProperty
 from .notcond import ULNot
 from .logictreestatus import ULLogicTreeStatus
+from .compare import ULCompare

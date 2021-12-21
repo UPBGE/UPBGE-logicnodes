@@ -1,74 +1,103 @@
 '''TODO: Documentation
 '''
 
+from types import MethodType
 from bge import logic
-from uplogic.data.globaldb import GlobalDB
+from bpy.types import AnyType
 import time
+
+
+SCENE = logic.getCurrentScene()
+
+
+def get_event_manager(name: str = 'default'):
+    if not ULEventManager.initialized:
+        SCENE.pre_draw.append(ULEventManager.update)
+        ULEventManager.initialized = True
 
 
 class ULEventManager():
     events = {}
+    callbacks = []
+    initialized = False
+    done = []
 
-    def __init__(self):
-        pass
+    @classmethod
+    def update(cls):
+        for cb in cls.callbacks.copy():
+            cb()
 
-    def register(name, content, messenger, events):
-        pass
+    @classmethod
+    def schedule(cls, cb):
+        if not cls.initialized:
+            get_event_manager()
+        cls.callbacks.append(cb)
+
+    @classmethod
+    def deschedule(cls, cb):
+        if not cls.initialized:
+            get_event_manager()
+        cls.callbacks.remove(cb)
+
+    @classmethod
+    def register(cls, event):
+        if not cls.initialized:
+            get_event_manager()
+        cls.events[event.name] = event
+        cls.schedule(event.remove)
+
+    # @classmethod
+    # def put(cls, event):
+
+    @classmethod
+    def catch(cls, name):
+        if not cls.initialized:
+            get_event_manager()
+        return cls.events.get(name, None)
+
+    @classmethod
+    def consume(cls, name):
+        if not cls.initialized:
+            get_event_manager()
+        return cls.events.pop(name, None)
 
 
 class ULEvent():
     '''TODO: Documentation
     '''
 
-    def __init__(self, name, content=None, messenger=None, events=None):
+    def __init__(self, name, content=None, messenger=None):
         self.name = name
         self.content = content
         self.messenger = messenger
-        self.events = events
-        # self.events.lock(self.name, self)
-        logic.getCurrentScene().pre_draw.append(self.register)
+        # ULEventManager.register(self)
+        ULEventManager.schedule(self.register)
 
-    def register(self, cam):
-        scene = logic.getCurrentScene()
-        if self.register not in scene.pre_draw:
-            return
-        if self.events.get(self.name):
-            return
-        # # self.events.unlock(self.name)
-        self.events.put(self.name, self)
-        scene.pre_draw.remove(self.register)
-        scene.pre_draw_setup.append(self.unregister)
+    def register(self):
+        ULEventManager.register(self)
+        ULEventManager.deschedule(self.register)
 
-    def unregister(self):
-        if not self.events:
-            return
-        scene = logic.getCurrentScene()
-        self.events.pop(self.name)
-        scene.pre_draw_setup.remove(self.unregister)
+    def remove(self):
+        ULEventManager.events.pop(self.name, None)
+        ULEventManager.deschedule(self.remove)
 
 
 def throw(name: str, content=None, messenger=None) -> None:
     '''TODO: Documentation
     '''
-    events = GlobalDB.retrieve('uplogic.events')
-    ULEvent(name, content, messenger, events)
-    # if name not in events.locked:
-    # else:
-    #     print(name, 'locked')
+    ULEvent(name, content, messenger)
 
 
 def catch(name: str):
     '''TODO: Documentation
     '''
-    events = GlobalDB.retrieve('uplogic.events')
-    return events.get(name)
+    return ULEventManager.catch(name)
 
 
 def consume(name: str):
     '''TODO: Documentation
     '''
-    events = GlobalDB.retrieve('uplogic.events')
-    return events.pop(name)
+    return ULEventManager.consume(name, None)
 
 
 def schedule(name: str, content=None, messenger=None, delay=0.0):
@@ -83,15 +112,12 @@ class ScheduledEvent():
         self.name = name
         self.content = content
         self.messenger = messenger
-        scene = self.scene = logic.getCurrentScene()
-        scene.pre_draw.append(self.throw_scheduled)
+        ULEventManager.schedule(self.throw_scheduled)
 
     def throw_scheduled(self):
         if time.time() >= self.delay:
-            self.scene.pre_draw.remove(self.throw_scheduled)
-            events = GlobalDB.retrieve('uplogic.events')
-            if self.name not in events.locked:
-                ULEvent(self.name, self.content, self.messenger, events)
+            ULEventManager.deschedule(self.throw_scheduled)
+            ULEvent(self.name, self.content, self.messenger)
 
 
 def schedule_callback(cb, delay=0.0, arg=None):
@@ -99,19 +125,21 @@ def schedule_callback(cb, delay=0.0, arg=None):
 
 
 class ScheduledCallback():
+    delay: float = 0
+    arg: AnyType = None
+    callback: MethodType = None
 
     def __init__(self, cb, delay=0.0, arg=None):
+        ULEventManager.schedule(self.call_scheduled)
         self.time = time.time()
         self.delay = self.time + delay
         self.callback = cb
         self.arg = arg
-        scene = self.scene = logic.getCurrentScene()
-        scene.pre_draw.append(self.call_scheduled)
 
     def call_scheduled(self):
         if time.time() >= self.delay:
-            self.scene.pre_draw.remove(self.call_scheduled)
-            if self.arg:
+            if self.arg is not None:
                 self.callback(self.arg)
             else:
                 self.callback()
+            ULEventManager.deschedule(self.call_scheduled)
