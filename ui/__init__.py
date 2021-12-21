@@ -469,8 +469,12 @@ class BGE_PT_LogicTreeOptions(bpy.types.Panel):
         if getattr(context.space_data, 'edit_tree', None) is not None:
             bge_netlogic._consume_update_tree_code_queue()
             if not bge_netlogic._tree_code_writer_started:
-                bge_netlogic._tree_code_writer_started = True
-                bpy.ops.bgenetlogic.treecodewriter_operator()
+                try:
+                    bge_netlogic._tree_code_writer_started = True
+                    bpy.ops.bgenetlogic.treecodewriter_operator()
+                    utils.success('Code Generator started.')
+                except Exception:
+                    utils.warn('Could not start Code Generator; Context Invalid.')
         return enabled
 
     def draw(self, context):

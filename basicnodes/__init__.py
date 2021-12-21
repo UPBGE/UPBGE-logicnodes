@@ -643,16 +643,18 @@ class NetLogicType:
     pass
 
 
-class NetLogicSocketType:
-    valid_sockets = []
+class NLSocket:
+    valid_sockets: list = []
+    nl_color: list = PARAMETER_SOCKET_COLOR
+
+    def __init__(self):
+        self.valid_sockets = []
+
+    def draw_color(self, context, node):
+        return self.nl_color
 
     def validate(self, from_socket):
-        if not self.valid_sockets:
-            return True
-        elif from_socket.bl_idname not in self.valid_sockets:
-            return False
-        else:
-            return True
+        pass
 
     def get_unlinked_value(self):
         raise NotImplementedError()
@@ -804,16 +806,17 @@ class NLNode(NetLogicType):
         pass
 
 
-class NLConditionSocket(bpy.types.NodeSocket, NetLogicSocketType):
+class NLConditionSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLConditionSocket"
     bl_label = "Condition"
     default_value: bpy.props.StringProperty(
         name='Condition',
         default="None"
     )
+    nl_color = CONDITION_SOCKET_COLOR
 
-    def draw_color(self, context, node):
-        return CONDITION_SOCKET_COLOR
+    # def draw_color(self, context, node):
+    #     return CONDITION_SOCKET_COLOR
 
     def draw(self, context, layout, node, text):
         layout.label(text=text)
@@ -825,7 +828,7 @@ class NLConditionSocket(bpy.types.NodeSocket, NetLogicSocketType):
 _sockets.append(NLConditionSocket)
 
 
-class NLPseudoConditionSocket(bpy.types.NodeSocket, NetLogicSocketType):
+class NLPseudoConditionSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLPseudoConditionSocket"
     bl_label = "Condition"
     value: bpy.props.BoolProperty(
@@ -853,13 +856,16 @@ class NLPseudoConditionSocket(bpy.types.NodeSocket, NetLogicSocketType):
 _sockets.append(NLPseudoConditionSocket)
 
 
-class NLParameterSocket(bpy.types.NodeSocket, NetLogicSocketType):
+class NLParameterSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLParameterSocket"
     bl_label = "Parameter"
-    color = PARAMETER_SOCKET_COLOR
+    nl_color = PARAMETER_SOCKET_COLOR
 
     def draw_color(self, context, node):
-        return self.color
+        return self.nl_color
+
+    def validate(self, from_socket):
+        self.nl_color = from_socket.nl_color
 
     def draw(self, context, layout, node, text):
         layout.label(text=text)
@@ -871,7 +877,7 @@ class NLParameterSocket(bpy.types.NodeSocket, NetLogicSocketType):
 _sockets.append(NLParameterSocket)
 
 
-class NLDictSocket(bpy.types.NodeSocket, NetLogicSocketType):
+class NLDictSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLDictSocket"
     bl_label = "Parameter"
 
@@ -888,7 +894,7 @@ class NLDictSocket(bpy.types.NodeSocket, NetLogicSocketType):
 _sockets.append(NLDictSocket)
 
 
-class NLListSocket(bpy.types.NodeSocket, NetLogicSocketType):
+class NLListSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLListSocket"
     bl_label = "Parameter"
 
@@ -905,7 +911,7 @@ class NLListSocket(bpy.types.NodeSocket, NetLogicSocketType):
 _sockets.append(NLListSocket)
 
 
-class NLCollisionMaskSocket(bpy.types.NodeSocket, NetLogicSocketType):
+class NLCollisionMaskSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLCollisionMaskSocket"
     bl_label = "Parameter"
     slot_0: bpy.props.BoolProperty(default=True)
@@ -952,7 +958,7 @@ class NLCollisionMaskSocket(bpy.types.NodeSocket, NetLogicSocketType):
 _sockets.append(NLCollisionMaskSocket)
 
 
-class NLLogicBrickSocket(bpy.types.NodeSocket, NetLogicSocketType):
+class NLLogicBrickSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLLogicBrickSocket"
     bl_label = "Property"
     value: bpy.props.StringProperty(
@@ -1015,7 +1021,7 @@ class NLLogicBrickSocket(bpy.types.NodeSocket, NetLogicSocketType):
 _sockets.append(NLLogicBrickSocket)
 
 
-class NLPythonSocket(bpy.types.NodeSocket, NetLogicSocketType):
+class NLPythonSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLPythonSocket"
     bl_label = "Python"
 
@@ -1032,7 +1038,7 @@ class NLPythonSocket(bpy.types.NodeSocket, NetLogicSocketType):
 _sockets.append(NLPythonSocket)
 
 
-class NLActionSocket(bpy.types.NodeSocket, NetLogicSocketType):
+class NLActionSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLActionSocket"
     bl_label = "Action"
 
@@ -1052,13 +1058,14 @@ class NLAbstractNode(NLNode):
     def poll(cls, node_tree):
         pass
 
-    #def insert_link(self, link):
-    #    to_socket = link.to_socket
-    #    from_socket = link.from_socket
-    #    try:
-    #        link.is_valid = to_socket.validate(from_socket)
-    #    except Exception:
-    #        utils.debug('Receiving Node not a Logic Node Type, skipping validation.')
+    def insert_link(self, link):
+        to_socket = link.to_socket
+        from_socket = link.from_socket
+        try:
+            to_socket.validate(from_socket)
+        except Exception as e:
+            utils.error(e)
+            utils.debug('Receiving Node not a Logic Node Type, skipping validation.')
 
     def free(self):
         pass
@@ -1126,7 +1133,7 @@ class NLParameterNode(NLAbstractNode):
 ###############################################################################
 
 
-class NLGameObjectSocket(bpy.types.NodeSocket, NetLogicSocketType):
+class NLGameObjectSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLGameObjectSocket"
     bl_label = "Object"
     value: bpy.props.PointerProperty(
@@ -1179,7 +1186,7 @@ class NLGameObjectSocket(bpy.types.NodeSocket, NetLogicSocketType):
 _sockets.append(NLGameObjectSocket)
 
 
-class NLCameraSocket(bpy.types.NodeSocket, NetLogicSocketType):
+class NLCameraSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLCameraSocket"
     bl_label = "Camera"
     value: bpy.props.PointerProperty(
@@ -1232,7 +1239,7 @@ class NLCameraSocket(bpy.types.NodeSocket, NetLogicSocketType):
 _sockets.append(NLCameraSocket)
 
 
-class NLSpeakerSocket(bpy.types.NodeSocket, NetLogicSocketType):
+class NLSpeakerSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLSpeakerSocket"
     bl_label = "Camera"
     value: bpy.props.PointerProperty(
@@ -1272,7 +1279,7 @@ class NLSpeakerSocket(bpy.types.NodeSocket, NetLogicSocketType):
 _sockets.append(NLSpeakerSocket)
 
 
-class NLNavMeshSocket(bpy.types.NodeSocket, NetLogicSocketType):
+class NLNavMeshSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLNavMeshSocket"
     bl_label = "Object"
     value: bpy.props.PointerProperty(
@@ -1325,7 +1332,7 @@ class NLNavMeshSocket(bpy.types.NodeSocket, NetLogicSocketType):
 _sockets.append(NLNavMeshSocket)
 
 
-class NLLightObjectSocket(bpy.types.NodeSocket, NetLogicSocketType):
+class NLLightObjectSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLLightObjectSocket"
     bl_label = "Light"
     value: bpy.props.PointerProperty(
@@ -1378,7 +1385,7 @@ class NLLightObjectSocket(bpy.types.NodeSocket, NetLogicSocketType):
 _sockets.append(NLLightObjectSocket)
 
 
-class NLArmatureObjectSocket(bpy.types.NodeSocket, NetLogicSocketType):
+class NLArmatureObjectSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLArmatureObjectSocket"
     bl_label = "Armature"
     value: bpy.props.PointerProperty(
@@ -1431,7 +1438,7 @@ class NLArmatureObjectSocket(bpy.types.NodeSocket, NetLogicSocketType):
 _sockets.append(NLArmatureObjectSocket)
 
 
-class NLCurveObjectSocket(bpy.types.NodeSocket, NetLogicSocketType):
+class NLCurveObjectSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLCurveObjectSocket"
     bl_label = "Curve"
     value: bpy.props.PointerProperty(
@@ -1483,7 +1490,7 @@ class NLCurveObjectSocket(bpy.types.NodeSocket, NetLogicSocketType):
 _sockets.append(NLCurveObjectSocket)
 
 
-class NLGamePropertySocket(bpy.types.NodeSocket, NetLogicSocketType):
+class NLGamePropertySocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLGamePropertySocket"
     bl_label = "Property"
     value: bpy.props.StringProperty(
@@ -1545,7 +1552,7 @@ class NLGamePropertySocket(bpy.types.NodeSocket, NetLogicSocketType):
 _sockets.append(NLGamePropertySocket)
 
 
-class NLArmatureBoneSocket(bpy.types.NodeSocket, NetLogicSocketType):
+class NLArmatureBoneSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLArmatureBoneSocket"
     bl_label = "Property"
     value: bpy.props.StringProperty(
@@ -1598,7 +1605,7 @@ class NLArmatureBoneSocket(bpy.types.NodeSocket, NetLogicSocketType):
 _sockets.append(NLArmatureBoneSocket)
 
 
-class NLBoneConstraintSocket(bpy.types.NodeSocket, NetLogicSocketType):
+class NLBoneConstraintSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLBoneConstraintSocket"
     bl_label = "Property"
     value: bpy.props.StringProperty(
@@ -1648,7 +1655,7 @@ class NLBoneConstraintSocket(bpy.types.NodeSocket, NetLogicSocketType):
 _sockets.append(NLBoneConstraintSocket)
 
 
-class NLGeomNodeTreeSocket(bpy.types.NodeSocket, NetLogicSocketType):
+class NLGeomNodeTreeSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLGeomNodeTreeSocket"
     bl_label = "Material"
     value: bpy.props.PointerProperty(
@@ -1687,7 +1694,7 @@ class NLGeomNodeTreeSocket(bpy.types.NodeSocket, NetLogicSocketType):
 _sockets.append(NLGeomNodeTreeSocket)
 
 
-class NLNodeGroupSocket(bpy.types.NodeSocket, NetLogicSocketType):
+class NLNodeGroupSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLNodeGroupSocket"
     bl_label = "Node Tree"
     value: bpy.props.PointerProperty(
@@ -1726,7 +1733,7 @@ class NLNodeGroupSocket(bpy.types.NodeSocket, NetLogicSocketType):
 _sockets.append(NLNodeGroupSocket)
 
 
-class NLNodeGroupNodeSocket(bpy.types.NodeSocket, NetLogicSocketType):
+class NLNodeGroupNodeSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLNodeGroupNodeSocket"
     bl_label = "Tree Node"
     value: bpy.props.StringProperty(
@@ -1766,7 +1773,7 @@ class NLNodeGroupNodeSocket(bpy.types.NodeSocket, NetLogicSocketType):
 _sockets.append(NLNodeGroupNodeSocket)
 
 
-class NLMaterialSocket(bpy.types.NodeSocket, NetLogicSocketType):
+class NLMaterialSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLMaterialSocket"
     bl_label = "Material"
     value: bpy.props.PointerProperty(
@@ -1805,7 +1812,7 @@ class NLMaterialSocket(bpy.types.NodeSocket, NetLogicSocketType):
 _sockets.append(NLMaterialSocket)
 
 
-class NLTreeNodeSocket(bpy.types.NodeSocket, NetLogicSocketType):
+class NLTreeNodeSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLTreeNodeSocket"
     bl_label = "Tree Node"
     value: bpy.props.StringProperty(
@@ -1845,7 +1852,7 @@ class NLTreeNodeSocket(bpy.types.NodeSocket, NetLogicSocketType):
 _sockets.append(NLTreeNodeSocket)
 
 
-class NLTextIDSocket(bpy.types.NodeSocket, NetLogicSocketType):
+class NLTextIDSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLTextIDSocket"
     bl_label = "Text"
     value: bpy.props.PointerProperty(
@@ -1883,7 +1890,7 @@ class NLTextIDSocket(bpy.types.NodeSocket, NetLogicSocketType):
 _sockets.append(NLTextIDSocket)
 
 
-class NLMeshSocket(bpy.types.NodeSocket, NetLogicSocketType):
+class NLMeshSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLMeshSocket"
     bl_label = "Mesh"
     value: bpy.props.PointerProperty(
@@ -1921,7 +1928,7 @@ class NLMeshSocket(bpy.types.NodeSocket, NetLogicSocketType):
 _sockets.append(NLMeshSocket)
 
 
-class NLGameObjectNameSocket(bpy.types.NodeSocket, NetLogicSocketType):
+class NLGameObjectNameSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLGameObjectNameSocket"
     bl_label = "Object"
     value: bpy.props.PointerProperty(
@@ -1959,7 +1966,7 @@ class NLGameObjectNameSocket(bpy.types.NodeSocket, NetLogicSocketType):
 _sockets.append(NLGameObjectNameSocket)
 
 
-class NLCollectionSocket(bpy.types.NodeSocket, NetLogicSocketType):
+class NLCollectionSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLCollectionSocket"
     bl_label = "Collection"
     value: bpy.props.PointerProperty(
@@ -2000,7 +2007,7 @@ class NLCollectionSocket(bpy.types.NodeSocket, NetLogicSocketType):
 _sockets.append(NLCollectionSocket)
 
 
-class NLSocketLogicTree(bpy.types.NodeSocket, NetLogicSocketType):
+class NLSocketLogicTree(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLSocketLogicTree"
     bl_label = "Logic Tree"
     value: bpy.props.PointerProperty(
@@ -2041,7 +2048,7 @@ class NLSocketLogicTree(bpy.types.NodeSocket, NetLogicSocketType):
 _sockets.append(NLSocketLogicTree)
 
 
-class NLAnimationSocket(bpy.types.NodeSocket, NetLogicSocketType):
+class NLAnimationSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLAnimationSocket"
     bl_label = "Action"
     value: bpy.props.PointerProperty(
@@ -2078,7 +2085,7 @@ class NLAnimationSocket(bpy.types.NodeSocket, NetLogicSocketType):
 _sockets.append(NLAnimationSocket)
 
 
-class NLSoundFileSocket(bpy.types.NodeSocket, NetLogicSocketType):
+class NLSoundFileSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLSoundFileSocket"
     bl_label = "String"
     filepath_value: bpy.props.StringProperty(
@@ -2127,7 +2134,7 @@ class NLSoundFileSocket(bpy.types.NodeSocket, NetLogicSocketType):
 _sockets.append(NLSoundFileSocket)
 
 
-class NLImageSocket(bpy.types.NodeSocket, NetLogicSocketType):
+class NLImageSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLImageSocket"
     bl_label = "Image"
     value: bpy.props.PointerProperty(
@@ -2166,7 +2173,7 @@ _sockets.append(NLImageSocket)
 ###############################################################################
 
 
-class NLGlobalCatSocket(bpy.types.NodeSocket, NetLogicSocketType):
+class NLGlobalCatSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLGlobalCatSocket"
     bl_label = "Category"
     value: bpy.props.StringProperty(
@@ -2197,7 +2204,7 @@ class NLGlobalCatSocket(bpy.types.NodeSocket, NetLogicSocketType):
 _sockets.append(NLGlobalCatSocket)
 
 
-class NLGlobalPropSocket(bpy.types.NodeSocket, NetLogicSocketType):
+class NLGlobalPropSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLGlobalPropSocket"
     bl_label = "Category"
     value: bpy.props.StringProperty(
@@ -2241,7 +2248,7 @@ _sockets.append(NLGlobalPropSocket)
 ###############################################################################
 
 
-class NLSocketAlphaFloat(bpy.types.NodeSocket, NetLogicSocketType):
+class NLSocketAlphaFloat(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLSocketAlphaFloat"
     bl_label = "Factor"
     value: bpy.props.FloatProperty(
@@ -2269,7 +2276,7 @@ class NLSocketAlphaFloat(bpy.types.NodeSocket, NetLogicSocketType):
 _sockets.append(NLSocketAlphaFloat)
 
 
-class NLSocketLogicOperator(bpy.types.NodeSocket, NetLogicSocketType):
+class NLSocketLogicOperator(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLSocketLogicOperator"
     bl_label = "Logic Operator"
     value: bpy.props.EnumProperty(
@@ -2295,7 +2302,7 @@ class NLSocketLogicOperator(bpy.types.NodeSocket, NetLogicSocketType):
 _sockets.append(NLSocketLogicOperator)
 
 
-class NLSocketControllerButtons(bpy.types.NodeSocket, NetLogicSocketType):
+class NLSocketControllerButtons(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLSocketControllerButtons"
     bl_label = "Controller Buttons"
     value: bpy.props.EnumProperty(
@@ -2320,7 +2327,7 @@ class NLSocketControllerButtons(bpy.types.NodeSocket, NetLogicSocketType):
 _sockets.append(NLSocketControllerButtons)
 
 
-class NLQualitySocket(bpy.types.NodeSocket, NetLogicSocketType):
+class NLQualitySocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLQualitySocket"
     bl_label = "Quality"
     value: bpy.props.EnumProperty(
@@ -2350,7 +2357,7 @@ class NLQualitySocket(bpy.types.NodeSocket, NetLogicSocketType):
 _sockets.append(NLQualitySocket)
 
 
-class NLSocketDistanceCheck(bpy.types.NodeSocket, NetLogicSocketType):
+class NLSocketDistanceCheck(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLSocketDistanceCheck"
     bl_label = "Distance Operator"
     value: bpy.props.EnumProperty(
@@ -2372,7 +2379,7 @@ class NLSocketDistanceCheck(bpy.types.NodeSocket, NetLogicSocketType):
 _sockets.append(NLSocketDistanceCheck)
 
 
-class NLSocketLoopCount(bpy.types.NodeSocket, NetLogicSocketType):
+class NLSocketLoopCount(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLSocketLoopCount"
     bl_label = "Loop Count"
     value: bpy.props.StringProperty(update=update_tree_code)
@@ -2427,7 +2434,7 @@ class NLSocketLoopCount(bpy.types.NodeSocket, NetLogicSocketType):
 _sockets.append(NLSocketLoopCount)
 
 
-class NLBooleanSocket(bpy.types.NodeSocket, NetLogicSocketType):
+class NLBooleanSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLBooleanSocket"
     bl_label = "Boolean"
     value: bpy.props.BoolProperty(update=update_tree_code)
@@ -2462,7 +2469,7 @@ class NLBooleanSocket(bpy.types.NodeSocket, NetLogicSocketType):
 _sockets.append(NLBooleanSocket)
 
 
-class NLXYZSocket(bpy.types.NodeSocket, NetLogicSocketType):
+class NLXYZSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLXYZSocket"
     bl_label = "Boolean"
     x: bpy.props.BoolProperty(update=update_tree_code, default=True)
@@ -2492,7 +2499,7 @@ class NLXYZSocket(bpy.types.NodeSocket, NetLogicSocketType):
 _sockets.append(NLXYZSocket)
 
 
-class NLInvertedXYSocket(bpy.types.NodeSocket, NetLogicSocketType):
+class NLInvertedXYSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLInvertedXYSocket"
     bl_label = "Boolean"
     x: bpy.props.BoolProperty(update=update_tree_code)
@@ -2520,7 +2527,7 @@ class NLInvertedXYSocket(bpy.types.NodeSocket, NetLogicSocketType):
 _sockets.append(NLInvertedXYSocket)
 
 
-class NLPositiveFloatSocket(bpy.types.NodeSocket, NetLogicSocketType):
+class NLPositiveFloatSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLPositiveFloatSocket"
     bl_label = "Positive Float"
     value: bpy.props.FloatProperty(min=0.0, update=update_tree_code)
@@ -2541,7 +2548,7 @@ class NLPositiveFloatSocket(bpy.types.NodeSocket, NetLogicSocketType):
 _sockets.append(NLPositiveFloatSocket)
 
 
-class NLPositiveStepFloat(bpy.types.NodeSocket, NetLogicSocketType):
+class NLPositiveStepFloat(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLPositiveStepFloat"
     bl_label = "Float"
     value: bpy.props.FloatProperty(min=1, default=1, update=update_tree_code)
@@ -2562,7 +2569,7 @@ class NLPositiveStepFloat(bpy.types.NodeSocket, NetLogicSocketType):
 _sockets.append(NLPositiveStepFloat)
 
 
-class NLPosFloatFormatSocket(bpy.types.NodeSocket, NetLogicSocketType):
+class NLPosFloatFormatSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLPosFloatFormatSocket"
     bl_label = "Positive Float"
     value: bpy.props.FloatProperty(min=0.0, update=update_tree_code)
@@ -2585,7 +2592,7 @@ class NLPosFloatFormatSocket(bpy.types.NodeSocket, NetLogicSocketType):
 _sockets.append(NLPosFloatFormatSocket)
 
 
-class NLSocketOptionalPositiveFloat(bpy.types.NodeSocket, NetLogicSocketType):
+class NLSocketOptionalPositiveFloat(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLSocketOptionalPositiveFloat"
     bl_label = "Positive Float"
     use_this: bpy.props.BoolProperty(update=update_tree_code)
@@ -2625,7 +2632,7 @@ class NLSocketOptionalPositiveFloat(bpy.types.NodeSocket, NetLogicSocketType):
 _sockets.append(NLSocketOptionalPositiveFloat)
 
 
-class NLSocketIKMode(bpy.types.NodeSocket, NetLogicSocketType):
+class NLSocketIKMode(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLSocketIKMode"
     bl_label = "IK Mode"
     value: bpy.props.EnumProperty(
@@ -2650,7 +2657,7 @@ class NLSocketIKMode(bpy.types.NodeSocket, NetLogicSocketType):
 _sockets.append(NLSocketIKMode)
 
 
-class NLAlphaSocket(bpy.types.NodeSocket, NetLogicSocketType):
+class NLAlphaSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLAlphaSocket"
     bl_label = "Alpha Float"
     value: bpy.props.StringProperty(update=update_tree_code)
@@ -2676,7 +2683,7 @@ class NLAlphaSocket(bpy.types.NodeSocket, NetLogicSocketType):
 _sockets.append(NLAlphaSocket)
 
 
-class NLQuotedStringFieldSocket(bpy.types.NodeSocket, NetLogicSocketType):
+class NLQuotedStringFieldSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLQuotedStringFieldSocket"
     bl_label = "String"
     value: bpy.props.StringProperty(update=update_tree_code)
@@ -2709,7 +2716,7 @@ class NLQuotedStringFieldSocket(bpy.types.NodeSocket, NetLogicSocketType):
 _sockets.append(NLQuotedStringFieldSocket)
 
 
-class NLFilePathSocket(bpy.types.NodeSocket, NetLogicSocketType):
+class NLFilePathSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLFilePathSocket"
     bl_label = "String"
     value: bpy.props.StringProperty(
@@ -2740,7 +2747,7 @@ class NLFilePathSocket(bpy.types.NodeSocket, NetLogicSocketType):
 _sockets.append(NLFilePathSocket)
 
 
-class NLIntegerFieldSocket(bpy.types.NodeSocket, NetLogicSocketType):
+class NLIntegerFieldSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLIntegerFieldSocket"
     bl_label = "Integer"
     value: bpy.props.IntProperty(update=update_tree_code)
@@ -2762,7 +2769,7 @@ class NLIntegerFieldSocket(bpy.types.NodeSocket, NetLogicSocketType):
 _sockets.append(NLIntegerFieldSocket)
 
 
-class NLPositiveIntegerFieldSocket(bpy.types.NodeSocket, NetLogicSocketType):
+class NLPositiveIntegerFieldSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLPositiveIntegerFieldSocket"
     bl_label = "Integer"
     value: bpy.props.IntProperty(min=0, default=0, update=update_tree_code)
@@ -2783,7 +2790,7 @@ class NLPositiveIntegerFieldSocket(bpy.types.NodeSocket, NetLogicSocketType):
 _sockets.append(NLPositiveIntegerFieldSocket)
 
 
-class NLCountSocket(bpy.types.NodeSocket, NetLogicSocketType):
+class NLCountSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLCountSocket"
     bl_label = "Integer"
     value: bpy.props.IntProperty(min=1, default=1, update=update_tree_code)
@@ -2804,7 +2811,7 @@ class NLCountSocket(bpy.types.NodeSocket, NetLogicSocketType):
 _sockets.append(NLCountSocket)
 
 
-class NLPositiveIntCentSocket(bpy.types.NodeSocket, NetLogicSocketType):
+class NLPositiveIntCentSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLPositiveIntCentSocket"
     bl_label = "Integer"
     value: bpy.props.IntProperty(
@@ -2830,7 +2837,7 @@ class NLPositiveIntCentSocket(bpy.types.NodeSocket, NetLogicSocketType):
 _sockets.append(NLPositiveIntCentSocket)
 
 
-class NLSceneSocket(bpy.types.NodeSocket, NetLogicSocketType):
+class NLSceneSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLSceneSocket"
     bl_label = "Scene"
 
@@ -2846,7 +2853,7 @@ class NLSceneSocket(bpy.types.NodeSocket, NetLogicSocketType):
 _sockets.append(NLSceneSocket)
 
 
-class NLValueFieldSocket(bpy.types.NodeSocket, NetLogicSocketType):
+class NLValueFieldSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLValueFieldSocket"
     bl_label = "Value"
     value: bpy.props.StringProperty(update=update_tree_code)
@@ -2931,7 +2938,7 @@ class NLValueFieldSocket(bpy.types.NodeSocket, NetLogicSocketType):
 _sockets.append(NLValueFieldSocket)
 
 
-class NLOptionalValueFieldSocket(bpy.types.NodeSocket, NetLogicSocketType):
+class NLOptionalValueFieldSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLOptionalValueFieldSocket"
     bl_label = "Value"
     value: bpy.props.StringProperty(update=update_tree_code)
@@ -3023,7 +3030,7 @@ class NLOptionalValueFieldSocket(bpy.types.NodeSocket, NetLogicSocketType):
 _sockets.append(NLOptionalValueFieldSocket)
 
 
-class NLNumericFieldSocket(bpy.types.NodeSocket, NetLogicSocketType):
+class NLNumericFieldSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLNumericFieldSocket"
     bl_label = "Value"
 
@@ -3056,7 +3063,7 @@ class NLNumericFieldSocket(bpy.types.NodeSocket, NetLogicSocketType):
 _sockets.append(NLNumericFieldSocket)
 
 
-class NLOptionalRadiansFieldSocket(bpy.types.NodeSocket, NetLogicSocketType):
+class NLOptionalRadiansFieldSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLOptionalRadiansFieldSocket"
     bl_label = "Value"
     value: bpy.props.StringProperty(update=update_tree_code, default="0.0")
@@ -3109,7 +3116,7 @@ class NLOptionalRadiansFieldSocket(bpy.types.NodeSocket, NetLogicSocketType):
 _sockets.append(NLOptionalRadiansFieldSocket)
 
 
-class NLSocketReadableMemberName(bpy.types.NodeSocket, NetLogicSocketType):
+class NLSocketReadableMemberName(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLSocketReadableMemberName"
     bl_label = "Att. Name"
     value: bpy.props.StringProperty(
@@ -3154,7 +3161,7 @@ class NLSocketReadableMemberName(bpy.types.NodeSocket, NetLogicSocketType):
 _sockets.append(NLSocketReadableMemberName)
 
 
-class NLKeyboardKeySocket(bpy.types.NodeSocket, NetLogicSocketType):
+class NLKeyboardKeySocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLKeyboardKeySocket"
     bl_label = "Key"
     value: bpy.props.StringProperty(update=update_tree_code)
@@ -3178,7 +3185,7 @@ class NLKeyboardKeySocket(bpy.types.NodeSocket, NetLogicSocketType):
 _sockets.append(NLKeyboardKeySocket)
 
 
-class NLMouseButtonSocket(bpy.types.NodeSocket, NetLogicSocketType):
+class NLMouseButtonSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLMouseButtonSocket"
     bl_label = "Mouse Button"
     value: bpy.props.EnumProperty(
@@ -3201,7 +3208,7 @@ class NLMouseButtonSocket(bpy.types.NodeSocket, NetLogicSocketType):
 _sockets.append(NLMouseButtonSocket)
 
 
-class NLVSyncSocket(bpy.types.NodeSocket, NetLogicSocketType):
+class NLVSyncSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLVSyncSocket"
     bl_label = "Vsync"
     value: bpy.props.EnumProperty(
@@ -3225,7 +3232,7 @@ class NLVSyncSocket(bpy.types.NodeSocket, NetLogicSocketType):
 _sockets.append(NLVSyncSocket)
 
 
-class NLPlayActionModeSocket(bpy.types.NodeSocket, NetLogicSocketType):
+class NLPlayActionModeSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLPlayActionModeSocket"
     bl_label = "Play Mode"
     value: bpy.props.EnumProperty(
@@ -3250,7 +3257,7 @@ class NLPlayActionModeSocket(bpy.types.NodeSocket, NetLogicSocketType):
 _sockets.append(NLPlayActionModeSocket)
 
 
-class NLFloatFieldSocket(bpy.types.NodeSocket, NetLogicSocketType):
+class NLFloatFieldSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLFloatFieldSocket"
     bl_label = "Float Value"
     value: bpy.props.FloatProperty(default=0, update=update_tree_code)
@@ -3272,7 +3279,7 @@ class NLFloatFieldSocket(bpy.types.NodeSocket, NetLogicSocketType):
 _sockets.append(NLFloatFieldSocket)
 
 
-class NLTimeSocket(bpy.types.NodeSocket, NetLogicSocketType):
+class NLTimeSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLTimeSocket"
     bl_label = "Float Value"
     value: bpy.props.FloatProperty(
@@ -3299,7 +3306,7 @@ class NLTimeSocket(bpy.types.NodeSocket, NetLogicSocketType):
 _sockets.append(NLTimeSocket)
 
 
-class NLVec2FieldSocket(bpy.types.NodeSocket, NetLogicSocketType):
+class NLVec2FieldSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLVec2FieldSocket"
     bl_label = "Float Value"
     value_x: bpy.props.FloatProperty(default=0, update=update_tree_code)
@@ -3327,7 +3334,7 @@ class NLVec2FieldSocket(bpy.types.NodeSocket, NetLogicSocketType):
 _sockets.append(NLVec2FieldSocket)
 
 
-class NLAngleLimitSocket(bpy.types.NodeSocket, NetLogicSocketType):
+class NLAngleLimitSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLAngleLimitSocket"
     bl_label = "Float Value"
     value_x: bpy.props.FloatProperty(
@@ -3363,7 +3370,7 @@ class NLAngleLimitSocket(bpy.types.NodeSocket, NetLogicSocketType):
 _sockets.append(NLAngleLimitSocket)
 
 
-class NLVec2PositiveFieldSocket(bpy.types.NodeSocket, NetLogicSocketType):
+class NLVec2PositiveFieldSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLVec2PositiveFieldSocket"
     bl_label = "Float Value"
     value_x: bpy.props.FloatProperty(
@@ -3399,7 +3406,7 @@ class NLVec2PositiveFieldSocket(bpy.types.NodeSocket, NetLogicSocketType):
 _sockets.append(NLVec2PositiveFieldSocket)
 
 
-class NLVec3FieldSocket(bpy.types.NodeSocket, NetLogicSocketType):
+class NLVec3FieldSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLVec3FieldSocket"
     bl_label = "Float Value"
     value_x: bpy.props.FloatProperty(default=0, update=update_tree_code)
@@ -3433,7 +3440,7 @@ class NLVec3FieldSocket(bpy.types.NodeSocket, NetLogicSocketType):
 _sockets.append(NLVec3FieldSocket)
 
 
-class NLVec3RotationSocket(bpy.types.NodeSocket, NetLogicSocketType):
+class NLVec3RotationSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLVec3RotationSocket"
     bl_label = "Float Value"
     value_x: bpy.props.FloatProperty(
@@ -3479,7 +3486,7 @@ class NLVec3RotationSocket(bpy.types.NodeSocket, NetLogicSocketType):
 _sockets.append(NLVec3RotationSocket)
 
 
-class NLVelocitySocket(bpy.types.NodeSocket, NetLogicSocketType):
+class NLVelocitySocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLVelocitySocket"
     bl_label = "Float Value"
     value_x: bpy.props.FloatProperty(
@@ -3525,7 +3532,7 @@ class NLVelocitySocket(bpy.types.NodeSocket, NetLogicSocketType):
 _sockets.append(NLVelocitySocket)
 
 
-class NLVec3PositiveFieldSocket(bpy.types.NodeSocket, NetLogicSocketType):
+class NLVec3PositiveFieldSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLVec3PositiveFieldSocket"
     bl_label = "Float Value"
     value_x: bpy.props.FloatProperty(
@@ -3568,7 +3575,7 @@ class NLVec3PositiveFieldSocket(bpy.types.NodeSocket, NetLogicSocketType):
 _sockets.append(NLVec3PositiveFieldSocket)
 
 
-class NLColorSocket(bpy.types.NodeSocket, NetLogicSocketType):
+class NLColorSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLColorSocket"
     bl_label = "Float Value"
     value: bpy.props.FloatVectorProperty(
@@ -3602,7 +3609,7 @@ class NLColorSocket(bpy.types.NodeSocket, NetLogicSocketType):
 _sockets.append(NLColorSocket)
 
 
-class NLColorAlphaSocket(bpy.types.NodeSocket, NetLogicSocketType):
+class NLColorAlphaSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLColorAlphaSocket"
     bl_label = "Float Value"
     value: bpy.props.FloatVectorProperty(
@@ -3637,7 +3644,7 @@ class NLColorAlphaSocket(bpy.types.NodeSocket, NetLogicSocketType):
 _sockets.append(NLColorAlphaSocket)
 
 
-class NLBlendActionModeSocket(bpy.types.NodeSocket, NetLogicSocketType):
+class NLBlendActionModeSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLBlendActionMode"
     bl_label = "Blend Mode"
     value: bpy.props.EnumProperty(
@@ -3663,7 +3670,7 @@ class NLBlendActionModeSocket(bpy.types.NodeSocket, NetLogicSocketType):
 _sockets.append(NLBlendActionModeSocket)
 
 
-class NLVectorSocket(bpy.types.NodeSocket, NetLogicSocketType):
+class NLVectorSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLVectorSocket"
     bl_label = "Parameter"
 
@@ -3679,7 +3686,7 @@ class NLVectorSocket(bpy.types.NodeSocket, NetLogicSocketType):
 _sockets.append(NLVectorSocket)
 
 
-class NLSocketVectorField(bpy.types.NodeSocket, NetLogicSocketType):
+class NLSocketVectorField(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLSocketVectorField"
     bl_label = "Vector"
     value: bpy.props.StringProperty(
@@ -3708,7 +3715,7 @@ class NLSocketVectorField(bpy.types.NodeSocket, NetLogicSocketType):
 _sockets.append(NLSocketVectorField)
 
 
-class NLOptionalSocketVectorField(bpy.types.NodeSocket, NetLogicSocketType):
+class NLOptionalSocketVectorField(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLOptionalSocketVectorField"
     bl_label = "Vector"
     value: bpy.props.StringProperty(
@@ -3738,7 +3745,7 @@ class NLOptionalSocketVectorField(bpy.types.NodeSocket, NetLogicSocketType):
 _sockets.append(NLOptionalSocketVectorField)
 
 
-class NLSocketOptionalFilePath(bpy.types.NodeSocket, NetLogicSocketType):
+class NLSocketOptionalFilePath(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLSocketOptionalFilePath"
     bl_label = "File"
     value: bpy.props.StringProperty(
@@ -3767,7 +3774,7 @@ class NLSocketOptionalFilePath(bpy.types.NodeSocket, NetLogicSocketType):
 _sockets.append(NLSocketOptionalFilePath)
 
 
-class NLSocketMouseWheelDirection(bpy.types.NodeSocket, NetLogicSocketType):
+class NLSocketMouseWheelDirection(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLSocketMouseWheelDirection"
     bl_label = "Mouse Wheel"
     value: bpy.props.EnumProperty(
@@ -3792,7 +3799,7 @@ class NLSocketMouseWheelDirection(bpy.types.NodeSocket, NetLogicSocketType):
 _sockets.append(NLSocketMouseWheelDirection)
 
 
-class NLSocketDistanceModels(bpy.types.NodeSocket, NetLogicSocketType):
+class NLSocketDistanceModels(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLSocketDistanceModels"
     bl_label = "Distance Model"
     value: bpy.props.EnumProperty(
@@ -3819,7 +3826,7 @@ class NLSocketDistanceModels(bpy.types.NodeSocket, NetLogicSocketType):
 _sockets.append(NLSocketDistanceModels)
 
 
-class NLVectorMathSocket(bpy.types.NodeSocket, NetLogicSocketType):
+class NLVectorMathSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLVectorMathSocket"
     bl_label = "Vector Math"
     value: bpy.props.EnumProperty(
@@ -3844,7 +3851,7 @@ class NLVectorMathSocket(bpy.types.NodeSocket, NetLogicSocketType):
 _sockets.append(NLVectorMathSocket)
 
 
-class NLTypeCastSocket(bpy.types.NodeSocket, NetLogicSocketType):
+class NLTypeCastSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLTypeCastSocket"
     bl_label = "Types"
     value: bpy.props.EnumProperty(
@@ -3869,7 +3876,7 @@ class NLTypeCastSocket(bpy.types.NodeSocket, NetLogicSocketType):
 _sockets.append(NLTypeCastSocket)
 
 
-class NLConstraintTypeSocket(bpy.types.NodeSocket, NetLogicSocketType):
+class NLConstraintTypeSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLConstraintTypeSocket"
     bl_label = "Constraint Type"
     value: bpy.props.EnumProperty(
@@ -3894,7 +3901,7 @@ class NLConstraintTypeSocket(bpy.types.NodeSocket, NetLogicSocketType):
 _sockets.append(NLConstraintTypeSocket)
 
 
-class NLSocketLocalAxis(bpy.types.NodeSocket, NetLogicSocketType):
+class NLSocketLocalAxis(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLSocketLocalAxis"
     bl_label = "Local Axis"
     value: bpy.props.EnumProperty(
@@ -3920,7 +3927,7 @@ class NLSocketLocalAxis(bpy.types.NodeSocket, NetLogicSocketType):
 _sockets.append(NLSocketLocalAxis)
 
 
-class NLSocketOrientedLocalAxis(bpy.types.NodeSocket, NetLogicSocketType):
+class NLSocketOrientedLocalAxis(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLSocketOrientedLocalAxis"
     bl_label = "Local Axis"
     value: bpy.props.EnumProperty(

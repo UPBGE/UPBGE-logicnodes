@@ -18,10 +18,10 @@ class ULCatchEvent(ULConditionNode):
         return self.event is not None
 
     def get_body(self):
-        return self.event.content
+        return None if self.event is None else self.event.content
 
     def get_target(self):
-        return self.event.messenger
+        return None if self.event is None else self.event.messenger
 
     def evaluate(self):
         self.received = False

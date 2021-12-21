@@ -49,11 +49,11 @@ class GlobalDB(object):
     def retrieve(cls, fname):
         '''TODO: Documentation
         '''
-        db = cls.shared_dbs.get(fname, GlobalDB(fname))
-        # if db is None:
-        #     db = GlobalDB(fname)
-        #     cls.shared_dbs[fname] = db
-        cls.shared_dbs[fname] = db
+        db = cls.shared_dbs.get(fname)
+        if db is None:
+            db = GlobalDB(fname)
+            cls.shared_dbs[fname] = db
+        # cls.shared_dbs[fname] = db
         return db
 
     @classmethod
@@ -163,8 +163,8 @@ class GlobalDB(object):
             debug("Compressing sld {}".format(file_name))
             GlobalDB.compress(self.fname, self.content)
 
-    def lock(self, item):
-        self.locked[item] = 1
+    def lock(self, item, event):
+        self.locked[item] = event
 
     def unlock(self, item):
         self.locked.pop(item)

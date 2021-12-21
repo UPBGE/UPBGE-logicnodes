@@ -7,9 +7,10 @@ import time
 
 
 class ULEventManager():
+    events = {}
 
     def __init__(self):
-        self.events = {}
+        pass
 
     def register(name, content, messenger, events):
         pass
@@ -20,46 +21,54 @@ class ULEvent():
     '''
 
     def __init__(self, name, content=None, messenger=None, events=None):
-        print(self, name)
         self.name = name
         self.content = content
         self.messenger = messenger
         self.events = events
-        events.lock(name)
+        # self.events.lock(self.name, self)
         logic.getCurrentScene().pre_draw.append(self.register)
 
     def register(self, cam):
         scene = logic.getCurrentScene()
         if self.register not in scene.pre_draw:
-            print(self.name)
-            print('WTF')
             return
         if self.events.get(self.name):
-            print(self.name)
-            print('WFT2')
             return
+        # # self.events.unlock(self.name)
         self.events.put(self.name, self)
-        self.events.unlock(self.name)
         scene.pre_draw.remove(self.register)
-        scene.pre_draw.append(self.unregister)
+        scene.pre_draw_setup.append(self.unregister)
 
     def unregister(self):
         if not self.events:
             return
         scene = logic.getCurrentScene()
         self.events.pop(self.name)
-        scene.pre_draw.remove(self.unregister)
+        scene.pre_draw_setup.remove(self.unregister)
 
 
 def throw(name: str, content=None, messenger=None) -> None:
     '''TODO: Documentation
     '''
     events = GlobalDB.retrieve('uplogic.events')
-    if name not in events.locked:
-        print(name)
-        ULEvent(name, content, messenger, events)
-    else:
-        print(name, 'locked')
+    ULEvent(name, content, messenger, events)
+    # if name not in events.locked:
+    # else:
+    #     print(name, 'locked')
+
+
+def catch(name: str):
+    '''TODO: Documentation
+    '''
+    events = GlobalDB.retrieve('uplogic.events')
+    return events.get(name)
+
+
+def consume(name: str):
+    '''TODO: Documentation
+    '''
+    events = GlobalDB.retrieve('uplogic.events')
+    return events.pop(name)
 
 
 def schedule(name: str, content=None, messenger=None, delay=0.0):
@@ -106,17 +115,3 @@ class ScheduledCallback():
                 self.callback(self.arg)
             else:
                 self.callback()
-
-
-def catch(name: str):
-    '''TODO: Documentation
-    '''
-    events = GlobalDB.retrieve('uplogic.events')
-    return events.get(name)
-
-
-def consume(name: str):
-    '''TODO: Documentation
-    '''
-    events = GlobalDB.retrieve('uplogic.events')
-    return events.pop(name)

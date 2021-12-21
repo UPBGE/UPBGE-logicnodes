@@ -1663,95 +1663,6 @@ class ActionPrint(ULActionNode):
         self.done = True
 
 
-class ActionCreateVehicle(ULActionNode):
-    def __init__(self):
-        ULActionNode.__init__(self)
-        self.condition = None
-        self.game_object = None
-        self.wheels_steering = None
-        self.wheels = None
-        self.suspension = None
-        self.stiffness = None
-        self.damping = None
-        self.friction = None
-        self.done = None
-        self.vehicle = None
-        self.wheels = None
-        self.OUT = ULOutSocket(self, self.get_done)
-        self.VEHICLE = ULOutSocket(self, self.get_vehicle)
-        self.WHEELS = ULOutSocket(self, self.get_wheels)
-
-    def get_done(self):
-        return self.done
-
-    def get_vehicle(self):
-        return self.vehicle
-
-    def get_wheels(self):
-        return self.wheels
-
-    def evaluate(self):
-        self.done = False
-        condition = self.get_socket_value(self.condition)
-        if not_met(condition):
-            return
-        game_object = self.get_socket_value(self.game_object)
-        wheels_steering = self.get_socket_value(self.wheels_steering)
-        wheels = self.get_socket_value(self.wheels)
-        suspension = self.get_socket_value(self.suspension)
-        stiffness = self.get_socket_value(self.stiffness)
-        damping = self.get_socket_value(self.damping)
-        friction = self.get_socket_value(self.friction)
-        if is_waiting(
-            game_object,
-            wheels_steering,
-            wheels,
-            suspension,
-            stiffness,
-            damping,
-            friction
-        ):
-            return
-        self._set_ready()
-        orig_ori = game_object.worldOrientation
-        game_object.worldOrientation = Euler((0, 0, 0), 'XYZ')
-        ph_id = game_object.getPhysicsId()
-        car = bge.constraints.createVehicle(ph_id)
-        down = Vector((0, 0, -1))
-        axle_dir = Vector((0, -1, 0))
-        wheels_steering = bpy.data.collections[wheels_steering]
-        wheels = bpy.data.collections[wheels]
-        for wheel in wheels_steering.objects:
-            wheel = check_game_object(wheel.name)
-            car.addWheel(
-                wheel,
-                wheel.worldPosition - game_object.worldPosition,
-                down,
-                axle_dir,
-                suspension,
-                abs(wheel.worldScale.x/2),
-                True
-            )
-        for wheel in wheels.objects:
-            wheel = check_game_object(wheel.name)
-            car.addWheel(
-                wheel,
-                wheel.worldPosition - game_object.worldPosition,
-                down,
-                axle_dir,
-                suspension,
-                abs(wheel.worldScale.x/2),
-                False
-            )
-        for wheel in range(car.getNumWheels()):
-            car.setSuspensionStiffness(stiffness, wheel)
-            car.setSuspensionDamping(damping, wheel)
-            car.setTyreFriction(friction, wheel)
-        self.vehicle = car
-        game_object.worldOrientation = orig_ori
-        self.done = True
-
-
 class ActionCreateVehicleFromParent(ULActionNode):
     def __init__(self):
         ULActionNode.__init__(self)
@@ -1806,7 +1717,7 @@ class ActionCreateVehicleFromParent(ULActionNode):
         ph_id = game_object.getPhysicsId()
         car = bge.constraints.createVehicle(ph_id)
         down = Vector((0, 0, -1))
-        axle_dir = game_object.getAxisVect(Vector((0, -1, 0)))
+        axle_dir = game_object.getAxisVect(Vector((-1, 0, 0)))
         wheels = []
         cs = sorted(game_object.children, key=lambda c: c.name)
         for c in cs:
