@@ -16,16 +16,28 @@ class ULLogicTreeStatus(ULConditionNode):
         self.IFSTOPPED = ULOutSocket(self, self.get_stopped)
 
     def get_running(self):
-        tree = self.tree
-        if not tree:
-            return STATUS_WAITING
-        return tree.is_running()
+        socket = self.get_socket('running')
+        if socket is None:
+            tree = self.tree
+            if not tree:
+                return STATUS_WAITING
+            return self.set_socket(
+                'running',
+                tree.is_running()
+            )
+        return socket
 
     def get_stopped(self):
-        tree = self.tree
-        if not tree:
-            return STATUS_WAITING
-        return tree.is_stopped()
+        socket = self.get_socket('stopped')
+        if socket is None:
+            tree = self.tree
+            if not tree:
+                return STATUS_WAITING
+            return self.set_socket(
+                'stopped',
+                tree.is_stopped()
+            )
+        return socket
 
     def evaluate(self):
         game_object = self.get_socket_value(self.game_object)

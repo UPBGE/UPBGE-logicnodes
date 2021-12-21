@@ -18,16 +18,22 @@ class ULEvaluateProperty(ULConditionNode):
         self.VAL = ULOutSocket(self, self.get_val)
 
     def get_out(self):
-        compare_value = self.get_socket_value(self.compare_value)
-        if is_waiting(compare_value):
-            return STATUS_WAITING
-        operator = self.get_socket_value(self.operator)
-        if operator > 1:  # eq and neq are valid for None
-            if is_invalid(self.val, compare_value):
+        socket = self.get_socket('out')
+        if socket is None:
+            compare_value = self.get_socket_value(self.compare_value)
+            if is_waiting(compare_value):
                 return STATUS_WAITING
-        if operator is None:
-            return STATUS_WAITING
-        return LOGIC_OPERATORS[operator](self.val, compare_value)
+            operator = self.get_socket_value(self.operator)
+            if operator > 1:  # eq and neq are valid for None
+                if is_invalid(self.val, compare_value):
+                    return STATUS_WAITING
+            if operator is None:
+                return STATUS_WAITING
+            return self.set_socket(
+                'out',
+                LOGIC_OPERATORS[operator](self.val, compare_value)
+            )
+        return socket
 
     def get_val(self):
         return self.val

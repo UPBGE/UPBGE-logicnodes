@@ -16,26 +16,32 @@ class ULGamepadButton(ULConditionNode):
         self.initialized = False
 
     def get_button(self):
-        index = self.get_socket_value(self.index)
-        if logic.joysticks[index]:
-            joystick = logic.joysticks[index]
-        else:
-            self._button = False
-            self._set_ready()
-            return STATUS_WAITING
-        if is_invalid(joystick):
-            return STATUS_WAITING
-        if self.button in joystick.activeButtons:
-            if not self.initialized:
-                pressed = True
+        socket = self.get_socket('button')
+        if socket is None:
+            index = self.get_socket_value(self.index)
+            if logic.joysticks[index]:
+                joystick = logic.joysticks[index]
+            else:
+                self._button = False
+                self._set_ready()
+                return STATUS_WAITING
+            if is_invalid(joystick):
+                return STATUS_WAITING
+            if self.button in joystick.activeButtons:
+                if not self.initialized:
+                    pressed = True
+                else:
+                    pressed = False
+                if not self.pulse:
+                    self.initialized = True
             else:
                 pressed = False
-            if not self.pulse:
-                self.initialized = True
-        else:
-            pressed = False
-            self.initialized = False
-        return pressed
+                self.initialized = False
+            return self.set_socket(
+                'button',
+                pressed
+            )
+        return socket
 
     def evaluate(self):
         self._set_ready()

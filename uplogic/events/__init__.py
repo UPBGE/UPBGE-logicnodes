@@ -7,10 +7,9 @@ import time
 
 
 class ULEventManager():
-    events = {}
 
     def __init__(self):
-        pass
+        self.events = {}
 
     def register(name, content, messenger, events):
         pass
@@ -21,6 +20,7 @@ class ULEvent():
     '''
 
     def __init__(self, name, content=None, messenger=None, events=None):
+        print(self, name)
         self.name = name
         self.content = content
         self.messenger = messenger
@@ -31,12 +31,16 @@ class ULEvent():
     def register(self, cam):
         scene = logic.getCurrentScene()
         if self.register not in scene.pre_draw:
+            print(self.name)
+            print('WTF')
             return
         if self.events.get(self.name):
+            print(self.name)
+            print('WFT2')
             return
+        self.events.put(self.name, self)
         self.events.unlock(self.name)
         scene.pre_draw.remove(self.register)
-        self.events.put(self.name, self)
         scene.pre_draw.append(self.unregister)
 
     def unregister(self):
@@ -52,7 +56,10 @@ def throw(name: str, content=None, messenger=None) -> None:
     '''
     events = GlobalDB.retrieve('uplogic.events')
     if name not in events.locked:
+        print(name)
         ULEvent(name, content, messenger, events)
+    else:
+        print(name, 'locked')
 
 
 def schedule(name: str, content=None, messenger=None, delay=0.0):

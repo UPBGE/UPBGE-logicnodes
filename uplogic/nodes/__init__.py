@@ -1,10 +1,9 @@
 from bge import logic
 from bge.types import KX_GameObject as GameObject
-from mathutils import Vector, Euler, Matrix, Quaternion
+from mathutils import Vector, Euler, Quaternion
 from uplogic.data import GlobalDB
 from uplogic.utils import LO_AXIS_TO_VECTOR
 from uplogic.utils import LOGIC_OPERATORS
-from uplogic.utils import STATUS_INVALID
 from uplogic.utils import STATUS_READY
 from uplogic.utils import STATUS_WAITING
 from uplogic.utils import compute_distance
@@ -369,7 +368,21 @@ class ULOutSocket(ULLogicBase):
 
 
 class ULLogicNode(ULLogicContainer):
-    pass
+
+    def __init__(self):
+        super().__init__()
+        self.socket_values = {}
+
+    def reset(self):
+        super().reset()
+        self.socket_values = {}
+
+    def set_socket(self, socket, value):
+        self.socket_values[socket] = value
+        return value
+
+    def get_socket(self, socket, default=None):
+        return self.socket_values.get(socket, default)
 
 
 class ULParameterNode(ULLogicNode):
@@ -402,36 +415,6 @@ class ULConditionNode(ULLogicNode):
 ###############################################################################
 # Unordered
 ###############################################################################
-
-
-class ConditionLogicOp(ULConditionNode):
-    def __init__(self, operator='GREATER'):
-        ULConditionNode.__init__(self)
-        self.operator = operator
-        self.param_a = None
-        self.param_b = None
-        self.threshold = None
-
-    def evaluate(self):
-        a = self.get_socket_value(self.param_a)
-        b = self.get_socket_value(self.param_b)
-        threshold = self.get_socket_value(self.threshold)
-        operator = self.get_socket_value(self.operator)
-        if is_waiting(a, b, threshold):
-            return
-        self._set_ready()
-        if operator > 1:  # eq and neq are valid for None
-            if a is None:
-                return
-            if b is None:
-                return
-        if threshold is None:
-            threshold = 0
-        if threshold > 0 and abs(a - b) < threshold:
-            a = b
-        if operator is None:
-            return
-        self._set_value(LOGIC_OPERATORS[operator](a, b))
 
 
 class ConditionCompareVecs(ULConditionNode):

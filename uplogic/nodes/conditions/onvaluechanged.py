@@ -1,6 +1,5 @@
 from uplogic.nodes import ULConditionNode
 from uplogic.nodes import ULOutSocket
-from uplogic.utils import is_waiting
 
 
 class ULOnValueChanged(ULConditionNode):

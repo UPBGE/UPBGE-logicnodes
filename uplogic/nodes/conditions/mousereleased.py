@@ -13,17 +13,26 @@ class ULMouseReleased(ULConditionNode):
         self.OUT = ULOutSocket(self, self.get_changed)
 
     def get_changed(self):
-        mouse_button = self.get_socket_value(self.mouse_button_code)
-        if is_waiting(mouse_button):
-            return STATUS_WAITING
-        mstat = self.network.mouse_events[mouse_button]
-        if self.pulse:
-            return (
-                mstat.released or
-                mstat.inactive
-            )
-        else:
-            return (mstat.released)
+        socket = self.get_socket('changed')
+        if socket is None:
+            mouse_button = self.get_socket_value(self.mouse_button_code)
+            if is_waiting(mouse_button):
+                return STATUS_WAITING
+            mstat = self.network.mouse_events[mouse_button]
+            if self.pulse:
+                return self.set_socket(
+                    'changed',
+                    (
+                        mstat.released or
+                        mstat.inactive
+                    )
+                )
+            else:
+                return self.set_socket(
+                    'changed',
+                    (mstat.released)
+                )
+        return socket
 
     def setup(self, network):
         self.network = network

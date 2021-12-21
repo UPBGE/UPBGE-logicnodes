@@ -1,5 +1,6 @@
 from uplogic.nodes import ULConditionNode
 from uplogic.nodes import ULOutSocket
+from uplogic.utils import STATUS_WAITING
 from uplogic.utils import is_waiting
 
 
@@ -10,10 +11,16 @@ class ULNot(ULConditionNode):
         self.OUT = ULOutSocket(self, self.get_out)
 
     def get_out(self):
-        condition = self.get_socket_value(self.condition)
-        if is_waiting(condition):
-            return
-        return not condition
+        socket = self.get_socket('out')
+        if socket is None:
+            condition = self.get_socket_value(self.condition)
+            if is_waiting(condition):
+                return STATUS_WAITING
+            return self.set_socket(
+                'out',
+                not condition
+            )
+        return socket
 
     def evaluate(self):
         self._set_ready()

@@ -17,30 +17,40 @@ class ULGamepadButtonUp(ULConditionNode):
         self.initialized = False
 
     def get_button(self):
-        pressed = False
-        index = self.get_socket_value(self.index)
-        if logic.joysticks[index]:
-            joystick = logic.joysticks[index]
-        else:
-            return STATUS_WAITING
-        if is_invalid(joystick):
-            return STATUS_WAITING
-
-        button_down = True if self.button in joystick.activeButtons else False
-
-        if button_down != self._last_value and not button_down:
-            if not self.pulse and not self.initialized:
-                self.initialized = True
-            pressed = True
-        elif (pressed and self.initialized) or button_down:
-
+        socket = self.get_socket('button')
+        if socket is None:
             pressed = False
-            self.initialized = False
-        elif not (self.initialized and button_down) and pressed:
-            pressed = True
+            index = self.get_socket_value(self.index)
+            if logic.joysticks[index]:
+                joystick = logic.joysticks[index]
+            else:
+                return STATUS_WAITING
+            if is_invalid(joystick):
+                return STATUS_WAITING
 
-        self._last_value = button_down
-        return pressed
+            button_down = (
+                True if
+                self.button in joystick.activeButtons else
+                False
+            )
+
+            if button_down != self._last_value and not button_down:
+                if not self.pulse and not self.initialized:
+                    self.initialized = True
+                pressed = True
+            elif (pressed and self.initialized) or button_down:
+
+                pressed = False
+                self.initialized = False
+            elif not (self.initialized and button_down) and pressed:
+                pressed = True
+
+            self._last_value = button_down
+            return self.set_socket(
+                'button',
+                pressed
+            )
+        return socket
 
     def evaluate(self):
         self._set_ready()

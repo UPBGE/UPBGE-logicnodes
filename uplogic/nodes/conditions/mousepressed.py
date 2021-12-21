@@ -12,18 +12,27 @@ class ULMousePressed(ULConditionNode):
         self.OUT = ULOutSocket(self, self.get_pressed)
 
     def get_pressed(self):
-        mouse_button = self.get_socket_value(self.mouse_button_code)
-        if is_waiting(mouse_button):
-            return STATUS_WAITING
-        self._set_ready()
-        mstat = self.network.mouse_events[mouse_button]
-        if self.pulse:
-            return (
-                mstat.active or
-                mstat.activated
-            )
-        else:
-            return (mstat.activated)
+        socket = self.get_socket('pressed')
+        if socket is None:
+            mouse_button = self.get_socket_value(self.mouse_button_code)
+            if is_waiting(mouse_button):
+                return STATUS_WAITING
+            self._set_ready()
+            mstat = self.network.mouse_events[mouse_button]
+            if self.pulse:
+                return self.set_socket(
+                    'pressed',
+                    (
+                        mstat.active or
+                        mstat.activated
+                    )
+                )
+            else:
+                return self.set_socket(
+                    'pressed',
+                    (mstat.activated)
+                )
+        return socket
 
     def evaluate(self):
         self._set_ready()

@@ -7309,6 +7309,8 @@ class NLConditionLogicOperation(bpy.types.Node, NLConditionNode):
     bl_idname = "NLConditionLogicOperation"
     bl_label = "Compare"
     nl_category = "Math"
+    nl_module = "conditions"
+
     operator: bpy.props.EnumProperty(
         name='Operator',
         items=_enum_logic_operators,
@@ -7334,7 +7336,7 @@ class NLConditionLogicOperation(bpy.types.Node, NLConditionNode):
         )
 
     def get_netlogic_class_name(self):
-        return "nodes.ConditionLogicOp"
+        return "ULCompare"
 
     def get_input_sockets_field_names(self):
         return ["param_a", "param_b", 'threshold']
@@ -7352,6 +7354,10 @@ class NLConditionLogicOperation(bpy.types.Node, NLConditionNode):
             "operator",
             self.operator
         )
+
+    def get_output_socket_varnames(self):
+        return ['RESULT']
+
 
 
 _nodes.append(NLConditionLogicOperation)

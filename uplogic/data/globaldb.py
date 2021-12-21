@@ -172,11 +172,8 @@ class GlobalDB(object):
     def get(self, key, default_value=None):
         '''TODO: Documentation
         '''
-        # print(f'First Here with {key.__class__} as {key}')
         if not key:
-            # print('Key Invalid')
             return default_value
-        # print('Then Here')
         return self.content.get(key, default_value)
 
     def clear(self):

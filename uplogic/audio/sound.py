@@ -62,7 +62,11 @@ class ULReverb():
                 self.volume = interpolate(self.volume, 0, .1)
         else:
             parent = self.parent
-            target_vol = parent.volume / 10 if parent.occluded else parent.volume
+            target_vol = (
+                parent.volume / 10 if
+                parent.occluded else
+                parent.volume / 2
+            )
             self.volume = interpolate(self.volume, target_vol, .1)
         for idx, sample in enumerate(self.samples):
             if not sample.status:
