@@ -12,11 +12,17 @@ class ULChildByName(ULParameterNode):
         self.CHILD = ULOutSocket(self, self.get_child)
 
     def get_child(self):
-        parent = self.get_socket_value(self.from_parent)
-        child_name = self.get_socket_value(self.child)
-        if is_invalid(parent, child_name):
-            return STATUS_WAITING
-        return parent.childrenRecursive.get(child_name)
+        socket = self.get_socket('child')
+        if socket is None:
+            parent = self.get_socket_value(self.from_parent)
+            child_name = self.get_socket_value(self.child)
+            if is_invalid(parent, child_name):
+                return STATUS_WAITING
+            return self.set_socket(
+                'child',
+                parent.childrenRecursive.get(child_name)
+            )
+        return socket
 
     def evaluate(self):
         self._set_ready()

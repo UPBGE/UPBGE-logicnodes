@@ -15,15 +15,18 @@ class ULGetGlobalValue(ULParameterNode):
         self.OUT = ULOutSocket(self, self.get_out)
 
     def get_out(self):
-        data_id = self.get_socket_value(self.data_id)
-        key = self.get_socket_value(self.key)
-        default = self.get_socket_value(self.default)
-        if default is STATUS_INVALID:
-            default = None
-        if is_waiting(data_id, key, default):
-            return STATUS_WAITING
-        db = GlobalDB.retrieve(data_id)
-        return db.get(key, default)
+        socket = self.get_socket('val')
+        if socket is None:
+            data_id = self.get_socket_value(self.data_id)
+            key = self.get_socket_value(self.key)
+            default = self.get_socket_value(self.default)
+            if default is STATUS_INVALID:
+                default = None
+            if is_waiting(data_id, key, default):
+                return STATUS_WAITING
+            db = GlobalDB.retrieve(data_id)
+            return self.set_socket('val', db.get(key, default))
+        return socket
 
     def evaluate(self):
         self._set_ready()

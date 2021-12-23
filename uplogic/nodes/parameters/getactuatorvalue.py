@@ -14,14 +14,20 @@ class ULGetActuatorValue(ULParameterNode):
         self.OUT = ULOutSocket(self, self.get_actuator)
 
     def get_actuator(self):
-        game_obj = self.get_socket_value(self.game_obj)
-        act_name = self.get_socket_value(self.act_name)
-        field = self.get_socket_value(self.field)
-        if is_invalid(game_obj, act_name, field):
-            return STATUS_WAITING
-        if act_name not in game_obj.actuators:
-            return STATUS_WAITING
-        return getattr(game_obj.actuators[act_name], field)
+        socket = self.get_socket('actuator')
+        if socket is None:
+            game_obj = self.get_socket_value(self.game_obj)
+            act_name = self.get_socket_value(self.act_name)
+            field = self.get_socket_value(self.field)
+            if is_invalid(game_obj, act_name, field):
+                return STATUS_WAITING
+            if act_name not in game_obj.actuators:
+                return STATUS_WAITING
+            return self.set_socket(
+                'actuator',
+                getattr(game_obj.actuators[act_name], field)
+            )
+        return socket
 
     def evaluate(self):
         self._set_ready()

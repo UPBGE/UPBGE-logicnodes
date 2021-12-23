@@ -646,6 +646,7 @@ class NetLogicType:
 class NLSocket:
     valid_sockets: list = []
     nl_color: list = PARAMETER_SOCKET_COLOR
+    
 
     def __init__(self):
         self.valid_sockets = []
@@ -4973,7 +4974,7 @@ class NLGetSensorNode(bpy.types.Node, NLConditionNode):
     bl_label = "Sensor Positive"
     nl_category = "Logic"
     nl_subcat = 'Bricks'
-    nl_module = 'parameters'
+    nl_module = 'conditions'
 
     def init(self, context):
         NLConditionNode.init(self, context)
@@ -4984,6 +4985,9 @@ class NLGetSensorNode(bpy.types.Node, NLConditionNode):
 
     def get_netlogic_class_name(self):
         return "ULSensorPositive"
+
+    def get_input_sockets_field_names(self):
+        return ['obj_name', 'sens_name']
 
     def get_output_socket_varnames(self):
         return ['OUT']
@@ -6623,6 +6627,7 @@ class NLKeyLoggerAction(bpy.types.Node, NLActionNode):
     bl_label = "Logger"
     nl_category = "Input"
     nl_subcat = 'Keyboard'
+    nl_module = 'actions'
     pulse: bpy.props.BoolProperty(
         description=(
             'ON: True until the key is released, '
@@ -6646,7 +6651,7 @@ class NLKeyLoggerAction(bpy.types.Node, NLActionNode):
         )
 
     def get_netlogic_class_name(self):
-        return "nodes.ActionKeyLogger"
+        return "ULKeyLogger"
 
     def get_input_sockets_field_names(self):
         return ["condition"]
@@ -6672,6 +6677,8 @@ class NLKeyReleasedCondition(bpy.types.Node, NLConditionNode):
     bl_label = "Key Up"
     nl_category = "Input"
     nl_subcat = 'Keyboard'
+    nl_module = 'conditions'
+
     pulse: bpy.props.BoolProperty(
         description=(
             'ON: True until the key is released, '
@@ -6694,7 +6701,7 @@ class NLKeyReleasedCondition(bpy.types.Node, NLConditionNode):
         )
 
     def get_netlogic_class_name(self):
-        return "nodes.ConditionKeyReleased"
+        return "ULKeyReleased"
 
     def get_input_sockets_field_names(self):
         return ["key_code"]
@@ -6967,7 +6974,7 @@ class NLConditionNextFrameNode(bpy.types.Node, NLConditionNode):
         utils.register_outputs(self, NLConditionSocket, "Next Tick")
 
     def get_netlogic_class_name(self):
-        return "ULOnNextFrame"
+        return "ULOnNextTick"
 
     def get_input_sockets_field_names(self):
         return ["input_condition"]
@@ -7030,6 +7037,7 @@ class NLConditionCollisionNode(bpy.types.Node, NLConditionNode):
     bl_idname = "NLConditionCollisionNode"
     bl_label = "Collision"
     nl_category = "Physics"
+    nl_module = 'conditions'
     pulse: bpy.props.BoolProperty(
         update=update_tree_code)
 
@@ -7058,7 +7066,7 @@ class NLConditionCollisionNode(bpy.types.Node, NLConditionNode):
         )
 
     def get_netlogic_class_name(self):
-        return "nodes.ConditionCollision"
+        return "ULCollision"
 
     def get_input_sockets_field_names(self):
         return ["game_object", 'use_mat', 'prop', 'material']
@@ -7121,6 +7129,7 @@ class NLConditionAndNode(bpy.types.Node, NLConditionNode):
     bl_width_min = 60
     bl_width_default = 80
     nl_category = "Logic"
+    nl_module = 'conditions'
 
     def init(self, context):
         NLConditionNode.init(self, context)
@@ -7130,10 +7139,10 @@ class NLConditionAndNode(bpy.types.Node, NLConditionNode):
         self.outputs.new(NLConditionSocket.bl_idname, "If A and B")
 
     def get_netlogic_class_name(self):
-        return "nodes.ConditionAnd"
+        return "ULAnd"
 
     def get_input_sockets_field_names(self):
-        return ["condition_a", "condition_b"]
+        return ["ca", "cb"]
 
 
 _nodes.append(NLConditionAndNode)
@@ -7145,6 +7154,7 @@ class NLConditionAndNotNode(bpy.types.Node, NLConditionNode):
     bl_width_min = 60
     bl_width_default = 100
     nl_category = "Logic"
+    nl_module = 'parameters'
 
     def init(self, context):
         NLConditionNode.init(self, context)
@@ -7154,7 +7164,7 @@ class NLConditionAndNotNode(bpy.types.Node, NLConditionNode):
         self.outputs.new(NLConditionSocket.bl_idname, "If A and not B")
 
     def get_netlogic_class_name(self):
-        return "nodes.ConditionAndNot"
+        return "ULAndNot"
 
     def get_input_sockets_field_names(self):
         return ["condition_a", "condition_b"]
@@ -7169,6 +7179,7 @@ class NLConditionOrNode(bpy.types.Node, NLConditionNode):
     bl_width_min = 60
     bl_width_default = 80
     nl_category = "Logic"
+    nl_module = 'conditions'
 
     def init(self, context):
         NLConditionNode.init(self, context)
@@ -7178,10 +7189,10 @@ class NLConditionOrNode(bpy.types.Node, NLConditionNode):
         self.outputs.new(NLConditionSocket.bl_idname, 'A or B')
 
     def get_netlogic_class_name(self):
-        return "nodes.ConditionOr"
+        return "ULOr"
 
     def get_input_sockets_field_names(self):
-        return ["condition_a", "condition_b"]
+        return ["ca", "cb"]
 
 
 _nodes.append(NLConditionOrNode)
@@ -7193,6 +7204,7 @@ class NLConditionOrList(bpy.types.Node, NLConditionNode):
     bl_width_min = 60
     bl_width_default = 100
     nl_category = "Logic"
+    nl_module = 'conditions'
 
     def init(self, context):
         NLConditionNode.init(self, context)
@@ -7216,7 +7228,7 @@ class NLConditionOrList(bpy.types.Node, NLConditionNode):
             self.inputs[-1].enabled = True
 
     def get_netlogic_class_name(self):
-        return "nodes.ConditionOrList"
+        return "ULOrList"
 
     def get_input_sockets_field_names(self):
         return [
@@ -7238,6 +7250,7 @@ class NLConditionAndList(bpy.types.Node, NLConditionNode):
     bl_width_min = 60
     bl_width_default = 100
     nl_category = "Logic"
+    nl_module = 'conditions'
 
     def init(self, context):
         NLConditionNode.init(self, context)
@@ -7267,7 +7280,7 @@ class NLConditionAndList(bpy.types.Node, NLConditionNode):
             self.inputs[-1].enabled = True
 
     def get_netlogic_class_name(self):
-        return "nodes.ConditionAndList"
+        return "ULAndList"
 
     def get_input_sockets_field_names(self):
         return [
@@ -7375,6 +7388,8 @@ class NLConditionCompareVecs(bpy.types.Node, NLConditionNode):
     bl_label = "Compare Vectors"
     nl_category = "Math"
     nl_subcat = 'Vector Math'
+    nl_module = 'conditions'
+
     operator: bpy.props.EnumProperty(
         name='Operator',
         items=_enum_logic_operators,
@@ -7393,10 +7408,13 @@ class NLConditionCompareVecs(bpy.types.Node, NLConditionNode):
         self.outputs.new(NLConditionSocket.bl_idname, "If True")
 
     def get_netlogic_class_name(self):
-        return "nodes.ConditionCompareVecs"
+        return "ULCompareVectors"
 
     def get_input_sockets_field_names(self):
         return ['all', 'threshold', "param_a", "param_b"]
+    
+    def get_output_socket_varnames(self):
+        return ['OUT']
 
     def setup(self, cell_varname, uids, line_writer):
         NLNode.setup(
@@ -7420,6 +7438,7 @@ class NLConditionDistanceCheck(bpy.types.Node, NLConditionNode):
     bl_idname = "NLConditionDistanceCheck"
     bl_label = "Check Distance"
     nl_category = "Math"
+    nl_module = 'conditions'
 
     def init(self, context):
         NLConditionNode.init(self, context)
@@ -7431,7 +7450,7 @@ class NLConditionDistanceCheck(bpy.types.Node, NLConditionNode):
         self.outputs.new(NLConditionSocket.bl_idname, "Out")
 
     def get_netlogic_class_name(self):
-        return "nodes.ConditionDistanceCheck"
+        return "ULCheckDistance"
 
     def get_input_sockets_field_names(self):
         return ["operator", "param_a", "param_b", "dist", "hyst"]
@@ -7489,6 +7508,7 @@ class NLConditionTimeElapsed(bpy.types.Node, NLConditionNode):
     bl_idname = "NLConditionTimeElapsed"
     bl_label = "Timer"
     nl_category = 'Time'
+    nl_module = 'conditions'
 
     def init(self, context):
         NLConditionNode.init(self, context)
@@ -7497,7 +7517,7 @@ class NLConditionTimeElapsed(bpy.types.Node, NLConditionNode):
         self.outputs.new(NLConditionSocket.bl_idname, "When Elapsed")
 
     def get_netlogic_class_name(self):
-        return "nodes.ConditionTimeElapsed"
+        return "ULTimer"
 
     def get_input_sockets_field_names(self):
         return ["condition", "delta_time"]
@@ -7512,6 +7532,7 @@ class NLConditionNotNoneNode(bpy.types.Node, NLConditionNode):
     bl_width_min = 60
     bl_width_default = 100
     nl_category = "Logic"
+    nl_module = 'conditions'
 
     def init(self, context):
         NLConditionNode.init(self, context)
@@ -7520,7 +7541,7 @@ class NLConditionNotNoneNode(bpy.types.Node, NLConditionNode):
         utils.register_outputs(self, NLConditionSocket, "If Not None")
 
     def get_netlogic_class_name(self):
-        return "nodes.ConditionNotNone"
+        return "ULNotNone"
 
     def get_input_sockets_field_names(self):
         return ["checked_value"]
@@ -7535,6 +7556,7 @@ class NLConditionNoneNode(bpy.types.Node, NLConditionNode):
     bl_width_min = 60
     bl_width_default = 80
     nl_category = "Logic"
+    nl_module = 'conditions'
 
     def init(self, context):
         NLConditionNode.init(self, context)
@@ -7543,7 +7565,7 @@ class NLConditionNoneNode(bpy.types.Node, NLConditionNode):
         self.outputs.new(NLConditionSocket.bl_idname, "If None")
 
     def get_netlogic_class_name(self):
-        return "nodes.ConditionNone"
+        return "ULNone"
 
     def get_input_sockets_field_names(self):
         return ["checked_value"]
@@ -7556,6 +7578,7 @@ class NLConditionValueValidNode(bpy.types.Node, NLConditionNode):
     bl_idname = "NLConditionValueValidNode"
     bl_label = "Value Valid"
     nl_category = "Values"
+    nl_module = 'conditions'
 
     def init(self, context):
         NLConditionNode.init(self, context)
@@ -7563,7 +7586,7 @@ class NLConditionValueValidNode(bpy.types.Node, NLConditionNode):
         self.outputs.new(NLConditionSocket.bl_idname, "If Valid")
 
     def get_netlogic_class_name(self):
-        return "nodes.ConditionValueValid"
+        return "ULValueValid"
 
     def get_input_sockets_field_names(self):
         return ["checked_value"]
@@ -12246,7 +12269,6 @@ class NLActionStart3DSoundAdv(bpy.types.Node, NLActionNode):
         self.inputs.new(NLConditionSocket.bl_idname, "Condition")
         self.inputs.new(NLGameObjectSocket.bl_idname, "Speaker")
         self.inputs.new(NLSoundFileSocket.bl_idname, "Sound File")
-        self.inputs.new(NLBooleanSocket.bl_idname, "Enable Reverb")
         self.inputs.new(NLBooleanSocket.bl_idname, "Use Occlusion")
         self.inputs.new(NLSocketAlphaFloat.bl_idname, 'Transition')
         self.inputs[-1].value = .1
@@ -12257,6 +12279,7 @@ class NLActionStart3DSoundAdv(bpy.types.Node, NLActionNode):
         self.inputs[-1].value = 1.0
         self.inputs.new(NLPositiveFloatSocket.bl_idname, "Volume")
         self.inputs[-1].value = 1.0
+        self.inputs.new(NLBooleanSocket.bl_idname, "Enable Reverb")
         self.inputs.new(NLPositiveFloatSocket.bl_idname, "Attenuation")
         self.inputs[-1].value = 1.0
         self.inputs.new(NLPosFloatFormatSocket.bl_idname, "Reference Distance")
@@ -12273,7 +12296,7 @@ class NLActionStart3DSoundAdv(bpy.types.Node, NLActionNode):
     def update_draw(self):
         self.inputs[4].enabled = self.inputs[5].enabled = self.inputs[3].value
         state = self.advanced
-        for i in [10, 11, 12, 13]:
+        for i in [9, 10, 11, 12, 13]:
             ipt = self.inputs[i]
             if ipt.is_linked:
                 ipt.enabled = True
@@ -12294,13 +12317,13 @@ class NLActionStart3DSoundAdv(bpy.types.Node, NLActionNode):
             "condition",
             "speaker",
             "sound",
-            'reverb',
             'occlusion',
             'transition',
             'cutoff',
             "loop_count",
             "pitch",
             "volume",
+            'reverb',
             "attenuation",
             "distance_ref",
             "cone_angle",
@@ -12776,6 +12799,7 @@ class NLActionRandomFloat(bpy.types.Node, NLActionNode):
     bl_label = "Random Float"
     nl_category = "Values"
     nl_subcat = 'Random'
+    nl_module = 'parameters'
 
     def init(self, context):
         NLActionNode.init(self, context)
@@ -12787,7 +12811,7 @@ class NLActionRandomFloat(bpy.types.Node, NLActionNode):
         return ["max_value", "min_value"]
 
     def get_netlogic_class_name(self):
-        return "nodes.ActionRandomFloat"
+        return "ULRandomFloat"
 
     def get_output_socket_varnames(self):
         return ["OUT_A"]

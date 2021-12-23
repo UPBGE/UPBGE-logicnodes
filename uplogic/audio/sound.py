@@ -3,7 +3,6 @@
 
 from bge import logic
 from bge.types import KX_GameObject as GameObject
-from bpy.types import AnyType
 from mathutils import Vector
 from uplogic.audio import ULAudioSystem
 from uplogic.data import GlobalDB
@@ -39,7 +38,9 @@ class ULReverb():
         sample.location = handle.location
         sample.velocity = handle.velocity
         sample.attenuation = handle.attenuation
-        sample.orientation = handle.orientation
+        ori = self.parent.speaker.worldOrientation.to_quaternion()
+        ori.negate()
+        sample.orientation = ori
         sample.pitch = handle.pitch
         sample.volume = 0
         sample.distance_reference = handle.distance_reference
@@ -87,7 +88,9 @@ class ULReverb():
             )
             sample.velocity = handle.velocity
             sample.attenuation = handle.attenuation
-            sample.orientation = handle.orientation
+            ori = self.parent.speaker.worldOrientation.to_quaternion()
+            ori.negate()
+            sample.orientation = ori
             sample.distance_maximum = handle.distance_maximum
             sample.cone_angle_inner = handle.cone_angle_inner
             sample.pitch = handle.pitch
@@ -180,18 +183,18 @@ class ULSound3D(ULSound):
         self,
         speaker: GameObject = None,
         file: str = '',
-        aud_system: str = 'default',
         occlusion: bool = False,
         transition_speed: float = .1,
         cutoff_frequency: float = .1,
-        volume: float = 1,
+        loop_count: int = -1,
         pitch: float = 1,
+        volume: float = 1,
+        reverb=False,
         attenuation: float = 1,
         distance_ref: float = 1,
         cone_angle: list[float] = [360, 360],
         cone_outer_volume: float = 0,
-        loop_count: int = -1,
-        reverb=False
+        aud_system: str = 'default'
     ):
         if not (file and aud_system and speaker):
             return
@@ -237,7 +240,7 @@ class ULSound3D(ULSound):
             handle.cone_angle_outer = cone_angle[1]
             handle.loop_count = loop_count
             handle.cone_volume_outer = cone_outer_volume * volume
-        if self.aud_system.reverb and self.reverb:
+        if self.reverb:
             self.reverb_samples = ULReverb(
                 self,
                 sound,

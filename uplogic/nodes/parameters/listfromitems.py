@@ -17,18 +17,21 @@ class ULListFromItems(ULParameterNode):
         self.LIST = ULOutSocket(self, self.get_list)
 
     def get_list(self):
-        value = self.get_socket_value(self.value)
-        value2 = self.get_socket_value(self.value2)
-        value3 = self.get_socket_value(self.value3)
-        value4 = self.get_socket_value(self.value4)
-        value5 = self.get_socket_value(self.value5)
-        value6 = self.get_socket_value(self.value6)
-        values = [value, value2, value3, value4, value5, value6]
-        self.items = []
-        for val in values:
-            if not is_waiting(val) and not is_invalid(val):
-                self.items.append(val)
-        return self.items
+        socket = self.get_socket('list')
+        if socket is None:
+            value = self.get_socket_value(self.value)
+            value2 = self.get_socket_value(self.value2)
+            value3 = self.get_socket_value(self.value3)
+            value4 = self.get_socket_value(self.value4)
+            value5 = self.get_socket_value(self.value5)
+            value6 = self.get_socket_value(self.value6)
+            values = [value, value2, value3, value4, value5, value6]
+            self.items = []
+            for val in values:
+                if not is_waiting(val) and not is_invalid(val):
+                    self.items.append(val)
+            return self.set_socket('list', self.items)
+        return socket
 
     def evaluate(self):
         self._set_ready()

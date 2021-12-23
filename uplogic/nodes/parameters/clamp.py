@@ -14,19 +14,22 @@ class ULClamp(ULParameterNode):
         self.OUT = ULOutSocket(self, self.get_done)
 
     def get_done(self):
-        value = self.get_socket_value(self.value)
-        range_ft = self.get_socket_value(self.range)
-        if is_waiting(range_ft):
-            return STATUS_WAITING
-        if is_invalid(value):
-            return STATUS_WAITING
-        if range_ft.x == range_ft.y:
-            return value
-        if value < range_ft.x:
-            value = range_ft.x
-        if value > range_ft.y:
-            value = range_ft.y
-        return value
+        socket = self.get_socket('result')
+        if socket is None:
+            value = self.get_socket_value(self.value)
+            range_ft = self.get_socket_value(self.range)
+            if is_waiting(range_ft):
+                return STATUS_WAITING
+            if is_invalid(value):
+                return STATUS_WAITING
+            if range_ft.x == range_ft.y:
+                return value
+            if value < range_ft.x:
+                value = range_ft.x
+            if value > range_ft.y:
+                value = range_ft.y
+            return self.set_socket('result', value)
+        return socket
 
     def evaluate(self):
         self._set_ready()

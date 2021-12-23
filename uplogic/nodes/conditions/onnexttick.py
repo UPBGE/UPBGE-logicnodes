@@ -1,7 +1,7 @@
 from uplogic.nodes import ULConditionNode
 
 
-class ULOnNextFrame(ULConditionNode):
+class ULOnNextTick(ULConditionNode):
 
     def __init__(self):
         ULConditionNode.__init__(self)

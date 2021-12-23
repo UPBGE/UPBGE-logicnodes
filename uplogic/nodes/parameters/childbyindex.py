@@ -14,14 +14,20 @@ class ULChildByIndex(ULParameterNode):
         self.CHILD = ULOutSocket(self, self.get_child)
 
     def get_child(self):
-        parent: GameObject = self.get_socket_value(self.from_parent)
-        index: int = self.get_socket_value(self.index)
-        if is_waiting(parent, index):
+        socket = self.get_socket('child')
+        if socket is None:
+            parent: GameObject = self.get_socket_value(self.from_parent)
+            index: int = self.get_socket_value(self.index)
+            if is_waiting(parent, index):
+                return STATUS_WAITING
+            elif not is_invalid(parent):
+                if len(parent.children) > index:
+                    return self.set_socket(
+                        'child',
+                        parent.children[index]
+                    )
             return STATUS_WAITING
-        elif not is_invalid(parent):
-            if len(parent.children) > index:
-                return parent.children[index]
-        return STATUS_WAITING
+        return socket
 
     def evaluate(self):
         self._set_ready()

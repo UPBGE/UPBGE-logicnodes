@@ -1,7 +1,9 @@
 from uplogic.events import catch
+from uplogic.events import ULEvent
 from uplogic.nodes import ULConditionNode
 from uplogic.nodes import ULOutSocket
-from uplogic.utils import STATUS_WAITING, is_invalid
+from uplogic.utils import STATUS_WAITING
+from uplogic.utils import is_invalid
 
 
 class ULCatchEvent(ULConditionNode):
@@ -15,7 +17,7 @@ class ULCatchEvent(ULConditionNode):
         self.TARGET = ULOutSocket(self, self.get_target)
 
     def get_received(self):
-        return self.event is not None
+        return isinstance(self.event, ULEvent)
 
     def get_body(self):
         return STATUS_WAITING if self.event is None else self.event.content
@@ -29,3 +31,4 @@ class ULCatchEvent(ULConditionNode):
             return
         self._set_ready()
         self.event = catch(subject)
+        # print(self.event)

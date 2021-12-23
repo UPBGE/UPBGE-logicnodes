@@ -59,13 +59,16 @@ class ULFormula(ULParameterNode):
         self.OUT = ULOutSocket(self, self.get_out)
 
     def get_out(self):
-        a = self.get_socket_value(self.a)
-        b = self.get_socket_value(self.b)
-        formula_locals = self._formula_locals
-        formula_locals["a"] = a
-        formula_locals["b"] = b
-        out = eval(self.formula, self._formula_globals, formula_locals)
-        return out
+        socket = self.get_socket('out')
+        if socket is None:
+            a = self.get_socket_value(self.a)
+            b = self.get_socket_value(self.b)
+            formula_locals = self._formula_locals
+            formula_locals["a"] = a
+            formula_locals["b"] = b
+            out = eval(self.formula, self._formula_globals, formula_locals)
+            return self.set_socket('out', out)
+        return socket
 
     def evaluate(self):
         self._set_ready()

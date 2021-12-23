@@ -28,6 +28,13 @@ class ULEventManager():
             cb()
 
     @classmethod
+    def log(cls):
+        if cls.events:
+            print('Events:')
+            for evt in cls.events:
+                print(f'\t{evt}:\t{cls.events[evt]}')
+
+    @classmethod
     def schedule(cls, cb):
         if not cls.initialized:
             get_event_manager()
@@ -45,9 +52,6 @@ class ULEventManager():
             get_event_manager()
         cls.events[event.name] = event
         cls.schedule(event.remove)
-
-    # @classmethod
-    # def put(cls, event):
 
     @classmethod
     def catch(cls, name):
@@ -70,7 +74,6 @@ class ULEvent():
         self.name = name
         self.content = content
         self.messenger = messenger
-        # ULEventManager.register(self)
         ULEventManager.schedule(self.register)
 
     def register(self):

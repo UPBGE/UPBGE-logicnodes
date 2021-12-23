@@ -15,12 +15,15 @@ class ULInterpolate(ULParameterNode):
         self.OUT = ULOutSocket(self, self.get_done)
 
     def get_done(self):
-        a = self.get_socket_value(self.a)
-        b = self.get_socket_value(self.b)
-        fac = self.get_socket_value(self.fac)
-        if is_invalid(a, b, fac):
-            return STATUS_WAITING
-        return interpolate(a, b, fac)
+        socket = self.get_socket('val')
+        if socket is None:
+            a = self.get_socket_value(self.a)
+            b = self.get_socket_value(self.b)
+            fac = self.get_socket_value(self.fac)
+            if is_invalid(a, b, fac):
+                return STATUS_WAITING
+            return self.set_socket('val', interpolate(a, b, fac))
+        return socket
 
     def evaluate(self):
         self._set_ready()

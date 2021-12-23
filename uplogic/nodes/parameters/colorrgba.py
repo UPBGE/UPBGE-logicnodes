@@ -11,10 +11,15 @@ class ULColorRGBA(ULParameterNode):
         self.OUTV = ULOutSocket(self, self.get_out_v)
 
     def get_out_v(self):
-        c = self.get_socket_value(self.color)
-        if is_waiting(c):
-            return
-        return c.copy()
+        socket = self.get_socket('out_v')
+        if socket is None:
+            c = self.get_socket_value(self.color)
+            if is_waiting(c):
+                return
+            c = c.copy()
+            c.resize_4d()
+            return self.set_socket('out_v', c)
+        return socket
 
     def evaluate(self):
         self._set_ready()

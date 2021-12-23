@@ -11,14 +11,23 @@ class ULGetCurvePoints(ULParameterNode):
         self.OUT = ULOutSocket(self, self.get_points)
 
     def get_points(self):
-        obj = self.get_socket_value(self.curve)
-        if is_invalid(obj):
-            return
-        offset = obj.worldPosition
-        o = obj.blenderObject.data.splines[0]
-        if o.type == 'BEZIER':
-            return [Vector(p.co) + offset for p in o.bezier_points]
-        return [Vector(p.co[:-1]) + offset for p in o.points]
+        socket = self.get_socket('points')
+        if socket is None:
+            obj = self.get_socket_value(self.curve)
+            if is_invalid(obj):
+                return
+            offset = obj.worldPosition
+            o = obj.blenderObject.data.splines[0]
+            if o.type == 'BEZIER':
+                return self.set_socket(
+                    'points',
+                    [Vector(p.co) + offset for p in o.bezier_points]
+                )
+            return self.set_socket(
+                'points',
+                [Vector(p.co[:-1]) + offset for p in o.points]
+            )
+        return socket
 
     def evaluate(self):
         self._set_ready()

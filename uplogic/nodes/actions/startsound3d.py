@@ -50,6 +50,12 @@ class ULStartSound3D(ULActionNode):
     def evaluate(self):
         self.done = False
         self.on_finish = False
+        volume = self.get_socket_value(self.volume)
+        pitch = self.get_socket_value(self.pitch) * logic.getTimeScale()
+        if self._handle:
+            self._handle.volume = volume
+            self._handle.pitch = pitch
+            return
         condition = self.get_socket_value(self.condition)
         if not_met(condition):
             self._set_ready()
@@ -58,7 +64,6 @@ class ULStartSound3D(ULActionNode):
         transition = self.get_socket_value(self.transition)
         reverb = self.get_socket_value(self.reverb)
         occlusion = self.get_socket_value(self.occlusion)
-        volume = self.get_socket_value(self.volume)
         cone_outer_volume = self.get_socket_value(self.cone_outer_volume)
         attenuation = self.get_socket_value(self.attenuation)
         cutoff = self.get_socket_value(self.cutoff)
@@ -66,25 +71,25 @@ class ULStartSound3D(ULActionNode):
         loop_count = self.get_socket_value(self.loop_count)
         distance_ref = self.get_socket_value(self.distance_ref)
         cone_angle = self.get_socket_value(self.cone_angle)
-        pitch = self.get_socket_value(self.pitch) * logic.getTimeScale()
         self._set_ready()
 
         if is_invalid(file):
             return
+        print(reverb)
         self._handle = ULSound3D(
             speaker,
             file,
-            'default',
             occlusion,
             transition,
             cutoff,
-            volume,
+            loop_count,
             pitch,
+            volume,
+            reverb,
             attenuation,
             distance_ref,
             [cone_angle.x, cone_angle.y],
             cone_outer_volume,
-            loop_count,
-            reverb
+            'default'
         )
         self.done = True

@@ -290,8 +290,13 @@ def get_instance_by_distance(game_obj: GameObject, name: str):
 ###############################################################################
 
 def interpolate(a: float, b: float, fac: float) -> float:
-    '''TODO: Documentation
-    '''
+    """Interpolate between 2 values using a factor.
+
+    @param a: starting value
+    @param b: target value
+    @param fac: interpolation factor
+    @returns: calculated value as float
+    """
     if -.001 < a-b < .001:
         return b
     return (fac * b) + ((1-fac) * a)

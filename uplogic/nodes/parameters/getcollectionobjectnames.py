@@ -13,17 +13,20 @@ class ULGetCollectionObjectNames(ULParameterNode):
         self.OUT = ULOutSocket(self, self.get_objects)
 
     def get_objects(self):
-        collection = self.get_socket_value(self.collection)
-        if is_invalid(collection):
-            return STATUS_WAITING
-        col = bpy.data.collections.get(collection)
-        if not col:
-            return STATUS_WAITING
-        objects = []
-        for o in col.objects:
-            if not o.parent:
-                objects.append(o.name)
-        return objects
+        socket = self.get_socket('objects')
+        if socket is None:
+            collection = self.get_socket_value(self.collection)
+            if is_invalid(collection):
+                return STATUS_WAITING
+            col = bpy.data.collections.get(collection)
+            if not col:
+                return STATUS_WAITING
+            objects = []
+            for o in col.objects:
+                if not o.parent:
+                    objects.append(o.name)
+            return self.set_socket('objects', objects)
+        return socket
 
     def evaluate(self):
         self._set_ready()

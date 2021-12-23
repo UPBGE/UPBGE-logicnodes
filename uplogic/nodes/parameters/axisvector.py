@@ -12,11 +12,17 @@ class ULAxisVector(ULParameterNode):
         self.OUT = ULOutSocket(self, self.get_vec)
 
     def get_vec(self):
-        obj = self.get_socket_value(self.game_object)
-        front_vector = LO_AXIS_TO_VECTOR[self.axis]
-        if is_invalid(obj, front_vector):
-            return STATUS_WAITING
-        return obj.getAxisVect(front_vector)
+        socket = self.get_socket('vec')
+        if socket is None:
+            obj = self.get_socket_value(self.game_object)
+            front_vector = LO_AXIS_TO_VECTOR[self.axis]
+            if is_invalid(obj, front_vector):
+                return STATUS_WAITING
+            return self.set_socket(
+                'vec',
+                obj.getAxisVect(front_vector)
+            )
+        return socket
 
     def evaluate(self):
         self._set_ready()

@@ -16,22 +16,28 @@ class ULGetMaterialAttribute(ULParameterNode):
         self.OUT = ULOutSocket(self, self._get_val)
 
     def _get_val(self):
-        mat_name = self.get_socket_value(self.mat_name)
-        node_name = self.get_socket_value(self.node_name)
-        if is_invalid(mat_name, node_name):
-            return STATUS_WAITING
-        internal = self.get_socket_value(self.internal)
-        attribute = self.get_socket_value(self.attribute)
-        if is_waiting(mat_name):
-            return STATUS_WAITING
-        target = (
-            bpy.data.materials[mat_name]
-            .node_tree
-            .nodes[node_name]
-        )
-        if internal:
-            target = getattr(target, internal, target)
-        return getattr(target, attribute, None)
+        socket = self.get_socket('val')
+        if socket is None:
+            mat_name = self.get_socket_value(self.mat_name)
+            node_name = self.get_socket_value(self.node_name)
+            if is_invalid(mat_name, node_name):
+                return STATUS_WAITING
+            internal = self.get_socket_value(self.internal)
+            attribute = self.get_socket_value(self.attribute)
+            if is_waiting(mat_name):
+                return STATUS_WAITING
+            target = (
+                bpy.data.materials[mat_name]
+                .node_tree
+                .nodes[node_name]
+            )
+            if internal:
+                target = getattr(target, internal, target)
+            return self.set_socket(
+                'val',
+                getattr(target, attribute, None)
+            )
+        return socket
 
     def evaluate(self):
         self._set_ready()

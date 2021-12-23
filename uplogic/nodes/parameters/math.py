@@ -26,23 +26,26 @@ class ULMath(ULParameterNode):
         self.OUT = ULOutSocket(self, self.get_done)
 
     def get_done(self):
-        a = self.get_socket_value(self.operand_a)
-        b = self.get_socket_value(self.operand_b)
-        if is_invalid(a, b):
-            return STATUS_WAITING
-        if (a is None) or (b is None):
-            return STATUS_WAITING
-        else:
-            if (
-                isinstance(a, Vector) and
-                isinstance(b, Vector)
-            ):
-                return self.get_vec_vec_calc(a, b)
-            elif isinstance(a, Vector):
-                return self.get_vec_calc(a, b)
-            elif isinstance(b, Vector):
-                return self.get_vec_calc(b, a)
-            return self.operator(a, b)
+        socket = self.get_socket('done')
+        if socket is None:
+            a = self.get_socket_value(self.operand_a)
+            b = self.get_socket_value(self.operand_b)
+            if is_invalid(a, b):
+                return STATUS_WAITING
+            if (a is None) or (b is None):
+                return STATUS_WAITING
+            else:
+                if (
+                    isinstance(a, Vector) and
+                    isinstance(b, Vector)
+                ):
+                    return self.get_vec_vec_calc(a, b)
+                elif isinstance(a, Vector):
+                    return self.get_vec_calc(a, b)
+                elif isinstance(b, Vector):
+                    return self.get_vec_calc(b, a)
+                return self.set_socket('done', self.operator(a, b))
+        return socket
 
     def evaluate(self):
         self._set_ready()

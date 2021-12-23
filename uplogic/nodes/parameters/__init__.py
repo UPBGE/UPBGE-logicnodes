@@ -51,6 +51,7 @@ from .mousedata import ULMouseData
 from .objectattr import ULObjectAttribute
 from .objectdataname import ULObjectDataName
 from .objectdatavertices import ULObjectDataVertices
+from .randomfloat import ULRandomFloat
 from .rangedthreshold import ULRangedThreshold
 from .screenposition import ULScreenPosition
 from .simplevalue import ULSimpleValue

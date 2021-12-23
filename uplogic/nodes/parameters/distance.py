@@ -13,11 +13,17 @@ class ULDistance(ULParameterNode):
         self.OUT = ULOutSocket(self, self.get_out)
 
     def get_out(self):
-        parama = self.get_socket_value(self.parama)
-        paramb = self.get_socket_value(self.paramb)
-        if is_waiting(parama, paramb):
-            return STATUS_WAITING
-        return compute_distance(parama, paramb)
+        socket = self.get_socket('distance')
+        if socket is None:
+            parama = self.get_socket_value(self.parama)
+            paramb = self.get_socket_value(self.paramb)
+            if is_waiting(parama, paramb):
+                return STATUS_WAITING
+            return self.set_socket(
+                'distance',
+                compute_distance(parama, paramb)
+            )
+        return socket
 
     def evaluate(self):
         self._set_ready()

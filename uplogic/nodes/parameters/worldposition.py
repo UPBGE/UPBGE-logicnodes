@@ -13,23 +13,25 @@ class ULWorldPosition(ULParameterNode):
         self.OUT = ULOutSocket(self, self.get_pos)
 
     def get_pos(self):
-        camera = self.get_socket_value(self.camera)
-        screen_x = self.get_socket_value(self.screen_x)
-        screen_y = self.get_socket_value(self.screen_y)
-        world_z = self.get_socket_value(self.world_z)
-        if (
-            is_invalid(camera) or
-            (screen_x is None) or
-            (screen_y is None) or
-            (world_z is None)
-        ):
-            return STATUS_WAITING
-        else:
+        socket = self.get_socket('pos')
+        if socket is None:
+            camera = self.get_socket_value(self.camera)
+            screen_x = self.get_socket_value(self.screen_x)
+            screen_y = self.get_socket_value(self.screen_y)
+            world_z = self.get_socket_value(self.world_z)
+            if (
+                is_invalid(camera) or
+                (screen_x is None) or
+                (screen_y is None) or
+                (world_z is None)
+            ):
+                return STATUS_WAITING
             direction = camera.getScreenVect(screen_x, screen_y)
             origin = camera.worldPosition
             aim = direction * -world_z
             point = origin + (aim)
-            return point
+            return self.set_socket('pos', point)
+        return socket
 
     def evaluate(self):
         self._set_ready()
