@@ -289,13 +289,30 @@ def get_instance_by_distance(game_obj: GameObject, name: str):
 # MATH
 ###############################################################################
 
+
+def clamp(value: float, min: float = 0, max: float = 1) -> float:
+    """Clamp a value in between two other values.
+
+    :param value: input value
+    :param min: minimum value
+    :param max: maximum value
+    :returns: clamped value as float
+    """
+
+    if value < min:
+        return min
+    if value > max:
+        return max
+    return value
+
+
 def interpolate(a: float, b: float, fac: float) -> float:
     """Interpolate between 2 values using a factor.
 
-    @param a: starting value
-    @param b: target value
-    @param fac: interpolation factor
-    @returns: calculated value as float
+    :param a: starting value
+    :param b: target value
+    :param fac: interpolation factor
+    :returns: calculated value as float
     """
     if -.001 < a-b < .001:
         return b
@@ -303,8 +320,13 @@ def interpolate(a: float, b: float, fac: float) -> float:
 
 
 def lerp(a: float, b: float, fac: float) -> float:
-    '''TODO: Documentation
-    '''
+    """Interpolate between 2 values using a factor.
+
+    :param a: starting value
+    :param b: target value
+    :param fac: interpolation factor
+    :returns: calculated value as float
+    """
     if -.001 < a-b < .001:
         return b
     return (fac * b) + ((1-fac) * a)
@@ -325,7 +347,7 @@ def get_angle(a: Vector, b: Vector, up=Vector((0, 0, 1))) -> float:
     return deg
 
 
-def get_direction(a, b, local=False):
+def get_direction(a, b, local=False) -> Vector:
     start = a.worldPosition.copy() if hasattr(a, "worldPosition") else a
     if hasattr(b, "worldPosition"):
         b = b.worldPosition.copy()
@@ -357,6 +379,19 @@ def raycast(
     local=False,
     visualize=False
 ):
+    """Raycast from any point to any target
+
+    :param caster: casting object, this object will be ignored by the ray.
+    :param origin: origin point; any vector or list.
+    :param dest: target point; any vector or list.
+    :param distance: distance the ray will be cast (0 means the ray will only be cast to target).
+    :param property_name: look only for this property, leave empty to look for all.
+    :param xray: look for objects behind others.
+    :param local: add the target vector to the origin.
+    :param visualize: show the raycast.
+
+    :returns: obj, point, normal, direction
+    """
     direction, distance, dest = ray_data(origin, dest, local, distance)
     obj, point, normal = caster.rayCast(
         dest,
