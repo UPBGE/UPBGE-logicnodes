@@ -6,11 +6,11 @@ from uplogic.utils import not_met
 import bpy
 
 
-class ULSetNodeSocketValue(ULActionNode):
+class ULSetMatNodeSocket(ULActionNode):
     def __init__(self):
         ULActionNode.__init__(self)
         self.condition = None
-        self.tree_name = None
+        self.mat_name = None
         self.node_name = None
         self.input_slot = None
         self.value = None
@@ -26,19 +26,20 @@ class ULSetNodeSocketValue(ULActionNode):
         if not_met(condition):
             self._set_ready()
             return
-        tree_name = self.get_socket_value(self.tree_name)
+        mat_name = self.get_socket_value(self.mat_name)
         node_name = self.get_socket_value(self.node_name)
         input_slot = self.get_socket_value(self.input_slot)
         value = self.get_socket_value(self.value)
         if is_waiting(node_name, input_slot, value):
             return
-        if is_invalid(tree_name):
+        if is_invalid(mat_name):
             return
         if condition:
             self.done = True
             self._set_ready()
             (
-                bpy.data.node_groups[tree_name]
+                bpy.data.materials[mat_name]
+                .node_tree
                 .nodes[node_name]
                 .inputs[input_slot]
                 .default_value

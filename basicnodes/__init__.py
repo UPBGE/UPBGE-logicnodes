@@ -7719,6 +7719,7 @@ class NLSetGeometryNodeValue(bpy.types.Node, NLActionNode):
     bl_icon = 'TRIA_RIGHT'
     nl_category = 'Nodes'
     nl_subcat = 'Geometry'
+    nl_module = 'actions'
 
     def init(self, context):
         NLActionNode.init(self, context)
@@ -7752,7 +7753,7 @@ class NLSetGeometryNodeValue(bpy.types.Node, NLActionNode):
             ipt.name = name
 
     def get_netlogic_class_name(self):
-        return "nodes.ActionSetNodeTreeNodeValue"
+        return "ULSetNodeSocket"
 
     def get_input_sockets_field_names(self):
         return [
@@ -7776,6 +7777,7 @@ class NLSetNodeTreeNodeValue(bpy.types.Node, NLActionNode):
     bl_icon = 'TRIA_RIGHT'
     nl_category = 'Nodes'
     nl_subcat = 'Groups'
+    nl_module = 'actions'
 
     def init(self, context):
         NLActionNode.init(self, context)
@@ -7809,7 +7811,7 @@ class NLSetNodeTreeNodeValue(bpy.types.Node, NLActionNode):
             ipt.name = name
 
     def get_netlogic_class_name(self):
-        return "nodes.ActionSetNodeTreeNodeValue"
+        return "ULSetNodeSocket"
 
     def get_input_sockets_field_names(self):
         return [
@@ -7833,6 +7835,7 @@ class NLSetGeometryNodeAttribute(bpy.types.Node, NLActionNode):
     bl_icon = 'DRIVER_TRANSFORM'
     nl_category = 'Nodes'
     nl_subcat = 'Geometry'
+    nl_module = 'actions'
 
     def init(self, context):
         NLActionNode.init(self, context)
@@ -7857,7 +7860,7 @@ class NLSetGeometryNodeAttribute(bpy.types.Node, NLActionNode):
             att.enabled = val.enabled = itl.enabled = False
 
     def get_netlogic_class_name(self):
-        return "nodes.ActionSetNodeTreeNodeAttribute"
+        return "ULSetNodeValue"
 
     def get_input_sockets_field_names(self):
         return [
@@ -7882,6 +7885,7 @@ class NLSetNodeTreeNodeAttribute(bpy.types.Node, NLActionNode):
     bl_icon = 'DRIVER_TRANSFORM'
     nl_category = 'Nodes'
     nl_subcat = 'Groups'
+    nl_module = 'actions'
 
     def init(self, context):
         NLActionNode.init(self, context)
@@ -7906,7 +7910,7 @@ class NLSetNodeTreeNodeAttribute(bpy.types.Node, NLActionNode):
             att.enabled = val.enabled = itl.enabled = False
 
     def get_netlogic_class_name(self):
-        return "nodes.ActionSetNodeTreeNodeAttribute"
+        return "ULSetNodeValue"
 
     def get_input_sockets_field_names(self):
         return [
@@ -7930,6 +7934,7 @@ class NLSetMaterial(bpy.types.Node, NLActionNode):
     bl_label = "Set Material"
     nl_category = 'Nodes'
     nl_subcat = 'Materials'
+    nl_module = 'actions'
 
     def init(self, context):
         NLActionNode.init(self, context)
@@ -7940,7 +7945,7 @@ class NLSetMaterial(bpy.types.Node, NLActionNode):
         self.outputs.new(NLConditionSocket.bl_idname, "Done")
 
     def get_netlogic_class_name(self):
-        return "nodes.SetMaterial"
+        return "ULSetMaterial"
 
     def update_draw(self):
         obj_socket = self.inputs[1]
@@ -8003,7 +8008,7 @@ class NLSetMaterialNodeValue(bpy.types.Node, NLActionNode):
             ipt.name = name
 
     def get_netlogic_class_name(self):
-        return "nodes.ActionSetMaterialNodeValue"
+        return "ULSetMatNodeSocket"
 
     def get_input_sockets_field_names(self):
         return [
@@ -8027,6 +8032,7 @@ class NLSetMaterialNodeAttribute(bpy.types.Node, NLActionNode):
     bl_icon = 'DRIVER_TRANSFORM'
     nl_category = 'Nodes'
     nl_subcat = 'Materials'
+    nl_module = 'actions'
 
     def init(self, context):
         NLActionNode.init(self, context)
@@ -8051,7 +8057,7 @@ class NLSetMaterialNodeAttribute(bpy.types.Node, NLActionNode):
             att.enabled = val.enabled = itl.enabled = False
 
     def get_netlogic_class_name(self):
-        return "nodes.ActionSetMaterialNodeAttribute"
+        return "ULSetMatNodeValue"
 
     def get_input_sockets_field_names(self):
         return [
@@ -8075,6 +8081,7 @@ class NLPlayMaterialSequence(bpy.types.Node, NLActionNode):
     bl_label = "Play Sequence"
     nl_category = 'Nodes'
     nl_subcat = 'Materials'
+    nl_module = 'actions'
 
     def init(self, context):
         NLActionNode.init(self, context)
@@ -8125,7 +8132,7 @@ class NLPlayMaterialSequence(bpy.types.Node, NLActionNode):
                 ipt.enabled = False
 
     def get_netlogic_class_name(self):
-        return "nodes.ActionPlayMaterialSequence"
+        return "ULPaySequence"
 
     def get_input_sockets_field_names(self):
         return [
