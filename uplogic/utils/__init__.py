@@ -272,7 +272,7 @@ def make_unique_light(old_lamp_ge: GameObject) -> GameObject:
     return new_lamp_ge
 
 
-def get_instance_by_distance(game_obj: GameObject, name: str):
+def get_closest_instance(game_obj: GameObject, name: str):
     '''TODO: Documentation
     '''
     objs = []
@@ -304,6 +304,25 @@ def clamp(value: float, min: float = 0, max: float = 1) -> float:
     if value > max:
         return max
     return value
+
+
+def vec_clamp(vec: Vector, min: float = 0, max: float = 1) -> Vector:
+    """Clamp a value in between two other values.
+
+    :param value: input value
+    :param min: minimum value
+    :param max: maximum value
+    :returns: clamped value as float
+    """
+    vec = vec.copy()
+
+    if vec.length < min:
+        vec.normalize()
+        return vec * min
+    if vec.length > max:
+        vec.normalize()
+        return vec * max
+    return vec
 
 
 def interpolate(a: float, b: float, fac: float) -> float:

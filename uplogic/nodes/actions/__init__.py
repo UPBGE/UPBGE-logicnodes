@@ -20,3 +20,7 @@ from .startsound import ULStartSound
 from .startsound3d import ULStartSound3D
 from .startspeaker import ULStartSpeaker
 from .throwevent import ULTrowEvent
+from .addobject import ULActionNode
+from .setproperty import ULSetProperty
+from .setmaterial import ULSetMaterial
+from .setnodesocketvalue import ULSetNodeSocketValue

@@ -62,5 +62,5 @@ class ULCollision():
         logic.getCurrentScene().pre_draw.remove(self.update)
 
 
-def on_collision(obj, callback, property='', material='', tap=False):
-    return ULCollision(obj, callback, property, material, tap)
+def on_collision(obj, callback, prop='', material='', tap=False):
+    return ULCollision(obj, callback, prop, material, tap)

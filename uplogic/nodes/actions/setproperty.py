@@ -1,0 +1,37 @@
+from uplogic.nodes import ULActionNode
+from uplogic.nodes import ULOutSocket
+from uplogic.utils import is_invalid
+from uplogic.utils import is_waiting
+from uplogic.utils import not_met
+
+
+class ULSetProperty(ULActionNode):
+    def __init__(self):
+        ULActionNode.__init__(self)
+        self.condition = None
+        self.game_object = None
+        self.property_name = None
+        self.property_value = None
+        self.done = False
+        self.OUT = ULOutSocket(self, self._get_done)
+
+    def _get_done(self):
+        return self.done
+
+    def evaluate(self):
+        self.done = False
+        condition = self.get_socket_value(self.condition)
+        if not_met(condition):
+            self._set_ready()
+            return
+        game_object = self.get_socket_value(self.game_object)
+        property_name = self.get_socket_value(self.property_name)
+        property_value = self.get_socket_value(self.property_value)
+        if is_waiting(property_name, property_value):
+            return
+        if is_invalid(game_object):
+            return
+        if condition:
+            self.done = True
+            self._set_ready()
+            game_object[property_name] = property_value

@@ -7651,6 +7651,7 @@ class NLAddObjectActionNode(bpy.types.Node, NLActionNode):
     bl_label = "Add Object"
     bl_icon = 'PLUS'
     nl_category = "Objects"
+    nl_module = 'actions'
 
     def init(self, context):
         NLActionNode.init(self, context)
@@ -7665,7 +7666,7 @@ class NLAddObjectActionNode(bpy.types.Node, NLActionNode):
         self.outputs.new(NLGameObjectSocket.bl_idname, "Added Object")
 
     def get_netlogic_class_name(self):
-        return "nodes.ActionAddObject"
+        return "ULAddObject"
 
     def get_input_sockets_field_names(self):
         return ["condition", "name", 'reference', "life"]
@@ -7683,6 +7684,7 @@ class NLSetGameObjectGamePropertyActionNode(bpy.types.Node, NLActionNode):
     bl_icon = 'IMPORT'
     nl_category = "Objects"
     nl_subcat = 'Properties'
+    nl_module = 'actions'
 
     def init(self, context):
         NLActionNode.init(self, context)
@@ -7694,7 +7696,7 @@ class NLSetGameObjectGamePropertyActionNode(bpy.types.Node, NLActionNode):
         self.outputs.new(NLConditionSocket.bl_idname, "Done")
 
     def get_netlogic_class_name(self):
-        return "nodes.ActionSetGameObjectGameProperty"
+        return "ULSetProperty"
 
     def get_input_sockets_field_names(self):
         return [
@@ -9776,7 +9778,7 @@ _nodes.append(NLActionApplyImpulse)
 
 class NLGamepadLook(bpy.types.Node, NLActionNode):
     bl_idname = "NLGamepadLook"
-    bl_label = "Look"
+    bl_label = "Gamepad Look"
     nl_category = "Input"
     nl_subcat = 'Gamepad'
     axis: bpy.props.EnumProperty(
@@ -11490,7 +11492,7 @@ _nodes.append(NLActionTimeFilter)
 
 class NLActionMouseLookNode(bpy.types.Node, NLActionNode):
     bl_idname = "NLActionMouseLookNode"
-    bl_label = "Look"
+    bl_label = "Mouse Look"
     bl_icon = 'CAMERA_DATA'
     nl_category = "Input"
     nl_subcat = 'Mouse'
