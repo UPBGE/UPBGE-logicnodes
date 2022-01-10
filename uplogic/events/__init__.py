@@ -3,7 +3,6 @@
 
 from types import MethodType
 from bge import logic
-from bpy.types import AnyType
 import time
 
 
@@ -129,7 +128,7 @@ def schedule_callback(cb, delay=0.0, arg=None):
 
 class ScheduledCallback():
     delay: float = 0
-    arg: AnyType = None
+    arg = None
     callback: MethodType = None
 
     def __init__(self, cb, delay=0.0, arg=None):

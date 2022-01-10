@@ -1,10 +1,8 @@
-from uplogic.animation import sequence
 from uplogic.animation.sequence import ULSequence
 from uplogic.nodes import ULActionNode
 from uplogic.nodes import ULOutSocket
 from uplogic.utils import is_waiting
 from uplogic.utils import not_met
-import bpy
 
 
 class ULPaySequence(ULActionNode):

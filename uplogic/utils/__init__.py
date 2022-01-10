@@ -378,7 +378,11 @@ def get_direction(a, b, local=False) -> Vector:
 
 
 def ray_data(origin, dest, local, dist):
-    start = origin.worldPosition.copy() if hasattr(origin, "worldPosition") else origin
+    start = (
+        origin.worldPosition.copy()
+        if hasattr(origin, "worldPosition")
+        else origin
+    )
     if hasattr(dest, "worldPosition"):
         dest = dest.worldPosition.copy()
     if local:
@@ -403,8 +407,10 @@ def raycast(
     :param caster: casting object, this object will be ignored by the ray.
     :param origin: origin point; any vector or list.
     :param dest: target point; any vector or list.
-    :param distance: distance the ray will be cast (0 means the ray will only be cast to target).
-    :param property_name: look only for this property, leave empty to look for all.
+    :param distance: distance the ray will be cast
+    (0 means the ray will only be cast to target).
+    :param property_name: look only for this property,
+    leave empty to look for all.
     :param xray: look for objects behind others.
     :param local: add the target vector to the origin.
     :param visualize: show the raycast.

@@ -1,6 +1,7 @@
-from uplogic.nodes import ULOutSocket
 from uplogic.nodes import ULConditionNode
-from uplogic.utils import STATUS_WAITING, debug, is_invalid
+from uplogic.nodes import ULOutSocket
+from uplogic.utils import debug
+from uplogic.utils import is_invalid
 from uplogic.utils import is_waiting
 
 
@@ -18,7 +19,13 @@ class ULControllerStatus(ULConditionNode):
         if socket is None:
             game_obj = self.game_obj
             cont = game_obj.controllers[self.controller]
-            state = game_obj.blenderObject.game.controllers[self.controller].type
+            state = (
+                game_obj
+                .blenderObject
+                .game
+                .controllers[self.controller]
+                .type
+            )
             if not cont.sensors:
                 return self.set_output(
                     'controller',
