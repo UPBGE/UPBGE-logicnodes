@@ -297,23 +297,6 @@ class ULLogicContainer(ULLogicBase):
     def has_status(self, status):
         return status == self._status
 
-    def get_game_object(self, param, scene):
-        if str(param) == 'NLO:U_O':
-            return self.network._owner
-        else:
-            return check_game_object(param.split(':')[-1], scene)
-
-    def get_socket_value(self, param, scene=None):
-        if str(param).startswith('NLO:'):
-            return self.get_game_object(param, scene)
-        if isinstance(param, ULLogicBase):
-            if param.has_status(STATUS_READY):
-                return param.get_value()
-            else:
-                return STATUS_WAITING
-        else:
-            return param
-
     def reset(self):
         """
         Resets the status of the cell to ULLogicContainer.STATUS_WAITING.
@@ -371,18 +354,32 @@ class ULLogicNode(ULLogicContainer):
 
     def __init__(self):
         super().__init__()
-        self.socket_values = {}
+        self.output_values = {}
 
     def reset(self):
         super().reset()
-        self.socket_values = {}
+        self.output_values = {}
 
-    def set_socket(self, socket, value):
-        self.socket_values[socket] = value
+    def set_output(self, socket, value):
+        self.output_values[socket] = value
         return value
 
-    def get_socket(self, socket, default=None):
-        return self.socket_values.get(socket, default)
+    def get_output(self, socket, default=None):
+        return self.output_values.get(socket, default)
+
+    def get_input(self, param, scene=None):
+        if str(param).startswith('NLO:'):
+            if str(param) == 'NLO:U_O':
+                return self.network._owner
+            else:
+                return check_game_object(param.split(':')[-1], scene)
+        if isinstance(param, ULLogicBase):
+            if param.has_status(STATUS_READY):
+                return param.get_value()
+            else:
+                return STATUS_WAITING
+        else:
+            return param
 
 
 class ULParameterNode(ULLogicNode):
@@ -420,37 +417,6 @@ class ULConditionNode(ULLogicNode):
 # Action Cells
 
 
-class ActionToggleGameObjectGameProperty(ULActionNode):
-    def __init__(self):
-        ULActionNode.__init__(self)
-        self.condition = None
-        self.game_object = None
-        self.property_name = None
-        self.done = False
-        self.OUT = ULOutSocket(self, self._get_done)
-
-    def _get_done(self):
-        return self.done
-
-    def evaluate(self):
-        self.done = False
-        condition = self.get_socket_value(self.condition)
-        if not_met(condition):
-            self._set_ready()
-            return
-        game_object = self.get_socket_value(self.game_object)
-        property_name = self.get_socket_value(self.property_name)
-        if is_waiting(property_name):
-            return
-        if is_invalid(game_object):
-            return
-        self._set_ready()
-        if condition:
-            value = game_object[property_name]
-            game_object[property_name] = not value
-        self.done = True
-
-
 class ActionAddToGameObjectGameProperty(ULActionNode):
 
     @classmethod
@@ -479,12 +445,12 @@ class ActionAddToGameObjectGameProperty(ULActionNode):
 
     def evaluate(self):
         self.done = False
-        condition = self.get_socket_value(self.condition)
+        condition = self.get_input(self.condition)
         if not_met(condition):
             return
-        game_object = self.get_socket_value(self.game_object)
-        property_name = self.get_socket_value(self.property_name)
-        property_value = self.get_socket_value(self.property_value)
+        game_object = self.get_input(self.game_object)
+        property_name = self.get_input(self.property_name)
+        property_value = self.get_input(self.property_value)
         if is_waiting(property_name, property_value):
             return
         if is_invalid(game_object):
@@ -512,14 +478,14 @@ class CopyPropertyFromObject(ULActionNode):
 
     def evaluate(self):
         self.done = False
-        condition = self.get_socket_value(self.condition)
+        condition = self.get_input(self.condition)
         if not_met(condition):
             return
-        from_object = self.get_socket_value(self.from_object)
-        to_object = self.get_socket_value(self.to_object)
+        from_object = self.get_input(self.from_object)
+        to_object = self.get_input(self.to_object)
         if is_invalid(from_object, to_object):
             return
-        property_name = self.get_socket_value(self.property_name)
+        property_name = self.get_input(self.property_name)
         if is_waiting(property_name):
             return
         self._set_ready()
@@ -545,15 +511,15 @@ class ActionClampedAddToGameObjectGameProperty(ULActionNode):
 
     def evaluate(self):
         self.done = False
-        condition = self.get_socket_value(self.condition)
-        game_object = self.get_socket_value(self.game_object)
+        condition = self.get_input(self.condition)
+        game_object = self.get_input(self.game_object)
         if not_met(condition):
             return
         if is_invalid(game_object):
             return
-        property_name = self.get_socket_value(self.property_name)
-        property_value = self.get_socket_value(self.property_value)
-        val_range = self.get_socket_value(self.range)
+        property_name = self.get_input(self.property_name)
+        property_value = self.get_input(self.property_value)
+        val_range = self.get_input(self.range)
         if is_waiting(property_name, property_value):
             return
         self._set_ready()
@@ -582,9 +548,9 @@ class ValueSwitch(ULActionNode):
         return self.out_value
 
     def evaluate(self):
-        condition = self.get_socket_value(self.condition)
-        val_a = self.get_socket_value(self.val_a)
-        val_b = self.get_socket_value(self.val_b)
+        condition = self.get_input(self.condition)
+        val_a = self.get_input(self.val_a)
+        val_b = self.get_input(self.val_b)
         self._set_ready()
         self.out_value = (
             val_a if condition is True else val_b
@@ -602,7 +568,7 @@ class InvertBool(ULActionNode):
         return self.out_value
 
     def evaluate(self):
-        value = self.get_socket_value(self.value)
+        value = self.get_input(self.value)
         if is_invalid(value):
             self.out_value = False
             return
@@ -621,7 +587,7 @@ class InvertValue(ULActionNode):
         return self.out_value
 
     def evaluate(self):
-        value = self.get_socket_value(self.value)
+        value = self.get_input(self.value)
         if is_invalid(value):
             self.out_value = 0
             return
@@ -642,7 +608,7 @@ class AbsoluteValue(ULActionNode):
     def evaluate(self):
         if is_invalid(self.value):
             return
-        value = self.get_socket_value(self.value)
+        value = self.get_input(self.value)
         self._set_ready()
         self.out_value = math.fabs(value)
 
@@ -661,10 +627,10 @@ class ActionPrint(ULActionNode):
 
     def evaluate(self):
         self.done = False
-        condition = self.get_socket_value(self.condition)
+        condition = self.get_input(self.condition)
         if not_met(condition):
             return
-        value = self.get_socket_value(self.value)
+        value = self.get_input(self.value)
         self._set_ready()
         print(value)
         self.done = True
@@ -698,17 +664,17 @@ class ActionCreateVehicleFromParent(ULActionNode):
 
     def evaluate(self):
         self.done = False
-        game_object = self.get_socket_value(self.game_object)
-        if not_met(self.get_socket_value(self.condition)):
+        game_object = self.get_input(self.game_object)
+        if not_met(self.get_input(self.condition)):
             if game_object.get('_vconst'):
                 self._set_ready()
                 self.vehicle = game_object['_vconst']
             return
-        suspension = self.get_socket_value(self.suspension)
-        stiffness = self.get_socket_value(self.stiffness)
-        damping = self.get_socket_value(self.damping)
-        friction = self.get_socket_value(self.friction)
-        wheel_size = self.get_socket_value(self.wheel_size)
+        suspension = self.get_input(self.suspension)
+        stiffness = self.get_input(self.stiffness)
+        damping = self.get_input(self.damping)
+        friction = self.get_input(self.friction)
+        wheel_size = self.get_input(self.wheel_size)
         if is_waiting(
             game_object,
             suspension,
@@ -778,8 +744,8 @@ class VehicleApplyForce(ULActionNode):
 
     def evaluate(self):
         self.done = False
-        condition = self.get_socket_value(self.condition)
-        vehicle = self.get_socket_value(self.vehicle)
+        condition = self.get_input(self.condition)
+        vehicle = self.get_input(self.vehicle)
         if is_invalid(vehicle):
             return
         constraint = vehicle.get('_vconst', None)
@@ -791,9 +757,9 @@ class VehicleApplyForce(ULActionNode):
                     constraint.applyEngineForce(0, wheel)
                 self._reset = False
             return
-        value = self.get_socket_value(self.value_type)
-        wheelcount = self.get_socket_value(self.wheelcount)
-        power = self.get_socket_value(self.power)
+        value = self.get_input(self.value_type)
+        wheelcount = self.get_input(self.wheelcount)
+        power = self.get_input(self.power)
         if is_waiting(value, wheelcount, power):
             return
         self._reset = True
@@ -827,8 +793,8 @@ class VehicleApplyBraking(ULActionNode):
 
     def evaluate(self):
         self.done = False
-        condition = self.get_socket_value(self.condition)
-        vehicle = self.get_socket_value(self.vehicle)
+        condition = self.get_input(self.condition)
+        vehicle = self.get_input(self.vehicle)
         if is_invalid(vehicle):
             return
         constraint = vehicle.get('_vconst', None)
@@ -840,9 +806,9 @@ class VehicleApplyBraking(ULActionNode):
                     constraint.applyBraking(0, wheel)
                 self._reset = False
             return
-        value_type = self.get_socket_value(self.value_type)
-        wheelcount = self.get_socket_value(self.wheelcount)
-        power = self.get_socket_value(self.power)
+        value_type = self.get_input(self.value_type)
+        wheelcount = self.get_input(self.wheelcount)
+        power = self.get_input(self.power)
         if is_waiting(value_type, wheelcount, power):
             return
         self._reset = True
@@ -876,8 +842,8 @@ class VehicleApplySteering(ULActionNode):
 
     def evaluate(self):
         self.done = False
-        condition = self.get_socket_value(self.condition)
-        vehicle = self.get_socket_value(self.vehicle)
+        condition = self.get_input(self.condition)
+        vehicle = self.get_input(self.vehicle)
         if is_invalid(vehicle):
             return
         constraint = vehicle.get('_vconst', None)
@@ -889,9 +855,9 @@ class VehicleApplySteering(ULActionNode):
                     constraint.setSteeringValue(0, wheel)
                 self._reset = False
             return
-        value_type = self.get_socket_value(self.value_type)
-        wheelcount = self.get_socket_value(self.wheelcount)
-        power = self.get_socket_value(self.power)
+        value_type = self.get_input(self.value_type)
+        wheelcount = self.get_input(self.wheelcount)
+        power = self.get_input(self.power)
         if is_waiting(value_type, wheelcount, power):
             return
         self._reset = True
@@ -941,27 +907,27 @@ class VehicleSetAttributes(ULActionNode):
 
     def evaluate(self):
         self.done = False
-        condition = self.get_socket_value(self.condition)
+        condition = self.get_input(self.condition)
         if not_met(condition):
             return
-        vehicle = self.get_socket_value(self.vehicle)
-        value_type = self.get_socket_value(self.value_type)
-        wheelcount = self.get_socket_value(self.wheelcount)
+        vehicle = self.get_input(self.vehicle)
+        value_type = self.get_input(self.value_type)
+        wheelcount = self.get_input(self.wheelcount)
         if is_waiting(value_type, wheelcount):
             return
         if is_invalid(vehicle):
             return
         attrs_to_set = [
-            self.get_socket_value(self.set_suspension_compression),
-            self.get_socket_value(self.set_suspension_stiffness),
-            self.get_socket_value(self.set_suspension_damping),
-            self.get_socket_value(self.set_tyre_friction)
+            self.get_input(self.set_suspension_compression),
+            self.get_input(self.set_suspension_stiffness),
+            self.get_input(self.set_suspension_damping),
+            self.get_input(self.set_tyre_friction)
         ]
         values_to_set = [
-            self.get_socket_value(self.suspension_compression),
-            self.get_socket_value(self.suspension_stiffness),
-            self.get_socket_value(self.suspension_damping),
-            self.get_socket_value(self.tyre_friction)
+            self.get_input(self.suspension_compression),
+            self.get_input(self.suspension_stiffness),
+            self.get_input(self.suspension_damping),
+            self.get_input(self.tyre_friction)
         ]
         constraint = vehicle.get('_vconst', None)
         if not constraint:
@@ -1011,13 +977,13 @@ class ActionSetObjectAttribute(ULActionNode):
 
     def evaluate(self):
         self.done = False
-        condition = self.get_socket_value(self.condition)
+        condition = self.get_input(self.condition)
         if not_met(condition):
             return
-        xyz = self.get_socket_value(self.xyz)
-        game_object = self.get_socket_value(self.game_object)
-        attribute = self.get_socket_value(self.value_type)
-        value = self.get_socket_value(self.attribute_value)
+        xyz = self.get_input(self.xyz)
+        game_object = self.get_input(self.game_object)
+        attribute = self.get_input(self.value_type)
+        value = self.get_input(self.attribute_value)
         if is_waiting(xyz, game_object, attribute, value):
             return
 
@@ -1068,12 +1034,12 @@ class ActionInstalSubNetwork(ULActionNode):
 
     def evaluate(self):
         self.done = False
-        condition = self.get_socket_value(self.condition)
+        condition = self.get_input(self.condition)
         if not_met(condition):
             return
-        target_object = self.get_socket_value(self.target_object)
-        tree_name = self.get_socket_value(self.tree_name)
-        initial_status = self.get_socket_value(self.initial_status)
+        target_object = self.get_input(self.target_object)
+        tree_name = self.get_input(self.tree_name)
+        initial_status = self.get_input(self.initial_status)
         if is_waiting(
             target_object,
             tree_name,
@@ -1109,9 +1075,9 @@ class ActionExecuteNetwork(ULActionNode):
 
     def evaluate(self):
         self.done = False
-        condition = self.get_socket_value(self.condition)
-        target_object = self.get_socket_value(self.target_object)
-        tree_name = self.get_socket_value(self.tree_name)
+        condition = self.get_input(self.condition)
+        target_object = self.get_input(self.target_object)
+        tree_name = self.get_input(self.tree_name)
         self._set_ready()
         if is_invalid(target_object):
             return
@@ -1146,11 +1112,11 @@ class ActionStartLogicNetwork(ULActionNode):
 
     def evaluate(self):
         self.done = False
-        condition = self.get_socket_value(self.condition)
+        condition = self.get_input(self.condition)
         if not_met(condition):
             return
-        game_object = self.get_socket_value(self.game_object)
-        logic_network_name = self.get_socket_value(self.logic_network_name)
+        game_object = self.get_input(self.game_object)
+        logic_network_name = self.get_input(self.logic_network_name)
         if is_waiting(game_object, logic_network_name):
             return
         self._set_ready()
@@ -1176,11 +1142,11 @@ class ActionStopLogicNetwork(ULActionNode):
 
     def evaluate(self):
         self.done = False
-        condition = self.get_socket_value(self.condition)
+        condition = self.get_input(self.condition)
         if not_met(condition):
             return
-        game_object = self.get_socket_value(self.game_object)
-        logic_network_name = self.get_socket_value(self.logic_network_name)
+        game_object = self.get_input(self.game_object)
+        logic_network_name = self.get_input(self.logic_network_name)
         if is_waiting(game_object, logic_network_name):
             return
         self._set_ready()
@@ -1201,15 +1167,15 @@ class ActionSendMessage(ULActionNode):
         self.body = None
 
     def evaluate(self):
-        condition = self.get_socket_value(self.condition)
+        condition = self.get_input(self.condition)
         if not_met(condition):
             self._set_ready()
             self._set_value(False)
             return
-        from_obj = self.get_socket_value(self.from_obj)
-        to_obj = self.get_socket_value(self.to_obj)
-        subject = self.get_socket_value(self.subject)
-        body = self.get_socket_value(self.body)
+        from_obj = self.get_input(self.from_obj)
+        to_obj = self.get_input(self.to_obj)
+        subject = self.get_input(self.subject)
+        body = self.get_input(self.body)
         if is_waiting(from_obj, to_obj, subject, body):
             return
         self._set_ready()
@@ -1239,13 +1205,13 @@ class ActionSetGameObjectVisibility(ULActionNode):
 
     def evaluate(self):
         self.done = False
-        condition = self.get_socket_value(self.condition)
+        condition = self.get_input(self.condition)
         if not_met(condition):
             self._set_ready()
             return
-        game_object = self.get_socket_value(self.game_object)
-        visible: bool = self.get_socket_value(self.visible)
-        recursive: bool = self.get_socket_value(self.recursive)
+        game_object = self.get_input(self.game_object)
+        visible: bool = self.get_input(self.visible)
+        recursive: bool = self.get_input(self.recursive)
         if is_waiting(visible, recursive):
             return
         if is_invalid(game_object):
@@ -1273,12 +1239,12 @@ class SetCurvePoints(ULActionNode):
 
     def evaluate(self):
         self.done = False
-        condition = self.get_socket_value(self.condition)
+        condition = self.get_input(self.condition)
         if not_met(condition):
             self._set_ready()
             return
-        curve_object = self.get_socket_value(self.curve_object)
-        points = self.get_socket_value(self.points)
+        curve_object = self.get_input(self.curve_object)
+        points = self.get_input(self.points)
         if is_waiting(points):
             return
         if is_invalid(curve_object):
@@ -1336,7 +1302,7 @@ class ActionRayPick(ULActionNode):
         return self._direction
 
     def _compute_direction(self, origin, dest, local, dist):
-        custom_dist = self.get_socket_value(self.custom_dist)
+        custom_dist = self.get_input(self.custom_dist)
         start = origin.worldPosition.copy() if hasattr(origin, "worldPosition") else origin
         if hasattr(dest, "worldPosition"):
             dest = dest.worldPosition.copy()
@@ -1347,20 +1313,20 @@ class ActionRayPick(ULActionNode):
         return d, dist if custom_dist else (start - dest).length, dest
 
     def evaluate(self):
-        condition = self.get_socket_value(self.condition)
+        condition = self.get_input(self.condition)
         if not_met(condition):
             self._set_value(False)
             self._normal = None
             self._object = None
             # self._point = None
             return
-        origin = self.get_socket_value(self.origin)
-        destination = self.get_socket_value(self.destination)
-        local: bool = self.get_socket_value(self.local)
-        property_name: str = self.get_socket_value(self.property_name)
-        xray: bool = self.get_socket_value(self.xray)
-        distance: float = self.get_socket_value(self.distance)
-        visualize: bool = self.get_socket_value(self.visualize)
+        origin = self.get_input(self.origin)
+        destination = self.get_input(self.destination)
+        local: bool = self.get_input(self.local)
+        property_name: str = self.get_input(self.property_name)
+        xray: bool = self.get_input(self.xray)
+        distance: float = self.get_input(self.distance)
+        visualize: bool = self.get_input(self.visualize)
 
         if is_waiting(origin, destination, local, property_name, distance):
             return
@@ -1462,21 +1428,21 @@ class ProjectileRayCast(ULActionNode):
         return Vector((0, 0, half)) + vel + pos
 
     def evaluate(self):
-        condition = self.get_socket_value(self.condition)
+        condition = self.get_input(self.condition)
         if not_met(condition):
             self._set_value(False)
             self._out_normal = None
             self._out_object = None
             self._out_point = None
             return
-        origin = self.get_socket_value(self.origin)
-        power: float = self.get_socket_value(self.power)
-        destination = self.get_socket_value(self.destination)
-        resolution: float = 1 - (self.get_socket_value(self.resolution) * .99)
-        property_name: str = self.get_socket_value(self.property_name)
-        xray: bool = self.get_socket_value(self.xray)
-        distance: float = self.get_socket_value(self.distance)
-        visualize: bool = self.get_socket_value(self.visualize)
+        origin = self.get_input(self.origin)
+        power: float = self.get_input(self.power)
+        destination = self.get_input(self.destination)
+        resolution: float = 1 - (self.get_input(self.resolution) * .99)
+        property_name: str = self.get_input(self.property_name)
+        xray: bool = self.get_input(self.xray)
+        distance: float = self.get_input(self.distance)
+        visualize: bool = self.get_input(self.visualize)
 
         if is_waiting(origin, destination, property_name, distance):
             return
@@ -1544,13 +1510,13 @@ class ActionMousePick(ULActionNode):
         return self._out_point
 
     def evaluate(self):
-        condition = self.get_socket_value(self.condition)
+        condition = self.get_input(self.condition)
         if not_met(condition):
             return
-        distance = self.get_socket_value(self.distance)
-        property_name = self.get_socket_value(self.property)
-        xray = self.get_socket_value(self.xray)
-        camera = self.get_socket_value(self.camera)
+        distance = self.get_input(self.distance)
+        property_name = self.get_input(self.property)
+        xray = self.get_input(self.xray)
+        camera = self.get_input(self.camera)
         if is_waiting(distance, property_name, xray, camera):
             return
         self._set_ready()
@@ -1606,14 +1572,14 @@ class ActionCameraPick(ULActionNode):
         return self._picked_normal
 
     def evaluate(self):
-        condition = self.get_socket_value(self.condition)
+        condition = self.get_input(self.condition)
         if not_met(condition):
             return
-        camera = self.get_socket_value(self.camera)
-        aim = self.get_socket_value(self.aim)
-        property_name = self.get_socket_value(self.property_name)
-        xray = self.get_socket_value(self.xray)
-        distance = self.get_socket_value(self.distance)
+        camera = self.get_input(self.camera)
+        aim = self.get_input(self.aim)
+        property_name = self.get_input(self.property_name)
+        xray = self.get_input(self.xray)
+        distance = self.get_input(self.distance)
         if is_waiting(camera, aim, property_name, xray, distance):
             return
         self._set_ready()
@@ -1662,10 +1628,10 @@ class ActionSetActiveCamera(ULActionNode):
 
     def evaluate(self):
         self.done = False
-        condition = self.get_socket_value(self.condition)
+        condition = self.get_input(self.condition)
         if not_met(condition):
             return
-        camera = self.get_socket_value(self.camera)
+        camera = self.get_input(self.camera)
         if is_waiting(camera):
             return
         self._set_ready()
@@ -1690,11 +1656,11 @@ class ActionSetCameraFov(ULActionNode):
 
     def evaluate(self):
         self.done = False
-        condition = self.get_socket_value(self.condition)
+        condition = self.get_input(self.condition)
         if not_met(condition):
             return
-        camera = self.get_socket_value(self.camera)
-        fov = self.get_socket_value(self.fov)
+        camera = self.get_input(self.camera)
+        fov = self.get_input(self.fov)
         if is_waiting(camera, fov):
             return
         self._set_ready()
@@ -1718,11 +1684,11 @@ class ActionSetCameraOrthoScale(ULActionNode):
 
     def evaluate(self):
         self.done = False
-        condition = self.get_socket_value(self.condition)
+        condition = self.get_input(self.condition)
         if not_met(condition):
             return
-        camera = self.get_socket_value(self.camera)
-        scale = self.get_socket_value(self.scale)
+        camera = self.get_input(self.camera)
+        scale = self.get_input(self.scale)
         if is_waiting(camera, scale):
             return
         self._set_ready()
@@ -1746,11 +1712,11 @@ class ActionSetResolution(ULActionNode):
 
     def evaluate(self):
         self.done = False
-        condition = self.get_socket_value(self.condition)
+        condition = self.get_input(self.condition)
         if not_met(condition):
             return
-        x_res = self.get_socket_value(self.x_res)
-        y_res = self.get_socket_value(self.y_res)
+        x_res = self.get_input(self.x_res)
+        y_res = self.get_input(self.y_res)
         if is_waiting(x_res, y_res):
             return
         self._set_ready()
@@ -1771,10 +1737,10 @@ class ActionSetFullscreen(ULActionNode):
 
     def evaluate(self):
         self.done = False
-        condition = self.get_socket_value(self.condition)
+        condition = self.get_input(self.condition)
         if not_met(condition):
             return
-        use_fullscreen = self.get_socket_value(self.use_fullscreen)
+        use_fullscreen = self.get_input(self.use_fullscreen)
         if is_waiting(use_fullscreen):
             return
         self._set_ready()
@@ -1795,10 +1761,10 @@ class ULSetProfile(ULActionNode):
 
     def evaluate(self):
         self.done = False
-        condition = self.get_socket_value(self.condition)
+        condition = self.get_input(self.condition)
         if not_met(condition):
             return
-        use_profile = self.get_socket_value(self.use_profile)
+        use_profile = self.get_input(self.use_profile)
         if is_waiting(use_profile):
             return
         self._set_ready()
@@ -1819,10 +1785,10 @@ class ULShowFramerate(ULActionNode):
 
     def evaluate(self):
         self.done = False
-        condition = self.get_socket_value(self.condition)
+        condition = self.get_input(self.condition)
         if not_met(condition):
             return
-        use_framerate = self.get_socket_value(self.use_framerate)
+        use_framerate = self.get_input(self.use_framerate)
         if is_waiting(use_framerate):
             return
         self._set_ready()
@@ -1856,12 +1822,12 @@ class ULDrawLine(ULActionNode):
         self.to_point = None
 
     def evaluate(self):
-        condition = self.get_socket_value(self.condition)
+        condition = self.get_input(self.condition)
         if not_met(condition):
             return
-        from_point = self.get_socket_value(self.from_point)
-        to_point = self.get_socket_value(self.to_point)
-        color = self.get_socket_value(self.color)
+        from_point = self.get_input(self.from_point)
+        to_point = self.get_input(self.to_point)
+        color = self.get_input(self.color)
         if is_invalid(from_point, to_point, color):
             return
         self._set_ready()
@@ -1917,10 +1883,10 @@ class ActionSetVSync(ULActionNode):
 
     def evaluate(self):
         self.done = False
-        condition = self.get_socket_value(self.condition)
+        condition = self.get_input(self.condition)
         if not_met(condition):
             return
-        vsync_mode = self.get_socket_value(self.vsync_mode)
+        vsync_mode = self.get_input(self.vsync_mode)
         if is_waiting(vsync_mode):
             return
         self._set_ready()
@@ -1945,7 +1911,7 @@ class InitEmptyDict(ULActionNode):
 
     def evaluate(self):
         self.done = False
-        condition = self.get_socket_value(self.condition)
+        condition = self.get_input(self.condition)
         if not_met(condition):
             return
         self._set_ready()
@@ -1972,11 +1938,11 @@ class InitNewDict(ULActionNode):
 
     def evaluate(self):
         self.done = False
-        condition = self.get_socket_value(self.condition)
+        condition = self.get_input(self.condition)
         if not_met(condition):
             return
-        key = self.get_socket_value(self.key)
-        value = self.get_socket_value(self.val)
+        key = self.get_input(self.key)
+        value = self.get_input(self.val)
         if is_waiting(key, value):
             return
         if not condition:
@@ -2006,12 +1972,12 @@ class SetDictKeyValue(ULActionNode):
 
     def evaluate(self):
         self.done = False
-        condition = self.get_socket_value(self.condition)
+        condition = self.get_input(self.condition)
         if not_met(condition):
             return
-        dictionary = self.get_socket_value(self.dict)
-        key = self.get_socket_value(self.key)
-        val = self.get_socket_value(self.val)
+        dictionary = self.get_input(self.dict)
+        key = self.get_input(self.key)
+        val = self.get_input(self.val)
         if is_waiting(dictionary, key, val):
             return
         self._set_ready()
@@ -2039,11 +2005,11 @@ class SetDictDelKey(ULActionNode):
 
     def evaluate(self):
         self.done = False
-        condition = self.get_socket_value(self.condition)
+        condition = self.get_input(self.condition)
         if not_met(condition):
             return
-        dictionary = self.get_socket_value(self.dict)
-        key = self.get_socket_value(self.key)
+        dictionary = self.get_input(self.dict)
+        key = self.get_input(self.key)
         if is_waiting(dictionary, key):
             return
         self._set_ready()
@@ -2074,10 +2040,10 @@ class InitEmptyList(ULActionNode):
 
     def evaluate(self):
         self.done = False
-        condition = self.get_socket_value(self.condition)
+        condition = self.get_input(self.condition)
         if not_met(condition):
             return
-        length = self.get_socket_value(self.length)
+        length = self.get_input(self.length)
         if is_waiting(length):
             return
         self._set_ready()
@@ -2104,11 +2070,11 @@ class AppendListItem(ULActionNode):
 
     def evaluate(self):
         self.done: bool = False
-        condition = self.get_socket_value(self.condition)
+        condition = self.get_input(self.condition)
         if not_met(condition):
             return
-        list_d: list = self.get_socket_value(self.items)
-        val = self.get_socket_value(self.val)
+        list_d: list = self.get_input(self.items)
+        val = self.get_input(self.val)
         if is_waiting(list_d, val):
             return
         self._set_ready()
@@ -2137,12 +2103,12 @@ class SetListIndex(ULActionNode):
 
     def evaluate(self):
         self.done = False
-        condition = self.get_socket_value(self.condition)
+        condition = self.get_input(self.condition)
         if not_met(condition):
             return
-        list_d: list = self.get_socket_value(self.items)
-        index: int = self.get_socket_value(self.index)
-        val = self.get_socket_value(self.val)
+        list_d: list = self.get_input(self.items)
+        index: int = self.get_input(self.index)
+        val = self.get_input(self.val)
         if is_invalid(list_d, index, val):
             return
         self._set_ready()
@@ -2170,11 +2136,11 @@ class RemoveListValue(ULActionNode):
 
     def evaluate(self):
         self.done = False
-        condition = self.get_socket_value(self.condition)
+        condition = self.get_input(self.condition)
         if not_met(condition):
             return
-        list_d = self.get_socket_value(self.items)
-        val = self.get_socket_value(self.val)
+        list_d = self.get_input(self.items)
+        val = self.get_input(self.val)
         if is_invalid(list_d, val):
             return
         self._set_ready()
@@ -2206,11 +2172,11 @@ class RemoveListIndex(ULActionNode):
 
     def evaluate(self):
         self.done = False
-        condition = self.get_socket_value(self.condition)
+        condition = self.get_input(self.condition)
         if not_met(condition):
             return
-        list_d = self.get_socket_value(self.items)
-        idx = self.get_socket_value(self.idx)
+        list_d = self.get_input(self.items)
+        idx = self.get_input(self.idx)
         if is_invalid(list_d, idx):
             return
         self._set_ready()
@@ -2239,13 +2205,13 @@ class ActionSetParent(ULActionNode):
 
     def evaluate(self):
         self.done = False
-        condition = self.get_socket_value(self.condition)
+        condition = self.get_input(self.condition)
         if not_met(condition):
             return
-        child_object = self.get_socket_value(self.child_object)
-        parent_object = self.get_socket_value(self.parent_object)
-        compound = self.get_socket_value(self.compound)
-        ghost = self.get_socket_value(self.ghost)
+        child_object = self.get_input(self.child_object)
+        parent_object = self.get_input(self.parent_object)
+        compound = self.get_input(self.compound)
+        ghost = self.get_input(self.ghost)
         self._set_ready()
         if is_invalid(child_object, parent_object, compound, ghost):
             return
@@ -2268,10 +2234,10 @@ class ActionRemoveParent(ULActionNode):
 
     def evaluate(self):
         self.done = False
-        condition = self.get_socket_value(self.condition)
+        condition = self.get_input(self.condition)
         if not_met(condition):
             return
-        child_object = self.get_socket_value(self.child_object)
+        child_object = self.get_input(self.child_object)
         if is_waiting(child_object):
             return
         self._set_ready()
@@ -2310,20 +2276,20 @@ class ActionPerformanceProfile(ULActionNode):
     def evaluate(self):
         self.done = False
         self.data = '----------------------------------Start Profile\n'
-        condition = self.get_socket_value(self.condition)
+        condition = self.get_input(self.condition)
         if not_met(condition):
             self._set_ready()
             return
-        print_profile = self.get_socket_value(
+        print_profile = self.get_input(
             self.print_profile
         )
-        check_evaluated_cells = self.get_socket_value(
+        check_evaluated_cells = self.get_input(
             self.check_evaluated_cells
         )
-        check_average_cells_per_sec = self.get_socket_value(
+        check_average_cells_per_sec = self.get_input(
             self.check_average_cells_per_sec
         )
-        check_cells_per_tick = self.get_socket_value(
+        check_cells_per_tick = self.get_input(
             self.check_cells_per_tick
         )
         if is_waiting(
@@ -2369,13 +2335,13 @@ class ULSetBoneConstraintInfluence(ULActionNode):
 
     def evaluate(self):
         self.done = False
-        condition = self.get_socket_value(self.condition)
+        condition = self.get_input(self.condition)
         if not_met(condition):
             return
-        armature = self.get_socket_value(self.armature)
-        bone = self.get_socket_value(self.bone)
-        constraint = self.get_socket_value(self.constraint)
-        influence = self.get_socket_value(self.influence)
+        armature = self.get_input(self.armature)
+        bone = self.get_input(self.bone)
+        constraint = self.get_input(self.constraint)
+        influence = self.get_input(self.influence)
         if is_waiting(
             armature,
             bone,
@@ -2406,13 +2372,13 @@ class ULSetBoneConstraintTarget(ULActionNode):
 
     def evaluate(self):
         self.done = False
-        condition = self.get_socket_value(self.condition)
+        condition = self.get_input(self.condition)
         if not_met(condition):
             return
-        armature = self.get_socket_value(self.armature)
-        bone = self.get_socket_value(self.bone)
-        constraint = self.get_socket_value(self.constraint)
-        target = self.get_socket_value(self.target)
+        armature = self.get_input(self.armature)
+        bone = self.get_input(self.bone)
+        constraint = self.get_input(self.constraint)
+        target = self.get_input(self.target)
         if is_waiting(
             armature,
             bone,
@@ -2444,14 +2410,14 @@ class ULSetBoneConstraintAttribute(ULActionNode):
 
     def evaluate(self):
         self.done = False
-        condition = self.get_socket_value(self.condition)
+        condition = self.get_input(self.condition)
         if not_met(condition):
             return
-        armature = self.get_socket_value(self.armature)
-        bone = self.get_socket_value(self.bone)
-        constraint = self.get_socket_value(self.constraint)
-        attribute = self.get_socket_value(self.attribute)
-        value = self.get_socket_value(self.value)
+        armature = self.get_input(self.armature)
+        bone = self.get_input(self.bone)
+        constraint = self.get_input(self.constraint)
+        attribute = self.get_input(self.attribute)
+        value = self.get_input(self.value)
         if is_waiting(
             armature,
             bone,
@@ -2513,17 +2479,17 @@ class ActionEditBone(ULActionNode):
 
     def evaluate(self):
         self.done = False
-        condition = self.get_socket_value(self.condition)
+        condition = self.get_input(self.condition)
         if not_met(condition):
             return
-        armature = self.get_socket_value(self.armature)
-        bone_name = self.get_socket_value(self.bone_name)
-        set_translation = self.get_socket_value(self.set_translation)
-        set_orientation = self.get_socket_value(self.set_orientation)
-        set_scale = self.get_socket_value(self.set_scale)
-        translate = self.get_socket_value(self.translate)
-        rotate = self.get_socket_value(self.rotate)
-        scale = self.get_socket_value(self.scale)
+        armature = self.get_input(self.armature)
+        bone_name = self.get_input(self.bone_name)
+        set_translation = self.get_input(self.set_translation)
+        set_orientation = self.get_input(self.set_orientation)
+        set_scale = self.get_input(self.set_scale)
+        translate = self.get_input(self.translate)
+        rotate = self.get_input(self.rotate)
+        scale = self.get_input(self.scale)
         if is_waiting(
             armature,
             bone_name,
@@ -2579,12 +2545,12 @@ class ActionSetBonePos(ULActionNode):
 
     def evaluate(self):
         self.done = False
-        condition = self.get_socket_value(self.condition)
+        condition = self.get_input(self.condition)
         if not_met(condition):
             return
-        armature = self.get_socket_value(self.armature)
-        bone_name = self.get_socket_value(self.bone_name)
-        set_translation = self.get_socket_value(self.set_translation)
+        armature = self.get_input(self.armature)
+        bone_name = self.get_input(self.bone_name)
+        set_translation = self.get_input(self.set_translation)
         self._set_ready()
         if is_invalid(armature, bone_name, set_translation):
             return
@@ -2616,8 +2582,8 @@ class ActionTimeFilter(ULActionNode):
             if delta < self._trigger_delay:
                 self._set_value(False)
                 return
-        condition = self.get_socket_value(self.condition)
-        delay = self.get_socket_value(self.delay)
+        condition = self.get_input(self.condition)
+        delay = self.get_input(self.delay)
         if is_waiting(condition, delay):
             return
         self._set_ready()
@@ -2645,8 +2611,8 @@ class ULBarrier(ULActionNode):
         self.trigger = 0
 
     def evaluate(self):
-        condition = self.get_socket_value(self.condition)
-        time = self.get_socket_value(self.time)
+        condition = self.get_input(self.condition)
+        time = self.get_input(self.time)
         if is_waiting(time):
             return
 
@@ -2678,8 +2644,8 @@ class ActionTimeDelay(ULActionNode):
         self.triggers = []
 
     def evaluate(self):
-        condition = self.get_socket_value(self.condition)
-        delay = self.get_socket_value(self.delay)
+        condition = self.get_input(self.condition)
+        delay = self.get_input(self.delay)
         if is_invalid(delay):
             return
         self._set_ready()
@@ -2715,12 +2681,12 @@ class ActionSetDynamics(ULActionNode):
 
     def evaluate(self):
         self.done = False
-        condition = self.get_socket_value(self.condition)
+        condition = self.get_input(self.condition)
         if not_met(condition):
             return
-        game_object = self.get_socket_value(self.game_object)
-        ghost = self.get_socket_value(self.ghost)
-        activate = self.get_socket_value(self.activate)
+        game_object = self.get_input(self.game_object)
+        ghost = self.get_input(self.ghost)
+        activate = self.get_input(self.activate)
         if is_waiting(game_object, ghost, activate):
             return
         self._set_ready()
@@ -2748,12 +2714,12 @@ class ActionSetPhysics(ULActionNode):
 
     def evaluate(self):
         self.done = False
-        condition = self.get_socket_value(self.condition)
+        condition = self.get_input(self.condition)
         if not_met(condition):
             return
-        game_object = self.get_socket_value(self.game_object)
-        activate = self.get_socket_value(self.activate)
-        free_const = self.get_socket_value(self.free_const)
+        game_object = self.get_input(self.game_object)
+        activate = self.get_input(self.activate)
+        free_const = self.get_input(self.free_const)
         if is_waiting(game_object, free_const, activate):
             return
         self._set_ready()
@@ -2780,11 +2746,11 @@ class ActionSetRigidBody(ULActionNode):
 
     def evaluate(self):
         self.done = False
-        condition = self.get_socket_value(self.condition)
+        condition = self.get_input(self.condition)
         if not_met(condition):
             return
-        game_object = self.get_socket_value(self.game_object)
-        activate = self.get_socket_value(self.activate)
+        game_object = self.get_input(self.game_object)
+        activate = self.get_input(self.activate)
         if is_waiting(game_object, activate):
             return
         if is_invalid(game_object):
@@ -2811,8 +2777,8 @@ class ActionEndObject(ULActionNode):
 
     def evaluate(self):
         self.done = False
-        condition = self.get_socket_value(self.condition)
-        game_object = self.get_socket_value(self.game_object)
+        condition = self.get_input(self.condition)
+        game_object = self.get_input(self.game_object)
         if not_met(condition):
             return
         if is_waiting(game_object):
@@ -2840,10 +2806,10 @@ class ActionSetTimeScale(ULActionNode):
 
     def evaluate(self):
         self.done = False
-        condition = self.get_socket_value(self.condition)
+        condition = self.get_input(self.condition)
         if not_met(condition):
             return
-        timescale = self.get_socket_value(self.timescale)
+        timescale = self.get_input(self.timescale)
         if is_waiting(timescale):
             return
         self._set_ready()
@@ -2867,10 +2833,10 @@ class ActionSetGravity(ULActionNode):
 
     def evaluate(self):
         self.done = False
-        condition = self.get_socket_value(self.condition)
+        condition = self.get_input(self.condition)
         if not_met(condition):
             return
-        gravity = self.get_socket_value(self.gravity)
+        gravity = self.get_input(self.gravity)
         if is_waiting(gravity):
             return
         self._set_ready()
@@ -2892,16 +2858,16 @@ class ActionApplyGameObjectValue(ULActionNode):
         self.local = False
 
     def evaluate(self):
-        condition = self.get_socket_value(self.condition)
+        condition = self.get_input(self.condition)
         if not_met(condition):
             return
-        game_object = self.get_socket_value(self.game_object)
+        game_object = self.get_input(self.game_object)
         if is_waiting(game_object):
             return
-        movement = self.get_socket_value(self.movement)
-        rotation = self.get_socket_value(self.rotation)
-        force = self.get_socket_value(self.force)
-        torque = self.get_socket_value(self.torque)
+        movement = self.get_input(self.movement)
+        rotation = self.get_input(self.rotation)
+        force = self.get_input(self.force)
+        torque = self.get_input(self.torque)
         local = self.local
         if is_waiting(movement, rotation, force, torque, local):
             return
@@ -2937,11 +2903,11 @@ class ActionApplyLocation(ULActionNode):
 
     def evaluate(self):
         self.done = False
-        condition = self.get_socket_value(self.condition)
+        condition = self.get_input(self.condition)
         if not_met(condition):
             return
-        game_object = self.get_socket_value(self.game_object)
-        movement = self.get_socket_value(self.movement)
+        game_object = self.get_input(self.game_object)
+        movement = self.get_input(self.movement)
         local = self.local
         if is_waiting(game_object, movement, local):
             return
@@ -2967,11 +2933,11 @@ class ActionApplyRotation(ULActionNode):
 
     def evaluate(self):
         self.done = False
-        condition = self.get_socket_value(self.condition)
+        condition = self.get_input(self.condition)
         if not_met(condition):
             return
-        game_object = self.get_socket_value(self.game_object)
-        rotation = self.get_socket_value(self.rotation)
+        game_object = self.get_input(self.game_object)
+        rotation = self.get_input(self.rotation)
         local = self.local
         if is_waiting(game_object, rotation, local):
             return
@@ -3000,11 +2966,11 @@ class ActionApplyForce(ULActionNode):
 
     def evaluate(self):
         self.done = False
-        condition = self.get_socket_value(self.condition)
+        condition = self.get_input(self.condition)
         if not_met(condition):
             return
-        game_object = self.get_socket_value(self.game_object)
-        force = self.get_socket_value(self.force)
+        game_object = self.get_input(self.game_object)
+        force = self.get_input(self.force)
         local = self.local
         if is_waiting(game_object, force):
             return
@@ -3028,12 +2994,12 @@ class ActionApplyImpulse(ULActionNode):
 
     def evaluate(self):
         self.done = False
-        condition = self.get_socket_value(self.condition)
+        condition = self.get_input(self.condition)
         if not_met(condition):
             return
-        game_object = self.get_socket_value(self.game_object)
-        point = self.get_socket_value(self.point)
-        impulse = self.get_socket_value(self.impulse)
+        game_object = self.get_input(self.game_object)
+        point = self.get_input(self.point)
+        impulse = self.get_input(self.impulse)
         local = self.local
         if hasattr(point, 'worldPosition'):
             point = point.worldPosition
@@ -3069,28 +3035,28 @@ class GamepadLook(ULActionNode):
 
     def evaluate(self):
         self.done = False
-        axis: int = self.get_socket_value(self.axis)
-        condition: GameObject = self.get_socket_value(self.condition)
+        axis: int = self.get_input(self.axis)
+        condition: GameObject = self.get_input(self.condition)
         if not_met(condition):
             return
-        main_obj: GameObject = self.get_socket_value(self.main_obj)
-        head_obj: GameObject = self.get_socket_value(self.head_obj)
+        main_obj: GameObject = self.get_input(self.main_obj)
+        head_obj: GameObject = self.get_input(self.head_obj)
         if is_invalid(head_obj):
             head_obj = main_obj
         if is_invalid(axis):
             debug('Gamepad Sticks Node: Invalid Controller Stick!')
             return
-        inverted: bool = self.get_socket_value(self.inverted)
-        index: int = self.get_socket_value(self.index)
-        sensitivity: float = self.get_socket_value(self.sensitivity)
-        exponent: float = self.get_socket_value(self.exponent)
-        threshold: float = self.get_socket_value(self.threshold)
-        use_cap_x: Vector = self.get_socket_value(self.use_cap_x)
-        cap_x: Vector = self.get_socket_value(self.cap_x)
+        inverted: bool = self.get_input(self.inverted)
+        index: int = self.get_input(self.index)
+        sensitivity: float = self.get_input(self.sensitivity)
+        exponent: float = self.get_input(self.exponent)
+        threshold: float = self.get_input(self.threshold)
+        use_cap_x: Vector = self.get_input(self.use_cap_x)
+        cap_x: Vector = self.get_input(self.cap_x)
         uppercapX: float = cap_x.x
         lowercapX: float = -cap_x.y
-        use_cap_y: Vector = self.get_socket_value(self.use_cap_y)
-        cap_y: Vector = self.get_socket_value(self.cap_y)
+        use_cap_y: Vector = self.get_input(self.use_cap_y)
+        cap_y: Vector = self.get_input(self.cap_y)
         uppercapY: float = cap_y.x
         lowercapY: float = -cap_y.y
 
@@ -3173,11 +3139,11 @@ class ActionCharacterJump(ULActionNode):
 
     def evaluate(self):
         self.done = False
-        condition = self.get_socket_value(self.condition)
+        condition = self.get_input(self.condition)
         if not_met(condition):
             self._set_ready()
             return
-        game_object = self.get_socket_value(self.game_object)
+        game_object = self.get_input(self.game_object)
         if is_waiting(game_object):
             return
         physics = bge.constraints.getCharacter(game_object)
@@ -3203,12 +3169,12 @@ class SetCharacterJumpSpeed(ULActionNode):
 
     def evaluate(self):
         self.done = False
-        condition = self.get_socket_value(self.condition)
+        condition = self.get_input(self.condition)
         if not_met(condition):
             self._set_ready()
             return
-        game_object = self.get_socket_value(self.game_object)
-        force = self.get_socket_value(self.force)
+        game_object = self.get_input(self.game_object)
+        force = self.get_input(self.force)
         if is_waiting(game_object):
             return
         physics = bge.constraints.getCharacter(game_object)
@@ -3233,12 +3199,12 @@ class SetCollisionGroup(ULActionNode):
 
     def evaluate(self):
         self.done = False
-        condition = self.get_socket_value(self.condition)
+        condition = self.get_input(self.condition)
         if not_met(condition):
             self._set_ready()
             return
-        game_object = self.get_socket_value(self.game_object)
-        slots = self.get_socket_value(self.slots)
+        game_object = self.get_input(self.game_object)
+        slots = self.get_input(self.slots)
         if is_waiting(game_object, slots):
             return
         self._set_ready()
@@ -3263,12 +3229,12 @@ class SetCollisionMask(ULActionNode):
 
     def evaluate(self):
         self.done = False
-        condition = self.get_socket_value(self.condition)
+        condition = self.get_input(self.condition)
         if not_met(condition):
             self._set_ready()
             return
-        game_object = self.get_socket_value(self.game_object)
-        slots = self.get_socket_value(self.slots)
+        game_object = self.get_input(self.game_object)
+        slots = self.get_input(self.slots)
         if is_waiting(game_object, slots):
             return
         self._set_ready()
@@ -3318,11 +3284,11 @@ class ActionSaveVariable(ULActionNode):
 
     def evaluate(self):
         self.done = False
-        condition = self.get_socket_value(self.condition)
+        condition = self.get_input(self.condition)
         if not_met(condition):
             return
-        name = self.get_socket_value(self.name)
-        val = self.get_socket_value(self.val)
+        name = self.get_input(self.name)
+        val = self.get_input(self.val)
         if is_waiting(name, val):
             return
         self._set_ready()
@@ -3372,10 +3338,10 @@ class ActionSaveVariables(ULActionNode):
 
     def evaluate(self):
         self.done = False
-        condition = self.get_socket_value(self.condition)
+        condition = self.get_input(self.condition)
         if not_met(condition):
             return
-        val = self.get_socket_value(self.val)
+        val = self.get_input(self.val)
         if is_waiting(val):
             return
         self._set_ready()
@@ -3431,10 +3397,10 @@ class ActionLoadVariable(ULActionNode):
 
     def evaluate(self):
         self.done = False
-        condition = self.get_socket_value(self.condition)
+        condition = self.get_input(self.condition)
         if not_met(condition):
             return
-        name = self.get_socket_value(self.name)
+        name = self.get_input(self.name)
         if is_waiting(name):
             return
         self._set_ready()
@@ -3487,7 +3453,7 @@ class ActionLoadVariables(ULActionNode):
 
     def evaluate(self):
         self.done = False
-        condition = self.get_socket_value(self.condition)
+        condition = self.get_input(self.condition)
         if not_met(condition):
             return
         self._set_ready()
@@ -3540,10 +3506,10 @@ class ActionRemoveVariable(ULActionNode):
 
     def evaluate(self):
         self.done = False
-        condition = self.get_socket_value(self.condition)
+        condition = self.get_input(self.condition)
         if not_met(condition):
             return
-        name = self.get_socket_value(self.name)
+        name = self.get_input(self.name)
         if is_waiting(name):
             return
         self._set_ready()
@@ -3595,7 +3561,7 @@ class ActionClearVariables(ULActionNode):
 
     def evaluate(self):
         self.done = False
-        condition = self.get_socket_value(self.condition)
+        condition = self.get_input(self.condition)
         if not_met(condition):
             return
         self._set_ready()
@@ -3657,10 +3623,10 @@ class ActionListVariables(ULActionNode):
 
     def evaluate(self):
         self.done = False
-        condition = self.get_socket_value(self.condition)
+        condition = self.get_input(self.condition)
         if not_met(condition):
             return
-        print_list = self.get_socket_value(self.print_list)
+        print_list = self.get_input(self.print_list)
         if is_waiting(print_list):
             return
         self._set_ready()
@@ -3691,11 +3657,11 @@ class ActionSetCharacterJump(ULActionNode):
 
     def evaluate(self):
         self.done = False
-        condition = self.get_socket_value(self.condition)
+        condition = self.get_input(self.condition)
         if not_met(condition):
             return
-        game_object = self.get_socket_value(self.game_object)
-        max_jumps = self.get_socket_value(self.max_jumps)
+        game_object = self.get_input(self.game_object)
+        max_jumps = self.get_input(self.max_jumps)
         if is_waiting(game_object, max_jumps):
             return
         self._set_ready()
@@ -3720,11 +3686,11 @@ class ActionSetCharacterGravity(ULActionNode):
 
     def evaluate(self):
         self.done = False
-        condition = self.get_socket_value(self.condition)
+        condition = self.get_input(self.condition)
         if not_met(condition):
             return
-        game_object = self.get_socket_value(self.game_object)
-        gravity = self.get_socket_value(self.gravity)
+        game_object = self.get_input(self.game_object)
+        gravity = self.get_input(self.gravity)
         if is_waiting(gravity):
             return
         self._set_ready()
@@ -3754,19 +3720,19 @@ class ActionSetCharacterWalkDir(ULActionNode):
 
     def evaluate(self):
         self.done = False
-        condition = self.get_socket_value(self.condition)
+        condition = self.get_input(self.condition)
         if not_met(condition):
             if self.active:
-                game_object = self.get_socket_value(self.game_object)
+                game_object = self.get_input(self.game_object)
                 physics = bge.constraints.getCharacter(game_object)
                 physics.walkDirection = Vector((0, 0, 0))
                 self.active = False
             return
         elif not self.active:
             self.active = True
-        game_object = self.get_socket_value(self.game_object)
+        game_object = self.get_input(self.game_object)
         local = self.local
-        walkDir = self.get_socket_value(self.walkDir)
+        walkDir = self.get_input(self.walkDir)
         if is_waiting(game_object, local, walkDir):
             return
         self._set_ready()
@@ -3795,16 +3761,16 @@ class ActionSetCharacterVelocity(ULActionNode):
 
     def evaluate(self):
         self.done = False
-        condition = self.get_socket_value(self.condition)
+        condition = self.get_input(self.condition)
         if not_met(condition):
             return
-        game_object = self.get_socket_value(self.game_object)
+        game_object = self.get_input(self.game_object)
         if is_waiting(game_object):
             return
         local = self.local
         physics = bge.constraints.getCharacter(game_object)
-        vel = self.get_socket_value(self.vel)
-        time = self.get_socket_value(self.time)
+        vel = self.get_input(self.vel)
+        time = self.get_input(self.time)
         self._set_ready()
         if is_invalid(game_object):
             return
@@ -3827,11 +3793,11 @@ class ActionApplyTorque(ULActionNode):
 
     def evaluate(self):
         self.done = False
-        condition = self.get_socket_value(self.condition)
+        condition = self.get_input(self.condition)
         if not_met(condition):
             return
-        game_object = self.get_socket_value(self.game_object)
-        torque = self.get_socket_value(self.torque)
+        game_object = self.get_input(self.game_object)
+        torque = self.get_input(self.torque)
         local = self.local
         if is_waiting(game_object, torque):
             return
@@ -3898,18 +3864,18 @@ class ActionPlayAction(ULActionNode):
             self._finished = False
 
     def evaluate(self):
-        condition = self.get_socket_value(self.condition)
-        game_object = self.get_socket_value(self.game_object)
-        action_name = self.get_socket_value(self.action_name)
-        start_frame = self.get_socket_value(self.start_frame)
-        end_frame = self.get_socket_value(self.end_frame)
-        layer = self.get_socket_value(self.layer)
-        priority = self.get_socket_value(self.priority)
-        play_mode = self.get_socket_value(self.play_mode)
-        layer_weight = self.get_socket_value(self.layer_weight)
-        speed = self.get_socket_value(self.speed)
-        blendin = self.get_socket_value(self.blendin)
-        blend_mode = self.get_socket_value(self.blend_mode)
+        condition = self.get_input(self.condition)
+        game_object = self.get_input(self.game_object)
+        action_name = self.get_input(self.action_name)
+        start_frame = self.get_input(self.start_frame)
+        end_frame = self.get_input(self.end_frame)
+        layer = self.get_input(self.layer)
+        priority = self.get_input(self.priority)
+        play_mode = self.get_input(self.play_mode)
+        layer_weight = self.get_input(self.layer_weight)
+        speed = self.get_input(self.speed)
+        blendin = self.get_input(self.blendin)
+        blend_mode = self.get_input(self.blend_mode)
         if is_invalid(
             game_object,
             action_name,
@@ -4034,12 +4000,12 @@ class ActionStopAnimation(ULActionNode):
 
     def evaluate(self):
         self.done = False
-        condition = self.get_socket_value(self.condition)
+        condition = self.get_input(self.condition)
         if not condition:
             self._set_ready()
             return
-        game_object = self.get_socket_value(self.game_object)
-        action_layer = self.get_socket_value(self.action_layer)
+        game_object = self.get_input(self.game_object)
+        action_layer = self.get_input(self.action_layer)
         if is_waiting(game_object, action_layer):
             return
         self._set_ready()
@@ -4068,16 +4034,16 @@ class ActionSetAnimationFrame(ULActionNode):
 
     def evaluate(self):
         self.done = False
-        condition = self.get_socket_value(self.condition)
+        condition = self.get_input(self.condition)
         if not condition:
             self._set_ready()
             return
-        game_object = self.get_socket_value(self.game_object)
-        action_layer = self.get_socket_value(self.action_layer)
-        action_frame = self.get_socket_value(self.action_frame)
-        freeze = self.get_socket_value(self.freeze)
-        action_name = self.get_socket_value(self.action_name)
-        layer_weight = self.get_socket_value(self.layer_weight)
+        game_object = self.get_input(self.game_object)
+        action_layer = self.get_input(self.action_layer)
+        action_frame = self.get_input(self.action_frame)
+        freeze = self.get_input(self.freeze)
+        action_name = self.get_input(self.action_name)
+        layer_weight = self.get_input(self.layer_weight)
         self._set_ready()
         if is_invalid(
             game_object,
@@ -4134,10 +4100,10 @@ class ActionFindScene(ULActionNode):
 
     def evaluate(self):
         self.done = False
-        condition = self.get_socket_value(self.condition)
+        condition = self.get_input(self.condition)
         if not_met(condition):
             return
-        query = self.get_socket_value(self.query)
+        query = self.get_input(self.query)
         if is_waiting(query):
             return
         self._set_ready()
@@ -4156,10 +4122,10 @@ class ActionStopSound(ULActionNode):
         self.sound = None
 
     def evaluate(self):
-        condition = self.get_socket_value(self.condition)
+        condition = self.get_input(self.condition)
         if not_met(condition):
             return
-        sound = self.get_socket_value(self.sound)
+        sound = self.get_input(self.sound)
         if is_waiting(sound):
             return
         self._set_ready()
@@ -4174,7 +4140,7 @@ class ActionStopAllSounds(ULActionNode):
         self.condition = None
 
     def evaluate(self):
-        condition = self.get_socket_value(self.condition)
+        condition = self.get_input(self.condition)
         if not_met(condition):
             return
         aud_sys = GlobalDB.retrieve('.uplogic_audio').get('nl_audio_system')
@@ -4191,10 +4157,10 @@ class ActionPauseSound(ULActionNode):
         self.sound = None
 
     def evaluate(self):
-        condition = self.get_socket_value(self.condition)
+        condition = self.get_input(self.condition)
         if not_met(condition):
             return
-        sound = self.get_socket_value(self.sound)
+        sound = self.get_input(self.sound)
         if is_waiting(sound):
             return
         self._set_ready()
@@ -4210,10 +4176,10 @@ class ActionResumeSound(ULActionNode):
         self.sound = None
 
     def evaluate(self):
-        condition = self.get_socket_value(self.condition)
+        condition = self.get_input(self.condition)
         if not_met(condition):
             return
-        sound = self.get_socket_value(self.sound)
+        sound = self.get_input(self.sound)
         if is_waiting(sound):
             return
         self._set_ready()
@@ -4230,11 +4196,11 @@ class ActionListGlobalValues(ULActionNode):
         self.print_d = None
 
     def evaluate(self):
-        condition = self.get_socket_value(self.condition)
+        condition = self.get_input(self.condition)
         if not_met(condition):
             return
-        data_id = self.get_socket_value(self.data_id)
-        print_d = self.get_socket_value(self.print_d)
+        data_id = self.get_input(self.data_id)
+        print_d = self.get_input(self.print_d)
         if is_waiting(data_id, print_d):
             return
         self._set_ready()
@@ -4263,14 +4229,14 @@ class ActionSetGlobalValue(ULActionNode):
 
     def evaluate(self):
         self.done = False
-        condition = self.get_socket_value(self.condition)
+        condition = self.get_input(self.condition)
         if not_met(condition):
             self._set_ready()
             return
-        data_id = self.get_socket_value(self.data_id)
-        persistent = self.get_socket_value(self.persistent)
-        key = self.get_socket_value(self.key)
-        value = self.get_socket_value(self.value)
+        data_id = self.get_input(self.data_id)
+        persistent = self.get_input(self.persistent)
+        key = self.get_input(self.key)
+        value = self.get_input(self.value)
         if is_waiting(data_id, persistent, key, value):
             return
         self._set_ready()
@@ -4296,8 +4262,8 @@ class ActionRandomInt(ULActionNode):
         self.OUT_A = ULOutSocket(self, self._get_output)
 
     def _get_output(self):
-        min_value = self.get_socket_value(self.min_value)
-        max_value = self.get_socket_value(self.max_value)
+        min_value = self.get_input(self.min_value)
+        max_value = self.get_input(self.max_value)
         if is_waiting(max_value, min_value):
             return STATUS_WAITING
         if min_value > max_value:
@@ -4319,7 +4285,7 @@ class ULRandomVect(ULActionNode):
         self.OUT_A = ULOutSocket(self, self._get_output)
 
     def _get_output(self):
-        xyz = self.get_socket_value(self.xyz)
+        xyz = self.get_input(self.xyz)
         if is_waiting(xyz):
             return
         vmin, vmax = -999999999, 999999999
@@ -4345,17 +4311,17 @@ class ActionTranslate(ULActionNode):
         self._old_values = None
 
     def evaluate(self):
-        condition = self.get_socket_value(self.condition)
+        condition = self.get_input(self.condition)
         if not_met(condition):
             self._set_value(False)
             return self._set_ready()
-        moving_object = self.get_socket_value(self.moving_object)
-        vect = self.get_socket_value(self.vect)
+        moving_object = self.get_input(self.moving_object)
+        vect = self.get_input(self.vect)
         dx = vect.x
         dy = vect.y
         dz = vect.z
-        speed = self.get_socket_value(self.speed)
-        local = self.get_socket_value(self.local)
+        speed = self.get_input(self.speed)
+        local = self.get_input(self.local)
         if is_waiting(
             vect,
             dx,
@@ -4430,10 +4396,10 @@ class SetGamma(ULActionNode):
 
     def evaluate(self):
         self.done = False
-        condition = self.get_socket_value(self.condition)
+        condition = self.get_input(self.condition)
         if not_met(condition):
             return
-        value = self.get_socket_value(self.value)
+        value = self.get_input(self.value)
         if is_invalid(value):
             return
         self._set_ready()
@@ -4458,10 +4424,10 @@ class SetExposure(ULActionNode):
 
     def evaluate(self):
         self.done = False
-        condition = self.get_socket_value(self.condition)
+        condition = self.get_input(self.condition)
         if not_met(condition):
             return
-        value = self.get_socket_value(self.value)
+        value = self.get_input(self.value)
         if is_invalid(value):
             return
         self._set_ready()
@@ -4486,10 +4452,10 @@ class SetEeveeAO(ULActionNode):
 
     def evaluate(self):
         self.done = False
-        condition = self.get_socket_value(self.condition)
+        condition = self.get_input(self.condition)
         if not_met(condition):
             return
-        value = self.get_socket_value(self.value)
+        value = self.get_input(self.value)
         if is_invalid(value):
             return
         self._set_ready()
@@ -4512,10 +4478,10 @@ class SetEeveeBloom(ULActionNode):
 
     def evaluate(self):
         self.done = False
-        condition = self.get_socket_value(self.condition)
+        condition = self.get_input(self.condition)
         if not_met(condition):
             return
-        value = self.get_socket_value(self.value)
+        value = self.get_input(self.value)
         if is_invalid(value):
             return
         self._set_ready()
@@ -4538,10 +4504,10 @@ class SetEeveeSSR(ULActionNode):
 
     def evaluate(self):
         self.done = False
-        condition = self.get_socket_value(self.condition)
+        condition = self.get_input(self.condition)
         if not_met(condition):
             return
-        value = self.get_socket_value(self.value)
+        value = self.get_input(self.value)
         if is_invalid(value):
             return
         self._set_ready()
@@ -4564,10 +4530,10 @@ class SetEeveeVolumetrics(ULActionNode):
 
     def evaluate(self):
         self.done = False
-        condition = self.get_socket_value(self.condition)
+        condition = self.get_input(self.condition)
         if not_met(condition):
             return
-        value = self.get_socket_value(self.value)
+        value = self.get_input(self.value)
         if is_invalid(value):
             return
         self._set_ready()
@@ -4592,10 +4558,10 @@ class SetEeveeSMAA(ULActionNode):
 
     def evaluate(self):
         self.done = False
-        condition = self.get_socket_value(self.condition)
+        condition = self.get_input(self.condition)
         if not_met(condition):
             return
-        value = self.get_socket_value(self.value)
+        value = self.get_input(self.value)
         if is_invalid(value):
             return
         self._set_ready()
@@ -4618,10 +4584,10 @@ class SetEeveeSMAAQuality(ULActionNode):
 
     def evaluate(self):
         self.done = False
-        condition = self.get_socket_value(self.condition)
+        condition = self.get_input(self.condition)
         if not_met(condition):
             return
-        value = self.get_socket_value(self.value)
+        value = self.get_input(self.value)
         if is_invalid(value):
             return
         self._set_ready()
@@ -4645,12 +4611,12 @@ class SetLightEnergy(ULActionNode):
 
     def evaluate(self):
         self.done = False
-        condition = self.get_socket_value(self.condition)
+        condition = self.get_input(self.condition)
         if not_met(condition):
             self._set_value(False)
             return self._set_ready()
-        lamp = self.get_socket_value(self.lamp)
-        energy = self.get_socket_value(self.energy)
+        lamp = self.get_input(self.lamp)
+        energy = self.get_input(self.energy)
         if is_waiting(lamp, energy):
             return
         self._set_ready()
@@ -4678,11 +4644,11 @@ class ULMakeUniqueLight(ULActionNode):
 
     def evaluate(self):
         self.done = False
-        condition = self.get_socket_value(self.condition)
+        condition = self.get_input(self.condition)
         if not_met(condition):
             self._set_value(False)
             return self._set_ready()
-        old_lamp_ge = self.get_socket_value(self.light)
+        old_lamp_ge = self.get_input(self.light)
         if is_waiting(old_lamp_ge):
             return
         self._set_ready()
@@ -4707,12 +4673,12 @@ class SetLightShadow(ULActionNode):
 
     def evaluate(self):
         self.done = False
-        condition = self.get_socket_value(self.condition)
+        condition = self.get_input(self.condition)
         if not_met(condition):
             self._set_value(False)
             return self._set_ready()
-        lamp = self.get_socket_value(self.lamp)
-        use_shadow = self.get_socket_value(self.use_shadow)
+        lamp = self.get_input(self.lamp)
+        use_shadow = self.get_input(self.use_shadow)
         if is_waiting(lamp, use_shadow):
             return
         self._set_ready()
@@ -4736,12 +4702,12 @@ class SetLightColor(ULActionNode):
 
     def evaluate(self):
         self.done = False
-        condition = self.get_socket_value(self.condition)
+        condition = self.get_input(self.condition)
         if not_met(condition):
             self._set_value(False)
             return self._set_ready()
-        lamp = self.get_socket_value(self.lamp)
-        color = self.get_socket_value(self.color)
+        lamp = self.get_input(self.lamp)
+        color = self.get_input(self.color)
         if is_waiting(lamp, color):
             return
         if len(color) > 3:
@@ -4764,7 +4730,7 @@ class GetLightEnergy(ULActionNode):
         return self.energy
 
     def evaluate(self):
-        lamp = self.get_socket_value(self.lamp)
+        lamp = self.get_input(self.lamp)
         if is_waiting(lamp):
             return
         self._set_ready()
@@ -4784,7 +4750,7 @@ class GetLightColor(ULActionNode):
         return self.color
 
     def evaluate(self):
-        lamp = self.get_socket_value(self.lamp)
+        lamp = self.get_input(self.lamp)
         if is_waiting(lamp):
             return
         self._set_ready()
@@ -4806,14 +4772,14 @@ class ActionMoveTo(ULActionNode):
         self.distance = None
 
     def evaluate(self):  # the actual execution of this cell
-        condition = self.get_socket_value(self.condition)
+        condition = self.get_input(self.condition)
         if not_met(condition):
             return
-        moving_object = self.get_socket_value(self.moving_object)
-        destination_point = self.get_socket_value(self.destination_point)
-        speed = self.get_socket_value(self.speed)
-        distance = self.get_socket_value(self.distance)
-        dynamic = self.get_socket_value(self.dynamic)
+        moving_object = self.get_input(self.moving_object)
+        destination_point = self.get_input(self.destination_point)
+        speed = self.get_input(self.speed)
+        distance = self.get_input(self.distance)
+        dynamic = self.get_input(self.dynamic)
         if hasattr(destination_point, 'worldPosition'):
             destination_point = destination_point.worldPosition
         if is_waiting(
@@ -4845,14 +4811,14 @@ class ActionTrackTo(ULActionNode):
 
     def evaluate(self):
         self._set_value(False)
-        condition = self.get_socket_value(self.condition)
+        condition = self.get_input(self.condition)
         if not_met(condition):
             return self._set_ready()
-        moving_object = self.get_socket_value(self.moving_object)
-        target_object = self.get_socket_value(self.target_object)
-        speed = self.get_socket_value(self.speed)
-        rot_axis = self.get_socket_value(self.rot_axis)
-        front_axis = self.get_socket_value(self.front_axis)
+        moving_object = self.get_input(self.moving_object)
+        target_object = self.get_input(self.target_object)
+        speed = self.get_input(self.speed)
+        rot_axis = self.get_input(self.rot_axis)
+        front_axis = self.get_input(self.front_axis)
         if is_waiting(speed, rot_axis, front_axis):
             return
         if is_invalid(moving_object):
@@ -4907,16 +4873,16 @@ class ActionRotateTo(ULActionNode):
 
     def evaluate(self):
         self._set_value(False)
-        condition = self.get_socket_value(self.condition)
+        condition = self.get_input(self.condition)
         if not_met(condition):
             return
-        moving_object = self.get_socket_value(self.moving_object)
-        target_point = self.get_socket_value(self.target_point)
-        speed = self.get_socket_value(self.speed)
+        moving_object = self.get_input(self.moving_object)
+        target_point = self.get_input(self.target_point)
+        speed = self.get_input(self.speed)
         if hasattr(target_point, 'worldPosition'):
             target_point = target_point.worldPosition
-        rot_axis = self.get_socket_value(self.rot_axis)
-        front_axis = self.get_socket_value(self.front_axis)
+        rot_axis = self.get_input(self.rot_axis)
+        front_axis = self.get_input(self.front_axis)
         if is_waiting(moving_object, target_point, speed, rot_axis, front_axis):
             return
         self._set_ready()
@@ -4991,22 +4957,22 @@ class ActionNavigateWithNavmesh(ULActionNode):
         self._motion_path = None
 
     def evaluate(self):
-        condition = self.get_socket_value(self.condition)
+        condition = self.get_input(self.condition)
         if not_met(condition):
             self._set_ready()
             return
-        moving_object = self.get_socket_value(self.moving_object)
-        rotating_object = self.get_socket_value(self.rotating_object)
-        navmesh_object = self.get_socket_value(self.navmesh_object)
-        destination_point = self.get_socket_value(self.destination_point)
-        move_dynamic = self.get_socket_value(self.move_dynamic)
-        linear_speed = self.get_socket_value(self.linear_speed)
-        reach_threshold = self.get_socket_value(self.reach_threshold)
-        look_at = self.get_socket_value(self.look_at)
-        rot_axis = self.get_socket_value(self.rot_axis)
-        front_axis = self.get_socket_value(self.front_axis)
-        rot_speed = self.get_socket_value(self.rot_speed)
-        visualize = self.get_socket_value(self.visualize)
+        moving_object = self.get_input(self.moving_object)
+        rotating_object = self.get_input(self.rotating_object)
+        navmesh_object = self.get_input(self.navmesh_object)
+        destination_point = self.get_input(self.destination_point)
+        move_dynamic = self.get_input(self.move_dynamic)
+        linear_speed = self.get_input(self.linear_speed)
+        reach_threshold = self.get_input(self.reach_threshold)
+        look_at = self.get_input(self.look_at)
+        rot_axis = self.get_input(self.rot_axis)
+        front_axis = self.get_input(self.front_axis)
+        rot_speed = self.get_input(self.rot_speed)
+        visualize = self.get_input(self.visualize)
         if is_invalid(
             destination_point,
             move_dynamic,
@@ -5121,25 +5087,25 @@ class ActionFollowPath(ULActionNode):
 
     def evaluate(self):
         self.done = False
-        condition = self.get_socket_value(self.condition)
-        path_continue = self.get_socket_value(self.path_continue)
+        condition = self.get_input(self.condition)
+        path_continue = self.get_input(self.path_continue)
         if not_met(condition):
             if not path_continue:
                 self._motion_path = None
             self._set_ready()
             return
-        moving_object = self.get_socket_value(self.moving_object)
-        rotating_object = self.get_socket_value(self.rotating_object)
-        path_points = self.get_socket_value(self.path_points)
-        navmesh_object = self.get_socket_value(self.navmesh_object)
-        move_dynamic = self.get_socket_value(self.move_dynamic)
-        linear_speed = self.get_socket_value(self.linear_speed)
-        reach_threshold = self.get_socket_value(self.reach_threshold)
-        look_at = self.get_socket_value(self.look_at)
-        rot_axis = self.get_socket_value(self.rot_axis)
-        front_axis = self.get_socket_value(self.front_axis)
-        rot_speed = self.get_socket_value(self.rot_speed)
-        loop = self.get_socket_value(self.loop)
+        moving_object = self.get_input(self.moving_object)
+        rotating_object = self.get_input(self.rotating_object)
+        path_points = self.get_input(self.path_points)
+        navmesh_object = self.get_input(self.navmesh_object)
+        move_dynamic = self.get_input(self.move_dynamic)
+        linear_speed = self.get_input(self.linear_speed)
+        reach_threshold = self.get_input(self.reach_threshold)
+        look_at = self.get_input(self.look_at)
+        rot_axis = self.get_input(self.rot_axis)
+        front_axis = self.get_input(self.front_axis)
+        rot_speed = self.get_input(self.rot_speed)
+        loop = self.get_input(self.loop)
         if is_invalid(
             path_points,
             move_dynamic,
@@ -5247,14 +5213,14 @@ class ActionReplaceMesh(ULActionNode):
 
     def evaluate(self):
         self.done = False
-        condition = self.get_socket_value(self.condition)
+        condition = self.get_input(self.condition)
         self._set_ready()
         if not condition:
             return
-        target = self.get_socket_value(self.target_game_object)
-        mesh = self.get_socket_value(self.new_mesh_name)
-        display = self.get_socket_value(self.use_display)
-        physics = self.get_socket_value(self.use_physics)
+        target = self.get_input(self.target_game_object)
+        mesh = self.get_input(self.new_mesh_name)
+        display = self.get_input(self.use_display)
+        physics = self.get_input(self.use_physics)
         if is_invalid(target):
             return
         if mesh is None:
@@ -5283,13 +5249,13 @@ class RemovePhysicsConstraint(ULActionNode):
 
     def evaluate(self):
         self.done = False
-        condition = self.get_socket_value(self.condition)
+        condition = self.get_input(self.condition)
         if not condition:
             return
-        obj = self.get_socket_value(self.object)
+        obj = self.get_input(self.object)
         if is_invalid(obj):
             return
-        name = self.get_socket_value(self.name)
+        name = self.get_input(self.name)
         if is_invalid(name):
             return
         self._set_ready()
@@ -5318,18 +5284,18 @@ class AddPhysicsConstraint(ULActionNode):
 
     def evaluate(self):
         self.done = False
-        condition = self.get_socket_value(self.condition)
+        condition = self.get_input(self.condition)
         if not_met(condition):
             return
-        target = self.get_socket_value(self.target)
-        child = self.get_socket_value(self.child)
-        name = self.get_socket_value(self.name)
-        constraint = self.get_socket_value(self.constraint)
-        pivot = self.get_socket_value(self.pivot)
-        use_limit = self.get_socket_value(self.use_limit)
-        use_world = self.get_socket_value(self.use_world)
-        axis_limits = self.get_socket_value(self.axis_limits)
-        linked_col = self.get_socket_value(self.linked_col)
+        target = self.get_input(self.target)
+        child = self.get_input(self.child)
+        name = self.get_input(self.name)
+        constraint = self.get_input(self.constraint)
+        pivot = self.get_input(self.pivot)
+        use_limit = self.get_input(self.use_limit)
+        use_world = self.get_input(self.use_world)
+        axis_limits = self.get_input(self.axis_limits)
+        linked_col = self.get_input(self.linked_col)
         if is_invalid(
             target,
             child,
@@ -5389,14 +5355,14 @@ class ActionAlignAxisToVector(ULActionNode):
 
     def evaluate(self):
         self.done = False
-        condition = self.get_socket_value(self.condition)
+        condition = self.get_input(self.condition)
         self._set_ready()
         if not_met(condition):
             return
-        game_object = self.get_socket_value(self.game_object)
-        v = self.get_socket_value(self.vector)
-        axis = self.get_socket_value(self.axis)
-        factor = self.get_socket_value(self.factor)
+        game_object = self.get_input(self.game_object)
+        v = self.get_input(self.vector)
+        axis = self.get_input(self.axis)
+        factor = self.get_input(self.factor)
         if is_invalid(game_object):
             return
         if axis is None:
@@ -5430,13 +5396,13 @@ class ActionUpdateBitmapFontQuads(ULActionNode):
 
     def evaluate(self):  # no status waiting, test
         self.done = False
-        condition = self.get_socket_value(self.condition)
+        condition = self.get_input(self.condition)
         if not condition:
             return self._set_ready()
         self._set_ready()
-        game_object = self.get_socket_value(self.game_object)
-        text = eval(self.get_socket_value(self.text))
-        grid_size = self.get_socket_value(self.grid_size)
+        game_object = self.get_input(self.game_object)
+        text = eval(self.get_input(self.text))
+        grid_size = self.get_input(self.grid_size)
         if is_invalid(game_object):
             return
         if text is None:
@@ -5490,11 +5456,11 @@ class ActionSetCurrentScene(ULActionNode):
 
     def evaluate(self):
         self.done = False
-        condition = self.get_socket_value(self.condition)
+        condition = self.get_input(self.condition)
         self._set_ready()
         if not condition:
             return
-        scene_name = self.get_socket_value(self.scene_name)
+        scene_name = self.get_input(self.scene_name)
         if scene_name is None:
             return
         current_scene = logic.getCurrentScene()
@@ -5516,11 +5482,11 @@ class ActionStringOp(ULActionNode):
 
     def evaluate(self):
         self._set_ready()
-        code = self.get_socket_value(self.opcode)
-        condition = self.get_socket_value(self.condition)
-        input_string = self.get_socket_value(self.input_string)
-        input_param_a = self.get_socket_value(self.input_param_a)
-        input_param_b = self.get_socket_value(self.input_param_b)
+        code = self.get_input(self.opcode)
+        condition = self.get_input(self.condition)
+        input_string = self.get_input(self.input_string)
+        input_param_a = self.get_input(self.input_param_a)
+        input_param_b = self.get_input(self.input_param_b)
         if not condition:
             return
         if input_string is None:

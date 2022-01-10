@@ -15,9 +15,9 @@ class ULGetSensorValue(ULParameterNode):
         self.OUT = ULOutSocket(self, self.get_sensor)
 
     def get_sensor(self):
-        game_obj: GameObject = self.get_socket_value(self.game_obj)
-        sens_name: str = self.get_socket_value(self.sens_name)
-        field = self.get_socket_value(self.field)
+        game_obj: GameObject = self.get_input(self.game_obj)
+        sens_name: str = self.get_input(self.sens_name)
+        field = self.get_input(self.field)
         if is_invalid(game_obj, sens_name, field):
             return STATUS_WAITING
         if sens_name not in game_obj.sensors:

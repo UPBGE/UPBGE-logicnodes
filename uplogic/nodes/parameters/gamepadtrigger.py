@@ -16,14 +16,14 @@ class ULGamepadTrigger(ULParameterNode):
         self.VAL = ULOutSocket(self, self.get_value)
 
     def get_value(self):
-        socket = self.get_socket('changed')
+        socket = self.get_output('changed')
         if socket is None:
-            axis = self.get_socket_value(self.axis)
+            axis = self.get_input(self.axis)
             if is_invalid(axis):
                 return STATUS_WAITING
-            index = self.get_socket_value(self.index)
-            sensitivity = self.get_socket_value(self.sensitivity)
-            threshold = self.get_socket_value(self.threshold)
+            index = self.get_input(self.index)
+            sensitivity = self.get_input(self.sensitivity)
+            threshold = self.get_input(self.threshold)
             if logic.joysticks[index]:
                 joystick = logic.joysticks[index]
             else:
@@ -39,7 +39,7 @@ class ULGamepadTrigger(ULParameterNode):
 
             if -threshold < value < threshold:
                 value = 0
-            return self.set_socket('trigger', value * sensitivity)
+            return self.set_output('trigger', value * sensitivity)
         return socket
 
     def evaluate(self):

@@ -18,8 +18,8 @@ class ULRangedThreshold(ULParameterNode):
         self.OUT = ULOutSocket(self, self.get_done)
 
     def get_done(self):
-        v = self.get_socket_value(self.value)
-        t = self.get_socket_value(self.threshold)
+        v = self.get_input(self.value)
+        t = self.get_input(self.threshold)
         if is_waiting(v, t):
             return STATUS_WAITING
         value = self.calc_threshold(self.operator, v, t)

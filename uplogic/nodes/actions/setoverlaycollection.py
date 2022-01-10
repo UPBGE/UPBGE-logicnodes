@@ -13,11 +13,11 @@ class ULSetOverlayCollection(ULActionNode):
         self.collection = None
 
     def evaluate(self):
-        condition = self.get_socket_value(self.condition)
+        condition = self.get_input(self.condition)
         if not_met(condition):
             return
-        collection = self.get_socket_value(self.collection)
-        camera = self.get_socket_value(self.camera)
+        collection = self.get_input(self.collection)
+        camera = self.get_input(self.camera)
         if is_invalid(camera, collection):
             return
         self._set_ready()

@@ -23,17 +23,17 @@ class ULVectorAngleCheck(ULParameterNode):
         return self._angle
 
     def get_done(self):
-        op: str = self.get_socket_value(self.op)
+        op: str = self.get_input(self.op)
         if is_waiting(
             op
         ):
             return STATUS_WAITING
-        value: float = self.get_socket_value(self.value)
+        value: float = self.get_input(self.value)
         return LOGIC_OPERATORS[int(op)](self._angle, value)
 
     def evaluate(self):
-        vector: Vector = self.get_socket_value(self.vector)
-        vector_2: Vector = self.get_socket_value(self.vector_2)
+        vector: Vector = self.get_input(self.vector)
+        vector_2: Vector = self.get_input(self.vector_2)
         if is_invalid(
             vector,
             vector_2

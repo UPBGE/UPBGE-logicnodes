@@ -14,10 +14,10 @@ class ULVectorXYZW(ULParameterNode):
         self.OUTV = ULOutSocket(self, self.get_out_v)
 
     def get_out_v(self):
-        x = self.get_socket_value(self.input_x)
-        y = self.get_socket_value(self.input_y)
-        z = self.get_socket_value(self.input_z)
-        w = self.get_socket_value(self.input_w)
+        x = self.get_input(self.input_x)
+        y = self.get_input(self.input_y)
+        z = self.get_input(self.input_z)
+        w = self.get_input(self.input_w)
         v = Vector((0, 0, 0, 0))
         if not is_invalid(x):
             v.x = x

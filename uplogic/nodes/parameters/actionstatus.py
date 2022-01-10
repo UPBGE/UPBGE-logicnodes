@@ -26,8 +26,8 @@ class ULActionStatus(ULParameterNode):
         return not self.get_value()
 
     def evaluate(self):
-        game_object = self.get_socket_value(self.game_object)
-        action_layer = self.get_socket_value(self.action_layer)
+        game_object = self.get_input(self.game_object)
+        action_layer = self.get_input(self.action_layer)
         if is_waiting(game_object, action_layer):
             return
         self._set_ready()

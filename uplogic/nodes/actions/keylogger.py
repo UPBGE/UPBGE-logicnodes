@@ -32,7 +32,7 @@ class ULKeyLogger(ULActionNode):
 
     def evaluate(self):
         self._set_ready()
-        condition = self.get_socket_value(self.condition)
+        condition = self.get_input(self.condition)
         if not condition:
             return
         network = self.network

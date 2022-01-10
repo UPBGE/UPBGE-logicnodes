@@ -22,10 +22,10 @@ class ULSetMaterial(ULActionNode):
 
     def evaluate(self):
         self.done = False
-        condition = self.get_socket_value(self.condition)
-        game_object = self.get_socket_value(self.game_object)
-        slot = self.get_socket_value(self.slot) - 1
-        mat_name = self.get_socket_value(self.mat_name)
+        condition = self.get_input(self.condition)
+        game_object = self.get_input(self.game_object)
+        slot = self.get_input(self.slot) - 1
+        mat_name = self.get_input(self.mat_name)
         if not_met(condition):
             return
         if is_invalid(game_object):

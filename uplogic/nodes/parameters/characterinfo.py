@@ -32,7 +32,7 @@ class ULCharacterInfo(ULParameterNode):
         return self.physics.gravity
 
     def get_walk_dir(self):
-        socket = self.get_socket('walk_dir')
+        socket = self.get_output('walk_dir')
         if socket is None:
             physics = self.physics
             wdir = (
@@ -40,7 +40,7 @@ class ULCharacterInfo(ULParameterNode):
                 if self.local else
                 physics.walkDirection
             )
-            return self.set_socket(
+            return self.set_output(
                 'walk_dir',
                 wdir * bpy.data.scenes[
                     logic.getCurrentScene().name
@@ -52,7 +52,7 @@ class ULCharacterInfo(ULParameterNode):
         return self.physics.onGround
 
     def evaluate(self):
-        game_object = self.owner = self.get_socket_value(self.game_object)
+        game_object = self.owner = self.get_input(self.game_object)
         if is_invalid(game_object):
             return
         self.physics = constraints.getCharacter(game_object)

@@ -14,10 +14,10 @@ class ULMousePressedOn(ULConditionNode):
         self.OUT = ULOutSocket(self, self.get_changed)
 
     def get_changed(self):
-        socket = self.get_socket('changed')
+        socket = self.get_output('changed')
         if socket is None:
-            mouse_button = self.get_socket_value(self.mouse_button)
-            game_object = self.get_socket_value(self.game_object)
+            mouse_button = self.get_input(self.mouse_button)
+            game_object = self.get_input(self.game_object)
             if is_waiting(mouse_button, game_object):
                 return STATUS_WAITING
             if mouse_button is None:
@@ -40,7 +40,7 @@ class ULMousePressedOn(ULConditionNode):
                 False,
                 distance
             )
-            return self.set_socket(
+            return self.set_output(
                 'changed',
                 (t == game_object)
             )

@@ -11,7 +11,7 @@ class ULObjectDataName(ULParameterNode):
         self.OUT = ULOutSocket(self, self.get_name)
 
     def get_name(self):
-        obj = self.get_socket_value(self.game_object)
+        obj = self.get_input(self.game_object)
         if is_invalid(obj):
             return STATUS_WAITING
         return obj.blenderObject.name

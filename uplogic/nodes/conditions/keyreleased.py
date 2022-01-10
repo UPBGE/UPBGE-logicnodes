@@ -13,7 +13,7 @@ class ULKeyReleased(ULConditionNode):
         self.network = network
 
     def evaluate(self):
-        keycode = self.get_socket_value(self.key_code)
+        keycode = self.get_input(self.key_code)
         if is_waiting(keycode):
             return
         self._set_ready()

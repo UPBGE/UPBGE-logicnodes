@@ -14,13 +14,13 @@ class ULListIndexRandom(ULParameterNode):
         self.OUT = ULOutSocket(self, self.get_val)
 
     def get_val(self):
-        socket = self.get_socket('val')
+        socket = self.get_output('val')
         if socket is None:
-            list_d = self.get_socket_value(self.items)
+            list_d = self.get_input(self.items)
             if is_invalid(list_d):
                 return STATUS_WAITING
             self._item = random.choice(list_d)
-            return self.set_socket('val', self._item)
+            return self.set_output('val', self._item)
         return socket
 
     def evaluate(self):

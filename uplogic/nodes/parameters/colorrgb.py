@@ -12,14 +12,14 @@ class ULColorRGB(ULParameterNode):
         self.OUTV = ULOutSocket(self, self.get_out_v)
 
     def get_out_v(self):
-        socket = self.get_socket('out_v')
+        socket = self.get_output('out_v')
         if socket is None:
-            c = self.get_socket_value(self.color)
+            c = self.get_input(self.color)
             if is_waiting(c):
                 return STATUS_WAITING
             c = c.copy()
             c.resize_3d()
-            return self.set_socket('out_v', c.copy())
+            return self.set_output('out_v', c.copy())
         return socket
 
     def evaluate(self):

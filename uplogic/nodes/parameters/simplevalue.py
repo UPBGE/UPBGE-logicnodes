@@ -9,7 +9,7 @@ class ULSimpleValue(ULParameterNode):
         self.OUT = ULOutSocket(self, self.get_done)
 
     def get_done(self):
-        value = self.get_socket_value(self.value)
+        value = self.get_input(self.value)
         return value
 
     def evaluate(self):

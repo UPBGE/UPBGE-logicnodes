@@ -10,8 +10,8 @@ class ULGetProperty(ULParameterNode):
         self.OUT = ULOutSocket(self, self.get_property)
 
     def get_property(self):
-        game_object = self.get_socket_value(self.game_object)
-        property_name = self.get_socket_value(self.property_name)
+        game_object = self.get_input(self.game_object)
+        property_name = self.get_input(self.property_name)
         if is_invalid(game_object, property_name):
             return STATUS_WAITING
         if property_name in game_object:

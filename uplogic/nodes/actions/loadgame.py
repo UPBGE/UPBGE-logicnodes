@@ -30,11 +30,11 @@ class ULLoadGame(ULActionNode):
 
     def evaluate(self):
         self.done = False
-        condition = self.get_socket_value(self.condition)
+        condition = self.get_input(self.condition)
         if not_met(condition):
             return
         self._set_ready()
-        slot = self.get_socket_value(self.slot)
+        slot = self.get_input(self.slot)
         if is_waiting(slot):
             return
         cust_path = self.get_custom_path(self.path)

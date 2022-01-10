@@ -13,8 +13,8 @@ class ULScreenPosition(ULParameterNode):
         self.OUT = ULOutSocket(self, self.get_pos)
 
     def get_pos(self):
-        game_object = self.get_socket_value(self.game_object)
-        camera = self.get_socket_value(self.camera)
+        game_object = self.get_input(self.game_object)
+        camera = self.get_input(self.camera)
         if is_invalid(game_object) or is_invalid(camera):
             return STATUS_WAITING
         position = camera.getScreenPosition(game_object)

@@ -36,3 +36,4 @@ from .sensorpositive import ULSensorPositive
 from .timer import ULTimer
 from .truefalse import ULTrueFalse
 from .valuevalid import ULValueValid
+from .controllerstatus import ULControllerStatus

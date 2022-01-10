@@ -18,8 +18,8 @@ class ULWithinRange(ULParameterNode):
         self.OUT = ULOutSocket(self, self.get_done)
 
     def get_done(self):
-        v = self.get_socket_value(self.value)
-        r = self.get_socket_value(self.range)
+        v = self.get_input(self.value)
+        r = self.get_input(self.range)
         if is_waiting(v, r):
             return STATUS_WAITING
         value = self.calc_range(self.operator, v, r)

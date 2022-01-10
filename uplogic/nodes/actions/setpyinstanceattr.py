@@ -12,12 +12,12 @@ class ULSetPyInstanceAttr(ULActionNode):
         self.value = None
 
     def evaluate(self):
-        condition = self.get_socket_value(self.condition)
+        condition = self.get_input(self.condition)
         if not_met(condition):
             return
-        instance = self.get_socket_value(self.instance)
-        attr = self.get_socket_value(self.attr)
-        value = self.get_socket_value(self.value)
+        instance = self.get_input(self.instance)
+        attr = self.get_input(self.attr)
+        value = self.get_input(self.value)
         if is_waiting(instance, attr, value):
             return
         self._set_ready()

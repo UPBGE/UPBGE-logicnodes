@@ -18,18 +18,18 @@ class ULEvaluateProperty(ULConditionNode):
         self.VAL = ULOutSocket(self, self.get_val)
 
     def get_out(self):
-        socket = self.get_socket('out')
+        socket = self.get_output('out')
         if socket is None:
-            compare_value = self.get_socket_value(self.compare_value)
+            compare_value = self.get_input(self.compare_value)
             if is_waiting(compare_value):
                 return STATUS_WAITING
-            operator = self.get_socket_value(self.operator)
+            operator = self.get_input(self.operator)
             if operator > 1:  # eq and neq are valid for None
                 if is_invalid(self.val, compare_value):
                     return STATUS_WAITING
             if operator is None:
                 return STATUS_WAITING
-            return self.set_socket(
+            return self.set_output(
                 'out',
                 LOGIC_OPERATORS[operator](self.val, compare_value)
             )
@@ -39,10 +39,10 @@ class ULEvaluateProperty(ULConditionNode):
         return self.val
 
     def evaluate(self):
-        game_object = self.get_socket_value(self.game_object)
+        game_object = self.get_input(self.game_object)
         if is_invalid(game_object):
             return STATUS_WAITING
-        property_name = self.get_socket_value(self.property_name)
+        property_name = self.get_input(self.property_name)
         if is_waiting(property_name):
             return STATUS_WAITING
         self._set_ready()

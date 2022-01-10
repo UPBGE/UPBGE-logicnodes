@@ -13,9 +13,9 @@ class ULGetCollectionObjects(ULParameterNode):
         self.OUT = ULOutSocket(self, self.get_objects)
 
     def get_objects(self):
-        socket = self.get_socket('objects')
+        socket = self.get_output('objects')
         if socket is None:
-            collection = self.get_socket_value(self.collection)
+            collection = self.get_input(self.collection)
             if is_invalid(collection):
                 return STATUS_WAITING
             col = bpy.data.collections.get(collection)
@@ -24,7 +24,7 @@ class ULGetCollectionObjects(ULParameterNode):
             objects = []
             for o in col.objects:
                 objects.append(check_game_object(o.name))
-            return self.set_socket('objects', objects)
+            return self.set_output('objects', objects)
         return socket
 
     def evaluate(self):

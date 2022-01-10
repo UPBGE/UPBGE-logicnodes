@@ -12,19 +12,19 @@ class ULEuler(ULParameterNode):
         self.OUTV = ULOutSocket(self, self.get_out_v)
 
     def get_out_v(self):
-        socket = self.get_socket('out_v')
+        socket = self.get_output('out_v')
         if socket is None:
             e = Euler()
-            x = self.get_socket_value(self.input_x)
-            y = self.get_socket_value(self.input_y)
-            z = self.get_socket_value(self.input_z)
+            x = self.get_input(self.input_x)
+            y = self.get_input(self.input_y)
+            z = self.get_input(self.input_z)
             if x is not None:
                 e.x = x
             if y is not None:
                 e.y = y
             if z is not None:
                 e.z = z
-            return self.set_socket('out_v', e)
+            return self.set_output('out_v', e)
         return socket
 
     def evaluate(self):

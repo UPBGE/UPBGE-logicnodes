@@ -16,8 +16,8 @@ class ULTimer(ULConditionNode):
         self.network = network
 
     def evaluate(self):
-        condition = self.get_socket_value(self.condition)
-        delta_time = self.get_socket_value(self.delta_time)
+        condition = self.get_input(self.condition)
+        delta_time = self.get_input(self.delta_time)
         if is_waiting(delta_time):
             return
         self._set_ready()

@@ -11,7 +11,7 @@ class ULGetCollection(ULParameterNode):
         self.OUT = ULOutSocket(self, self.get_collection)
 
     def get_collection(self):
-        collection = self.get_socket_value(self.collection)
+        collection = self.get_input(self.collection)
         if is_invalid(collection):
             return STATUS_WAITING
         return collection

@@ -31,7 +31,7 @@ class ULGamepadSticks(ULParameterNode):
 
     def evaluate(self):
         self._set_ready()
-        index = self.get_socket_value(self.index)
+        index = self.get_input(self.index)
 
         if logic.joysticks[index]:
             joystick = logic.joysticks[index]
@@ -41,13 +41,13 @@ class ULGamepadSticks(ULParameterNode):
             return
         if is_invalid(joystick):
             return
-        axis = self.get_socket_value(self.axis)
+        axis = self.get_input(self.axis)
         raw_values = joystick.axisValues
         if axis == 0:
             self.raw_values = [raw_values[0], raw_values[1]]
         elif axis == 1:
             self.raw_values = [raw_values[2], raw_values[3]]
-        inverted = self.get_socket_value(self.inverted)
-        sensitivity = self.get_socket_value(self.sensitivity)
+        inverted = self.get_input(self.inverted)
+        sensitivity = self.get_input(self.sensitivity)
         self.sensitivity = -sensitivity if inverted else sensitivity
-        self.threshold = self.get_socket_value(self.threshold)
+        self.threshold = self.get_input(self.threshold)

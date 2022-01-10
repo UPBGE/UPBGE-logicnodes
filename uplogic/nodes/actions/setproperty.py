@@ -20,13 +20,13 @@ class ULSetProperty(ULActionNode):
 
     def evaluate(self):
         self.done = False
-        condition = self.get_socket_value(self.condition)
+        condition = self.get_input(self.condition)
         if not_met(condition):
             self._set_ready()
             return
-        game_object = self.get_socket_value(self.game_object)
-        property_name = self.get_socket_value(self.property_name)
-        property_value = self.get_socket_value(self.property_value)
+        game_object = self.get_input(self.game_object)
+        property_name = self.get_input(self.property_name)
+        property_value = self.get_input(self.property_value)
         if is_waiting(property_name, property_value):
             return
         if is_invalid(game_object):

@@ -207,12 +207,14 @@ class ULLogicTree(ULLogicContainer):
             self.capslock_pressed = not self.capslock_pressed
         me = self.mouse.inputs
         self.mouse_wheel_delta = 0
-        if(me[events.WHEELUPMOUSE].activated):
-            self.mouse_wheel_delta = 1
+        wheelup = me[events.WHEELUPMOUSE]
+        wheeldown = me[events.WHEELDOWNMOUSE]
+        if(wheelup.active or wheelup.activated):
+            self.mouse_wheel_delta += 1
         elif(
-            me[events.WHEELDOWNMOUSE].activated
+            wheeldown.active or wheeldown.activated
         ):
-            self.mouse_wheel_delta = -1
+            self.mouse_wheel_delta -= 1
         self.mouse_events = me
         # update the cells
         cells = self._iter

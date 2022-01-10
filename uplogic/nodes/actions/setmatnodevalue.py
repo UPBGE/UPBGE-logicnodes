@@ -23,15 +23,15 @@ class ULSetMatNodeValue(ULActionNode):
 
     def evaluate(self):
         self.done = False
-        condition = self.get_socket_value(self.condition)
+        condition = self.get_input(self.condition)
         if not_met(condition):
             self._set_ready()
             return
-        mat_name = self.get_socket_value(self.mat_name)
-        node_name = self.get_socket_value(self.node_name)
-        attribute = self.get_socket_value(self.attribute)
-        internal = self.get_socket_value(self.internal)
-        value = self.get_socket_value(self.value)
+        mat_name = self.get_input(self.mat_name)
+        node_name = self.get_input(self.node_name)
+        attribute = self.get_input(self.attribute)
+        internal = self.get_input(self.internal)
+        value = self.get_input(self.value)
         if is_waiting(node_name, attribute, internal, value):
             return
         if is_invalid(mat_name):

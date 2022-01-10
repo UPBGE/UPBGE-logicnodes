@@ -21,17 +21,17 @@ class ULSetActuatorValue(ULActionNode):
 
     def evaluate(self):
         self.done = False
-        game_obj = self.get_socket_value(self.game_obj)
-        act_name = self.get_socket_value(self.act_name)
-        condition = self.get_socket_value(self.condition)
+        game_obj = self.get_input(self.game_obj)
+        act_name = self.get_input(self.act_name)
+        condition = self.get_input(self.condition)
         if not_met(condition):
             return
         actuator = game_obj.actuators.get(act_name)
         if not actuator:
             return
         self._set_ready()
-        field = self.get_socket_value(self.field)
-        value = self.get_socket_value(self.value)
+        field = self.get_input(self.field)
+        value = self.get_input(self.value)
         if is_waiting(field, value):
             return
         setattr(actuator, field, value)

@@ -17,7 +17,7 @@ class ULRestartGame(ULActionNode):
     def evaluate(self):
         self.done = False
         self._set_ready()
-        condition = self.get_socket_value(self.condition)
+        condition = self.get_input(self.condition)
         if condition:
             logic.restartGame()
         self.done = True

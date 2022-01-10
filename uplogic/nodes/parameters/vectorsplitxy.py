@@ -20,6 +20,6 @@ class ULVectorSplitXY(ULParameterNode):
 
     def evaluate(self):
         self._set_ready()
-        vec = self.get_socket_value(self.input_v)
+        vec = self.get_input(self.input_v)
         if not is_invalid(vec):
             self.output_v = vec

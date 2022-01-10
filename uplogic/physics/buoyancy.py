@@ -91,7 +91,7 @@ class ULShip(ULBuoy):
             )
             if obj:
                 lindamp += (.7 / lifts)
-                lift = (up * (wpos - point).length * self.buoyancy) / lifts
+                lift = (up * (wpos - point).length * 5 * self.buoyancy) / lifts
                 ship.applyImpulse(
                     wpos,
                     vec_clamp(lift, max=self.buoyancy * 2 / lifts),

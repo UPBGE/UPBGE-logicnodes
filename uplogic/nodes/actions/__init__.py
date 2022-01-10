@@ -20,12 +20,13 @@ from .startsound import ULStartSound
 from .startsound3d import ULStartSound3D
 from .startspeaker import ULStartSpeaker
 from .throwevent import ULTrowEvent
-
 from .addobject import ULAddObject
 from .setproperty import ULSetProperty
 from .setmaterial import ULSetMaterial
-from .setnodesocket import ULSetNodeSocket
-from .setnodevalue import ULSetNodeValue
-from .setmatnodesocket import ULSetMatNodeSocket
 from .setmatnodevalue import ULSetMatNodeValue
 from .playsequence import ULPaySequence
+from .setnodesocket import ULSetNodeSocket
+from .setnodevalue import ULSetNodeValue
+from .toggleproperty import ULToggleProperty
+
+from .setmatnodesocket import ULSetMatNodeSocket

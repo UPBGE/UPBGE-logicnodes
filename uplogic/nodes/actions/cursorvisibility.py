@@ -17,11 +17,11 @@ class ULSetCursorVisibility(ULActionNode):
 
     def evaluate(self):
         self.done = False
-        condition = self.get_socket_value(self.condition)
+        condition = self.get_input(self.condition)
         if not_met(condition):
             return
         self._set_ready()
-        visibility_status = self.get_socket_value(self.visibility_status)
+        visibility_status = self.get_input(self.visibility_status)
         if is_waiting(visibility_status):
             return
         logic.mouse.visible = visibility_status

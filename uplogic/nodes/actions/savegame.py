@@ -29,10 +29,10 @@ class ULSaveGame(ULActionNode):
 
     def evaluate(self):
         self.done = False
-        condition = self.get_socket_value(self.condition)
+        condition = self.get_input(self.condition)
         if not_met(condition):
             return
-        slot = self.get_socket_value(self.slot)
+        slot = self.get_input(self.slot)
         if is_waiting(slot):
             return
         self._set_ready()

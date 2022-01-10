@@ -37,7 +37,7 @@ class ULMouseOver(ULConditionNode):
         return self._normal
 
     def evaluate(self):
-        game_object = self.get_socket_value(self.game_object)
+        game_object = self.get_input(self.game_object)
         if is_waiting(game_object):
             return
         self._set_ready()

@@ -13,13 +13,13 @@ class ULDistance(ULParameterNode):
         self.OUT = ULOutSocket(self, self.get_out)
 
     def get_out(self):
-        socket = self.get_socket('distance')
+        socket = self.get_output('distance')
         if socket is None:
-            parama = self.get_socket_value(self.parama)
-            paramb = self.get_socket_value(self.paramb)
+            parama = self.get_input(self.parama)
+            paramb = self.get_input(self.paramb)
             if is_waiting(parama, paramb):
                 return STATUS_WAITING
-            return self.set_socket(
+            return self.set_output(
                 'distance',
                 compute_distance(parama, paramb)
             )

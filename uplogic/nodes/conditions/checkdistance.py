@@ -40,11 +40,11 @@ class ULCheckDistance(ULConditionNode):
                 self._set_value(False)
 
     def evaluate(self):
-        a = self.get_socket_value(self.param_a)
-        b = self.get_socket_value(self.param_b)
-        op = self.get_socket_value(self.operator)
-        dist = self.get_socket_value(self.dist)
-        hyst = self.get_socket_value(self.hyst)
+        a = self.get_input(self.param_a)
+        b = self.get_input(self.param_b)
+        op = self.get_input(self.operator)
+        dist = self.get_input(self.dist)
+        hyst = self.get_input(self.hyst)
         if is_waiting(a, b, op, dist, hyst):
             return
         self._set_ready()

@@ -22,13 +22,13 @@ class ULGamepadVibration(ULActionNode):
 
     def evaluate(self):
         self._set_ready()
-        condition = self.get_socket_value(self.condition)
+        condition = self.get_input(self.condition)
         if not_met(condition):
             return
-        index = self.get_socket_value(self.index)
-        left = self.get_socket_value(self.left)
-        right = self.get_socket_value(self.right)
-        time = self.get_socket_value(self.time)
+        index = self.get_input(self.index)
+        left = self.get_input(self.left)
+        right = self.get_input(self.right)
+        time = self.get_input(self.time)
         if is_waiting(index, left, right, time):
             return
 

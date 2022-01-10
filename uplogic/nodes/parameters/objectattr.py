@@ -14,8 +14,8 @@ class ULObjectAttribute(ULParameterNode):
         self.OUT = ULOutSocket(self, self.get_done)
 
     def get_done(self):
-        game_object = self.get_socket_value(self.game_object)
-        attribute_name = self.get_socket_value(self.attribute_name)
+        game_object = self.get_input(self.game_object)
+        attribute_name = self.get_input(self.attribute_name)
         if is_waiting(game_object, attribute_name):
             return STATUS_WAITING
         if is_invalid(game_object):

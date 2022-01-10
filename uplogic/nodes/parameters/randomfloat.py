@@ -14,10 +14,10 @@ class ULRandomFloat(ULParameterNode):
         self.OUT_A = ULOutSocket(self, self._get_output)
 
     def _get_output(self):
-        socket = self.get_socket('output')
+        socket = self.get_output('output')
         if socket is None:
-            min_value = self.get_socket_value(self.min_value)
-            max_value = self.get_socket_value(self.max_value)
+            min_value = self.get_input(self.min_value)
+            max_value = self.get_input(self.max_value)
             if is_waiting(min_value, max_value):
                 return STATUS_WAITING
             if min_value > max_value:
@@ -27,7 +27,7 @@ class ULRandomFloat(ULParameterNode):
                 max_value = sys.float_info.max
 
             delta = max_value - min_value
-            return self.set_socket(
+            return self.set_output(
                 'output',
                 min_value + (delta * random.random())
             )

@@ -12,10 +12,10 @@ class ULRemoveOverlayCollection(ULActionNode):
         self.collection = None
 
     def evaluate(self):
-        condition = self.get_socket_value(self.condition)
+        condition = self.get_input(self.condition)
         if not_met(condition):
             return
-        collection = self.get_socket_value(self.collection)
+        collection = self.get_input(self.collection)
         if is_invalid(collection):
             return
         self._set_ready()

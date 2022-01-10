@@ -16,19 +16,19 @@ class ULFormattedString(ULParameterNode):
         self.OUT = ULOutSocket(self, self.get_out)
 
     def get_out(self):
-        socket = self.get_socket('out')
+        socket = self.get_output('out')
         if socket is None:
-            format_string = self.get_socket_value(self.format_string)
-            value_a = self.get_socket_value(self.value_a)
-            value_b = self.get_socket_value(self.value_b)
-            value_c = self.get_socket_value(self.value_c)
-            value_d = self.get_socket_value(self.value_d)
+            format_string = self.get_input(self.format_string)
+            value_a = self.get_input(self.value_a)
+            value_b = self.get_input(self.value_b)
+            value_c = self.get_input(self.value_c)
+            value_d = self.get_input(self.value_d)
             if is_invalid(format_string):
                 return STATUS_WAITING
             if is_waiting(value_a, value_b, value_c, value_d):
                 return STATUS_WAITING
             result = format_string.format(value_a, value_b, value_c, value_d)
-            return self.set_socket('out', result)
+            return self.set_output('out', result)
         return socket
 
     def evaluate(self):

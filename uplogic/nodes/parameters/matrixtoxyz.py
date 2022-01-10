@@ -13,7 +13,7 @@ class ULMatrixToXYZ(ULParameterNode):
         self.OUT = ULOutSocket(self, self.get_out)
 
     def get_out(self):
-        matrix = self.get_socket_value(self.input_m)
+        matrix = self.get_input(self.input_m)
         if self.output:
             return matrix.to_euler()
         else:

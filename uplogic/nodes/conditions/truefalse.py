@@ -10,10 +10,10 @@ class ULTrueFalse(ULConditionNode):
         self.FALSE = ULOutSocket(self, self.get_false_value)
 
     def get_true_value(self):
-        return self.get_socket_value(self.state)
+        return self.get_input(self.state)
 
     def get_false_value(self):
-        return not self.get_socket_value(self.state)
+        return not self.get_input(self.state)
 
     def evaluate(self):
         self._set_ready()

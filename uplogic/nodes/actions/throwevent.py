@@ -23,15 +23,15 @@ class ULTrowEvent(ULActionNode):
 
     def evaluate(self):
         self.done = False
-        condition = self.get_socket_value(self.condition)
+        condition = self.get_input(self.condition)
         if not_met(condition):
             self._set_ready()
             return
-        subject = self.get_socket_value(self.subject)
-        body = self.get_socket_value(self.body)
+        subject = self.get_input(self.subject)
+        body = self.get_input(self.body)
         if body is STATUS_INVALID:
             body = None
-        target = self.get_socket_value(self.target)
+        target = self.get_input(self.target)
         if is_waiting(body, target):
             return
         if is_invalid(subject):

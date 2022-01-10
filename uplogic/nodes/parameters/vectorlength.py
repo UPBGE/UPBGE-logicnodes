@@ -12,7 +12,7 @@ class ULVectorLength(ULParameterNode):
         self.OUTV = ULOutSocket(self, self.get_out_v)
 
     def get_out_v(self):
-        vec = self.get_socket_value(self.input_v)
+        vec = self.get_input(self.input_v)
         if is_invalid(vec):
             return STATUS_WAITING
         return vec.length

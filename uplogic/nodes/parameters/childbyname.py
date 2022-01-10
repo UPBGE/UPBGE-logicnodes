@@ -12,13 +12,13 @@ class ULChildByName(ULParameterNode):
         self.CHILD = ULOutSocket(self, self.get_child)
 
     def get_child(self):
-        socket = self.get_socket('child')
+        socket = self.get_output('child')
         if socket is None:
-            parent = self.get_socket_value(self.from_parent)
-            child_name = self.get_socket_value(self.child)
+            parent = self.get_input(self.from_parent)
+            child_name = self.get_input(self.child)
             if is_invalid(parent, child_name):
                 return STATUS_WAITING
-            return self.set_socket(
+            return self.set_output(
                 'child',
                 parent.childrenRecursive.get(child_name)
             )

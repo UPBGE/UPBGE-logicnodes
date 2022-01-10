@@ -13,8 +13,8 @@ class ULListIndex(ULParameterNode):
         self.OUT = ULOutSocket(self, self.get_val)
 
     def get_val(self):
-        list_d = self.get_socket_value(self.items)
-        index = self.get_socket_value(self.index)
+        list_d = self.get_input(self.items)
+        index = self.get_input(self.index)
         if is_invalid(list_d):
             return STATUS_WAITING
         if is_waiting(index):

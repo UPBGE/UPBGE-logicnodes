@@ -12,8 +12,8 @@ class ULGetPyInstanceAttr(ULParameterNode):
         self.OUT = ULOutSocket(self, self.get_done)
 
     def get_done(self):
-        instance = self.get_socket_value(self.instance)
-        attr = self.get_socket_value(self.attr)
+        instance = self.get_input(self.instance)
+        attr = self.get_input(self.attr)
         if is_waiting(instance, attr):
             return
         return getattr(instance, attr, STATUS_WAITING)

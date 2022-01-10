@@ -20,16 +20,16 @@ class ULCursorBehavior(ULActionNode):
     def evaluate(self):
         self.done = False
         self._set_ready()
-        cursor_object = self.get_socket_value(self.cursor_object)
+        cursor_object = self.get_input(self.cursor_object)
         if is_invalid(cursor_object):
             return
-        condition = self.get_socket_value(self.condition)
+        condition = self.get_input(self.condition)
         if not_met(condition):
             if cursor_object.visible:
                 cursor_object.setVisible(False, True)
             return
         camera = logic.getCurrentScene().active_camera
-        world_z = self.get_socket_value(self.world_z)
+        world_z = self.get_input(self.world_z)
         if not cursor_object.visible:
             cursor_object.setVisible(True, True)
         else:

@@ -12,7 +12,7 @@ class ULGetImage(ULParameterNode):
         self.OUT = ULOutSocket(self, self.get_done)
 
     def get_done(self):
-        image = self.get_socket_value(self.image)
+        image = self.get_input(self.image)
         if is_invalid(image):
             return
         return bpy.data.images[image]

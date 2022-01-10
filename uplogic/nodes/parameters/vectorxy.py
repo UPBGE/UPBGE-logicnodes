@@ -12,8 +12,8 @@ class ULVectorXY(ULParameterNode):
         self.OUTV = ULOutSocket(self, self.get_out_v)
 
     def get_out_v(self):
-        x = self.get_socket_value(self.input_x)
-        y = self.get_socket_value(self.input_y)
+        x = self.get_input(self.input_x)
+        y = self.get_input(self.input_y)
         v = Vector((0, 0, 0))
         if not is_invalid(x):
             v.x = x

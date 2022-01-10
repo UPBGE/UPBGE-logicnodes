@@ -28,14 +28,14 @@ class ULRunPython(ULActionNode):
 
     def evaluate(self):
         self.done = False
-        condition = self.get_socket_value(self.condition)
+        condition = self.get_input(self.condition)
         if not_met(condition):
             return
-        mname = self.get_socket_value(self.module_name)
-        mfun = self.get_socket_value(self.module_func)
+        mname = self.get_input(self.module_name)
+        mfun = self.get_input(self.module_func)
         if is_waiting(mname, mfun):
             return
-        arg = self.get_socket_value(self.arg)
+        arg = self.get_input(self.arg)
         self._set_ready()
         if mname and (self._old_mod_name != mname):
             exec("import {}".format(mname))

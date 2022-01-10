@@ -8,5 +8,5 @@ class ULKeyCode(ULParameterNode):
 
     def evaluate(self):
         self._set_ready()
-        key_code = self.get_socket_value(self.key_code)
+        key_code = self.get_input(self.key_code)
         self._set_value(key_code)

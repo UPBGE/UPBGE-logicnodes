@@ -9,8 +9,8 @@ class ULOr(ULConditionNode):
         self.cb = False
 
     def evaluate(self):
-        ca = self.get_socket_value(self.ca)
-        cb = self.get_socket_value(self.cb)
+        ca = self.get_input(self.ca)
+        cb = self.get_input(self.cb)
         self._set_ready()
         if is_waiting(ca, cb):
             self._set_value(False)
@@ -28,12 +28,12 @@ class ULOrList(ULConditionNode):
         self.cf = False
 
     def evaluate(self):
-        ca = self.get_socket_value(self.ca)
-        cb = self.get_socket_value(self.cb)
-        cc = self.get_socket_value(self.cc)
-        cd = self.get_socket_value(self.cd)
-        ce = self.get_socket_value(self.ce)
-        cf = self.get_socket_value(self.cf)
+        ca = self.get_input(self.ca)
+        cb = self.get_input(self.cb)
+        cc = self.get_input(self.cc)
+        cd = self.get_input(self.cd)
+        ce = self.get_input(self.ce)
+        cf = self.get_input(self.cf)
         self._set_ready()
         if is_waiting(ca, cb, cc, cd, ce, cf):
             self._set_value(False)

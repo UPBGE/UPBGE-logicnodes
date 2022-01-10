@@ -11,12 +11,12 @@ class ULNot(ULConditionNode):
         self.OUT = ULOutSocket(self, self.get_out)
 
     def get_out(self):
-        socket = self.get_socket('out')
+        socket = self.get_output('out')
         if socket is None:
-            condition = self.get_socket_value(self.condition)
+            condition = self.get_input(self.condition)
             if is_waiting(condition):
                 return STATUS_WAITING
-            return self.set_socket(
+            return self.set_output(
                 'out',
                 not condition
             )

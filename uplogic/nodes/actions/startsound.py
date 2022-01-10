@@ -39,14 +39,14 @@ class ULStartSound(ULActionNode):
         self.done = False
         self.on_finish = False
         self._set_ready()
-        condition = self.get_socket_value(self.condition)
+        condition = self.get_input(self.condition)
         if not_met(condition):
             self._set_ready()
             return
-        pitch = self.get_socket_value(self.pitch)
-        volume = self.get_socket_value(self.volume)
-        file = self.get_socket_value(self.sound)
-        loop_count = self.get_socket_value(self.loop_count)
+        pitch = self.get_input(self.pitch)
+        volume = self.get_input(self.volume)
+        file = self.get_input(self.sound)
+        loop_count = self.get_input(self.loop_count)
 
         if is_invalid(file):
             return

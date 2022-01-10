@@ -11,13 +11,13 @@ class ULDictValue(ULParameterNode):
         self.OUT = ULOutSocket(self, self.get_val)
 
     def get_val(self):
-        socket = self.get_socket('val')
+        socket = self.get_output('val')
         if socket is None:
-            dictionary = self.get_socket_value(self.dict)
-            key = self.get_socket_value(self.key)
+            dictionary = self.get_input(self.dict)
+            key = self.get_input(self.key)
             if is_invalid(dictionary, key):
                 return
-            return self.set_socket('val', dictionary.get(key))
+            return self.set_output('val', dictionary.get(key))
         return socket
 
     def evaluate(self):

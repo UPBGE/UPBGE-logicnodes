@@ -17,13 +17,13 @@ class ULCompareVectors(ULConditionNode):
         self.OUT = ULOutSocket(self, self.get_result)
 
     def get_result(self):
-        socket = self.get_socket('result')
+        socket = self.get_output('result')
         if socket is None:
-            a = self.get_socket_value(self.param_a)
-            b = self.get_socket_value(self.param_b)
-            all_values = self.get_socket_value(self.all)
-            operator = self.get_socket_value(self.operator)
-            threshold = self.get_socket_value(self.threshold)
+            a = self.get_input(self.param_a)
+            b = self.get_input(self.param_b)
+            all_values = self.get_input(self.all)
+            operator = self.get_input(self.operator)
+            threshold = self.get_input(self.threshold)
             if is_waiting(a, b, all_values, operator, threshold):
                 return STATUS_WAITING
             if (
@@ -38,7 +38,7 @@ class ULCompareVectors(ULConditionNode):
                     return STATUS_WAITING
             if operator is None:
                 return STATUS_WAITING
-            return self.set_socket(
+            return self.set_output(
                 'result',
                 self.get_vec_val(
                     operator,

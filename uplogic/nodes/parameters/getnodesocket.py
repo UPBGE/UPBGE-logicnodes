@@ -15,16 +15,16 @@ class ULGetNodeSocket(ULParameterNode):
         self.OUT = ULOutSocket(self, self._get_val)
 
     def _get_val(self):
-        socket = self.get_socket('val')
+        socket = self.get_output('val')
         if socket is None:
-            tree_name = self.get_socket_value(self.tree_name)
-            node_name = self.get_socket_value(self.node_name)
+            tree_name = self.get_input(self.tree_name)
+            node_name = self.get_input(self.node_name)
             if is_invalid(tree_name, node_name):
                 return STATUS_WAITING
-            input_slot = self.get_socket_value(self.input_slot)
+            input_slot = self.get_input(self.input_slot)
             if is_waiting(tree_name):
                 return STATUS_WAITING
-            return self.set_socket(
+            return self.set_output(
                 'val',
                 (
                     bpy.data

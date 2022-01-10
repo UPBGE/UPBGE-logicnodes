@@ -12,8 +12,8 @@ class ULTypeCastValue(ULParameterNode):
         self.OUT = ULOutSocket(self, self.get_done)
 
     def get_done(self):
-        value = self.get_socket_value(self.value)
-        to_type = self.get_socket_value(self.to_type)
+        value = self.get_input(self.value)
+        to_type = self.get_input(self.to_type)
         if is_waiting(to_type, value):
             return STATUS_WAITING
         return self.typecast_value(value, to_type)

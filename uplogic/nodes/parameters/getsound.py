@@ -12,7 +12,7 @@ class ULGetSound(ULParameterNode):
         self.OUT = ULOutSocket(self, self.get_done)
 
     def get_done(self):
-        sound = self.get_socket_value(self.sound)
+        sound = self.get_input(self.sound)
         if is_invalid(sound):
             return STATUS_WAITING
         return sound

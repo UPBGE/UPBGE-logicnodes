@@ -14,12 +14,12 @@ class ULCompare(ULConditionNode):
         self.RESULT = ULOutSocket(self, self.get_result)
 
     def get_result(self):
-        socket = self.get_socket('result')
+        socket = self.get_output('result')
         if socket is None:
-            a = self.get_socket_value(self.param_a)
-            b = self.get_socket_value(self.param_b)
-            threshold = self.get_socket_value(self.threshold)
-            operator = self.get_socket_value(self.operator)
+            a = self.get_input(self.param_a)
+            b = self.get_input(self.param_b)
+            threshold = self.get_input(self.threshold)
+            operator = self.get_input(self.operator)
             if is_waiting(a, b, threshold):
                 return
             if operator > 1:  # eq and neq are valid for None
@@ -33,7 +33,7 @@ class ULCompare(ULConditionNode):
                 a = b
             if operator is None:
                 return
-            return self.set_socket(
+            return self.set_output(
                 'result',
                 LOGIC_OPERATORS[operator](a, b)
             )

@@ -9,7 +9,7 @@ class ULOnNextTick(ULConditionNode):
         self._activated = 0
 
     def evaluate(self):
-        input_condition = self.get_socket_value(self.input_condition)
+        input_condition = self.get_input(self.input_condition)
         self._set_ready()
         if self._activated == 1:
             self._set_value(True)

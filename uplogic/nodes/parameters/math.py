@@ -26,10 +26,10 @@ class ULMath(ULParameterNode):
         self.OUT = ULOutSocket(self, self.get_done)
 
     def get_done(self):
-        socket = self.get_socket('done')
+        socket = self.get_output('done')
         if socket is None:
-            a = self.get_socket_value(self.operand_a)
-            b = self.get_socket_value(self.operand_b)
+            a = self.get_input(self.operand_a)
+            b = self.get_input(self.operand_b)
             if is_invalid(a, b):
                 return STATUS_WAITING
             if (a is None) or (b is None):
@@ -44,7 +44,7 @@ class ULMath(ULParameterNode):
                     return self.get_vec_calc(a, b)
                 elif isinstance(b, Vector):
                     return self.get_vec_calc(b, a)
-                return self.set_socket('done', self.operator(a, b))
+                return self.set_output('done', self.operator(a, b))
         return socket
 
     def evaluate(self):

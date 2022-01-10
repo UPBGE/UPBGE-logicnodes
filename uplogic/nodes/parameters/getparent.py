@@ -12,7 +12,7 @@ class ULGetParent(ULParameterNode):
         self.OUT = ULOutSocket(self, self.get_parent)
 
     def get_parent(self):
-        game_object = self.get_socket_value(self.game_object)
+        game_object = self.get_input(self.game_object)
         if is_invalid(game_object):
             return STATUS_WAITING
         return game_object.parent

@@ -38,15 +38,15 @@ class ULPaySequence(ULActionNode):
     def evaluate(self):
         self.on_finish = False
         self.on_start = False
-        condition = self.get_socket_value(self.condition)
-        play_continue = self.get_socket_value(self.play_continue)
+        condition = self.get_input(self.condition)
+        play_continue = self.get_input(self.play_continue)
         if self.sequence:
             if self.sequence.on_finish:
                 self.on_finish = True
                 if self.sequence.mode < 3:
                     self.sequence = None
-        play_mode = self.get_socket_value(self.play_mode)
-        frames = self.get_socket_value(self.frames)
+        play_mode = self.get_input(self.play_mode)
+        frames = self.get_input(self.frames)
         if not_met(condition) and play_mode < 2:
             return
         elif not_met(condition) and self.sequence:
@@ -55,9 +55,9 @@ class ULPaySequence(ULActionNode):
             self.sequence.pause()
         elif condition and self.sequence:
             self.sequence.unpause()
-        mat_name = self.get_socket_value(self.mat_name)
-        node_name = self.get_socket_value(self.node_name)
-        fps = self.get_socket_value(self.fps)
+        mat_name = self.get_input(self.mat_name)
+        node_name = self.get_input(self.node_name)
+        fps = self.get_input(self.fps)
         if is_waiting(
             mat_name,
             node_name,

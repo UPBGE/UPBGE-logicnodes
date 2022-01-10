@@ -177,12 +177,12 @@ class TreeCodeGenerator(object):
         return line_writer
 
     def write_init_content(self, tree, line_writer):
-        line_writer.write_line("network = ULLogicTree()")
+        line_writer.write_line("network = self.network = ULLogicTree()")
         cell_var_names, uid_map = self._write_tree(tree, line_writer)
         for varname in self._sort_cellvarnames(cell_var_names, uid_map):
             if not uid_map.is_removed(varname):
                 line_writer.write_line("network.add_cell({})", varname)
-        line_writer.write_line('owner["IGNLTree_{}"] = network', tree.name)
+        # line_writer.write_line('owner["IGNLTree_{}"] = network', tree.name)
         line_writer.write_line("network._owner = owner")
         line_writer.write_line("network.setup()")
         line_writer.write_line("network.stopped = not owner.get('{}')", utils.get_key_network_initial_status_for_tree(tree))
@@ -217,7 +217,8 @@ class TreeCodeGenerator(object):
         return line_writer._indent_level
 
     def write_pulse_content(self, tree, line_writer, indent):
-        line_writer.write_line('network = owner.get("IGNLTree_{}")', tree.name)
+        # line_writer.write_line('network = owner.get("IGNLTree_{}")', tree.name)
+        line_writer.write_line('network = self.network')
         if not isinstance(line_writer, BLTextWrapper):
             line_writer.write_line("if network is None:")
             line_writer.set_indent_level(indent + 1)

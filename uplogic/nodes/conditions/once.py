@@ -14,9 +14,9 @@ class ULOnce(ULConditionNode):
         self.time = 0.0
 
     def evaluate(self):
-        condition = self.get_socket_value(self.input_condition)
-        repeat = self.get_socket_value(self.repeat)
-        reset_time = self.get_socket_value(self.reset_time)
+        condition = self.get_input(self.input_condition)
+        repeat = self.get_input(self.repeat)
+        reset_time = self.get_input(self.reset_time)
         if is_waiting(repeat, reset_time):
             self._set_value(False)
             return

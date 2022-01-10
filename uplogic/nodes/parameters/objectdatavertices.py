@@ -12,13 +12,13 @@ class ULObjectDataVertices(ULParameterNode):
         self.OUT = ULOutSocket(self, self.get_data)
 
     def get_data(self):
-        socket = self.get_socket('data')
+        socket = self.get_output('data')
         if socket is None:
-            obj = self.get_socket_value(self.game_object)
+            obj = self.get_input(self.game_object)
             if is_invalid(obj):
                 return STATUS_WAITING
             offset = obj.worldPosition
-            return self.set_socket(
+            return self.set_output(
                 'data',
                 (
                     sorted(

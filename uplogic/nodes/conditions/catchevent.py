@@ -26,7 +26,7 @@ class ULCatchEvent(ULConditionNode):
         return STATUS_WAITING if self.event is None else self.event.messenger
 
     def evaluate(self):
-        subject = self.get_socket_value(self.subject)
+        subject = self.get_input(self.subject)
         if is_invalid(subject):
             return
         self._set_ready()

@@ -14,13 +14,13 @@ class ULValueChangedTo(ULConditionNode):
         self.OUT = ULOutSocket(self, self.get_changed)
 
     def get_changed(self):
-        socket = self.get_socket('changed')
+        socket = self.get_output('changed')
         if socket is None:
-            monitored_value = self.get_socket_value(self.monitored_value)
-            trigger_value = self.get_socket_value(self.trigger_value)
+            monitored_value = self.get_input(self.monitored_value)
+            trigger_value = self.get_input(self.trigger_value)
             if is_waiting(monitored_value, trigger_value):
                 return STATUS_WAITING
-            return self.set_socket(
+            return self.set_output(
                 'changed',
                 (
                     monitored_value == trigger_value and
@@ -30,7 +30,7 @@ class ULValueChangedTo(ULConditionNode):
         return socket
 
     def evaluate(self):
-        monitored_value = self.get_socket_value(self.monitored_value)
+        monitored_value = self.get_input(self.monitored_value)
         self.changed = monitored_value != self.old
         self.old = monitored_value
         self._set_ready()

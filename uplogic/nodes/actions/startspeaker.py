@@ -40,15 +40,15 @@ class ULStartSpeaker(ULActionNode):
     def evaluate(self):
         self.done = False
         self.on_finish = False
-        condition = self.get_socket_value(self.condition)
+        condition = self.get_input(self.condition)
         if not_met(condition):
             self._set_ready()
             return
-        speaker = self.get_socket_value(self.speaker)
-        transition = self.get_socket_value(self.transition)
-        occlusion = self.get_socket_value(self.occlusion)
-        cutoff = self.get_socket_value(self.cutoff)
-        loop_count = self.get_socket_value(self.loop_count)
+        speaker = self.get_input(self.speaker)
+        transition = self.get_input(self.transition)
+        occlusion = self.get_input(self.occlusion)
+        cutoff = self.get_input(self.cutoff)
+        loop_count = self.get_input(self.loop_count)
         bl_speaker = speaker.blenderObject.data
         file = bl_speaker.sound.filepath
         if not file:

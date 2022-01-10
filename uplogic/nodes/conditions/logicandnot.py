@@ -9,8 +9,8 @@ class ULAndNot(ULConditionNode):
         self.condition_b = None
 
     def evaluate(self):
-        ca = self.get_socket_value(self.condition_a)
-        cb = not self.get_socket_value(self.condition_b)
+        ca = self.get_input(self.condition_a)
+        cb = not self.get_input(self.condition_b)
         self._set_ready()
         if is_waiting(ca, cb):
             self._set_value(False)

@@ -41,11 +41,11 @@ class ULMouseLook(ULActionNode):
         return self.done
 
     def get_x_obj(self):
-        game_object_x = self.get_socket_value(self.game_object_x)
+        game_object_x = self.get_input(self.game_object_x)
         return game_object_x
 
     def get_y_obj(self):
-        game_object_y = self.get_socket_value(self.game_object_y)
+        game_object_y = self.get_input(self.game_object_y)
         if is_invalid(game_object_y):
             game_object_y = self.get_x_obj()
         elif game_object_y is not self.get_x_obj():
@@ -65,7 +65,7 @@ class ULMouseLook(ULActionNode):
     def evaluate(self):
         self.done = False
         self.get_data()
-        condition = self.get_socket_value(self.condition)
+        condition = self.get_input(self.condition)
         if not_met(condition):
             self.initialized = False
         elif not self.initialized:
@@ -74,17 +74,17 @@ class ULMouseLook(ULActionNode):
             return
         game_object_x = self.get_x_obj()
         game_object_y = self.get_y_obj()
-        sensitivity = self.get_socket_value(self.sensitivity) * 1000
-        use_cap_z = self.get_socket_value(self.use_cap_z)
-        use_cap_y = self.get_socket_value(self.use_cap_y)
-        cap_z = self.get_socket_value(self.cap_z)
+        sensitivity = self.get_input(self.sensitivity) * 1000
+        use_cap_z = self.get_input(self.use_cap_z)
+        use_cap_y = self.get_input(self.use_cap_y)
+        cap_z = self.get_input(self.cap_z)
         lowercapX = cap_z.y
         uppercapX = cap_z.x
-        cap_y = self.get_socket_value(self.cap_y)
+        cap_y = self.get_input(self.cap_y)
         lowercapY = cap_y.x
         uppercapY = cap_y.y
-        inverted = self.get_socket_value(self.inverted)
-        smooth = 1 - (self.get_socket_value(self.smooth) * .99)
+        inverted = self.get_input(self.inverted)
+        smooth = 1 - (self.get_input(self.smooth) * .99)
         self._set_ready()
 
         if is_invalid(game_object_x):

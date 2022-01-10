@@ -15,8 +15,8 @@ class ULVectorAngle(ULParameterNode):
         self.OUT = ULOutSocket(self, self.get_done)
 
     def get_done(self):
-        vector: Vector = self.get_socket_value(self.vector)
-        vector_2: Vector = self.get_socket_value(self.vector_2)
+        vector: Vector = self.get_input(self.vector)
+        vector_2: Vector = self.get_input(self.vector_2)
         if is_invalid(
             vector,
             vector_2

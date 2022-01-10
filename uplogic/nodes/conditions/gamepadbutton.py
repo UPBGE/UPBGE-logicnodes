@@ -16,9 +16,9 @@ class ULGamepadButton(ULConditionNode):
         self.initialized = False
 
     def get_button(self):
-        socket = self.get_socket('button')
+        socket = self.get_output('button')
         if socket is None:
-            index = self.get_socket_value(self.index)
+            index = self.get_input(self.index)
             if logic.joysticks[index]:
                 joystick = logic.joysticks[index]
             else:
@@ -37,7 +37,7 @@ class ULGamepadButton(ULConditionNode):
             else:
                 pressed = False
                 self.initialized = False
-            return self.set_socket(
+            return self.set_output(
                 'button',
                 pressed
             )

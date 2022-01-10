@@ -8,7 +8,7 @@ class ULGamepadActive(ULConditionNode):
         self.index = None
 
     def evaluate(self):
-        index = self.get_socket_value(self.index)
+        index = self.get_input(self.index)
         if logic.joysticks[index]:
             joystick = logic.joysticks[index]
         else:

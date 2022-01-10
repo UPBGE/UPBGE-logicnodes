@@ -20,16 +20,16 @@ class ULRunActuator(ULActionNode):
 
     def evaluate(self):
         self.done = False
-        game_obj = self.get_socket_value(self.game_obj)
-        cont_name = self.get_socket_value(self.cont_name)
-        act_name = self.get_socket_value(self.act_name)
+        game_obj = self.get_input(self.game_obj)
+        cont_name = self.get_input(self.cont_name)
+        act_name = self.get_input(self.act_name)
         if is_waiting(act_name, cont_name):
             return
         controller = game_obj.controllers[cont_name]
         if act_name not in controller.actuators:
             return
         actuator = controller.actuators[act_name]
-        condition = self.get_socket_value(self.condition)
+        condition = self.get_input(self.condition)
         self._set_ready()
         if not_met(condition):
             controller.deactivate(actuator)

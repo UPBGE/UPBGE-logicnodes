@@ -15,10 +15,10 @@ class ULVectorMath(ULParameterNode):
         self.OUT = ULOutSocket(self, self.get_done)
 
     def get_done(self):
-        op = self.get_socket_value(self.op)
-        vector = self.get_socket_value(self.vector)
-        vector_2 = self.get_socket_value(self.vector_2)
-        factor = self.get_socket_value(self.factor)
+        op = self.get_input(self.op)
+        vector = self.get_input(self.vector)
+        vector_2 = self.get_input(self.vector_2)
+        factor = self.get_input(self.factor)
         if is_waiting(
             op,
             factor

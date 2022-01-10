@@ -9,5 +9,5 @@ class ULValueValid(ULConditionNode):
 
     def evaluate(self):
         self._set_ready()
-        value = self.get_socket_value(self.checked_value)
+        value = self.get_input(self.checked_value)
         self._set_value(not is_invalid(value))

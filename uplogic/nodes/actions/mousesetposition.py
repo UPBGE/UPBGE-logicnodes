@@ -22,11 +22,11 @@ class ULSetMousePosition(ULActionNode):
 
     def evaluate(self):
         self.done = False
-        condition = self.get_socket_value(self.condition)
+        condition = self.get_input(self.condition)
         if not_met(condition):
             return
-        screen_x = self.get_socket_value(self.screen_x)
-        screen_y = self.get_socket_value(self.screen_y)
+        screen_x = self.get_input(self.screen_x)
+        screen_y = self.get_input(self.screen_y)
         if is_waiting(screen_x, screen_y):
             return
         self._set_ready()

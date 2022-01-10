@@ -33,8 +33,8 @@ class ULBoneStatus(ULParameterNode):
         return self._rot
 
     def evaluate(self):
-        armature = self.get_socket_value(self.armature)
-        bone_name = self.get_socket_value(self.bone_name)
+        armature = self.get_input(self.armature)
+        bone_name = self.get_input(self.bone_name)
         if is_invalid(armature, bone_name):
             return
         self._set_ready()

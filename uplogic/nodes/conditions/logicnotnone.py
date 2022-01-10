@@ -8,6 +8,6 @@ class ULNotNone(ULConditionNode):
         self.checked_value = None
 
     def evaluate(self):
-        value = self.get_socket_value(self.checked_value)
+        value = self.get_input(self.checked_value)
         self._set_ready()
         self._set_value(value is not None)

@@ -12,7 +12,7 @@ class ULListDuplicate(ULParameterNode):
         self.OUT = ULOutSocket(self, self.get_points)
 
     def get_points(self):
-        list_d = self.get_socket_value(self.items)
+        list_d = self.get_input(self.items)
         if is_invalid(list_d):
             return STATUS_WAITING
         return list_d.copy()

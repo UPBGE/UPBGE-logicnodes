@@ -4996,6 +4996,34 @@ class NLGetSensorNode(bpy.types.Node, NLConditionNode):
 _nodes.append(NLGetSensorNode)
 
 
+class NLControllerStatus(bpy.types.Node, NLConditionNode):
+    bl_idname = "NLControllerStatus"
+    bl_label = "Controller Status"
+    nl_category = "Logic"
+    nl_subcat = 'Bricks'
+    nl_module = 'conditions'
+
+    def init(self, context):
+        NLConditionNode.init(self, context)
+        self.inputs.new(NLGameObjectSocket.bl_idname, 'Object')
+        self.inputs.new(NLLogicBrickSocket.bl_idname, 'Controller')
+        self.inputs[-1].brick_type = 'controllers'
+        self.outputs.new(NLConditionSocket.bl_idname, "Status")
+        self.outputs.new(NLDictSocket.bl_idname, "Sensors")
+
+    def get_netlogic_class_name(self):
+        return "ULControllerStatus"
+
+    def get_input_sockets_field_names(self):
+        return ['obj_name', 'cont_name']
+
+    def get_output_socket_varnames(self):
+        return ['OUT', 'SENSORS']
+
+
+_nodes.append(NLControllerStatus)
+
+
 class NLSensorValueNode(bpy.types.Node, NLParameterNode):
     bl_idname = "NLSensorValueNode"
     bl_label = "Get Sensor Value"
@@ -7975,6 +8003,7 @@ class NLSetMaterialNodeValue(bpy.types.Node, NLActionNode):
     bl_icon = 'TRIA_RIGHT'
     nl_category = 'Nodes'
     nl_subcat = 'Materials'
+    nl_module = 'actions'
 
     def init(self, context):
         NLActionNode.init(self, context)
@@ -8158,6 +8187,7 @@ class NLToggleGameObjectGamePropertyActionNode(bpy.types.Node, NLActionNode):
     bl_icon = 'UV_SYNC_SELECT'
     nl_category = "Objects"
     nl_subcat = 'Properties'
+    nl_module = 'actions'
 
     def init(self, context):
         NLActionNode.init(self, context)
@@ -8168,7 +8198,7 @@ class NLToggleGameObjectGamePropertyActionNode(bpy.types.Node, NLActionNode):
         self.outputs.new(NLConditionSocket.bl_idname, "Done")
 
     def get_netlogic_class_name(self):
-        return "nodes.ActionToggleGameObjectGameProperty"
+        return "ULToggleProperty"
 
     def get_input_sockets_field_names(self):
         return [

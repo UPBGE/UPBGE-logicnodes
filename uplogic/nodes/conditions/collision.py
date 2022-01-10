@@ -41,9 +41,9 @@ class ULCollision(ULConditionNode):
 
     def _collision_callback(self, obj, point, normal):
         self._objects.append(obj)
-        use_mat = self.get_socket_value(self.use_mat)
+        use_mat = self.get_input(self.use_mat)
         if use_mat:
-            material = self.get_socket_value(self.material)
+            material = self.get_input(self.material)
             if material:
                 for obj in self._objects:
                     bo = obj.blenderObject
@@ -62,7 +62,7 @@ class ULCollision(ULConditionNode):
                 self._collision_triggered = False
                 return
         else:
-            prop = self.get_socket_value(self.prop)
+            prop = self.get_input(self.prop)
             if prop:
                 for obj in self._objects:
                     if prop not in obj:
@@ -114,7 +114,7 @@ class ULCollision(ULConditionNode):
 
     def evaluate(self):
         last_target = self._target
-        game_object = self.get_socket_value(self.game_object)
+        game_object = self.get_input(self.game_object)
         self._reset_last_monitored_object(game_object)
         if is_waiting(game_object):
             return
