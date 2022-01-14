@@ -1,7 +1,6 @@
 import bpy
 import bge_netlogic
 import bge_netlogic.utilities as utils
-from os.path import join, dirname
 
 
 _filter_prop_types = [
@@ -121,8 +120,9 @@ class NL_UL_glvalue(bpy.types.UIList):
 
 class BGE_PT_GlobalValuePanel(bpy.types.Panel):
     bl_label = "Globals"
-    bl_space_type = "NODE_EDITOR"
-    bl_region_type = "UI"
+    bl_space_type = "PROPERTIES"
+    bl_region_type = "WINDOW"
+    bl_context = 'scene'
     bl_category = "Global Values"
 
     @classmethod

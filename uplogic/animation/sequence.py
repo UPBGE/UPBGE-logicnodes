@@ -39,7 +39,6 @@ class ULSequence():
         logic.getCurrentScene().pre_draw.append(self.update)
 
     def stop(self):
-        print('Stopped')
         self.on_finish = True
         logic.getCurrentScene().pre_draw.remove(self.update)
 
@@ -53,9 +52,6 @@ class ULSequence():
     def unpause(self):
         self._pause = False
         self.running = True
-
-    def on_frame_finish(self, leftover):
-        pass
 
     def update(self):
         now = time.time()
@@ -86,7 +82,7 @@ class ULSequence():
             self.on_start = True
             self._consumed = False
 
-        start_cond = (frame > start_frame) if inverted else (frame < start_frame)
+        start_cond = frame > start_frame if inverted else frame < start_frame
 
         if start_cond:
             self.running = True

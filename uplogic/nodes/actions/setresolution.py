@@ -26,6 +26,7 @@ class ULSetResolution(ULActionNode):
         y_res = self.get_input(self.y_res)
         if is_waiting(x_res, y_res):
             return
+        print('aaa')
         self._set_ready()
         render.setWindowSize(x_res, y_res)
         self.done = True

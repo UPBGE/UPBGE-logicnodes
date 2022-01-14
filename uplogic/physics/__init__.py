@@ -5,3 +5,4 @@ from .vehicle import FOURWD  # noqa
 from .vehicle import FWD  # noqa
 from .vehicle import RWD  # noqa
 from .vehicle import ULVehicle  # noqa
+from .character import ULCharacter  # noqa

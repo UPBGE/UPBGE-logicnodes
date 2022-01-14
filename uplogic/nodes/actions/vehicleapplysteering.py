@@ -1,9 +1,10 @@
 from uplogic.nodes import ULActionNode
 from uplogic.nodes import ULOutSocket
+from uplogic.physics import RWD
+from uplogic.utils import VEHICLE
 from uplogic.utils import is_waiting
 from uplogic.utils import is_invalid
 from uplogic.utils import not_met
-from uplogic.physics import RWD
 
 
 class ULVehicleApplySteering(ULActionNode):
@@ -28,7 +29,7 @@ class ULVehicleApplySteering(ULActionNode):
         game_object = self.get_input(self.vehicle)
         if is_invalid(game_object):
             return
-        vehicle = game_object.get('_vconst', None)
+        vehicle = game_object.get(VEHICLE, None)
         if vehicle is None:
             return
         value_type = self.get_input(self.value_type)

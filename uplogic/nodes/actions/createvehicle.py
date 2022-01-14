@@ -1,6 +1,7 @@
 from uplogic.nodes import ULActionNode
 from uplogic.nodes import ULOutSocket
 from uplogic.physics.vehicle import ULVehicle
+from uplogic.utils import VEHICLE
 from uplogic.utils import is_waiting
 from uplogic.utils import not_met
 
@@ -35,9 +36,9 @@ class ULCreateVehicle(ULActionNode):
         self.done = False
         game_object = self.get_input(self.game_object)
         if not_met(self.get_input(self.condition)):
-            if game_object.get('_vconst'):
+            if game_object.get(VEHICLE):
                 self._set_ready()
-                self.vehicle = game_object['_vconst']
+                self.vehicle = game_object[VEHICLE]
             return
         suspension = self.get_input(self.suspension)
         stiffness = self.get_input(self.stiffness)

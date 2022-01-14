@@ -3,7 +3,7 @@ from uplogic.nodes import ULOutSocket
 from uplogic.utils import is_invalid
 
 
-class ActionExecuteNetwork(ULActionNode):
+class ULExecuteSubNetwork(ULActionNode):
     def __init__(self):
         ULActionNode.__init__(self)
         self.condition = None

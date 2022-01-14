@@ -84,13 +84,13 @@ class ULEvent():
         ULEventManager.deschedule(self.remove)
 
 
-def throw(name: str, content=None, messenger=None) -> None:
+def dispatch(name: str, content=None, messenger=None) -> None:
     '''TODO: Documentation
     '''
     ULEvent(name, content, messenger)
 
 
-def catch(name: str):
+def handle(name: str):
     '''TODO: Documentation
     '''
     return ULEventManager.catch(name)

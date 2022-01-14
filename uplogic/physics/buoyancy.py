@@ -2,6 +2,9 @@ from bge import logic
 from mathutils import Vector
 from uplogic.utils import vec_clamp
 from uplogic.utils import raycast
+from uplogic.utils import FLOATSAM
+from uplogic.utils import SHIP
+from uplogic.utils import WATER
 
 
 class ULBuoy():
@@ -21,11 +24,13 @@ class ULBuoy():
 
 class ULFloatsam(ULBuoy):
 
-    def __init__(self, game_object, buoyancy=1, height=200) -> None:
+    def __init__(self, game_object, buoyancy=1, height=200, align=True) -> None:
         super().__init__()
         self.game_object = game_object
+        game_object[FLOATSAM] = self
         self.height = height
         self.buoyancy = buoyancy
+        self.align = align
         logic.getCurrentScene().pre_draw.append(self.update)
 
     def update(self):
@@ -40,7 +45,7 @@ class ULFloatsam(ULBuoy):
             wpos,
             up,
             self.height,
-            'water',
+            WATER,
             True,
             True
         )
@@ -52,6 +57,8 @@ class ULFloatsam(ULBuoy):
                 vec_clamp(lift, max=self.buoyancy),
                 False
             )
+            if self.align:
+                self.game_object.alignAxisToVect(normal, 2, .2)
         floatsam.linearDamping = lindamp
         floatsam.angularDamping = lindamp * .8
 
@@ -64,6 +71,8 @@ class ULShip(ULBuoy):
     def __init__(self, game_object, buoyancy=1, height=200) -> None:
         super().__init__()
         self.game_object = game_object
+        game_object[SHIP] = self
+        print(game_object)
         self.height = height
         cs = sorted(game_object.childrenRecursive, key=lambda c: c.name)
         self.buoys = [c for c in cs if 'Buoy' in c.name]
@@ -84,7 +93,8 @@ class ULShip(ULBuoy):
                 wpos,
                 up,
                 self.height,
-                'water',
+                WATER,
+                True,
                 True,
                 True
             )

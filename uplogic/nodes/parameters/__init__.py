@@ -70,4 +70,17 @@ from .vectorxyz import ULVectorXYZ  # noqa
 from .vectorxyzw import ULVectorXYZW  # noqa
 from .withinrange import ULWithinRange  # noqa
 from .worldposition import ULWorldPosition  # noqa
+
 from .getvsync import ULGetVSync  # noqa
+from .valueswitch import ULValueSwitch  # noqa
+from .getfullscreen import ULGetFullscreen  # noqa
+from .getresolution import ULGetResolution  # noqa
+from .initemptydict import ULInitEmptyDict  # noqa
+from .initnewdict import ULInitNewDict  # noqa
+from .initemptylist import ULInitEmptyList  # noqa
+from .loadvariable import ULLoadVariable
+from .loadvariabledict import ULLoadVariableDict
+from .randomint import ULRandomInt
+from .randomvect import ULRandomVect
+from .getlightenergy import ULGetLightEnergy
+from .getlightcolor import ULGetLightColor

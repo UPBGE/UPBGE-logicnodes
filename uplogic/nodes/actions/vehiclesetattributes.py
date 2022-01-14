@@ -1,5 +1,6 @@
 from uplogic.nodes import ULActionNode
 from uplogic.nodes import ULOutSocket
+from uplogic.utils import VEHICLE
 from uplogic.utils import is_waiting
 from uplogic.utils import is_invalid
 from uplogic.utils import not_met
@@ -49,6 +50,7 @@ class ULVehicleSetAttributes(ULActionNode):
         if is_waiting(value_type, wheelcount):
             return
         if is_invalid(game_object):
+            print(game_object)
             return
         attrs_to_set = [
             self.get_input(self.set_suspension_compression),
@@ -62,9 +64,10 @@ class ULVehicleSetAttributes(ULActionNode):
             self.get_input(self.suspension_damping),
             self.get_input(self.tyre_friction)
         ]
-        vehicle = game_object.get('_vconst', None)
+        vehicle = game_object.get(VEHICLE, None)
         if not vehicle:
             return
+        const = vehicle.constraint
         self._set_ready()
         if value_type == FWD:
             for wheel in range(wheelcount):
@@ -76,7 +79,7 @@ class ULVehicleSetAttributes(ULActionNode):
                 )
         if value_type == RWD:
             for wheel in range(wheelcount):
-                wheel = vehicle.getNumWheels() - wheel - 1
+                wheel = const.getNumWheels() - wheel - 1
                 self.set_attributes(
                     vehicle,
                     wheel,
@@ -84,7 +87,7 @@ class ULVehicleSetAttributes(ULActionNode):
                     values_to_set
                 )
         if value_type == FOURWD:
-            for wheel in range(vehicle.getNumWheels()):
+            for wheel in range(const.getNumWheels()):
                 self.set_attributes(
                     vehicle,
                     wheel,

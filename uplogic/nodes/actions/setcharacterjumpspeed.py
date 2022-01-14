@@ -1,20 +1,17 @@
-from uplogic.events import throw
+from bge import constraints
 from uplogic.nodes import ULActionNode
 from uplogic.nodes import ULOutSocket
-from uplogic.utils import STATUS_INVALID
-from uplogic.utils import is_invalid
 from uplogic.utils import is_waiting
+from uplogic.utils import is_invalid
 from uplogic.utils import not_met
 
 
-class ULTrowEvent(ULActionNode):
+class ULSetCharacterJumpSpeed(ULActionNode):
     def __init__(self):
         ULActionNode.__init__(self)
         self.condition = None
-        self.subject = None
-        self.body = None
-        self.target = None
-        self.old_subject = None
+        self.game_object = None
+        self.force = None
         self.done = None
         self.OUT = ULOutSocket(self, self.get_done)
 
@@ -27,15 +24,13 @@ class ULTrowEvent(ULActionNode):
         if not_met(condition):
             self._set_ready()
             return
-        subject = self.get_input(self.subject)
-        body = self.get_input(self.body)
-        if body is STATUS_INVALID:
-            body = None
-        target = self.get_input(self.target)
-        if is_waiting(body, target):
+        game_object = self.get_input(self.game_object)
+        force = self.get_input(self.force)
+        if is_waiting(game_object):
             return
-        if is_invalid(subject):
-            return
+        physics = constraints.getCharacter(game_object)
         self._set_ready()
-        throw(subject, body, target)
+        if is_invalid(game_object):
+            return
+        physics.jumpSpeed = force
         self.done = True

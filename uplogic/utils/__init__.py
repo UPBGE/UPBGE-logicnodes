@@ -28,6 +28,14 @@ STATUS_READY = _Status("READY")
 STATUS_INVALID = _Status("INVALID")
 
 
+# uplogic game properties
+VEHICLE = '.ulvehicleconst'
+SHIP = '.ulshipconst'
+FLOATSAM = '.ulfloatsamconst'
+
+WATER = '.ulwater'
+
+
 LOGIC_OPERATORS = [
     operator.eq,
     operator.ne,
@@ -120,7 +128,7 @@ def debug(message: str):
     if not bpy.context.scene.logic_node_settings.use_node_debug:
         return
     else:
-        print('[Logic Nodes] ' + message)
+        print('[UPLOGIC] ' + message)
 
 
 def is_invalid(*a) -> bool:
@@ -178,6 +186,192 @@ def unload_nodes(a, b):
     if not hasattr(bpy.types.Scene, 'nl_globals_initialized'):
         return
     delattr(bpy.types.Scene, 'nl_globals_initialized')
+
+
+def move_to(
+    moving_object,
+    destination_point,
+    speed,
+    time_per_frame,
+    dynamic,
+    distance
+):
+    if dynamic:
+        direction = (
+            destination_point -
+            moving_object.worldPosition)
+        dst = direction.length
+        if(dst <= distance):
+            return True
+        direction.z = 0
+        direction.normalize()
+        velocity = direction * speed
+        velocity.z = moving_object.worldLinearVelocity.z
+        moving_object.worldLinearVelocity = velocity
+        return False
+    else:
+        direction = (
+            destination_point -
+            moving_object.worldPosition
+            )
+        dst = direction.length
+        if(dst <= distance):
+            return True
+        direction.normalize()
+        displacement = speed * time_per_frame
+        motion = direction * displacement
+        moving_object.worldPosition += motion
+        return False
+
+
+def project_vector3(v, xi, yi):
+    return Vector((v[xi], v[yi]))
+
+
+def xrot_to(
+    rotating_object,
+    target_pos,
+    front_axis_code,
+    speed,
+    time_per_frame
+):
+    front_vector = LO_AXIS_TO_VECTOR[front_axis_code]
+    vec = rotating_object.getVectTo(target_pos)[1]
+    if speed == 0:
+        if front_axis_code >= 3:
+            vec.negate()
+            front_axis_code = front_axis_code - 3
+        if vec.x == vec.y == vec.z == 0:
+            return
+        rotating_object.alignAxisToVect(vec, front_axis_code, 1.0)
+        rotating_object.alignAxisToVect(LO_AXIS_TO_VECTOR[0], 0, 1.0)
+        return True
+    else:
+        vec = project_vector3(vec, 1, 2)
+        vec.normalize()
+        front_vector = rotating_object.getAxisVect(front_vector)
+        front_vector = project_vector3(front_vector, 1, 2)
+        signed_angle = vec.angle_signed(front_vector, None)
+        if signed_angle is None:
+            return
+        abs_angle = abs(signed_angle)
+        if abs_angle < 0.01:
+            return True
+        angle_sign = (signed_angle > 0) - (signed_angle < 0)
+        drot = angle_sign * abs_angle * speed * time_per_frame
+        eulers = rotating_object.localOrientation.to_euler()
+        eulers[0] += drot
+        rotating_object.localOrientation = eulers
+        return False
+
+
+def yrot_to(
+    rotating_object,
+    target_pos,
+    front_axis_code,
+    speed,
+    time_per_frame
+):
+    front_vector = LO_AXIS_TO_VECTOR[front_axis_code]
+    vec = rotating_object.getVectTo(target_pos)[1]
+    if speed == 0:
+        if front_axis_code >= 3:
+            vec.negate()
+            front_axis_code = front_axis_code - 3
+        if vec.x == vec.y == vec.z == 0:
+            return
+        rotating_object.alignAxisToVect(vec, front_axis_code, 1.0)
+        rotating_object.alignAxisToVect(LO_AXIS_TO_VECTOR[1], 1, 1.0)
+        return True
+    else:
+        vec = project_vector3(vec, 2, 0)
+        vec.normalize()
+        front_vector = rotating_object.getAxisVect(front_vector)
+        front_vector = project_vector3(front_vector, 2, 0)
+        signed_angle = vec.angle_signed(front_vector, None)
+        if signed_angle is None:
+            return
+        abs_angle = abs(signed_angle)
+        if abs_angle < 0.01:
+            return True
+        angle_sign = (signed_angle > 0) - (signed_angle < 0)
+        drot = angle_sign * abs_angle * speed * time_per_frame
+        eulers = rotating_object.localOrientation.to_euler()
+        eulers[1] += drot
+        rotating_object.localOrientation = eulers
+        return False
+
+
+def zrot_to(
+    rotating_object,
+    target_pos,
+    front_axis_code,
+    speed,
+    time_per_frame
+):
+    front_vector = LO_AXIS_TO_VECTOR[front_axis_code]
+    vec = rotating_object.getVectTo(target_pos)[1]
+    if speed == 0:
+        if front_axis_code >= 3:
+            vec.negate()
+            front_axis_code = front_axis_code - 3
+        if vec.x == vec.y == vec.z == 0:
+            return
+        rotating_object.alignAxisToVect(vec, front_axis_code, 1.0)
+        rotating_object.alignAxisToVect(LO_AXIS_TO_VECTOR[2], 2, 1.0)
+        return True
+    else:
+        # project in 2d, compute angle diff, set euler rot 2
+        vec = project_vector3(vec, 0, 1)
+        vec.normalize()
+        front_vector = rotating_object.getAxisVect(front_vector)
+        front_vector = project_vector3(front_vector, 0, 1)
+        signed_angle = vec.angle_signed(front_vector, None)
+        if signed_angle is None:
+            return True
+        abs_angle = abs(signed_angle)
+        if abs_angle < 0.01:
+            return True
+        angle_sign = (signed_angle > 0) - (signed_angle < 0)
+        drot = angle_sign * abs_angle * speed * time_per_frame
+        eulers = rotating_object.localOrientation.to_euler()
+        eulers[2] += drot
+        rotating_object.localOrientation = eulers
+        return False
+
+
+def rot_to(
+    rot_axis_index,
+    rotating_object,
+    target_pos,
+    front_axis_code,
+    speed,
+    time_per_frame
+):
+    if rot_axis_index == 0:
+        return xrot_to(
+            rotating_object,
+            target_pos,
+            front_axis_code,
+            speed,
+            time_per_frame
+        )
+    elif rot_axis_index == 1:
+        return yrot_to(
+            rotating_object,
+            target_pos,
+            front_axis_code,
+            speed,
+            time_per_frame
+        )
+    elif rot_axis_index == 2:
+        return zrot_to(
+            rotating_object,
+            target_pos,
+            front_axis_code,
+            speed,
+            time_per_frame
+        )
 
 
 ###############################################################################
@@ -285,6 +479,10 @@ def get_closest_instance(game_obj: GameObject, name: str):
     return distances[min(distances.keys())]
 
 
+def is_water(game_object: GameObject):
+    return WATER in game_object
+
+
 ###############################################################################
 # MATH
 ###############################################################################
@@ -296,6 +494,7 @@ def clamp(value: float, min: float = 0, max: float = 1) -> float:
     :param value: input value
     :param min: minimum value
     :param max: maximum value
+
     :returns: clamped value as float
     """
 
@@ -307,12 +506,13 @@ def clamp(value: float, min: float = 0, max: float = 1) -> float:
 
 
 def vec_clamp(vec: Vector, min: float = 0, max: float = 1) -> Vector:
-    """Clamp a value in between two other values.
+    """Clamp length of a vector.
 
-    :param value: input value
-    :param min: minimum value
-    :param max: maximum value
-    :returns: clamped value as float
+    :param value: `Vector`
+    :param min: minimum length
+    :param max: maximum length
+
+    :returns: clamped vector as float
     """
     vec = vec.copy()
 
@@ -331,6 +531,7 @@ def interpolate(a: float, b: float, fac: float) -> float:
     :param a: starting value
     :param b: target value
     :param fac: interpolation factor
+
     :returns: calculated value as float
     """
     if -.001 < a-b < .001:
@@ -344,6 +545,7 @@ def lerp(a: float, b: float, fac: float) -> float:
     :param a: starting value
     :param b: target value
     :param fac: interpolation factor
+
     :returns: calculated value as float
     """
     if -.001 < a-b < .001:
@@ -352,6 +554,13 @@ def lerp(a: float, b: float, fac: float) -> float:
 
 
 def vec_abs(vec):
+    """Make every value of this vector positive.\n
+    Only supports less than 4 Dimensions.
+
+    :param a: `Vector`
+
+    :returns: positive vector
+    """
     vec = vec.copy()
     vec.x = abs(vec.x)
     vec.y = abs(vec.y)
@@ -360,6 +569,14 @@ def vec_abs(vec):
 
 
 def get_angle(a: Vector, b: Vector, up=Vector((0, 0, 1))) -> float:
+    """Get the angle between the direction from a to b and up.
+
+    :param a: `Vector` a
+    :param b: `Vector` b
+    :param up: compare direction
+
+    :returns: calculated value as float
+    """
     direction = get_direction(a, b)
     rad: float = direction.angle(up)
     deg: float = rad * 180/math.pi
@@ -367,6 +584,14 @@ def get_angle(a: Vector, b: Vector, up=Vector((0, 0, 1))) -> float:
 
 
 def get_direction(a, b, local=False) -> Vector:
+    """Get the direction from one vector to another.
+
+    :param a: `Vector` a
+    :param b: `Vector` b
+    :param local: use local space (position only)
+
+    :returns: direction as `Vector`
+    """
     start = a.worldPosition.copy() if hasattr(a, "worldPosition") else a
     if hasattr(b, "worldPosition"):
         b = b.worldPosition.copy()
@@ -378,6 +603,9 @@ def get_direction(a, b, local=False) -> Vector:
 
 
 def ray_data(origin, dest, local, dist):
+    """Get necessary data to calculate the ray.\n
+    Not intended for manual use.
+    """
     start = (
         origin.worldPosition.copy()
         if hasattr(origin, "worldPosition")

@@ -1,4 +1,4 @@
-from .catchevent import ULCatchEvent  # noqa
+from .handleevent import ULHandleEvent  # noqa
 from .checkdistance import ULCheckDistance  # noqa
 from .collision import ULCollision  # noqa
 from .compare import ULCompare  # noqa
@@ -36,4 +36,8 @@ from .sensorpositive import ULSensorPositive  # noqa
 from .timer import ULTimer  # noqa
 from .truefalse import ULTrueFalse  # noqa
 from .valuevalid import ULValueValid  # noqa
+
 from .controllerstatus import ULControllerStatus  # noqa
+from .pulsify import ULPulsify  # noqa
+from .barrier import ULBarrier
+from .delay import ULDelay
