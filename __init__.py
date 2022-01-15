@@ -50,6 +50,7 @@ def update_current_tree_code(*ignored):
 
 
 def update_tree_name(tree, old_name):
+    return
     utils.set_compile_status(utils.TREE_MODIFIED)
     new_name = tree.name
     _tree_to_name_map[tree] = new_name
@@ -97,8 +98,9 @@ def update_tree_name(tree, old_name):
                 if c.module == comp_name:
                     try:
                         ops.tree_code_generator.TreeCodeGenerator().write_code_for_tree(tree)
-                    except Exception:
+                    except Exception as e:
                         utils.error(f"Couldn't compile tree {tree.name}!")
+                        utils.error(e)
                     text = bpy.data.texts.get(f'{comp_name}.py')
                     if text:
                         bpy.data.texts.remove(text)
@@ -141,6 +143,23 @@ def _update_all_logic_tree_code():
     except Exception:
         utils.error("Unknown Error, abort generating Network code")
 
+
+@persistent
+def _reload_texts(self, context):
+    if not hasattr(bpy.types.Scene, 'logic_node_settings'):
+        return
+    if not bpy.context or not bpy.context.scene:
+        return
+    if not bpy.context.scene.logic_node_settings.use_reload_text:
+        return
+    else:
+        for t in bpy.data.texts:
+            if t.filepath:
+                with open(t.filepath) as f:
+                    t.clear()
+                    t.write(f.read())
+
+
 @persistent
 def _generate_on_game_start(self, context):
     utils.notify('Building Logic Trees on Startup...')
@@ -148,17 +167,15 @@ def _generate_on_game_start(self, context):
 
 
 def _consume_update_tree_code_queue():
-    edit_tree = getattr(bpy.context.space_data, "edit_tree", None)
-    if _generate_on_game_start not in bpy.app.handlers.game_pre:
-        bpy.app.handlers.game_pre.append(_generate_on_game_start)
-    if edit_tree:
-        # edit_tree = bpy.context.space_data.edit_tree
-        old_name = _tree_to_name_map.get(edit_tree)
-        if not old_name:
-            _tree_to_name_map[edit_tree] = edit_tree.name
-        else:
-            if old_name != edit_tree.name:
-                update_tree_name(edit_tree, old_name)
+    # edit_tree = getattr(bpy.context.space_data, "edit_tree", None)
+    # if edit_tree:
+    #     # edit_tree = bpy.context.space_data.edit_tree
+    #     old_name = _tree_to_name_map.get(edit_tree)
+    #     if not old_name:
+    #         _tree_to_name_map[edit_tree] = edit_tree.name
+    #     else:
+    #         if old_name != edit_tree.name:
+    #             update_tree_name(edit_tree, old_name)
     if not _update_queue:
         return
     now = time.time()
@@ -400,6 +417,7 @@ class NLAddonSettings(bpy.types.PropertyGroup):
     )
     use_node_debug: bpy.props.BoolProperty(default=True)
     use_node_notify: bpy.props.BoolProperty(default=True)
+    use_reload_text: bpy.props.BoolProperty(default=False)
     use_generate_on_open: bpy.props.BoolProperty(default=False)
     use_generate_all: bpy.props.BoolProperty(default=True)
     auto_compile: bpy.props.BoolProperty(default=False)
@@ -438,6 +456,8 @@ class LogicNodesAddonPreferences(bpy.types.AddonPreferences):
 
     def draw(self, context):
         layout = self.layout
+        uplogic_row = layout.box()
+        uplogic_row.operator('bge_netlogic.install_uplogic_module', icon='IMPORT')
         main_row = layout.row()
         col = layout.column()
         debug_col = main_row.column()
@@ -447,6 +467,11 @@ class LogicNodesAddonPreferences(bpy.types.AddonPreferences):
             context.scene.logic_node_settings,
             'use_custom_node_color',
             text="Dark Node Color"
+        )
+        ui_col.prop(
+            context.scene.logic_node_settings,
+            'use_reload_text',
+            text="Reload Texts on Game Start"
         )
         debug_col.prop(
             context.scene.logic_node_settings,
@@ -486,6 +511,7 @@ class LogicNodesAddonPreferences(bpy.types.AddonPreferences):
 basicnodes = _abs_import("basicnodes", _abs_path("basicnodes", "__init__.py"))
 _registered_classes = [
     ui.BGELogicTree,
+    ops.NLInstallUplogicModuleOperator,
     ops.NLSelectTreeByNameOperator,
     ops.NLRemoveTreeByNameOperator,
     ops.NLApplyLogicOperator,
@@ -515,6 +541,7 @@ _registered_classes = [
     ops.NLRemoveGlobalOperator,
     ops.NLAddGlobalCatOperator,
     ops.NLRemoveGlobalCatOperator,
+    ops.NLResetEmptySize,
     NLNodeTreeReference
 ]
 
@@ -533,13 +560,14 @@ _registered_classes.extend([
     ui.NL_UL_glvalue,
     ui.BGE_PT_LogicPanel,
     ui.BGE_PT_LogicTreeInfoPanel,
+    # ui.BGE_PT_ObjectTreeInfoPanel,
     ui.BGE_PT_GlobalValuePanel,
-    ui.BGE_PT_NLEditorPropertyPanel,
-    ui.BGE_PT_HelpPanel,
-    ui.BGE_PT_GameComponentPanel,
+    # ui.BGE_PT_NLEditorPropertyPanel,
+    # ui.BGE_PT_HelpPanel,
+    # ui.BGE_PT_GameComponentPanel,
     ui.BGE_PT_LogicNodeSettingsObject,
     ui.BGE_PT_LogicTreeOptions,
-    ui.BGE_PT_GamePropertyPanel3DView,
+    # ui.BGE_PT_GamePropertyPanel3DView,
     ui.BGE_PT_PropertiesPanelObject,
     ui.BGE_PT_LogicTreeGroups
 ])
@@ -621,8 +649,8 @@ def _list_menu_nodes():
 
 # blender add-on registration callback
 def register():
-    if _generate_on_game_start not in bpy.app.handlers.game_pre:
-        bpy.app.handlers.game_pre.append(_generate_on_game_start)
+    bpy.app.handlers.game_pre.append(_generate_on_game_start)
+    bpy.app.handlers.game_pre.append(_reload_texts)
     for cls in _registered_classes:
         # print("Registering... {}".format(cls.__name__))
         bpy.utils.register_class(cls)
@@ -637,7 +665,7 @@ def register():
     bpy.types.Object.sound_occluder = bpy.props.BoolProperty(
         default=True,
         name='Sound Occluder',
-        description='Wether this object will dampen sound played from Logic Nodes'
+        description='Whether this object will dampen sound'
     )
     bpy.types.Object.sound_blocking = bpy.props.FloatProperty(
         min=0.0,
@@ -645,6 +673,18 @@ def register():
         default=.05,
         name='Sound Blocking',
         description='The amount of sound blocking caused by this wall. A value of 1 will block all sound'
+    )
+    bpy.types.Object.reverb_volume = bpy.props.BoolProperty(
+        default=False,
+        name='Reverb Volume',
+        description='Whether this volume will cause sound to reverberate (Range Limit: 50m)'
+    )
+    bpy.types.Object.reverb_samples = bpy.props.IntProperty(
+        min=0,
+        max=30,
+        default=10,
+        name='Reverb Bounces',
+        description='Samples used by this reverb volume. More samples mean a longer reverberation'
     )
 
     bpy.types.Object.bgelogic_treelist = bpy.props.CollectionProperty(
@@ -670,7 +710,14 @@ def register():
 # blender add-on unregistration callback
 def unregister():
     utils.debug('Removing Game Start Compile handler...')
-    filter(lambda a: a is not _generate_on_game_start, bpy.app.handlers.game_pre)
+    remove_f = []
+    filter(lambda a: a.__name__ == '_generate_on_game_start', bpy.app.handlers.game_pre)
+    filter(lambda a: a.__name__ == '_reload_texts', bpy.app.handlers.game_pre)
+    for f in bpy.app.handlers.game_pre:
+        if f.__name__ == '_generate_on_game_start' or f.__name__ == '_reload_texts':
+            remove_f.append(f)
+    for f in remove_f:
+        bpy.app.handlers.game_pre.remove(f)
     # print("Unregister node category [{}]".format("NETLOGIC_NODES"))
     nodeitems_utils.unregister_node_categories("NETLOGIC_NODES")
     for cls in reversed(_registered_classes):

@@ -34,7 +34,7 @@ class CustomParameterCell(ParameterCell):
     def evaluate(self):
 
         # get the value from the input field.
-        input = self.get_socket_value(self.my_input)
+        input = self.get_input(self.my_input)
 
         # tell the node it is ready to perform (after all variables are fetched)
         self._set_ready()
