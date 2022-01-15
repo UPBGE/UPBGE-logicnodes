@@ -131,15 +131,15 @@ class NL_UL_glvalue(bpy.types.UIList):
 
 
 class BGE_PT_GlobalValuePanel(bpy.types.Panel):
-    bl_label = "Globals"
-    bl_space_type = "NODE_EDITOR"
-    bl_region_type = "UI"
-    bl_category = "Dashboard"
+    bl_label = "Scene Game Properties"
+    bl_space_type = "PROPERTIES"
+    bl_region_type = "WINDOW"
+    bl_context = 'scene'
+    bl_category = "Global Values"
 
     @classmethod
     def poll(cls, context):
-        enabled = (context.space_data.tree_type == BGELogicTree.bl_idname)
-        return enabled
+        return True
 
     def draw(self, context):
         layout = self.layout
@@ -469,11 +469,11 @@ class BGE_PT_LogicTreeOptions(bpy.types.Panel):
             text="Apply To Selected",
             icon='PREFERENCES'
         ).owner = "BGE_PT_LogicPanel"
-        tree = context.space_data.edit_tree
-        if tree:
-            r = apply.row()
-            r.label(text='Apply As:')
-            r.prop(tree, 'mode', toggle=True, text='Component' if tree.mode else 'Bricks')
+        # tree = context.space_data.edit_tree
+        # if tree:
+        #     r = apply.row()
+        #     r.label(text='Apply As:')
+        #     r.prop(tree, 'mode', toggle=True, text='Component' if tree.mode else 'Bricks')
         code = layout.box()
         code.operator(
             bge_netlogic.ops.NLGenerateLogicNetworkOperator.bl_idname,
@@ -671,7 +671,7 @@ class BGELogicTree(bpy.types.NodeTree):
     mode: bpy.props.BoolProperty(
         name='Compile Mode',
         default=False,
-        description='Whether to apply this tree using bricks or as a component.\nNOTE: Changing this value does not remove already applied trees',
+        description='Nope',
         update=update_tree_mode
     )
 

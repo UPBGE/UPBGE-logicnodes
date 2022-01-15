@@ -1,5 +1,11 @@
+<<<<<<< Updated upstream
 import os, subprocess
+=======
+import os
+import sys
+>>>>>>> Stashed changes
 import json
+from sre_constants import SUCCESS
 import bpy
 import bge_netlogic
 import bge_netlogic.utilities as utils
@@ -40,6 +46,27 @@ NODE_ATTRS = [
     'use_owner',
     'advanced'
 ]
+
+
+class NLInstallUplogicModuleOperator(bpy.types.Operator):
+    bl_idname = "bge_netlogic.install_uplogic_module"
+    bl_label = "Install or Update Uplogic Module"
+    bl_description = (
+        'Downloads the latest version of the uplogic module required for '
+        'running logic nodes.\n\n'
+        'NOTE:This may take a few seconds and requires internet connection.'
+    )
+    bl_options = {'REGISTER', 'UNDO'}
+
+    def execute(self, context):
+        utils.notify('Installing uplogic module...')
+        try:
+            os.system(f'{sys.executable} -m ensurepip')
+            os.system(f'{sys.executable} -m pip install uplogic')
+            utils.success('Installed.')
+        except Exception:
+            utils.error('Install failed.')
+        return {"FINISHED"}
 
 
 class TreeCodeWriterOperator(bpy.types.Operator):
