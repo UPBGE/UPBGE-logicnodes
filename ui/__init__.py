@@ -503,12 +503,6 @@ class BGE_PT_LogicTreeOptions(bpy.types.Panel):
             text="Compile",
             icon='FILE_SCRIPT'
         )
-        code.operator(
-            bge_netlogic.ops.NLUpdateUplogicPackage.bl_idname,
-            text="Update Nodes",
-            icon='FILE_SCRIPT'
-        )
-
 
 class BGE_PT_LogicTreeInfoPanel(bpy.types.Panel):
     bl_label = "Tree applied to:"

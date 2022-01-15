@@ -456,6 +456,8 @@ class LogicNodesAddonPreferences(bpy.types.AddonPreferences):
 
     def draw(self, context):
         layout = self.layout
+        uplogic_row = layout.box()
+        uplogic_row.operator('bge_netlogic.install_uplogic_module', icon='IMPORT')
         main_row = layout.row()
         col = layout.column()
         debug_col = main_row.column()
@@ -509,6 +511,7 @@ class LogicNodesAddonPreferences(bpy.types.AddonPreferences):
 basicnodes = _abs_import("basicnodes", _abs_path("basicnodes", "__init__.py"))
 _registered_classes = [
     ui.BGELogicTree,
+    ops.NLInstallUplogicModuleOperator,
     ops.NLSelectTreeByNameOperator,
     ops.NLRemoveTreeByNameOperator,
     ops.NLApplyLogicOperator,
@@ -538,7 +541,6 @@ _registered_classes = [
     ops.NLRemoveGlobalOperator,
     ops.NLAddGlobalCatOperator,
     ops.NLRemoveGlobalCatOperator,
-    ops.NLUpdateUplogicPackage,
     ops.NLResetEmptySize,
     NLNodeTreeReference
 ]

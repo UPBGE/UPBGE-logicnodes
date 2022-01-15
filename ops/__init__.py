@@ -1,4 +1,4 @@
-import os, subprocess
+import os
 import json
 import bpy
 from mathutils import Vector
@@ -41,6 +41,22 @@ NODE_ATTRS = [
     'use_owner',
     'advanced'
 ]
+
+
+class NLInstallUplogicModuleOperator(bpy.types.Operator):
+    bl_idname = "bge_netlogic.install_uplogic_module"
+    bl_label = "Install or Update Uplogic Module"
+    bl_description = (
+        'Downloads the latest version of the uplogic module required for '
+        'running logic nodes.\n\n'
+        'NOTE:This may take a few seconds and requires internet connection.'
+    )
+    bl_options = {'REGISTER', 'UNDO'}
+
+    def execute(self, context):
+        os.system('python -m ensurepip')
+        os.system('pip install uplogic --upgrade')
+        return {"FINISHED"}
 
 
 class TreeCodeWriterOperator(bpy.types.Operator):
@@ -955,20 +971,6 @@ class NLGenerateLogicNetworkOperatorAll(bpy.types.Operator):
             utils.warn("Couldn't redraw panel, code updated.")
         return {"FINISHED"}
 
-
-class NLUpdateUplogicPackage(bpy.types.Operator):
-    bl_idname = "bge_netlogic.update_uplogic_package"
-    bl_label = "Update Nodes"
-    bl_options = {'REGISTER', 'UNDO'}
-    bl_description = "(Re)Write the python package containing node definitions"
-
-    @classmethod
-    def poll(cls, context):
-        return True
-
-    def execute(self, context):
-        tree_code_generator.TreeCodeGenerator().update_package()
-        return {"FINISHED"}
 
 
 class NLResetEmptySize(bpy.types.Operator):
