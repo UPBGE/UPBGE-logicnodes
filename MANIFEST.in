@@ -1,0 +1,4 @@
+include *.md
+include GPL-license.txt
+recursive-include uplogic *
+recursive-exclude uplogic *.pyc *.pyo

@@ -1,7 +1,6 @@
 import bpy
 import bge_netlogic
 import bge_netlogic.utilities as utils
-from os.path import join, dirname
 
 
 _filter_prop_types = [
@@ -13,17 +12,6 @@ _filter_prop_types = [
     ("TIMER", "Timers", "Show only Timer Properties"),
     ("NAME", 'Filter By Name', 'Search for a Property')
 ]
-
-
-def get_icons_directory():
-
-    background = bpy.context.preferences.themes['Default'].view_3d.space.panelcolors.back
-    if background[0] < 0.4:
-        icons_directory = join(dirname(__file__), "IconsBright")
-    else:
-        icons_directory = join(dirname(__file__), "IconsDark")
-
-    return icons_directory
 
 
 class BGEPropFilter(bpy.types.PropertyGroup):
@@ -38,7 +26,7 @@ class BGEPropFilter(bpy.types.PropertyGroup):
     show_hidden: bpy.props.BoolProperty(
         name='Show Hidden',
         default=True,
-        description='Show properties that start with "_"'
+        description='Show properties that start with "."'
     )
     show_trees: bpy.props.BoolProperty(
         name='Show Trees',
@@ -204,16 +192,14 @@ class BGE_PT_GlobalValuePanel(bpy.types.Panel):
 
 
 class BGE_PT_GamePropertyPanel(bpy.types.Panel):
-    bl_label = "Game Properties"
+    bl_label = "Game Properties (Advanced)"
     bl_space_type = "NODE_EDITOR"
     bl_region_type = "UI"
     bl_category = "Dashboard"
 
     @classmethod
     def poll(cls, context):
-        ob = context.active_object
-        enabled = (context.space_data.tree_type == BGELogicTree.bl_idname)
-        return ob and ob.name and enabled
+        return False
 
     def draw_tree_prop(self, prop, index, box, show_movers):
         col = box.column()
@@ -308,7 +294,7 @@ class BGE_PT_GamePropertyPanel(bpy.types.Panel):
 
         props = [prop for prop in obj.game.properties]
         for prop in obj.game.properties:
-            if not show_hidden and prop.name.startswith('_'):
+            if not show_hidden and prop.name.startswith('.'):
                 continue
             is_tree = prop.name.startswith(utils.NLPREFIX)
             if is_tree and not show_trees:
@@ -356,8 +342,11 @@ class BGE_PT_NLEditorPropertyPanel(BGE_PT_GamePropertyPanel):
     @classmethod
     def poll(cls, context):
         ob = context.active_object
+        if not ob:
+            return False
+        sel = ob.select_get()
         enabled = (context.space_data.tree_type == BGELogicTree.bl_idname)
-        return ob and ob.name and enabled
+        return sel and ob.name and enabled
 
 
 class BGE_PT_GamePropertyPanel3DView(BGE_PT_GamePropertyPanel):
@@ -370,24 +359,30 @@ class BGE_PT_GamePropertyPanel3DView(BGE_PT_GamePropertyPanel):
     @classmethod
     def poll(cls, context):
         ob = context.active_object
-        return ob and ob.name
+        if not ob:
+            return False
+        sel = ob.select_get()
+        return sel and ob.name
 
 
 class BGE_PT_PropertiesPanelObject(BGE_PT_GamePropertyPanel):
     bl_label = "Game Properties"
     bl_space_type = "PROPERTIES"
     bl_region_type = "WINDOW"
-    bl_context = "object"
+    bl_context = "game"
     name: bpy.props.StringProperty()
 
     @classmethod
     def poll(cls, context):
         ob = context.active_object
-        return ob and ob.name
+        if not ob:
+            return False
+        sel = ob.select_get()
+        return sel and ob.name
 
 
 class BGE_PT_LogicNodeSettingsObject(bpy.types.Panel):
-    bl_label = "Logic Node Settings"
+    bl_label = "Uplogic Settings"
     bl_space_type = "PROPERTIES"
     bl_region_type = "WINDOW"
     bl_context = "physics"
@@ -404,8 +399,26 @@ class BGE_PT_LogicNodeSettingsObject(bpy.types.Panel):
         parts = main_col.split()
         col1 = parts.column()
         col2 = parts.column()
-        col1.prop(context.active_object, 'sound_occluder', text='Sound Occluder')
-        col2.prop(context.active_object, 'sound_blocking', text='Factor', slider=True)
+        row = col1.row()
+        row.prop(context.active_object, 'sound_occluder', text='Sound Occluder')
+        block = col2.row()
+        block.prop(context.active_object, 'sound_blocking', text='Factor', slider=True)
+        col1.separator()
+        col2.separator()
+        block.enabled = context.active_object.sound_occluder
+        if not context.active_object.data:
+            row = col1.row()
+            row.prop(context.active_object, 'reverb_volume', text='Reverb Volume')
+            reverb_settings = col2.column(align=True)
+            block = reverb_settings.row(align=True)
+            block.prop(context.active_object, 'empty_display_size', text='Radius')
+            block.operator(
+                bge_netlogic.ops.NLResetEmptySize.bl_idname,
+                text="",
+                icon='FULLSCREEN_EXIT'
+            )
+            block.enabled = context.active_object.reverb_volume
+            reverb_settings.prop(context.active_object, 'reverb_samples', text='Samples')
 
 
 class BGE_PT_LogicTreeGroups(bpy.types.Panel):
@@ -455,8 +468,12 @@ class BGE_PT_LogicTreeOptions(bpy.types.Panel):
         if getattr(context.space_data, 'edit_tree', None) is not None:
             bge_netlogic._consume_update_tree_code_queue()
             if not bge_netlogic._tree_code_writer_started:
-                bge_netlogic._tree_code_writer_started = True
-                bpy.ops.bgenetlogic.treecodewriter_operator()
+                try:
+                    bge_netlogic._tree_code_writer_started = True
+                    bpy.ops.bgenetlogic.treecodewriter_operator()
+                    utils.success('Code Generator started.')
+                except Exception:
+                    utils.warn('Could not start Code Generator; Context Invalid.')
         return enabled
 
     def draw(self, context):
@@ -475,20 +492,19 @@ class BGE_PT_LogicTreeOptions(bpy.types.Panel):
         #     r.label(text='Apply As:')
         #     r.prop(tree, 'mode', toggle=True, text='Component' if tree.mode else 'Bricks')
         code = layout.box()
-        code.operator(
-            bge_netlogic.ops.NLGenerateLogicNetworkOperator.bl_idname,
-            text=context.scene.logic_node_settings.tree_compiled,
-            icon=utils.STATUS_ICONS.get(context.scene.logic_node_settings.tree_compiled)
-        )
+        # code.operator(
+        #     bge_netlogic.ops.NLGenerateLogicNetworkOperator.bl_idname,
+        #     text=context.scene.logic_node_settings.tree_compiled,
+        #     icon=utils.STATUS_ICONS.get(context.scene.logic_node_settings.tree_compiled)
+        # )
         code.operator(
             bge_netlogic.ops.NLGenerateLogicNetworkOperatorAll.bl_idname,
-            text="Compile All",
+            text="Compile",
             icon='FILE_SCRIPT'
         )
 
-
 class BGE_PT_LogicTreeInfoPanel(bpy.types.Panel):
-    bl_label = "Object Trees"
+    bl_label = "Tree applied to:"
     bl_space_type = "NODE_EDITOR"
     bl_region_type = "UI"
     bl_category = "Dashboard"
@@ -496,9 +512,49 @@ class BGE_PT_LogicTreeInfoPanel(bpy.types.Panel):
 
     @classmethod
     def poll(cls, context):
-        ob = context.active_object
+        if not getattr(context.space_data, 'edit_tree', None):
+            return False
         enabled = (context.space_data.tree_type == BGELogicTree.bl_idname)
-        return ob and ob.name and enabled
+        return enabled
+
+    def draw_owner(self, obj, container, prop, tree):
+        layout = container.box()
+        row = layout.split()
+        row.label(text=obj.name)
+        row = row.row()
+        row.prop(prop, 'value', text='Active')
+        op = row.operator(
+            bge_netlogic.ops.NLRemoveTreeByNameOperator.bl_idname,
+            text="",
+            icon="X"
+        )
+        op.tree_name = tree.name
+        op.from_obj_name = obj.name
+
+    def draw(self, context):
+        layout = self.layout
+        tree = context.space_data.edit_tree
+        container = layout.column(align=True)
+        for obj in bpy.data.objects:
+            if f'NL__{tree.name}' in obj.game.properties:
+                prop = obj.game.properties[f'NL__{tree.name}']
+                self.draw_owner(obj, container, prop, tree)
+
+
+class BGE_PT_ObjectTreeInfoPanel(bpy.types.Panel):
+    bl_label = "Object Trees"
+    bl_space_type = "VIEW_3D"
+    bl_region_type = "UI"
+    bl_category = "Item"
+    _current_tree = None
+
+    @classmethod
+    def poll(cls, context):
+        ob = context.active_object
+        if not ob:
+            return False
+        sel = ob.select_get()
+        return sel and ob.name
 
     def get_combined_status_of_tree_items(self, tree_item_list):
         last = None
@@ -532,7 +588,7 @@ class BGE_PT_LogicTreeInfoPanel(bpy.types.Panel):
                     active_tree_items[e.tree_name] = data
                 data.append(e)
         tree_count = len(active_tree_items.keys())
-        if title:
+        if title and context.object:
             title.label(text="Trees applied to {}: {}".format(context.object.name, tree_count))
         for name in active_tree_items:
             box = box_over.box()
@@ -679,9 +735,11 @@ class BGELogicTree(bpy.types.NodeTree):
     def poll(cls, context):
         return True
 
-    # def update(self):
-    #    if not getattr(bpy.context.scene.logic_node_settings, 'auto_compile'):
-    #        return
-    #    bge_netlogic.update_current_tree_code()
-    #     for link in self.links:
-    #         print(link.is_valid)
+    def update(self):
+        for n in self.nodes:
+            if isinstance(n, bpy.types.NodeReroute):
+                source = n.inputs[0].links[0].from_socket
+                while isinstance(source.node, bpy.types.NodeReroute):
+                    source = source.node.inputs[0].links[0].from_socket
+                n.inputs[0].type = source.type
+                n.outputs[0].type = n.inputs[0].type

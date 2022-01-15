@@ -1,9 +1,5 @@
-<<<<<<< Updated upstream
-import os, subprocess
-=======
 import os
 import sys
->>>>>>> Stashed changes
 import json
 from sre_constants import SUCCESS
 import bpy

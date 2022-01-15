@@ -460,7 +460,8 @@ def remove_tree_item_from_object(ob, tree_name):
     index = -1
     for item in ob.bgelogic_treelist:
         index += 1
-        if item.tree_name == tree_name: break
+        if item.tree_name == tree_name:
+            break
     if index >= 0:
         ob.bgelogic_treelist.remove(index)
     else:
@@ -469,7 +470,8 @@ def remove_tree_item_from_object(ob, tree_name):
 
 def object_has_treeitem_for_treename(ob, treename):
     for item in ob.bgelogic_treelist:
-        if item.tree_name == treename: return True
+        if item.tree_name == treename:
+            return True
     return False
 
 
