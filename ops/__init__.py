@@ -1,7 +1,6 @@
 import os
 import sys
 import json
-from sre_constants import SUCCESS
 import bpy
 import bge_netlogic
 import bge_netlogic.utilities as utils
@@ -50,18 +49,19 @@ class NLInstallUplogicModuleOperator(bpy.types.Operator):
     bl_description = (
         'Downloads the latest version of the uplogic module required for '
         'running logic nodes.\n\n'
-        'NOTE:This may take a few seconds and requires internet connection.'
+        'NOTE: This may take a few seconds and requires internet connection.'
     )
     bl_options = {'REGISTER', 'UNDO'}
 
     def execute(self, context):
         utils.notify('Installing uplogic module...')
         try:
-            os.system(f'{sys.executable} -m ensurepip')
-            os.system(f'{sys.executable} -m pip install uplogic')
+            os.system(f'"{sys.executable}" -m ensurepip')
+            os.system(f'"{sys.executable}" -m pip install uplogic')
             utils.success('Installed.')
-        except Exception:
-            utils.error('Install failed.')
+        except Exception as e:
+            utils.error('Install failed. Traceback:')
+            utils.error(e)
         return {"FINISHED"}
 
 
@@ -319,6 +319,7 @@ class NLRemoveTreeByNameOperator(bpy.types.Operator):
     bl_options = {'REGISTER', 'UNDO'}
     bl_description = "Remove the tree from the selected objects"
     tree_name: bpy.props.StringProperty()
+    from_obj_name: bpy.props.StringProperty()
 
     @classmethod
     def poll(cls, context):
@@ -331,49 +332,54 @@ class NLRemoveTreeByNameOperator(bpy.types.Operator):
             stripped_tree_name
         )
         py_module_name = py_module_name.split('NL')[-1]
-        objs = [
-            ob for ob in context.scene.objects if ob.select_get() and
-            tools.object_has_treeitem_for_treename(
-                ob, self.tree_name
-            )
-        ]
-        for ob in objs:
-            tree_name = utils.make_valid_name(self.tree_name)
-            module = f'nl_{tree_name.lower()}'
-            gs = ob.game
-            idx = 0
-            for c in gs.components:
-                if c.module == module:
-                    bpy.ops.logic.python_component_remove(index=idx)
-                idx += 1
-            controllers = [
-                c for c in gs.controllers if py_module_name in c.name
-            ]
-            actuators = [
-                a for a in gs.actuators if py_module_name in a.name
-            ]
-            sensors = [
-                s for s in gs.sensors if py_module_name in s.name
-            ]
-            for s in sensors:
-                bpy.ops.logic.sensor_remove(sensor=s.name, object=ob.name)
-            for c in controllers:
-                bpy.ops.logic.controller_remove(
-                    controller=c.name, object=ob.name
-                )
-            for a in actuators:
-                bpy.ops.logic.actuator_remove(actuator=a.name, object=ob.name)
+        orig_ob = bpy.context.object
+        try:
+            ob = bpy.data.objects[self.from_obj_name]
+        except Exception:
+            ob = orig_ob
 
-            bge_netlogic.utilities.remove_tree_item_from_object(
-                ob, self.tree_name
+        if not ob:
+            return {'FINISHED'}
+
+        bpy.context.view_layer.objects.active = ob
+        tree_name = utils.make_valid_name(self.tree_name)
+        module = f'nl_{tree_name.lower()}'
+        for text in bpy.data.texts:
+            if text.name == f'{module}.py':
+                bpy.data.texts.remove(text)
+        gs = ob.game
+        for idx, c in enumerate(gs.components):
+            if c.module == module:
+                bpy.ops.logic.python_component_remove(index=idx)
+        controllers = [
+            c for c in gs.controllers if py_module_name in c.name
+        ]
+        actuators = [
+            a for a in gs.actuators if py_module_name in a.name
+        ]
+        sensors = [
+            s for s in gs.sensors if py_module_name in s.name
+        ]
+        for s in sensors:
+            bpy.ops.logic.sensor_remove(sensor=s.name, object=ob.name)
+        for c in controllers:
+            bpy.ops.logic.controller_remove(
+                controller=c.name, object=ob.name
             )
-            bge_netlogic.utilities.remove_network_initial_status_key(
-                ob, self.tree_name
-            )
-            utils.success("Successfully removed tree {} from object {}.".format(
-                self.tree_name,
-                ob.name
-            ))
+        for a in actuators:
+            bpy.ops.logic.actuator_remove(actuator=a.name, object=ob.name)
+
+        bge_netlogic.utilities.remove_tree_item_from_object(
+            ob, self.tree_name
+        )
+        bge_netlogic.utilities.remove_network_initial_status_key(
+            ob, self.tree_name
+        )
+        utils.success("Successfully removed tree {} from object {}.".format(
+            self.tree_name,
+            ob.name
+        ))
+        bpy.context.view_layer.objects.active = orig_ob
         return {'FINISHED'}
 
     def remove_tree_from_object_pcoll(self, ob, treename):
@@ -579,7 +585,7 @@ class NLUpdateTreeVersionOperator(bpy.types.Operator):
 
 
 class NLMakeGroupOperator(bpy.types.Operator):
-    bl_idname = "bge_netlogic.make_group"
+    bl_idname = "bge_netlogic.group_make"
     bl_label = "Pack Into New Tree"
     bl_description = "Convert selected Nodes to a new tree. Will be applied to selected object.\nWARNING: All Nodes connected to selection must be selected too"
     bl_options = {'REGISTER', 'UNDO'}
@@ -957,20 +963,6 @@ class NLGenerateLogicNetworkOperatorAll(bpy.types.Operator):
         return BLTextBuffer(blender_text_data)
 
     def execute(self, context):
-        # ensure that the local "bgelogic" folder exists
-        local_bgelogic_folder = bpy.path.abspath("//bgelogic")
-        if not os.path.exists(local_bgelogic_folder):
-            try:
-                os.mkdir(local_bgelogic_folder)
-            except PermissionError:
-                self.report(
-                    {"ERROR"},
-                    "Cannot generate the code because the blender file has "
-                    "not been saved or the user has no write permission for "
-                    "the containing folder."
-                )
-                utils.set_compile_status(utils.TREE_FAILED)
-                return {"FINISHED"}
         for tree in bpy.data.node_groups:
             if tree.bl_idname == bge_netlogic.ui.BGELogicTree.bl_idname:
                 try:
@@ -983,6 +975,24 @@ class NLGenerateLogicNetworkOperatorAll(bpy.types.Operator):
             context.region.tag_redraw()
         except Exception:
             utils.warn("Couldn't redraw panel, code updated.")
+        return {"FINISHED"}
+
+
+
+class NLResetEmptySize(bpy.types.Operator):
+    bl_idname = "bge_netlogic.reset_empty_scale"
+    bl_label = "Set Reverb Volume"
+    bl_options = {'REGISTER', 'UNDO'}
+    bl_description = "Reset the volume scale"
+
+    @classmethod
+    def poll(cls, context):
+        ob = context.active_object
+        return ob and ob.name
+
+    def execute(self, context):
+        context.active_object.scale = Vector((1, 1, 1))
+        context.active_object.empty_display_type = 'CUBE'
         return {"FINISHED"}
 
 

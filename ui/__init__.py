@@ -726,7 +726,7 @@ class BGELogicTree(bpy.types.NodeTree):
     bl_category = "Scripting"
     mode: bpy.props.BoolProperty(
         name='Compile Mode',
-        default=False,
+        default=True,
         description='Nope',
         update=update_tree_mode
     )
