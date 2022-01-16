@@ -57,7 +57,7 @@ class NLInstallUplogicModuleOperator(bpy.types.Operator):
         utils.notify('Installing uplogic module...')
         try:
             os.system(f'"{sys.executable}" -m ensurepip')
-            os.system(f'"{sys.executable}" -m pip install uplogic')
+            os.system(f'"{sys.executable}" -m pip install uplogic --upgrade')
             utils.success('Installed.')
         except Exception as e:
             utils.error('Install failed. Traceback:')

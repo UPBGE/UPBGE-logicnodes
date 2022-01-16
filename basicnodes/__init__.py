@@ -7192,7 +7192,7 @@ class NLConditionAndNotNode(bpy.types.Node, NLConditionNode):
     bl_width_min = 60
     bl_width_default = 100
     nl_category = "Logic"
-    nl_module = 'parameters'
+    nl_module = 'conditions'
 
     def init(self, context):
         NLConditionNode.init(self, context)
@@ -12979,7 +12979,7 @@ class NLRandomVect(bpy.types.Node, NLActionNode):
         self.outputs.new(NLVectorSocket.bl_idname, "Vector")
 
     def get_input_sockets_field_names(self):
-        return ["condition", 'xyz']
+        return ['xyz']
 
     def get_netlogic_class_name(self):
         return "ULRandomVect"
