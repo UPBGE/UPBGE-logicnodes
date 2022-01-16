@@ -5276,7 +5276,7 @@ class NLRemoveOverlayCollection(bpy.types.Node, NLActionNode):
     bl_label = "Remove Overlay Collection"
     nl_category = "Scene"
     nl_subcat = 'Collections'
-    nl_module = 'parameters'
+    nl_module = 'actions'
 
     def init(self, context):
         NLActionNode.init(self, context)
@@ -5689,7 +5689,7 @@ _nodes.append(NLParameterTimeNode)
 
 class NLMouseDataParameter(bpy.types.Node, NLParameterNode):
     bl_idname = "NLMouseDataParameter"
-    bl_label = "Status"
+    bl_label = "Mouse Status"
     bl_icon = 'OPTIONS'
     nl_category = "Input"
     nl_subcat = 'Mouse'
