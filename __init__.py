@@ -476,7 +476,7 @@ class LogicNodesAddonPreferences(bpy.types.AddonPreferences):
         ui_col.prop(
             context.scene.logic_node_settings,
             'use_reload_text',
-            text="Reload Texts on Game Start"
+            text="Reload Scripts on Game Start"
         )
         debug_col.prop(
             context.scene.logic_node_settings,
