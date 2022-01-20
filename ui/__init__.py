@@ -503,6 +503,7 @@ class BGE_PT_LogicTreeOptions(bpy.types.Panel):
             icon='FILE_SCRIPT'
         )
 
+
 class BGE_PT_LogicTreeInfoPanel(bpy.types.Panel):
     bl_label = "Tree applied to:"
     bl_space_type = "NODE_EDITOR"
@@ -543,9 +544,9 @@ class BGE_PT_LogicTreeInfoPanel(bpy.types.Panel):
 
 class BGE_PT_ObjectTreeInfoPanel(bpy.types.Panel):
     bl_label = "Object Trees"
-    bl_space_type = "VIEW_3D"
+    bl_space_type = "NODE_EDITOR"
     bl_region_type = "UI"
-    bl_category = "Item"
+    bl_category = "Dashboard"
     _current_tree = None
 
     @classmethod
@@ -685,7 +686,6 @@ class BGE_PT_GameComponentPanel(bpy.types.Panel):
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
     bl_category = "Item"
-    # module = bpy.StringProperty()
 
     @classmethod
     def poll(cls, context):

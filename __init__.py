@@ -14,7 +14,7 @@ bl_info = {
         "A Node System to create game logic."
     ),
     "author": "pgi, Leopold A-C (Iza Zed)",
-    "version": (2, 0, 1),
+    "version": (2, 0, 2),
     "blender": (2, 91, 0),
     "location": "View Menu",
     "category": "Game Engine"
@@ -26,6 +26,8 @@ _current_user_nodes_parent_directory = None
 _update_queue = []
 _tree_to_name_map = {}
 _tree_code_writer_started = False
+
+UPLOGIC_INSTALLED = False
 
 
 def debug(*message):
@@ -456,8 +458,11 @@ class LogicNodesAddonPreferences(bpy.types.AddonPreferences):
 
     def draw(self, context):
         layout = self.layout
-        uplogic_row = layout.box()
-        uplogic_row.operator('bge_netlogic.install_uplogic_module', icon='IMPORT')
+        box = layout.box()
+        col = box.column()
+        col.label(text='Logic Nodes require the uplogic module, please install if missing.', icon='ERROR')
+        col.operator('bge_netlogic.install_uplogic_module', icon='IMPORT')
+        # col.operator('bge_netlogic.install_fake_bge_module', icon='IMPORT')
         main_row = layout.row()
         col = layout.column()
         debug_col = main_row.column()
@@ -512,6 +517,7 @@ basicnodes = _abs_import("basicnodes", _abs_path("basicnodes", "__init__.py"))
 _registered_classes = [
     ui.BGELogicTree,
     ops.NLInstallUplogicModuleOperator,
+    ops.NLInstallFakeBGEModuleOperator,
     ops.NLSelectTreeByNameOperator,
     ops.NLRemoveTreeByNameOperator,
     ops.NLApplyLogicOperator,
@@ -560,7 +566,7 @@ _registered_classes.extend([
     ui.NL_UL_glvalue,
     ui.BGE_PT_LogicPanel,
     ui.BGE_PT_LogicTreeInfoPanel,
-    # ui.BGE_PT_ObjectTreeInfoPanel,
+    ui.BGE_PT_ObjectTreeInfoPanel,
     ui.BGE_PT_GlobalValuePanel,
     # ui.BGE_PT_NLEditorPropertyPanel,
     # ui.BGE_PT_HelpPanel,

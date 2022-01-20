@@ -512,6 +512,14 @@ def filter_lights(self, item):
     return False
 
 
+def filter_texts(self, item):
+    if (
+        item.name.startswith('nl_')
+    ):
+        return False
+    return True
+
+
 def filter_navmesh(self, item):
     if item.game.physics_type == 'NAVMESH':
         return True
@@ -1859,6 +1867,7 @@ class NLTextIDSocket(bpy.types.NodeSocket, NLSocket):
     value: bpy.props.PointerProperty(
         name='Text',
         type=bpy.types.Text,
+        poll=filter_texts,
         update=update_tree_code
     )
 
@@ -12712,7 +12721,7 @@ _nodes.append(NLActionStartGame)
 
 class NLParameterReceiveMessage(bpy.types.Node, NLParameterNode):
     bl_idname = "NLParameterReceiveMessage"
-    bl_label = "Handle"
+    bl_label = "Receive"
     nl_category = "Events"
     nl_subcat = 'Custom'
     nl_module = 'conditions'
@@ -12797,7 +12806,7 @@ _nodes.append(NLActionListGlobalValues)
 
 class NLActionCreateMessage(bpy.types.Node, NLActionNode):
     bl_idname = "NLActionCreateMessage"
-    bl_label = "Dispatch"
+    bl_label = "Send"
     nl_category = "Events"
     nl_subcat = 'Custom'
     nl_module = 'actions'

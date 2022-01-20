@@ -58,9 +58,32 @@ class NLInstallUplogicModuleOperator(bpy.types.Operator):
         try:
             os.system(f'"{sys.executable}" -m ensurepip')
             os.system(f'"{sys.executable}" -m pip install uplogic --upgrade')
+            bge_netlogic.UPLOGIC_INSTALLED = True
             utils.success('Installed.')
         except Exception as e:
-            utils.error('Install failed. Traceback:')
+            utils.error('Install failed. Error:')
+            utils.error(e)
+        return {"FINISHED"}
+
+
+class NLInstallFakeBGEModuleOperator(bpy.types.Operator):
+    bl_idname = "bge_netlogic.install_fake_bge_module"
+    bl_label = "Install or Update BGE Stub Module"
+    bl_description = (
+        'Downloads the latest version of the fake bge module to avoid errors.'
+        'NOTE: This may take a few seconds and requires internet connection.'
+    )
+    bl_options = {'REGISTER', 'UNDO'}
+
+    def execute(self, context):
+        utils.notify('Installing bge stub module...')
+        try:
+            os.system(f'"{sys.executable}" -m ensurepip')
+            os.system(f'"{sys.executable}" -m pip install upbge-stubs==0.3.1.26.dev1705922753')
+            bge_netlogic.UPLOGIC_INSTALLED = True
+            utils.success('Installed.')
+        except Exception as e:
+            utils.error('Install failed. Error:')
             utils.error(e)
         return {"FINISHED"}
 
