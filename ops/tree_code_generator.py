@@ -31,17 +31,76 @@ class BLTextWrapper(AbstractTextBuffer):
 
 
 MODULE_TEMPLATE = """\
-import foo
+# MACHINE GENERATED
+import bge, bpy, sys
+import mathutils
+import math
+from collections import OrderedDict
 
-class Foo:
 
-    was auch immer
+class {}Wrapper():
 
-    def start():
-        %(start)s
+    def __init__(self, args):
+        {}
+        self.condition = args['Execution Condition']
+        self.consumed = False
+        owner = self.object
+        network = self.network = ULLogicTree()
+        CON0000 = ULOnInit()
+        ACT0001 = ULPrintValue()
+        ACT0002 = ULPlayAction()
+        ACT0001.condition = ACT0002.STARTED
+        ACT0001.value = ACT0002.FRAME
+        ACT0002.condition = CON0000
+        ACT0002.game_object = "NLO:U_O"
+        ACT0002.action_name = "CubeAction"
+        ACT0002.start_frame = 0.0
+        ACT0002.end_frame = 13.170000076293945
+        ACT0002.layer = 0
+        ACT0002.priority = 0
+        ACT0002.play_mode = bge.logic.KX_ACTION_MODE_PLAY + 3
+        ACT0002.stop = False
+        ACT0002.layer_weight = 1.0
+        ACT0002.speed = 1.0
+        ACT0002.blendin = 0.0
+        ACT0002.blend_mode = bge.logic.KX_ACTION_BLEND_BLEND
+        network.add_cell(CON0000)
+        network.add_cell(ACT0002)
+        network.add_cell(ACT0001)
+        network._owner = owner
+        network.setup()
+        network.stopped = not owner.get('NL__NodeTree')
+        if args['Only Run At Startup']:
+            self.consumed = True
+        network.evaluate()
 
-    def update():
-        ...
+    def evaluate(self):
+        if self.consumed:
+            return
+        owner = self.object
+        if self.condition:
+            cond = owner[self.condition]
+            if not cond: return
+        network = self.network
+        if network.stopped: return
+        shutdown = network.evaluate()
+        if shutdown is True:
+            self.consumed = True
+
+
+class NodeTree(bge.types.KX_PythonComponent):
+
+    args = OrderedDict([
+        ("Only Run At Startup", False),
+        ("Execution Condition", "")
+    ])
+
+    def start(self, args):
+        self.logictree = NodeTreeWrapper(args)
+
+    def update(self):
+        self.logictree.evaluate()
+
 """
 
 # MODULE_TEMPLATE % {'start': lines}
@@ -83,6 +142,8 @@ class TreeCodeGenerator(object):
         self.write_init_content(tree, writer)
         indent = self.write_pulse_line(tree, writer)
         self.write_pulse_content(tree, writer, indent)
+        if tree.mode:
+            self.write_component_part(tree, writer, 0)
 
     def write_unloader(self, writer):
         writer.write_line("def unload_pyd(a, b):")
@@ -132,26 +193,17 @@ class TreeCodeGenerator(object):
         # for module in user_modules:
         #     line_writer.write_line('{} = bgelogic.load_user_logic("{}")', module, module)
         line_writer.write_line('')
-        # self.write_unloader(line_writer)
-        line_writer.write_line(f'class {tree_name}(bge.types.KX_PythonComponent):')
+        line_writer.write_line('')
+        line_writer.write_line(f'class {tree_name}Wrapper():')
         line_writer.write_line('')
         line_writer.set_indent_level(1)
-        line_writer.write_line('consumed = False')
-        line_writer.write_line('condition = ""')
-        line_writer.write_line('args = OrderedDict([')
-        line_writer.set_indent_level(2)
-        line_writer.write_line('("Only Run At Startup", False),')
-        line_writer.write_line('("Execution Condition", "")')
-        line_writer.set_indent_level(1)
-        line_writer.write_line('])')
-        line_writer.write_line('')
-        line_writer.write_line('def start(self, args):')
+        line_writer.write_line('def __init__(self, game_object, exec_cond="", startup=False):')
         line_writer.set_indent_level(2)
         line_writer.write_line("from uplogic import nodes, utils")
         line_writer.write_line("from uplogic.nodes.logictree import ULLogicTree")
         self.write_imports(tree, line_writer)
-        line_writer.write_line("self.condition = args['Execution Condition']")
-        line_writer.write_line("owner = self.object")
+        line_writer.write_line("self.condition = exec_cond")
+        line_writer.write_line("owner = self.owner = game_object")
         return line_writer
 
     def write_to_file(self, tree):
@@ -182,29 +234,24 @@ class TreeCodeGenerator(object):
         for varname in self._sort_cellvarnames(cell_var_names, uid_map):
             if not uid_map.is_removed(varname):
                 line_writer.write_line("network.add_cell({})", varname)
-        # line_writer.write_line('owner["IGNLTree_{}"] = network', tree.name)
+        tree_name = utils.make_valid_name(tree.name)
+        line_writer.write_line('owner["IGNLTree_{}"] = network', tree_name)
         line_writer.write_line("network._owner = owner")
         line_writer.write_line("network.setup()")
         line_writer.write_line("network.stopped = not owner.get('{}')", utils.get_key_network_initial_status_for_tree(tree))
-        if isinstance(line_writer, BLTextWrapper):
-            line_writer.write_line("if args['Only Run At Startup']:")
-            line_writer.set_indent_level(line_writer._indent_level + 1)
-            line_writer.write_line("self.consumed = True")
-            line_writer.write_line("network.evaluate()")
-            line_writer.set_indent_level(line_writer._indent_level - 1)
-        line_writer.write_line("return network")
+        line_writer.write_line("self.consumed = startup")
 
     def write_pulse_line(self, tree, line_writer):
         line_writer.set_indent_level(line_writer._indent_level - 1)
         line_writer.write_line("")
         if isinstance(line_writer, BLTextWrapper):
-            line_writer.write_line('def update(self):')
+            line_writer.write_line('def evaluate(self):')
             line_writer.set_indent_level(2)
             line_writer.write_line("if self.consumed:")
             line_writer.set_indent_level(3)
             line_writer.write_line("return")
             line_writer.set_indent_level(2)
-            line_writer.write_line("owner = self.object")
+            line_writer.write_line("owner = self.owner")
             line_writer.write_line("if self.condition:")
             line_writer.set_indent_level(3)
             line_writer.write_line("cond = owner[self.condition]")
@@ -232,49 +279,48 @@ class TreeCodeGenerator(object):
             line_writer.write_line("controller.sensors[0].repeat = False")
         else:
             line_writer.write_line("self.consumed = True")
-        line_writer.close()
 
-    def update_package(self):
-        this_module_dir = os.path.dirname(__file__)
-        bge_netlogic_dir = os.path.dirname(this_module_dir)
-        uplogic_dir = os.path.join(bge_netlogic_dir, 'uplogic')
-        import site
-        uplogic_path = os.path.join(site.getsitepackages()[-1], 'uplogic')
-
-        try:
-            if os.path.isdir(uplogic_path):
-                shutil.rmtree(uplogic_path)
-            os.mkdir(uplogic_path)
-            self.recreate_dir(uplogic_dir, uplogic_path)
-        except PermissionError:
-            initfile = self.create_text_file("__init__.py")
-            initfile.close()
-            self.rewrite_file('nodes.py', uplogic_dir, bpy.abspath('//bgelogic/'))
-
-    def recreate_dir(self, from_dir, to_dir):
-        for f in os.listdir(from_dir):
-            entry = os.path.join(from_dir, f)
-            if os.path.isdir(entry):
-                new_dir = os.path.join(to_dir, f)
-                os.mkdir(new_dir)
-                self.recreate_dir(entry, new_dir)
-            else:
-                self.rewrite_file(f, from_dir, to_dir)
-
-    def rewrite_file(self, f, from_path, to_path):
-        writer = self.create_text_file(f, os.path.join(to_path))
-        input_f = os.path.join(from_path, f)
-        bgelogic_source_code = None
-        with open(input_f, "r") as f:
-            bgelogic_source_code = f.read()
-        assert (bgelogic_source_code is not None)
-        writer.write_line(bgelogic_source_code)
-        writer.close()
+    def write_component_part(self, tree, line_writer, indent=0):
+        line_writer.set_indent_level(0)
+        line_writer.write_line('')
+        line_writer.write_line('')
+        tree_name = utils.make_valid_name(tree.name)
+        line_writer.write_line(f'class {tree_name}(bge.types.KX_PythonComponent):')
+        line_writer.set_indent_level(1)
+        line_writer.write_line('args = OrderedDict([')
+        line_writer.set_indent_level(2)
+        line_writer.write_line('("Only Run At Startup", False),')
+        line_writer.write_line('("Execution Condition", "")')
+        line_writer.set_indent_level(1)
+        line_writer.write_line('])')
+        line_writer.write_line('def start(self, args):')
+        line_writer.set_indent_level(2)
+        line_writer.write_line(f'self.logictree = {tree_name}Wrapper(')
+        line_writer.set_indent_level(3)
+        line_writer.write_line('self.object,')
+        line_writer.write_line('exec_cond=args["Execution Condition"],')
+        line_writer.write_line('startup=args["Only Run At Startup"]')
+        line_writer.set_indent_level(2)
+        line_writer.write_line(')')
+        line_writer.write_line('self.logictree.evaluate()')
+        line_writer.set_indent_level(1)
+        line_writer.write_line('def update(self):')
+        line_writer.set_indent_level(2)
+        line_writer.write_line('if not self.logictree.consumed:')
+        line_writer.set_indent_level(3)
+        line_writer.write_line('self.logictree.evaluate()')
+        line_writer.set_indent_level(0)
+        line_writer.write_line('')
+        line_writer.write_line('')
+        # self.write_unloader(line_writer)
+        line_writer.write_line('def get_tree(obj):')
+        line_writer.set_indent_level(1)
+        line_writer.write_line(f'return {tree_name}Wrapper(obj)')
 
     def _write_tree(self, tree, line_writer):
         uid_map = UIDMap()
         cell_uid = 0
-        node_cellvar_list = []
+        # node_cellvar_list = []
         for node in tree.nodes:
             prefix = None
             if not (

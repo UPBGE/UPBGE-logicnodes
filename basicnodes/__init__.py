@@ -9570,7 +9570,7 @@ class NLActionInstallSubNetwork(bpy.types.Node, NLActionNode):
         self.inputs.new(NLConditionSocket.bl_idname, "Condition")
         self.inputs.new(NLGameObjectSocket.bl_idname, "Target Object")
         self.inputs.new(NLSocketLogicTree.bl_idname, "Tree Name")
-        self.inputs.new(NLBooleanSocket.bl_idname, "Enabled")
+        self.inputs.new(NLBooleanSocket.bl_idname, "Initialize")
         self.inputs[-1].use_toggle = True
         self.outputs.new(NLConditionSocket.bl_idname, 'Done')
 
