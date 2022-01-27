@@ -8481,34 +8481,34 @@ class NLValueSwitchListCompare(bpy.types.Node, NLParameterNode):
     def init(self, context):
         NLParameterNode.init(self, context)
         self.hide = True
-        self.inputs.new(NLValueFieldSocket.bl_idname, "Compare X with:")
+        self.inputs.new(NLValueFieldSocket.bl_idname, "Switch:")
         self.inputs[-1].value = "X"
-        self.inputs.new(NLValueFieldSocket.bl_idname, "A")
+        self.inputs.new(NLValueFieldSocket.bl_idname, "Case A")
         self.inputs[-1].value = "_None_"
         self.inputs.new(NLValueFieldSocket.bl_idname, "")
         self.inputs[-1].value = "_None_"
-        self.inputs.new(NLValueFieldSocket.bl_idname, "B")
+        self.inputs.new(NLValueFieldSocket.bl_idname, "Case B")
         self.inputs[-1].value = "_None_"
         self.inputs.new(NLValueFieldSocket.bl_idname, "")
         self.inputs[-1].value = "_None_"
-        self.inputs.new(NLValueFieldSocket.bl_idname, "C")
+        self.inputs.new(NLValueFieldSocket.bl_idname, "Case C")
         self.inputs[-1].value = "_None_"
         self.inputs.new(NLValueFieldSocket.bl_idname, "")
         self.inputs[-1].value = "_None_"
-        self.inputs.new(NLValueFieldSocket.bl_idname, "D")
+        self.inputs.new(NLValueFieldSocket.bl_idname, "Case D")
         self.inputs[-1].value = "_None_"
         self.inputs.new(NLValueFieldSocket.bl_idname, "")
         self.inputs[-1].value = "_None_"
-        self.inputs.new(NLValueFieldSocket.bl_idname, "E")
+        self.inputs.new(NLValueFieldSocket.bl_idname, "Case E")
         self.inputs[-1].value = "_None_"
         self.inputs.new(NLValueFieldSocket.bl_idname, "")
         self.inputs[-1].value = "_None_"
-        self.inputs.new(NLValueFieldSocket.bl_idname, "F")
+        self.inputs.new(NLValueFieldSocket.bl_idname, "Case F")
         self.inputs[-1].value = "_None_"
         self.inputs.new(NLValueFieldSocket.bl_idname, "")
         self.inputs[-1].value = "_None_"
         self.outputs.new(NLParameterSocket.bl_idname,
-                         "A or B or C or D or E or F")
+                         "Output Case")
 
     def update_draw(self):
         for x in range(1, 13):
