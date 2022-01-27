@@ -8482,7 +8482,9 @@ class NLValueSwitchListCompare(bpy.types.Node, NLParameterNode):
         NLParameterNode.init(self, context)
         self.hide = True
         self.inputs.new(NLValueFieldSocket.bl_idname, "Switch:")
-        self.inputs[-1].value = "X"
+        self.inputs[-1].value = "_None_"
+        self.inputs.new(NLValueFieldSocket.bl_idname, "Default")
+        self.inputs[-1].value = "_None_"
         self.inputs.new(NLValueFieldSocket.bl_idname, "Case A")
         self.inputs[-1].value = "_None_"
         self.inputs.new(NLValueFieldSocket.bl_idname, "")
@@ -8511,7 +8513,7 @@ class NLValueSwitchListCompare(bpy.types.Node, NLParameterNode):
                          "Output Case")
 
     def update_draw(self):
-        for x in range(1, 13):
+        for x in range(2, 14):
             if self.inputs[x].is_linked or self.inputs[x].value != "_None_":
                 self.inputs[x].enabled = True
                 self.inputs[x+1].enabled = True
@@ -8525,7 +8527,7 @@ class NLValueSwitchListCompare(bpy.types.Node, NLParameterNode):
 
     def get_input_sockets_field_names(self):
         return [
-            "p0",
+            "p0", "val_default",
             "pa", 'val_a',
             "pb", 'val_b',
             "pc", 'val_c',
