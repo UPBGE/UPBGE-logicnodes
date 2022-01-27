@@ -93,11 +93,14 @@ _enum_type_casts = [
 
 _enum_distance_models = {
     ('INVERSE', 'Inverse', 'Sound will fade exponentially (Realistic)'),
-    ('INVERSE_CLAMPED', 'Inverse Clamped', 'Sound will fade exponentially (Realistic, Clamped)'),
+    ('INVERSE_CLAMPED', 'Inverse Clamped',
+     'Sound will fade exponentially (Realistic, Clamped)'),
     ('EXPONENT', 'Exponent', 'Sound will fade detemined by an exponent (Good audibility)'),
-    ('EXPONENT_CLAMPED', 'Exponent Clamped', 'Sound will fade detemined by an exponent (Good audibility, Clamped)'),
+    ('EXPONENT_CLAMPED', 'Exponent Clamped',
+     'Sound will fade detemined by an exponent (Good audibility, Clamped)'),
     ('LINEAR', 'Linear', 'Sound will fade in a linear relation to distance'),
-    ('LINEAR_CLAMPED', 'Linear Clamped', 'Sound will fade in a linear relation to distance (Clamped)'),
+    ('LINEAR_CLAMPED', 'Linear Clamped',
+     'Sound will fade in a linear relation to distance (Clamped)'),
     ('NONE', 'None', "Don't use a distance model")
 }
 
@@ -654,7 +657,6 @@ class NetLogicType:
 class NLSocket:
     valid_sockets: list = []
     nl_color: list = PARAMETER_SOCKET_COLOR
-    
 
     def __init__(self):
         self.valid_sockets = []
@@ -953,10 +955,12 @@ class NLCollisionMaskSocket(bpy.types.NodeSocket, NLSocket):
             row2 = col.row(align=True)
             idx = 0
             while idx < 8:
-                row.prop(self, f'slot_{idx}', text='', emboss=True, icon='BLANK1')
+                row.prop(self, f'slot_{idx}', text='',
+                         emboss=True, icon='BLANK1')
                 idx += 1
             while idx < 16:
-                row2.prop(self, f'slot_{idx}', text='', emboss=True, icon='BLANK1')
+                row2.prop(self, f'slot_{idx}', text='',
+                          emboss=True, icon='BLANK1')
                 idx += 1
 
     def get_unlinked_value(self):
@@ -1074,7 +1078,8 @@ class NLAbstractNode(NLNode):
             to_socket.validate(from_socket)
         except Exception as e:
             utils.error(e)
-            utils.debug('Receiving Node not a Logic Node Type, skipping validation.')
+            utils.debug(
+                'Receiving Node not a Logic Node Type, skipping validation.')
 
     def free(self):
         pass
@@ -1091,7 +1096,7 @@ class NLAbstractNode(NLNode):
     def update(self):
         update_tree_code(self, bpy.context)
 
-    #def draw_label(self):
+    # def draw_label(self):
     #    return self.__class__.bl_label
 
 
@@ -1669,7 +1674,7 @@ class NLGeomNodeTreeSocket(bpy.types.NodeSocket, NLSocket):
     bl_label = "Material"
     value: bpy.props.PointerProperty(
         name='Geometry Node Tree',
-        type=bpy.types.GeometryNodeTree ,
+        type=bpy.types.GeometryNodeTree,
         poll=filter_geometry_nodes,
         update=update_tree_code
     )
@@ -2128,13 +2133,15 @@ class NLSoundFileSocket(bpy.types.NodeSocket, NLSocket):
                 row2.prop(self, "filepath_value", text='')
             else:
                 row2.prop(self, "sound_value", text='')
-            row2.operator(bge_netlogic.ops.NLLoadSoundOperator.bl_idname, icon='FILEBROWSER', text='')
+            row2.operator(
+                bge_netlogic.ops.NLLoadSoundOperator.bl_idname, icon='FILEBROWSER', text='')
             # row.prop(self, 'use_path', icon='FILEBROWSER', text='')
 
     def get_unlinked_value(self):
         if not self.use_path and self.sound_value is None:
             return '"None"'
-        path = str(self.filepath_value) if self.use_path else str(self.sound_value.filepath)
+        path = str(self.filepath_value) if self.use_path else str(
+            self.sound_value.filepath)
         path = path.replace('\\', '/')
         if path.endswith('\\'):
             path = path[:-1]
@@ -2167,7 +2174,8 @@ class NLImageSocket(bpy.types.NodeSocket, NLSocket):
             row.label(text=text)
             row2 = col.row(align=True)
             row2.prop(self, "value", text='')
-            row2.operator(bge_netlogic.ops.NLLoadImageOperator.bl_idname, icon='FILEBROWSER', text='')
+            row2.operator(
+                bge_netlogic.ops.NLLoadImageOperator.bl_idname, icon='FILEBROWSER', text='')
 
     def get_unlinked_value(self):
         if self.value is None:
@@ -4203,7 +4211,7 @@ class NLGetVsyncNode(bpy.types.Node, NLParameterNode):
 
     def get_netlogic_class_name(self):
         return "ULGetVSync"
-    
+
     def get_output_socket_varnames(self):
         return ['OUT']
 
@@ -4223,7 +4231,7 @@ class NLGetFullscreen(bpy.types.Node, NLParameterNode):
 
     def get_netlogic_class_name(self):
         return "ULGetFullscreen"
-    
+
     def get_output_socket_varnames(self):
         return ['OUT']
 
@@ -4768,7 +4776,7 @@ class NLRunActuatorNode(bpy.types.Node, NLActionNode):
         self.inputs[-1].ref_index = 1
         self.inputs[-1].brick_type = 'actuators'
         self.outputs.new(NLConditionSocket.bl_idname, 'Done')
-    
+
     def get_controller(self):
         tree = getattr(bpy.context.space_data, 'edit_tree', None)
         obj_socket = self.inputs[1]
@@ -4907,7 +4915,8 @@ class NLVectorMath(bpy.types.Node, NLParameterNode):
             uids,
             line_writer
         )
-        line_writer.write_line("{}.{} = '{}'", cell_varname, "op", self.operator)
+        line_writer.write_line(
+            "{}.{} = '{}'", cell_varname, "op", self.operator)
 
 
 _nodes.append(NLVectorMath)
@@ -4971,7 +4980,7 @@ class NLVectorAngleCheck(bpy.types.Node, NLParameterNode):
             'operator',
             text=''
         )
-    
+
     def get_output_socket_varnames(self):
         return ['OUT', 'ANGLE']
 
@@ -4982,7 +4991,8 @@ class NLVectorAngleCheck(bpy.types.Node, NLParameterNode):
             uids,
             line_writer
         )
-        line_writer.write_line("{}.{} = '{}'", cell_varname, "op", self.operator)
+        line_writer.write_line(
+            "{}.{} = '{}'", cell_varname, "op", self.operator)
 
 
 _nodes.append(NLVectorAngleCheck)
@@ -5157,6 +5167,7 @@ class NLActiveCameraParameterNode(bpy.types.Node, NLParameterNode):
     def get_output_socket_varnames(self):
         return ["OUT"]
 
+
 _nodes.append(NLActiveCameraParameterNode)
 
 
@@ -5325,11 +5336,11 @@ class NLArithmeticOpParameterNode(bpy.types.Node, NLParameterNode):
 
     def get_nonsocket_fields(self):
         return [
-                (
-                    "operator", lambda:
+            (
+                "operator", lambda:
                     f'ULMath.op_by_code("{self.operator}")'
-                )
-            ]
+            )
+        ]
 
     def get_netlogic_class_name(self):
         return "ULMath"
@@ -5369,13 +5380,13 @@ class NLThresholdNode(bpy.types.Node, NLParameterNode):
 
     def get_nonsocket_fields(self):
         return [
-                (
-                    "operator", lambda:
+            (
+                "operator", lambda:
                     'ULThreshold.op_by_code("{}")'.format(
                         self.operator
                     )
-                )
-            ]
+            )
+        ]
 
     def get_netlogic_class_name(self):
         return "ULThreshold"
@@ -5411,13 +5422,13 @@ class NLRangedThresholdNode(bpy.types.Node, NLParameterNode):
 
     def get_nonsocket_fields(self):
         return [
-                (
-                    "operator", lambda:
+            (
+                "operator", lambda:
                     'ULRangedThreshold.op_by_code("{}")'.format(
                         self.operator
                     )
-                )
-            ]
+            )
+        ]
 
     def get_netlogic_class_name(self):
         return "ULRangedThreshold"
@@ -5454,13 +5465,13 @@ class NLLimitRange(bpy.types.Node, NLParameterNode):
 
     def get_nonsocket_fields(self):
         return [
-                (
-                    "operator", lambda:
+            (
+                "operator", lambda:
                     'ULLimitRange.op_by_code("{}")'.format(
                         self.operator
                     )
-                )
-            ]
+            )
+        ]
 
     def get_netlogic_class_name(self):
         return "ULLimitRange"
@@ -5470,6 +5481,7 @@ class NLLimitRange(bpy.types.Node, NLParameterNode):
 
     def get_output_socket_varnames(self):
         return ['OUT']
+
 
 _nodes.append(NLLimitRange)
 
@@ -5497,13 +5509,13 @@ class NLWithinRangeNode(bpy.types.Node, NLParameterNode):
 
     def get_nonsocket_fields(self):
         return [
-                (
-                    "operator", lambda:
+            (
+                "operator", lambda:
                     'ULWithinRange.op_by_code("{}")'.format(
                         self.operator
                     )
-                )
-            ]
+            )
+        ]
 
     def get_netlogic_class_name(self):
         return "ULWithinRange"
@@ -5573,7 +5585,7 @@ class NLGetSound(bpy.types.Node, NLParameterNode):
     bl_label = "Get Sound"
     bl_icon = 'FILE_SOUND'
     nl_category = "File"
-    nl_module = 'parameters'    
+    nl_module = 'parameters'
 
     def init(self, context):
         NLParameterNode.init(self, context)
@@ -6260,6 +6272,7 @@ class NLParameterMatrixToEulerNode(bpy.types.Node, NLParameterNode):
     def set_props(self, writer, node):
         writer.write_line(f'{node}.output = {self.output}')
 
+
 _nodes.append(NLParameterMatrixToEulerNode)
 
 
@@ -6812,6 +6825,7 @@ class NLMousePressedCondition(bpy.types.Node, NLConditionNode):
 
     def get_output_socket_varnames(self):
         return ['OUT']
+
 
 _nodes.append(NLMousePressedCondition)
 
@@ -7426,7 +7440,6 @@ class NLConditionLogicOperation(bpy.types.Node, NLConditionNode):
         return ['RESULT']
 
 
-
 _nodes.append(NLConditionLogicOperation)
 
 
@@ -7459,7 +7472,7 @@ class NLConditionCompareVecs(bpy.types.Node, NLConditionNode):
 
     def get_input_sockets_field_names(self):
         return ['all', 'threshold', "param_a", "param_b"]
-    
+
     def get_output_socket_varnames(self):
         return ['OUT']
 
@@ -8263,13 +8276,13 @@ class NLAddToGameObjectGamePropertyActionNode(bpy.types.Node, NLActionNode):
 
     def get_nonsocket_fields(self):
         return [
-                (
-                    "operator", lambda:
+            (
+                "operator", lambda:
                     'ULModifyProperty.op_by_code("{}")'.format(
                         self.operator
                     )
-                )
-            ]
+            )
+        ]
 
     def get_input_sockets_field_names(self):
         return [
@@ -8384,6 +8397,164 @@ class NLValueSwitch(bpy.types.Node, NLParameterNode):
 
 
 _nodes.append(NLValueSwitch)
+
+
+class NLValueSwitchList(bpy.types.Node, NLParameterNode):
+    bl_idname = "NLValueSwitchList"
+    bl_label = "Value Switch List"
+    bl_width_min = 100
+    bl_width_default = 160
+    nl_category = "Values"
+    nl_module = 'parameters'
+
+    def init(self, context):
+        NLParameterNode.init(self, context)
+        self.hide = True
+        self.inputs.new(NLBooleanSocket.bl_idname, "if A")
+        self.inputs.new(NLValueFieldSocket.bl_idname, "")
+        self.inputs[-1].value = "A"
+        self.inputs.new(NLBooleanSocket.bl_idname, "elif B")
+        self.inputs.new(NLValueFieldSocket.bl_idname, "")
+        self.inputs[-1].value = "B"
+        self.inputs.new(NLBooleanSocket.bl_idname, "elif C")
+        self.inputs.new(NLValueFieldSocket.bl_idname, "")
+        self.inputs[-1].value = "C"
+        self.inputs.new(NLBooleanSocket.bl_idname, "elif D")
+        self.inputs.new(NLValueFieldSocket.bl_idname, "")
+        self.inputs[-1].value = "D"
+        self.inputs.new(NLBooleanSocket.bl_idname, "elif E")
+        self.inputs.new(NLValueFieldSocket.bl_idname, "")
+        self.inputs[-1].value = "E"
+        self.inputs.new(NLBooleanSocket.bl_idname, "elif F")
+        self.inputs.new(NLValueFieldSocket.bl_idname, "")
+        self.inputs[-1].value = "F"
+        self.outputs.new(NLParameterSocket.bl_idname,
+                         "A or B or C or D or E or F")
+
+    def update_draw(self):
+        for x in range(0, 12, 2):
+            if self.inputs[x].is_linked or self.inputs[x].value == True:
+                self.inputs[x].enabled = True
+                self.inputs[x+1].enabled = True
+                self.inputs[x+2].enabled = True
+            elif not self.inputs[x+1].is_linked:
+                self.inputs[x+1].enabled = False
+                self.inputs[x+2].enabled = False
+
+    def get_netlogic_class_name(self):
+        return "ULValueSwitchList"
+
+    def get_input_sockets_field_names(self):
+        return [
+            "ca", 'val_a',
+            "cb", 'val_b',
+            "cc", 'val_c',
+            "cd", 'val_d',
+            "ce", 'val_e',
+            "cf", 'val_f'
+        ]
+
+    def get_output_socket_varnames(self):
+        return ['VAL']
+
+
+_nodes.append(NLValueSwitchList)
+
+
+class NLValueSwitchListCompare(bpy.types.Node, NLParameterNode):
+    bl_idname = "NLValueSwitchListCompare"
+    bl_label = "Value Switch List Compare"
+    bl_width_min = 100
+    bl_width_default = 172
+    nl_category = "Values"
+    nl_module = 'parameters'
+
+    operator: bpy.props.EnumProperty(
+        name='Operator',
+        items=_enum_logic_operators,
+        update=update_tree_code
+    )
+
+    def draw_buttons(self, context, layout):
+        layout.prop(self, "operator", text='')
+
+    def init(self, context):
+        NLParameterNode.init(self, context)
+        self.hide = True
+        self.inputs.new(NLValueFieldSocket.bl_idname, "Switch:")
+        self.inputs[-1].value = "_None_"
+        self.inputs.new(NLValueFieldSocket.bl_idname, "Default")
+        self.inputs[-1].value = "_None_"
+        self.inputs.new(NLValueFieldSocket.bl_idname, "Case A")
+        self.inputs[-1].value = "_None_"
+        self.inputs.new(NLValueFieldSocket.bl_idname, "")
+        self.inputs[-1].value = "_None_"
+        self.inputs.new(NLValueFieldSocket.bl_idname, "Case B")
+        self.inputs[-1].value = "_None_"
+        self.inputs.new(NLValueFieldSocket.bl_idname, "")
+        self.inputs[-1].value = "_None_"
+        self.inputs.new(NLValueFieldSocket.bl_idname, "Case C")
+        self.inputs[-1].value = "_None_"
+        self.inputs.new(NLValueFieldSocket.bl_idname, "")
+        self.inputs[-1].value = "_None_"
+        self.inputs.new(NLValueFieldSocket.bl_idname, "Case D")
+        self.inputs[-1].value = "_None_"
+        self.inputs.new(NLValueFieldSocket.bl_idname, "")
+        self.inputs[-1].value = "_None_"
+        self.inputs.new(NLValueFieldSocket.bl_idname, "Case E")
+        self.inputs[-1].value = "_None_"
+        self.inputs.new(NLValueFieldSocket.bl_idname, "")
+        self.inputs[-1].value = "_None_"
+        self.inputs.new(NLValueFieldSocket.bl_idname, "Case F")
+        self.inputs[-1].value = "_None_"
+        self.inputs.new(NLValueFieldSocket.bl_idname, "")
+        self.inputs[-1].value = "_None_"
+        self.outputs.new(NLParameterSocket.bl_idname,
+                         "Output Case")
+
+    def update_draw(self):
+        for x in range(2, 14):
+            if self.inputs[x].is_linked or self.inputs[x].value != "_None_":
+                self.inputs[x].enabled = True
+                self.inputs[x+1].enabled = True
+                self.inputs[x+2].enabled = True
+            elif not self.inputs[x+1].is_linked:
+                self.inputs[x+1].enabled = False
+                self.inputs[x+2].enabled = False
+
+    def get_netlogic_class_name(self):
+        return "ULValueSwitchListCompare"
+
+    def get_input_sockets_field_names(self):
+        return [
+            "p0", "val_default",
+            "pa", 'val_a',
+            "pb", 'val_b',
+            "pc", 'val_c',
+            "pd", 'val_d',
+            "pe", 'val_e',
+            "pf", 'val_f'
+        ]
+
+    def setup(self, cell_varname, uids, line_writer):
+        NLNode.setup(
+            self,
+            cell_varname,
+            uids,
+            line_writer
+        )
+        line_writer.write_line(
+            "{}.{} = {}",
+            cell_varname,
+            "operator",
+            self.operator
+        )
+
+    def get_output_socket_varnames(self):
+        return ['RESULT']
+
+
+_nodes.append(NLValueSwitchListCompare)
 
 
 class NLInvertValueNode(bpy.types.Node, NLParameterNode):
@@ -10150,7 +10321,8 @@ class NLActionSaveVariable(bpy.types.Node, NLActionNode):
     nl_category = "Variables"
     nl_module = 'actions'
 
-    file_name: bpy.props.StringProperty(update=update_tree_code, default='variables')
+    file_name: bpy.props.StringProperty(
+        update=update_tree_code, default='variables')
     custom_path: bpy.props.BoolProperty(update=update_tree_code)
     path: bpy.props.StringProperty(
         subtype='DIR_PATH',
@@ -10200,7 +10372,7 @@ class NLActionSaveVariable(bpy.types.Node, NLActionNode):
                 path_formatted
             ) if self.custom_path else "''"
         ),
-        (
+            (
             "file_name",
             lambda: "'{}'".format(
                 self.file_name
@@ -10220,7 +10392,8 @@ class NLActionSaveVariables(bpy.types.Node, NLActionNode):
     nl_category = "Variables"
     nl_module = 'actions'
 
-    file_name: bpy.props.StringProperty(update=update_tree_code, default='variables')
+    file_name: bpy.props.StringProperty(
+        update=update_tree_code, default='variables')
     custom_path: bpy.props.BoolProperty(update=update_tree_code)
     path: bpy.props.StringProperty(
         subtype='DIR_PATH',
@@ -10268,7 +10441,7 @@ class NLActionSaveVariables(bpy.types.Node, NLActionNode):
                 path_formatted
             ) if self.custom_path else "''"
         ),
-        (
+            (
             "file_name",
             lambda: "'{}'".format(
                 self.file_name
@@ -10311,7 +10484,8 @@ class NLActionLoadVariable(bpy.types.Node, NLActionNode):
     nl_category = "Variables"
     nl_module = 'parameters'
 
-    file_name: bpy.props.StringProperty(update=update_tree_code, default='variables')
+    file_name: bpy.props.StringProperty(
+        update=update_tree_code, default='variables')
     custom_path: bpy.props.BoolProperty(update=update_tree_code)
     path: bpy.props.StringProperty(
         subtype='DIR_PATH',
@@ -10359,7 +10533,7 @@ class NLActionLoadVariable(bpy.types.Node, NLActionNode):
                 path_formatted
             ) if self.custom_path else "''"
         ),
-        (
+            (
             "file_name",
             lambda: "'{}'".format(
                 self.file_name
@@ -10379,7 +10553,8 @@ class NLActionLoadVariables(bpy.types.Node, NLActionNode):
     nl_category = "Variables"
     nl_module = 'parameters'
 
-    file_name: bpy.props.StringProperty(update=update_tree_code, default='variables')
+    file_name: bpy.props.StringProperty(
+        update=update_tree_code, default='variables')
     custom_path: bpy.props.BoolProperty(update=update_tree_code)
     path: bpy.props.StringProperty(
         subtype='DIR_PATH',
@@ -10425,7 +10600,7 @@ class NLActionLoadVariables(bpy.types.Node, NLActionNode):
                 path_formatted
             ) if self.custom_path else "''"
         ),
-        (
+            (
             "file_name",
             lambda: "'{}'".format(
                 self.file_name
@@ -10445,7 +10620,8 @@ class NLActionRemoveVariable(bpy.types.Node, NLActionNode):
     nl_category = "Variables"
     nl_module = 'actions'
 
-    file_name: bpy.props.StringProperty(update=update_tree_code, default='variables')
+    file_name: bpy.props.StringProperty(
+        update=update_tree_code, default='variables')
     custom_path: bpy.props.BoolProperty(update=update_tree_code)
     path: bpy.props.StringProperty(
         subtype='DIR_PATH',
@@ -10494,7 +10670,7 @@ class NLActionRemoveVariable(bpy.types.Node, NLActionNode):
                 path_formatted
             ) if self.custom_path else "''"
         ),
-        (
+            (
             "file_name",
             lambda: "'{}'".format(
                 self.file_name
@@ -10514,7 +10690,8 @@ class NLActionClearVariables(bpy.types.Node, NLActionNode):
     nl_category = "Variables"
     nl_module = 'actions'
 
-    file_name: bpy.props.StringProperty(update=update_tree_code, default='variables')
+    file_name: bpy.props.StringProperty(
+        update=update_tree_code, default='variables')
     custom_path: bpy.props.BoolProperty(update=update_tree_code)
     path: bpy.props.StringProperty(
         subtype='DIR_PATH',
@@ -10561,7 +10738,7 @@ class NLActionClearVariables(bpy.types.Node, NLActionNode):
                 path_formatted
             ) if self.custom_path else "''"
         ),
-        (
+            (
             "file_name",
             lambda: "'{}'".format(
                 self.file_name
@@ -10581,7 +10758,8 @@ class NLActionListVariables(bpy.types.Node, NLActionNode):
     nl_category = "Variables"
     nl_module = 'actions'
 
-    file_name: bpy.props.StringProperty(update=update_tree_code, default='variables')
+    file_name: bpy.props.StringProperty(
+        update=update_tree_code, default='variables')
     custom_path: bpy.props.BoolProperty(update=update_tree_code)
     path: bpy.props.StringProperty(
         subtype='DIR_PATH',
@@ -10630,7 +10808,7 @@ class NLActionListVariables(bpy.types.Node, NLActionNode):
                 path_formatted
             ) if self.custom_path else "''"
         ),
-        (
+            (
             "file_name",
             lambda: "'{}'".format(
                 self.file_name
@@ -10716,7 +10894,7 @@ class NLActionSetCharacterWalkDir(bpy.types.Node, NLActionNode):
 
     def get_output_socket_varnames(self):
         return ["OUT"]
-    
+
     def draw_buttons(self, context, layout):
         layout.prop(
             self,
@@ -10730,7 +10908,7 @@ class NLActionSetCharacterWalkDir(bpy.types.Node, NLActionNode):
 
     def get_input_sockets_field_names(self):
         return ["condition", "game_object", 'walkDir']
-    
+
     def get_nonsocket_fields(self):
         return [("local", lambda: "True" if self.local else "False")]
 
@@ -10757,7 +10935,7 @@ class NLActionSetCharacterVelocity(bpy.types.Node, NLActionNode):
 
     def get_output_socket_varnames(self):
         return ["OUT"]
-    
+
     def draw_buttons(self, context, layout):
         layout.prop(
             self,
@@ -10771,7 +10949,7 @@ class NLActionSetCharacterVelocity(bpy.types.Node, NLActionNode):
 
     def get_input_sockets_field_names(self):
         return ["condition", "game_object", 'vel', 'time']
-    
+
     def get_nonsocket_fields(self):
         return [("local", lambda: "True" if self.local else "False")]
 
@@ -11512,7 +11690,7 @@ class NLActionAlignAxisToVector(bpy.types.Node, NLActionNode):
         self.inputs.new(NLSocketAlphaFloat.bl_idname, "Factor")
         self.inputs[-1].value = 1.0
         self.outputs.new(NLConditionSocket.bl_idname, 'Done')
-    
+
     def draw_buttons(self, context, layout):
         layout.prop(
             self,
@@ -11529,7 +11707,7 @@ class NLActionAlignAxisToVector(bpy.types.Node, NLActionNode):
 
     def get_input_sockets_field_names(self):
         return ["condition", "game_object", "vector", "axis", 'factor']
-    
+
     def get_nonsocket_fields(self):
         return [("local", lambda: "True" if self.local else "False")]
 
@@ -12046,7 +12224,7 @@ class NLSetBoneConstraintInfluence(bpy.types.Node, NLActionNode):
         self.inputs[3].enabled = (
             self.inputs[2].enabled and
             (self.inputs[2].value != '' or
-            self.inputs[2].is_linked)
+             self.inputs[2].is_linked)
         )
 
     def get_output_socket_varnames(self):
@@ -12096,7 +12274,7 @@ class NLSetBoneConstraintTarget(bpy.types.Node, NLActionNode):
         self.inputs[3].enabled = (
             self.inputs[2].enabled and
             (self.inputs[2].value != '' or
-            self.inputs[2].is_linked)
+             self.inputs[2].is_linked)
         )
 
     def get_output_socket_varnames(self):
@@ -12147,7 +12325,7 @@ class NLSetBoneConstraintAttribute(bpy.types.Node, NLActionNode):
         self.inputs[3].enabled = (
             self.inputs[2].enabled and
             (self.inputs[2].value != '' or
-            self.inputs[2].is_linked)
+             self.inputs[2].is_linked)
         )
 
     def get_output_socket_varnames(self):
@@ -12673,7 +12851,6 @@ class NLActionRestartGame(bpy.types.Node, NLActionNode):
     nl_category = "Game"
     nl_module = 'actions'
 
-
     def init(self, context):
         NLActionNode.init(self, context)
         self.inputs.new(NLConditionSocket.bl_idname, "Condition")
@@ -12733,7 +12910,7 @@ class NLParameterReceiveMessage(bpy.types.Node, NLParameterNode):
 
     def get_input_sockets_field_names(self):
         return ['subject']
-    
+
     def get_output_socket_varnames(self):
         return ["OUT", 'BODY', 'TARGET']
 
@@ -12828,7 +13005,7 @@ class NLActionCreateMessage(bpy.types.Node, NLActionNode):
         adv = [2, 3]
         for x in adv:
             self.inputs[x].enabled = self.advanced
-    
+
     def draw_buttons(self, context, layout):
         layout.prop(self, 'advanced', text='Advanced', icon='SETTINGS')
 
@@ -13207,7 +13384,7 @@ class NLActionFollowPath(bpy.types.Node, NLActionNode):
         self.inputs.new(NLConditionSocket.bl_idname, "Condition")
         self.inputs.new(NLGameObjectSocket.bl_idname, "Moving Object")
         self.inputs.new(NLGameObjectSocket.bl_idname, "Rotating Object")
-        self.inputs.new(NLListSocket.bl_idname,"Path Points")
+        self.inputs.new(NLListSocket.bl_idname, "Path Points")
         self.inputs.new(NLBooleanSocket.bl_idname, "Loop")
         self.inputs.new(NLBooleanSocket.bl_idname, "Continue")
         self.inputs.new(NLNavMeshSocket.bl_idname, "Optional Navmesh")
