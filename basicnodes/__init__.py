@@ -9380,9 +9380,7 @@ class NLInitEmptyList(bpy.types.Node, NLParameterNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
-        self.inputs.new(NLPseudoConditionSocket.bl_idname, 'Condition')
         self.inputs.new(NLIntegerFieldSocket.bl_idname, 'Length')
-        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
         self.outputs.new(NLListSocket.bl_idname, 'List')
 
     def get_output_socket_varnames(self):
@@ -10348,7 +10346,7 @@ class NLActionLoadVariable(bpy.types.Node, NLActionNode):
         return "ULLoadVariable"
 
     def get_input_sockets_field_names(self):
-        return ["condition", 'name']
+        return ['name']
 
     def get_nonsocket_fields(self):
         s_path = self.path
