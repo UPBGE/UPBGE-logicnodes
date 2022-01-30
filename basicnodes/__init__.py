@@ -1,4 +1,3 @@
-import re
 import math
 import bpy
 import bge_netlogic
@@ -159,10 +158,6 @@ _enum_field_value_types = [
     ("BOOLEAN", "Bool", "A True/False value"),
     ("FILE_PATH", "File Path", 'Choose a file path')
 ]
-_enum_boolean_values = [
-    ("True", "TRUE", "The True value"),
-    ("False", "FALSE", "The False value")
-]
 
 _enum_numeric_field_value_types = [
     ("NONE", "None", "The None value"),
@@ -183,22 +178,6 @@ _enum_vehicle_axis = [
     ("ALL", "All", "Apply to all wheels")
 ]
 
-_enum_optional_positive_float_value_types = [
-    ("NONE", "None", "No value"),
-    ("FLOAT", "Float", "A positive decimal value")
-]
-
-_enum_add_scene_types = [
-    ("1", "Overlay", "Draw on top of the 3D environment"),
-    ("0", "Underlay", "Draw as background of the 3D environment")
-]
-
-_enum_mouse_motion = [
-    ("UP", "Mouse Up", "Mouse moves up"),
-    ("DOWN", "Mouse Down", "Mouse moves down"),
-    ("LEFT", "Mouse Left", "Mouse moves left"),
-    ("RIGHT", "Mouse Right", "Mouse moves right")
-]
 
 _enum_loop_count_values = [
     (
@@ -6062,7 +6041,7 @@ class NLVectorLength(bpy.types.Node, NLParameterNode):
 
     def init(self, context):
         NLParameterNode.init(self, context)
-        self.inputs.new(NLVec3FieldSocket.bl_idname, 'Vector')
+        self.inputs.new(NLParameterSocket.bl_idname, 'Length')
         self.outputs.new(NLVec3FieldSocket.bl_idname, "Vector")
 
     def get_netlogic_class_name(self):

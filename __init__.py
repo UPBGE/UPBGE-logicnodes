@@ -157,7 +157,12 @@ def _reload_texts(self, context):
     else:
         for t in bpy.data.texts:
             if t.filepath:
-                with open(t.filepath) as f:
+                path = (
+                    os.path.join(bpy.path.abspath('//'), t.filepath[2:])
+                    if t.filepath.startswith('//')
+                    else t.filepath
+                )
+                with open(path) as f:
                     t.clear()
                     t.write(f.read())
 
