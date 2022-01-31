@@ -9126,6 +9126,38 @@ class NLActionSetGameObjectVisibility(bpy.types.Node, NLActionNode):
 _nodes.append(NLActionSetGameObjectVisibility)
 
 
+class NLActionSetCollectionVisibility(bpy.types.Node, NLActionNode):
+    bl_idname = "NLActionSetCollectionVisibility"
+    bl_label = "Set Collection Visibility"
+    bl_icon = 'HIDE_OFF'
+    nl_category = "Scene"
+    nl_subcat = 'Collections'
+    nl_module = 'actions'
+
+    def init(self, context):
+        NLActionNode.init(self, context)
+        self.inputs.new(NLConditionSocket.bl_idname, "Condition")
+        self.inputs.new(NLCollectionSocket.bl_idname, "Collection")
+        self.inputs.new(NLBooleanSocket.bl_idname, "Visible")
+        socket = self.inputs[-1]
+        socket.use_toggle = True
+        socket.true_label = "Visible"
+        socket.false_label = "Not Visibile"
+        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+
+    def get_output_socket_varnames(self):
+        return ["OUT"]
+
+    def get_netlogic_class_name(self):
+        return "ULSetCollectionVisibility"
+
+    def get_input_sockets_field_names(self):
+        return ["condition", "collection", "visible"]
+
+
+_nodes.append(NLActionSetCollectionVisibility)
+
+
 class NLSetCurvePoints(bpy.types.Node, NLActionNode):
     bl_idname = "NLSetCurvePoints"
     bl_label = "Set Curve Points"
