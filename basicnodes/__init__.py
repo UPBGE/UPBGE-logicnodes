@@ -9151,7 +9151,8 @@ class NLActionSetCollectionVisibility(bpy.types.Node, NLActionNode):
     bl_idname = "NLActionSetCollectionVisibility"
     bl_label = "Set Collection Visibility"
     bl_icon = 'HIDE_OFF'
-    nl_category = "Objects"
+    nl_category = "Scene"
+    nl_subcat = 'Collections'
     nl_module = 'actions'
 
     def init(self, context):
