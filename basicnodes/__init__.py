@@ -9143,6 +9143,7 @@ class NLActionSetCollectionVisibility(bpy.types.Node, NLActionNode):
         socket.use_toggle = True
         socket.true_label = "Visible"
         socket.false_label = "Not Visibile"
+        self.inputs.new(NLBooleanSocket.bl_idname, "Include Children")
         self.outputs.new(NLConditionSocket.bl_idname, 'Done')
 
     def get_output_socket_varnames(self):
@@ -9152,7 +9153,7 @@ class NLActionSetCollectionVisibility(bpy.types.Node, NLActionNode):
         return "ULSetCollectionVisibility"
 
     def get_input_sockets_field_names(self):
-        return ["condition", "collection", "visible"]
+        return ["condition", "collection", "visible", "recursive"]
 
 
 _nodes.append(NLActionSetCollectionVisibility)
