@@ -13,12 +13,22 @@ class BLTextWrapper(AbstractTextBuffer):
     _indent = ''
 
     def __init__(self, name):
+        text = self.get_text(name)
+        if text is None:
+            utils.error('Could not find or generate text file')
+        self.text = text
+
+    def get_text(self, name):
         text = bpy.data.texts.get(name)
         if text is None:
             bpy.ops.text.new()
-            text = bpy.data.texts[-1]
+            for t in bpy.data.texts:
+                if t.library:
+                    break
+                else:
+                    text = t
             text.name = name
-        self.text = text
+        return text
 
     def clear(self):
         self.text.clear()
