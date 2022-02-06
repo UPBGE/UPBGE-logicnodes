@@ -16,6 +16,7 @@ class BLTextWrapper(AbstractTextBuffer):
         text = self.get_text(name)
         if text is None:
             utils.error('Could not find or generate text file')
+        print(text)
         self.text = text
 
     def get_text(self, name):
@@ -23,7 +24,7 @@ class BLTextWrapper(AbstractTextBuffer):
         if text is None:
             bpy.ops.text.new()
             for t in bpy.data.texts:
-                if t.library:
+                if t.library is not None:
                     break
                 else:
                     text = t
