@@ -8955,7 +8955,7 @@ class NLActionRayCastNode(bpy.types.Node, NLActionNode):
         self.outputs.new(NLVec3FieldSocket.bl_idname, "Picked Point")
         self.outputs.new(NLVec3FieldSocket.bl_idname, "Picked Normal")
         self.outputs.new(NLVec3FieldSocket.bl_idname, "Ray Direction")
-        self.outputs.new(NLMaterialSocket.bl_idname, "Material")
+        self.outputs.new(NLParameterSocket.bl_idname, "Material Name")
         self.outputs.new(NLVec2FieldSocket.bl_idname, "UV Coords")
 
     def update_draw(self):
