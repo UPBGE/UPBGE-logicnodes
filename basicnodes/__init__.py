@@ -8968,6 +8968,8 @@ class NLActionRayCastNode(bpy.types.Node, NLActionNode):
             ipts[7],
             ipts[8],
             ipts[10],
+            opts[3],
+            opts[4],
             opts[5],
             opts[6]
         ]
