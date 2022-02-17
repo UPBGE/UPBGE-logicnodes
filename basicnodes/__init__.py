@@ -8928,6 +8928,7 @@ _nodes.append(NLSetObjectAttributeActionNode)
 class NLActionRayCastNode(bpy.types.Node, NLActionNode):
     bl_idname = "NLActionRayCastNode"
     bl_label = "Raycast"
+    bl_width_default = 180
     nl_category = "Ray Casts"
     nl_module = 'actions'
     advanced: bpy.props.BoolProperty(
@@ -8955,7 +8956,7 @@ class NLActionRayCastNode(bpy.types.Node, NLActionNode):
         self.outputs.new(NLVec3FieldSocket.bl_idname, "Picked Point")
         self.outputs.new(NLVec3FieldSocket.bl_idname, "Picked Normal")
         self.outputs.new(NLVec3FieldSocket.bl_idname, "Ray Direction")
-        self.outputs.new(NLParameterSocket.bl_idname, "Material Name")
+        self.outputs.new(NLParameterSocket.bl_idname, "Face Material Name")
         self.outputs.new(NLVec2FieldSocket.bl_idname, "UV Coords")
 
     def update_draw(self):
