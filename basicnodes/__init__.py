@@ -8928,7 +8928,7 @@ _nodes.append(NLSetObjectAttributeActionNode)
 class NLActionRayCastNode(bpy.types.Node, NLActionNode):
     bl_idname = "NLActionRayCastNode"
     bl_label = "Raycast"
-    bl_width_default = 180
+    # bl_width_default = 180
     nl_category = "Ray Casts"
     nl_module = 'actions'
     advanced: bpy.props.BoolProperty(
