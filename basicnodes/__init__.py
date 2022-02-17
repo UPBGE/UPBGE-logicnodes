@@ -4618,13 +4618,14 @@ class NLGetDictKeyNode(bpy.types.Node, NLParameterNode):
         self.inputs.new(NLDictSocket.bl_idname, "Dictionary")
         self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Key")
         self.inputs[-1].value = 'key'
+        self.inputs.new(NLOptionalValueFieldSocket.bl_idname, "Default Value")
         self.outputs.new(NLParameterSocket.bl_idname, "Property Value")
 
     def get_netlogic_class_name(self):
         return "ULDictValue"
 
     def get_input_sockets_field_names(self):
-        return ["dict", "key"]
+        return ["dict", "key", 'default_value']
 
     def get_output_socket_varnames(self):
         return ['OUT']
