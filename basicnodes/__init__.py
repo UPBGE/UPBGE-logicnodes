@@ -8942,6 +8942,8 @@ class NLActionRayCastNode(bpy.types.Node, NLActionNode):
         self.inputs.new(NLVec3FieldSocket.bl_idname, "Aim")
         self.inputs.new(NLBooleanSocket.bl_idname, "Local")
         self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Property")
+        self.inputs.new(NLMaterialSocket.bl_idname, "Material")
+        self.inputs.new(NLBooleanSocket.bl_idname, "Exclude")
         self.inputs.new(NLBooleanSocket.bl_idname, 'X-Ray')
         self.inputs.new(NLBooleanSocket.bl_idname, "Custom Distance")
         self.inputs.new(NLPositiveFloatSocket.bl_idname, "Distance")
@@ -8952,16 +8954,25 @@ class NLActionRayCastNode(bpy.types.Node, NLActionNode):
         self.outputs.new(NLVec3FieldSocket.bl_idname, "Picked Point")
         self.outputs.new(NLVec3FieldSocket.bl_idname, "Picked Normal")
         self.outputs.new(NLVec3FieldSocket.bl_idname, "Ray Direction")
+        self.outputs.new(NLMaterialSocket.bl_idname, "Material")
+        self.outputs.new(NLVec2FieldSocket.bl_idname, "UV Coords")
 
     def update_draw(self):
         ipts = self.inputs
+        opts = self.outputs
         adv = [
+            ipts[4],
             ipts[5],
-            ipts[6]
+            ipts[6],
+            ipts[7],
+            ipts[8],
+            ipts[10],
+            opts[5],
+            opts[6]
         ]
         for i in adv:
             i.enabled = self.advanced
-        self.inputs[7].enabled = self.inputs[6].value and self.advanced
+        self.inputs[9].enabled = self.inputs[8].value and self.advanced
 
     def draw_buttons(self, context, layout):
         layout.prop(self, 'advanced', text='Advanced', icon='SETTINGS')
@@ -8976,6 +8987,8 @@ class NLActionRayCastNode(bpy.types.Node, NLActionNode):
             "destination",
             'local',
             "property_name",
+            "material",
+            "exclude",
             'xray',
             'custom_dist',
             "distance",
