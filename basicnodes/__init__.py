@@ -10529,6 +10529,7 @@ class NLActionLoadVariable(bpy.types.Node, NLActionNode):
         NLActionNode.init(self, context)
         self.inputs.new(NLQuotedStringFieldSocket.bl_idname, 'Name')
         self.inputs[-1].value = 'var'
+        self.inputs.new(NLOptionalValueFieldSocket.bl_idname, 'Default Value')
         self.outputs.new(NLParameterSocket.bl_idname, 'Value')
 
     def draw_buttons(self, context, layout):
@@ -10549,7 +10550,7 @@ class NLActionLoadVariable(bpy.types.Node, NLActionNode):
         return "ULLoadVariable"
 
     def get_input_sockets_field_names(self):
-        return ['name']
+        return ['name', 'default_value']
 
     def get_nonsocket_fields(self):
         s_path = self.path
