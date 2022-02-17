@@ -7701,6 +7701,7 @@ class NLAddObjectActionNode(bpy.types.Node, NLActionNode):
             "Copy Data From (Optional)"
         )
         self.inputs.new(NLPositiveIntegerFieldSocket.bl_idname, "Life")
+        self.inputs.new(NLBooleanSocket.bl_idname, "Full Copy")
         self.outputs.new(NLConditionSocket.bl_idname, "Done")
         self.outputs.new(NLGameObjectSocket.bl_idname, "Added Object")
 
@@ -7708,7 +7709,7 @@ class NLAddObjectActionNode(bpy.types.Node, NLActionNode):
         return "ULAddObject"
 
     def get_input_sockets_field_names(self):
-        return ["condition", "name", 'reference', "life"]
+        return ["condition", "name", 'reference', "life", 'full_copy']
 
     def get_output_socket_varnames(self):
         return ['OUT', 'OBJ']
@@ -8996,7 +8997,7 @@ class NLActionRayCastNode(bpy.types.Node, NLActionNode):
         ]
 
     def get_output_socket_varnames(self):
-        return [OUTCELL, "PICKED_OBJECT", "POINT", "NORMAL", "DIRECTION"]
+        return ['RESULT', "PICKED_OBJECT", "POINT", "NORMAL", "DIRECTION", "MATERIAL", "UV"]
 
 
 _nodes.append(NLActionRayCastNode)
