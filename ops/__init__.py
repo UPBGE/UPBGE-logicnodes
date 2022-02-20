@@ -881,6 +881,19 @@ class NLApplyLogicOperator(bpy.types.Operator):
                 continue
             if module not in comps:
                 bpy.ops.logic.python_component_register(component_name=name)
+                utils.success(
+                    "Applied tree {} to object {}.".format(
+                        tree.name,
+                        obj.name
+                    )
+                )
+            else:
+                utils.success(
+                    "Tree {} already applied to object {}. Updating status.".format(
+                        tree.name,
+                        obj.name
+                    )
+                )
             tree_collection = obj.bgelogic_treelist
             contains = False
             for t in tree_collection:
@@ -896,12 +909,6 @@ class NLApplyLogicOperator(bpy.types.Operator):
                 bge_netlogic.utilities.set_network_initial_status_key(
                     obj, tree.name, initial_status
                 )
-            utils.success(
-                "Applied tree {} to object {}.".format(
-                    tree.name,
-                    obj.name
-                )
-            )
         bpy.context.view_layer.objects.active = active_object
         return {'FINISHED'}
 
