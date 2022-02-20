@@ -537,7 +537,7 @@ class BGE_PT_LogicTreeInfoPanel(bpy.types.Panel):
         tree = context.space_data.edit_tree
         container = layout.column(align=True)
         for obj in bpy.data.objects:
-            if f'NL__{tree.name}' in obj.game.properties and obj in bpy.context.view_layer.objects:
+            if f'NL__{tree.name}' in obj.game.properties and obj.name in bpy.context.view_layer.objects:
                 prop = obj.game.properties[f'NL__{tree.name}']
                 self.draw_owner(obj, container, prop, tree)
 

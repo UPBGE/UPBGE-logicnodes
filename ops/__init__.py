@@ -874,7 +874,7 @@ class NLApplyLogicOperator(bpy.types.Operator):
             module = f'nl_{tree_name.lower()}'
             name = f'{module}.{tree_name}'
             comps = [c.module for c in obj.game.components]
-            if obj in bpy.context.view_layer.objects:
+            if obj.name in bpy.context.view_layer.objects:
                 bpy.context.view_layer.objects.active = obj
             else:
                 utils.error(f'Object {obj.name} not in view layer, please check for references. Skipping...')
