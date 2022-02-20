@@ -851,8 +851,12 @@ class NLApplyLogicOperator(bpy.types.Operator):
     def execute(self, context):
         current_scene = context.scene
         tree = context.space_data.edit_tree
+        active_object = context.object
+        if not active_object:
+            utils.error('Missing active object, aborting...')
+            return {'FINISHED'}
         tree.use_fake_user = True
-        py_module_name = bge_netlogic.utilities.py_module_name_for_tree(tree)
+        # py_module_name = bge_netlogic.utilities.py_module_name_for_tree(tree)
         selected_objects = [
             ob for ob in current_scene.objects if ob.select_get()
         ]
@@ -866,23 +870,13 @@ class NLApplyLogicOperator(bpy.types.Operator):
             print(e)
         initial_status = True if initial_status is None else False
         for obj in selected_objects:
-            utils.success(
-                "Applied tree {} to object {}.".format(
-                    tree.name,
-                    obj.name
-                )
-            )
-            if tree.mode:
-                tree_name = utils.make_valid_name(tree.name)
-                module = f'nl_{tree_name.lower()}'
-                name = f'{module}.{tree_name}'
-                comps = [c.module for c in obj.game.components]
-                if module not in comps:
-                    bpy.ops.logic.python_component_register(component_name=name)
-            else:
-                self._setup_logic_bricks_for_object(
-                    tree, py_module_name, obj, context
-                )
+            tree_name = utils.make_valid_name(tree.name)
+            module = f'nl_{tree_name.lower()}'
+            name = f'{module}.{tree_name}'
+            comps = [c.module for c in obj.game.components]
+            bpy.context.view_layer.objects.active = obj
+            if module not in comps:
+                bpy.ops.logic.python_component_register(component_name=name)
             tree_collection = obj.bgelogic_treelist
             contains = False
             for t in tree_collection:
@@ -898,6 +892,13 @@ class NLApplyLogicOperator(bpy.types.Operator):
                 bge_netlogic.utilities.set_network_initial_status_key(
                     obj, tree.name, initial_status
                 )
+            utils.success(
+                "Applied tree {} to object {}.".format(
+                    tree.name,
+                    obj.name
+                )
+            )
+        bpy.context.view_layer.objects.active = active_object
         return {'FINISHED'}
 
     def _setup_logic_bricks_for_object(
