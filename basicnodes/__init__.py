@@ -4811,7 +4811,7 @@ class NLSetSensorValueNode(bpy.types.Node, NLActionNode):
         self.inputs.new(NLLogicBrickSocket.bl_idname, "Sensor")
         self.inputs[-1].ref_index = 1
         self.inputs[-1].brick_type = 'sensors'
-        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Field")
+        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Attribute")
         self.inputs.new(NLValueFieldSocket.bl_idname, "")
         self.outputs.new(NLConditionSocket.bl_idname, 'Done')
 
@@ -4826,6 +4826,37 @@ class NLSetSensorValueNode(bpy.types.Node, NLActionNode):
 
 
 _nodes.append(NLSetSensorValueNode)
+
+
+class NLSetActuatorValueNode(bpy.types.Node, NLActionNode):
+    bl_idname = "NLSetActuatorValueNode"
+    bl_label = "Set Actuator Value"
+    nl_category = "Logic"
+    nl_subcat = 'Bricks'
+    nl_module = 'actions'
+
+    def init(self, context):
+        NLActionNode.init(self, context)
+        self.inputs.new(NLConditionSocket.bl_idname, "Condition")
+        self.inputs.new(NLGameObjectSocket.bl_idname, "Object")
+        self.inputs.new(NLLogicBrickSocket.bl_idname, "Actuator")
+        self.inputs[-1].ref_index = 1
+        self.inputs[-1].brick_type = 'actuators'
+        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Attribute")
+        self.inputs.new(NLValueFieldSocket.bl_idname, "")
+        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+
+    def get_output_socket_varnames(self):
+        return ["OUT"]
+
+    def get_netlogic_class_name(self):
+        return "ULSetActuatorValue"
+
+    def get_input_sockets_field_names(self):
+        return ["condition", 'game_obj', 'act_name', 'field', 'value']
+
+
+_nodes.append(NLSetActuatorValueNode)
 
 
 class NLVectorMath(bpy.types.Node, NLParameterNode):
@@ -9642,6 +9673,33 @@ class NLInitNewList(bpy.types.Node, NLParameterNode):
 
 
 _nodes.append(NLInitNewList)
+
+
+class NLExtendList(bpy.types.Node, NLParameterNode):
+    bl_idname = "NLExtendList"
+    bl_label = "Append"
+    nl_category = "Python"
+    nl_subcat = 'List'
+    nl_module = 'actions'
+
+    def init(self, context):
+        NLParameterNode.init(self, context)
+        self.inputs.new(NLListSocket.bl_idname, 'List 1')
+        self.inputs.new(NLListSocket.bl_idname, 'List 2')
+        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+        self.outputs.new(NLListSocket.bl_idname, 'List')
+
+    def get_output_socket_varnames(self):
+        return ["OUT", "LIST"]
+
+    def get_netlogic_class_name(self):
+        return "ULExtendList"
+
+    def get_input_sockets_field_names(self):
+        return ['list_1', 'list_2']
+
+
+_nodes.append(NLExtendList)
 
 
 class NLAppendListItem(bpy.types.Node, NLActionNode):
