@@ -104,6 +104,12 @@ _enum_distance_models = {
 }
 
 
+_enum_object_property_types = {
+    ('GAME', 'Game Property', 'Edit Game Property'),
+    ('ATTR', 'Attribute', 'Edit Internal Attribute (can be used in materials)')
+}
+
+
 _enum_constraint_types = [
     (
         "bge.constraints.POINTTOPOINT_CONSTRAINT",
@@ -372,7 +378,11 @@ _enum_math_operations = [
     ("ADD", "Add", "Sum A and B"),
     ("SUB", "Subtract", "Subtract B from A"),
     ("DIV", "Divide", "Divide A by B"),
-    ("MUL", "Multiply", "Multiply A by B")
+    ("MUL", "Multiply", "Multiply A by B"),
+    ("POW", "Power", "A to the power of B"),
+    ("MOD", "Modulo", "Modulo of A by B"),
+    ("FDIV", "Floor Divide", "Floor Divide A by B"),
+    ("MATMUL", "Matrix Multiply", "Transform A by B")
 ]
 
 _enum_greater_less = [
@@ -1499,6 +1509,7 @@ class NLGamePropertySocket(bpy.types.NodeSocket, NLSocket):
         return PARAMETER_SOCKET_COLOR
 
     def draw(self, context, layout, node, text):
+        mode = getattr(self.node, 'mode', 'GAME')
         if self.is_output:
             layout.label(text=self.name)
         elif self.is_linked:
@@ -1520,10 +1531,10 @@ class NLGamePropertySocket(bpy.types.NodeSocket, NLSocket):
             if self.name:
                 row = col.row()
                 row.label(text=self.name)
-                if not game_obj_socket.is_linked and game_object:
+                if not game_obj_socket.is_linked and game_object and mode == 'GAME':
                     row.prop(self, 'use_custom', text='', icon='GREASEPENCIL')
             if game_object or game_obj_socket.is_linked:
-                if not game_obj_socket.is_linked and not self.use_custom:
+                if not game_obj_socket.is_linked and not self.use_custom and mode == 'GAME':
                     game = game_object.game
                     col.prop_search(
                         self,
@@ -4271,6 +4282,15 @@ class NLGameObjectPropertyParameterNode(bpy.types.Node, NLParameterNode):
     nl_category = 'Objects'
     nl_subcat = 'Properties'
     nl_module = 'parameters'
+    mode: bpy.props.EnumProperty(
+        name='Mode',
+        items=_enum_object_property_types,
+        default='GAME',
+        update=update_tree_code
+    )
+
+    def draw_buttons(self, context, layout):
+        layout.prop(self, "mode", text="")
 
     def init(self, context):
         NLParameterNode.init(self, context)
@@ -4283,6 +4303,9 @@ class NLGameObjectPropertyParameterNode(bpy.types.Node, NLParameterNode):
 
     def get_input_sockets_field_names(self):
         return ["game_object", "property_name"]
+
+    def get_nonsocket_fields(self):
+        return [("mode", lambda: f'"{self.mode}"')]
 
     def get_output_socket_varnames(self):
         return ['OUT']
@@ -4585,6 +4608,15 @@ class NLGameObjectHasPropertyParameterNode(bpy.types.Node, NLParameterNode):
     nl_category = "Objects"
     nl_subcat = 'Properties'
     nl_module = 'conditions'
+    mode: bpy.props.EnumProperty(
+        name='Mode',
+        items=_enum_object_property_types,
+        default='GAME',
+        update=update_tree_code
+    )
+
+    def draw_buttons(self, context, layout):
+        layout.prop(self, "mode", text="")
 
     def init(self, context):
         NLParameterNode.init(self, context)
@@ -4598,6 +4630,9 @@ class NLGameObjectHasPropertyParameterNode(bpy.types.Node, NLParameterNode):
 
     def get_input_sockets_field_names(self):
         return ["game_object", "property_name"]
+
+    def get_nonsocket_fields(self):
+        return [("mode", lambda: f'"{self.mode}"')]
 
     def get_output_socket_varnames(self):
         return ['OUT']
@@ -5347,10 +5382,7 @@ class NLArithmeticOpParameterNode(bpy.types.Node, NLParameterNode):
 
     def get_nonsocket_fields(self):
         return [
-            (
-                "operator", lambda:
-                    f'ULMath.op_by_code("{self.operator}")'
-            )
+            ("operator", lambda: f'OPERATORS.get("{self.operator}")')
         ]
 
     def get_netlogic_class_name(self):
@@ -5391,12 +5423,7 @@ class NLThresholdNode(bpy.types.Node, NLParameterNode):
 
     def get_nonsocket_fields(self):
         return [
-            (
-                "operator", lambda:
-                    'ULThreshold.op_by_code("{}")'.format(
-                        self.operator
-                    )
-            )
+            ("operator", lambda: f'"{self.operator}"')
         ]
 
     def get_netlogic_class_name(self):
@@ -5433,12 +5460,7 @@ class NLRangedThresholdNode(bpy.types.Node, NLParameterNode):
 
     def get_nonsocket_fields(self):
         return [
-            (
-                "operator", lambda:
-                    'ULRangedThreshold.op_by_code("{}")'.format(
-                        self.operator
-                    )
-            )
+            ("operator", lambda: f'"{self.operator}"')
         ]
 
     def get_netlogic_class_name(self):
@@ -5476,12 +5498,7 @@ class NLLimitRange(bpy.types.Node, NLParameterNode):
 
     def get_nonsocket_fields(self):
         return [
-            (
-                "operator", lambda:
-                    'ULLimitRange.op_by_code("{}")'.format(
-                        self.operator
-                    )
-            )
+            ("operator", lambda: f'"{self.operator}"')
         ]
 
     def get_netlogic_class_name(self):
@@ -5520,12 +5537,7 @@ class NLWithinRangeNode(bpy.types.Node, NLParameterNode):
 
     def get_nonsocket_fields(self):
         return [
-            (
-                "operator", lambda:
-                    'ULWithinRange.op_by_code("{}")'.format(
-                        self.operator
-                    )
-            )
+            ("operator", lambda: f'"{self.operator}"')
         ]
 
     def get_netlogic_class_name(self):
@@ -6985,7 +6997,12 @@ class NLObjectPropertyOperator(bpy.types.Node, NLConditionNode):
     nl_module = 'conditions'
     nl_category = "Objects"
     nl_subcat = 'Properties'
-
+    mode: bpy.props.EnumProperty(
+        name='Mode',
+        items=_enum_object_property_types,
+        default='GAME',
+        update=update_tree_code
+    )
     operator: bpy.props.EnumProperty(
         name='Operator',
         items=_enum_logic_operators,
@@ -6993,20 +7010,8 @@ class NLObjectPropertyOperator(bpy.types.Node, NLConditionNode):
     )
 
     def draw_buttons(self, context, layout):
+        layout.prop(self, "mode", text="")
         layout.prop(self, "operator", text='')
-
-    def setup(self, cell_varname, uids, line_writer):
-        NLNode.setup(
-            self, cell_varname,
-            uids,
-            line_writer
-        )
-        line_writer.write_line(
-            "{}.{} = {}",
-            cell_varname,
-            "operator",
-            self.operator
-        )
 
     def init(self, context):
         NLConditionNode.init(self, context)
@@ -7024,6 +7029,12 @@ class NLObjectPropertyOperator(bpy.types.Node, NLConditionNode):
             "game_object",
             "property_name",
             "compare_value"
+        ]
+
+    def get_nonsocket_fields(self):
+        return [
+            ("mode", lambda: f'"{self.mode}"'),
+            ("operator", lambda: f'LOGIC_OPERATORS[{self.operator}]')
         ]
 
     def get_output_socket_varnames(self):
@@ -7757,6 +7768,15 @@ class NLSetGameObjectGamePropertyActionNode(bpy.types.Node, NLActionNode):
     nl_category = "Objects"
     nl_subcat = 'Properties'
     nl_module = 'actions'
+    mode: bpy.props.EnumProperty(
+        name='Mode',
+        items=_enum_object_property_types,
+        default='GAME',
+        update=update_tree_code
+    )
+
+    def draw_buttons(self, context, layout):
+        layout.prop(self, "mode", text="")
 
     def init(self, context):
         NLActionNode.init(self, context)
@@ -7777,6 +7797,9 @@ class NLSetGameObjectGamePropertyActionNode(bpy.types.Node, NLActionNode):
             "property_name",
             "property_value"
         ]
+
+    def get_nonsocket_fields(self):
+        return [("mode", lambda: f'"{self.mode}"')]
 
     def get_output_socket_varnames(self):
         return ['OUT']
@@ -8232,6 +8255,15 @@ class NLToggleGameObjectGamePropertyActionNode(bpy.types.Node, NLActionNode):
     nl_category = "Objects"
     nl_subcat = 'Properties'
     nl_module = 'actions'
+    mode: bpy.props.EnumProperty(
+        name='Mode',
+        items=_enum_object_property_types,
+        default='GAME',
+        update=update_tree_code
+    )
+
+    def draw_buttons(self, context, layout):
+        layout.prop(self, "mode", text="")
 
     def init(self, context):
         NLActionNode.init(self, context)
@@ -8251,6 +8283,9 @@ class NLToggleGameObjectGamePropertyActionNode(bpy.types.Node, NLActionNode):
             "property_name"
         ]
 
+    def get_nonsocket_fields(self):
+        return [("mode", lambda: f'"{self.mode}"')]
+
     def get_output_socket_varnames(self):
         return ['OUT']
 
@@ -8265,6 +8300,12 @@ class NLAddToGameObjectGamePropertyActionNode(bpy.types.Node, NLActionNode):
     nl_category = "Objects"
     nl_subcat = 'Properties'
     nl_module = 'actions'
+    mode: bpy.props.EnumProperty(
+        name='Mode',
+        items=_enum_object_property_types,
+        default='GAME',
+        update=update_tree_code
+    )
     operator: bpy.props.EnumProperty(
         name='Operation',
         items=_enum_math_operations,
@@ -8284,16 +8325,13 @@ class NLAddToGameObjectGamePropertyActionNode(bpy.types.Node, NLActionNode):
         return "ULModifyProperty"
 
     def draw_buttons(self, context, layout):
+        layout.prop(self, "mode", text="")
         layout.prop(self, "operator", text="")
 
     def get_nonsocket_fields(self):
         return [
-            (
-                "operator", lambda:
-                    'ULModifyProperty.op_by_code("{}")'.format(
-                        self.operator
-                    )
-            )
+            ("mode", lambda: f'"{self.mode}"'),
+            ("operator", lambda: f'OPERATORS.get("{self.operator}")')
         ]
 
     def get_input_sockets_field_names(self):
@@ -8311,6 +8349,65 @@ class NLAddToGameObjectGamePropertyActionNode(bpy.types.Node, NLActionNode):
 _nodes.append(NLAddToGameObjectGamePropertyActionNode)
 
 
+
+class NLClampedModifyProperty(bpy.types.Node, NLActionNode):
+    bl_idname = "NLClampedModifyProperty"
+    bl_label = "Clamped Modify Property"
+    bl_icon = 'ARROW_LEFTRIGHT'
+    nl_category = "Objects"
+    nl_subcat = 'Properties'
+    nl_module = 'actions'
+    mode: bpy.props.EnumProperty(
+        name='Mode',
+        items=_enum_object_property_types,
+        default='GAME',
+        update=update_tree_code
+    )
+    operator: bpy.props.EnumProperty(
+        name='Operation',
+        items=_enum_math_operations,
+        update=update_tree_code
+    )
+
+    def init(self, context):
+        NLActionNode.init(self, context)
+        self.inputs.new(NLConditionSocket.bl_idname, "Condition")
+        self.inputs.new(NLGameObjectSocket.bl_idname, "Object")
+        self.inputs.new(NLGamePropertySocket.bl_idname, "Property")
+        self.inputs[-1].ref_index = 1
+        self.inputs.new(NLFloatFieldSocket.bl_idname, "Value")
+        self.inputs.new(NLVec2FieldSocket.bl_idname, "Range")
+        self.outputs.new(NLConditionSocket.bl_idname, "Done")
+
+    def draw_buttons(self, context, layout):
+        layout.prop(self, "mode", text="")
+        layout.prop(self, "operator", text="")
+
+    def get_netlogic_class_name(self):
+        return "ULClampedModifyProperty"
+
+    def get_nonsocket_fields(self):
+        return [
+            ("mode", lambda: f'"{self.mode}"'),
+            ("operator", lambda: f'OPERATORS.get("{self.operator}")')
+        ]
+
+    def get_input_sockets_field_names(self):
+        return [
+            "condition",
+            "game_object",
+            "property_name",
+            "property_value",
+            'range'
+        ]
+
+    def get_output_socket_varnames(self):
+        return ['OUT']
+
+
+_nodes.append(NLClampedModifyProperty)
+
+
 class NLCopyPropertyFromObject(bpy.types.Node, NLActionNode):
     bl_idname = "NLCopyPropertyFromObject"
     bl_label = "Copy From Object"
@@ -8318,6 +8415,15 @@ class NLCopyPropertyFromObject(bpy.types.Node, NLActionNode):
     nl_category = "Objects"
     nl_subcat = 'Properties'
     nl_module = 'actions'
+    mode: bpy.props.EnumProperty(
+        name='Mode',
+        items=_enum_object_property_types,
+        default='GAME',
+        update=update_tree_code
+    )
+
+    def draw_buttons(self, context, layout):
+        layout.prop(self, "mode", text="")
 
     def init(self, context):
         NLActionNode.init(self, context)
@@ -8339,48 +8445,14 @@ class NLCopyPropertyFromObject(bpy.types.Node, NLActionNode):
             "property_name"
         ]
 
+    def get_nonsocket_fields(self):
+        return [("mode", lambda: f'"{self.mode}"')]
+
     def get_output_socket_varnames(self):
         return ['OUT']
 
 
 _nodes.append(NLCopyPropertyFromObject)
-
-
-class NLClampedModifyProperty(bpy.types.Node, NLActionNode):
-    bl_idname = "NLClampedModifyProperty"
-    bl_label = "Clamped Modify Property"
-    bl_icon = 'ARROW_LEFTRIGHT'
-    nl_category = "Objects"
-    nl_subcat = 'Properties'
-    nl_module = 'actions'
-
-    def init(self, context):
-        NLActionNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, "Condition")
-        self.inputs.new(NLGameObjectSocket.bl_idname, "Object")
-        self.inputs.new(NLGamePropertySocket.bl_idname, "Property")
-        self.inputs[-1].ref_index = 1
-        self.inputs.new(NLFloatFieldSocket.bl_idname, "Value")
-        self.inputs.new(NLVec2FieldSocket.bl_idname, "Range")
-        self.outputs.new(NLConditionSocket.bl_idname, "Done")
-
-    def get_netlogic_class_name(self):
-        return "ULClampedModifyProperty"
-
-    def get_input_sockets_field_names(self):
-        return [
-            "condition",
-            "game_object",
-            "property_name",
-            "property_value",
-            'range'
-        ]
-
-    def get_output_socket_varnames(self):
-        return ['OUT']
-
-
-_nodes.append(NLClampedModifyProperty)
 
 
 class NLValueSwitch(bpy.types.Node, NLParameterNode):
@@ -13435,7 +13507,12 @@ class NLActionNavigate(bpy.types.Node, NLActionNode):
         self.inputs.new(NLFloatFieldSocket.bl_idname, "Rot Speed")
         self.inputs[-1].value = 1.0
         self.inputs.new(NLBooleanSocket.bl_idname, "Visualize")
+        self.outputs.new(NLConditionSocket.bl_idname, "Done")
         self.outputs.new(NLConditionSocket.bl_idname, "When Reached")
+        self.outputs.new(NLListSocket.bl_idname, "Next Point")
+
+    def get_output_socket_varnames(self):
+        return ["OUT", "FINISHED", "POINT"]
 
     def get_netlogic_class_name(self):
         return "ULMoveToWithNavmesh"

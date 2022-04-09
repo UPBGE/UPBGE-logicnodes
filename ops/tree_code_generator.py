@@ -200,6 +200,7 @@ class TreeCodeGenerator(object):
         line_writer.write_line("import mathutils")
         line_writer.write_line("import math")
         line_writer.write_line("from collections import OrderedDict")
+        line_writer.write_line("from uplogic.utils import OPERATORS, LOGIC_OPERATORS")
         # user_modules = self.list_user_modules_needed_by_tree(tree)
         # for module in user_modules:
         #     line_writer.write_line('{} = bgelogic.load_user_logic("{}")', module, module)
