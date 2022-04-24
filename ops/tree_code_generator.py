@@ -200,7 +200,6 @@ class TreeCodeGenerator(object):
         line_writer.write_line("import mathutils")
         line_writer.write_line("import math")
         line_writer.write_line("from collections import OrderedDict")
-        line_writer.write_line("from uplogic.utils import OPERATORS, LOGIC_OPERATORS")
         # user_modules = self.list_user_modules_needed_by_tree(tree)
         # for module in user_modules:
         #     line_writer.write_line('{} = bgelogic.load_user_logic("{}")', module, module)
@@ -213,6 +212,7 @@ class TreeCodeGenerator(object):
         line_writer.set_indent_level(2)
         line_writer.write_line("from uplogic import nodes, utils")
         line_writer.write_line("from uplogic.nodes.logictree import ULLogicTree")
+        line_writer.write_line("from uplogic.utils import OPERATORS, LOGIC_OPERATORS")
         self.write_imports(tree, line_writer)
         line_writer.write_line("self.condition = exec_cond")
         line_writer.write_line("owner = self.owner = game_object")
