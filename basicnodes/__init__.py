@@ -4059,7 +4059,7 @@ class NLGetVRControllerValues(bpy.types.Node, NLParameterNode):
     nl_subcat = 'VR'
     nl_module = 'parameters'
     index: bpy.props.EnumProperty(
-        name='Mode',
+        name='Controller',
         items=_enum_vrcontroller_trigger_operators,
         default='0',
         update=update_tree_code
