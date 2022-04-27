@@ -415,6 +415,11 @@ _enum_controller_trigger_operators = [
     ("1", "Right Trigger", "Right Trigger Values")
 ]
 
+_enum_vrcontroller_trigger_operators = [
+    ("0", "Left", "Left Controller Values"),
+    ("1", "Right", "Right Controller Values")
+]
+
 
 _enum_controller_buttons_operators = [
     ("0", "A / Cross", "A / Cross Button"),
@@ -4047,6 +4052,66 @@ class NLParameterGetAttribute(bpy.types.Node, NLParameterNode):
 _nodes.append(NLParameterGetAttribute)
 
 
+class NLGetVRControllerValues(bpy.types.Node, NLParameterNode):
+    bl_idname = "NLGetVRControllerValues"
+    bl_label = "VR Controller"
+    nl_category = "Input"
+    nl_subcat = 'VR'
+    nl_module = 'parameters'
+    index: bpy.props.EnumProperty(
+        name='Mode',
+        items=_enum_vrcontroller_trigger_operators,
+        default='0',
+        update=update_tree_code
+    )
+
+    def draw_buttons(self, context, layout):
+        layout.prop(self, "index", text="")
+
+    def init(self, context):
+        NLParameterNode.init(self, context)
+        self.outputs.new(NLVec3FieldSocket.bl_idname, "Position")
+        self.outputs.new(NLVec3FieldSocket.bl_idname, "Orientation")
+        self.outputs.new(NLVec3FieldSocket.bl_idname, "Aim Position")
+        self.outputs.new(NLVec3FieldSocket.bl_idname, "Aim Orientation")
+        self.outputs.new(NLVec2FieldSocket.bl_idname, "Thumbstick")
+        self.outputs.new(NLFloatFieldSocket.bl_idname, "Trigger")
+
+    def get_netlogic_class_name(self):
+        return "ULGetVRControllerValues"
+
+    def get_nonsocket_fields(self):
+        return [("index", lambda: f'{self.index}')]
+
+    def get_output_socket_varnames(self):
+        return ['POS', 'ORI', 'APOS', 'AORI', 'STICK', 'TRIGGER']
+
+
+_nodes.append(NLGetVRControllerValues)
+
+
+class NLGetVRHeadsetValues(bpy.types.Node, NLParameterNode):
+    bl_idname = "NLGetVRHeadsetValues"
+    bl_label = "VR Headset"
+    nl_category = "Input"
+    nl_subcat = 'VR'
+    nl_module = 'parameters'
+
+    def init(self, context):
+        NLParameterNode.init(self, context)
+        self.outputs.new(NLVec3FieldSocket.bl_idname, "Position")
+        self.outputs.new(NLVec3FieldSocket.bl_idname, "Orientation")
+
+    def get_netlogic_class_name(self):
+        return "ULGetVRHeadsetValues"
+
+    def get_output_socket_varnames(self):
+        return ['POS', 'ORI']
+
+
+_nodes.append(NLGetVRHeadsetValues)
+
+
 class NLGetScene(bpy.types.Node, NLParameterNode):
     bl_idname = "NLGetScene"
     bl_label = "Get Scene"
@@ -4141,14 +4206,14 @@ class NLParameterWorldPosition(bpy.types.Node, NLParameterNode):
 _nodes.append(NLParameterWorldPosition)
 
 
-class NLCursorBehavior(bpy.types.Node, NLParameterNode):
+class NLCursorBehavior(bpy.types.Node, NLActionNode):
     bl_idname = "NLCursorBehavior"
     bl_label = "Custom Cursor"
     nl_category = "Scene"
     nl_module = 'actions'
 
     def init(self, context):
-        NLParameterNode.init(self, context)
+        NLActionNode.init(self, context)
         self.inputs.new(NLPseudoConditionSocket.bl_idname, "Condition")
         self.inputs.new(NLGameObjectSocket.bl_idname, "Cursor")
         self.inputs.new(NLFloatFieldSocket.bl_idname, "Distance")

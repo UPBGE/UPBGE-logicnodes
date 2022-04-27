@@ -68,7 +68,8 @@ _cat_icons = {
     'Vector Math': 'EMPTY_ARROWS',
     'Vectors': 'EMPTY_ARROWS',
     'Vehicle': 'AUTO',
-    'Visuals': 'HIDE_OFF'
+    'Visuals': 'HIDE_OFF',
+    'VR': 'CAMERA_STEREO'
 }
 
 _main_menues = [
