@@ -421,6 +421,22 @@ class BGE_PT_LogicNodeSettingsObject(bpy.types.Panel):
             reverb_settings.prop(context.active_object, 'reverb_samples', text='Samples')
 
 
+class BGE_PT_LogicNodeSettingsScene(bpy.types.Panel):
+    bl_label = "Uplogic Settings"
+    bl_space_type = "PROPERTIES"
+    bl_region_type = "WINDOW"
+    bl_context = "scene"
+    name: bpy.props.StringProperty()
+
+    @classmethod
+    def poll(cls, context):
+        return True
+
+    def draw(self, context):
+        layout = self.layout
+        layout.prop(bpy.context.scene, 'use_vr_audio_space')
+
+
 class BGE_PT_LogicTreeGroups(bpy.types.Panel):
     bl_label = "Tree Prefabs and Subtrees"
     bl_space_type = "NODE_EDITOR"

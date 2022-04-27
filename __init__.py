@@ -538,6 +538,7 @@ _registered_classes = [
     ops.NLLoadImageOperator,
     ops.NLSwitchInitialNetworkStatusOperator,
     ops.NLUpdateTreeVersionOperator,
+    ops.NLUpdateTreeIdNameOperator,
     ops.NLAddPropertyOperator,
     ops.NLAddComponentOperator,
     ops.NLRemovePropertyOperator,
@@ -573,6 +574,7 @@ _registered_classes.extend([
     ui.BGE_PT_LogicTreeInfoPanel,
     ui.BGE_PT_ObjectTreeInfoPanel,
     ui.BGE_PT_GlobalValuePanel,
+    ui.BGE_PT_LogicNodeSettingsScene,
     # ui.BGE_PT_NLEditorPropertyPanel,
     # ui.BGE_PT_HelpPanel,
     # ui.BGE_PT_GameComponentPanel,
@@ -715,6 +717,9 @@ def register():
     )
     bpy.types.Scene.nl_global_cat_selected = bpy.props.IntProperty(
         name='Category'
+    )
+    bpy.types.Scene.use_vr_audio_space = bpy.props.BoolProperty(
+        name='Use VR Audio Space'
     )
 
 
