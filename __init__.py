@@ -538,7 +538,6 @@ _registered_classes = [
     ops.NLLoadImageOperator,
     ops.NLSwitchInitialNetworkStatusOperator,
     ops.NLUpdateTreeVersionOperator,
-    ops.NLUpdateTreeIdNameOperator,
     ops.NLAddPropertyOperator,
     ops.NLAddComponentOperator,
     ops.NLRemovePropertyOperator,
