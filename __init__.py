@@ -465,7 +465,10 @@ class LogicNodesAddonPreferences(bpy.types.AddonPreferences):
         layout = self.layout
         box = layout.box()
         col = box.column()
-        col.label(text='Logic Nodes require the uplogic module, please install if missing.', icon='ERROR')
+        col.label(
+            text='Logic Nodes require the uplogic module, please install if missing.',
+            icon='CHECKMARK' if UPLOGIC_INSTALLED else 'ERROR'
+        )
         col.operator('bge_netlogic.install_uplogic_module', icon='IMPORT')
         # col.operator('bge_netlogic.install_fake_bge_module', icon='IMPORT')
         main_row = layout.row()
@@ -659,6 +662,19 @@ def _list_menu_nodes():
     return menu_nodes
 
 
+def load_uplogic_module():
+    utils.notify('Installing uplogic module...')
+    try:
+        os.system(f'"{sys.executable}" -m ensurepip')
+        os.system(f'"{sys.executable}" -m pip install uplogic --upgrade')
+        global UPLOGIC_INSTALLED
+        UPLOGIC_INSTALLED = True
+        utils.success('Installed.')
+    except Exception as e:
+        utils.error('Install failed. Error:')
+        utils.error(e)
+
+
 # blender add-on registration callback
 def register():
     bpy.app.handlers.game_pre.append(_generate_on_game_start)
@@ -673,6 +689,8 @@ def register():
     ]
     menu_nodes.append(NodeCategory('Layout', 'Layout', items=layout_items))
     nodeitems_utils.register_node_categories("NETLOGIC_NODES", menu_nodes)
+
+    load_uplogic_module()
 
     bpy.types.Object.sound_occluder = bpy.props.BoolProperty(
         default=True,

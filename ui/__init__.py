@@ -64,10 +64,10 @@ def check_double_name(self, data):
             names.append(p.name)
     if base in names:
         count = 1
-        name = f'{base}{count}'
+        name = f'{base}.{count:02}'
         while name in names:
             count += 1
-            name = f'{base}{count}'
+            name = f'{base}.{count:02}'
         self.name = name
 
 
@@ -400,13 +400,14 @@ class BGE_PT_LogicNodeSettingsObject(bpy.types.Panel):
         col1 = parts.column()
         col2 = parts.column()
         row = col1.row()
-        row.prop(context.active_object, 'sound_occluder', text='Sound Occluder')
-        block = col2.row()
-        block.prop(context.active_object, 'sound_blocking', text='Factor', slider=True)
-        col1.separator()
-        col2.separator()
-        block.enabled = context.active_object.sound_occluder
-        if not context.active_object.data:
+        if context.active_object.data:
+            row.prop(context.active_object, 'sound_occluder', text='Sound Occluder')
+            block = col2.row()
+            block.prop(context.active_object, 'sound_blocking', text='Factor', slider=True)
+            col1.separator()
+            col2.separator()
+            block.enabled = context.active_object.sound_occluder
+        else:
             row = col1.row()
             row.prop(context.active_object, 'reverb_volume', text='Reverb Volume')
             reverb_settings = col2.column(align=True)
