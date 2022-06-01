@@ -434,6 +434,7 @@ class BGE_PT_LogicNodeSettingsScene(bpy.types.Panel):
 
     def draw(self, context):
         layout = self.layout
+        layout.prop(bpy.context.scene, 'jump_in_game_cam')
         layout.prop(bpy.context.scene, 'use_vr_audio_space')
 
 

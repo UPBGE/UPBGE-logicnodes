@@ -31,6 +31,20 @@ def is_compile_status(status):
     return bpy.context.scene.logic_node_settings.tree_compiled == status
 
 
+def start_vr_session():
+    session = bpy.context.window_manager.xr_session_state
+    if not session:
+        # raise Exception('No active XR Session found')
+        bpy.ops.wm.xr_session_toggle()
+
+
+def stop_vr_session():
+    session = bpy.context.window_manager.xr_session_state
+    if session is not None:
+        # raise Exception('No active XR Session found')
+        bpy.ops.wm.xr_session_toggle()
+
+
 class ansicol:
     RED = '\033[31m'
     GREEN = '\033[32m'

@@ -173,6 +173,23 @@ def _generate_on_game_start(self, context):
     bpy.ops.bge_netlogic.generate_logicnetwork_all()
 
 
+@persistent
+def _jump_in_game_cam(self, context):
+    if bpy.context.scene.jump_in_game_cam:
+        bpy.ops.view3d.view_camera()
+
+
+@persistent
+def _set_vr_mode(self, context):
+    if bpy.context.scene.use_vr_audio_space and not bpy.context.window_manager.xr_session_state:
+        bpy.context.scene.game_settings.use_viewport_render = True
+        utils.notify('Starting in VR mode...')
+        utils.start_vr_session()
+    elif bpy.context.window_manager.xr_session_state and not bpy.context.scene.use_vr_audio_space:
+        utils.notify('Shutting down VR mode...')
+        utils.stop_vr_session()
+
+
 def _consume_update_tree_code_queue():
     # edit_tree = getattr(bpy.context.space_data, "edit_tree", None)
     # if edit_tree:
@@ -662,6 +679,8 @@ def _list_menu_nodes():
 # blender add-on registration callback
 def register():
     bpy.app.handlers.game_pre.append(_generate_on_game_start)
+    bpy.app.handlers.game_pre.append(_jump_in_game_cam)
+    bpy.app.handlers.game_pre.append(_set_vr_mode)
     bpy.app.handlers.game_pre.append(_reload_texts)
     for cls in _registered_classes:
         # print("Registering... {}".format(cls.__name__))
@@ -719,6 +738,9 @@ def register():
     )
     bpy.types.Scene.use_vr_audio_space = bpy.props.BoolProperty(
         name='Use VR Audio Space'
+    )
+    bpy.types.Scene.jump_in_game_cam = bpy.props.BoolProperty(
+        name='Use Game Camera On Start'
     )
 
 

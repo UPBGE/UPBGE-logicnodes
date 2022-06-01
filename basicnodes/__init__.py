@@ -8000,8 +8000,8 @@ class NLSetGeometryNodeAttribute(bpy.types.Node, NLActionNode):
     def init(self, context):
         NLActionNode.init(self, context)
         self.inputs.new(NLConditionSocket.bl_idname, "Condition")
-        self.inputs.new(NLNodeGroupSocket.bl_idname, 'Tree')
-        self.inputs.new(NLGeomNodeTreeSocket.bl_idname, 'Node Name')
+        self.inputs.new(NLGeomNodeTreeSocket.bl_idname, 'Tree')
+        self.inputs.new(NLNodeGroupNodeSocket.bl_idname, 'Node Name')
         self.inputs[-1].ref_index = 1
         self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Internal")
         self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Attribute")
