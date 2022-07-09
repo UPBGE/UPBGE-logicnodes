@@ -80,11 +80,49 @@ class NLInstallFakeBGEModuleOperator(bpy.types.Operator):
         try:
             os.system(f'"{sys.executable}" -m ensurepip')
             os.system(f'"{sys.executable}" -m pip install upbge-stubs==0.3.1.26.dev1705922753')
-            bge_netlogic.UPLOGIC_INSTALLED = True
             utils.success('Installed.')
         except Exception as e:
             utils.error('Install failed. Error:')
             utils.error(e)
+        return {"FINISHED"}
+
+
+class NLMakeCustomMainLoop(bpy.types.Operator):
+    bl_idname = "bge_netlogic.make_custom_mainloop"
+    bl_label = "Use Custom Mainloop"
+    bl_description = ('Use a custom Mainloop for this scene')
+    bl_options = {'REGISTER', 'UNDO'}
+
+    def execute(self, context):
+        scene = context.scene
+        if scene.get('__main__', '') != '':
+            scene['__main__'] = ''
+            scene.game_settings.use_frame_rate = True
+            return {"FINISHED"}
+        main = bpy.data.texts.get(f'{scene.name}.py')
+        if main is None:
+            main = bpy.data.texts.new(f'{scene.name}.py')
+            main.write(f'''from uplogic import ULLoop
+
+
+class {scene.name}Loop(ULLoop):
+
+    def start(self):
+        """This code runs once on scene start."""
+        pass
+
+    def update(self):
+        """This code runs when a frame is rendered (default up to 60x/second)."""
+        pass
+
+    def stop(self):
+        """This code runs when the game is stopped."""
+        pass
+
+
+{scene.name}Loop()''')
+        scene['__main__'] = f'{scene.name}.py'
+        scene.game_settings.use_frame_rate = False
         return {"FINISHED"}
 
 

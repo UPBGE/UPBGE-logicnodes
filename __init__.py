@@ -573,6 +573,7 @@ _registered_classes = [
     ops.NLAddGlobalCatOperator,
     ops.NLRemoveGlobalCatOperator,
     ops.NLResetEmptySize,
+    ops.NLMakeCustomMainLoop,
     NLNodeTreeReference
 ]
 
@@ -680,16 +681,13 @@ def _list_menu_nodes():
 
 
 def load_uplogic_module():
-    utils.notify('Installing uplogic module...')
     try:
         os.system(f'"{sys.executable}" -m ensurepip')
         os.system(f'"{sys.executable}" -m pip install uplogic --upgrade')
         global UPLOGIC_INSTALLED
         UPLOGIC_INSTALLED = True
-        utils.success('Installed.')
-    except Exception as e:
-        utils.error('Install failed. Error:')
-        utils.error(e)
+    except Exception:
+        pass
 
 
 # blender add-on registration callback
@@ -760,7 +758,6 @@ def register():
     bpy.types.Scene.jump_in_game_cam = bpy.props.BoolProperty(
         name='Use Game Camera On Start'
     )
-
 
 # blender add-on unregistration callback
 def unregister():

@@ -437,6 +437,12 @@ class BGE_PT_LogicNodeSettingsScene(bpy.types.Panel):
         layout = self.layout
         layout.prop(bpy.context.scene, 'jump_in_game_cam')
         layout.prop(bpy.context.scene, 'use_vr_audio_space')
+        use_mainloop = context.scene.get('__main__', '') != ''
+        layout.operator(
+            bge_netlogic.ops.NLMakeCustomMainLoop.bl_idname,
+            text='Remove Custom Mainloop' if use_mainloop else 'Use Custom Mainloop',
+            icon='CANCEL' if use_mainloop else 'PLAY'
+        )
 
 
 class BGE_PT_LogicTreeGroups(bpy.types.Panel):
