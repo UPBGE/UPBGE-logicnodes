@@ -95,13 +95,14 @@ class NLMakeCustomMainLoop(bpy.types.Operator):
 
     def execute(self, context):
         scene = context.scene
+        name = scene.name.lower()
         if scene.get('__main__', '') != '':
             scene['__main__'] = ''
             scene.game_settings.use_frame_rate = True
             return {"FINISHED"}
-        main = bpy.data.texts.get(f'{scene.name}.py')
+        main = bpy.data.texts.get(f'{name}.py')
         if main is None:
-            main = bpy.data.texts.new(f'{scene.name}.py')
+            main = bpy.data.texts.new(f'{name}.py')
             main.write(f'''from uplogic import ULLoop
 
 
@@ -121,8 +122,39 @@ class {scene.name}Loop(ULLoop):
 
 
 {scene.name}Loop()''')
-        scene['__main__'] = f'{scene.name}.py'
+        scene['__main__'] = f'{name}.py'
         scene.game_settings.use_frame_rate = False
+        return {"FINISHED"}
+
+
+class NLMakeCustomLoopTree(bpy.types.Operator):
+    bl_idname = "bge_netlogic.make_custom_looptree"
+    bl_label = "Use a logic tree for scene logic."
+    bl_description = ('Use a custom Mainloop for this scene')
+    bl_options = {'REGISTER', 'UNDO'}
+
+    @classmethod
+    def poll(cls, context):
+        if not hasattr(context.space_data, 'edit_tree'):
+            return False
+        tree = context.space_data.edit_tree
+        if not tree:
+            return False
+        if not (tree.bl_idname == bge_netlogic.ui.BGELogicTree.bl_idname):
+            return False
+        elif tree:
+            return True
+        return False
+
+    def execute(self, context):
+        scene = context.scene
+        if not scene.get('__main__') and not scene.get('custom_mainloop_tree'):
+            bpy.ops.bge_netlogic.make_custom_mainloop()
+        tree = context.space_data.edit_tree
+        if scene.custom_mainloop_tree is tree:
+            scene.custom_mainloop_tree = None
+        else:
+            scene.custom_mainloop_tree = tree
         return {"FINISHED"}
 
 
@@ -453,6 +485,24 @@ class NLRemoveTreeByNameOperator(bpy.types.Operator):
             i += 1
         if index is not None:
             ob.bgelogic_treelist.remove(index)
+
+
+class NLSelectAppliedObject(bpy.types.Operator):
+    bl_idname = "bge_netlogic.select_applied_object"
+    bl_label = "Select"
+    bl_options = {'REGISTER', 'UNDO'}
+    bl_description = "Select the object this tree is applied to"
+    applied_object: bpy.props.StringProperty()
+
+    @classmethod
+    def poll(cls, context):
+        return True
+
+    def execute(self, context):
+        obj = context.view_layer.objects.get(self.applied_object)
+        context.view_layer.objects.active = obj
+        obj.select_set(True)
+        return {'FINISHED'}
 
 
 class NLUpdateTreeVersionOperator(bpy.types.Operator):
@@ -1038,18 +1088,17 @@ class NLGenerateLogicNetworkOperatorAll(bpy.types.Operator):
     def execute(self, context):
         for tree in bpy.data.node_groups:
             if tree.bl_idname == bge_netlogic.ui.BGELogicTree.bl_idname:
-                try:
-                    tree_code_generator.TreeCodeGenerator().write_code_for_tree(tree)
-                except Exception as e:
-                    utils.error(f"Couldn't compile tree {tree.name}!")
-                    utils.error(e)
+                # try:
+                tree_code_generator.TreeCodeGenerator().write_code_for_tree(tree)
+                # except Exception as e:
+                #     utils.error(f"Couldn't compile tree {tree.name}!")
+                #     utils.error(e)
         utils.set_compile_status(utils.TREE_COMPILED_ALL)
         try:
             context.region.tag_redraw()
         except Exception:
             utils.warn("Couldn't redraw panel, code updated.")
         return {"FINISHED"}
-
 
 
 class NLResetEmptySize(bpy.types.Operator):

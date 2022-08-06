@@ -16,7 +16,6 @@ class BLTextWrapper(AbstractTextBuffer):
         text = self.get_text(name)
         if text is None:
             utils.error('Could not find or generate text file')
-        print(text)
         self.text = text
 
     def get_text(self, name):
@@ -51,44 +50,24 @@ from collections import OrderedDict
 
 class {}Wrapper():
 
-    def __init__(self, args):
-        {}
-        self.condition = args['Execution Condition']
-        self.consumed = False
-        owner = self.object
+    def __init__(self, game_object, exec_cond="", startup=False):
+        from uplogic import nodes, utils
+        from uplogic.nodes.logictree import ULLogicTree
+{}
+        self.condition = exec_cond
+        owner = self.owner = game_object
         network = self.network = ULLogicTree()
-        CON0000 = ULOnInit()
-        ACT0001 = ULPrintValue()
-        ACT0002 = ULPlayAction()
-        ACT0001.condition = ACT0002.STARTED
-        ACT0001.value = ACT0002.FRAME
-        ACT0002.condition = CON0000
-        ACT0002.game_object = "NLO:U_O"
-        ACT0002.action_name = "CubeAction"
-        ACT0002.start_frame = 0.0
-        ACT0002.end_frame = 13.170000076293945
-        ACT0002.layer = 0
-        ACT0002.priority = 0
-        ACT0002.play_mode = bge.logic.KX_ACTION_MODE_PLAY + 3
-        ACT0002.stop = False
-        ACT0002.layer_weight = 1.0
-        ACT0002.speed = 1.0
-        ACT0002.blendin = 0.0
-        ACT0002.blend_mode = bge.logic.KX_ACTION_BLEND_BLEND
-        network.add_cell(CON0000)
-        network.add_cell(ACT0002)
-        network.add_cell(ACT0001)
+{}
+        owner["IGNLTree_{}"] = network
         network._owner = owner
         network.setup()
-        network.stopped = not owner.get('NL__NodeTree')
-        if args['Only Run At Startup']:
-            self.consumed = True
-        network.evaluate()
+        network.stopped = not owner.get('NL__{}')
+        self.consumed = startup
 
     def evaluate(self):
         if self.consumed:
             return
-        owner = self.object
+        owner = self.owner
         if self.condition:
             cond = owner[self.condition]
             if not cond: return
@@ -99,18 +78,27 @@ class {}Wrapper():
             self.consumed = True
 
 
-class NodeTree(bge.types.KX_PythonComponent):
-
+class {}(bge.types.KX_PythonComponent):
     args = OrderedDict([
         ("Only Run At Startup", False),
         ("Execution Condition", "")
     ])
 
     def start(self, args):
-        self.logictree = NodeTreeWrapper(args)
+        self.logictree = {}Wrapper(
+            self.object,
+            exec_cond=args["Execution Condition"],
+            startup=args["Only Run At Startup"]
+        )
+        self.logictree.evaluate()
 
     def update(self):
-        self.logictree.evaluate()
+        if not self.logictree.consumed:
+            self.logictree.evaluate()
+
+
+def get_tree(obj):
+    return {}Wrapper(obj)
 
 """
 
@@ -146,15 +134,33 @@ class TreeCodeGenerator(object):
     def write_code_for_tree(self, tree):
         if getattr(bpy.context.scene.logic_node_settings, 'use_node_debug', False):
             utils.notify("Generating code for tree {}".format(tree.name))
-        if tree.mode:
-            writer = self.write_to_text(tree)
-        else:
-            writer = self.write_to_file(tree)
-        self.write_init_content(tree, writer)
-        indent = self.write_pulse_line(tree, writer)
-        self.write_pulse_content(tree, writer, indent)
-        if tree.mode:
-            self.write_component_part(tree, writer, 0)
+        tree_name = utils.make_valid_name(tree.name)
+        line_writer = BLTextWrapper(f'nl_{tree_name.lower()}.py')
+        imports = self.write_imports(tree)
+        # text += self._write_tree(tree)
+        text = self.add_nodes(tree)
+        line_writer.clear()
+        text = MODULE_TEMPLATE.format(
+            tree_name,
+            imports,
+            text,
+            tree_name,
+            tree_name,
+            tree_name,
+            tree_name,
+            tree_name
+        )
+        line_writer.write_line(text)
+
+        # if tree.mode:
+        #     writer = self.write_to_text(tree)
+        # else:
+        #     writer = self.write_to_file(tree)
+        # self.write_init_content(tree, writer)
+        # indent = self.write_pulse_line(tree, writer)
+        # self.write_pulse_content(tree, writer, indent)
+        # if tree.mode:
+        #     self.write_component_part(tree, writer, 0)
 
     def write_unloader(self, writer):
         writer.write_line("def unload_pyd(a, b):")
@@ -179,7 +185,8 @@ class TreeCodeGenerator(object):
         writer.write_line('')
         writer.set_indent_level(0)
 
-    def write_imports(self, tree, writer):
+    def write_imports(self, tree):
+        text = ''
         imp = []
         for n in tree.nodes:
             try:
@@ -187,9 +194,11 @@ class TreeCodeGenerator(object):
                 clsname = n.get_netlogic_class_name()
                 if clsname not in imp and mod:
                     imp.append(clsname)
-                    writer.write_line(f'from uplogic.nodes.{mod} import {clsname}')
+                    # writer.write_line(f'from uplogic.nodes.{mod} import {clsname}')
+                    text += f'        from uplogic.nodes.{mod} import {clsname}\n'
             except Exception:
                 continue
+        return text
 
     def write_to_text(self, tree):
         tree_name = utils.make_valid_name(tree.name)
@@ -240,12 +249,15 @@ class TreeCodeGenerator(object):
         line_writer.set_indent_level(1)
         return line_writer
 
-    def write_init_content(self, tree, line_writer):
-        line_writer.write_line("network = self.network = ULLogicTree()")
-        cell_var_names, uid_map = self._write_tree(tree, line_writer)
+    def add_nodes(self, tree):
+        cell_var_names, uid_map, text = self._write_tree(tree)
         for varname in self._sort_cellvarnames(cell_var_names, uid_map):
             if not uid_map.is_removed(varname):
-                line_writer.write_line("network.add_cell({})", varname)
+                text += f"        network.add_cell({varname})\n"
+        return text
+
+    def write_init_content(self, tree, line_writer):
+        line_writer.write_line("network = self.network = ULLogicTree()")
         tree_name = utils.make_valid_name(tree.name)
         line_writer.write_line('owner["IGNLTree_{}"] = network', tree_name)
         line_writer.write_line("network._owner = owner")
@@ -329,7 +341,8 @@ class TreeCodeGenerator(object):
         line_writer.set_indent_level(1)
         line_writer.write_line(f'return {tree_name}Wrapper(obj)')
 
-    def _write_tree(self, tree, line_writer):
+    def _write_tree(self, tree):
+        text = ''
         uid_map = UIDMap()
         cell_uid = 0
         # node_cellvar_list = []
@@ -352,13 +365,14 @@ class TreeCodeGenerator(object):
                                 node.__class__.__name__))
             varname = "{0}{1:04d}".format(prefix, cell_uid)
             uid_map._register(varname, cell_uid, node)
-            node.write_cell_declaration(varname, line_writer)
+            text += f'        {varname} = {node.get_netlogic_class_name()}()\n'
             cell_uid += 1
         for uid in range(0, cell_uid):
             tree_node = uid_map._get_node_for_uid(uid)
             cell_varname = uid_map._get_varname_for_uid(uid)
-            tree_node.setup(cell_varname, uid_map, line_writer)
-        return uid_map._list_cell_names(), uid_map
+            text += tree_node.setup(cell_varname, uid_map)
+        # return text
+        return uid_map._list_cell_names(), uid_map, text
 
     def _sort_cellvarnames(self, node_cellvar_list, uid_map):
         # sorting is effective only in serial execution context. Because the python vm is basically a serial only

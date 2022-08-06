@@ -526,6 +526,13 @@ class BGE_PT_LogicTreeOptions(bpy.types.Panel):
             text="Compile",
             icon='FILE_SCRIPT'
         )
+        cmtree = context.scene.custom_mainloop_tree
+        is_scene_tree = cmtree is context.space_data.edit_tree
+        code.operator(
+            bge_netlogic.ops.NLMakeCustomLoopTree.bl_idname,
+            text='Unset Scene Logic' if is_scene_tree else 'Set as Scene Logic',
+            icon='REMOVE' if is_scene_tree else 'PLAY'
+        )
 
 
 class BGE_PT_LogicTreeInfoPanel(bpy.types.Panel):
@@ -546,8 +553,14 @@ class BGE_PT_LogicTreeInfoPanel(bpy.types.Panel):
         layout = container.box()
         row = layout.split()
         row.label(text=obj.name)
-        row = row.row()
-        row.prop(prop, 'value', text='Active')
+        row = row.row(align=True)
+        row.alignment = 'RIGHT'
+        op = row.operator(
+            bge_netlogic.ops.NLSelectAppliedObject.bl_idname,
+            text="",
+            icon="RESTRICT_SELECT_OFF"
+        )
+        op.applied_object = obj.name
         op = row.operator(
             bge_netlogic.ops.NLRemoveTreeByNameOperator.bl_idname,
             text="",

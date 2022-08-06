@@ -2,6 +2,7 @@ import math
 import bpy
 import bge_netlogic
 from bge_netlogic import utilities as utils
+from ui import BGELogicTree
 
 TOO_OLD = bpy.app.version < (2, 80, 0)
 
@@ -672,42 +673,42 @@ class NLNode(NetLogicType):
         classname = self.get_netlogic_class_name()
         line_writer.write_line("{} = {}()", cell_varname, classname)
 
+    @property
+    def tree(self):
+        for tree in bpy.data.node_groups:
+            if not isinstance(tree, BGELogicTree):
+                continue
+            nodes = [node for node in tree.nodes]
+            if self in nodes:
+                return tree
+
     def setup(
         self,
         cell_varname,
-        uids,
-        line_writer
+        uids
     ):
+        text = ''
         for t in self.get_nonsocket_fields():
             field_name = t[0]
             field_value = t[1]
             if callable(field_value):
                 field_value = field_value()
-            line_writer.write_line(
-                '{}.{} = {}',
-                cell_varname,
-                field_name,
-                field_value
-            )
+            text += f'        {cell_varname}.{field_name} = {field_value}\n'
         for socket in self.inputs:
-            self.write_socket_field_initialization(
+            text += self.write_socket_field_initialization(
                 socket,
                 cell_varname,
-                uids,
-                line_writer
+                uids
             )
-        self.set_props(line_writer, cell_varname)
-
-    def set_props(self, writer, node):
-        pass
+        return text
 
     def write_socket_field_initialization(
         self,
         socket,
         cell_varname,
-        uids,
-        line_writer
+        uids
     ):
+        text = ''
         input_names = self.get_input_sockets_field_names()
         input_socket_index = self._index_of(socket, self.inputs)
         field_name = None
@@ -725,12 +726,14 @@ class NLNode(NetLogicType):
             )
         else:
             field_value = socket.get_unlinked_value()
-        line_writer.write_line(
-            "{}.{} = {}",
-            cell_varname,
-            field_name,
-            field_value
-        )
+        # line_writer.write_line(
+        #     "\t{}.{} = {}",
+        #     cell_varname,
+        #     field_name,
+        #     field_value
+        # )
+        text += f'        {cell_varname}.{field_name} = {field_value}\n'
+        return text
 
     def get_nonsocket_fields(self):
         """
@@ -1159,18 +1162,23 @@ class NLGameObjectSocket(bpy.types.NodeSocket, NLSocket):
     def draw_color(self, context, node):
         return self.color
 
+    def is_scene_logic(self):
+        return self.node.tree is bpy.context.scene.get('custom_mainloop_tree', None)
+
     def draw(self, context, layout, node, text):
+        scene_logic = self.is_scene_logic()
         if self.is_output:
             layout.label(text=self.name)
         elif self.is_linked:
             layout.label(text=self.name)
         else:
-            if not self.use_owner:
+            if not self.use_owner or scene_logic:
                 col = layout.column(align=False)
                 row = col.row()
                 if self.name:
                     row.label(text=self.name)
-                row.prop(self, 'use_owner', icon='USER', text='')
+                if not scene_logic:
+                    row.prop(self, 'use_owner', icon='USER', text='')
                 col.prop_search(
                     self,
                     'value',
@@ -1185,7 +1193,7 @@ class NLGameObjectSocket(bpy.types.NodeSocket, NLSocket):
                 row.prop(self, 'use_owner', icon='USER', text='')
 
     def get_unlinked_value(self):
-        if self.use_owner:
+        if self.use_owner and not self.is_scene_logic():
             return '"NLO:U_O"'
         if isinstance(self.value, bpy.types.Object):
             return '"NLO:{}"'.format(self.value.name)
@@ -2130,7 +2138,6 @@ class NLSoundFileSocket(bpy.types.NodeSocket, NLSocket):
                 row2.prop(self, "sound_value", text='')
             row2.operator(
                 bge_netlogic.ops.NLLoadSoundOperator.bl_idname, icon='FILEBROWSER', text='')
-            # row.prop(self, 'use_path', icon='FILEBROWSER', text='')
 
     def get_unlinked_value(self):
         if not self.use_path and self.sound_value is None:
@@ -5019,15 +5026,10 @@ class NLVectorMath(bpy.types.Node, NLParameterNode):
             text=''
         )
 
-    def setup(self, cell_varname, uids, line_writer):
-        NLNode.setup(
-            self,
-            cell_varname,
-            uids,
-            line_writer
-        )
-        line_writer.write_line(
-            "{}.{} = '{}'", cell_varname, "op", self.operator)
+    def get_nonsocket_fields(self):
+        return [
+            ("op", lambda: f'"{self.operator}"'),
+        ]
 
 
 _nodes.append(NLVectorMath)
@@ -5095,15 +5097,10 @@ class NLVectorAngleCheck(bpy.types.Node, NLParameterNode):
     def get_output_socket_varnames(self):
         return ['OUT', 'ANGLE']
 
-    def setup(self, cell_varname, uids, line_writer):
-        NLNode.setup(
-            self,
-            cell_varname,
-            uids,
-            line_writer
-        )
-        line_writer.write_line(
-            "{}.{} = '{}'", cell_varname, "op", self.operator)
+    def get_nonsocket_fields(self):
+        return [
+            ("op", lambda: f'"{self.operator}"'),
+        ]
 
 
 _nodes.append(NLVectorAngleCheck)
@@ -6357,8 +6354,10 @@ class NLParameterMatrixToEulerNode(bpy.types.Node, NLParameterNode):
     def get_input_sockets_field_names(self):
         return ["input_m"]
 
-    def set_props(self, writer, node):
-        writer.write_line(f'{node}.output = {self.output}')
+    def get_nonsocket_fields(self):
+        return [
+            ("output", lambda: f'{self.output}'),
+        ]
 
 
 _nodes.append(NLParameterMatrixToEulerNode)
@@ -6377,13 +6376,6 @@ class NLOnInitConditionNode(bpy.types.Node, NLConditionNode):
 
     def get_netlogic_class_name(self):
         return "ULOnInit"
-
-    def setup(self, cell_varname, uids, line_writer):
-        NLNode.setup(
-            self, cell_varname,
-            uids,
-            line_writer
-        )
 
 
 _nodes.append(NLOnInitConditionNode)
@@ -6404,14 +6396,6 @@ class NLOnUpdateConditionNode(bpy.types.Node, NLConditionNode):
 
     def get_netlogic_class_name(self):
         return "ULOnUpdate"
-
-    def setup(self, cell_varname, uids, line_writer):
-        NLNode.setup(
-            self,
-            cell_varname,
-            uids,
-            line_writer
-        )
 
 
 _nodes.append(NLOnUpdateConditionNode)
@@ -6483,14 +6467,10 @@ class NLGamepadSticksCondition(bpy.types.Node, NLParameterNode):
     def get_output_socket_varnames(self):
         return ["X", "Y"]
 
-    def setup(self, cell_varname, uids, line_writer):
-        NLNode.setup(
-            self,
-            cell_varname,
-            uids,
-            line_writer
-        )
-        line_writer.write_line("{}.{} = {}", cell_varname, "axis", self.axis)
+    def get_nonsocket_fields(self):
+        return [
+            ("axis", lambda: f'"{self.axis}"'),
+        ]
 
 
 _nodes.append(NLGamepadSticksCondition)
@@ -6530,14 +6510,10 @@ class NLGamepadTriggerCondition(bpy.types.Node, NLParameterNode):
     def get_output_socket_varnames(self):
         return ["VAL"]
 
-    def setup(self, cell_varname, uids, line_writer):
-        NLNode.setup(
-            self,
-            cell_varname,
-            uids,
-            line_writer
-        )
-        line_writer.write_line("{}.{} = {}", cell_varname, "axis", self.axis)
+    def get_nonsocket_fields(self):
+        return [
+            ("axis", lambda: f'"{self.axis}"'),
+        ]
 
 
 _nodes.append(NLGamepadTriggerCondition)
@@ -6612,24 +6588,11 @@ class NLGamepadButtonsCondition(bpy.types.Node, NLConditionNode):
     def get_output_socket_varnames(self):
         return ["BUTTON"]
 
-    def setup(self, cell_varname, uids, line_writer):
-        NLNode.setup(
-            self,
-            cell_varname,
-            uids,
-            line_writer)
-        line_writer.write_line(
-            "{}.{} = {}",
-            cell_varname,
-            "pulse",
-            self.pulse
-        )
-        line_writer.write_line(
-            "{}.{} = {}",
-            cell_varname,
-            "button",
-            self.button
-        )
+    def get_nonsocket_fields(self):
+        return [
+            ("pulse", lambda: f'{self.pulse}'),
+            ("button", lambda: f'{self.button}')
+        ]
 
 
 _nodes.append(NLGamepadButtonsCondition)
@@ -6678,24 +6641,11 @@ class NLGamepadButtonUpCondition(bpy.types.Node, NLConditionNode):
     def get_output_socket_varnames(self):
         return ["BUTTON"]
 
-    def setup(self, cell_varname, uids, line_writer):
-        NLNode.setup(
-            self,
-            cell_varname,
-            uids,
-            line_writer)
-        line_writer.write_line(
-            "{}.{} = {}",
-            cell_varname,
-            "pulse",
-            self.pulse
-        )
-        line_writer.write_line(
-            "{}.{} = {}",
-            cell_varname,
-            "button",
-            self.button
-        )
+    def get_nonsocket_fields(self):
+        return [
+            ("pulse", lambda: f'{self.pulse}'),
+            ("button", lambda: f'{self.button}')
+        ]
 
 
 _nodes.append(NLGamepadButtonUpCondition)
@@ -6757,14 +6707,10 @@ class NLKeyPressedCondition(bpy.types.Node, NLConditionNode):
     def get_input_sockets_field_names(self):
         return ["key_code"]
 
-    def setup(self, cell_varname, uids, line_writer):
-        NLNode.setup(
-            self,
-            cell_varname,
-            uids,
-            line_writer
-        )
-        line_writer.write_line("{}.{} = {}", cell_varname, "pulse", self.pulse)
+    def get_nonsocket_fields(self):
+        return [
+            ("pulse", lambda: f'{self.pulse}')
+        ]
 
 
 _nodes.append(NLKeyPressedCondition)
@@ -6807,14 +6753,10 @@ class NLKeyLoggerAction(bpy.types.Node, NLActionNode):
     def get_output_socket_varnames(self):
         return ["KEY_LOGGED", "KEY_CODE", "CHARACTER"]
 
-    def setup(self, cell_varname, uids, line_writer):
-        NLNode.setup(
-            self,
-            cell_varname,
-            uids,
-            line_writer
-        )
-        line_writer.write_line("{}.{} = {}", cell_varname, "pulse", self.pulse)
+    def get_nonsocket_fields(self):
+        return [
+            ("pulse", lambda: f'{self.pulse}')
+        ]
 
 
 _nodes.append(NLKeyLoggerAction)
@@ -6854,14 +6796,10 @@ class NLKeyReleasedCondition(bpy.types.Node, NLConditionNode):
     def get_input_sockets_field_names(self):
         return ["key_code"]
 
-    def setup(self, cell_varname, uids, line_writer):
-        NLNode.setup(
-            self,
-            cell_varname,
-            uids,
-            line_writer
-        )
-        line_writer.write_line("{}.{} = {}", cell_varname, "pulse", self.pulse)
+    def get_nonsocket_fields(self):
+        return [
+            ("pulse", lambda: f'{self.pulse}')
+        ]
 
 
 _nodes.append(NLKeyReleasedCondition)
@@ -6902,14 +6840,10 @@ class NLMousePressedCondition(bpy.types.Node, NLConditionNode):
     def get_input_sockets_field_names(self):
         return ["mouse_button_code"]
 
-    def setup(self, cell_varname, uids, line_writer):
-        NLNode.setup(
-            self,
-            cell_varname,
-            uids,
-            line_writer
-        )
-        line_writer.write_line("{}.{} = {}", cell_varname, "pulse", self.pulse)
+    def get_nonsocket_fields(self):
+        return [
+            ("pulse", lambda: f'{self.pulse}')
+        ]
 
     def get_output_socket_varnames(self):
         return ['OUT']
@@ -6952,14 +6886,10 @@ class NLMouseMovedCondition(bpy.types.Node, NLConditionNode):
     def get_input_sockets_field_names(self):
         return ["mouse_button_code"]
 
-    def setup(self, cell_varname, uids, line_writer):
-        NLNode.setup(
-            self,
-            cell_varname,
-            uids,
-            line_writer
-        )
-        line_writer.write_line("{}.{} = {}", cell_varname, "pulse", self.pulse)
+    def get_nonsocket_fields(self):
+        return [
+            ("pulse", lambda: f'{self.pulse}')
+        ]
 
 
 _nodes.append(NLMouseMovedCondition)
@@ -7000,14 +6930,10 @@ class NLMouseReleasedCondition(bpy.types.Node, NLConditionNode):
     def get_input_sockets_field_names(self):
         return ["mouse_button_code"]
 
-    def setup(self, cell_varname, uids, line_writer):
-        NLNode.setup(
-            self,
-            cell_varname,
-            uids,
-            line_writer
-        )
-        line_writer.write_line("{}.{} = {}", cell_varname, "pulse", self.pulse)
+    def get_nonsocket_fields(self):
+        return [
+            ("pulse", lambda: f'{self.pulse}')
+        ]
 
     def get_output_socket_varnames(self):
         return ['OUT']
@@ -7222,14 +7148,10 @@ class NLConditionCollisionNode(bpy.types.Node, NLConditionNode):
     def get_output_socket_varnames(self):
         return [OUTCELL, "TARGET", "OBJECTS", "POINT", "NORMAL"]
 
-    def setup(self, cell_varname, uids, line_writer):
-        NLNode.setup(
-            self,
-            cell_varname,
-            uids,
-            line_writer
-        )
-        line_writer.write_line("{}.{} = {}", cell_varname, "pulse", self.pulse)
+    def get_nonsocket_fields(self):
+        return [
+            ("pulse", lambda: f'{self.pulse}'),
+        ]
 
 
 _nodes.append(NLConditionCollisionNode)
@@ -7509,19 +7431,10 @@ class NLConditionLogicOperation(bpy.types.Node, NLConditionNode):
     def get_input_sockets_field_names(self):
         return ["param_a", "param_b", 'threshold']
 
-    def setup(self, cell_varname, uids, line_writer):
-        NLNode.setup(
-            self,
-            cell_varname,
-            uids,
-            line_writer
-        )
-        line_writer.write_line(
-            "{}.{} = {}",
-            cell_varname,
-            "operator",
-            self.operator
-        )
+    def get_nonsocket_fields(self):
+        return [
+            ("operator", lambda: f'{self.operator}'),
+        ]
 
     def get_output_socket_varnames(self):
         return ['RESULT']
@@ -7563,19 +7476,10 @@ class NLConditionCompareVecs(bpy.types.Node, NLConditionNode):
     def get_output_socket_varnames(self):
         return ['OUT']
 
-    def setup(self, cell_varname, uids, line_writer):
-        NLNode.setup(
-            self,
-            cell_varname,
-            uids,
-            line_writer
-        )
-        line_writer.write_line(
-            "{}.{} = {}",
-            cell_varname,
-            "operator",
-            self.operator
-        )
+    def get_nonsocket_fields(self):
+        return [
+            ("operator", lambda: f'{self.operator}'),
+        ]
 
 
 _nodes.append(NLConditionCompareVecs)
@@ -8685,19 +8589,10 @@ class NLValueSwitchListCompare(bpy.types.Node, NLParameterNode):
             "pf", 'val_f'
         ]
 
-    def setup(self, cell_varname, uids, line_writer):
-        NLNode.setup(
-            self,
-            cell_varname,
-            uids,
-            line_writer
-        )
-        line_writer.write_line(
-            "{}.{} = {}",
-            cell_varname,
-            "operator",
-            self.operator
-        )
+    def get_nonsocket_fields(self):
+        return [
+            ("operator", lambda: f'{self.operator}'),
+        ]
 
     def get_output_socket_varnames(self):
         return ['RESULT']
@@ -8837,19 +8732,10 @@ class NLVehicleApplyEngineForce(bpy.types.Node, NLActionNode):
     def get_input_sockets_field_names(self):
         return ["condition", "vehicle", "wheelcount", 'power']
 
-    def setup(self, cell_varname, uids, line_writer):
-        NLNode.setup(
-            self,
-            cell_varname,
-            uids,
-            line_writer
-        )
-        line_writer.write_line(
-            "{}.{} = '{}'",
-            cell_varname,
-            "value_type",
-            self.value_type
-        )
+    def get_nonsocket_fields(self):
+        return [
+            ("value_type", lambda: f'"{self.value_type}"'),
+        ]
 
 
 _nodes.append(NLVehicleApplyEngineForce)
@@ -8892,19 +8778,10 @@ class NLVehicleApplyBraking(bpy.types.Node, NLActionNode):
     def get_input_sockets_field_names(self):
         return ["condition", "vehicle", "wheelcount", 'power']
 
-    def setup(self, cell_varname, uids, line_writer):
-        NLNode.setup(
-            self,
-            cell_varname,
-            uids,
-            line_writer
-        )
-        line_writer.write_line(
-            "{}.{} = '{}'",
-            cell_varname,
-            "value_type",
-            self.value_type
-        )
+    def get_nonsocket_fields(self):
+        return [
+            ("value_type", lambda: f'"{self.value_type}"'),
+        ]
 
 
 _nodes.append(NLVehicleApplyBraking)
@@ -8946,19 +8823,10 @@ class NLVehicleApplySteering(bpy.types.Node, NLActionNode):
     def get_input_sockets_field_names(self):
         return ["condition", "vehicle", "wheelcount", 'power']
 
-    def setup(self, cell_varname, uids, line_writer):
-        NLNode.setup(
-            self,
-            cell_varname,
-            uids,
-            line_writer
-        )
-        line_writer.write_line(
-            "{}.{} = '{}'",
-            cell_varname,
-            "value_type",
-            self.value_type
-        )
+    def get_nonsocket_fields(self):
+        return [
+            ("value_type", lambda: f'"{self.value_type}"'),
+        ]
 
 
 _nodes.append(NLVehicleApplySteering)
@@ -9024,19 +8892,10 @@ class NLVehicleSetAttributes(bpy.types.Node, NLActionNode):
             'tyre_friction'
         ]
 
-    def setup(self, cell_varname, uids, line_writer):
-        NLNode.setup(
-            self,
-            cell_varname,
-            uids,
-            line_writer
-        )
-        line_writer.write_line(
-            "{}.{} = '{}'",
-            cell_varname,
-            "value_type",
-            self.value_type
-        )
+    def get_nonsocket_fields(self):
+        return [
+            ("value_type", lambda: f'"{self.value_type}"'),
+        ]
 
 
 _nodes.append(NLVehicleSetAttributes)
@@ -9076,19 +8935,10 @@ class NLSetObjectAttributeActionNode(bpy.types.Node, NLActionNode):
     def get_input_sockets_field_names(self):
         return ["condition", "xyz", "game_object", "attribute_value"]
 
-    def setup(self, cell_varname, uids, line_writer):
-        NLNode.setup(
-            self,
-            cell_varname,
-            uids,
-            line_writer
-        )
-        line_writer.write_line(
-            "{}.{} = '{}'",
-            cell_varname,
-            "value_type",
-            self.value_type
-        )
+    def get_nonsocket_fields(self):
+        return [
+            ("value_type", lambda: f'"{self.value_type}"'),
+        ]
 
 
 _nodes.append(NLSetObjectAttributeActionNode)
@@ -10306,14 +10156,10 @@ class NLGamepadLook(bpy.types.Node, NLActionNode):
     def get_output_socket_varnames(self):
         return ["DONE"]
 
-    def setup(self, cell_varname, uids, line_writer):
-        NLNode.setup(
-            self,
-            cell_varname,
-            uids,
-            line_writer
-        )
-        line_writer.write_line("{}.{} = {}", cell_varname, "axis", self.axis)
+    def get_nonsocket_fields(self):
+        return [
+            ("axis", lambda: f'{self.axis}'),
+        ]
 
 
 _nodes.append(NLGamepadLook)
@@ -13676,10 +13522,8 @@ _enum_predefined_math_fun = {
     ("degrees(a)", "degrees(a)", "convert a from radians to degrees"),
     ("e", "e", "the e constant"),
     ("exp(a)", "exp(e)", "e to the power a"),
-    ("float(a)", "float(a)", "a (float string) converted to a float value"),
     ("floor(a)", "floor(a)", "largest integer value < or = to a"),
     ("hypot(a,b)", "hypot(a,b)", "sqrt(a*a + b*b)"),
-    ("int(a)", "int(a)", "a (integer string) converted to an integer value"),
     ("log(a)", "log(a)", "natural log of a"),
     ("log10(a)", "log10(a)", "base 10 log of a"),
     ("mod(a,b)", "mod(a,b)", "a modulo b"),
@@ -13690,7 +13534,6 @@ _enum_predefined_math_fun = {
     ("sin(a)", "sin(a)", "sine of a, radians"),
     ("sinh(a)", "sinh(a)", "hyperbolic sine of a"),
     ("sqrt(a)", "sqrt(a)", "square root of a"),
-    ("str(a)", "str(a)", "a (non string value) converted to a string"),
     ("tan(a)", "tan(a)", "tangent of a, radians"),
     ("tanh(a)", "tanh(a)", "hyperbolic tangent of a")
 }

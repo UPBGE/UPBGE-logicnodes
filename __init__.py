@@ -14,7 +14,7 @@ bl_info = {
         "A Node System to create game logic."
     ),
     "author": "pgi, Leopold A-C (Iza Zed)",
-    "version": (2, 1, 0),
+    "version": (2, 1, 1),
     "blender": (2, 91, 0),
     "location": "View Menu",
     "category": "Game Engine"
@@ -112,7 +112,7 @@ def update_tree_name(tree, old_name):
                     bpy.ops.logic.python_component_register(component_name=new_comp_name)
                     bpy.context.view_layer.objects.active = active_object
                 idx += 1
-            
+
             for sensor in gs.sensors:
                 if old_name_code in sensor.name:
                     sensor.name = sensor.name.replace(
@@ -574,6 +574,8 @@ _registered_classes = [
     ops.NLRemoveGlobalCatOperator,
     ops.NLResetEmptySize,
     ops.NLMakeCustomMainLoop,
+    ops.NLMakeCustomLoopTree,
+    ops.NLSelectAppliedObject,
     NLNodeTreeReference
 ]
 
@@ -758,6 +760,11 @@ def register():
     bpy.types.Scene.jump_in_game_cam = bpy.props.BoolProperty(
         name='Use Game Camera On Start'
     )
+    bpy.types.Scene.custom_mainloop_tree = bpy.props.PointerProperty(
+        name='Custom Mainloop Tree',
+        type=bpy.types.NodeTree
+    )
+
 
 # blender add-on unregistration callback
 def unregister():
