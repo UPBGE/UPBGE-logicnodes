@@ -961,7 +961,8 @@ class NLCollisionMaskSocket(bpy.types.NodeSocket, NLSocket):
                 idx += 1
 
     def get_unlinked_value(self):
-        slots = [self.get(f'slot_{idx}', 0) * (2**idx) for idx in range(15)]
+        slots = [self.get(f'slot_{idx}', 1) * (2**idx) for idx in range(16)]
+        print(slots)
         return sum(slots)
 
 
@@ -2393,7 +2394,8 @@ class NLSocketDistanceCheck(bpy.types.NodeSocket, NLSocket):
         else:
             layout.prop(self, "value", text=text)
 
-    def get_unlinked_value(self): return "{}".format(self.value)
+    def get_unlinked_value(self):
+        return "{}".format(self.value)
 
 
 _sockets.append(NLSocketDistanceCheck)
@@ -2509,11 +2511,7 @@ class NLXYZSocket(bpy.types.NodeSocket, NLSocket):
             row.prop(self, 'z', text="Z")
 
     def get_unlinked_value(self):
-        return {
-            'x': self.x,
-            'y': self.y,
-            'z': self.z
-        }
+        return "dict(x={}, y={}, z={})".format(self.x, self.y, self.z)
 
 
 _sockets.append(NLXYZSocket)
@@ -2538,10 +2536,7 @@ class NLInvertedXYSocket(bpy.types.NodeSocket, NLSocket):
             row.prop(self, 'y', text="Y")
 
     def get_unlinked_value(self):
-        return {
-            'x': self.x,
-            'y': self.y
-        }
+        return "dict(x={}, y={})".format(self.x, self.y)
 
 
 _sockets.append(NLInvertedXYSocket)
@@ -2671,36 +2666,10 @@ class NLSocketIKMode(bpy.types.NodeSocket, NLSocket):
             layout.prop(self, "value", text=text)
 
     def get_unlinked_value(self):
-        return self.value
+        return f'{self.value}'
 
 
 _sockets.append(NLSocketIKMode)
-
-
-class NLAlphaSocket(bpy.types.NodeSocket, NLSocket):
-    bl_idname = "NLAlphaSocket"
-    bl_label = "Alpha Float"
-    value: bpy.props.StringProperty(update=update_tree_code)
-
-    def draw_color(self, context, node):
-        return PARAMETER_SOCKET_COLOR
-
-    def draw(self, context, layout, node, text):
-        if self.is_linked or self.is_output:
-            layout.label(text=text)
-        else:
-            layout.prop(self, "value", text=text)
-
-    def get_unlinked_value(self):
-        if not self.value:
-            return None
-        try:
-            return float(self.value)
-        except ValueError:
-            return None
-
-
-_sockets.append(NLAlphaSocket)
 
 
 class NLQuotedStringFieldSocket(bpy.types.NodeSocket, NLSocket):
@@ -2864,7 +2833,8 @@ class NLSceneSocket(bpy.types.NodeSocket, NLSocket):
     def draw_color(self, context, node):
         return PARAM_SCENE_SOCKET_COLOR
 
-    def get_unlinked_value(self): return "None"
+    def get_unlinked_value(self):
+        return "None"
 
     def draw(self, context, layout, node, text):
         layout.label(text=text)
@@ -3064,7 +3034,8 @@ class NLNumericFieldSocket(bpy.types.NodeSocket, NLSocket):
     def draw_color(self, context, node):
         return PARAMETER_SOCKET_COLOR
 
-    def get_unlinked_value(self): return socket_field(self)
+    def get_unlinked_value(self):
+        return socket_field(self)
 
     def draw(self, context, layout, node, text):
         if self.is_linked or self.is_output:
@@ -3163,7 +3134,8 @@ class NLSocketReadableMemberName(bpy.types.NodeSocket, NLSocket):
             self.value != 'visible'
         ) else PARAMETER_SOCKET_COLOR
 
-    def get_unlinked_value(self): return '"{}"'.format(self.value)
+    def get_unlinked_value(self):
+        return '"{}"'.format(self.value)
 
     def draw(self, context, layout, node, text):
         if self.is_linked or self.is_output:
@@ -3216,7 +3188,8 @@ class NLMouseButtonSocket(bpy.types.NodeSocket, NLSocket):
     def draw_color(self, context, node):
         return PARAM_INPUT_SOCKET_COLOR
 
-    def get_unlinked_value(self): return self.value
+    def get_unlinked_value(self):
+        return self.value
 
     def draw(self, context, layout, node, text):
         if self.is_linked or self.is_output:
@@ -3262,7 +3235,8 @@ class NLPlayActionModeSocket(bpy.types.NodeSocket, NLSocket):
         update=update_tree_code
     )
 
-    def get_unlinked_value(self): return self.value
+    def get_unlinked_value(self):
+        return self.value
 
     def draw_color(self, context, node):
         return PARAMETER_SOCKET_COLOR
@@ -3700,7 +3674,8 @@ class NLVectorSocket(bpy.types.NodeSocket, NLSocket):
     def draw(self, context, layout, node, text):
         layout.label(text=text)
 
-    def get_unlinked_value(self): return "None"
+    def get_unlinked_value(self):
+        return "None"
 
 
 _sockets.append(NLVectorSocket)
@@ -3941,7 +3916,8 @@ class NLSocketLocalAxis(bpy.types.NodeSocket, NLSocket):
             parts.label(text=text)
             parts.prop(self, "value", text='')
 
-    def get_unlinked_value(self): return self.value
+    def get_unlinked_value(self):
+        return self.value
 
 
 _sockets.append(NLSocketLocalAxis)

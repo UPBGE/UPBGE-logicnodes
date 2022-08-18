@@ -53,6 +53,7 @@ class {}Wrapper():
     def __init__(self, game_object, exec_cond="", startup=False):
         from uplogic import nodes, utils
         from uplogic.nodes.logictree import ULLogicTree
+        from uplogic.utils import OPERATORS, LOGIC_OPERATORS
 {}
         self.condition = exec_cond
         owner = self.owner = game_object
