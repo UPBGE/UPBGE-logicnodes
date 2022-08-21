@@ -91,7 +91,7 @@ _enum_type_casts = [
 ]
 
 
-_enum_distance_models = {
+_enum_distance_models = [
     ('INVERSE', 'Inverse', 'Sound will fade exponentially (Realistic)'),
     ('INVERSE_CLAMPED', 'Inverse Clamped',
      'Sound will fade exponentially (Realistic, Clamped)'),
@@ -102,13 +102,26 @@ _enum_distance_models = {
     ('LINEAR_CLAMPED', 'Linear Clamped',
      'Sound will fade in a linear relation to distance (Clamped)'),
     ('NONE', 'None', "Don't use a distance model")
-}
+]
 
 
-_enum_object_property_types = {
+_enum_object_property_types = [
     ('GAME', 'Game Property', 'Edit Game Property'),
     ('ATTR', 'Attribute', 'Edit Internal Attribute (can be used in materials)')
-}
+]
+
+
+_enum_2d_filters = [
+    ('FXAA', 'FXAA', 'Fast Anti-Aliasing'),
+    ('HBAO', 'HBAO', 'Horizon-Based Ambient Occlusion'),
+    ('SSAO', 'SSAO', 'Screen-Space Ambient Occlusion'),
+    ('VIGNETTE', 'Vignette', 'Fade to color at screen edges'),
+    ('BRIGHTNESS', 'Brightness', 'Overall brightness'),
+    ('CHROMAB', 'Chromatic Aberration', 'Lens light bending effect'),
+    ('GRAYSCALE', 'Grayscale', 'Convert image to grayscale'),
+    ('LEVELS', 'Levels', 'Control color levels'),
+    ('MIST', 'Mist', 'Classic depth fog implementation')
+]
 
 
 _enum_constraint_types = [
@@ -219,20 +232,20 @@ _enum_readable_member_names = [
         "The local orientation of the object"
     ), (
         "worldLinearVelocity",
-        "Velocity (Global)",
+        "Linear Velocity (Global)",
         "The local linear velocity of the object"
     ), (
         "localLinearVelocity",
-        "Velocity (Local)",
+        "Linear Velocity (Local)",
         "The local linear velocity of the object"
     ), (
         "worldAngularVelocity",
-        "Torque (Global)",
-        "The local rotational velocity of the object"
+        "Angular Velocity (Global)",
+        "The local angular velocity of the object"
     ), (
         "localAngularVelocity",
-        "Torque (Local)",
-        "The local rotational velocity of the object"
+        "Angular Velocity (Local)",
+        "The local angular velocity of the object"
     ), (
         "worldTransform",
         "Transform (Global)",
@@ -617,6 +630,18 @@ def update_tree_code(self, context):
     if not getattr(bpy.context.scene.logic_node_settings, 'auto_compile'):
         return
     bge_netlogic.update_current_tree_code()
+
+
+def update_draw(self, context):
+    if not hasattr(context.space_data, 'edit_tree'):
+        return
+    tree = context.space_data.edit_tree
+    for node in tree.nodes:
+        if isinstance(node, NLNode):
+            try:
+                node.update_draw()
+            except Exception:
+                pass
 
 
 def socket_field(s):
@@ -5255,6 +5280,44 @@ class NLActiveCameraParameterNode(bpy.types.Node, NLParameterNode):
 _nodes.append(NLActiveCameraParameterNode)
 
 
+class NLStoreValue(bpy.types.Node, NLParameterNode):
+    bl_idname = "NLStoreValue"
+    bl_label = "Store Value"
+    nl_category = "Values"
+    nl_module = 'parameters'
+    initialize: bpy.props.BoolProperty(
+        name='Initialize',
+        description='Store a value in the first frame to avoid NoneType issues',
+        default=True
+    )
+
+    def init(self, context):
+        NLParameterNode.init(self, context)
+        self.inputs.new(NLConditionSocket.bl_idname, "Condition")
+        self.inputs.new(NLValueFieldSocket.bl_idname, "Value")
+        self.outputs.new(NLParameterSocket.bl_idname, "Stored Value")
+
+    def draw_buttons(self, context, layout):
+        layout.prop(self, "initialize")
+
+    def get_nonsocket_fields(self):
+        return [
+            ("initialize", lambda: f'{self.initialize}')
+        ]
+
+    def get_input_sockets_field_names(self):
+        return ['condition', 'value']
+
+    def get_netlogic_class_name(self):
+        return "ULStoreValue"
+
+    def get_output_socket_varnames(self):
+        return ["OUT"]
+
+
+_nodes.append(NLStoreValue)
+
+
 class NLGetGravityNode(bpy.types.Node, NLParameterNode):
     bl_idname = "NLGetGravityNode"
     bl_label = "Get Gravity"
@@ -5375,6 +5438,62 @@ class NLSetOverlayCollection(bpy.types.Node, NLActionNode):
 _nodes.append(NLSetOverlayCollection)
 
 
+class NLAddFilter(bpy.types.Node, NLActionNode):
+    bl_idname = "NLAddFilter"
+    bl_label = "Add Filter"
+    nl_category = "Scene"
+    nl_module = 'actions'
+    filter_type: bpy.props.EnumProperty(
+        items=_enum_2d_filters,
+        name='Filer',
+        description='2D Filters modify the image rendered by EEVEE',
+        default='FXAA',
+        update=update_draw
+    )
+
+    def update_draw(self):
+        self.inputs[2].enabled = self.filter_type == 'BRIGHTNESS'
+        self.inputs[3].enabled = self.filter_type in ['VIGNETTE', 'CHROMAB', 'GRAYSCALE', 'MIST']
+        self.inputs[4].enabled = self.filter_type in ['VIGNETTE', 'LEVELS', 'MIST']
+        self.inputs[5].enabled = self.filter_type == 'MIST'
+        self.inputs[6].enabled = self.inputs[5].enabled
+
+    def init(self, context):
+        NLActionNode.init(self, context)
+        self.inputs.new(NLConditionSocket.bl_idname, 'Condition')
+        self.inputs.new(NLPositiveIntCentSocket.bl_idname, 'Pass Index')
+        self.inputs.new(NLFloatFieldSocket.bl_idname, 'Brightness')
+        self.inputs[-1].value = 1.0
+        self.inputs.new(NLFloatFieldSocket.bl_idname, 'Power')
+        self.inputs[-1].value = 1.0
+        self.inputs.new(NLColorSocket.bl_idname, 'Color')
+        self.inputs.new(NLFloatFieldSocket.bl_idname, 'Start')
+        self.inputs[-1].value = .1
+        self.inputs.new(NLFloatFieldSocket.bl_idname, 'End')
+        self.inputs[-1].value = 50.0
+        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+
+    def draw_buttons(self, context, layout):
+        layout.prop(self, "filter_type")
+
+    def get_input_sockets_field_names(self):
+        return ['condition', 'pass_idx', 'brightness', 'power', 'color', 'start', 'end']
+
+    def get_nonsocket_fields(self):
+        return [
+            ("filter_type", lambda: f'"{self.filter_type}"')
+        ]
+
+    def get_output_socket_varnames(self):
+        return ["OUT"]
+
+    def get_netlogic_class_name(self):
+        return "ULAddFilter"
+
+
+_nodes.append(NLAddFilter)
+
+
 class NLRemoveOverlayCollection(bpy.types.Node, NLActionNode):
     bl_idname = "NLRemoveOverlayCollection"
     bl_label = "Remove Overlay Collection"
@@ -5415,8 +5534,8 @@ class NLArithmeticOpParameterNode(bpy.types.Node, NLParameterNode):
         self.inputs.new(NLFloatFieldSocket.bl_idname, "B")
         self.outputs.new(NLParameterSocket.bl_idname, "")
 
-    def draw_buttons(self, context, layout):
-        layout.prop(self, "operator", text="")
+    def get_input_sockets_field_names(self):
+        return ['collection']
 
     def get_nonsocket_fields(self):
         return [
