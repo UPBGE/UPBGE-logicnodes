@@ -1347,24 +1347,107 @@ class NLAddPropertyOperator(bpy.types.Operator):
 
     def execute(self, context):
         bpy.ops.object.game_property_new()
-        print(context)
         bge_netlogic.update_current_tree_code()
         return {'FINISHED'}
+
+
+def _enum_components(self, context):
+    select_text = context.scene.nl_componenthelper
+    items = []
+    for line in select_text.lines:
+        if 'class ' in line.body:
+            cname = line.body.split('(')[0]
+            cname = cname.split('class ')[-1]
+            cname = cname.replace(':', '')
+            cname = cname.replace(' ', '')
+            items.append((cname, cname, cname))
+    return items
+
+
+def reload_texts():
+    for t in bpy.data.texts:
+        if t.filepath:
+            path = (
+                os.path.join(bpy.path.abspath('//'), t.filepath[2:])
+                if t.filepath.startswith('//')
+                else t.filepath
+            )
+            with open(path) as f:
+                t.clear()
+                t.write(f.read())
 
 
 class NLAddComponentOperator(bpy.types.Operator):
     bl_idname = "bge_netlogic.add_component"
     bl_label = "Add Component"
     bl_options = {'REGISTER', 'UNDO'}
-    bl_description = "Add a python Component to the selected object."
+    bl_description = "Add a python Component to the selected object"
+
+    component: bpy.props.EnumProperty(
+        name="Component Name", description="Add this Component to the current object", items=_enum_components
+    )
 
     @classmethod
     def poll(cls, context):
-        return True
+        return context.active_object is not None
 
     def execute(self, context):
-        bpy.ops.logic.python_component_register()
-        bge_netlogic.update_current_tree_code()
+        select_text = context.scene.nl_componenthelper
+        mod_name = select_text.name[:len(select_text.name) - 3]
+        body = select_text.as_string()
+        for line in select_text.lines:
+            if 'uplogic' in line.body or line.body.startswith('from bge '):
+                line.body = '# ' + line.body
+        try:
+            bpy.ops.logic.python_component_register(component_name=f'{mod_name}.{self.component}')
+            select_text.clear()
+            select_text.write(body)
+        except Exception as e:
+            select_text.clear()
+            select_text.write(body)
+            self.report({"ERROR"}, e)
+        return {'FINISHED'}
+
+    def invoke(self, context, event):
+        reload_texts()
+        return context.window_manager.invoke_props_dialog(self, width=400)
+
+
+class NLReloadComponents(bpy.types.Operator):
+    bl_idname = "bge_netlogic.reload_components"
+    bl_label = "Reload Components"
+    bl_options = {'REGISTER', 'UNDO'}
+    bl_description = "Reload all components applied to this object"
+
+    @classmethod
+    def poll(cls, context):
+        return context.active_object is not None
+
+    def execute(self, context):
+        reload_texts()
+        obj = context.active_object
+        for i, c in enumerate(obj.game.components):
+            text = bpy.data.texts[f'{c.module}.py']
+            for line in text.lines:
+                if 'uplogic' in line.body or line.body.startswith('from bge '):
+                    line.body = '# ' + line.body
+            bpy.ops.logic.python_component_reload(index=i)
+        reload_texts()
+        return {'FINISHED'}
+
+
+class NLReloadTexts(bpy.types.Operator):
+    bl_idname = "bge_netlogic.reload_texts"
+    bl_label = "Reload Scripts"
+    bl_options = {'REGISTER', 'UNDO'}
+    bl_description = "Reload all externally saved scripts"
+
+    @classmethod
+    def poll(cls, context):
+        return context.active_object is not None
+
+    def execute(self, context):
+        reload_texts()
         return {'FINISHED'}
 
 

@@ -756,6 +756,47 @@ class BGE_PT_GameComponentPanel(bpy.types.Panel):
                     col.prop(prop, "value", text="")
 
 
+class BGE_PT_GameComponentHelperPanel(bpy.types.Panel):
+    bl_label = "Component Helper"
+    bl_space_type = "PROPERTIES"
+    bl_region_type = "WINDOW"
+    bl_context = "game"
+
+    @classmethod
+    def poll(cls, context):
+        ob = context.active_object
+        return ob and ob.name
+
+    def draw(self, context):
+        layout = self.layout
+
+        ob = context.active_object
+        # row.operator("logic.python_component_register", text="Register", icon="PLUS")
+        # row.operator("logic.python_component_create", text="Create", icon="PLUS")
+        layout.operator('bge_netlogic.reload_components', text='Reload Components', icon='RECOVER_LAST')
+        row = layout.row()
+        row.label(text=f'Add Component To {context.active_object.name}:')
+        row = layout.row(align=True)
+        row.prop(context.scene, 'nl_componenthelper', text='')
+        row.operator("bge_netlogic.add_component", text='', icon="PLUS")
+
+        # for i, c in enumerate(game.components):
+        #     box = layout.box()
+        #     row = box.row()
+        #     row.prop(c, "show_expanded", text="", emboss=False)
+        #     row.label(text=c.name)
+        #     row.operator("logic.python_component_reload", text="", icon='RECOVER_LAST').index = i
+        #     row.operator("logic.python_component_remove", text="", icon='X').index = i
+
+        #     if c.show_expanded and len(c.properties) > 0:
+        #         box = box.box()
+        #         for prop in c.properties:
+        #             row = box.row()
+        #             row.label(text=prop.name)
+        #             col = row.column()
+        #             col.prop(prop, "value", text="")
+
+
 class BGELogicTree(bpy.types.NodeTree):
     bl_idname = "BGELogicTree"
     bl_label = "Logic Node Editor"
@@ -772,11 +813,12 @@ class BGELogicTree(bpy.types.NodeTree):
     def poll(cls, context):
         return True
 
-    # def update(self):
-    #     for n in self.nodes:
-    #         if isinstance(n, bpy.types.NodeReroute):
-    #             source = n.inputs[0].links[0].from_socket
-    #             while isinstance(source.node, bpy.types.NodeReroute):
-    #                 source = source.node.inputs[0].links[0].from_socket
-    #             n.inputs[0].type = source.type
-    #             n.outputs[0].type = n.inputs[0].type
+    def update(self):
+        # for n in self.nodes:
+        #     if isinstance(n, bpy.types.NodeReroute):
+        #         source = n.inputs[0].links[0].from_socket
+        #         while isinstance(source.node, bpy.types.NodeReroute):
+        #             source = source.node.inputs[0].links[0].from_socket
+        #         n.inputs[0].type = source.type
+        #         n.outputs[0].type = n.inputs[0].type
+        pass

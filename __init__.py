@@ -9,7 +9,7 @@ import time
 
 
 bl_info = {
-    "name": "Logic Nodes",
+    "name": "Logic Nodes+",
     "description": (
         "A Node System to create game logic."
     ),
@@ -51,7 +51,8 @@ def update_current_tree_code(*ignored):
     _update_queue.append(now)
 
 
-def update_tree_name(tree, old_name):
+def update_tree_name(context):
+    print('Going In Here')
     return
     utils.set_compile_status(utils.TREE_MODIFIED)
     new_name = tree.name
@@ -484,7 +485,7 @@ class LogicNodesAddonPreferences(bpy.types.AddonPreferences):
         col = box.column()
         col.label(
             text='Logic Nodes require the uplogic module, please install if missing.',
-            icon='CHECKMARK' if UPLOGIC_INSTALLED else 'ERROR'
+            icon='CHECKMARK' if 'uplogic' in sys.modules else 'ERROR'
         )
         col.operator('bge_netlogic.install_uplogic_module', icon='IMPORT')
         # col.operator('bge_netlogic.install_fake_bge_module', icon='IMPORT')
@@ -532,7 +533,7 @@ class LogicNodesAddonPreferences(bpy.types.AddonPreferences):
         col.separator()
         link_row = col.row(align=True)
         link_row.operator("bge_netlogic.github", icon="URL")
-        link_row.operator("bge_netlogic.update_tree_version", icon='PLUGIN')
+        # link_row.operator("bge_netlogic.update_tree_version", icon='PLUGIN')
         link_row.operator("bge_netlogic.donate", icon="FUND")
         contrib_row = col.row()
         contrib_row.label(text='Contributors: VUAIEO, Simon, L_P, p45510n')
@@ -576,6 +577,8 @@ _registered_classes = [
     ops.NLMakeCustomMainLoop,
     ops.NLMakeCustomLoopTree,
     ops.NLSelectAppliedObject,
+    ops.NLReloadTexts,
+    ops.NLReloadComponents,
     NLNodeTreeReference
 ]
 
@@ -590,6 +593,8 @@ _registered_classes.extend([
     ui.BGEGroupName,
     ui.BGEGlobalValue,
     ui.BGEGlobalValueCategory,
+    ui.BGE_PT_GameComponentHelperPanel,
+    # ui.BGEComponentHelper,
     ui.NL_UL_glcategory,
     ui.NL_UL_glvalue,
     ui.BGE_PT_LogicPanel,
@@ -692,6 +697,20 @@ def load_uplogic_module():
         pass
 
 
+import re
+
+
+def filter_components(self, item=bpy.types.Text):
+    if not item.name.startswith('nl_'):
+        return True
+    # for line in item.lines:
+    #     # print(line.body)
+    #     if re.match(re.compile('class.KX_PythonComponent.'), line.body):
+    #         print('Heureka')
+    #         return True
+    return False
+
+
 # blender add-on registration callback
 def register():
     bpy.app.handlers.game_pre.append(_generate_on_game_start)
@@ -709,7 +728,9 @@ def register():
     menu_nodes.append(NodeCategory('Layout', 'Layout', items=layout_items))
     nodeitems_utils.register_node_categories("NETLOGIC_NODES", menu_nodes)
 
-    load_uplogic_module()
+    rename_handle = object()
+    subscribe_to = ui.BGELogicTree, 'name'
+    bpy.msgbus.subscribe_rna(key=subscribe_to, owner=rename_handle, args=(bpy.context,), notify=update_tree_name)
 
     bpy.types.Object.sound_occluder = bpy.props.BoolProperty(
         default=True,
@@ -751,6 +772,9 @@ def register():
     bpy.types.Scene.nl_global_categories = bpy.props.CollectionProperty(
         type=ui.BGEGlobalValueCategory
     )
+    bpy.types.Scene.nl_componenthelper = bpy.props.PointerProperty(
+        type=bpy.types.Text, poll=filter_components, name='Component', description='Add the first component defined in this file'
+    )
     bpy.types.Scene.nl_global_cat_selected = bpy.props.IntProperty(
         name='Category'
     )
@@ -764,6 +788,16 @@ def register():
         name='Custom Mainloop Tree',
         type=bpy.types.NodeTree
     )
+
+    try:
+        import uplogic  # noqa
+        message = 'Uplogic Module already installed.'
+        print(f'[Logic Nodes][{utils.ansicol.BBLUE}NOTIFICATION{utils.ansicol.END}] {message}')
+    except ImportError as e:
+        print(e)
+        message = 'Uplogic Module not installed, fetching latest version...'
+        print(f'[Logic Nodes][{utils.ansicol.BBLUE}NOTIFICATION{utils.ansicol.END}] {message}')
+        # load_uplogic_module()
 
 
 # blender add-on unregistration callback
