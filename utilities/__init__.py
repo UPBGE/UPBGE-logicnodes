@@ -262,7 +262,7 @@ def success(message):
 
 def make_valid_name(name):
     valid_characters = (
-        "abcdefghijklmnopqrstuvwxyz1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+        "_abcdefghijklmnopqrstuvwxyz1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ"
     )
     clsname = name.replace(' ', '_')
     stripped_name = "".join(

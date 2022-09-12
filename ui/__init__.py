@@ -1,6 +1,9 @@
 import bpy
 import bge_netlogic
 import bge_netlogic.utilities as utils
+import ops
+from bpy.app.handlers import persistent
+from utilities import make_valid_name
 
 
 _filter_prop_types = [
@@ -489,15 +492,16 @@ class BGE_PT_LogicTreeOptions(bpy.types.Panel):
     @classmethod
     def poll(cls, context):
         enabled = (context.space_data.tree_type == BGELogicTree.bl_idname)
-        if getattr(context.space_data, 'edit_tree', None) is not None:
-            bge_netlogic._consume_update_tree_code_queue()
-            if not bge_netlogic._tree_code_writer_started:
-                try:
-                    bge_netlogic._tree_code_writer_started = True
-                    bpy.ops.bgenetlogic.treecodewriter_operator()
-                    utils.success('Code Generator started.')
-                except Exception:
-                    utils.warn('Could not start Code Generator; Context Invalid.')
+        # if getattr(context.space_data, 'edit_tree', None) is not None:
+        #     bge_netlogic._consume_update_tree_code_queue()
+        #     bpy.ops.bge_netlogic.generate_logicnetwork_all()
+            # if not bge_netlogic._tree_code_writer_started:
+            #     try:
+            #         bge_netlogic._tree_code_writer_started = True
+            #         bpy.ops.bgenetlogic.treecodewriter_operator()
+            #         utils.success('Code Generator started.')
+            #     except Exception:
+                    # utils.warn('Could not start Code Generator; Context Invalid.')
         return enabled
 
     def draw(self, context):
@@ -574,8 +578,9 @@ class BGE_PT_LogicTreeInfoPanel(bpy.types.Panel):
         tree = context.space_data.edit_tree
         container = layout.column(align=True)
         for obj in bpy.data.objects:
-            if f'NL__{tree.name}' in obj.game.properties and obj.name in bpy.context.view_layer.objects:
-                prop = obj.game.properties[f'NL__{tree.name}']
+            pname = f'NL__{utils.make_valid_name(tree.name)}'
+            if pname in obj.game.properties and obj.name in bpy.context.view_layer.objects:
+                prop = obj.game.properties[pname]
                 self.draw_owner(obj, container, prop, tree)
 
 
@@ -797,6 +802,9 @@ class BGE_PT_GameComponentHelperPanel(bpy.types.Panel):
         #             col.prop(prop, "value", text="")
 
 
+RENAMING = False
+
+
 class BGELogicTree(bpy.types.NodeTree):
     bl_idname = "BGELogicTree"
     bl_label = "Logic Node Editor"
@@ -808,17 +816,54 @@ class BGELogicTree(bpy.types.NodeTree):
         description='Nope',
         update=update_tree_mode
     )
+    old_name: bpy.props.StringProperty()
 
     @classmethod
     def poll(cls, context):
         return True
 
+    def update_name(self):
+        clsname = utils.make_valid_name(self.name)
+        if clsname == '':
+            utils.error('Tree name cannot consist of illegal letters only!')
+            self.name = self.old_name
+            return
+        bpy.ops.bge_netlogic.generate_logicnetwork_all()
+        for obj in bpy.context.scene.objects:
+            for ref in obj.bgelogic_treelist:
+                if ref.tree is self:
+                    ref.tree_name = self.name
+                    new_comp_name = f'nl_{clsname.lower()}.{clsname}'
+                    for i, c in enumerate(obj.game.components):
+                        check_name = make_valid_name(self.old_name)
+                        if c.name == check_name:
+                            active_object = bpy.context.object
+                            bpy.context.view_layer.objects.active = obj
+                            bpy.ops.logic.python_component_remove(index=i)
+                            text = bpy.data.texts.get(f'nl_{check_name.lower()}.py')
+                            if text and clsname != check_name:
+                                bpy.data.texts.remove(text)
+                            obj.game.properties.get(f'NL__{check_name}').name = f'NL__{clsname}'
+                            bpy.ops.logic.python_component_register(component_name=new_comp_name)
+                            bpy.context.view_layer.objects.active = active_object
+
+        if self.old_name != '':
+            utils.success(f'Successfully Renamed {self.old_name} to {self.name}')
+        self.old_name = self.name
+
     def update(self):
-        # for n in self.nodes:
-        #     if isinstance(n, bpy.types.NodeReroute):
-        #         source = n.inputs[0].links[0].from_socket
-        #         while isinstance(source.node, bpy.types.NodeReroute):
-        #             source = source.node.inputs[0].links[0].from_socket
-        #         n.inputs[0].type = source.type
-        #         n.outputs[0].type = n.inputs[0].type
         pass
+
+
+@persistent
+def _watch_tree_names(self, context):
+    global RENAMING
+    if RENAMING:
+        return
+    else:
+        RENAMING = True
+        for tree in bpy.data.node_groups:
+            if isinstance(tree, BGELogicTree):
+                if tree.name != tree.old_name:
+                    tree.update_name()
+        RENAMING = False

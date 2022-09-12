@@ -9207,7 +9207,6 @@ _nodes.append(NLSetObjectAttributeActionNode)
 class NLActionRayCastNode(bpy.types.Node, NLActionNode):
     bl_idname = "NLActionRayCastNode"
     bl_label = "Raycast"
-    # bl_width_default = 180
     nl_category = "Ray Casts"
     nl_module = 'actions'
     advanced: bpy.props.BoolProperty(
@@ -9247,7 +9246,6 @@ class NLActionRayCastNode(bpy.types.Node, NLActionNode):
             ipts[6],
             ipts[7],
             ipts[8],
-            ipts[10],
             opts[3],
             opts[4],
             opts[5],
@@ -9262,6 +9260,9 @@ class NLActionRayCastNode(bpy.types.Node, NLActionNode):
 
     def get_netlogic_class_name(self):
         return "ULRaycast"
+
+    def get_attributes(self):
+        return [("advanced", lambda: "True" if self.advanced else "False")]
 
     def get_input_sockets_field_names(self):
         return [

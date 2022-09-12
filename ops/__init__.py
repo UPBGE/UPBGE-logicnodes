@@ -995,7 +995,7 @@ class NLApplyLogicOperator(bpy.types.Operator):
                 # this will set both new_entry.tree_initial_status and add a
                 # game property that makes the status usable at runtime
                 bge_netlogic.utilities.set_network_initial_status_key(
-                    obj, tree.name, initial_status
+                    obj, tree_name, initial_status
                 )
         bpy.context.view_layer.objects.active = active_object
         return {'FINISHED'}
@@ -1396,7 +1396,12 @@ class NLAddComponentOperator(bpy.types.Operator):
         mod_name = select_text.name[:len(select_text.name) - 3]
         body = select_text.as_string()
         for line in select_text.lines:
-            if 'uplogic' in line.body or line.body.startswith('from bge '):
+            if (
+                'uplogic' in line.body
+                or line.body.startswith('from bge ')
+                or 'bgui' in line.body
+                or line.body.startswith('@')
+            ):
                 line.body = '# ' + line.body
         try:
             bpy.ops.logic.python_component_register(component_name=f'{mod_name}.{self.component}')
@@ -1429,7 +1434,12 @@ class NLReloadComponents(bpy.types.Operator):
         for i, c in enumerate(obj.game.components):
             text = bpy.data.texts[f'{c.module}.py']
             for line in text.lines:
-                if 'uplogic' in line.body or line.body.startswith('from bge '):
+                if (
+                    'uplogic' in line.body
+                    or line.body.startswith('from bge ')
+                    or 'bgui' in line.body
+                    or line.body.startswith('@')
+                ):
                     line.body = '# ' + line.body
             bpy.ops.logic.python_component_reload(index=i)
         reload_texts()

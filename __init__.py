@@ -14,7 +14,7 @@ bl_info = {
         "A Node System to create game logic."
     ),
     "author": "pgi, Leopold A-C (Iza Zed)",
-    "version": (2, 1, 3),
+    "version": (2, 1, 5),
     "blender": (2, 91, 0),
     "location": "View Menu",
     "category": "Game Engine"
@@ -208,14 +208,7 @@ def _consume_update_tree_code_queue():
     delta = now - last_event
     if delta > 0.25:
         _update_queue.clear()
-        try:
-            bpy.ops.bge_netlogic.generate_logicnetwork()
-        except Exception:
-            if getattr(bpy.context.scene.logic_node_settings, 'use_generate_all', False):
-                utils.warn('Could not update tree, updating all...')
-                bpy.ops.bge_netlogic.generate_logicnetwork_all()
-            else:
-                utils.error('Could not update tree, context incorrect!')
+        bpy.ops.bge_netlogic.generate_logicnetwork_all()
         return True
 
 
@@ -394,11 +387,16 @@ def refresh_custom_nodes(dummy):
 def request_tree_code_writer_start(dummy):
     global _tree_code_writer_started
     _tree_code_writer_started = False
-    generator = ops.tree_code_generator.TreeCodeGenerator()
+    # generator = bpy.ops.tree_code_generator.TreeCodeGenerator()
     if getattr(bpy.context.scene.logic_node_settings, 'use_generate_on_open', False):
         utils.debug('Writing trees on file open...')
         bpy.ops.bge_netlogic.generate_logicnetwork_all()
         utils.debug('FINISHED')
+
+    for tree in bpy.data.node_groups:
+        if isinstance(tree, ui.BGELogicTree):
+            if tree.name != tree.old_name:
+                tree.update_name()
 
 
 for f in [
@@ -411,14 +409,14 @@ for f in [
     bpy.app.handlers.load_post.append(f)
 
 #import modules and definitions
-ui = _abs_import("ui", _abs_path("ui", "__init__.py"))
+utilities = _abs_import("utilities", _abs_path("utilities", "__init__.py"))
 ops = _abs_import("ops", _abs_path("ops", "__init__.py"))
+ui = _abs_import("ui", _abs_path("ui", "__init__.py"))
 ops.abstract_text_buffer = _abs_import("abstract_text_buffer", _abs_path("ops", "abstract_text_buffer.py"))
 ops.bl_text_buffer = _abs_import("bl_text_buffer", _abs_path("ops","bl_text_buffer.py"))
 ops.file_text_buffer = _abs_import("file_text_buffer", _abs_path("ops","file_text_buffer.py"))
 ops.tree_code_generator = _abs_import("tree_code_generator", _abs_path("ops","tree_code_generator.py"))
 ops.uid_map = _abs_import("uid_map", _abs_path("ops", "uid_map.py"))
-utilities = _abs_import("utilities", _abs_path("utilities", "__init__.py"))
 
 
 def update_node_colors(self, context):
@@ -717,8 +715,8 @@ def register():
     bpy.app.handlers.game_pre.append(_jump_in_game_cam)
     bpy.app.handlers.game_pre.append(_set_vr_mode)
     bpy.app.handlers.game_pre.append(_reload_texts)
+    bpy.app.handlers.depsgraph_update_post.append(ui._watch_tree_names)
     for cls in _registered_classes:
-        # print("Registering... {}".format(cls.__name__))
         bpy.utils.register_class(cls)
     menu_nodes = _list_menu_nodes()
     layout_items = [
@@ -728,9 +726,9 @@ def register():
     menu_nodes.append(NodeCategory('Layout', 'Layout', items=layout_items))
     nodeitems_utils.register_node_categories("NETLOGIC_NODES", menu_nodes)
 
-    rename_handle = object()
-    subscribe_to = ui.BGELogicTree, 'name'
-    bpy.msgbus.subscribe_rna(key=subscribe_to, owner=rename_handle, args=(bpy.context,), notify=update_tree_name)
+    # rename_handle = object()
+    # subscribe_to = ui.BGELogicTree, 'name'
+    # bpy.msgbus.subscribe_rna(key=subscribe_to, owner=rename_handle, args=(bpy.context,), notify=update_tree_name)
 
     bpy.types.Object.sound_occluder = bpy.props.BoolProperty(
         default=True,
@@ -789,15 +787,15 @@ def register():
         type=bpy.types.NodeTree
     )
 
-    try:
-        import uplogic  # noqa
-        message = 'Uplogic Module already installed.'
-        print(f'[Logic Nodes][{utils.ansicol.BBLUE}NOTIFICATION{utils.ansicol.END}] {message}')
-    except ImportError as e:
-        print(e)
-        message = 'Uplogic Module not installed, fetching latest version...'
-        print(f'[Logic Nodes][{utils.ansicol.BBLUE}NOTIFICATION{utils.ansicol.END}] {message}')
-        # load_uplogic_module()
+    # try:
+    #     import uplogic  # noqa
+    #     message = 'Uplogic Module already installed.'
+    #     print(f'[Logic Nodes][{utils.ansicol.BBLUE}NOTIFICATION{utils.ansicol.END}] {message}')
+    # except ImportError as e:
+    #     print(e)
+    #     message = 'Uplogic Module not installed, fetching latest version...'
+    #     print(f'[Logic Nodes][{utils.ansicol.BBLUE}NOTIFICATION{utils.ansicol.END}] {message}')
+    #     # load_uplogic_module()
 
 
 # blender add-on unregistration callback
@@ -805,6 +803,7 @@ def unregister():
     utils.debug('Removing Game Start Compile handler...')
     remove_f = []
     filter(lambda a: a.__name__ == '_generate_on_game_start', bpy.app.handlers.game_pre)
+    filter(lambda a: a.__name__ == '_watch_tree_names', bpy.app.handlers.depsgraph_update_post)
     filter(lambda a: a.__name__ == '_reload_texts', bpy.app.handlers.game_pre)
     for f in bpy.app.handlers.game_pre:
         if f.__name__ == '_generate_on_game_start' or f.__name__ == '_reload_texts':
