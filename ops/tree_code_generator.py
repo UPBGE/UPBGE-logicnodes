@@ -33,8 +33,8 @@ class BLTextWrapper(AbstractTextBuffer):
     def clear(self):
         self.text.clear()
 
-    def write_line(self, string, *args):
-        self.text.write(f'{self._indent}{string}\n'.format(*args))
+    def write_line(self, string):
+        self.text.write(f'{self._indent}{string}\n')
 
     def close(self):
         pass

@@ -6,6 +6,8 @@ from ui import BGELogicTree
 
 TOO_OLD = bpy.app.version < (2, 80, 0)
 
+INVALID = 'INVALID'
+
 CONDITION_SOCKET_COLOR = utils.Color.RGBA(.8, 0.2, 0.2, 1.0)
 PSEUDO_COND_SOCKET_COLOR = utils.Color.RGBA(.8, 0.2, 0.2, 1.0)
 PARAMETER_SOCKET_COLOR = utils.Color.RGBA(.9, 0.54, 0.18, 1.0)
@@ -679,6 +681,7 @@ class NLSocket:
     nl_color: list = PARAMETER_SOCKET_COLOR
 
     def __init__(self):
+        self.socket_id = INVALID
         self.valid_sockets = []
 
     def draw_color(self, context, node):
@@ -1102,7 +1105,12 @@ class NLAbstractNode(NLNode):
         except Exception as e:
             utils.error(e)
             utils.debug(
-                'Receiving Node not a Logic Node Type, skipping validation.')
+                'Receiving Node not a Logic Node Type, skipping validation.'
+            )
+
+    def add_input(self, cls, name, socket_id):
+        self.inputs.new(cls.bl_idname, name)
+        self.inputs[-1].socket_id = socket_id
 
     def free(self):
         pass
@@ -1893,6 +1901,44 @@ class NLTreeNodeSocket(bpy.types.NodeSocket, NLSocket):
 
 
 _sockets.append(NLTreeNodeSocket)
+
+
+class NLSceneSocket(bpy.types.NodeSocket, NLSocket):
+    bl_idname = "NLSceneSocket"
+    bl_label = "Scene"
+    value: bpy.props.PointerProperty(
+        name='Scene',
+        type=bpy.types.Scene,
+        update=update_tree_code
+    )
+
+    def draw_color(self, context, node):
+        return PARAM_MAT_SOCKET_COLOR
+
+    def draw(self, context, layout, node, text):
+        if self.is_output:
+            layout.label(text=self.name)
+        elif self.is_linked:
+            layout.label(text=self.name)
+        else:
+            col = layout.column(align=False)
+            if self.name and self.is_linked:
+                col.label(text=self.name)
+            col.prop_search(
+                self,
+                'value',
+                bpy.data,
+                'scenes',
+                icon='NONE',
+                text=''
+            )
+
+    def get_unlinked_value(self):
+        if isinstance(self.value, bpy.types.Scene):
+            return '"{}"'.format(self.value.name)
+
+
+_sockets.append(NLSceneSocket)
 
 
 class NLTextIDSocket(bpy.types.NodeSocket, NLSocket):
@@ -2849,23 +2895,6 @@ class NLPositiveIntCentSocket(bpy.types.NodeSocket, NLSocket):
 
 
 _sockets.append(NLPositiveIntCentSocket)
-
-
-class NLSceneSocket(bpy.types.NodeSocket, NLSocket):
-    bl_idname = "NLSceneSocket"
-    bl_label = "Scene"
-
-    def draw_color(self, context, node):
-        return PARAM_SCENE_SOCKET_COLOR
-
-    def get_unlinked_value(self):
-        return "None"
-
-    def draw(self, context, layout, node, text):
-        layout.label(text=text)
-
-
-_sockets.append(NLSceneSocket)
 
 
 class NLValueFieldSocket(bpy.types.NodeSocket, NLSocket):
@@ -10426,6 +10455,31 @@ class NLGamepadLook(bpy.types.Node, NLActionNode):
 _nodes.append(NLGamepadLook)
 
 
+class NLUILayout(bpy.types.Node, NLParameterNode):
+    bl_idname = "NLUILayout"
+    bl_label = "Layout"
+    nl_category = "UI"
+    nl_module = 'parameters'
+
+    def init(self, context):
+        NLParameterNode.init(self, context)
+        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, 'Name')
+        self.outputs.new(NLParameterSocket.bl_idname, 'Layout')
+        self.outputs.new(NLListSocket.bl_idname, 'Widgets')
+
+    def get_output_socket_varnames(self):
+        return ["OUT"]
+
+    def get_netlogic_class_name(self):
+        return "ULUILayout"
+
+    def get_input_sockets_field_names(self):
+        return ["condition", "game_object"]
+
+
+# _nodes.append(NLUILayout)
+
+
 class NLSetCollisionGroup(bpy.types.Node, NLActionNode):
     bl_idname = "NLSetCollisionGroup"
     bl_label = "Set Collision Group"
@@ -10785,6 +10839,88 @@ class NLActionSaveVariables(bpy.types.Node, NLActionNode):
 
 
 _nodes.append(NLActionSaveVariables)
+
+
+class NLSetScene(bpy.types.Node, NLActionNode):
+    bl_idname = "NLSetScene"
+    bl_label = "Set Scene"
+    nl_category = "Scene"
+    nl_module = 'actions'
+
+    def init(self, context):
+        NLActionNode.init(self, context)
+        self.inputs.new(NLConditionSocket.bl_idname, 'Condition')
+        self.inputs.new(NLSceneSocket.bl_idname, "Scene")
+        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+
+    def get_netlogic_class_name(self):
+        return "ULSetScene"
+
+    def get_input_sockets_field_names(self):
+        return ['condition', 'scene']
+
+    def get_output_socket_varnames(self):
+        return ['OUT']
+
+
+_nodes.append(NLSetScene)
+
+
+class NLLoadScene(bpy.types.Node, NLActionNode):
+    bl_idname = "NLLoadScene"
+    bl_label = "Load Scene"
+    nl_category = "Scene"
+    nl_module = 'actions'
+
+    def init(self, context):
+        NLActionNode.init(self, context)
+        self.inputs.new(NLConditionSocket.bl_idname, 'Condition')
+        self.inputs.new(NLSceneSocket.bl_idname, "Scene")
+        self.outputs.new(NLConditionSocket.bl_idname, 'Loaded')
+        self.outputs.new(NLConditionSocket.bl_idname, 'Updated')
+        self.outputs.new(NLParameterSocket.bl_idname, 'Status')
+        self.outputs.new(NLParameterSocket.bl_idname, 'Datatype')
+        self.outputs.new(NLParameterSocket.bl_idname, 'Item')
+
+    def get_netlogic_class_name(self):
+        return "ULLoadScene"
+
+    def get_input_sockets_field_names(self):
+        return ['condition', 'scene']
+
+    def get_output_socket_varnames(self):
+        return ['OUT', 'UPDATED', 'STATUS', 'DATATYPE', 'ITEM']
+
+
+_nodes.append(NLLoadScene)
+
+
+class NLLoadFileContent(bpy.types.Node, NLActionNode):
+    bl_idname = "NLLoadFileContent"
+    bl_label = "Load File Content"
+    nl_category = "File"
+    nl_module = 'actions'
+
+    def init(self, context):
+        NLActionNode.init(self, context)
+        self.inputs.new(NLConditionSocket.bl_idname, 'Condition')
+        self.outputs.new(NLConditionSocket.bl_idname, 'Loaded')
+        self.outputs.new(NLConditionSocket.bl_idname, 'Updated')
+        self.outputs.new(NLParameterSocket.bl_idname, 'Status')
+        self.outputs.new(NLParameterSocket.bl_idname, 'Datatype')
+        self.outputs.new(NLParameterSocket.bl_idname, 'Item')
+
+    def get_netlogic_class_name(self):
+        return "ULLoadFileContent"
+
+    def get_input_sockets_field_names(self):
+        return ['condition']
+
+    def get_output_socket_varnames(self):
+        return ['OUT', 'UPDATED', 'STATUS', 'DATATYPE', 'ITEM']
+
+
+_nodes.append(NLLoadFileContent)
 
 
 class NLParameterSetAttribute(bpy.types.Node, NLActionNode):

@@ -3,6 +3,7 @@ import bpy
 from bpy.app.handlers import persistent
 from bge_netlogic import nodeutils as nodeitems_utils
 import bge_netlogic.utilities as utils
+import bge_netlogic.audio as audio
 import os
 import sys
 import time
@@ -383,6 +384,10 @@ def load_nodes_from(abs_dir):
 def refresh_custom_nodes(dummy):
     setup_user_nodes()
 
+
+RENAMING = False
+
+
 @persistent
 def request_tree_code_writer_start(dummy):
     global _tree_code_writer_started
@@ -393,10 +398,27 @@ def request_tree_code_writer_start(dummy):
         bpy.ops.bge_netlogic.generate_logicnetwork_all()
         utils.debug('FINISHED')
 
+    global RENAMING
+    RENAMING = True
     for tree in bpy.data.node_groups:
         if isinstance(tree, ui.BGELogicTree):
             if tree.name != tree.old_name:
-                tree.update_name()
+                tree.update_name(False)
+    RENAMING = False
+
+
+@persistent
+def _watch_tree_names(self, context):
+    global RENAMING
+    if RENAMING:
+        return
+    else:
+        RENAMING = True
+        for tree in bpy.data.node_groups:
+            if isinstance(tree, ui.BGELogicTree):
+                if tree.name != tree.old_name:
+                    tree.update_name()
+        RENAMING = False
 
 
 for f in [
@@ -415,8 +437,8 @@ ui = _abs_import("ui", _abs_path("ui", "__init__.py"))
 ops.abstract_text_buffer = _abs_import("abstract_text_buffer", _abs_path("ops", "abstract_text_buffer.py"))
 ops.bl_text_buffer = _abs_import("bl_text_buffer", _abs_path("ops","bl_text_buffer.py"))
 ops.file_text_buffer = _abs_import("file_text_buffer", _abs_path("ops","file_text_buffer.py"))
-ops.tree_code_generator = _abs_import("tree_code_generator", _abs_path("ops","tree_code_generator.py"))
 ops.uid_map = _abs_import("uid_map", _abs_path("ops", "uid_map.py"))
+ops.tree_code_generator = _abs_import("tree_code_generator", _abs_path("ops","tree_code_generator.py"))
 
 
 def update_node_colors(self, context):
@@ -577,6 +599,7 @@ _registered_classes = [
     ops.NLSelectAppliedObject,
     ops.NLReloadTexts,
     ops.NLReloadComponents,
+    ops.NLStartAudioSystem,
     NLNodeTreeReference
 ]
 
@@ -695,9 +718,6 @@ def load_uplogic_module():
         pass
 
 
-import re
-
-
 def filter_components(self, item=bpy.types.Text):
     if not item.name.startswith('nl_'):
         return True
@@ -715,7 +735,7 @@ def register():
     bpy.app.handlers.game_pre.append(_jump_in_game_cam)
     bpy.app.handlers.game_pre.append(_set_vr_mode)
     bpy.app.handlers.game_pre.append(_reload_texts)
-    bpy.app.handlers.depsgraph_update_post.append(ui._watch_tree_names)
+    bpy.app.handlers.depsgraph_update_post.append(_watch_tree_names)
     for cls in _registered_classes:
         bpy.utils.register_class(cls)
     menu_nodes = _list_menu_nodes()
@@ -725,6 +745,7 @@ def register():
     ]
     menu_nodes.append(NodeCategory('Layout', 'Layout', items=layout_items))
     nodeitems_utils.register_node_categories("NETLOGIC_NODES", menu_nodes)
+    # audio.get_audio_system()
 
     # rename_handle = object()
     # subscribe_to = ui.BGELogicTree, 'name'

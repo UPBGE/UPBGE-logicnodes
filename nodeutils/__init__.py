@@ -90,8 +90,9 @@ _main_menues = [
     'Ray Casts',
     'Time',
     'File',
-    'Variables',
     'Render',
+    'UI',
+    'Variables',
     'Layout',
     'Utilities'
 ]
@@ -100,7 +101,7 @@ _cat_separators = [
     'Values',
     'Sound',
     'Time',
-    'Render'
+    'Variables'
 ]
 
 

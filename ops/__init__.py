@@ -4,6 +4,7 @@ import json
 import bpy
 import bge_netlogic
 import bge_netlogic.utilities as utils
+import bge_netlogic.audio as audio
 from bpy_extras.io_utils import ImportHelper
 import webbrowser
 
@@ -485,6 +486,33 @@ class NLRemoveTreeByNameOperator(bpy.types.Operator):
             i += 1
         if index is not None:
             ob.bgelogic_treelist.remove(index)
+
+
+class NLStartAudioSystem(bpy.types.Operator):
+    bl_idname = "bge_netlogic.start_audio_system"
+    bl_label = "Start Audio System"
+    bl_options = {'REGISTER', 'UNDO'}
+    bl_description = "Select the object this tree is applied to"
+    applied_object: bpy.props.StringProperty()
+
+    @classmethod
+    def poll(cls, context):
+        return True
+
+    def modal(self, context, event):
+        if audio.SYSTEM is None:
+            return {'FINISHED'}
+        audio.get_audio_system().update()
+        return {'PASS_THROUGH'}
+
+    def invoke(self, context, event):
+        if audio.SYSTEM is None:
+            audio.get_audio_system()
+        else:
+            audio.SYSTEM.shutdown()
+
+        context.window_manager.modal_handler_add(self)
+        return {'RUNNING_MODAL'}
 
 
 class NLSelectAppliedObject(bpy.types.Operator):
@@ -1377,6 +1405,15 @@ def reload_texts():
                 t.write(f.read())
 
 
+COMPONENT_TEMPLATE = """\
+import bge, bpy
+from collections import OrderedDict
+class {}(bge.types.KX_PythonComponent):
+    {}
+    def start(self, args): pass
+    def update(self): pass"""
+
+
 class NLAddComponentOperator(bpy.types.Operator):
     bl_idname = "bge_netlogic.add_component"
     bl_label = "Add Component"
@@ -1395,22 +1432,30 @@ class NLAddComponentOperator(bpy.types.Operator):
         select_text = context.scene.nl_componenthelper
         mod_name = select_text.name[:len(select_text.name) - 3]
         body = select_text.as_string()
+        cargs = ''
+        in_args = False
         for line in select_text.lines:
-            if (
-                'uplogic' in line.body
-                or line.body.startswith('from bge ')
-                or 'bgui' in line.body
-                or line.body.startswith('@')
-            ):
-                line.body = '# ' + line.body
+            if self.component in line.body:
+                continue
+            line.body = line.body.replace(' ', '')
+            if 'args=' in line.body:
+                in_args = True
+            if '])' in line.body:
+                cargs += line.body
+                break
+            if in_args:
+                cargs += line.body
+        text = COMPONENT_TEMPLATE.format(self.component, cargs)
         try:
+            select_text.clear()
+            select_text.write(text)
             bpy.ops.logic.python_component_register(component_name=f'{mod_name}.{self.component}')
             select_text.clear()
             select_text.write(body)
         except Exception as e:
             select_text.clear()
             select_text.write(body)
-            self.report({"ERROR"}, e)
+            self.report({"ERROR"}, str(e))
         return {'FINISHED'}
 
     def invoke(self, context, event):

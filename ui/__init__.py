@@ -1,8 +1,6 @@
 import bpy
 import bge_netlogic
 import bge_netlogic.utilities as utils
-import ops
-from bpy.app.handlers import persistent
 from utilities import make_valid_name
 
 
@@ -446,6 +444,11 @@ class BGE_PT_LogicNodeSettingsScene(bpy.types.Panel):
             text='Remove Custom Mainloop' if use_mainloop else 'Use Custom Mainloop',
             icon='CANCEL' if use_mainloop else 'PLAY'
         )
+        layout.separator()
+        layout.operator(
+            bge_netlogic.ops.NLStartAudioSystem.bl_idname,
+            icon='PLAY'
+        )
 
 
 class BGE_PT_LogicTreeGroups(bpy.types.Panel):
@@ -802,9 +805,6 @@ class BGE_PT_GameComponentHelperPanel(bpy.types.Panel):
         #             col.prop(prop, "value", text="")
 
 
-RENAMING = False
-
-
 class BGELogicTree(bpy.types.NodeTree):
     bl_idname = "BGELogicTree"
     bl_label = "Logic Node Editor"
@@ -822,13 +822,17 @@ class BGELogicTree(bpy.types.NodeTree):
     def poll(cls, context):
         return True
 
-    def update_name(self):
+    def get_name(self):
+        pass
+
+    def update_name(self, update=True):
         clsname = utils.make_valid_name(self.name)
         if clsname == '':
             utils.error('Tree name cannot consist of illegal letters only!')
             self.name = self.old_name
             return
-        bpy.ops.bge_netlogic.generate_logicnetwork_all()
+        if update:
+            bpy.ops.bge_netlogic.generate_logicnetwork_all()
         for obj in bpy.context.scene.objects:
             for ref in obj.bgelogic_treelist:
                 if ref.tree is self:
@@ -843,7 +847,9 @@ class BGELogicTree(bpy.types.NodeTree):
                             text = bpy.data.texts.get(f'nl_{check_name.lower()}.py')
                             if text and clsname != check_name:
                                 bpy.data.texts.remove(text)
-                            obj.game.properties.get(f'NL__{check_name}').name = f'NL__{clsname}'
+                            prop = obj.game.properties.get(f'NL__{check_name}')
+                            if prop:
+                                prop.name = f'NL__{clsname}'
                             bpy.ops.logic.python_component_register(component_name=new_comp_name)
                             bpy.context.view_layer.objects.active = active_object
 
@@ -853,17 +859,3 @@ class BGELogicTree(bpy.types.NodeTree):
 
     def update(self):
         pass
-
-
-@persistent
-def _watch_tree_names(self, context):
-    global RENAMING
-    if RENAMING:
-        return
-    else:
-        RENAMING = True
-        for tree in bpy.data.node_groups:
-            if isinstance(tree, BGELogicTree):
-                if tree.name != tree.old_name:
-                    tree.update_name()
-        RENAMING = False
