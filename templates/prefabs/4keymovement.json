@@ -3,13 +3,13 @@
         {
             "x": 0,
             "y": 0,
-            "label": "W Pressed",
+            "label": "D Pressed",
             "node_type": "NLKeyPressedCondition",
             "links": [],
             "values": [
                 {
                     "index": 0,
-                    "value": "W"
+                    "value": "D"
                 }, {
                     "index": "pulse",
                     "value": true
@@ -18,21 +18,6 @@
         }, {
             "x": 0,
             "y": -40,
-            "label": "S Pressed",
-            "node_type": "NLKeyPressedCondition",
-            "links": [],
-            "values": [
-                {
-                    "index": 0,
-                    "value": "S"
-                }, {
-                    "index": "pulse",
-                    "value": true
-                }
-            ]
-        }, {
-            "x": 0,
-            "y": -80,
             "label": "A Pressed",
             "node_type": "NLKeyPressedCondition",
             "links": [],
@@ -47,14 +32,29 @@
             ]
         }, {
             "x": 0,
-            "y": -120,
-            "label": "D Pressed",
+            "y": -80,
+            "label": "W Pressed",
             "node_type": "NLKeyPressedCondition",
             "links": [],
             "values": [
                 {
                     "index": 0,
-                    "value": "D"
+                    "value": "W"
+                }, {
+                    "index": "pulse",
+                    "value": true
+                }
+            ]
+        }, {
+            "x": 0,
+            "y": -120,
+            "label": "S Pressed",
+            "node_type": "NLKeyPressedCondition",
+            "links": [],
+            "values": [
+                {
+                    "index": 0,
+                    "value": "S"
                 }, {
                     "index": "pulse",
                     "value": true
@@ -63,7 +63,7 @@
         }, {
             "x": 220,
             "y": -40,
-            "label": "W or S pressed",
+            "label": "A or D pressed",
             "node_type": "NLArithmeticOpParameterNode",
             "links": [[0, 0, 0], [1, 0, 1]],
             "values": [
@@ -75,7 +75,7 @@
         }, {
             "x": 220,
             "y": -80,
-            "label": "A or D pressed",
+            "label": "W or S pressed",
             "node_type": "NLArithmeticOpParameterNode",
             "links": [[2, 0, 0], [3, 0, 1]],
             "values": [

@@ -15,7 +15,7 @@ bl_info = {
         "A Node System to create game logic."
     ),
     "author": "pgi, Leopold A-C (Iza Zed)",
-    "version": (2, 1, 5),
+    "version": (2, 1, 6),
     "blender": (2, 91, 0),
     "location": "View Menu",
     "category": "Game Engine"
@@ -600,6 +600,7 @@ _registered_classes = [
     ops.NLReloadTexts,
     ops.NLReloadComponents,
     ops.NLStartAudioSystem,
+    # ops.NLStartGameHere,
     NLNodeTreeReference
 ]
 
@@ -708,10 +709,20 @@ def _list_menu_nodes():
     return menu_nodes
 
 
-def load_uplogic_module():
+def update_uplogic_module():
     try:
         os.system(f'"{sys.executable}" -m ensurepip')
         os.system(f'"{sys.executable}" -m pip install uplogic --upgrade')
+        global UPLOGIC_INSTALLED
+        UPLOGIC_INSTALLED = True
+    except Exception:
+        pass
+
+
+def get_uplogic_module():
+    try:
+        os.system(f'"{sys.executable}" -m ensurepip')
+        os.system(f'"{sys.executable}" -m pip install uplogic')
         global UPLOGIC_INSTALLED
         UPLOGIC_INSTALLED = True
     except Exception:
@@ -816,7 +827,7 @@ def register():
     #     print(e)
     #     message = 'Uplogic Module not installed, fetching latest version...'
     #     print(f'[Logic Nodes][{utils.ansicol.BBLUE}NOTIFICATION{utils.ansicol.END}] {message}')
-    #     # load_uplogic_module()
+    get_uplogic_module()
 
 
 # blender add-on unregistration callback

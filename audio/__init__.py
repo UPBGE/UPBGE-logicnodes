@@ -412,6 +412,7 @@ class NLSound3D(NLSound):
         self.cone_outer_volume = cone_outer_volume
         master_volume = self.aud_system.volume
         self.transition = transition_speed
+        file = bpy.path.abspath(file)
         if not isfile(file):
             print(f'Soundfile {file} could not be loaded!')
             return

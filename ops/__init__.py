@@ -493,7 +493,6 @@ class NLStartAudioSystem(bpy.types.Operator):
     bl_label = "Start Audio System"
     bl_options = {'REGISTER', 'UNDO'}
     bl_description = "Select the object this tree is applied to"
-    applied_object: bpy.props.StringProperty()
 
     @classmethod
     def poll(cls, context):
@@ -513,6 +512,31 @@ class NLStartAudioSystem(bpy.types.Operator):
 
         context.window_manager.modal_handler_add(self)
         return {'RUNNING_MODAL'}
+
+
+class NLStartGameHere(bpy.types.Operator):
+    bl_idname = "bge_netlogic.start_game_here"
+    bl_label = "Start Game Here"
+    bl_options = {'REGISTER', 'UNDO'}
+    bl_description = "Select the object this tree is applied to"
+
+    @classmethod
+    def poll(cls, context):
+        if context.area.type != 'VIEW_3D':
+            return False
+        return 'Player' in [obj.name for obj in context.scene.objects]
+
+    def execute(self, context):
+        from bge_netlogic import audio
+        cam = audio.ViewportCamera()
+        player = context.scene.objects['Player']
+        pos = player.location
+        player.location = cam.location
+        bpy.ops.view3d.view_camera()
+        bpy.ops.view3d.game_start()
+        player = context.scene.objects['Player']
+        player.location = pos
+        return {'FINISHED'}
 
 
 class NLSelectAppliedObject(bpy.types.Operator):
@@ -1141,6 +1165,7 @@ class NLResetEmptySize(bpy.types.Operator):
         return ob and ob.name
 
     def execute(self, context):
+        from mathutils import Vector
         context.active_object.scale = Vector((1, 1, 1))
         context.active_object.empty_display_type = 'CUBE'
         return {"FINISHED"}
@@ -1429,13 +1454,14 @@ class NLAddComponentOperator(bpy.types.Operator):
         return context.active_object is not None
 
     def execute(self, context):
+        comp_name = self.component
         select_text = context.scene.nl_componenthelper
         mod_name = select_text.name[:len(select_text.name) - 3]
         body = select_text.as_string()
         cargs = ''
         in_args = False
         for line in select_text.lines:
-            if self.component in line.body:
+            if comp_name in line.body:
                 continue
             line.body = line.body.replace(' ', '')
             if 'args=' in line.body:
@@ -1445,11 +1471,12 @@ class NLAddComponentOperator(bpy.types.Operator):
                 break
             if in_args:
                 cargs += line.body
-        text = COMPONENT_TEMPLATE.format(self.component, cargs)
+        text = COMPONENT_TEMPLATE.format(comp_name, cargs)
         try:
             select_text.clear()
             select_text.write(text)
-            bpy.ops.logic.python_component_register(component_name=f'{mod_name}.{self.component}')
+            utils.notify(f'Adding {mod_name}.{comp_name} to {context.active_object.name}...')
+            bpy.ops.logic.python_component_register(component_name=f'{mod_name}.{comp_name}')
             select_text.clear()
             select_text.write(body)
         except Exception as e:

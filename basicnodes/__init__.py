@@ -63,11 +63,6 @@ _enum_local_oriented_axis = [
     ("5", "-Z Axis", "The Local Z Axis [Integer Value 5]")
 ]
 
-_enum_value_filters_3 = [
-    ("1", "Range Constraint", "Limit A between B and C [1]")
-]
-
-
 _enum_mouse_wheel_direction = [
     ("1", "Scroll Up", "Mouse Wheel Scrolled Up [1]"),
     ("2", "Scroll Down", "Mouse Wheel Scrolled Down [2]"),
@@ -76,12 +71,27 @@ _enum_mouse_wheel_direction = [
 
 
 _enum_vector_math_options = [
+    ("scale", "Scale", "A multiplied by Scale"),
+    ("length", "Length", "Length of A"),
+    ("distance", "Distance", "Distance between A and B"),
+    None,
+    ("dot", "Dot Product", "A dot B"),
+    ("faceforward", "Faceforward", "Orients a vector A to point away from a surface B as defined by its normal C. Returns A if A.dot(B) < 0 else -A"),
+    ("refract", "Refract", "For a given incident vector A, a surface normal B and ratio of indices of refraction, Ior, refract returns the refraction vector, R"),
+    ("reflect", "Reflect", "Reflect A around the normal B. B doesn't need to be normalized"),
+    ("project", "Project", "Project this vector onto another"),
+    ("cross", "Cross Product", "Project A onto B"),
+    None,
+    ("multadd", "Multiply Add", "A * B + C"),
+    ("divide", "Divide", "Entry-wise divide"),
+    ("multiply", "Multiply", "Entry-wise multiply"),
+    ("subtract", "Subtract", "A - B"),
+    ("add", "Add", "A + B"),
+    ("", "Operation", ""),
+    None,
     ("normalize", "Normalize", "Rescale all values to 0 - 1"),
     ("lerp", "Lerp", "Liner Interpolation between the two vectors"),
-    ("negate", "Negate", "Multiply all values by -1"),
-    ("dot", "Dot Product", "Return the dot product of the vectors"),
-    ("cross", "Cross Product", "Return the cross product of the vectors"),
-    ("project", "Project", "Project this vector onto another")
+    ("negate", "Negate", "Multiply all values by -1")
 ]
 
 
@@ -642,7 +652,8 @@ def update_draw(self, context):
         if isinstance(node, NLNode):
             try:
                 node.update_draw()
-            except Exception:
+            except Exception as e:
+                print('Failed node ', node, e)
                 pass
 
 
@@ -990,7 +1001,6 @@ class NLCollisionMaskSocket(bpy.types.NodeSocket, NLSocket):
 
     def get_unlinked_value(self):
         slots = [self.get(f'slot_{idx}', 1) * (2**idx) for idx in range(16)]
-        print(slots)
         return sum(slots)
 
 
@@ -1095,7 +1105,7 @@ class NLAbstractNode(NLNode):
 
     @classmethod
     def poll(cls, node_tree):
-        pass
+        return isinstance(node_tree, BGELogicTree)
 
     def insert_link(self, link):
         to_socket = link.to_socket
@@ -1136,7 +1146,12 @@ class NLAbstractNode(NLNode):
 ###############################################################################
 
 
-class NLConditionNode(NLAbstractNode):
+class NLConditionNode(bpy.types.Node, NLAbstractNode):
+
+    @classmethod
+    def poll(cls, node_tree):
+        return isinstance(node_tree, BGELogicTree)
+
     def init(self, context):
         self.use_custom_color = (
             bpy
@@ -1148,7 +1163,12 @@ class NLConditionNode(NLAbstractNode):
         self.color = CONDITION_NODE_COLOR
 
 
-class NLActionNode(NLAbstractNode):
+class NLActionNode(bpy.types.Node, NLAbstractNode):
+
+    @classmethod
+    def poll(cls, node_tree):
+        return isinstance(node_tree, BGELogicTree)
+
     def init(self, context):
         self.use_custom_color = (
             bpy
@@ -1160,7 +1180,12 @@ class NLActionNode(NLAbstractNode):
         self.color = ACTION_NODE_COLOR
 
 
-class NLParameterNode(NLAbstractNode):
+class NLParameterNode(bpy.types.Node, NLAbstractNode):
+
+    @classmethod
+    def poll(cls, node_tree):
+        return isinstance(node_tree, BGELogicTree)
+
     def init(self, context):
         self.use_custom_color = (
             bpy
@@ -4012,7 +4037,7 @@ _sockets.append(NLSocketOrientedLocalAxis)
 # Parameters
 
 
-class NLParameterFindChildByNameNode(bpy.types.Node, NLParameterNode):
+class NLParameterFindChildByNameNode(NLParameterNode):
     bl_idname = "NLParameterFindChildByNameNode"
     bl_label = "Get Child By Name"
     bl_icon = 'COMMUNITY'
@@ -4038,7 +4063,7 @@ class NLParameterFindChildByNameNode(bpy.types.Node, NLParameterNode):
 _nodes.append(NLParameterFindChildByNameNode)
 
 
-class NLParameterFindChildByIndexNode(bpy.types.Node, NLParameterNode):
+class NLParameterFindChildByIndexNode(NLParameterNode):
     bl_idname = "NLParameterFindChildByIndexNode"
     bl_label = "Get Child By Index"
     bl_icon = 'COMMUNITY'
@@ -4064,7 +4089,7 @@ class NLParameterFindChildByIndexNode(bpy.types.Node, NLParameterNode):
 _nodes.append(NLParameterFindChildByIndexNode)
 
 
-class NLParameterGetAttribute(bpy.types.Node, NLParameterNode):
+class NLParameterGetAttribute(NLParameterNode):
     bl_idname = "NLParameterGetAttribute"
     bl_label = "Get Object Attribute"
     nl_category = "Python"
@@ -4089,7 +4114,7 @@ class NLParameterGetAttribute(bpy.types.Node, NLParameterNode):
 _nodes.append(NLParameterGetAttribute)
 
 
-class NLGetVRControllerValues(bpy.types.Node, NLParameterNode):
+class NLGetVRControllerValues(NLParameterNode):
     bl_idname = "NLGetVRControllerValues"
     bl_label = "VR Controller"
     nl_category = "Input"
@@ -4127,7 +4152,7 @@ class NLGetVRControllerValues(bpy.types.Node, NLParameterNode):
 _nodes.append(NLGetVRControllerValues)
 
 
-class NLGetVRHeadsetValues(bpy.types.Node, NLParameterNode):
+class NLGetVRHeadsetValues(NLParameterNode):
     bl_idname = "NLGetVRHeadsetValues"
     bl_label = "VR Headset"
     nl_category = "Input"
@@ -4149,7 +4174,7 @@ class NLGetVRHeadsetValues(bpy.types.Node, NLParameterNode):
 _nodes.append(NLGetVRHeadsetValues)
 
 
-class NLGetScene(bpy.types.Node, NLParameterNode):
+class NLGetScene(NLParameterNode):
     bl_idname = "NLGetScene"
     bl_label = "Get Scene"
     nl_category = "Scene"
@@ -4169,7 +4194,7 @@ class NLGetScene(bpy.types.Node, NLParameterNode):
 _nodes.append(NLGetScene)
 
 
-class NLParameterGetTimeScale(bpy.types.Node, NLParameterNode):
+class NLParameterGetTimeScale(NLParameterNode):
     bl_idname = "NLParameterGetTimeScale"
     bl_label = "Get Timescale"
     nl_category = "Scene"
@@ -4189,7 +4214,7 @@ class NLParameterGetTimeScale(bpy.types.Node, NLParameterNode):
 _nodes.append(NLParameterGetTimeScale)
 
 
-class NLParameterScreenPosition(bpy.types.Node, NLParameterNode):
+class NLParameterScreenPosition(NLParameterNode):
     bl_idname = "NLParameterScreenPosition"
     bl_label = "Screen Position"
     nl_category = "Scene"
@@ -4215,7 +4240,7 @@ class NLParameterScreenPosition(bpy.types.Node, NLParameterNode):
 _nodes.append(NLParameterScreenPosition)
 
 
-class NLParameterWorldPosition(bpy.types.Node, NLParameterNode):
+class NLParameterWorldPosition(NLParameterNode):
     bl_idname = "NLParameterWorldPosition"
     bl_label = "World Position"
     nl_category = "Scene"
@@ -4243,7 +4268,7 @@ class NLParameterWorldPosition(bpy.types.Node, NLParameterNode):
 _nodes.append(NLParameterWorldPosition)
 
 
-class NLCursorBehavior(bpy.types.Node, NLActionNode):
+class NLCursorBehavior(NLActionNode):
     bl_idname = "NLCursorBehavior"
     bl_label = "Custom Cursor"
     nl_category = "Scene"
@@ -4269,7 +4294,7 @@ class NLCursorBehavior(bpy.types.Node, NLActionNode):
 _nodes.append(NLCursorBehavior)
 
 
-class NLOwnerGameObjectParameterNode(bpy.types.Node, NLParameterNode):
+class NLOwnerGameObjectParameterNode(NLParameterNode):
     """The owner of this logic tree.
     Each Object that has this tree installed is
     the "owner" of a logic tree
@@ -4291,7 +4316,7 @@ class NLOwnerGameObjectParameterNode(bpy.types.Node, NLParameterNode):
 _nodes.append(NLOwnerGameObjectParameterNode)
 
 
-class NLGetVsyncNode(bpy.types.Node, NLParameterNode):
+class NLGetVsyncNode(NLParameterNode):
     bl_idname = "NLGetVsyncNode"
     bl_label = "Get VSync"
     nl_category = 'Render'
@@ -4311,7 +4336,7 @@ class NLGetVsyncNode(bpy.types.Node, NLParameterNode):
 _nodes.append(NLGetVsyncNode)
 
 
-class NLGetFullscreen(bpy.types.Node, NLParameterNode):
+class NLGetFullscreen(NLParameterNode):
     bl_idname = "NLGetFullscreen"
     bl_label = "Get Fullscreen"
     nl_category = 'Render'
@@ -4331,7 +4356,7 @@ class NLGetFullscreen(bpy.types.Node, NLParameterNode):
 _nodes.append(NLGetFullscreen)
 
 
-class NLDrawLine(bpy.types.Node, NLActionNode):
+class NLDrawLine(NLActionNode):
     bl_idname = "NLDrawLine"
     bl_label = "Line"
     nl_category = 'Render'
@@ -4356,7 +4381,7 @@ class NLDrawLine(bpy.types.Node, NLActionNode):
 _nodes.append(NLDrawLine)
 
 
-class NLDrawCube(bpy.types.Node, NLActionNode):
+class NLDrawCube(NLActionNode):
     bl_idname = "NLDrawCube"
     bl_label = "Cube"
     nl_category = 'Render'
@@ -4394,7 +4419,7 @@ class NLDrawCube(bpy.types.Node, NLActionNode):
 _nodes.append(NLDrawCube)
 
 
-class NLDrawBox(bpy.types.Node, NLActionNode):
+class NLDrawBox(NLActionNode):
     bl_idname = "NLDrawBox"
     bl_label = "Box"
     nl_category = 'Render'
@@ -4436,7 +4461,7 @@ class NLDrawBox(bpy.types.Node, NLActionNode):
 _nodes.append(NLDrawBox)
 
 
-class NLGetResolution(bpy.types.Node, NLParameterNode):
+class NLGetResolution(NLParameterNode):
     bl_idname = "NLGetResolution"
     bl_label = "Get Resolution"
     nl_category = 'Render'
@@ -4458,7 +4483,7 @@ class NLGetResolution(bpy.types.Node, NLParameterNode):
 _nodes.append(NLGetResolution)
 
 
-class NLGameObjectPropertyParameterNode(bpy.types.Node, NLParameterNode):
+class NLGameObjectPropertyParameterNode(NLParameterNode):
     bl_idname = "NLGameObjectPropertyParameterNode"
     bl_label = "Get Property"
     bl_icon = 'EXPORT'
@@ -4497,7 +4522,7 @@ class NLGameObjectPropertyParameterNode(bpy.types.Node, NLParameterNode):
 _nodes.append(NLGameObjectPropertyParameterNode)
 
 
-class NLGetGeometryNodeValue(bpy.types.Node, NLParameterNode):
+class NLGetGeometryNodeValue(NLParameterNode):
     bl_idname = "NLGetGeometryNodeValue"
     bl_label = "Get Node Input Value"
     bl_icon = 'TRIA_RIGHT'
@@ -4545,7 +4570,7 @@ class NLGetGeometryNodeValue(bpy.types.Node, NLParameterNode):
 _nodes.append(NLGetGeometryNodeValue)
 
 
-class NLGetGeometryNodeAttribute(bpy.types.Node, NLParameterNode):
+class NLGetGeometryNodeAttribute(NLParameterNode):
     bl_idname = "NLGetGeometryNodeAttribute"
     bl_label = "Get Node Value"
     bl_icon = 'DRIVER_TRANSFORM'
@@ -4584,7 +4609,7 @@ class NLGetGeometryNodeAttribute(bpy.types.Node, NLParameterNode):
 _nodes.append(NLGetGeometryNodeAttribute)
 
 
-class NLGetNodeGroupNodeValue(bpy.types.Node, NLParameterNode):
+class NLGetNodeGroupNodeValue(NLParameterNode):
     bl_idname = "NLGetNodeGroupNodeValue"
     bl_label = "Get Node Input Value"
     bl_icon = 'TRIA_RIGHT'
@@ -4632,7 +4657,7 @@ class NLGetNodeGroupNodeValue(bpy.types.Node, NLParameterNode):
 _nodes.append(NLGetNodeGroupNodeValue)
 
 
-class NLGetNodeTreeNodeAttribute(bpy.types.Node, NLParameterNode):
+class NLGetNodeTreeNodeAttribute(NLParameterNode):
     bl_idname = "NLGetNodeTreeNodeAttribute"
     bl_label = "Get Node Value"
     bl_icon = 'DRIVER_TRANSFORM'
@@ -4671,7 +4696,7 @@ class NLGetNodeTreeNodeAttribute(bpy.types.Node, NLParameterNode):
 _nodes.append(NLGetNodeTreeNodeAttribute)
 
 
-class NLGetMaterialNodeValue(bpy.types.Node, NLParameterNode):
+class NLGetMaterialNodeValue(NLParameterNode):
     bl_idname = "NLGetMaterialNodeValue"
     bl_label = "Get Node Input Value"
     bl_icon = 'TRIA_RIGHT'
@@ -4719,7 +4744,7 @@ class NLGetMaterialNodeValue(bpy.types.Node, NLParameterNode):
 _nodes.append(NLGetMaterialNodeValue)
 
 
-class NLGetMaterialNodeAttribute(bpy.types.Node, NLParameterNode):
+class NLGetMaterialNodeAttribute(NLParameterNode):
     bl_idname = "NLGetMaterialNodeAttribute"
     bl_label = "Get Node Value"
     bl_icon = 'DRIVER_TRANSFORM'
@@ -4758,7 +4783,7 @@ class NLGetMaterialNodeAttribute(bpy.types.Node, NLParameterNode):
 _nodes.append(NLGetMaterialNodeAttribute)
 
 
-class NLGetMaterialNode(bpy.types.Node, NLParameterNode):
+class NLGetMaterialNode(NLParameterNode):
     bl_idname = "NLGetMaterialNode"
     bl_label = "Get Node"
     nl_category = 'Nodes'
@@ -4784,7 +4809,7 @@ class NLGetMaterialNode(bpy.types.Node, NLParameterNode):
 _nodes.append(NLGetMaterialNode)
 
 
-class NLGameObjectHasPropertyParameterNode(bpy.types.Node, NLParameterNode):
+class NLGameObjectHasPropertyParameterNode(NLParameterNode):
     bl_idname = "NLGameObjectHasPropertyParameterNode"
     bl_label = "Has Property"
     bl_icon = 'QUESTION'
@@ -4824,7 +4849,7 @@ class NLGameObjectHasPropertyParameterNode(bpy.types.Node, NLParameterNode):
 _nodes.append(NLGameObjectHasPropertyParameterNode)
 
 
-class NLGetDictKeyNode(bpy.types.Node, NLParameterNode):
+class NLGetDictKeyNode(NLParameterNode):
     bl_idname = "NLGetDictKeyNode"
     bl_label = 'Get Key'
     nl_category = "Python"
@@ -4852,7 +4877,7 @@ class NLGetDictKeyNode(bpy.types.Node, NLParameterNode):
 _nodes.append(NLGetDictKeyNode)
 
 
-class NLGetRandomListIndex(bpy.types.Node, NLParameterNode):
+class NLGetRandomListIndex(NLParameterNode):
     bl_idname = "NLGetRandomListIndex"
     bl_label = "Get Random Item"
     nl_category = "Python"
@@ -4877,7 +4902,7 @@ class NLGetRandomListIndex(bpy.types.Node, NLParameterNode):
 _nodes.append(NLGetRandomListIndex)
 
 
-class NLDuplicateList(bpy.types.Node, NLParameterNode):
+class NLDuplicateList(NLParameterNode):
     bl_idname = "NLDuplicateList"
     bl_label = "Duplicate"
     bl_icon = 'CON_TRANSLIKE'
@@ -4903,7 +4928,7 @@ class NLDuplicateList(bpy.types.Node, NLParameterNode):
 _nodes.append(NLDuplicateList)
 
 
-class NLGetListIndexNode(bpy.types.Node, NLParameterNode):
+class NLGetListIndexNode(NLParameterNode):
     bl_idname = "NLGetListIndexNode"
     bl_label = "Get Index"
     nl_category = "Python"
@@ -4929,7 +4954,7 @@ class NLGetListIndexNode(bpy.types.Node, NLParameterNode):
 _nodes.append(NLGetListIndexNode)
 
 
-class NLGetActuatorValue(bpy.types.Node, NLParameterNode):
+class NLGetActuatorValue(NLParameterNode):
     bl_idname = "NLGetActuatorValue"
     bl_label = "Get Actuator Value"
     nl_category = "Logic"
@@ -4957,7 +4982,7 @@ class NLGetActuatorValue(bpy.types.Node, NLParameterNode):
 _nodes.append(NLGetActuatorValue)
 
 
-class NLRunActuatorNode(bpy.types.Node, NLActionNode):
+class NLRunActuatorNode(NLActionNode):
     bl_idname = "NLRunActuatorNode"
     bl_label = "Run Actuator"
     nl_category = "Logic"
@@ -5015,7 +5040,7 @@ class NLRunActuatorNode(bpy.types.Node, NLActionNode):
 _nodes.append(NLRunActuatorNode)
 
 
-class NLSetSensorValueNode(bpy.types.Node, NLActionNode):
+class NLSetSensorValueNode(NLActionNode):
     bl_idname = "NLSetSensorValueNode"
     bl_label = "Set Sensor Value"
     nl_category = "Logic"
@@ -5046,7 +5071,7 @@ class NLSetSensorValueNode(bpy.types.Node, NLActionNode):
 _nodes.append(NLSetSensorValueNode)
 
 
-class NLSetActuatorValueNode(bpy.types.Node, NLActionNode):
+class NLSetActuatorValueNode(NLActionNode):
     bl_idname = "NLSetActuatorValueNode"
     bl_label = "Set Actuator Value"
     nl_category = "Logic"
@@ -5077,7 +5102,7 @@ class NLSetActuatorValueNode(bpy.types.Node, NLActionNode):
 _nodes.append(NLSetActuatorValueNode)
 
 
-class NLVectorMath(bpy.types.Node, NLParameterNode):
+class NLVectorMath(NLParameterNode):
     bl_idname = "NLVectorMath"
     bl_label = "Vector Math"
     nl_category = "Math"
@@ -5087,7 +5112,7 @@ class NLVectorMath(bpy.types.Node, NLParameterNode):
     operator: bpy.props.EnumProperty(
         name='Operation',
         items=_enum_vector_math_options,
-        update=update_tree_code
+        update=update_draw
     )
 
     def init(self, context):
@@ -5096,6 +5121,9 @@ class NLVectorMath(bpy.types.Node, NLParameterNode):
         self.inputs.new(NLVec3FieldSocket.bl_idname, "Vector 2")
         self.inputs.new(NLSocketAlphaFloat.bl_idname, "Factor")
         self.inputs[-1].value = 1.0
+        self.inputs.new(NLFloatFieldSocket.bl_idname, "Scale")
+        self.inputs.new(NLVec3FieldSocket.bl_idname, "Vector 3")
+        self.inputs.new(NLFloatFieldSocket.bl_idname, "IOR")
         self.outputs.new(NLParameterSocket.bl_idname, 'Result')
 
     def get_netlogic_class_name(self):
@@ -5105,27 +5133,18 @@ class NLVectorMath(bpy.types.Node, NLParameterNode):
         vtype = self.operator
         v2 = self.inputs[1]
         fac = self.inputs[2]
-        if vtype == 'normalize':
-            v2.enabled = False
-            fac.enabled = False
-        elif vtype == 'lerp':
-            v2.enabled = True
-            fac.enabled = True
-        elif vtype == 'negate':
-            v2.enabled = False
-            fac.enabled = False
-        elif vtype == 'dot':
-            v2.enabled = True
-            fac.enabled = False
-        elif vtype == 'cross':
-            v2.enabled = True
-            fac.enabled = False
-        elif vtype == 'project':
-            v2.enabled = True
-            fac.enabled = False
+        sca = self.inputs[3]
+        v3 = self.inputs[4]
+        ior = self.inputs[5]
+
+        v2.enabled = vtype in ['dot', 'cross', 'project', 'distance', 'faceforward', 'divide', 'multiply', 'subtract', 'add', 'lerp']
+        fac.enabled = vtype in ['lerp']
+        sca.enabled = vtype in ['scale']
+        v3.enabled = vtype in ['faceforward', 'multadd']
+        ior.enabled = vtype in ['refract']
 
     def get_input_sockets_field_names(self):
-        return ["vector", 'vector_2', 'factor']
+        return ["vector", 'vector_2', 'factor', 'scale', 'vector_3', 'ior']
 
     def get_output_socket_varnames(self):
         return ["OUT"]
@@ -5146,7 +5165,7 @@ class NLVectorMath(bpy.types.Node, NLParameterNode):
 _nodes.append(NLVectorMath)
 
 
-class NLVectorAngle(bpy.types.Node, NLParameterNode):
+class NLVectorAngle(NLParameterNode):
     bl_idname = "NLVectorAngle"
     bl_label = "Angle"
     nl_category = "Math"
@@ -5172,7 +5191,7 @@ class NLVectorAngle(bpy.types.Node, NLParameterNode):
 _nodes.append(NLVectorAngle)
 
 
-class NLVectorAngleCheck(bpy.types.Node, NLParameterNode):
+class NLVectorAngleCheck(NLParameterNode):
     bl_idname = "NLVectorAngleCheck"
     bl_label = "Check Angle"
     nl_category = "Math"
@@ -5217,7 +5236,7 @@ class NLVectorAngleCheck(bpy.types.Node, NLParameterNode):
 _nodes.append(NLVectorAngleCheck)
 
 
-class NLGetSensorNode(bpy.types.Node, NLConditionNode):
+class NLGetSensorNode(NLConditionNode):
     bl_idname = "NLGetSensorNode"
     bl_label = "Sensor Positive"
     nl_category = "Logic"
@@ -5244,7 +5263,7 @@ class NLGetSensorNode(bpy.types.Node, NLConditionNode):
 _nodes.append(NLGetSensorNode)
 
 
-class NLControllerStatus(bpy.types.Node, NLConditionNode):
+class NLControllerStatus(NLConditionNode):
     bl_idname = "NLControllerStatus"
     bl_label = "Controller Status"
     nl_category = "Logic"
@@ -5272,7 +5291,7 @@ class NLControllerStatus(bpy.types.Node, NLConditionNode):
 _nodes.append(NLControllerStatus)
 
 
-class NLSensorValueNode(bpy.types.Node, NLParameterNode):
+class NLSensorValueNode(NLParameterNode):
     bl_idname = "NLSensorValueNode"
     bl_label = "Get Sensor Value"
     nl_category = 'Logic'
@@ -5300,7 +5319,7 @@ class NLSensorValueNode(bpy.types.Node, NLParameterNode):
 _nodes.append(NLSensorValueNode)
 
 
-class NLActionGetCharacterInfo(bpy.types.Node, NLParameterNode):
+class NLActionGetCharacterInfo(NLParameterNode):
     bl_idname = "NLActionGetCharacterInfo"
     bl_label = "Get Physics Info"
     nl_category = "Physics"
@@ -5341,7 +5360,7 @@ class NLActionGetCharacterInfo(bpy.types.Node, NLParameterNode):
 _nodes.append(NLActionGetCharacterInfo)
 
 
-class NLObjectAttributeParameterNode(bpy.types.Node, NLParameterNode):
+class NLObjectAttributeParameterNode(NLParameterNode):
     bl_idname = "NLObjectAttributeParameterNode"
     bl_label = "Get Position / Rotation / Scale etc."
     bl_icon = 'VIEW3D'
@@ -5369,7 +5388,7 @@ class NLObjectAttributeParameterNode(bpy.types.Node, NLParameterNode):
 _nodes.append(NLObjectAttributeParameterNode)
 
 
-class NLActiveCameraParameterNode(bpy.types.Node, NLParameterNode):
+class NLActiveCameraParameterNode(NLParameterNode):
     bl_idname = "NLActiveCameraParameterNode"
     bl_label = "Active Camera"
     nl_category = "Scene"
@@ -5390,7 +5409,7 @@ class NLActiveCameraParameterNode(bpy.types.Node, NLParameterNode):
 _nodes.append(NLActiveCameraParameterNode)
 
 
-class NLStoreValue(bpy.types.Node, NLParameterNode):
+class NLStoreValue(NLParameterNode):
     bl_idname = "NLStoreValue"
     bl_label = "Store Value"
     nl_category = "Values"
@@ -5428,7 +5447,7 @@ class NLStoreValue(bpy.types.Node, NLParameterNode):
 _nodes.append(NLStoreValue)
 
 
-class NLGetGravityNode(bpy.types.Node, NLParameterNode):
+class NLGetGravityNode(NLParameterNode):
     bl_idname = "NLGetGravityNode"
     bl_label = "Get Gravity"
     nl_category = "Scene"
@@ -5448,7 +5467,7 @@ class NLGetGravityNode(bpy.types.Node, NLParameterNode):
 _nodes.append(NLGetGravityNode)
 
 
-class NLGetCollectionNode(bpy.types.Node, NLParameterNode):
+class NLGetCollectionNode(NLParameterNode):
     bl_idname = "NLGetCollectionNode"
     bl_label = "Get Collection"
     bl_icon = 'OUTLINER_COLLECTION'
@@ -5474,7 +5493,7 @@ class NLGetCollectionNode(bpy.types.Node, NLParameterNode):
 _nodes.append(NLGetCollectionNode)
 
 
-class NLGetCollectionObjectsNode(bpy.types.Node, NLParameterNode):
+class NLGetCollectionObjectsNode(NLParameterNode):
     bl_idname = "NLGetCollectionObjectsNode"
     bl_label = "Get Objects"
     nl_category = "Scene"
@@ -5499,7 +5518,7 @@ class NLGetCollectionObjectsNode(bpy.types.Node, NLParameterNode):
 _nodes.append(NLGetCollectionObjectsNode)
 
 
-class NLGetCollectionObjectNamesNode(bpy.types.Node, NLParameterNode):
+class NLGetCollectionObjectNamesNode(NLParameterNode):
     bl_idname = "NLGetCollectionObjectNamesNode"
     bl_label = "Get Object Names"
     nl_category = "Scene"
@@ -5524,7 +5543,7 @@ class NLGetCollectionObjectNamesNode(bpy.types.Node, NLParameterNode):
 _nodes.append(NLGetCollectionObjectNamesNode)
 
 
-class NLSetOverlayCollection(bpy.types.Node, NLActionNode):
+class NLSetOverlayCollection(NLActionNode):
     bl_idname = "NLSetOverlayCollection"
     bl_label = "Set Overlay Collection"
     nl_category = "Scene"
@@ -5548,7 +5567,7 @@ class NLSetOverlayCollection(bpy.types.Node, NLActionNode):
 _nodes.append(NLSetOverlayCollection)
 
 
-class NLAddFilter(bpy.types.Node, NLActionNode):
+class NLAddFilter(NLActionNode):
     bl_idname = "NLAddFilter"
     bl_label = "Add Filter"
     nl_category = "Scene"
@@ -5565,10 +5584,10 @@ class NLAddFilter(bpy.types.Node, NLActionNode):
 
     def update_draw(self):
         self.inputs[2].enabled = self.filter_type == 'BRIGHTNESS'
-        self.inputs[3].enabled = self.filter_type in ['VIGNETTE', 'CHROMAB', 'GRAYSCALE', 'MIST']
-        self.inputs[4].enabled = self.filter_type in ['VIGNETTE', 'LEVELS', 'MIST']
-        self.inputs[5].enabled = self.filter_type == 'MIST'
-        self.inputs[6].enabled = self.inputs[5].enabled
+        self.inputs[3].enabled = self.filter_type == 'MIST'
+        self.inputs[4].enabled = self.inputs[3].enabled
+        self.inputs[5].enabled = self.filter_type in ['VIGNETTE', 'CHROMAB', 'GRAYSCALE', 'MIST']
+        self.inputs[6].enabled = self.filter_type in ['VIGNETTE', 'LEVELS', 'MIST']
 
     def init(self, context):
         NLActionNode.init(self, context)
@@ -5576,20 +5595,20 @@ class NLAddFilter(bpy.types.Node, NLActionNode):
         self.inputs.new(NLPositiveIntCentSocket.bl_idname, 'Pass Index')
         self.inputs.new(NLFloatFieldSocket.bl_idname, 'Brightness')
         self.inputs[-1].value = 1.0
+        self.inputs.new(NLFloatFieldSocket.bl_idname, 'Start')
+        self.inputs[-1].value = .1
+        self.inputs.new(NLFloatFieldSocket.bl_idname, 'Density')
+        self.inputs[-1].value = 0.5
         self.inputs.new(NLFloatFieldSocket.bl_idname, 'Power')
         self.inputs[-1].value = 1.0
         self.inputs.new(NLColorSocket.bl_idname, 'Color')
-        self.inputs.new(NLFloatFieldSocket.bl_idname, 'Start')
-        self.inputs[-1].value = .1
-        self.inputs.new(NLFloatFieldSocket.bl_idname, 'End')
-        self.inputs[-1].value = 50.0
         self.outputs.new(NLConditionSocket.bl_idname, 'Done')
 
     def draw_buttons(self, context, layout):
         layout.prop(self, "filter_type")
 
     def get_input_sockets_field_names(self):
-        return ['condition', 'pass_idx', 'brightness', 'power', 'color', 'start', 'end']
+        return ['condition', 'pass_idx', 'brightness', 'start', 'density', 'power', 'color', 'end']
 
     def get_attributes(self):
         return [
@@ -5606,7 +5625,7 @@ class NLAddFilter(bpy.types.Node, NLActionNode):
 _nodes.append(NLAddFilter)
 
 
-class NLRemoveFilter(bpy.types.Node, NLActionNode):
+class NLRemoveFilter(NLActionNode):
     bl_idname = "NLRemoveFilter"
     bl_label = "Remove Filter"
     nl_category = "Scene"
@@ -5632,7 +5651,7 @@ class NLRemoveFilter(bpy.types.Node, NLActionNode):
 _nodes.append(NLRemoveFilter)
 
 
-class NLToggleFilter(bpy.types.Node, NLActionNode):
+class NLToggleFilter(NLActionNode):
     bl_idname = "NLToggleFilter"
     bl_label = "Toggle Filter"
     nl_category = "Scene"
@@ -5658,7 +5677,7 @@ class NLToggleFilter(bpy.types.Node, NLActionNode):
 _nodes.append(NLToggleFilter)
 
 
-class NLSetFilterState(bpy.types.Node, NLActionNode):
+class NLSetFilterState(NLActionNode):
     bl_idname = "NLSetFilterState"
     bl_label = "Set Filter State"
     nl_category = "Scene"
@@ -5685,7 +5704,7 @@ class NLSetFilterState(bpy.types.Node, NLActionNode):
 _nodes.append(NLSetFilterState)
 
 
-class NLRemoveOverlayCollection(bpy.types.Node, NLActionNode):
+class NLRemoveOverlayCollection(NLActionNode):
     bl_idname = "NLRemoveOverlayCollection"
     bl_label = "Remove Overlay Collection"
     nl_category = "Scene"
@@ -5708,7 +5727,7 @@ class NLRemoveOverlayCollection(bpy.types.Node, NLActionNode):
 _nodes.append(NLRemoveOverlayCollection)
 
 
-class NLArithmeticOpParameterNode(bpy.types.Node, NLParameterNode):
+class NLArithmeticOpParameterNode(NLParameterNode):
     bl_idname = "NLArithmeticOpParameterNode"
     bl_label = "Math"
     nl_category = "Math"
@@ -5749,7 +5768,7 @@ class NLArithmeticOpParameterNode(bpy.types.Node, NLParameterNode):
 _nodes.append(NLArithmeticOpParameterNode)
 
 
-class NLThresholdNode(bpy.types.Node, NLParameterNode):
+class NLThresholdNode(NLParameterNode):
     bl_idname = "NLThresholdNode"
     bl_label = "Threshold"
     nl_category = "Math"
@@ -5790,7 +5809,7 @@ class NLThresholdNode(bpy.types.Node, NLParameterNode):
 _nodes.append(NLThresholdNode)
 
 
-class NLRangedThresholdNode(bpy.types.Node, NLParameterNode):
+class NLRangedThresholdNode(NLParameterNode):
     bl_idname = "NLRangedThresholdNode"
     bl_label = "Ranged Threshold"
     nl_category = "Math"
@@ -5827,7 +5846,7 @@ class NLRangedThresholdNode(bpy.types.Node, NLParameterNode):
 _nodes.append(NLRangedThresholdNode)
 
 
-class NLLimitRange(bpy.types.Node, NLParameterNode):
+class NLLimitRange(NLParameterNode):
     bl_idname = "NLLimitRange"
     bl_label = "Limit Range"
     nl_category = "Math"
@@ -5865,7 +5884,7 @@ class NLLimitRange(bpy.types.Node, NLParameterNode):
 _nodes.append(NLLimitRange)
 
 
-class NLWithinRangeNode(bpy.types.Node, NLParameterNode):
+class NLWithinRangeNode(NLParameterNode):
     bl_idname = "NLWithinRangeNode"
     bl_label = "Within Range"
     nl_category = "Math"
@@ -5904,7 +5923,7 @@ class NLWithinRangeNode(bpy.types.Node, NLParameterNode):
 _nodes.append(NLWithinRangeNode)
 
 
-class NLClampValueNode(bpy.types.Node, NLParameterNode):
+class NLClampValueNode(NLParameterNode):
     bl_idname = "NLClampValueNode"
     bl_label = "Clamp"
     nl_category = "Math"
@@ -5929,7 +5948,7 @@ class NLClampValueNode(bpy.types.Node, NLParameterNode):
 _nodes.append(NLClampValueNode)
 
 
-class NLGetImage(bpy.types.Node, NLParameterNode):
+class NLGetImage(NLParameterNode):
     bl_idname = "NLGetImage"
     bl_label = "Get Image"
     bl_icon = 'IMAGE_DATA'
@@ -5954,7 +5973,7 @@ class NLGetImage(bpy.types.Node, NLParameterNode):
 _nodes.append(NLGetImage)
 
 
-class NLGetSound(bpy.types.Node, NLParameterNode):
+class NLGetSound(NLParameterNode):
     bl_idname = "NLGetSound"
     bl_label = "Get Sound"
     bl_icon = 'FILE_SOUND'
@@ -5979,7 +5998,7 @@ class NLGetSound(bpy.types.Node, NLParameterNode):
 _nodes.append(NLGetSound)
 
 
-class NLInterpolateValueNode(bpy.types.Node, NLParameterNode):
+class NLInterpolateValueNode(NLParameterNode):
     bl_idname = "NLInterpolateValueNode"
     bl_label = "Interpolate"
     nl_category = "Math"
@@ -6005,7 +6024,7 @@ class NLInterpolateValueNode(bpy.types.Node, NLParameterNode):
 _nodes.append(NLInterpolateValueNode)
 
 
-class NLParameterActionStatus(bpy.types.Node, NLParameterNode):
+class NLParameterActionStatus(NLParameterNode):
     bl_idname = "NLParameterActionStatus"
     bl_label = "Animation Status"
     nl_category = "Animation"
@@ -6032,7 +6051,7 @@ class NLParameterActionStatus(bpy.types.Node, NLParameterNode):
 _nodes.append(NLParameterActionStatus)
 
 
-class NLParameterSwitchValue(bpy.types.Node, NLConditionNode):
+class NLParameterSwitchValue(NLConditionNode):
     bl_idname = "NLParameterSwitchValue"
     bl_label = "True / False"
     bl_width_min = 60
@@ -6060,7 +6079,7 @@ class NLParameterSwitchValue(bpy.types.Node, NLConditionNode):
 _nodes.append(NLParameterSwitchValue)
 
 
-class NLParameterTimeNode(bpy.types.Node, NLParameterNode):
+class NLParameterTimeNode(NLParameterNode):
     bl_idname = "NLParameterTimeNode"
     bl_label = "Time Data"
     nl_category = 'Time'
@@ -6082,7 +6101,7 @@ class NLParameterTimeNode(bpy.types.Node, NLParameterNode):
 _nodes.append(NLParameterTimeNode)
 
 
-class NLMouseDataParameter(bpy.types.Node, NLParameterNode):
+class NLMouseDataParameter(NLParameterNode):
     bl_idname = "NLMouseDataParameter"
     bl_label = "Mouse Status"
     bl_icon = 'OPTIONS'
@@ -6110,7 +6129,7 @@ class NLMouseDataParameter(bpy.types.Node, NLParameterNode):
 _nodes.append(NLMouseDataParameter)
 
 
-class NLParameterBoneStatus(bpy.types.Node, NLParameterNode):
+class NLParameterBoneStatus(NLParameterNode):
     bl_idname = "NLParameterBoneStatus"
     bl_label = "Bone Status"
     nl_category = 'Animation'
@@ -6138,7 +6157,7 @@ class NLParameterBoneStatus(bpy.types.Node, NLParameterNode):
 _nodes.append(NLParameterBoneStatus)
 
 
-class NLParameterPythonModuleFunction(bpy.types.Node, NLActionNode):
+class NLParameterPythonModuleFunction(NLActionNode):
     bl_idname = "NLParameterPythonModuleFunction"
     bl_label = "Run Python Code"
     nl_category = "Python"
@@ -6166,7 +6185,7 @@ class NLParameterPythonModuleFunction(bpy.types.Node, NLActionNode):
 _nodes.append(NLParameterPythonModuleFunction)
 
 
-class NLParameterBooleanValue(bpy.types.Node, NLParameterNode):
+class NLParameterBooleanValue(NLParameterNode):
     bl_idname = "NLParameterBooleanValue"
     bl_label = "Boolean"
     bl_icon = 'CHECKBOX_HLT'
@@ -6192,7 +6211,7 @@ class NLParameterBooleanValue(bpy.types.Node, NLParameterNode):
 _nodes.append(NLParameterBooleanValue)
 
 
-class NLParameterFileValue(bpy.types.Node, NLParameterNode):
+class NLParameterFileValue(NLParameterNode):
     bl_idname = "NLParameterFileValue"
     bl_label = "File Path"
     nl_category = "Values"
@@ -6216,7 +6235,7 @@ class NLParameterFileValue(bpy.types.Node, NLParameterNode):
 _nodes.append(NLParameterFileValue)
 
 
-class NLParameterFloatValue(bpy.types.Node, NLParameterNode):
+class NLParameterFloatValue(NLParameterNode):
     bl_idname = "NLParameterFloatValue"
     bl_label = "Float"
     nl_category = "Values"
@@ -6241,7 +6260,7 @@ class NLParameterFloatValue(bpy.types.Node, NLParameterNode):
 _nodes.append(NLParameterFloatValue)
 
 
-class NLParameterIntValue(bpy.types.Node, NLParameterNode):
+class NLParameterIntValue(NLParameterNode):
     bl_idname = "NLParameterIntValue"
     bl_label = "Integer"
     nl_category = "Values"
@@ -6266,7 +6285,7 @@ class NLParameterIntValue(bpy.types.Node, NLParameterNode):
 _nodes.append(NLParameterIntValue)
 
 
-class NLParameterStringValue(bpy.types.Node, NLParameterNode):
+class NLParameterStringValue(NLParameterNode):
     bl_idname = "NLParameterStringValue"
     bl_icon = 'FONT_DATA'
     bl_label = "String"
@@ -6292,7 +6311,7 @@ class NLParameterStringValue(bpy.types.Node, NLParameterNode):
 _nodes.append(NLParameterStringValue)
 
 
-class NLParameterTypeCast(bpy.types.Node, NLParameterNode):
+class NLParameterTypeCast(NLParameterNode):
     bl_idname = "NLParameterTypeCast"
     bl_label = "Typecast Value"
     nl_category = "Python"
@@ -6317,7 +6336,7 @@ class NLParameterTypeCast(bpy.types.Node, NLParameterNode):
 _nodes.append(NLParameterTypeCast)
 
 
-class NLParameterVector2SimpleNode(bpy.types.Node, NLParameterNode):
+class NLParameterVector2SimpleNode(NLParameterNode):
     bl_idname = "NLParameterVector2SimpleNode"
     bl_label = "Vector XY"
     nl_category = "Values"
@@ -6346,7 +6365,7 @@ class NLParameterVector2SimpleNode(bpy.types.Node, NLParameterNode):
 _nodes.append(NLParameterVector2SimpleNode)
 
 
-class NLParameterVector2SplitNode(bpy.types.Node, NLParameterNode):
+class NLParameterVector2SplitNode(NLParameterNode):
     bl_idname = "NLParameterVector2SplitNode"
     bl_label = "Separate XY"
     nl_category = "Values"
@@ -6372,7 +6391,7 @@ class NLParameterVector2SplitNode(bpy.types.Node, NLParameterNode):
 _nodes.append(NLParameterVector2SplitNode)
 
 
-class NLParameterVector3SplitNode(bpy.types.Node, NLParameterNode):
+class NLParameterVector3SplitNode(NLParameterNode):
     bl_idname = "NLParameterVector3SplitNode"
     bl_label = "Separate XYZ"
     nl_category = "Values"
@@ -6399,7 +6418,7 @@ class NLParameterVector3SplitNode(bpy.types.Node, NLParameterNode):
 _nodes.append(NLParameterVector3SplitNode)
 
 
-class NLParameterAbsVector3Node(bpy.types.Node, NLParameterNode):
+class NLParameterAbsVector3Node(NLParameterNode):
     bl_idname = "NLParameterAbsVector3Node"
     bl_label = "Absolute Vector"
     nl_category = "Math"
@@ -6427,7 +6446,7 @@ class NLParameterAbsVector3Node(bpy.types.Node, NLParameterNode):
 _nodes.append(NLParameterAbsVector3Node)
 
 
-class NLVectorLength(bpy.types.Node, NLParameterNode):
+class NLVectorLength(NLParameterNode):
     bl_idname = "NLVectorLength"
     bl_label = "Vector Length"
     nl_category = "Math"
@@ -6452,7 +6471,7 @@ class NLVectorLength(bpy.types.Node, NLParameterNode):
 _nodes.append(NLVectorLength)
 
 
-class NLParameterVector3SimpleNode(bpy.types.Node, NLParameterNode):
+class NLParameterVector3SimpleNode(NLParameterNode):
     bl_idname = "NLParameterVector3SimpleNode"
     bl_label = "Vector XYZ"
     nl_category = "Values"
@@ -6479,7 +6498,7 @@ class NLParameterVector3SimpleNode(bpy.types.Node, NLParameterNode):
 _nodes.append(NLParameterVector3SimpleNode)
 
 
-class NLParameterVector4SimpleNode(bpy.types.Node, NLParameterNode):
+class NLParameterVector4SimpleNode(NLParameterNode):
     bl_idname = "NLParameterVector4SimpleNode"
     bl_label = "Vector XYZW"
     nl_category = "Values"
@@ -6507,7 +6526,7 @@ class NLParameterVector4SimpleNode(bpy.types.Node, NLParameterNode):
 _nodes.append(NLParameterVector4SimpleNode)
 
 
-class NLParameterRGBNode(bpy.types.Node, NLParameterNode):
+class NLParameterRGBNode(NLParameterNode):
     bl_idname = "NLParameterRGBNode"
     bl_label = "Color RGB"
     nl_category = "Values"
@@ -6532,7 +6551,7 @@ class NLParameterRGBNode(bpy.types.Node, NLParameterNode):
 _nodes.append(NLParameterRGBNode)
 
 
-class NLParameterRGBANode(bpy.types.Node, NLParameterNode):
+class NLParameterRGBANode(NLParameterNode):
     bl_idname = "NLParameterRGBANode"
     bl_label = "Color RGBA"
     nl_category = "Values"
@@ -6557,7 +6576,7 @@ class NLParameterRGBANode(bpy.types.Node, NLParameterNode):
 _nodes.append(NLParameterRGBANode)
 
 
-class NLParameterEulerSimpleNode(bpy.types.Node, NLParameterNode):
+class NLParameterEulerSimpleNode(NLParameterNode):
     bl_idname = "NLParameterEulerSimpleNode"
     bl_label = "Euler"
     nl_category = "Values"
@@ -6584,7 +6603,7 @@ class NLParameterEulerSimpleNode(bpy.types.Node, NLParameterNode):
 _nodes.append(NLParameterEulerSimpleNode)
 
 
-class NLParameterEulerToMatrixNode(bpy.types.Node, NLParameterNode):
+class NLParameterEulerToMatrixNode(NLParameterNode):
     bl_idname = "NLParameterEulerToMatrixNode"
     bl_label = "Euler/Vector To Matrix"
     nl_category = "Math"
@@ -6609,7 +6628,7 @@ class NLParameterEulerToMatrixNode(bpy.types.Node, NLParameterNode):
 _nodes.append(NLParameterEulerToMatrixNode)
 
 
-class NLParameterMatrixToEulerNode(bpy.types.Node, NLParameterNode):
+class NLParameterMatrixToEulerNode(NLParameterNode):
     bl_idname = "NLParameterMatrixToEulerNode"
     bl_label = "Matrix To XYZ"
     nl_category = "Math"
@@ -6652,7 +6671,7 @@ class NLParameterMatrixToEulerNode(bpy.types.Node, NLParameterNode):
 _nodes.append(NLParameterMatrixToEulerNode)
 
 
-class NLOnInitConditionNode(bpy.types.Node, NLConditionNode):
+class NLOnInitConditionNode(NLConditionNode):
     bl_idname = "NLOnInitConditionNode"
     bl_label = "On Init"
     bl_icon = 'SORTBYEXT'
@@ -6670,7 +6689,7 @@ class NLOnInitConditionNode(bpy.types.Node, NLConditionNode):
 _nodes.append(NLOnInitConditionNode)
 
 
-class NLOnUpdateConditionNode(bpy.types.Node, NLConditionNode):
+class NLOnUpdateConditionNode(NLConditionNode):
     bl_idname = "NLOnUpdateConditionNode"
     bl_label = "On Update"
     bl_icon = 'TRIA_RIGHT'
@@ -6690,7 +6709,7 @@ class NLOnUpdateConditionNode(bpy.types.Node, NLConditionNode):
 _nodes.append(NLOnUpdateConditionNode)
 
 
-class NLGamepadVibration(bpy.types.Node, NLParameterNode):
+class NLGamepadVibration(NLParameterNode):
     bl_idname = "NLGamepadVibration"
     bl_label = "Vibration"
     nl_category = "Input"
@@ -6720,7 +6739,7 @@ class NLGamepadVibration(bpy.types.Node, NLParameterNode):
 _nodes.append(NLGamepadVibration)
 
 
-class NLGamepadSticksCondition(bpy.types.Node, NLParameterNode):
+class NLGamepadSticksCondition(NLParameterNode):
     bl_idname = "NLGamepadSticksCondition"
     bl_label = "Sticks"
     nl_category = "Input"
@@ -6765,7 +6784,7 @@ class NLGamepadSticksCondition(bpy.types.Node, NLParameterNode):
 _nodes.append(NLGamepadSticksCondition)
 
 
-class NLGamepadTriggerCondition(bpy.types.Node, NLParameterNode):
+class NLGamepadTriggerCondition(NLParameterNode):
     bl_idname = "NLGamepadTriggerCondition"
     bl_label = "Trigger"
     nl_category = "Input"
@@ -6808,7 +6827,7 @@ class NLGamepadTriggerCondition(bpy.types.Node, NLParameterNode):
 _nodes.append(NLGamepadTriggerCondition)
 
 
-class NLGamepadActive(bpy.types.Node, NLConditionNode):
+class NLGamepadActive(NLConditionNode):
     bl_idname = "NLGamepadActive"
     bl_label = "Gamepad Active"
     nl_category = "Input"
@@ -6833,7 +6852,7 @@ class NLGamepadActive(bpy.types.Node, NLConditionNode):
 _nodes.append(NLGamepadActive)
 
 
-class NLGamepadButtonsCondition(bpy.types.Node, NLConditionNode):
+class NLGamepadButtonsCondition(NLConditionNode):
     bl_idname = "NLGamepadButtonsCondition"
     bl_label = "Button Down"
     nl_category = "Input"
@@ -6887,7 +6906,7 @@ class NLGamepadButtonsCondition(bpy.types.Node, NLConditionNode):
 _nodes.append(NLGamepadButtonsCondition)
 
 
-class NLGamepadButtonUpCondition(bpy.types.Node, NLConditionNode):
+class NLGamepadButtonUpCondition(NLConditionNode):
     bl_idname = "NLGamepadButtonUpCondition"
     bl_label = "Button Up"
     nl_category = "Input"
@@ -6940,7 +6959,7 @@ class NLGamepadButtonUpCondition(bpy.types.Node, NLConditionNode):
 _nodes.append(NLGamepadButtonUpCondition)
 
 
-class NLKeyboardActive(bpy.types.Node, NLConditionNode):
+class NLKeyboardActive(NLConditionNode):
     bl_idname = "NLKeyboardActive"
     bl_label = "Keyboard Active"
     nl_category = "Input"
@@ -6964,7 +6983,7 @@ class NLKeyboardActive(bpy.types.Node, NLConditionNode):
 _nodes.append(NLKeyboardActive)
 
 
-class NLKeyPressedCondition(bpy.types.Node, NLConditionNode):
+class NLKeyPressedCondition(NLConditionNode):
     bl_idname = "NLKeyPressedCondition"
     bl_label = "Key Down"
     nl_category = "Input"
@@ -7005,7 +7024,7 @@ class NLKeyPressedCondition(bpy.types.Node, NLConditionNode):
 _nodes.append(NLKeyPressedCondition)
 
 
-class NLKeyLoggerAction(bpy.types.Node, NLActionNode):
+class NLKeyLoggerAction(NLActionNode):
     bl_idname = "NLKeyLoggerAction"
     bl_label = "Logger"
     nl_category = "Input"
@@ -7051,7 +7070,7 @@ class NLKeyLoggerAction(bpy.types.Node, NLActionNode):
 _nodes.append(NLKeyLoggerAction)
 
 
-class NLKeyReleasedCondition(bpy.types.Node, NLConditionNode):
+class NLKeyReleasedCondition(NLConditionNode):
     bl_idname = "NLKeyReleasedCondition"
     bl_label = "Key Up"
     nl_category = "Input"
@@ -7094,7 +7113,7 @@ class NLKeyReleasedCondition(bpy.types.Node, NLConditionNode):
 _nodes.append(NLKeyReleasedCondition)
 
 
-class NLMousePressedCondition(bpy.types.Node, NLConditionNode):
+class NLMousePressedCondition(NLConditionNode):
     bl_idname = "NLMousePressedCondition"
     bl_label = "Button"
     bl_icon = 'MOUSE_LMB'
@@ -7141,7 +7160,7 @@ class NLMousePressedCondition(bpy.types.Node, NLConditionNode):
 _nodes.append(NLMousePressedCondition)
 
 
-class NLMouseMovedCondition(bpy.types.Node, NLConditionNode):
+class NLMouseMovedCondition(NLConditionNode):
     bl_idname = "NLMouseMovedCondition"
     bl_label = "Moved"
     bl_icon = 'MOUSE_MOVE'
@@ -7184,7 +7203,7 @@ class NLMouseMovedCondition(bpy.types.Node, NLConditionNode):
 _nodes.append(NLMouseMovedCondition)
 
 
-class NLMouseReleasedCondition(bpy.types.Node, NLConditionNode):
+class NLMouseReleasedCondition(NLConditionNode):
     bl_idname = "NLMouseReleasedCondition"
     bl_label = "Button Up"
     bl_icon = 'MOUSE_LMB'
@@ -7231,7 +7250,7 @@ class NLMouseReleasedCondition(bpy.types.Node, NLConditionNode):
 _nodes.append(NLMouseReleasedCondition)
 
 
-class NLConditionOnceNode(bpy.types.Node, NLConditionNode):
+class NLConditionOnceNode(NLConditionNode):
     bl_idname = "NLConditionOnceNode"
     bl_label = "Once"
     bl_icon = 'FF'
@@ -7270,7 +7289,7 @@ class NLConditionOnceNode(bpy.types.Node, NLConditionNode):
 _nodes.append(NLConditionOnceNode)
 
 
-class NLObjectPropertyOperator(bpy.types.Node, NLConditionNode):
+class NLObjectPropertyOperator(NLConditionNode):
     bl_idname = "NLObjectPropertyOperator"
     bl_label = "Evaluate Property"
     bl_icon = 'CON_TRANSLIKE'
@@ -7324,7 +7343,7 @@ class NLObjectPropertyOperator(bpy.types.Node, NLConditionNode):
 _nodes.append(NLObjectPropertyOperator)
 
 
-class NLConditionNextFrameNode(bpy.types.Node, NLConditionNode):
+class NLConditionNextFrameNode(NLConditionNode):
     bl_idname = "NLConditionNextFrameNode"
     bl_label = "On Next Tick"
     bl_icon = 'FRAME_NEXT'
@@ -7346,7 +7365,7 @@ class NLConditionNextFrameNode(bpy.types.Node, NLConditionNode):
 _nodes.append(NLConditionNextFrameNode)
 
 
-class NLConditionMousePressedOn(bpy.types.Node, NLConditionNode):
+class NLConditionMousePressedOn(NLConditionNode):
     bl_idname = "NLConditionMousePressedOn"
     bl_label = "Button Over"
     bl_icon = 'MOUSE_LMB'
@@ -7373,7 +7392,7 @@ class NLConditionMousePressedOn(bpy.types.Node, NLConditionNode):
 _nodes.append(NLConditionMousePressedOn)
 
 
-class NLConditionMouseWheelMoved(bpy.types.Node, NLConditionNode):
+class NLConditionMouseWheelMoved(NLConditionNode):
     bl_idname = "NLConditionMouseWheelMoved"
     bl_label = "Wheel"
     bl_icon = 'MOUSE_MMB'
@@ -7396,7 +7415,7 @@ class NLConditionMouseWheelMoved(bpy.types.Node, NLConditionNode):
 _nodes.append(NLConditionMouseWheelMoved)
 
 
-class NLConditionCollisionNode(bpy.types.Node, NLConditionNode):
+class NLConditionCollisionNode(NLConditionNode):
     bl_idname = "NLConditionCollisionNode"
     bl_label = "Collision"
     nl_category = "Physics"
@@ -7446,7 +7465,7 @@ class NLConditionCollisionNode(bpy.types.Node, NLConditionNode):
 _nodes.append(NLConditionCollisionNode)
 
 
-class NLConditionMouseTargetingNode(bpy.types.Node, NLConditionNode):
+class NLConditionMouseTargetingNode(NLConditionNode):
     bl_idname = "NLConditionMouseTargetingNode"
     bl_label = "Over"
     bl_icon = 'RESTRICT_SELECT_OFF'
@@ -7482,7 +7501,7 @@ class NLConditionMouseTargetingNode(bpy.types.Node, NLConditionNode):
 _nodes.append(NLConditionMouseTargetingNode)
 
 
-class NLConditionAndNode(bpy.types.Node, NLConditionNode):
+class NLConditionAndNode(NLConditionNode):
     bl_idname = "NLConditionAndNode"
     bl_label = "And"
     bl_width_min = 60
@@ -7507,7 +7526,7 @@ class NLConditionAndNode(bpy.types.Node, NLConditionNode):
 _nodes.append(NLConditionAndNode)
 
 
-class NLConditionAndNotNode(bpy.types.Node, NLConditionNode):
+class NLConditionAndNotNode(NLConditionNode):
     bl_idname = "NLConditionAndNotNode"
     bl_label = "And Not"
     bl_width_min = 60
@@ -7532,7 +7551,7 @@ class NLConditionAndNotNode(bpy.types.Node, NLConditionNode):
 _nodes.append(NLConditionAndNotNode)
 
 
-class NLConditionOrNode(bpy.types.Node, NLConditionNode):
+class NLConditionOrNode(NLConditionNode):
     bl_idname = "NLConditionOrNode"
     bl_label = "Or"
     bl_width_min = 60
@@ -7557,7 +7576,7 @@ class NLConditionOrNode(bpy.types.Node, NLConditionNode):
 _nodes.append(NLConditionOrNode)
 
 
-class NLConditionOrList(bpy.types.Node, NLConditionNode):
+class NLConditionOrList(NLConditionNode):
     bl_idname = "NLConditionOrList"
     bl_label = "Or List"
     bl_width_min = 60
@@ -7603,7 +7622,7 @@ class NLConditionOrList(bpy.types.Node, NLConditionNode):
 _nodes.append(NLConditionOrList)
 
 
-class NLConditionAndList(bpy.types.Node, NLConditionNode):
+class NLConditionAndList(NLConditionNode):
     bl_idname = "NLConditionAndList"
     bl_label = "And List"
     bl_width_min = 60
@@ -7655,7 +7674,7 @@ class NLConditionAndList(bpy.types.Node, NLConditionNode):
 _nodes.append(NLConditionAndList)
 
 
-class NLConditionValueTriggerNode(bpy.types.Node, NLConditionNode):
+class NLConditionValueTriggerNode(NLConditionNode):
     """When input becomes trigger, sends a true signal"""
     bl_idname = "NLConditionValueTriggerNode"
     bl_label = "On Value Changed To"
@@ -7684,7 +7703,7 @@ class NLConditionValueTriggerNode(bpy.types.Node, NLConditionNode):
 _nodes.append(NLConditionValueTriggerNode)
 
 
-class NLConditionLogicOperation(bpy.types.Node, NLConditionNode):
+class NLConditionLogicOperation(NLConditionNode):
     bl_idname = "NLConditionLogicOperation"
     bl_label = "Compare"
     nl_category = "Math"
@@ -7732,7 +7751,7 @@ class NLConditionLogicOperation(bpy.types.Node, NLConditionNode):
 _nodes.append(NLConditionLogicOperation)
 
 
-class NLConditionCompareVecs(bpy.types.Node, NLConditionNode):
+class NLConditionCompareVecs(NLConditionNode):
     bl_idname = "NLConditionCompareVecs"
     bl_label = "Compare Vectors"
     nl_category = "Math"
@@ -7774,7 +7793,7 @@ class NLConditionCompareVecs(bpy.types.Node, NLConditionNode):
 _nodes.append(NLConditionCompareVecs)
 
 
-class NLConditionDistanceCheck(bpy.types.Node, NLConditionNode):
+class NLConditionDistanceCheck(NLConditionNode):
     bl_idname = "NLConditionDistanceCheck"
     bl_label = "Check Distance"
     nl_category = "Math"
@@ -7799,7 +7818,7 @@ class NLConditionDistanceCheck(bpy.types.Node, NLConditionNode):
 _nodes.append(NLConditionDistanceCheck)
 
 
-class NLConditionValueChanged(bpy.types.Node, NLConditionNode):
+class NLConditionValueChanged(NLConditionNode):
     bl_idname = "NLConditionValueChanged"
     bl_label = "On Value Changed"
     bl_icon = 'DRIVER_TRANSFORM'
@@ -7844,7 +7863,7 @@ class NLConditionValueChanged(bpy.types.Node, NLConditionNode):
 _nodes.append(NLConditionValueChanged)
 
 
-class NLConditionTimeElapsed(bpy.types.Node, NLConditionNode):
+class NLConditionTimeElapsed(NLConditionNode):
     bl_idname = "NLConditionTimeElapsed"
     bl_label = "Timer"
     nl_category = 'Time'
@@ -7866,7 +7885,7 @@ class NLConditionTimeElapsed(bpy.types.Node, NLConditionNode):
 _nodes.append(NLConditionTimeElapsed)
 
 
-class NLConditionNotNoneNode(bpy.types.Node, NLConditionNode):
+class NLConditionNotNoneNode(NLConditionNode):
     bl_idname = "NLConditionNotNoneNode"
     bl_label = "Not None"
     bl_width_min = 60
@@ -7890,7 +7909,7 @@ class NLConditionNotNoneNode(bpy.types.Node, NLConditionNode):
 _nodes.append(NLConditionNotNoneNode)
 
 
-class NLConditionNoneNode(bpy.types.Node, NLConditionNode):
+class NLConditionNoneNode(NLConditionNode):
     bl_idname = "NLConditionNone"
     bl_label = "None"
     bl_width_min = 60
@@ -7914,7 +7933,7 @@ class NLConditionNoneNode(bpy.types.Node, NLConditionNode):
 _nodes.append(NLConditionNoneNode)
 
 
-class NLConditionValueValidNode(bpy.types.Node, NLConditionNode):
+class NLConditionValueValidNode(NLConditionNode):
     bl_idname = "NLConditionValueValidNode"
     bl_label = "Value Valid"
     nl_category = "Values"
@@ -7935,7 +7954,7 @@ class NLConditionValueValidNode(bpy.types.Node, NLConditionNode):
 _nodes.append(NLConditionValueValidNode)
 
 
-class NLConditionNotNode(bpy.types.Node, NLConditionNode):
+class NLConditionNotNode(NLConditionNode):
     bl_idname = "NLConditionNotNode"
     bl_label = "Not"
     nl_category = "Logic"
@@ -7959,7 +7978,7 @@ class NLConditionNotNode(bpy.types.Node, NLConditionNode):
 _nodes.append(NLConditionNotNode)
 
 
-class NLConditionLogicNetworkStatusNode(bpy.types.Node, NLConditionNode):
+class NLConditionLogicNetworkStatusNode(NLConditionNode):
     bl_idname = "NLConditionLogitNetworkStatusNode"
     bl_label = "Logic Network Status"
     nl_category = "Logic"
@@ -7986,7 +8005,7 @@ class NLConditionLogicNetworkStatusNode(bpy.types.Node, NLConditionNode):
 _nodes.append(NLConditionLogicNetworkStatusNode)
 
 
-class NLAddObjectActionNode(bpy.types.Node, NLActionNode):
+class NLAddObjectActionNode(NLActionNode):
     bl_idname = "NLAddObjectActionNode"
     bl_label = "Add Object"
     bl_icon = 'PLUS'
@@ -8019,7 +8038,7 @@ class NLAddObjectActionNode(bpy.types.Node, NLActionNode):
 _nodes.append(NLAddObjectActionNode)
 
 
-class NLSetGameObjectGamePropertyActionNode(bpy.types.Node, NLActionNode):
+class NLSetGameObjectGamePropertyActionNode(NLActionNode):
     bl_idname = "NLSetGameObjectGamePropertyActionNode"
     bl_label = "Set Property"
     bl_icon = 'IMPORT'
@@ -8066,7 +8085,7 @@ class NLSetGameObjectGamePropertyActionNode(bpy.types.Node, NLActionNode):
 _nodes.append(NLSetGameObjectGamePropertyActionNode)
 
 
-class NLSetGeometryNodeValue(bpy.types.Node, NLActionNode):
+class NLSetGeometryNodeValue(NLActionNode):
     bl_idname = "NLSetGeometryNodeValue"
     bl_label = "Set Node Input Value"
     bl_icon = 'TRIA_RIGHT'
@@ -8124,7 +8143,7 @@ class NLSetGeometryNodeValue(bpy.types.Node, NLActionNode):
 _nodes.append(NLSetGeometryNodeValue)
 
 
-class NLSetNodeTreeNodeValue(bpy.types.Node, NLActionNode):
+class NLSetNodeTreeNodeValue(NLActionNode):
     bl_idname = "NLSetNodeTreeNodeValue"
     bl_label = "Set Node Input Value"
     bl_icon = 'TRIA_RIGHT'
@@ -8182,7 +8201,7 @@ class NLSetNodeTreeNodeValue(bpy.types.Node, NLActionNode):
 _nodes.append(NLSetNodeTreeNodeValue)
 
 
-class NLSetGeometryNodeAttribute(bpy.types.Node, NLActionNode):
+class NLSetGeometryNodeAttribute(NLActionNode):
     bl_idname = "NLSetGeometryNodeAttribute"
     bl_label = "Set Node Value"
     bl_icon = 'DRIVER_TRANSFORM'
@@ -8232,7 +8251,7 @@ class NLSetGeometryNodeAttribute(bpy.types.Node, NLActionNode):
 _nodes.append(NLSetGeometryNodeAttribute)
 
 
-class NLSetNodeTreeNodeAttribute(bpy.types.Node, NLActionNode):
+class NLSetNodeTreeNodeAttribute(NLActionNode):
     bl_idname = "NLSetNodeTreeNodeAttribute"
     bl_label = "Set Node Value"
     bl_icon = 'DRIVER_TRANSFORM'
@@ -8282,7 +8301,7 @@ class NLSetNodeTreeNodeAttribute(bpy.types.Node, NLActionNode):
 _nodes.append(NLSetNodeTreeNodeAttribute)
 
 
-class NLSetMaterial(bpy.types.Node, NLActionNode):
+class NLSetMaterial(NLActionNode):
     bl_idname = "NLSetMaterial"
     bl_label = "Set Material"
     nl_category = 'Nodes'
@@ -8322,7 +8341,7 @@ class NLSetMaterial(bpy.types.Node, NLActionNode):
 _nodes.append(NLSetMaterial)
 
 
-class NLSetMaterialNodeValue(bpy.types.Node, NLActionNode):
+class NLSetMaterialNodeValue(NLActionNode):
     bl_idname = "NLSetMaterialNodeValue"
     bl_label = "Set Node Input Value"
     bl_icon = 'TRIA_RIGHT'
@@ -8380,7 +8399,7 @@ class NLSetMaterialNodeValue(bpy.types.Node, NLActionNode):
 _nodes.append(NLSetMaterialNodeValue)
 
 
-class NLSetMaterialNodeAttribute(bpy.types.Node, NLActionNode):
+class NLSetMaterialNodeAttribute(NLActionNode):
     bl_idname = "NLSetMaterialNodeAttribute"
     bl_label = "Set Node Value"
     bl_icon = 'DRIVER_TRANSFORM'
@@ -8430,7 +8449,7 @@ class NLSetMaterialNodeAttribute(bpy.types.Node, NLActionNode):
 _nodes.append(NLSetMaterialNodeAttribute)
 
 
-class NLPlayMaterialSequence(bpy.types.Node, NLActionNode):
+class NLPlayMaterialSequence(NLActionNode):
     bl_idname = "NLPlayMaterialSequence"
     bl_label = "Play Sequence"
     nl_category = 'Nodes'
@@ -8506,7 +8525,7 @@ class NLPlayMaterialSequence(bpy.types.Node, NLActionNode):
 _nodes.append(NLPlayMaterialSequence)
 
 
-class NLToggleGameObjectGamePropertyActionNode(bpy.types.Node, NLActionNode):
+class NLToggleGameObjectGamePropertyActionNode(NLActionNode):
     bl_idname = "NLToggleGameObjectGamePropertyActionNode"
     bl_label = "Toggle Property"
     bl_icon = 'UV_SYNC_SELECT'
@@ -8551,7 +8570,7 @@ class NLToggleGameObjectGamePropertyActionNode(bpy.types.Node, NLActionNode):
 _nodes.append(NLToggleGameObjectGamePropertyActionNode)
 
 
-class NLAddToGameObjectGamePropertyActionNode(bpy.types.Node, NLActionNode):
+class NLAddToGameObjectGamePropertyActionNode(NLActionNode):
     bl_idname = "NLAddToGameObjectGamePropertyActionNode"
     bl_label = "Modify Property"
     bl_icon = 'ADD'
@@ -8608,7 +8627,7 @@ _nodes.append(NLAddToGameObjectGamePropertyActionNode)
 
 
 
-class NLClampedModifyProperty(bpy.types.Node, NLActionNode):
+class NLClampedModifyProperty(NLActionNode):
     bl_idname = "NLClampedModifyProperty"
     bl_label = "Clamped Modify Property"
     bl_icon = 'ARROW_LEFTRIGHT'
@@ -8666,7 +8685,7 @@ class NLClampedModifyProperty(bpy.types.Node, NLActionNode):
 _nodes.append(NLClampedModifyProperty)
 
 
-class NLCopyPropertyFromObject(bpy.types.Node, NLActionNode):
+class NLCopyPropertyFromObject(NLActionNode):
     bl_idname = "NLCopyPropertyFromObject"
     bl_label = "Copy From Object"
     bl_icon = 'PASTEDOWN'
@@ -8713,7 +8732,7 @@ class NLCopyPropertyFromObject(bpy.types.Node, NLActionNode):
 _nodes.append(NLCopyPropertyFromObject)
 
 
-class NLValueSwitch(bpy.types.Node, NLParameterNode):
+class NLValueSwitch(NLParameterNode):
     bl_idname = "NLValueSwitch"
     bl_label = "Value Switch"
     nl_category = "Values"
@@ -8741,7 +8760,7 @@ class NLValueSwitch(bpy.types.Node, NLParameterNode):
 _nodes.append(NLValueSwitch)
 
 
-class NLValueSwitchList(bpy.types.Node, NLParameterNode):
+class NLValueSwitchList(NLParameterNode):
     bl_idname = "NLValueSwitchList"
     bl_label = "Value Switch List"
     bl_width_min = 100
@@ -8803,7 +8822,7 @@ class NLValueSwitchList(bpy.types.Node, NLParameterNode):
 _nodes.append(NLValueSwitchList)
 
 
-class NLValueSwitchListCompare(bpy.types.Node, NLParameterNode):
+class NLValueSwitchListCompare(NLParameterNode):
     bl_idname = "NLValueSwitchListCompare"
     bl_label = "Value Switch List Compare"
     bl_width_min = 100
@@ -8890,7 +8909,7 @@ class NLValueSwitchListCompare(bpy.types.Node, NLParameterNode):
 _nodes.append(NLValueSwitchListCompare)
 
 
-class NLInvertValueNode(bpy.types.Node, NLParameterNode):
+class NLInvertValueNode(NLParameterNode):
     bl_idname = "NLInvertValueNode"
     bl_label = "Invert"
     nl_category = "Values"
@@ -8914,7 +8933,7 @@ class NLInvertValueNode(bpy.types.Node, NLParameterNode):
 _nodes.append(NLInvertValueNode)
 
 
-class NLAbsoluteValue(bpy.types.Node, NLParameterNode):
+class NLAbsoluteValue(NLParameterNode):
     bl_idname = "NLAbsoluteValue"
     bl_label = "Absolute"
     nl_category = "Math"
@@ -8938,7 +8957,7 @@ class NLAbsoluteValue(bpy.types.Node, NLParameterNode):
 _nodes.append(NLAbsoluteValue)
 
 
-class NLCreateVehicleFromParent(bpy.types.Node, NLActionNode):
+class NLCreateVehicleFromParent(NLActionNode):
     bl_idname = "NLCreateVehicleFromParent"
     bl_label = "Create New Vehicle"
     nl_category = "Physics"
@@ -8984,7 +9003,7 @@ class NLCreateVehicleFromParent(bpy.types.Node, NLActionNode):
 _nodes.append(NLCreateVehicleFromParent)
 
 
-class NLVehicleApplyEngineForce(bpy.types.Node, NLActionNode):
+class NLVehicleApplyEngineForce(NLActionNode):
     bl_idname = "NLVehicleApplyEngineForce"
     bl_label = "Accelerate"
     nl_category = "Physics"
@@ -9030,7 +9049,7 @@ class NLVehicleApplyEngineForce(bpy.types.Node, NLActionNode):
 _nodes.append(NLVehicleApplyEngineForce)
 
 
-class NLVehicleApplyBraking(bpy.types.Node, NLActionNode):
+class NLVehicleApplyBraking(NLActionNode):
     bl_idname = "NLVehicleApplyBraking"
     bl_label = "Brake"
     nl_category = "Physics"
@@ -9076,7 +9095,7 @@ class NLVehicleApplyBraking(bpy.types.Node, NLActionNode):
 _nodes.append(NLVehicleApplyBraking)
 
 
-class NLVehicleApplySteering(bpy.types.Node, NLActionNode):
+class NLVehicleApplySteering(NLActionNode):
     bl_idname = "NLVehicleApplySteering"
     bl_label = "Steer"
     nl_category = "Physics"
@@ -9121,7 +9140,7 @@ class NLVehicleApplySteering(bpy.types.Node, NLActionNode):
 _nodes.append(NLVehicleApplySteering)
 
 
-class NLVehicleSetAttributes(bpy.types.Node, NLActionNode):
+class NLVehicleSetAttributes(NLActionNode):
     bl_idname = "NLVehicleSetAttributes"
     bl_label = "Set Attributes"
     nl_category = "Physics"
@@ -9190,7 +9209,7 @@ class NLVehicleSetAttributes(bpy.types.Node, NLActionNode):
 _nodes.append(NLVehicleSetAttributes)
 
 
-class NLSetObjectAttributeActionNode(bpy.types.Node, NLActionNode):
+class NLSetObjectAttributeActionNode(NLActionNode):
     bl_idname = "NLSetObjectAttributeActionNode"
     bl_label = "Set Position / Rotation / Scale etc."
     bl_icon = 'VIEW3D'
@@ -9233,7 +9252,7 @@ class NLSetObjectAttributeActionNode(bpy.types.Node, NLActionNode):
 _nodes.append(NLSetObjectAttributeActionNode)
 
 
-class NLActionRayCastNode(bpy.types.Node, NLActionNode):
+class NLActionRayCastNode(NLActionNode):
     bl_idname = "NLActionRayCastNode"
     bl_label = "Raycast"
     nl_category = "Ray Casts"
@@ -9315,7 +9334,7 @@ class NLActionRayCastNode(bpy.types.Node, NLActionNode):
 _nodes.append(NLActionRayCastNode)
 
 
-class NLProjectileRayCast(bpy.types.Node, NLActionNode):
+class NLProjectileRayCast(NLActionNode):
     bl_idname = "NLProjectileRayCast"
     bl_label = "Projectile Ray"
     nl_category = "Ray Casts"
@@ -9366,7 +9385,7 @@ _nodes.append(NLProjectileRayCast)
 
 # TODO: should we reset conditions that have been consumed?
 # Like a "once" condition. I'd say no.
-class NLStartLogicNetworkActionNode(bpy.types.Node, NLActionNode):
+class NLStartLogicNetworkActionNode(NLActionNode):
     bl_idname = "NLStartLogicNetworkActionNode"
     bl_label = "Start Logic Tree"
     nl_category = "Logic"
@@ -9393,7 +9412,7 @@ class NLStartLogicNetworkActionNode(bpy.types.Node, NLActionNode):
 _nodes.append(NLStartLogicNetworkActionNode)
 
 
-class NLStopLogicNetworkActionNode(bpy.types.Node, NLActionNode):
+class NLStopLogicNetworkActionNode(NLActionNode):
     bl_idname = "NLStopLogicNetworkActionNode"
     bl_label = "Stop Logic Tree"
     nl_category = "Logic"
@@ -9420,7 +9439,7 @@ class NLStopLogicNetworkActionNode(bpy.types.Node, NLActionNode):
 _nodes.append(NLStopLogicNetworkActionNode)
 
 
-class NLActionSetGameObjectVisibility(bpy.types.Node, NLActionNode):
+class NLActionSetGameObjectVisibility(NLActionNode):
     bl_idname = "NLActionSetGameObjectVisibility"
     bl_label = "Set Visibility"
     bl_icon = 'HIDE_OFF'
@@ -9452,7 +9471,7 @@ class NLActionSetGameObjectVisibility(bpy.types.Node, NLActionNode):
 _nodes.append(NLActionSetGameObjectVisibility)
 
 
-class NLActionSetCollectionVisibility(bpy.types.Node, NLActionNode):
+class NLActionSetCollectionVisibility(NLActionNode):
     bl_idname = "NLActionSetCollectionVisibility"
     bl_label = "Set Collection Visibility"
     bl_icon = 'HIDE_OFF'
@@ -9485,7 +9504,7 @@ class NLActionSetCollectionVisibility(bpy.types.Node, NLActionNode):
 _nodes.append(NLActionSetCollectionVisibility)
 
 
-class NLSetCurvePoints(bpy.types.Node, NLActionNode):
+class NLSetCurvePoints(NLActionNode):
     bl_idname = "NLSetCurvePoints"
     bl_label = "Set Curve Points"
     bl_icon = 'OUTLINER_DATA_CURVE'
@@ -9512,7 +9531,7 @@ class NLSetCurvePoints(bpy.types.Node, NLActionNode):
 _nodes.append(NLSetCurvePoints)
 
 
-class NLActionFindObjectNode(bpy.types.Node, NLParameterNode):
+class NLActionFindObjectNode(NLParameterNode):
     bl_idname = "NLActionFindObjectNode"
     bl_label = "Get Object"
     bl_icon = 'OBJECT_DATA'
@@ -9537,7 +9556,7 @@ class NLActionFindObjectNode(bpy.types.Node, NLParameterNode):
 _nodes.append(NLActionFindObjectNode)
 
 
-class NLActionSendMessage(bpy.types.Node, NLActionNode):
+class NLActionSendMessage(NLActionNode):
     bl_idname = "NLActionSendMessage"
     bl_label = "Send Message"
     bl_icon = 'OBJECT_DATA'
@@ -9566,7 +9585,7 @@ class NLActionSendMessage(bpy.types.Node, NLActionNode):
 _nodes.append(NLActionSendMessage)
 
 
-class NLActionSetActiveCamera(bpy.types.Node, NLActionNode):
+class NLActionSetActiveCamera(NLActionNode):
     bl_idname = "NLActionSetActiveCamera"
     bl_label = "Set Camera"
     nl_category = "Scene"
@@ -9592,7 +9611,7 @@ class NLActionSetActiveCamera(bpy.types.Node, NLActionNode):
 _nodes.append(NLActionSetActiveCamera)
 
 
-class NLActionSetCameraFov(bpy.types.Node, NLActionNode):
+class NLActionSetCameraFov(NLActionNode):
     bl_idname = "NLActionSetCameraFov"
     bl_label = "Set FOV"
     nl_category = "Scene"
@@ -9619,7 +9638,7 @@ class NLActionSetCameraFov(bpy.types.Node, NLActionNode):
 _nodes.append(NLActionSetCameraFov)
 
 
-class NLActionSetCameraOrthoScale(bpy.types.Node, NLActionNode):
+class NLActionSetCameraOrthoScale(NLActionNode):
     bl_idname = "NLActionSetCameraOrthoScale"
     bl_label = "Set Orthographic Scale"
     nl_category = "Scene"
@@ -9647,7 +9666,7 @@ class NLActionSetCameraOrthoScale(bpy.types.Node, NLActionNode):
 _nodes.append(NLActionSetCameraOrthoScale)
 
 
-class NLActionSetResolution(bpy.types.Node, NLActionNode):
+class NLActionSetResolution(NLActionNode):
     bl_idname = "NLActionSetResolution"
     bl_label = "Set Resolution"
     nl_category = 'Render'
@@ -9675,7 +9694,7 @@ class NLActionSetResolution(bpy.types.Node, NLActionNode):
 _nodes.append(NLActionSetResolution)
 
 
-class NLActionSetFullscreen(bpy.types.Node, NLActionNode):
+class NLActionSetFullscreen(NLActionNode):
     bl_idname = "NLActionSetFullscreen"
     bl_label = "Set Fullscreen"
     nl_category = 'Render'
@@ -9700,7 +9719,7 @@ class NLActionSetFullscreen(bpy.types.Node, NLActionNode):
 _nodes.append(NLActionSetFullscreen)
 
 
-class NLSetProfile(bpy.types.Node, NLActionNode):
+class NLSetProfile(NLActionNode):
     bl_idname = "NLSetProfile"
     bl_label = "Show Profile"
     nl_category = 'Render'
@@ -9725,7 +9744,7 @@ class NLSetProfile(bpy.types.Node, NLActionNode):
 _nodes.append(NLSetProfile)
 
 
-class NLShowFramerate(bpy.types.Node, NLActionNode):
+class NLShowFramerate(NLActionNode):
     bl_idname = "NLShowFramerate"
     bl_label = "Show Framerate"
     nl_category = 'Render'
@@ -9750,7 +9769,7 @@ class NLShowFramerate(bpy.types.Node, NLActionNode):
 _nodes.append(NLShowFramerate)
 
 
-class NLActionSetVSync(bpy.types.Node, NLActionNode):
+class NLActionSetVSync(NLActionNode):
     bl_idname = "NLActionSetVSync"
     bl_label = "Set VSync"
     nl_category = 'Render'
@@ -9775,7 +9794,7 @@ class NLActionSetVSync(bpy.types.Node, NLActionNode):
 _nodes.append(NLActionSetVSync)
 
 
-class NLInitEmptyDict(bpy.types.Node, NLParameterNode):
+class NLInitEmptyDict(NLParameterNode):
     bl_idname = "NLInitEmptyDict"
     bl_label = "Init Empty"
     nl_category = "Python"
@@ -9796,7 +9815,7 @@ class NLInitEmptyDict(bpy.types.Node, NLParameterNode):
 _nodes.append(NLInitEmptyDict)
 
 
-class NLInitNewDict(bpy.types.Node, NLParameterNode):
+class NLInitNewDict(NLParameterNode):
     bl_idname = "NLInitNewDict"
     bl_label = "Init From Item"
     nl_category = "Python"
@@ -9822,7 +9841,7 @@ class NLInitNewDict(bpy.types.Node, NLParameterNode):
 _nodes.append(NLInitNewDict)
 
 
-class NLSetDictKeyValue(bpy.types.Node, NLActionNode):
+class NLSetDictKeyValue(NLActionNode):
     bl_idname = "NLSetDictKeyValue"
     bl_label = "Set Key"
     nl_category = "Python"
@@ -9851,7 +9870,7 @@ class NLSetDictKeyValue(bpy.types.Node, NLActionNode):
 _nodes.append(NLSetDictKeyValue)
 
 
-class NLSetDictDelKey(bpy.types.Node, NLActionNode):
+class NLSetDictDelKey(NLActionNode):
     bl_idname = "NLSetDictDelKey"
     bl_label = "Remove Key"
     nl_category = "Python"
@@ -9880,7 +9899,7 @@ class NLSetDictDelKey(bpy.types.Node, NLActionNode):
 _nodes.append(NLSetDictDelKey)
 
 
-class NLInitEmptyList(bpy.types.Node, NLParameterNode):
+class NLInitEmptyList(NLParameterNode):
     bl_idname = "NLInitEmptyList"
     bl_label = "Init Empty"
     nl_category = "Python"
@@ -9905,7 +9924,7 @@ class NLInitEmptyList(bpy.types.Node, NLParameterNode):
 _nodes.append(NLInitEmptyList)
 
 
-class NLInitNewList(bpy.types.Node, NLParameterNode):
+class NLInitNewList(NLParameterNode):
     bl_idname = "NLInitNewList"
     bl_label = "From Items"
     nl_category = "Python"
@@ -9952,7 +9971,7 @@ class NLInitNewList(bpy.types.Node, NLParameterNode):
 _nodes.append(NLInitNewList)
 
 
-class NLExtendList(bpy.types.Node, NLParameterNode):
+class NLExtendList(NLParameterNode):
     bl_idname = "NLExtendList"
     bl_label = "Append"
     nl_category = "Python"
@@ -9979,7 +9998,7 @@ class NLExtendList(bpy.types.Node, NLParameterNode):
 _nodes.append(NLExtendList)
 
 
-class NLAppendListItem(bpy.types.Node, NLActionNode):
+class NLAppendListItem(NLActionNode):
     bl_idname = "NLAppendListItem"
     bl_label = "Append"
     nl_category = "Python"
@@ -10007,7 +10026,7 @@ class NLAppendListItem(bpy.types.Node, NLActionNode):
 _nodes.append(NLAppendListItem)
 
 
-class NLSetListIndex(bpy.types.Node, NLActionNode):
+class NLSetListIndex(NLActionNode):
     bl_idname = "NLSetListIndex"
     bl_label = "Set Index"
     nl_category = "Python"
@@ -10036,7 +10055,7 @@ class NLSetListIndex(bpy.types.Node, NLActionNode):
 _nodes.append(NLSetListIndex)
 
 
-class NLRemoveListValue(bpy.types.Node, NLActionNode):
+class NLRemoveListValue(NLActionNode):
     bl_idname = "NLRemoveListValue"
     bl_label = "Remove Value"
     nl_category = "Python"
@@ -10064,7 +10083,7 @@ class NLRemoveListValue(bpy.types.Node, NLActionNode):
 _nodes.append(NLRemoveListValue)
 
 
-class NLRemoveListIndex(bpy.types.Node, NLActionNode):
+class NLRemoveListIndex(NLActionNode):
     bl_idname = "NLRemoveListIndex"
     bl_label = "Remove Index"
     nl_category = "Python"
@@ -10092,7 +10111,7 @@ class NLRemoveListIndex(bpy.types.Node, NLActionNode):
 _nodes.append(NLRemoveListIndex)
 
 
-class NLActionInstallSubNetwork(bpy.types.Node, NLActionNode):
+class NLActionInstallSubNetwork(NLActionNode):
     bl_idname = "NLActionInstallSubNetwork"
     bl_label = "Add Logic Tree to Object"
     nl_category = "Logic"
@@ -10121,7 +10140,7 @@ class NLActionInstallSubNetwork(bpy.types.Node, NLActionNode):
 _nodes.append(NLActionInstallSubNetwork)
 
 
-class NLActionExecuteNetwork(bpy.types.Node, NLActionNode):
+class NLActionExecuteNetwork(NLActionNode):
     bl_idname = "NLActionExecuteNetwork"
     bl_label = "Execute Logic Tree"
     nl_category = "Logic"
@@ -10148,7 +10167,7 @@ class NLActionExecuteNetwork(bpy.types.Node, NLActionNode):
 _nodes.append(NLActionExecuteNetwork)
 
 
-class NLActionStopAnimation(bpy.types.Node, NLActionNode):
+class NLActionStopAnimation(NLActionNode):
     bl_idname = "NLActionStopAnimation"
     bl_label = "Stop Animation"
     nl_category = "Animation"
@@ -10177,7 +10196,7 @@ class NLActionStopAnimation(bpy.types.Node, NLActionNode):
 _nodes.append(NLActionStopAnimation)
 
 
-class NLActionSetAnimationFrame(bpy.types.Node, NLActionNode):
+class NLActionSetAnimationFrame(NLActionNode):
     bl_idname = "NLActionSetAnimationFrame"
     bl_label = "Set Animation Frame"
     nl_category = "Animation"
@@ -10217,7 +10236,7 @@ class NLActionSetAnimationFrame(bpy.types.Node, NLActionNode):
 _nodes.append(NLActionSetAnimationFrame)
 
 
-class NLActionApplyLocation(bpy.types.Node, NLActionNode):
+class NLActionApplyLocation(NLActionNode):
     bl_idname = "NLActionApplyLocation"
     bl_label = "Apply Movement"
     nl_category = "Objects"
@@ -10258,7 +10277,7 @@ class NLActionApplyLocation(bpy.types.Node, NLActionNode):
 _nodes.append(NLActionApplyLocation)
 
 
-class NLActionApplyRotation(bpy.types.Node, NLActionNode):
+class NLActionApplyRotation(NLActionNode):
     bl_idname = "NLActionApplyRotation"
     bl_label = "Apply Rotation"
     nl_category = "Objects"
@@ -10299,7 +10318,7 @@ class NLActionApplyRotation(bpy.types.Node, NLActionNode):
 _nodes.append(NLActionApplyRotation)
 
 
-class NLActionApplyForce(bpy.types.Node, NLActionNode):
+class NLActionApplyForce(NLActionNode):
     bl_idname = "NLActionApplyForce"
     bl_label = "Apply Force"
     nl_category = "Objects"
@@ -10341,7 +10360,7 @@ class NLActionApplyForce(bpy.types.Node, NLActionNode):
 _nodes.append(NLActionApplyForce)
 
 
-class NLActionApplyImpulse(bpy.types.Node, NLActionNode):
+class NLActionApplyImpulse(NLActionNode):
     bl_idname = "NLActionApplyImpulse"
     bl_label = "Apply Impulse"
     nl_category = "Objects"
@@ -10381,7 +10400,7 @@ class NLActionApplyImpulse(bpy.types.Node, NLActionNode):
 _nodes.append(NLActionApplyImpulse)
 
 
-class NLGamepadLook(bpy.types.Node, NLActionNode):
+class NLGamepadLook(NLActionNode):
     bl_idname = "NLGamepadLook"
     bl_label = "Gamepad Look"
     nl_category = "Input"
@@ -10455,7 +10474,7 @@ class NLGamepadLook(bpy.types.Node, NLActionNode):
 _nodes.append(NLGamepadLook)
 
 
-class NLUILayout(bpy.types.Node, NLParameterNode):
+class NLUILayout(NLParameterNode):
     bl_idname = "NLUILayout"
     bl_label = "Layout"
     nl_category = "UI"
@@ -10480,7 +10499,7 @@ class NLUILayout(bpy.types.Node, NLParameterNode):
 # _nodes.append(NLUILayout)
 
 
-class NLSetCollisionGroup(bpy.types.Node, NLActionNode):
+class NLSetCollisionGroup(NLActionNode):
     bl_idname = "NLSetCollisionGroup"
     bl_label = "Set Collision Group"
     nl_category = "Physics"
@@ -10506,7 +10525,7 @@ class NLSetCollisionGroup(bpy.types.Node, NLActionNode):
 _nodes.append(NLSetCollisionGroup)
 
 
-class NLSetCollisionMask(bpy.types.Node, NLActionNode):
+class NLSetCollisionMask(NLActionNode):
     bl_idname = "NLSetCollisionMask"
     bl_label = "Set Collision Mask"
     nl_category = "Physics"
@@ -10532,7 +10551,7 @@ class NLSetCollisionMask(bpy.types.Node, NLActionNode):
 _nodes.append(NLSetCollisionMask)
 
 
-class NLActionCharacterJump(bpy.types.Node, NLActionNode):
+class NLActionCharacterJump(NLActionNode):
     bl_idname = "NLActionCharacterJump"
     bl_label = "Jump"
     nl_category = "Physics"
@@ -10558,7 +10577,7 @@ class NLActionCharacterJump(bpy.types.Node, NLActionNode):
 _nodes.append(NLActionCharacterJump)
 
 
-class NLSetCharacterJumpSpeed(bpy.types.Node, NLActionNode):
+class NLSetCharacterJumpSpeed(NLActionNode):
     bl_idname = "NLSetCharacterJumpSpeed"
     bl_label = "Set Jump Force"
     nl_category = "Physics"
@@ -10585,7 +10604,7 @@ class NLSetCharacterJumpSpeed(bpy.types.Node, NLActionNode):
 _nodes.append(NLSetCharacterJumpSpeed)
 
 
-class NLActionSaveGame(bpy.types.Node, NLActionNode):
+class NLActionSaveGame(NLActionNode):
     bl_idname = "NLActionSaveGame"
     bl_label = "Save Game"
     bl_icon = 'FILE_TICK'
@@ -10643,7 +10662,7 @@ class NLActionSaveGame(bpy.types.Node, NLActionNode):
 _nodes.append(NLActionSaveGame)
 
 
-class NLActionLoadGame(bpy.types.Node, NLActionNode):
+class NLActionLoadGame(NLActionNode):
     bl_idname = "NLActionLoadGame"
     bl_label = "Load Game"
     bl_icon = 'FILE_FOLDER'
@@ -10701,7 +10720,7 @@ class NLActionLoadGame(bpy.types.Node, NLActionNode):
 _nodes.append(NLActionLoadGame)
 
 
-class NLActionSaveVariable(bpy.types.Node, NLActionNode):
+class NLActionSaveVariable(NLActionNode):
     bl_idname = "NLActionSaveVariable"
     bl_label = "Save Variable"
     nl_category = "Variables"
@@ -10772,7 +10791,7 @@ class NLActionSaveVariable(bpy.types.Node, NLActionNode):
 _nodes.append(NLActionSaveVariable)
 
 
-class NLActionSaveVariables(bpy.types.Node, NLActionNode):
+class NLActionSaveVariables(NLActionNode):
     bl_idname = "NLActionSaveVariables"
     bl_label = "Save Variable Dict"
     nl_category = "Variables"
@@ -10841,7 +10860,7 @@ class NLActionSaveVariables(bpy.types.Node, NLActionNode):
 _nodes.append(NLActionSaveVariables)
 
 
-class NLSetScene(bpy.types.Node, NLActionNode):
+class NLSetScene(NLActionNode):
     bl_idname = "NLSetScene"
     bl_label = "Set Scene"
     nl_category = "Scene"
@@ -10866,7 +10885,7 @@ class NLSetScene(bpy.types.Node, NLActionNode):
 _nodes.append(NLSetScene)
 
 
-class NLLoadScene(bpy.types.Node, NLActionNode):
+class NLLoadScene(NLActionNode):
     bl_idname = "NLLoadScene"
     bl_label = "Load Scene"
     nl_category = "Scene"
@@ -10895,7 +10914,7 @@ class NLLoadScene(bpy.types.Node, NLActionNode):
 _nodes.append(NLLoadScene)
 
 
-class NLLoadFileContent(bpy.types.Node, NLActionNode):
+class NLLoadFileContent(NLActionNode):
     bl_idname = "NLLoadFileContent"
     bl_label = "Load File Content"
     nl_category = "File"
@@ -10923,7 +10942,7 @@ class NLLoadFileContent(bpy.types.Node, NLActionNode):
 _nodes.append(NLLoadFileContent)
 
 
-class NLParameterSetAttribute(bpy.types.Node, NLActionNode):
+class NLParameterSetAttribute(NLActionNode):
     bl_idname = "NLParameterSetAttribute"
     bl_label = "Set Object Attribute"
     nl_category = "Python"
@@ -10946,7 +10965,7 @@ class NLParameterSetAttribute(bpy.types.Node, NLActionNode):
 _nodes.append(NLParameterSetAttribute)
 
 
-class NLActionLoadVariable(bpy.types.Node, NLActionNode):
+class NLActionLoadVariable(NLActionNode):
     bl_idname = "NLActionLoadVariable"
     bl_label = "Load Variable"
     nl_category = "Variables"
@@ -11016,7 +11035,7 @@ class NLActionLoadVariable(bpy.types.Node, NLActionNode):
 _nodes.append(NLActionLoadVariable)
 
 
-class NLActionLoadVariables(bpy.types.Node, NLActionNode):
+class NLActionLoadVariables(NLActionNode):
     bl_idname = "NLActionLoadVariables"
     bl_label = "Load Variable Dict"
     nl_category = "Variables"
@@ -11083,7 +11102,7 @@ class NLActionLoadVariables(bpy.types.Node, NLActionNode):
 _nodes.append(NLActionLoadVariables)
 
 
-class NLActionRemoveVariable(bpy.types.Node, NLActionNode):
+class NLActionRemoveVariable(NLActionNode):
     bl_idname = "NLActionRemoveVariable"
     bl_label = "Remove Variable"
     nl_category = "Variables"
@@ -11153,7 +11172,7 @@ class NLActionRemoveVariable(bpy.types.Node, NLActionNode):
 _nodes.append(NLActionRemoveVariable)
 
 
-class NLActionClearVariables(bpy.types.Node, NLActionNode):
+class NLActionClearVariables(NLActionNode):
     bl_idname = "NLActionClearVariables"
     bl_label = "Clear Variables"
     nl_category = "Variables"
@@ -11221,7 +11240,7 @@ class NLActionClearVariables(bpy.types.Node, NLActionNode):
 _nodes.append(NLActionClearVariables)
 
 
-class NLActionListVariables(bpy.types.Node, NLActionNode):
+class NLActionListVariables(NLActionNode):
     bl_idname = "NLActionListVariables"
     bl_label = "List Saved Variables"
     nl_category = "Variables"
@@ -11291,7 +11310,7 @@ class NLActionListVariables(bpy.types.Node, NLActionNode):
 _nodes.append(NLActionListVariables)
 
 
-class NLActionSetCharacterJump(bpy.types.Node, NLActionNode):
+class NLActionSetCharacterJump(NLActionNode):
     bl_idname = "NLSetActionCharacterJump"
     bl_label = "Set Max Jumps"
     nl_category = "Physics"
@@ -11318,7 +11337,7 @@ class NLActionSetCharacterJump(bpy.types.Node, NLActionNode):
 _nodes.append(NLActionSetCharacterJump)
 
 
-class NLActionSetCharacterGravity(bpy.types.Node, NLActionNode):
+class NLActionSetCharacterGravity(NLActionNode):
     bl_idname = "NLActionSetCharacterGravity"
     bl_label = "Set Gravity"
     nl_category = "Physics"
@@ -11345,7 +11364,7 @@ class NLActionSetCharacterGravity(bpy.types.Node, NLActionNode):
 _nodes.append(NLActionSetCharacterGravity)
 
 
-class NLActionSetCharacterWalkDir(bpy.types.Node, NLActionNode):
+class NLActionSetCharacterWalkDir(NLActionNode):
     bl_idname = "NLActionSetCharacterWalkDir"
     bl_label = "Walk"
     nl_category = "Physics"
@@ -11385,7 +11404,7 @@ class NLActionSetCharacterWalkDir(bpy.types.Node, NLActionNode):
 _nodes.append(NLActionSetCharacterWalkDir)
 
 
-class NLActionSetCharacterVelocity(bpy.types.Node, NLActionNode):
+class NLActionSetCharacterVelocity(NLActionNode):
     bl_idname = "NLActionSetCharacterVelocity"
     bl_label = "Set Velocity"
     nl_category = "Physics"
@@ -11426,7 +11445,7 @@ class NLActionSetCharacterVelocity(bpy.types.Node, NLActionNode):
 _nodes.append(NLActionSetCharacterVelocity)
 
 
-class NLActionApplyTorque(bpy.types.Node, NLActionNode):
+class NLActionApplyTorque(NLActionNode):
     bl_idname = "NLActionApplyTorque"
     bl_label = "Apply Torque"
     nl_category = "Objects"
@@ -11468,7 +11487,7 @@ class NLActionApplyTorque(bpy.types.Node, NLActionNode):
 _nodes.append(NLActionApplyTorque)
 
 
-class NLActionEndObjectNode(bpy.types.Node, NLActionNode):
+class NLActionEndObjectNode(NLActionNode):
     bl_idname = "NLActionEndObjectNode"
     bl_label = "Remove Object"
     bl_icon = 'TRASH'
@@ -11494,7 +11513,7 @@ class NLActionEndObjectNode(bpy.types.Node, NLActionNode):
 _nodes.append(NLActionEndObjectNode)
 
 
-class NLActionSetTimeScale(bpy.types.Node, NLActionNode):
+class NLActionSetTimeScale(NLActionNode):
     bl_idname = "NLActionSetTimeScale"
     bl_label = "Set Timescale"
     nl_category = "Scene"
@@ -11520,7 +11539,7 @@ class NLActionSetTimeScale(bpy.types.Node, NLActionNode):
 _nodes.append(NLActionSetTimeScale)
 
 
-class NLActionSetGravity(bpy.types.Node, NLActionNode):
+class NLActionSetGravity(NLActionNode):
     bl_idname = "NLActionSetGravity"
     bl_label = "Set Gravity"
     nl_category = "Scene"
@@ -11546,7 +11565,7 @@ class NLActionSetGravity(bpy.types.Node, NLActionNode):
 _nodes.append(NLActionSetGravity)
 
 
-class NLActionReplaceMesh(bpy.types.Node, NLActionNode):
+class NLActionReplaceMesh(NLActionNode):
     bl_idname = "NLActionReplaceMesh"
     bl_label = "Replace Mesh"
     bl_icon = 'MESH_DATA'
@@ -11582,7 +11601,7 @@ class NLActionReplaceMesh(bpy.types.Node, NLActionNode):
 _nodes.append(NLActionReplaceMesh)
 
 
-class NLActionRemovePhysicsConstraint(bpy.types.Node, NLActionNode):
+class NLActionRemovePhysicsConstraint(NLActionNode):
     bl_idname = "NLActionRemovePhysicsConstraint"
     bl_label = "Remove Constraint"
     bl_icon = 'TRASH'
@@ -11609,7 +11628,7 @@ class NLActionRemovePhysicsConstraint(bpy.types.Node, NLActionNode):
 _nodes.append(NLActionRemovePhysicsConstraint)
 
 
-class NLActionAddPhysicsConstraint(bpy.types.Node, NLActionNode):
+class NLActionAddPhysicsConstraint(NLActionNode):
     bl_idname = "NLActionAddPhysicsConstraint"
     bl_label = "Add Constraint"
     bl_icon = 'CONSTRAINT'
@@ -11668,7 +11687,7 @@ class NLActionAddPhysicsConstraint(bpy.types.Node, NLActionNode):
 _nodes.append(NLActionAddPhysicsConstraint)
 
 
-class NLSetGammaAction(bpy.types.Node, NLActionNode):
+class NLSetGammaAction(NLActionNode):
     bl_idname = "NLSetGammaAction"
     bl_label = "Set Gamma"
     nl_category = 'Render'
@@ -11697,7 +11716,7 @@ class NLSetGammaAction(bpy.types.Node, NLActionNode):
 _nodes.append(NLSetGammaAction)
 
 
-class NLSetExposureAction(bpy.types.Node, NLActionNode):
+class NLSetExposureAction(NLActionNode):
     bl_idname = "NLSetExposureAction"
     bl_label = "Set Exposure"
     nl_category = 'Render'
@@ -11726,7 +11745,7 @@ class NLSetExposureAction(bpy.types.Node, NLActionNode):
 _nodes.append(NLSetExposureAction)
 
 
-class NLSetEeveeAO(bpy.types.Node, NLActionNode):
+class NLSetEeveeAO(NLActionNode):
     bl_idname = "NLSetEeveeAO"
     bl_label = "Set Ambient Occlusion"
     nl_category = 'Render'
@@ -11755,7 +11774,7 @@ class NLSetEeveeAO(bpy.types.Node, NLActionNode):
 _nodes.append(NLSetEeveeAO)
 
 
-class NLSetEeveeBloom(bpy.types.Node, NLActionNode):
+class NLSetEeveeBloom(NLActionNode):
     bl_idname = "NLSetEeveeBloom"
     bl_label = "Set Bloom"
     nl_category = 'Render'
@@ -11784,7 +11803,7 @@ class NLSetEeveeBloom(bpy.types.Node, NLActionNode):
 _nodes.append(NLSetEeveeBloom)
 
 
-class NLSetEeveeSSR(bpy.types.Node, NLActionNode):
+class NLSetEeveeSSR(NLActionNode):
     bl_idname = "NLSetEeveeSSR"
     bl_label = "Set SSR"
     nl_category = 'Render'
@@ -11813,7 +11832,7 @@ class NLSetEeveeSSR(bpy.types.Node, NLActionNode):
 _nodes.append(NLSetEeveeSSR)
 
 
-class NLSetEeveeVolumetrics(bpy.types.Node, NLActionNode):
+class NLSetEeveeVolumetrics(NLActionNode):
     bl_idname = "NLSetEeveeVolumetrics"
     bl_label = "Set Volumetric Light"
     nl_category = 'Render'
@@ -11842,7 +11861,7 @@ class NLSetEeveeVolumetrics(bpy.types.Node, NLActionNode):
 _nodes.append(NLSetEeveeVolumetrics)
 
 
-class NLSetEeveeSMAA(bpy.types.Node, NLActionNode):
+class NLSetEeveeSMAA(NLActionNode):
     bl_idname = "NLSetEeveeSMAA"
     bl_label = "Set SMAA"
     nl_category = 'Render'
@@ -11871,7 +11890,7 @@ class NLSetEeveeSMAA(bpy.types.Node, NLActionNode):
 _nodes.append(NLSetEeveeSMAA)
 
 
-class NLSetEeveeSMAAQuality(bpy.types.Node, NLActionNode):
+class NLSetEeveeSMAAQuality(NLActionNode):
     bl_idname = "NLSetEeveeSMAAQuality"
     bl_label = "Set SMAA Quality"
     nl_category = 'Render'
@@ -11900,7 +11919,7 @@ class NLSetEeveeSMAAQuality(bpy.types.Node, NLActionNode):
 _nodes.append(NLSetEeveeSMAAQuality)
 
 
-class NLSetLightEnergyAction(bpy.types.Node, NLActionNode):
+class NLSetLightEnergyAction(NLActionNode):
     bl_idname = "NLSetLightEnergyAction"
     bl_label = "Set Light Energy"
     nl_category = "Lights"
@@ -11930,7 +11949,7 @@ class NLSetLightEnergyAction(bpy.types.Node, NLActionNode):
 _nodes.append(NLSetLightEnergyAction)
 
 
-class NLMakeUniqueLight(bpy.types.Node, NLActionNode):
+class NLMakeUniqueLight(NLActionNode):
     bl_idname = "NLMakeUniqueLight"
     bl_label = "Make Unique"
     nl_category = "Lights"
@@ -11959,7 +11978,7 @@ class NLMakeUniqueLight(bpy.types.Node, NLActionNode):
 _nodes.append(NLMakeUniqueLight)
 
 
-class NLSetLightShadowAction(bpy.types.Node, NLActionNode):
+class NLSetLightShadowAction(NLActionNode):
     bl_idname = "NLSetLightShadowAction"
     bl_label = "Set Light Shadow"
     nl_category = "Lights"
@@ -11989,7 +12008,7 @@ class NLSetLightShadowAction(bpy.types.Node, NLActionNode):
 _nodes.append(NLSetLightShadowAction)
 
 
-class NLSetLightColorAction(bpy.types.Node, NLActionNode):
+class NLSetLightColorAction(NLActionNode):
     bl_idname = "NLSetLightColorAction"
     bl_label = "Set Light Color"
     bl_icon = 'COLOR'
@@ -12020,7 +12039,7 @@ class NLSetLightColorAction(bpy.types.Node, NLActionNode):
 _nodes.append(NLSetLightColorAction)
 
 
-class NLGetLightEnergy(bpy.types.Node, NLParameterNode):
+class NLGetLightEnergy(NLParameterNode):
     bl_idname = "NLGetLightEnergy"
     bl_label = "Get Light Energy"
     nl_category = "Lights"
@@ -12044,7 +12063,7 @@ class NLGetLightEnergy(bpy.types.Node, NLParameterNode):
 _nodes.append(NLGetLightEnergy)
 
 
-class NLGetLightColorAction(bpy.types.Node, NLParameterNode):
+class NLGetLightColorAction(NLParameterNode):
     bl_idname = "NLGetLightColorAction"
     bl_label = "Get Light Color"
     nl_category = "Lights"
@@ -12068,7 +12087,7 @@ class NLGetLightColorAction(bpy.types.Node, NLParameterNode):
 _nodes.append(NLGetLightColorAction)
 
 
-class NLActionPlayActionNode(bpy.types.Node, NLActionNode):
+class NLActionPlayActionNode(NLActionNode):
     bl_idname = "NLActionPlayActionNode"
     bl_label = "Play Animation"
     nl_category = "Animation"
@@ -12142,7 +12161,7 @@ class NLActionPlayActionNode(bpy.types.Node, NLActionNode):
 _nodes.append(NLActionPlayActionNode)
 
 
-class NLActionAlignAxisToVector(bpy.types.Node, NLActionNode):
+class NLActionAlignAxisToVector(NLActionNode):
     bl_idname = "NLActionAlignAxisToVector"
     bl_label = "Align Axis to Vector"
     nl_category = "Objects"
@@ -12186,7 +12205,7 @@ _nodes.append(NLActionAlignAxisToVector)
 
 # If the condition stays true for N seconds, do something,
 # then stay true
-class NLActionTimeBarrier(bpy.types.Node, NLConditionNode):
+class NLActionTimeBarrier(NLConditionNode):
     bl_idname = 'NLActionTimeBarrier'
     bl_label = 'Barrier'
     nl_category = 'Time'
@@ -12208,7 +12227,7 @@ class NLActionTimeBarrier(bpy.types.Node, NLConditionNode):
 _nodes.append(NLActionTimeBarrier)
 
 
-class NLActionTimeDelay(bpy.types.Node, NLActionNode):
+class NLActionTimeDelay(NLActionNode):
     bl_idname = 'NLActionTimeDelay'
     bl_label = 'Delay'
     bl_icon = 'PREVIEW_RANGE'
@@ -12234,7 +12253,7 @@ _nodes.append(NLActionTimeDelay)
 # When the condition is True,
 # set to True then do the next check only after
 # N seconds have elapsed
-class NLActionTimeFilter(bpy.types.Node, NLConditionNode):
+class NLActionTimeFilter(NLConditionNode):
     bl_idname = "NLActionTimeFilter"
     bl_label = "Pulsify"
     bl_icon = 'TEMP'
@@ -12258,7 +12277,7 @@ class NLActionTimeFilter(bpy.types.Node, NLConditionNode):
 _nodes.append(NLActionTimeFilter)
 
 
-class NLActionMouseLookNode(bpy.types.Node, NLActionNode):
+class NLActionMouseLookNode(NLActionNode):
     bl_idname = "NLActionMouseLookNode"
     bl_label = "Mouse Look"
     bl_icon = 'CAMERA_DATA'
@@ -12331,7 +12350,7 @@ class NLActionMouseLookNode(bpy.types.Node, NLActionNode):
 _nodes.append(NLActionMouseLookNode)
 
 
-class NLActionPrint(bpy.types.Node, NLActionNode):
+class NLActionPrint(NLActionNode):
     bl_idname = "NLActionPrint"
     bl_label = "Print"
     bl_icon = 'CONSOLE'
@@ -12357,7 +12376,7 @@ class NLActionPrint(bpy.types.Node, NLActionNode):
 _nodes.append(NLActionPrint)
 
 
-class NLActionMousePickNode(bpy.types.Node, NLActionNode):
+class NLActionMousePickNode(NLActionNode):
     bl_idname = "NLActionMousePickNode"
     bl_label = "Mouse Ray"
     bl_icon = 'RESTRICT_SELECT_OFF'
@@ -12390,7 +12409,7 @@ class NLActionMousePickNode(bpy.types.Node, NLActionNode):
 _nodes.append(NLActionMousePickNode)
 
 
-class NLActionCameraPickNode(bpy.types.Node, NLActionNode):
+class NLActionCameraPickNode(NLActionNode):
     bl_idname = "NLActionCameraPickNode"
     bl_label = "Camera Ray"
     bl_icon = 'CAMERA_DATA'
@@ -12424,7 +12443,7 @@ class NLActionCameraPickNode(bpy.types.Node, NLActionNode):
 _nodes.append(NLActionCameraPickNode)
 
 
-class NLActionSetParentNode(bpy.types.Node, NLActionNode):
+class NLActionSetParentNode(NLActionNode):
     bl_idname = "NLActionSetParentNode"
     bl_label = "Set Parent"
     bl_icon = 'COMMUNITY'
@@ -12463,7 +12482,7 @@ class NLActionSetParentNode(bpy.types.Node, NLActionNode):
 _nodes.append(NLActionSetParentNode)
 
 
-class NLActionRemoveParentNode(bpy.types.Node, NLActionNode):
+class NLActionRemoveParentNode(NLActionNode):
     bl_idname = "NLActionRemoveParentNode"
     bl_label = "Remove Parent"
     bl_icon = 'X'
@@ -12489,7 +12508,7 @@ class NLActionRemoveParentNode(bpy.types.Node, NLActionNode):
 _nodes.append(NLActionRemoveParentNode)
 
 
-class NLActionGetPerformanceProfileNode(bpy.types.Node, NLActionNode):
+class NLActionGetPerformanceProfileNode(NLActionNode):
     bl_idname = "NLActionGetPerformanceProfileNode"
     bl_label = "Get Profile"
     bl_icon = 'TEXT'
@@ -12525,7 +12544,7 @@ class NLActionGetPerformanceProfileNode(bpy.types.Node, NLActionNode):
 _nodes.append(NLActionGetPerformanceProfileNode)
 
 
-class NLParameterGameObjectParent(bpy.types.Node, NLParameterNode):
+class NLParameterGameObjectParent(NLParameterNode):
     bl_idname = "NLParameterGameObjectParent"
     bl_label = "Get Parent"
     bl_icon = 'COMMUNITY'
@@ -12550,7 +12569,7 @@ class NLParameterGameObjectParent(bpy.types.Node, NLParameterNode):
 _nodes.append(NLParameterGameObjectParent)
 
 
-class NLParameterAxisVector(bpy.types.Node, NLParameterNode):
+class NLParameterAxisVector(NLParameterNode):
     bl_idname = "NLParameterAxisVector"
     bl_label = "Get Axis Vector"
     bl_icon = 'EMPTY_ARROWS'
@@ -12588,7 +12607,7 @@ class NLParameterAxisVector(bpy.types.Node, NLParameterNode):
 _nodes.append(NLParameterAxisVector)
 
 
-class NLGetObjectDataName(bpy.types.Node, NLParameterNode):
+class NLGetObjectDataName(NLParameterNode):
     bl_idname = "NLGetObjectDataName"
     bl_label = "Get Internal Name"
     bl_icon = 'FONT_DATA'
@@ -12614,7 +12633,7 @@ class NLGetObjectDataName(bpy.types.Node, NLParameterNode):
 _nodes.append(NLGetObjectDataName)
 
 
-class NLGetCurvePoints(bpy.types.Node, NLParameterNode):
+class NLGetCurvePoints(NLParameterNode):
     bl_idname = "NLGetCurvePoints"
     bl_label = "Get Curve Points"
     bl_icon = 'OUTLINER_DATA_CURVE'
@@ -12639,7 +12658,7 @@ class NLGetCurvePoints(bpy.types.Node, NLParameterNode):
 _nodes.append(NLGetCurvePoints)
 
 
-class NLGetObjectVertices(bpy.types.Node, NLParameterNode):
+class NLGetObjectVertices(NLParameterNode):
     bl_idname = "NLGetObjectVertices"
     bl_label = "Get Object Vertices"
     bl_icon = 'OUTLINER_DATA_MESH'
@@ -12665,7 +12684,7 @@ class NLGetObjectVertices(bpy.types.Node, NLParameterNode):
 _nodes.append(NLGetObjectVertices)
 
 
-class NLSetBoneConstraintInfluence(bpy.types.Node, NLActionNode):
+class NLSetBoneConstraintInfluence(NLActionNode):
     bl_idname = "NLSetBoneConstraintInfluence"
     bl_label = "Set Influence"
     bl_icon = 'CONSTRAINT_BONE'
@@ -12715,7 +12734,7 @@ class NLSetBoneConstraintInfluence(bpy.types.Node, NLActionNode):
 _nodes.append(NLSetBoneConstraintInfluence)
 
 
-class NLSetBoneConstraintTarget(bpy.types.Node, NLActionNode):
+class NLSetBoneConstraintTarget(NLActionNode):
     bl_idname = "NLSetBoneConstraintTarget"
     bl_label = "Set Target"
     bl_icon = 'CONSTRAINT_BONE'
@@ -12765,7 +12784,7 @@ class NLSetBoneConstraintTarget(bpy.types.Node, NLActionNode):
 _nodes.append(NLSetBoneConstraintTarget)
 
 
-class NLSetBoneConstraintAttribute(bpy.types.Node, NLActionNode):
+class NLSetBoneConstraintAttribute(NLActionNode):
     bl_idname = "NLSetBoneConstraintAttribute"
     bl_label = "Set Attribute"
     bl_icon = 'CONSTRAINT_BONE'
@@ -12817,7 +12836,7 @@ class NLSetBoneConstraintAttribute(bpy.types.Node, NLActionNode):
 _nodes.append(NLSetBoneConstraintAttribute)
 
 
-class NLActionSetBonePos(bpy.types.Node, NLActionNode):
+class NLActionSetBonePos(NLActionNode):
     bl_idname = "NLActionSetBonePos"
     bl_label = "Set Bone Position"
     bl_icon = 'BONE_DATA'
@@ -12847,7 +12866,7 @@ class NLActionSetBonePos(bpy.types.Node, NLActionNode):
 _nodes.append(NLActionSetBonePos)
 
 
-class NLActionEditBoneNode(bpy.types.Node, NLActionNode):
+class NLActionEditBoneNode(NLActionNode):
     bl_idname = "NLActionEditBoneNode"
     bl_label = "Edit Bone"
     bl_icon = 'BONE_DATA'
@@ -12892,7 +12911,7 @@ class NLActionEditBoneNode(bpy.types.Node, NLActionNode):
 _nodes.append(NLActionEditBoneNode)
 
 
-class NLActionSetDynamicsNode(bpy.types.Node, NLActionNode):
+class NLActionSetDynamicsNode(NLActionNode):
     bl_idname = "NLActionSetDynamicsNode"
     bl_label = "Set Dynamics"
     bl_icon = 'FORCE_LENNARDJONES'
@@ -12921,7 +12940,7 @@ class NLActionSetDynamicsNode(bpy.types.Node, NLActionNode):
 _nodes.append(NLActionSetDynamicsNode)
 
 
-class NLActionSetPhysicsNode(bpy.types.Node, NLActionNode):
+class NLActionSetPhysicsNode(NLActionNode):
     bl_idname = "NLActionSetPhysicsNode"
     bl_label = "Set Physics"
     bl_icon = 'FORCE_LENNARDJONES'
@@ -12950,7 +12969,7 @@ class NLActionSetPhysicsNode(bpy.types.Node, NLActionNode):
 _nodes.append(NLActionSetPhysicsNode)
 
 
-class NLSetRigidBody(bpy.types.Node, NLActionNode):
+class NLSetRigidBody(NLActionNode):
     bl_idname = "NLSetRigidBody"
     bl_label = "Set Rigid Body"
     bl_icon = 'FORCE_LENNARDJONES'
@@ -12978,7 +12997,7 @@ class NLSetRigidBody(bpy.types.Node, NLActionNode):
 _nodes.append(NLSetRigidBody)
 
 
-class NLActionSetMousePosition(bpy.types.Node, NLActionNode):
+class NLActionSetMousePosition(NLActionNode):
     bl_idname = "NLActionSetMousePosition"
     bl_label = "Set Position"
     bl_icon = 'RESTRICT_SELECT_OFF'
@@ -13008,7 +13027,7 @@ class NLActionSetMousePosition(bpy.types.Node, NLActionNode):
 _nodes.append(NLActionSetMousePosition)
 
 
-class NLActionSetMouseCursorVisibility(bpy.types.Node, NLActionNode):
+class NLActionSetMouseCursorVisibility(NLActionNode):
     bl_idname = "NLActionSetMouseCursorVisibility"
     bl_label = "Cursor Visibility"
     bl_icon = 'VIS_SEL_10'
@@ -13035,7 +13054,7 @@ class NLActionSetMouseCursorVisibility(bpy.types.Node, NLActionNode):
 _nodes.append(NLActionSetMouseCursorVisibility)
 
 
-class NLActionStart3DSoundAdv(bpy.types.Node, NLActionNode):
+class NLActionStart3DSoundAdv(NLActionNode):
     bl_idname = "NLActionStart3DSoundAdv"
     bl_label = "3D Sound"
     bl_icon = 'MUTE_IPO_ON'
@@ -13117,7 +13136,7 @@ class NLActionStart3DSoundAdv(bpy.types.Node, NLActionNode):
 _nodes.append(NLActionStart3DSoundAdv)
 
 
-class NLPlaySpeaker(bpy.types.Node, NLActionNode):
+class NLPlaySpeaker(NLActionNode):
     bl_idname = "NLPlaySpeaker"
     bl_label = "Start Speaker"
     bl_icon = 'MUTE_IPO_ON'
@@ -13161,7 +13180,7 @@ class NLPlaySpeaker(bpy.types.Node, NLActionNode):
 _nodes.append(NLPlaySpeaker)
 
 
-class NLActionStartSound(bpy.types.Node, NLActionNode):
+class NLActionStartSound(NLActionNode):
     bl_idname = "NLActionStartSound"
     bl_label = "2D Sound"
     bl_icon = 'FILE_SOUND'
@@ -13200,7 +13219,7 @@ class NLActionStartSound(bpy.types.Node, NLActionNode):
 _nodes.append(NLActionStartSound)
 
 
-class NLActionStopAllSounds(bpy.types.Node, NLActionNode):
+class NLActionStopAllSounds(NLActionNode):
     bl_idname = "NLActionStopAllSounds"
     bl_label = "Stop All Sounds"
     bl_icon = 'CANCEL'
@@ -13222,7 +13241,7 @@ class NLActionStopAllSounds(bpy.types.Node, NLActionNode):
 _nodes.append(NLActionStopAllSounds)
 
 
-class NLActionStopSound(bpy.types.Node, NLActionNode):
+class NLActionStopSound(NLActionNode):
     bl_idname = "NLActionStopSound"
     bl_label = "Stop Sound"
     bl_icon = 'SNAP_FACE'
@@ -13245,7 +13264,7 @@ class NLActionStopSound(bpy.types.Node, NLActionNode):
 _nodes.append(NLActionStopSound)
 
 
-class NLActionPauseSound(bpy.types.Node, NLActionNode):
+class NLActionPauseSound(NLActionNode):
     bl_idname = "NLActionPauseSound"
     bl_label = "Pause Sound"
     bl_icon = 'PAUSE'
@@ -13268,7 +13287,7 @@ class NLActionPauseSound(bpy.types.Node, NLActionNode):
 _nodes.append(NLActionPauseSound)
 
 
-class NLActionResumeSound(bpy.types.Node, NLActionNode):
+class NLActionResumeSound(NLActionNode):
     bl_idname = "NLActionResumeSound"
     bl_label = "Resume Sound"
     bl_icon = 'FRAME_NEXT'
@@ -13291,7 +13310,7 @@ class NLActionResumeSound(bpy.types.Node, NLActionNode):
 _nodes.append(NLActionResumeSound)
 
 
-class NLActionEndGame(bpy.types.Node, NLActionNode):
+class NLActionEndGame(NLActionNode):
     bl_idname = "NLActionEndGame"
     bl_label = "Quit Game"
     bl_icon = 'SCREEN_BACK'
@@ -13312,7 +13331,7 @@ class NLActionEndGame(bpy.types.Node, NLActionNode):
 _nodes.append(NLActionEndGame)
 
 
-class NLActionRestartGame(bpy.types.Node, NLActionNode):
+class NLActionRestartGame(NLActionNode):
     bl_idname = "NLActionRestartGame"
     bl_label = "Restart Game"
     bl_icon = 'LOOP_BACK'
@@ -13337,7 +13356,7 @@ class NLActionRestartGame(bpy.types.Node, NLActionNode):
 _nodes.append(NLActionRestartGame)
 
 
-class NLActionStartGame(bpy.types.Node, NLActionNode):
+class NLActionStartGame(NLActionNode):
     bl_idname = "NLActionStartGame"
     bl_label = "Load File"
     nl_category = "Game"
@@ -13362,7 +13381,7 @@ class NLActionStartGame(bpy.types.Node, NLActionNode):
 _nodes.append(NLActionStartGame)
 
 
-class NLParameterReceiveMessage(bpy.types.Node, NLParameterNode):
+class NLParameterReceiveMessage(NLParameterNode):
     bl_idname = "NLParameterReceiveMessage"
     bl_label = "Receive"
     nl_category = "Events"
@@ -13389,7 +13408,7 @@ class NLParameterReceiveMessage(bpy.types.Node, NLParameterNode):
 _nodes.append(NLParameterReceiveMessage)
 
 
-class NLParameterGetGlobalValue(bpy.types.Node, NLParameterNode):
+class NLParameterGetGlobalValue(NLParameterNode):
     bl_idname = "NLParameterGetGlobalValue"
     bl_label = "Get Global Value"
     nl_category = "Values"
@@ -13419,7 +13438,7 @@ class NLParameterGetGlobalValue(bpy.types.Node, NLParameterNode):
 _nodes.append(NLParameterGetGlobalValue)
 
 
-class NLActionListGlobalValues(bpy.types.Node, NLActionNode):
+class NLActionListGlobalValues(NLActionNode):
     bl_idname = "NLActionListGlobalValues"
     bl_label = "List Global Category"
     nl_category = "Values"
@@ -13447,7 +13466,7 @@ class NLActionListGlobalValues(bpy.types.Node, NLActionNode):
 _nodes.append(NLActionListGlobalValues)
 
 
-class NLActionCreateMessage(bpy.types.Node, NLActionNode):
+class NLActionCreateMessage(NLActionNode):
     bl_idname = "NLActionCreateMessage"
     bl_label = "Send"
     nl_category = "Events"
@@ -13490,7 +13509,7 @@ class NLActionCreateMessage(bpy.types.Node, NLActionNode):
 _nodes.append(NLActionCreateMessage)
 
 
-class NLActionSetGlobalValue(bpy.types.Node, NLActionNode):
+class NLActionSetGlobalValue(NLActionNode):
     bl_idname = "NLActionSetGlobalValue"
     bl_label = "Set Global Value"
     nl_category = "Values"
@@ -13524,7 +13543,7 @@ class NLActionSetGlobalValue(bpy.types.Node, NLActionNode):
 _nodes.append(NLActionSetGlobalValue)
 
 
-class NLParameterFormattedString(bpy.types.Node, NLParameterNode):
+class NLParameterFormattedString(NLParameterNode):
     bl_idname = "NLParameterFormattedString"
     bl_label = "Formatted String"
     nl_category = "Values"
@@ -13566,7 +13585,7 @@ class NLParameterFormattedString(bpy.types.Node, NLParameterNode):
 _nodes.append(NLParameterFormattedString)
 
 
-class NLActionRandomInteger(bpy.types.Node, NLActionNode):
+class NLActionRandomInteger(NLActionNode):
     bl_idname = "NLActionRandomInteger"
     bl_label = "Random Integer"
     nl_category = "Values"
@@ -13592,7 +13611,7 @@ class NLActionRandomInteger(bpy.types.Node, NLActionNode):
 _nodes.append(NLActionRandomInteger)
 
 
-class NLActionRandomFloat(bpy.types.Node, NLActionNode):
+class NLActionRandomFloat(NLActionNode):
     bl_idname = "NLActionRandomFloat"
     bl_label = "Random Float"
     nl_category = "Values"
@@ -13618,7 +13637,7 @@ class NLActionRandomFloat(bpy.types.Node, NLActionNode):
 _nodes.append(NLActionRandomFloat)
 
 
-class NLRandomVect(bpy.types.Node, NLActionNode):
+class NLRandomVect(NLActionNode):
     bl_idname = "NLRandomVect"
     bl_label = "Random Vector"
     nl_category = "Values"
@@ -13643,7 +13662,7 @@ class NLRandomVect(bpy.types.Node, NLActionNode):
 _nodes.append(NLRandomVect)
 
 
-class NLParameterDistance(bpy.types.Node, NLParameterNode):
+class NLParameterDistance(NLParameterNode):
     bl_idname = "NLParameterDistance"
     bl_label = "Distance"
     nl_category = "Math"
@@ -13668,7 +13687,7 @@ class NLParameterDistance(bpy.types.Node, NLParameterNode):
 _nodes.append(NLParameterDistance)
 
 
-class NLParameterKeyboardKeyCode(bpy.types.Node, NLParameterNode):
+class NLParameterKeyboardKeyCode(NLParameterNode):
     bl_idname = "NLParameterKeyboardKeyCode"
     bl_label = "Key Code"
     nl_category = "Input"
@@ -13691,7 +13710,7 @@ class NLParameterKeyboardKeyCode(bpy.types.Node, NLParameterNode):
 _nodes.append(NLParameterKeyboardKeyCode)
 
 
-class NLActionMoveTo(bpy.types.Node, NLActionNode):
+class NLActionMoveTo(NLActionNode):
     bl_idname = "NLActionMoveTo"
     bl_label = "Move To"
     nl_category = "Objects"
@@ -13727,7 +13746,7 @@ class NLActionMoveTo(bpy.types.Node, NLActionNode):
 _nodes.append(NLActionMoveTo)
 
 
-class NLActionTranslate(bpy.types.Node, NLActionNode):
+class NLActionTranslate(NLActionNode):
     bl_idname = "NLActionTranslate"
     bl_label = "Translate"
     nl_category = "Objects"
@@ -13754,7 +13773,7 @@ class NLActionTranslate(bpy.types.Node, NLActionNode):
 _nodes.append(NLActionTranslate)
 
 
-class NLActionRotateTo(bpy.types.Node, NLActionNode):
+class NLActionRotateTo(NLActionNode):
     bl_idname = "NLActionRotateTo"
     bl_label = "Rotate To"
     nl_category = "Objects"
@@ -13788,7 +13807,7 @@ class NLActionRotateTo(bpy.types.Node, NLActionNode):
 _nodes.append(NLActionRotateTo)
 
 
-class NLActionNavigate(bpy.types.Node, NLActionNode):
+class NLActionNavigate(NLActionNode):
     bl_idname = "NLActionNavigate"
     bl_label = "Move To with Navmesh"
     nl_category = "Objects"
@@ -13845,7 +13864,7 @@ class NLActionNavigate(bpy.types.Node, NLActionNode):
 _nodes.append(NLActionNavigate)
 
 
-class NLActionFollowPath(bpy.types.Node, NLActionNode):
+class NLActionFollowPath(NLActionNode):
     bl_idname = "NLActionFollowPath"
     bl_label = "Follow Path"
     nl_category = "Objects"
@@ -13935,7 +13954,7 @@ _enum_predefined_math_fun = {
 }
 
 
-class NLParameterMathFun(bpy.types.Node, NLParameterNode):
+class NLParameterMathFun(NLParameterNode):
     bl_idname = "NLParameterMathFun"
     bl_label = "Formula"
     nl_category = "Math"
