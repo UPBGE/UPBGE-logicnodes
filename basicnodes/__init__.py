@@ -633,6 +633,8 @@ def update_tree_code(self, context):
     if not hasattr(context.space_data, 'edit_tree'):
         return
     tree = context.space_data.edit_tree
+    if not tree:
+        return
     for node in tree.nodes:
         if isinstance(node, NLNode):
             try:
@@ -956,6 +958,25 @@ class NLListSocket(bpy.types.NodeSocket, NLSocket):
 
 
 _sockets.append(NLListSocket)
+
+
+class NLListItemSocket(bpy.types.NodeSocket, NLSocket):
+    bl_idname = "NLListItemSocket"
+    bl_label = "Parameter"
+
+    def draw_color(self, context, node):
+        return PARAMETER_SOCKET_COLOR
+
+    def draw(self, context, layout, node, text):
+        row = layout.row(align=True)
+        row.label(text=text)
+        row.operator(bge_netlogic.ops.NLRemoveListItemSocket.bl_idname, icon='X', text='')
+
+    def get_unlinked_value(self):
+        return None
+
+
+_sockets.append(NLListItemSocket)
 
 
 class NLCollisionMaskSocket(bpy.types.NodeSocket, NLSocket):
@@ -4852,7 +4873,7 @@ _nodes.append(NLGameObjectHasPropertyParameterNode)
 class NLGetDictKeyNode(NLParameterNode):
     bl_idname = "NLGetDictKeyNode"
     bl_label = 'Get Key'
-    nl_category = "Python"
+    nl_category = "Data"
     nl_subcat = 'Dictionary'
     nl_module = 'parameters'
 
@@ -4880,7 +4901,7 @@ _nodes.append(NLGetDictKeyNode)
 class NLGetRandomListIndex(NLParameterNode):
     bl_idname = "NLGetRandomListIndex"
     bl_label = "Get Random Item"
-    nl_category = "Python"
+    nl_category = "Data"
     nl_subcat = 'List'
     nl_module = 'parameters'
 
@@ -4906,7 +4927,7 @@ class NLDuplicateList(NLParameterNode):
     bl_idname = "NLDuplicateList"
     bl_label = "Duplicate"
     bl_icon = 'CON_TRANSLIKE'
-    nl_category = "Python"
+    nl_category = "Data"
     nl_subcat = 'List'
     nl_module = 'parameters'
 
@@ -4931,7 +4952,7 @@ _nodes.append(NLDuplicateList)
 class NLGetListIndexNode(NLParameterNode):
     bl_idname = "NLGetListIndexNode"
     bl_label = "Get Index"
-    nl_category = "Python"
+    nl_category = "Data"
     nl_subcat = 'List'
     nl_module = 'parameters'
 
@@ -5365,7 +5386,7 @@ class NLObjectAttributeParameterNode(NLParameterNode):
     bl_label = "Get Position / Rotation / Scale etc."
     bl_icon = 'VIEW3D'
     nl_category = "Objects"
-    nl_subcat = 'Data'
+    nl_subcat = 'Object Data'
     nl_module = 'parameters'
 
     def init(self, context):
@@ -9214,7 +9235,7 @@ class NLSetObjectAttributeActionNode(NLActionNode):
     bl_label = "Set Position / Rotation / Scale etc."
     bl_icon = 'VIEW3D'
     nl_category = "Objects"
-    nl_subcat = 'Data'
+    nl_subcat = 'Object Data'
     nl_module = 'actions'
     value_type: bpy.props.EnumProperty(
         name='Attribute',
@@ -9250,6 +9271,49 @@ class NLSetObjectAttributeActionNode(NLActionNode):
 
 
 _nodes.append(NLSetObjectAttributeActionNode)
+
+
+class NLSlowFollow(NLActionNode):
+    bl_idname = "NLSlowFollow"
+    bl_label = "Slow Follow"
+    bl_icon = 'VIEW3D'
+    nl_category = "Objects"
+    nl_subcat = 'Transformation'
+    nl_module = 'actions'
+    value_type: bpy.props.EnumProperty(
+        name='Attribute',
+        items=_enum_writable_member_names,
+        update=update_tree_code,
+        default='worldPosition'
+    )
+
+    def init(self, context):
+        NLActionNode.init(self, context)
+        self.inputs.new(NLConditionSocket.bl_idname, "Condition")
+        self.inputs.new(NLGameObjectSocket.bl_idname, "Object")
+        self.inputs.new(NLGameObjectSocket.bl_idname, "Target")
+        self.inputs.new(NLSocketAlphaFloat.bl_idname, "Factor")
+        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+
+    def get_output_socket_varnames(self):
+        return ["OUT"]
+
+    def draw_buttons(self, context, layout):
+        layout.prop(self, "value_type", text='')
+
+    def get_netlogic_class_name(self):
+        return "ULSlowFollow"
+
+    def get_input_sockets_field_names(self):
+        return ["condition", "game_object", "target", "factor"]
+
+    def get_attributes(self):
+        return [
+            ("value_type", lambda: f'"{self.value_type}"'),
+        ]
+
+
+_nodes.append(NLSlowFollow)
 
 
 class NLActionRayCastNode(NLActionNode):
@@ -9797,7 +9861,7 @@ _nodes.append(NLActionSetVSync)
 class NLInitEmptyDict(NLParameterNode):
     bl_idname = "NLInitEmptyDict"
     bl_label = "Init Empty"
-    nl_category = "Python"
+    nl_category = "Data"
     nl_subcat = 'Dictionary'
     nl_module = 'parameters'
 
@@ -9818,7 +9882,7 @@ _nodes.append(NLInitEmptyDict)
 class NLInitNewDict(NLParameterNode):
     bl_idname = "NLInitNewDict"
     bl_label = "Init From Item"
-    nl_category = "Python"
+    nl_category = "Data"
     nl_subcat = 'Dictionary'
     nl_module = 'parameters'
 
@@ -9844,7 +9908,7 @@ _nodes.append(NLInitNewDict)
 class NLSetDictKeyValue(NLActionNode):
     bl_idname = "NLSetDictKeyValue"
     bl_label = "Set Key"
-    nl_category = "Python"
+    nl_category = "Data"
     nl_subcat = 'Dictionary'
     nl_module = 'actions'
 
@@ -9873,7 +9937,7 @@ _nodes.append(NLSetDictKeyValue)
 class NLSetDictDelKey(NLActionNode):
     bl_idname = "NLSetDictDelKey"
     bl_label = "Remove Key"
-    nl_category = "Python"
+    nl_category = "Data"
     nl_subcat = 'Dictionary'
     nl_module = 'actions'
 
@@ -9902,7 +9966,7 @@ _nodes.append(NLSetDictDelKey)
 class NLInitEmptyList(NLParameterNode):
     bl_idname = "NLInitEmptyList"
     bl_label = "Init Empty"
-    nl_category = "Python"
+    nl_category = "Data"
     nl_subcat = 'List'
     nl_module = 'parameters'
 
@@ -9927,29 +9991,39 @@ _nodes.append(NLInitEmptyList)
 class NLInitNewList(NLParameterNode):
     bl_idname = "NLInitNewList"
     bl_label = "From Items"
-    nl_category = "Python"
+    nl_category = "Data"
     nl_subcat = 'List'
     nl_module = 'parameters'
 
     def init(self, context):
         NLActionNode.init(self, context)
-        self.inputs.new(NLParameterSocket.bl_idname, 'Item 1')
-        self.inputs.new(NLParameterSocket.bl_idname, 'Item 2')
-        self.inputs.new(NLParameterSocket.bl_idname, 'Item 3')
-        self.inputs.new(NLParameterSocket.bl_idname, 'Item 4')
-        self.inputs.new(NLParameterSocket.bl_idname, 'Item 5')
-        self.inputs.new(NLParameterSocket.bl_idname, 'Item 6')
+        self.inputs.new(NLListItemSocket.bl_idname, 'Item')
+        self.inputs.new(NLListItemSocket.bl_idname, 'Item')
         self.outputs.new(NLListSocket.bl_idname, 'List')
 
-    def update_draw(self):
-        for x in range(5):
-            if self.inputs[x].is_linked:
-                self.inputs[x].enabled = True
-                self.inputs[x+1].enabled = True
+    def draw_buttons(self, context, layout):
+        layout.operator(bge_netlogic.ops.NLAddListItemSocket.bl_idname)
+
+    def setup(
+        self,
+        cell_varname,
+        uids
+    ):
+        items = ''
+        for socket in self.inputs:
+            field_value = None
+            if socket.is_linked:
+                field_value = self.get_linked_socket_field_value(
+                    socket,
+                    cell_varname,
+                    None,
+                    uids
+                )
             else:
-                self.inputs[x+1].enabled = False
-        if self.inputs[-1].is_linked:
-            self.inputs[-1].enabled = True
+                field_value = socket.get_unlinked_value()
+            items += f'{field_value}, '
+        items = items[:-2]
+        return f'        {cell_varname}.items = [{items}]\n'
 
     def get_output_socket_varnames(self):
         return ['LIST']
@@ -9957,24 +10031,14 @@ class NLInitNewList(NLParameterNode):
     def get_netlogic_class_name(self):
         return "ULListFromItems"
 
-    def get_input_sockets_field_names(self):
-        return [
-            'value',
-            'value2',
-            'value3',
-            'value4',
-            'value5',
-            'value6'
-        ]
-
 
 _nodes.append(NLInitNewList)
 
 
 class NLExtendList(NLParameterNode):
     bl_idname = "NLExtendList"
-    bl_label = "Append"
-    nl_category = "Python"
+    bl_label = "Extend"
+    nl_category = "Data"
     nl_subcat = 'List'
     nl_module = 'actions'
 
@@ -10001,7 +10065,7 @@ _nodes.append(NLExtendList)
 class NLAppendListItem(NLActionNode):
     bl_idname = "NLAppendListItem"
     bl_label = "Append"
-    nl_category = "Python"
+    nl_category = "Data"
     nl_subcat = 'List'
     nl_module = 'actions'
 
@@ -10029,7 +10093,7 @@ _nodes.append(NLAppendListItem)
 class NLSetListIndex(NLActionNode):
     bl_idname = "NLSetListIndex"
     bl_label = "Set Index"
-    nl_category = "Python"
+    nl_category = "Data"
     nl_subcat = 'List'
     nl_module = 'actions'
 
@@ -10058,7 +10122,7 @@ _nodes.append(NLSetListIndex)
 class NLRemoveListValue(NLActionNode):
     bl_idname = "NLRemoveListValue"
     bl_label = "Remove Value"
-    nl_category = "Python"
+    nl_category = "Data"
     nl_subcat = 'List'
     nl_module = 'actions'
 
@@ -10086,7 +10150,7 @@ _nodes.append(NLRemoveListValue)
 class NLRemoveListIndex(NLActionNode):
     bl_idname = "NLRemoveListIndex"
     bl_label = "Remove Index"
-    nl_category = "Python"
+    nl_category = "Data"
     nl_subcat = 'List'
     nl_module = 'actions'
 
@@ -10723,7 +10787,8 @@ _nodes.append(NLActionLoadGame)
 class NLActionSaveVariable(NLActionNode):
     bl_idname = "NLActionSaveVariable"
     bl_label = "Save Variable"
-    nl_category = "Variables"
+    nl_category = "Data"
+    nl_subcat = "Variables"
     nl_module = 'actions'
 
     file_name: bpy.props.StringProperty(
@@ -10794,7 +10859,8 @@ _nodes.append(NLActionSaveVariable)
 class NLActionSaveVariables(NLActionNode):
     bl_idname = "NLActionSaveVariables"
     bl_label = "Save Variable Dict"
-    nl_category = "Variables"
+    nl_category = "Data"
+    nl_subcat = "Variables"
     nl_module = 'actions'
 
     file_name: bpy.props.StringProperty(
@@ -10968,7 +11034,8 @@ _nodes.append(NLParameterSetAttribute)
 class NLActionLoadVariable(NLActionNode):
     bl_idname = "NLActionLoadVariable"
     bl_label = "Load Variable"
-    nl_category = "Variables"
+    nl_category = "Data"
+    nl_subcat = "Variables"
     nl_module = 'parameters'
 
     file_name: bpy.props.StringProperty(
@@ -11038,7 +11105,8 @@ _nodes.append(NLActionLoadVariable)
 class NLActionLoadVariables(NLActionNode):
     bl_idname = "NLActionLoadVariables"
     bl_label = "Load Variable Dict"
-    nl_category = "Variables"
+    nl_category = "Data"
+    nl_subcat = "Variables"
     nl_module = 'parameters'
 
     file_name: bpy.props.StringProperty(
@@ -11105,7 +11173,8 @@ _nodes.append(NLActionLoadVariables)
 class NLActionRemoveVariable(NLActionNode):
     bl_idname = "NLActionRemoveVariable"
     bl_label = "Remove Variable"
-    nl_category = "Variables"
+    nl_category = "Data"
+    nl_subcat = "Variables"
     nl_module = 'actions'
 
     file_name: bpy.props.StringProperty(
@@ -11175,7 +11244,8 @@ _nodes.append(NLActionRemoveVariable)
 class NLActionClearVariables(NLActionNode):
     bl_idname = "NLActionClearVariables"
     bl_label = "Clear Variables"
-    nl_category = "Variables"
+    nl_category = "Data"
+    nl_subcat = "Variables"
     nl_module = 'actions'
 
     file_name: bpy.props.StringProperty(
@@ -11243,7 +11313,8 @@ _nodes.append(NLActionClearVariables)
 class NLActionListVariables(NLActionNode):
     bl_idname = "NLActionListVariables"
     bl_label = "List Saved Variables"
-    nl_category = "Variables"
+    nl_category = "Data"
+    nl_subcat = "Variables"
     nl_module = 'actions'
 
     file_name: bpy.props.StringProperty(
@@ -11570,7 +11641,7 @@ class NLActionReplaceMesh(NLActionNode):
     bl_label = "Replace Mesh"
     bl_icon = 'MESH_DATA'
     nl_category = "Objects"
-    nl_subcat = 'Data'
+    nl_subcat = 'Object Data'
     nl_module = 'actions'
 
     def init(self, context):
@@ -12574,7 +12645,7 @@ class NLParameterAxisVector(NLParameterNode):
     bl_label = "Get Axis Vector"
     bl_icon = 'EMPTY_ARROWS'
     nl_category = "Objects"
-    nl_subcat = 'Data'
+    nl_subcat = 'Object Data'
     nl_module = 'parameters'
 
     axis: bpy.props.EnumProperty(
@@ -12612,7 +12683,7 @@ class NLGetObjectDataName(NLParameterNode):
     bl_label = "Get Internal Name"
     bl_icon = 'FONT_DATA'
     nl_category = "Objects"
-    nl_subcat = 'Data'
+    nl_subcat = 'Object Data'
     nl_module = 'parameters'
 
     def init(self, context):
@@ -12663,7 +12734,7 @@ class NLGetObjectVertices(NLParameterNode):
     bl_label = "Get Object Vertices"
     bl_icon = 'OUTLINER_DATA_MESH'
     nl_category = "Objects"
-    nl_subcat = 'Data'
+    nl_subcat = 'Object Data'
     nl_module = 'parameters'
 
     def init(self, context):
@@ -13091,6 +13162,7 @@ class NLActionStart3DSoundAdv(NLActionNode):
         self.inputs[-1].value_y = 360
         self.inputs.new(NLPosFloatFormatSocket.bl_idname, "Cone Outer Volume")
         self.inputs[-1].value = 0.0
+        self.inputs.new(NLBooleanSocket.bl_idname, "Ignore Timescale")
         self.outputs.new(NLConditionSocket.bl_idname, 'On Start')
         self.outputs.new(NLConditionSocket.bl_idname, 'On Finish')
         self.outputs.new(NLParameterSocket.bl_idname, 'Sound')
@@ -13098,7 +13170,7 @@ class NLActionStart3DSoundAdv(NLActionNode):
     def update_draw(self):
         self.inputs[4].enabled = self.inputs[5].enabled = self.inputs[3].value
         state = self.advanced
-        for i in [9, 10, 11, 12, 13]:
+        for i in [9, 10, 11, 12, 13, 14]:
             ipt = self.inputs[i]
             if ipt.is_linked:
                 ipt.enabled = True
@@ -13129,7 +13201,8 @@ class NLActionStart3DSoundAdv(NLActionNode):
             "attenuation",
             "distance_ref",
             "cone_angle",
-            "cone_outer_volume"
+            "cone_outer_volume",
+            'ignore_timescale'
         ]
 
 
@@ -13153,6 +13226,7 @@ class NLPlaySpeaker(NLActionNode):
         self.inputs.new(NLSocketAlphaFloat.bl_idname, 'Lowpass')
         self.inputs[-1].value = .1
         self.inputs.new(NLSocketLoopCount.bl_idname, "Mode")
+        self.inputs.new(NLBooleanSocket.bl_idname, "Ignore Timescale")
         self.outputs.new(NLConditionSocket.bl_idname, 'On Start')
         self.outputs.new(NLConditionSocket.bl_idname, 'On Finish')
         self.outputs.new(NLParameterSocket.bl_idname, 'Sound')
@@ -13173,7 +13247,8 @@ class NLPlaySpeaker(NLActionNode):
             'occlusion',
             'transition',
             'cutoff',
-            "loop_count"
+            "loop_count",
+            'ignore_timescale'
         ]
 
 
@@ -13196,6 +13271,7 @@ class NLActionStartSound(NLActionNode):
         self.inputs[-1].value = 1.0
         self.inputs.new(NLSocketAlphaFloat.bl_idname, "Volume")
         self.inputs[-1].value = 1.0
+        self.inputs.new(NLBooleanSocket.bl_idname, "Ignore Timescale")
         self.outputs.new(NLConditionSocket.bl_idname, 'On Start')
         self.outputs.new(NLConditionSocket.bl_idname, 'On Finish')
         self.outputs.new(NLParameterSocket.bl_idname, 'Sound')
@@ -13212,7 +13288,8 @@ class NLActionStartSound(NLActionNode):
             "sound",
             "loop_count",
             "pitch",
-            "volume"
+            "volume",
+            'ignore_timescale'
         ]
 
 

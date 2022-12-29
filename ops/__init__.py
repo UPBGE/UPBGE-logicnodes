@@ -407,6 +407,42 @@ class NLSelectTreeByNameOperator(bpy.types.Operator):
         return {'FINISHED'}
 
 
+class NLAddListItemSocket(bpy.types.Operator):
+    bl_idname = "bge_netlogic.add_list_item_socket"
+    bl_label = "Add Socket"
+    bl_options = {'REGISTER', 'UNDO'}
+    bl_description = "Add a socket to this node"
+
+    @classmethod
+    def poll(cls, context):
+        return True
+
+    def execute(self, context):
+        socket = context.socket
+        node = context.node
+
+        node.inputs.new(bge_netlogic.basicnodes.NLListItemSocket.bl_idname, 'Item')
+        return {"FINISHED"}
+
+
+class NLRemoveListItemSocket(bpy.types.Operator):
+    bl_idname = "bge_netlogic.remove_list_item_socket"
+    bl_label = "Remove"
+    bl_options = {'REGISTER', 'UNDO'}
+    bl_description = "Remove this socket"
+
+    @classmethod
+    def poll(cls, context):
+        return True
+
+    def execute(self, context):
+        socket = context.socket
+        node = context.node
+
+        node.inputs.remove(socket)
+        return {"FINISHED"}
+
+
 class NLRemoveTreeByNameOperator(bpy.types.Operator):
     bl_idname = "bge_netlogic.remove_tree_by_name"
     bl_label = "Remove"
@@ -1464,6 +1500,8 @@ class NLAddComponentOperator(bpy.types.Operator):
             if comp_name in line.body:
                 continue
             line.body = line.body.replace(' ', '')
+            if line.body.startswith('@'):
+                continue
             if 'args=' in line.body:
                 in_args = True
             if '])' in line.body:

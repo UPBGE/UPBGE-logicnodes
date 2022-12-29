@@ -600,6 +600,8 @@ _registered_classes = [
     ops.NLReloadTexts,
     ops.NLReloadComponents,
     ops.NLStartAudioSystem,
+    ops.NLRemoveListItemSocket,
+    ops.NLAddListItemSocket,
     # ops.NLStartGameHere,
     NLNodeTreeReference
 ]

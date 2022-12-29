@@ -30,8 +30,10 @@ _cat_icons = {
     'Character': 'GHOST_ENABLED',
     'Collections': 'OUTLINER_COLLECTION',
     'Custom': 'INFO',
-    'Data': 'CON_OBJECTSOLVER',
+    'Data': 'RNA',
     'Dictionary': 'SNAP_VERTEX',
+    'Draw': 'GREASEPENCIL',
+    'EEVEE Effects': 'IMAGE_DATA',
     'Events': 'RIGHTARROW_THIN',
     'File': 'FILEBROWSER',
     'Game': 'IMAGE_BACKGROUND',
@@ -50,8 +52,10 @@ _cat_icons = {
     'Mouse': 'MOUSE_MMB',
     'Nodes': 'NODETREE',
     'Objects': 'OBJECT_DATAMODE',
+    'Object Data': 'CON_OBJECTSOLVER',
     'Physics': 'PHYSICS',
     'Properties': 'PROPERTIES',
+    'Post FX': 'IMAGE_DATA',
     'Python': 'FILE_SCRIPT',
     'Random': 'QUESTION',
     'Ray Casts': 'TRACKING_FORWARDS_SINGLE',
@@ -91,8 +95,8 @@ _main_menues = [
     'Time',
     'File',
     'Render',
+    'Data',
     'UI',
-    'Variables',
     'Layout',
     'Utilities'
 ]
@@ -101,7 +105,7 @@ _cat_separators = [
     'Values',
     'Sound',
     'Time',
-    'Variables'
+    'Data'
 ]
 
 
