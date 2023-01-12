@@ -97,7 +97,12 @@
             "label": "Normalize",
             "node_type": "NLVectorMath",
             "links": [[6, 0, 0]],
-            "values": []
+            "values": [
+                {
+                    "index": "operator",
+                    "value": "normalize"
+                }
+            ]
         }, {
             "x": 660,
             "y": -100,
