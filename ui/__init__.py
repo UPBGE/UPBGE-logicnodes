@@ -452,7 +452,7 @@ class BGE_PT_LogicNodeSettingsScene(bpy.types.Panel):
 
 
 class BGE_PT_LogicTreeGroups(bpy.types.Panel):
-    bl_label = "Tree Prefabs and Subtrees"
+    bl_label = "Tree Templates and Subtrees"
     bl_space_type = "NODE_EDITOR"
     bl_region_type = "UI"
     bl_category = "Dashboard"
@@ -476,7 +476,7 @@ class BGE_PT_LogicTreeGroups(bpy.types.Panel):
         layout.separator()
         prefabs = layout.box()
         title = prefabs.box()
-        title.label(text='Node Prefabs:')
+        title.label(text='Node Templates:')
         template_col = prefabs.column()
         template_col.scale_y = 1.4
         template_col.operator(
