@@ -655,7 +655,7 @@ def update_draw(self, context):
             try:
                 node.update_draw()
             except Exception as e:
-                print('Failed node ', node, e)
+                utils.error(f'Failed node {node}, {e}')
                 pass
 
 
@@ -736,11 +736,23 @@ class NLNode(NetLogicType):
                 field_value = field_value()
             text += f'        {cell_varname}.{field_name} = {field_value}\n'
         for socket in self.inputs:
-            text += self.write_socket_field_initialization(
-                socket,
-                cell_varname,
-                uids
-            )
+            try:
+                text += self.write_socket_field_initialization(
+                    socket,
+                    cell_varname,
+                    uids
+                )
+                self.mute = False
+            except Exception as e:
+                utils.error(
+                    f'Error occured when writing sockets for {self.__class__} Node: {e}\n'
+                    f'\tInfo:\n'
+                    f'\tSocket: {socket}\n'
+                    f'\tCellname: {cell_varname}\n'
+                    f'\tNode: {self.label if self.label else self.name}\n'
+                    '---END ERROR'
+                )
+                self.mute = True
         return text
 
     def write_socket_field_initialization(
@@ -5158,7 +5170,7 @@ class NLVectorMath(NLParameterNode):
         v3 = self.inputs[4]
         ior = self.inputs[5]
 
-        v2.enabled = vtype in ['dot', 'cross', 'project', 'distance', 'faceforward', 'divide', 'multiply', 'subtract', 'add', 'lerp']
+        v2.enabled = vtype in ['dot', 'cross', 'project', 'distance', 'faceforward', 'divide', 'multiply', 'subtract', 'add', 'lerp', 'multadd']
         fac.enabled = vtype in ['lerp']
         sca.enabled = vtype in ['scale']
         v3.enabled = vtype in ['faceforward', 'multadd']
@@ -5607,7 +5619,7 @@ class NLAddFilter(NLActionNode):
         self.inputs[2].enabled = self.filter_type == 'BRIGHTNESS'
         self.inputs[3].enabled = self.filter_type == 'MIST'
         self.inputs[4].enabled = self.inputs[3].enabled
-        self.inputs[5].enabled = self.filter_type in ['VIGNETTE', 'CHROMAB', 'GRAYSCALE', 'MIST']
+        self.inputs[5].enabled = self.filter_type in ['VIGNETTE', 'CHROMAB', 'GRAYSCALE', 'MIST', 'SSAO', 'HBAO']
         self.inputs[6].enabled = self.filter_type in ['VIGNETTE', 'LEVELS', 'MIST']
 
     def init(self, context):
