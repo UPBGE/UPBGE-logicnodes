@@ -10803,8 +10803,6 @@ class NLActionSaveVariable(NLActionNode):
     nl_subcat = "Variables"
     nl_module = 'actions'
 
-    file_name: bpy.props.StringProperty(
-        update=update_tree_code, default='variables')
     custom_path: bpy.props.BoolProperty(update=update_tree_code)
     path: bpy.props.StringProperty(
         subtype='DIR_PATH',
@@ -10818,15 +10816,15 @@ class NLActionSaveVariable(NLActionNode):
     def init(self, context):
         NLActionNode.init(self, context)
         self.inputs.new(NLConditionSocket.bl_idname, 'Condition')
-        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, 'Name')
+        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, 'Filename')
+        self.inputs[-1].value = 'variables'
+        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, 'Variable')
         self.inputs[-1].value = 'var'
         self.inputs.new(NLValueFieldSocket.bl_idname, '')
         self.outputs.new(NLConditionSocket.bl_idname, 'Done')
 
     def draw_buttons(self, context, layout):
         r = layout.row()
-        r.label(text='Save To:')
-        r.prop(self, 'file_name', text='')
         layout.prop(
             self,
             "custom_path",
@@ -10841,7 +10839,7 @@ class NLActionSaveVariable(NLActionNode):
         return "ULSaveVariable"
 
     def get_input_sockets_field_names(self):
-        return ["condition", 'name', 'val']
+        return ["condition", 'file_name', 'name', 'val']
 
     def get_attributes(self):
         s_path = self.path
@@ -10853,12 +10851,6 @@ class NLActionSaveVariable(NLActionNode):
             lambda: "'{}'".format(
                 path_formatted
             ) if self.custom_path else "''"
-        ),
-            (
-            "file_name",
-            lambda: "'{}'".format(
-                self.file_name
-            )
         )]
 
     def get_output_socket_varnames(self):
@@ -10875,8 +10867,6 @@ class NLActionSaveVariables(NLActionNode):
     nl_subcat = "Variables"
     nl_module = 'actions'
 
-    file_name: bpy.props.StringProperty(
-        update=update_tree_code, default='variables')
     custom_path: bpy.props.BoolProperty(update=update_tree_code)
     path: bpy.props.StringProperty(
         subtype='DIR_PATH',
@@ -10890,13 +10880,13 @@ class NLActionSaveVariables(NLActionNode):
     def init(self, context):
         NLActionNode.init(self, context)
         self.inputs.new(NLConditionSocket.bl_idname, 'Condition')
+        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, 'Filename')
+        self.inputs[-1].value = 'variables'
         self.inputs.new(NLDictSocket.bl_idname, 'Variables')
         self.outputs.new(NLConditionSocket.bl_idname, 'Done')
 
     def draw_buttons(self, context, layout):
         r = layout.row()
-        r.label(text='Save To:')
-        r.prop(self, 'file_name', text='')
         layout.prop(
             self,
             "custom_path",
@@ -10911,7 +10901,7 @@ class NLActionSaveVariables(NLActionNode):
         return "ULSaveVariableDict"
 
     def get_input_sockets_field_names(self):
-        return ["condition", 'val']
+        return ["condition", 'file_name', 'val']
 
     def get_attributes(self):
         s_path = self.path
@@ -10923,12 +10913,6 @@ class NLActionSaveVariables(NLActionNode):
             lambda: "'{}'".format(
                 path_formatted
             ) if self.custom_path else "''"
-        ),
-            (
-            "file_name",
-            lambda: "'{}'".format(
-                self.file_name
-            )
         )]
 
     def get_output_socket_varnames(self):
@@ -11050,8 +11034,6 @@ class NLActionLoadVariable(NLActionNode):
     nl_subcat = "Variables"
     nl_module = 'parameters'
 
-    file_name: bpy.props.StringProperty(
-        update=update_tree_code, default='variables')
     custom_path: bpy.props.BoolProperty(update=update_tree_code)
     path: bpy.props.StringProperty(
         subtype='DIR_PATH',
@@ -11064,15 +11046,14 @@ class NLActionLoadVariable(NLActionNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
+        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, 'Filename')
+        self.inputs[-1].value = 'variables'
         self.inputs.new(NLQuotedStringFieldSocket.bl_idname, 'Name')
         self.inputs[-1].value = 'var'
         self.inputs.new(NLOptionalValueFieldSocket.bl_idname, 'Default Value')
         self.outputs.new(NLParameterSocket.bl_idname, 'Value')
 
     def draw_buttons(self, context, layout):
-        r = layout.row()
-        r.label(text='Load From:')
-        r.prop(self, 'file_name', text='')
         layout.prop(
             self,
             "custom_path",
@@ -11087,7 +11068,7 @@ class NLActionLoadVariable(NLActionNode):
         return "ULLoadVariable"
 
     def get_input_sockets_field_names(self):
-        return ['name', 'default_value']
+        return ['file_name', 'name', 'default_value']
 
     def get_attributes(self):
         s_path = self.path
@@ -11099,12 +11080,6 @@ class NLActionLoadVariable(NLActionNode):
             lambda: "'{}'".format(
                 path_formatted
             ) if self.custom_path else "''"
-        ),
-            (
-            "file_name",
-            lambda: "'{}'".format(
-                self.file_name
-            )
         )]
 
     def get_output_socket_varnames(self):
@@ -11121,8 +11096,6 @@ class NLActionLoadVariables(NLActionNode):
     nl_subcat = "Variables"
     nl_module = 'parameters'
 
-    file_name: bpy.props.StringProperty(
-        update=update_tree_code, default='variables')
     custom_path: bpy.props.BoolProperty(update=update_tree_code)
     path: bpy.props.StringProperty(
         subtype='DIR_PATH',
@@ -11135,12 +11108,11 @@ class NLActionLoadVariables(NLActionNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
+        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, 'Filename')
+        self.inputs[-1].value = 'variables'
         self.outputs.new(NLDictSocket.bl_idname, 'Variables')
 
     def draw_buttons(self, context, layout):
-        r = layout.row()
-        r.label(text='Load From:')
-        r.prop(self, 'file_name', text='')
         layout.prop(
             self,
             "custom_path",
@@ -11155,7 +11127,7 @@ class NLActionLoadVariables(NLActionNode):
         return "ULLoadVariableDict"
 
     def get_input_sockets_field_names(self):
-        return ["condition", 'name']
+        return ["file_name", 'name']
 
     def get_attributes(self):
         s_path = self.path
@@ -11167,12 +11139,6 @@ class NLActionLoadVariables(NLActionNode):
             lambda: "'{}'".format(
                 path_formatted
             ) if self.custom_path else "''"
-        ),
-            (
-            "file_name",
-            lambda: "'{}'".format(
-                self.file_name
-            )
         )]
 
     def get_output_socket_varnames(self):
@@ -11189,8 +11155,6 @@ class NLActionRemoveVariable(NLActionNode):
     nl_subcat = "Variables"
     nl_module = 'actions'
 
-    file_name: bpy.props.StringProperty(
-        update=update_tree_code, default='variables')
     custom_path: bpy.props.BoolProperty(update=update_tree_code)
     path: bpy.props.StringProperty(
         subtype='DIR_PATH',
@@ -11204,14 +11168,13 @@ class NLActionRemoveVariable(NLActionNode):
     def init(self, context):
         NLActionNode.init(self, context)
         self.inputs.new(NLConditionSocket.bl_idname, 'Condition')
+        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, 'Filename')
+        self.inputs[-1].value = 'variables'
         self.inputs.new(NLQuotedStringFieldSocket.bl_idname, 'Name')
         self.inputs[-1].value = 'var'
         self.outputs.new(NLConditionSocket.bl_idname, 'Done')
 
     def draw_buttons(self, context, layout):
-        r = layout.row()
-        r.label(text='Remove From:')
-        r.prop(self, 'file_name', text='')
         layout.prop(
             self,
             "custom_path",
@@ -11226,7 +11189,7 @@ class NLActionRemoveVariable(NLActionNode):
         return "ULRemoveVariable"
 
     def get_input_sockets_field_names(self):
-        return ["condition", 'name']
+        return ["condition", 'file_name', 'name']
 
     def get_attributes(self):
         s_path = self.path
@@ -11238,12 +11201,6 @@ class NLActionRemoveVariable(NLActionNode):
             lambda: "'{}'".format(
                 path_formatted
             ) if self.custom_path else "''"
-        ),
-            (
-            "file_name",
-            lambda: "'{}'".format(
-                self.file_name
-            )
         )]
 
     def get_output_socket_varnames(self):
@@ -11260,8 +11217,6 @@ class NLActionClearVariables(NLActionNode):
     nl_subcat = "Variables"
     nl_module = 'actions'
 
-    file_name: bpy.props.StringProperty(
-        update=update_tree_code, default='variables')
     custom_path: bpy.props.BoolProperty(update=update_tree_code)
     path: bpy.props.StringProperty(
         subtype='DIR_PATH',
@@ -11275,12 +11230,11 @@ class NLActionClearVariables(NLActionNode):
     def init(self, context):
         NLActionNode.init(self, context)
         self.inputs.new(NLConditionSocket.bl_idname, 'Condition')
+        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, 'Filename')
+        self.inputs[-1].value = 'variables'
         self.outputs.new(NLConditionSocket.bl_idname, 'Done')
 
     def draw_buttons(self, context, layout):
-        r = layout.row()
-        r.label(text='Clear:')
-        r.prop(self, 'file_name', text='')
         layout.prop(
             self,
             "custom_path",
@@ -11295,7 +11249,7 @@ class NLActionClearVariables(NLActionNode):
         return "ULClearVariables"
 
     def get_input_sockets_field_names(self):
-        return ["condition"]
+        return ["condition", 'file_name']
 
     def get_attributes(self):
         s_path = self.path
@@ -11307,12 +11261,6 @@ class NLActionClearVariables(NLActionNode):
             lambda: "'{}'".format(
                 path_formatted
             ) if self.custom_path else "''"
-        ),
-            (
-            "file_name",
-            lambda: "'{}'".format(
-                self.file_name
-            )
         )]
 
     def get_output_socket_varnames(self):
@@ -11329,8 +11277,6 @@ class NLActionListVariables(NLActionNode):
     nl_subcat = "Variables"
     nl_module = 'actions'
 
-    file_name: bpy.props.StringProperty(
-        update=update_tree_code, default='variables')
     custom_path: bpy.props.BoolProperty(update=update_tree_code)
     path: bpy.props.StringProperty(
         subtype='DIR_PATH',
@@ -11344,14 +11290,13 @@ class NLActionListVariables(NLActionNode):
     def init(self, context):
         NLActionNode.init(self, context)
         self.inputs.new(NLPseudoConditionSocket.bl_idname, 'Condition')
+        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, 'Filename')
+        self.inputs[-1].value = 'variables'
         self.inputs.new(NLBooleanSocket.bl_idname, 'Print')
         self.outputs.new(NLConditionSocket.bl_idname, 'Done')
         self.outputs.new(NLListSocket.bl_idname, 'List')
 
     def draw_buttons(self, context, layout):
-        r = layout.row()
-        r.label(text='List:')
-        r.prop(self, 'file_name', text='')
         layout.prop(
             self,
             "custom_path",
@@ -11366,7 +11311,7 @@ class NLActionListVariables(NLActionNode):
         return "ULListVariables"
 
     def get_input_sockets_field_names(self):
-        return ["condition", 'print_list']
+        return ["condition", 'file_name', 'print_list']
 
     def get_attributes(self):
         s_path = self.path
@@ -11378,12 +11323,6 @@ class NLActionListVariables(NLActionNode):
             lambda: "'{}'".format(
                 path_formatted
             ) if self.custom_path else "''"
-        ),
-            (
-            "file_name",
-            lambda: "'{}'".format(
-                self.file_name
-            )
         )]
 
     def get_output_socket_varnames(self):
