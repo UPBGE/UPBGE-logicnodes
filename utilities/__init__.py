@@ -393,7 +393,7 @@ def py_module_file_path_for_stripped_tree_name(stripped_tree_name):
 
 
 def get_key_network_initial_status_for_tree_name(tree_name):
-    return f'{NLPREFIX}{tree_name}'
+    return f'{NLPREFIX}{make_valid_name(tree_name)}'
 
 
 def get_key_network_initial_status_for_tree(nodetree):
