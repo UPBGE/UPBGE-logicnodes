@@ -7,6 +7,7 @@ from bge_netlogic.basicnodes import NLAbstractNode
 from bge_netlogic.ops.file_text_buffer import FileTextBuffer
 from bge_netlogic.ops.abstract_text_buffer import AbstractTextBuffer
 from bge_netlogic.ops.uid_map import UIDMap
+from time import time
 
 
 class BLTextWrapper(AbstractTextBuffer):
@@ -378,9 +379,14 @@ class TreeCodeGenerator(object):
     def _sort_cellvarnames(self, node_cellvar_list, uid_map):
         # sorting is effective only in serial execution context. Because the python vm is basically a serial only
         # machine, we force a potentially parallel network to work as a serial one. Shame on GIL.
+        start = time()
         available_cells = list(node_cellvar_list)
         added_cells = []
         while available_cells:
+            now = time()
+            if now - start > 4:
+                utils.error('Timeout Error. Check tree for unlinked Reroutes or other issues.')
+                return []
             for cell_name in available_cells:
                 node = uid_map.get_node_for_varname(cell_name)
                 # if all the links of node are either constant or cells in added_cells, then this node can be put in the list

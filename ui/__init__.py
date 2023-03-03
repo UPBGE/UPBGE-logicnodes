@@ -2,6 +2,8 @@ import bpy
 import bge_netlogic
 import bge_netlogic.utilities as utils
 from utilities import make_valid_name
+from bpy.types import NodeReroute
+from time import time
 
 
 _filter_prop_types = [
@@ -817,6 +819,7 @@ class BGELogicTree(bpy.types.NodeTree):
         update=update_tree_mode
     )
     old_name: bpy.props.StringProperty()
+    old_links = []
 
     @classmethod
     def poll(cls, context):
@@ -858,4 +861,33 @@ class BGELogicTree(bpy.types.NodeTree):
         self.old_name = self.name
 
     def update(self):
-        pass
+        start = time()
+        for n in self.nodes:
+            if isinstance(n, NodeReroute):
+                osock = n.inputs[0]
+                if not n.inputs[0].links:
+                    if osock.type != 'VALUE':
+                        osock.type = 'VALUE'
+                        n.outputs[0].type = 'VALUE'
+                        osock.display_shape = 'CIRCLE'
+                        n.outputs[0].display_shape = 'CIRCLE'
+                    continue
+                socket = osock.links[0].from_socket
+                while isinstance(socket.node, NodeReroute):
+                    now = time()
+                    if now - start > 3:
+                        utils.error('Timeout Error. Check tree for unlinked Reroutes or other issues.')
+                        return
+                    if not socket.node.inputs[0].links:
+                        if osock.type != 'VALUE':
+                            osock.type = 'VALUE'
+                            n.outputs[0].type = 'VALUE'
+                            osock.display_shape = 'CIRCLE'
+                            n.outputs[0].display_shape = 'CIRCLE'
+                        break
+                    socket = socket.node.inputs[0].links[0].from_socket
+                if osock.type != socket.type:
+                    osock.type = socket.type
+                    osock.display_shape = socket.display_shape
+                    n.outputs[0].type = socket.type
+                    n.outputs[0].display_shape = socket.display_shape

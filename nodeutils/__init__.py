@@ -66,6 +66,8 @@ _cat_icons = {
     'Time': 'TIME',
     'Transformation': 'VIEW3D',
     'Trees': 'OUTLINER',
+    'UI': 'IMAGE_DATA',
+    'Widgets': 'SCENE_DATA',
     'Utilities': 'PLUGIN',
     'Values': 'RADIOBUT_OFF',
     'Variables': 'FILE',

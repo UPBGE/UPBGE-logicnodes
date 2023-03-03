@@ -15,8 +15,8 @@ bl_info = {
         "A Node System to create game logic."
     ),
     "author": "pgi, Leopold A-C (Iza Zed)",
-    "version": (2, 1, 6, 1),
-    "blender": (2, 91, 0),
+    "version": (2, 2),
+    "blender": (3, 0, 0),
     "location": "View Menu",
     "category": "Game Engine"
 }
@@ -602,6 +602,7 @@ _registered_classes = [
     ops.NLStartAudioSystem,
     ops.NLRemoveListItemSocket,
     ops.NLAddListItemSocket,
+    ops.NLLoadFontOperator,
     # ops.NLStartGameHere,
     NLNodeTreeReference
 ]
