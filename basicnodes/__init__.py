@@ -977,7 +977,6 @@ class NLParameterSocket(bpy.types.NodeSocket, NLSocket):
     bl_label = "Parameter"
     type: StringProperty(default='VALUE')
     nl_color = PARAMETER_SOCKET_COLOR
-    
 
     def draw_color(self, context, node):
         return self.nl_color
