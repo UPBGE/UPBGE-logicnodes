@@ -15,8 +15,8 @@ bl_info = {
         "A Node System to create game logic."
     ),
     "author": "pgi, Leopold A-C (Iza Zed)",
-    "version": (2, 2),
-    "blender": (3, 0, 0),
+    "version": (2, 3),
+    "blender": (3, 6, 0),
     "location": "View Menu",
     "category": "Game Engine"
 }
@@ -401,7 +401,7 @@ def request_tree_code_writer_start(dummy):
     global RENAMING
     RENAMING = True
     for tree in bpy.data.node_groups:
-        if isinstance(tree, ui.BGELogicTree):
+        if isinstance(tree, ui.LogicNodeTree):
             if tree.name != tree.old_name:
                 tree.update_name(False)
     RENAMING = False
@@ -415,7 +415,7 @@ def _watch_tree_names(self, context):
     else:
         RENAMING = True
         for tree in bpy.data.node_groups:
-            if isinstance(tree, ui.BGELogicTree):
+            if isinstance(tree, ui.LogicNodeTree):
                 if tree.name != tree.old_name:
                     tree.update_name()
         RENAMING = False
@@ -443,7 +443,7 @@ ops.tree_code_generator = _abs_import("tree_code_generator", _abs_path("ops","tr
 
 def update_node_colors(self, context):
     for tree in bpy.data.node_groups:
-        if isinstance(tree, ui.BGELogicTree):
+        if isinstance(tree, ui.LogicNodeTree):
             for node in tree.nodes:
                 if isinstance(node, bpy.types.NodeFrame):
                     continue
@@ -451,7 +451,7 @@ def update_node_colors(self, context):
 
 
 class NLNodeTreeReference(bpy.types.PropertyGroup):
-    tree: bpy.props.PointerProperty(type=ui.BGELogicTree)
+    tree: bpy.props.PointerProperty(type=ui.LogicNodeTree)
     tree_name: bpy.props.StringProperty()
     tree_initial_status: bpy.props.BoolProperty()
 
@@ -489,11 +489,13 @@ class NodeCategory():
 
     @classmethod
     def poll(cls, context):
-        enabled = (context.space_data.tree_type == ui.BGELogicTree.bl_idname)
+        enabled = (context.space_data.tree_type == ui.LogicNodeTree.bl_idname)
         return enabled
 
-    def draw(self, item, layout, context):
+    def draw(self, item, layout, context, separate=False):
         layout.menu("NODE_MT_category_%s" % self.identifier, icon=nodeitems_utils._cat_icons.get(self.identifier, 'X'))
+        if separate:
+            layout.separator()
 
 
 class LogicNodesAddonPreferences(bpy.types.AddonPreferences):
@@ -561,7 +563,7 @@ class LogicNodesAddonPreferences(bpy.types.AddonPreferences):
 
 basicnodes = _abs_import("basicnodes", _abs_path("basicnodes", "__init__.py"))
 _registered_classes = [
-    ui.BGELogicTree,
+    ui.LogicNodeTree,
     ops.NLInstallUplogicModuleOperator,
     ops.NLInstallFakeBGEModuleOperator,
     ops.NLSelectTreeByNameOperator,
@@ -671,10 +673,10 @@ def _list_menu_nodes():
         return catlist
 
     def get_node_item(node):
-        if hasattr(node, 'bl_icon'):
-            return nodeitems_utils.NodeItem(node.bl_idname, icon=node.bl_icon)
-        else:
-            return nodeitems_utils.NodeItem(node.bl_idname)
+        # if hasattr(node, 'bl_icon'):
+        return nodeitems_utils.NodeItem(node.bl_idname, icon=node.bl_icon, separate=node.nl_separate)
+        # else:
+        #     return nodeitems_utils.NodeItem(node.bl_idname)
 
     cats = {}
     for c in _registered_classes:
@@ -762,7 +764,7 @@ def register():
     # audio.get_audio_system()
 
     # rename_handle = object()
-    # subscribe_to = ui.BGELogicTree, 'name'
+    # subscribe_to = ui.LogicNodeTree, 'name'
     # bpy.msgbus.subscribe_rna(key=subscribe_to, owner=rename_handle, args=(bpy.context,), notify=update_tree_name)
 
     bpy.types.Object.sound_occluder = bpy.props.BoolProperty(
@@ -820,6 +822,15 @@ def register():
     bpy.types.Scene.custom_mainloop_tree = bpy.props.PointerProperty(
         name='Custom Mainloop Tree',
         type=bpy.types.NodeTree
+    )
+    bpy.types.Scene.use_screen_console = bpy.props.BoolProperty(
+        name='Screen Console',
+        default=True,
+        description='Print messages to an on-screen console.\nNeeds at least one uplogic import or Logic Node Tree.\nNote: Errors are not printed to this console'
+    )
+    bpy.types.Scene.screen_console_open = bpy.props.BoolProperty(
+        name='Open',
+        description='Start the game with the on-screen console already open'
     )
 
     # try:

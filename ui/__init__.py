@@ -348,7 +348,7 @@ class BGE_PT_NLEditorPropertyPanel(BGE_PT_GamePropertyPanel):
         if not ob:
             return False
         sel = ob.select_get()
-        enabled = (context.space_data.tree_type == BGELogicTree.bl_idname)
+        enabled = (context.space_data.tree_type == LogicNodeTree.bl_idname)
         return sel and ob.name and enabled
 
 
@@ -440,6 +440,12 @@ class BGE_PT_LogicNodeSettingsScene(bpy.types.Panel):
         layout = self.layout
         layout.prop(bpy.context.scene, 'jump_in_game_cam')
         layout.prop(bpy.context.scene, 'use_vr_audio_space')
+        row = layout.row()
+        row.prop(bpy.context.scene, 'use_screen_console')
+        part = row.row()
+        part.prop(bpy.context.scene, 'screen_console_open')
+        part.enabled = getattr(bpy.context.scene, 'use_screen_console', False)
+
         use_mainloop = context.scene.get('__main__', '') != ''
         layout.operator(
             bge_netlogic.ops.NLMakeCustomMainLoop.bl_idname,
@@ -462,7 +468,7 @@ class BGE_PT_LogicTreeGroups(bpy.types.Panel):
 
     @classmethod
     def poll(cls, context):
-        enabled = (context.space_data.tree_type == BGELogicTree.bl_idname)
+        enabled = (context.space_data.tree_type == LogicNodeTree.bl_idname)
         return enabled
 
     def draw(self, context):
@@ -496,7 +502,7 @@ class BGE_PT_LogicTreeOptions(bpy.types.Panel):
 
     @classmethod
     def poll(cls, context):
-        enabled = (context.space_data.tree_type == BGELogicTree.bl_idname)
+        enabled = (context.space_data.tree_type == LogicNodeTree.bl_idname)
         # if getattr(context.space_data, 'edit_tree', None) is not None:
         #     bge_netlogic._consume_update_tree_code_queue()
         #     bpy.ops.bge_netlogic.generate_logicnetwork_all()
@@ -555,7 +561,7 @@ class BGE_PT_LogicTreeInfoPanel(bpy.types.Panel):
     def poll(cls, context):
         if not getattr(context.space_data, 'edit_tree', None):
             return False
-        enabled = (context.space_data.tree_type == BGELogicTree.bl_idname)
+        enabled = (context.space_data.tree_type == LogicNodeTree.bl_idname)
         return enabled
 
     def draw_owner(self, obj, container, prop, tree):
@@ -675,7 +681,7 @@ class BGE_PT_LogicPanel(bpy.types.Panel):
 
     @classmethod
     def poll(cls, context):
-        enabled = (context.space_data.tree_type == BGELogicTree.bl_idname)
+        enabled = (context.space_data.tree_type == LogicNodeTree.bl_idname)
         return enabled
 
     def draw(self, context):
@@ -704,7 +710,7 @@ class BGE_PT_HelpPanel(bpy.types.Panel):
 
     @classmethod
     def poll(cls, context):
-        enabled = (context.space_data.tree_type == BGELogicTree.bl_idname)
+        enabled = (context.space_data.tree_type == LogicNodeTree.bl_idname)
         return enabled
 
     def draw(self, context):
@@ -724,7 +730,7 @@ class BGE_PT_HelpPanel(bpy.types.Panel):
 
 def update_tree_mode(self, context):
     tree = context.space_data.edit_tree
-    if not isinstance(tree, BGELogicTree):
+    if not isinstance(tree, LogicNodeTree):
         return
 
 
@@ -807,7 +813,7 @@ class BGE_PT_GameComponentHelperPanel(bpy.types.Panel):
         #             col.prop(prop, "value", text="")
 
 
-class BGELogicTree(bpy.types.NodeTree):
+class LogicNodeTree(bpy.types.NodeTree):
     bl_idname = "BGELogicTree"
     bl_label = "Logic Node Editor"
     bl_icon = "OUTLINER"

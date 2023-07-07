@@ -2,7 +2,7 @@ import math
 import bpy
 import bge_netlogic
 from bge_netlogic import utilities as utils
-from ui import BGELogicTree
+from ui import LogicNodeTree
 from utilities import make_valid_name
 from bpy.props import StringProperty
 from bpy.props import FloatProperty
@@ -14,6 +14,7 @@ from bpy.props import BoolProperty
 from bpy.props import EnumProperty
 from bpy.props import BoolVectorProperty
 from bpy.props import CollectionProperty
+import socket
 import os
 
 
@@ -286,7 +287,8 @@ _enum_readable_member_names = [
             'object'
         )
     ),
-    ("worldScale", "Scale", "The global scale of the object"),
+    ("worldScale", "World Scale", "The global scale of the object"),
+    ("localScale", "Local Scale", "The local scale of the object"),
     ("name", "Name", "The name of the object"),
     ("color", "Color", "The solid color of the object"),
     (
@@ -310,19 +312,19 @@ _enum_writable_member_names = [
         "The local orientation of the object"
     ), (
         "worldLinearVelocity",
-        "Velocity (Global)",
+        "Linear Velocity (Global)",
         "The local linear velocity of the object"
     ), (
         "localLinearVelocity",
-        "Velocity (Local)",
+        "Linear Velocity (Local)",
         "The local linear velocity of the object"
     ), (
         "worldAngularVelocity",
-        "Torque (Global)",
+        "Angular Velocity (Global)",
         "The local rotational velocity of the object"
     ), (
         "localAngularVelocity",
-        "Torque (Local)",
+        "Angular Velocity (Local)",
         "The local rotational velocity of the object"
     ), (
         "worldTransform",
@@ -522,6 +524,32 @@ _enum_blend_mode_values = [
     ("bge.logic.KX_ACTION_BLEND_ADD", "Add", "Adds the layer together")
 ]
 
+_enum_spawn_types = [
+    ("Simple", "Simple", "Spawn an instance without behavior"),
+    ("SimpleBullet", "Simple Bullet", "Spawn a bullet that travels linearly along its local +Y axis"),
+    ("PhysicsBullet", "Physical Bullet", "Spawn a bullet that travels along a trajectory aimed at its local +Y axis")
+]
+
+_serialize_types = [
+    ("builtin", "Built-In", "Serialize Built-In data type (int, float, bool, dict, etc.)"),
+    ("Vec2", "2D Vector", "Serialize a 2D Vector"),
+    ("Vec3", "3D Vector", "Serialize a 3D Vector"),
+    ("Vec4", "4D Vector", "Serialize a 4D Vector"),
+    ("Mat3", "3x3 Matrix", "Serialize a 3x3 Matrix"),
+    ("Mat4", "4x4 Matrix", "Serialize a 4x4 Matrix"),
+    ("GameObj", "Game Object", "Serialize a Game Object (Note: Not all data can be serialized)")
+]
+
+
+_enum_msg_types = [
+    ("INFO", "Info", "Will print the message in white (on-screen console)"),
+    ("DEBUG", "Debug", "Will print the message in light yellow (on-screen console)"),
+    ("WARNING", "Warning", "Will print the message in yellow (on-screen console)"),
+    ("ERROR", "Error", "Will print the message in red (on-screen console)"),
+    ("SUCCESS", "Success", "Will print the message in green (on-screen console)")
+]
+
+
 OUTCELL = "__standard_logic_cell_value__"
 
 
@@ -592,7 +620,7 @@ def filter_curves(self, item):
 
 def filter_logic_trees(self, item):
     if (
-        isinstance(item, bge_netlogic.ui.BGELogicTree)
+        isinstance(item, bge_netlogic.ui.LogicNodeTree)
     ):
         return True
     return False
@@ -739,7 +767,7 @@ class NLNode(NetLogicType):
     @property
     def tree(self):
         for tree in bpy.data.node_groups:
-            if not isinstance(tree, BGELogicTree):
+            if not isinstance(tree, LogicNodeTree):
                 continue
             nodes = [node for node in tree.nodes]
             if self in nodes:
@@ -947,7 +975,9 @@ _sockets.append(NLPseudoConditionSocket)
 class NLParameterSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLParameterSocket"
     bl_label = "Parameter"
+    type: StringProperty(default='VALUE')
     nl_color = PARAMETER_SOCKET_COLOR
+    
 
     def draw_color(self, context, node):
         return self.nl_color
@@ -968,6 +998,7 @@ _sockets.append(NLParameterSocket)
 class NLDictSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLDictSocket"
     bl_label = "Parameter"
+    type: StringProperty(default='MATERIAL')
 
     def draw_color(self, context, node):
         return PARAM_INT_SOCKET_COLOR
@@ -1178,10 +1209,12 @@ _sockets.append(NLActionSocket)
 
 
 class NLAbstractNode(NLNode):
+    bl_icon = 'DOT'
+    nl_separate = False
 
     @classmethod
     def poll(cls, node_tree):
-        return isinstance(node_tree, BGELogicTree)
+        return isinstance(node_tree, LogicNodeTree)
 
     def insert_link(self, link):
         to_socket = link.to_socket
@@ -1226,7 +1259,7 @@ class NLConditionNode(bpy.types.Node, NLAbstractNode):
 
     @classmethod
     def poll(cls, node_tree):
-        return isinstance(node_tree, BGELogicTree)
+        return isinstance(node_tree, LogicNodeTree)
 
     def init(self, context):
         self.use_custom_color = (
@@ -1243,7 +1276,7 @@ class NLActionNode(bpy.types.Node, NLAbstractNode):
 
     @classmethod
     def poll(cls, node_tree):
-        return isinstance(node_tree, BGELogicTree)
+        return isinstance(node_tree, LogicNodeTree)
 
     def init(self, context):
         self.use_custom_color = (
@@ -1260,7 +1293,7 @@ class NLParameterNode(bpy.types.Node, NLAbstractNode):
 
     @classmethod
     def poll(cls, node_tree):
-        return isinstance(node_tree, BGELogicTree)
+        return isinstance(node_tree, LogicNodeTree)
 
     def init(self, context):
         self.use_custom_color = (
@@ -3649,6 +3682,41 @@ class NLVec3FieldSocket(bpy.types.NodeSocket, NLSocket):
 _sockets.append(NLVec3FieldSocket)
 
 
+class NodeSocketMatrix3(bpy.types.NodeSocket, NLSocket):
+    bl_idname = "NodeSocketMatrix3"
+    bl_label = "Float Value"
+    type: StringProperty(default='VECTOR')
+    value_x: FloatProperty(default=0, update=update_tree_code)
+    value_y: FloatProperty(default=0, update=update_tree_code)
+    value_z: FloatProperty(default=0, update=update_tree_code)
+
+    def draw_color(self, context, node):
+        return PARAM_VECTOR_SOCKET_COLOR
+
+    def get_unlinked_value(self):
+        return "mathutils.Vector(({}, {}, {}))".format(
+            self.value_x,
+            self.value_y,
+            self.value_z
+        )
+
+    def draw(self, context, layout, node, text):
+        if self.is_linked or self.is_output:
+            layout.label(text=text)
+        else:
+            cont = layout.column(align=True)
+            if text != '':
+                cont.label(text=text)
+            if self.node.width >= 200:
+                cont = cont.row(align=True)
+            cont.prop(self, "value_x", text='X')
+            cont.prop(self, "value_y", text='Y')
+            cont.prop(self, "value_z", text='Z')
+
+
+_sockets.append(NodeSocketMatrix3)
+
+
 class NLVec3RotationSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLVec3RotationSocket"
     bl_label = "Float Value"
@@ -4493,10 +4561,11 @@ _nodes.append(LogicNodeCreateUICanvas)
 
 _writeable_widget_attrs = [
     ("show", "Visibility", "Visibility of Widget and its children"),#
-    ("color", "Color", "Background color"),#
+    ("bg_color", "Color", "Background color"),#
     ("opacity", "Opacity", "Opacity"),#
     ("pos", "Position", "Widget Position (0-1 if set to relative)"),#
     ("size", "Size", "Widget Size (0-1 if set to relative)"),#
+    ("angle", "Angle", "Widget Angle in degrees"),#
     ("width", "Width", "Widget Width (0-1 if set to relative)"),#
     ("height", "Height", "Widget Height (0-1 if set to relative)"),#
     ("use_clipping", "Clipping", "Cut off child widgets if they go over the edges"),#
@@ -4562,6 +4631,8 @@ class LogicNodeSetUIWidgetAttr(NLActionNode):
         self.inputs[-1].enabled = False
         self.inputs.new(NLImageSocket.bl_idname, "")
         self.inputs[-1].enabled = False
+        self.inputs.new(NLFloatAngleSocket.bl_idname, "")
+        self.inputs[-1].enabled = False
         self.outputs.new(NLConditionSocket.bl_idname, "Done")
 
     def get_attributes(self):
@@ -4579,7 +4650,7 @@ class LogicNodeSetUIWidgetAttr(NLActionNode):
         self.inputs[1].enabled = True
         if self.widget_attr in ['show', 'use_clipping', 'wrap', 'shadow']:
             self.inputs[2].enabled = True
-        elif self.widget_attr in ['color', 'border_color', 'shadow_color', 'font_color', 'hover_color']:
+        elif self.widget_attr in ['bg_color', 'border_color', 'shadow_color', 'font_color', 'hover_color']:
             self.inputs[3].enabled = True
         elif self.widget_attr in ['opacity', 'font_opacity']:
             self.inputs[4].enabled = True
@@ -4595,6 +4666,8 @@ class LogicNodeSetUIWidgetAttr(NLActionNode):
             self.inputs[9].enabled = True
         elif self.widget_attr in ['texture']:
             self.inputs[10].enabled = True
+        elif self.widget_attr in ['angle']:
+            self.inputs[11].enabled = True
 
     def get_netlogic_class_name(self):
         return "ULSetUIWidgetAttr"
@@ -4614,7 +4687,8 @@ class LogicNodeSetUIWidgetAttr(NLActionNode):
             'int_value',
             'float_value',
             'font_value',
-            'img_value'
+            'img_value',
+            'angle_value'
         ]
 
 
@@ -4766,7 +4840,6 @@ class LogicNodeCreateUILayout(NLActionNode):
         self.inputs.new(NLBooleanSocket.bl_idname, "Relative Size")
         self.inputs.new(NLVec2FieldSocket.bl_idname, "")
         self.inputs.new(NLFloatAngleSocket.bl_idname, "Angle")
-        self.inputs[-1].enabled = False
         self.inputs.new(NLColorAlphaSocket.bl_idname, "Color")
         self.inputs[-1].value = [0, 0, 0, 0]
         self.inputs.new(NLIntegerFieldSocket.bl_idname, "Border Width")
@@ -4840,7 +4913,6 @@ class LogicNodeCreateUIButton(NLActionNode):
         self.inputs.new(NLBooleanSocket.bl_idname, "Relative Size")
         self.inputs.new(NLVec2FieldSocket.bl_idname, "")
         self.inputs.new(NLFloatAngleSocket.bl_idname, "Angle")
-        self.inputs[-1].enabled = False
         self.inputs.new(NLColorAlphaSocket.bl_idname, "Color")
         self.inputs[-1].value = [0, 0, 0, 0]
         self.inputs.new(NLColorAlphaSocket.bl_idname, "Hover Color")
@@ -4933,7 +5005,6 @@ class LogicNodeCreateUILabel(NLActionNode):
         self.inputs.new(NLBooleanSocket.bl_idname, "Relative Position")
         self.inputs.new(NLVec2FieldSocket.bl_idname, "")
         self.inputs.new(NLFloatAngleSocket.bl_idname, "Angle")
-        self.inputs[-1].enabled = False
         self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Text")
         self.inputs.new(NLFontSocket.bl_idname, "")
         self.inputs.new(NLIntegerFieldSocket.bl_idname, "Font Size")
@@ -4944,8 +5015,8 @@ class LogicNodeCreateUILabel(NLActionNode):
         self.inputs[-1].value = [1, 1, 1, 1]
         self.inputs.new(NLBooleanSocket.bl_idname, "Use Shadow")
         self.inputs.new(NLVec2FieldSocket.bl_idname, "Shadow Offset")
-        self.inputs[-1].value_x = 2
-        self.inputs[-1].value_y = 2
+        self.inputs[-1].value_x = 1
+        self.inputs[-1].value_y = -1
         self.inputs.new(NLColorAlphaSocket.bl_idname, "Shadow Color")
         self.inputs[-1].value = [0, 0, 0, .5]
         self.outputs.new(NLConditionSocket.bl_idname, "Done")
@@ -5011,7 +5082,6 @@ class LogicNodeCreateUIImage(NLActionNode):
         self.inputs.new(NLBooleanSocket.bl_idname, "Relative Size")
         self.inputs.new(NLVec2FieldSocket.bl_idname, "")
         self.inputs.new(NLFloatAngleSocket.bl_idname, "Angle")
-        self.inputs[-1].enabled = False
         self.inputs.new(NLImageSocket.bl_idname, "")
         self.outputs.new(NLConditionSocket.bl_idname, "Done")
         self.outputs.new(NLUISocket.bl_idname, "Label")
@@ -6121,22 +6191,81 @@ class NLObjectAttributeParameterNode(NLParameterNode):
     nl_category = "Objects"
     nl_subcat = 'Object Data'
     nl_module = 'parameters'
+    
+    names = {
+        'worldPosition': 'World Position',
+        'localPosition': 'Local Position',
+        'worldScale': 'World Scale',
+        'localScale': 'Local Scale',
+        'worldLinearVelocity': 'World Linear Velocity',
+        'localLinearVelocity': 'Local Linear Velocity',
+        'worldAngularVelocity': 'World Angular Velocity',
+        'localAngularVelocity': 'Local Angular Velocity',
+        'color': 'Color',
+        'worldOrientation': 'World Orientation',
+        'localOrientation': 'Local Orientation'
+    }
+
+    attr_name: EnumProperty(items=_enum_readable_member_names, name="", default="worldPosition", update=update_draw)
 
     def init(self, context):
         NLParameterNode.init(self, context)
         self.inputs.new(NLGameObjectSocket.bl_idname, "Object")
         self.inputs.new(NLSocketReadableMemberName.bl_idname, "Value")
         self.inputs[-1].value = 'worldPosition'
+        self.inputs[-1].enabled = False
+        self.attr_name = self.inputs[-1].value
         self.outputs.new(NLParameterSocket.bl_idname, "Value")
+        self.outputs.new(NLVec3FieldSocket.bl_idname, "Vector")
+        self.outputs[-1].enabled = False
+        self.outputs.new(NLBooleanSocket.bl_idname, "Visible")
+        self.outputs[-1].enabled = False
+
+    def draw_buttons(self, context, layout) -> None:
+        layout.prop(self, 'attr_name', text="")
+
+    def update_draw(self):
+        print(self.attr_name)
+        if self.attr_name in [
+            'worldPosition',
+            'localPosition',
+            'worldScale',
+            'localScale',
+            'worldLinearVelocity',
+            'localLinearVelocity',
+            'worldAngularVelocity',
+            'localAngularVelocity',
+            'color',
+            'worldOrientation',
+            'localOrientation',
+        ]:
+            self.outputs[0].enabled = False
+            self.outputs[1].enabled = True
+            self.outputs[1].name = self.names[self.attr_name]
+            self.outputs[2].enabled = False
+        elif self.attr_name == 'visible':
+            self.outputs[0].enabled = False
+            self.outputs[1].enabled = False
+            self.outputs[2].enabled = True
+        else:
+            self.outputs[0].enabled = True
+            self.outputs[1].enabled = False
+            self.outputs[2].enabled = False
+            
+
+    def get_attributes(self):
+        return [
+            ("attribute_name", lambda: f'"{self.attr_name}"')
+        ]
 
     def get_netlogic_class_name(self):
         return "ULObjectAttribute"
 
     def get_input_sockets_field_names(self):
-        return ["game_object", "attribute_name"]
+        return ["game_object", "_attr_name"]
 
     def get_output_socket_varnames(self):
-        return ["OUT"]
+        return ["VAL", "VEC", "BOOL"]
 
 
 _nodes.append(NLObjectAttributeParameterNode)
@@ -6777,6 +6906,72 @@ class LogicNodeGetFont(NLParameterNode):
 _nodes.append(LogicNodeGetFont)
 
 
+class LogicNodeSerializeData(NLParameterNode):
+    bl_idname = "LogicNodeSerializeData"
+    bl_label = "Serialize Data"
+    bl_icon = 'ALIGN_FLUSH'
+    nl_category = "Network"
+    nl_module = 'parameters'
+
+    serialize_as: EnumProperty(items=_serialize_types, name='Serialize As', description='Select the correct format to serialize a python object.')
+
+    def init(self, context):
+        NLParameterNode.init(self, context)
+        self.inputs.new(NLParameterSocket.bl_idname, "Data")
+        self.outputs.new(NLParameterSocket.bl_idname, 'Data')
+
+    def draw_buttons(self, context, layout) -> None:
+        layout.prop(self, 'serialize_as', text='')
+
+    def get_netlogic_class_name(self):
+        return "ULSerializeData"
+
+    def get_attributes(self):
+        return [("serialize_as", lambda: f'"{self.serialize_as}"')]
+
+    def get_input_sockets_field_names(self):
+        return ["data"]
+
+    def get_output_socket_varnames(self):
+        return ['OUT']
+
+
+_nodes.append(LogicNodeSerializeData)
+
+
+class LogicNodeRebuildData(NLParameterNode):
+    bl_idname = "LogicNodeRebuildData"
+    bl_label = "Rebuild Data"
+    bl_icon = 'OBJECT_HIDDEN'
+    nl_category = "Network"
+    nl_module = 'parameters'
+
+    read_as: EnumProperty(items=_serialize_types, name='Read As', description='Select the correct format to read a python object.')
+
+    def init(self, context):
+        NLParameterNode.init(self, context)
+        self.inputs.new(NLParameterSocket.bl_idname, "Data")
+        self.outputs.new(NLParameterSocket.bl_idname, 'Data')
+
+    def draw_buttons(self, context, layout) -> None:
+        layout.prop(self, 'read_as', text='')
+
+    def get_netlogic_class_name(self):
+        return "ULRebuildData"
+
+    def get_attributes(self):
+        return [("read_as", lambda: f'"{self.read_as}"')]
+
+    def get_input_sockets_field_names(self):
+        return ["data"]
+
+    def get_output_socket_varnames(self):
+        return ['OUT']
+
+
+_nodes.append(LogicNodeRebuildData)
+
+
 class NLInterpolateValueNode(NLParameterNode):
     bl_idname = "NLInterpolateValueNode"
     bl_label = "Interpolate"
@@ -6880,6 +7075,26 @@ class NLParameterTimeNode(NLParameterNode):
 _nodes.append(NLParameterTimeNode)
 
 
+class LogicNodeTimeFactor(NLParameterNode):
+    bl_idname = "LogicNodeTimeFactor"
+    bl_label = "FPS Time Factor"
+    nl_category = 'Time'
+    nl_module = 'parameters'
+
+    def init(self, context):
+        NLParameterNode.init(self, context)
+        self.outputs.new(NLFloatFieldSocket.bl_idname, "Time Factor")
+
+    def get_output_socket_varnames(self):
+        return ["TIMEFACTOR"]
+
+    def get_netlogic_class_name(self):
+        return "ULTimeData"
+
+
+_nodes.append(LogicNodeTimeFactor)
+
+
 class NLMouseDataParameter(NLParameterNode):
     bl_idname = "NLMouseDataParameter"
     bl_label = "Mouse Status"
@@ -6947,15 +7162,53 @@ class NLParameterPythonModuleFunction(NLActionNode):
         self.inputs.new(NLPseudoConditionSocket.bl_idname, "Condition")
         self.inputs.new(NLTextIDSocket.bl_idname, "Module Name")
         self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Function")
-        self.inputs.new(NLOptionalValueFieldSocket.bl_idname, 'Argument')
+        self.inputs.new(NLListItemSocket.bl_idname, 'Argument')
         self.outputs.new(NLConditionSocket.bl_idname, "Done")
         self.outputs.new(NLParameterSocket.bl_idname, "Returned Value")
 
     def get_netlogic_class_name(self):
         return "ULRunPython"
 
+    def set_new_input_name(self):
+        self.inputs[-1].name = 'Argument'
+
+    def draw_buttons(self, context, layout):
+        op = layout.operator(bge_netlogic.ops.NLAddListItemSocket.bl_idname, text='Add Argument') 
+
+    def setup(
+        self,
+        cell_varname,
+        uids
+    ):
+        text = ''
+        socket = 0
+        while socket <= 2:
+            text += self.write_socket_field_initialization(
+                self.inputs[socket],
+                cell_varname,
+                uids
+            )
+            socket += 1
+        items = ''
+        while socket < len(self.inputs):
+            field_value = None
+            if self.inputs[socket].is_linked:
+                field_value = self.get_linked_socket_field_value(
+                    self.inputs[socket],
+                    cell_varname,
+                    None,
+                    uids
+                )
+            else:
+                field_value = self.inputs[socket].get_unlinked_value()
+            items += f'{field_value}, '
+            socket += 1
+        items = items[:-2]
+        line = f'        {cell_varname}.arg = [{items}]\n'
+        return text + line
+
     def get_input_sockets_field_names(self):
-        return ['condition', "module_name", "module_func", 'arg']
+        return ['condition', "module_name", 'module_func']
 
     def get_output_socket_varnames(self):
         return ["OUT", "VAL"]
@@ -7556,7 +7809,7 @@ class NLGamepadSticksCondition(NLParameterNode):
 
     def get_attributes(self):
         return [
-            ("axis", lambda: f'"{self.axis}"'),
+            ("axis", lambda: f'{self.axis}')
         ]
 
 
@@ -7599,7 +7852,7 @@ class NLGamepadTriggerCondition(NLParameterNode):
 
     def get_attributes(self):
         return [
-            ("axis", lambda: f'"{self.axis}"'),
+            ("axis", lambda: f'{self.axis}'),
         ]
 
 
@@ -8815,6 +9068,233 @@ class NLAddObjectActionNode(NLActionNode):
 
 
 _nodes.append(NLAddObjectActionNode)
+
+
+class LogicNodeSpawnPool(NLActionNode):
+    bl_idname = "LogicNodeSpawnPool"
+    bl_label = "Spawn Pool"
+    bl_icon = 'GROUP_VERTEX'
+    nl_category = "Objects"
+    nl_module = 'actions'
+
+    create_on_init: BoolProperty(
+        name='Startup',
+        description='Create Pool on Game Start',
+        default=True,
+        update=update_draw
+    )
+    spawn_type: EnumProperty(
+        items=_enum_spawn_types,
+        name="Spawn Behavior",
+        update=update_draw
+    )
+
+    def init(self, context):
+        NLActionNode.init(self, context)
+        self.inputs.new(NLConditionSocket.bl_idname, "Create Pool")
+        self.inputs.new(NLConditionSocket.bl_idname, "Spawn")
+        self.inputs.new(NLGameObjectSocket.bl_idname, "Spawner")
+        self.inputs.new(NLGameObjectNameSocket.bl_idname, "Object Instance")
+        self.inputs.new(NLPositiveIntegerFieldSocket.bl_idname, "Amount")
+        self.inputs[-1].value = 10
+        self.inputs.new(NLPositiveIntegerFieldSocket.bl_idname, "Life")
+        self.inputs[-1].value = 3
+        self.inputs.new(NLPositiveFloatSocket.bl_idname, "Speed")
+        self.inputs[-1].value = 75.0
+        self.inputs.new(NLBooleanSocket.bl_idname, "Visualize")
+        self.outputs.new(NLConditionSocket.bl_idname, "Pool Created")
+        self.outputs.new(NLConditionSocket.bl_idname, "Spawned")
+        self.outputs.new(NLConditionSocket.bl_idname, "On Hit")
+        self.outputs.new(NLGameObjectSocket.bl_idname, "Hit Object")
+        self.outputs.new(NLVectorSocket.bl_idname, "Hit Point")
+        self.outputs.new(NLVectorSocket.bl_idname, "Hit Normal")
+        self.outputs.new(NLVectorSocket.bl_idname, "Hit Direction")
+
+    def draw_buttons(self, context, layout) -> None:
+        layout.prop(self, 'create_on_init', text='On Startup')
+        layout.prop(self, 'spawn_type', text='')
+
+    def update_draw(self):
+        simple = self.spawn_type == 'Simple'
+        self.inputs[0].enabled = not self.create_on_init
+        self.outputs[3].enabled = not simple
+        self.outputs[4].enabled = not simple
+        self.outputs[5].enabled = not simple
+        self.outputs[0].enabled = not self.create_on_init
+        self.outputs[2].enabled = not simple
+        self.outputs[3].enabled = not simple
+        self.outputs[4].enabled = not simple
+        self.outputs[5].enabled = not simple
+        self.outputs[6].enabled = not simple
+
+    def get_netlogic_class_name(self):
+        return "ULSpawnPool"
+
+    def get_input_sockets_field_names(self):
+        return [
+            "condition",
+            'spawn',
+            "spawner",
+            "object_instance",
+            "amount",
+            "life",
+            "speed",
+            "visualize"
+        ]
+
+    def get_attributes(self):
+        return [
+            ("create_on_init", lambda: f'{self.create_on_init}'),
+            ("spawn_type", lambda: f'"{self.spawn_type}"')
+        ]
+
+    def get_output_socket_varnames(self):
+        return ['OUT', 'SPAWNED', 'ONHIT', 'HITOBJECT', 'HITPOINT', 'HITNORMAL', 'HITDIR']
+
+
+_nodes.append(LogicNodeSpawnPool)
+
+
+class LogicNodeLocalServer(NLActionNode):
+    bl_idname = "LogicNodeLocalServer"
+    bl_label = "Local Server"
+    bl_icon = 'NETWORK_DRIVE'
+    nl_category = "Network"
+    nl_module = 'actions'
+
+    on_init: BoolProperty(
+        name='Startup',
+        description='Start the server on game start',
+        default=True,
+        update=update_draw
+    )
+
+    def init(self, context):
+        NLActionNode.init(self, context)
+        self.inputs.new(NLConditionSocket.bl_idname, "Start")
+        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "IP")
+        self.inputs[-1].value = socket.gethostbyname(socket.gethostname())
+        self.inputs.new(NLPositiveIntegerFieldSocket.bl_idname, "Port")
+        self.inputs[-1].value = 8303
+        self.inputs.new(NLConditionSocket.bl_idname, "Stop")
+        self.outputs.new(NLConditionSocket.bl_idname, "Started")
+        self.outputs.new(NLConditionSocket.bl_idname, "Running")
+        self.outputs.new(NLConditionSocket.bl_idname, "Stopped")
+        self.outputs.new(NLParameterSocket.bl_idname, "Server")
+        self.outputs.new(NLConditionSocket.bl_idname, "Received")
+        self.outputs.new(NLDictSocket.bl_idname, "Message")
+
+    def draw_buttons(self, context, layout) -> None:
+        layout.prop(self, 'on_init', text='On Startup')
+
+    def get_netlogic_class_name(self):
+        return "ULLocalServer"
+
+    def get_input_sockets_field_names(self):
+        return [
+            "start_cond",
+            "ip_address",
+            "port",
+            "stop_cond",
+        ]
+
+    def get_attributes(self):
+        return [
+            ("on_init", lambda: f'{self.on_init}')
+        ]
+
+    def get_output_socket_varnames(self):
+        return ['STARTED', 'RUNNING', 'STOPPED', 'SERVER', 'RECEIVED', 'MSG']
+
+
+_nodes.append(LogicNodeLocalServer)
+
+
+class LogicNodeLocalClient(NLActionNode):
+    bl_idname = "LogicNodeLocalClient"
+    bl_label = "Client"
+    bl_icon = 'RESTRICT_VIEW_OFF'
+    nl_category = "Network"
+    nl_module = 'actions'
+
+    on_init: BoolProperty(
+        name='Startup',
+        description='Connect the client on game start',
+        default=False,
+        update=update_draw
+    )
+
+    def init(self, context):
+        NLActionNode.init(self, context)
+        self.inputs.new(NLConditionSocket.bl_idname, "Connect")
+        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "IP")
+        self.inputs.new(NLPositiveIntegerFieldSocket.bl_idname, "Port")
+        self.inputs[-1].value = 8303
+        self.inputs.new(NLConditionSocket.bl_idname, "Disconnect")
+        self.outputs.new(NLConditionSocket.bl_idname, "Connect")
+        self.outputs.new(NLConditionSocket.bl_idname, "Connected")
+        self.outputs.new(NLConditionSocket.bl_idname, "Disconnect")
+        self.outputs.new(NLParameterSocket.bl_idname, "Client")
+        self.outputs.new(NLConditionSocket.bl_idname, "Received")
+        self.outputs.new(NLDictSocket.bl_idname, "Message")
+
+    def draw_buttons(self, context, layout) -> None:
+        layout.prop(self, 'on_init', text='On Startup')
+
+    def get_netlogic_class_name(self):
+        return "ULLocalClient"
+
+    def get_input_sockets_field_names(self):
+        return [
+            "connect_cond",
+            "ip_address",
+            "port",
+            "disconnect_cond",
+        ]
+
+    def get_attributes(self):
+        return [
+            ("on_init", lambda: f'{self.on_init}')
+        ]
+
+    def get_output_socket_varnames(self):
+        return ['CONNECT', 'CONNECTED', 'DISCONNECT', 'CLIENT', 'RECEIVED', 'MSG']
+
+
+_nodes.append(LogicNodeLocalClient)
+
+
+class LogicNodeSendNetworkMessage(NLActionNode):
+    bl_idname = "LogicNodeSendNetworkMessage"
+    bl_label = "Send Data"
+    bl_icon = 'OUTLINER_DATA_GP_LAYER'
+    nl_category = "Network"
+    nl_module = 'actions'
+
+    def init(self, context):
+        NLActionNode.init(self, context)
+        self.inputs.new(NLConditionSocket.bl_idname, "Condition")
+        self.inputs.new(NLParameterSocket.bl_idname, "Server / Client")
+        self.inputs.new(NLParameterSocket.bl_idname, "Data")
+        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Subject")
+        self.outputs.new(NLConditionSocket.bl_idname, "Done")
+
+    def get_netlogic_class_name(self):
+        return "ULSendNetworkMessage"
+
+    def get_input_sockets_field_names(self):
+        return [
+            "condition",
+            "entity",
+            'data',
+            'subject'
+        ]
+
+    def get_output_socket_varnames(self):
+        return ['OUT']
+
+
+_nodes.append(LogicNodeSendNetworkMessage)
 
 
 class NLSetGameObjectGamePropertyActionNode(NLActionNode):
@@ -10051,6 +10531,7 @@ class NLSlowFollow(NLActionNode):
         self.inputs.new(NLGameObjectSocket.bl_idname, "Object")
         self.inputs.new(NLGameObjectSocket.bl_idname, "Target")
         self.inputs.new(NLSocketAlphaFloat.bl_idname, "Factor")
+        self.inputs[-1].value = .1
         self.outputs.new(NLConditionSocket.bl_idname, 'Done')
 
     def get_output_socket_varnames(self):
@@ -10165,6 +10646,7 @@ class NLProjectileRayCast(NLActionNode):
         self.inputs.new(NLConditionSocket.bl_idname, "Condition")
         self.inputs.new(NLVec3FieldSocket.bl_idname, "Origin")
         self.inputs.new(NLVec3FieldSocket.bl_idname, "Aim")
+        self.inputs.new(NLBooleanSocket.bl_idname, 'Local')
         self.inputs.new(NLPositiveFloatSocket.bl_idname, "Power")
         self.inputs[-1].value = 10.0
         self.inputs.new(NLPositiveFloatSocket.bl_idname, "Distance")
@@ -10188,6 +10670,7 @@ class NLProjectileRayCast(NLActionNode):
             "condition",
             "origin",
             "destination",
+            'local',
             'power',
             'distance',
             "resolution",
@@ -10329,6 +10812,7 @@ class NLSetCurvePoints(NLActionNode):
     bl_label = "Set Curve Points"
     bl_icon = 'OUTLINER_DATA_CURVE'
     nl_category = "Objects"
+    nl_subcat = 'Curves'
     nl_module = 'actions'
 
     def init(self, context):
@@ -13123,11 +13607,19 @@ class NLActionPrint(NLActionNode):
     nl_category = "Utilities"
     nl_module = 'actions'
 
+    msg_type: EnumProperty(items=_enum_msg_types, name='Type', description='The Message Type defines the color when using the on-screen console')
+
     def init(self, context):
         NLActionNode.init(self, context)
         self.inputs.new(NLPseudoConditionSocket.bl_idname, "Condition")
         self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Value")
         self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+
+    def draw_buttons(self, context, layout) -> None:
+        layout.prop(self, 'msg_type', text='')
+
+    def get_attributes(self):
+        return [("msg_type", lambda: f'"{self.msg_type}"')]
 
     def get_output_socket_varnames(self):
         return ["OUT"]
@@ -13404,6 +13896,7 @@ class NLGetCurvePoints(NLParameterNode):
     bl_label = "Get Curve Points"
     bl_icon = 'OUTLINER_DATA_CURVE'
     nl_category = "Objects"
+    nl_subcat = 'Curves'
     nl_module = 'parameters'
 
     def init(self, context):
@@ -14561,6 +15054,9 @@ class NLActionRotateTo(NLActionNode):
         self.inputs.new(NLSocketLocalAxis.bl_idname, "Rot Axis")
         self.inputs.new(NLSocketOrientedLocalAxis.bl_idname, "Front")
         self.outputs.new(NLConditionSocket.bl_idname, "When Done")
+
+    def get_output_socket_varnames(self):
+        return ["OUT"]
 
     def get_input_sockets_field_names(self):
         return [

@@ -88,7 +88,7 @@
             "x": 440,
             "y": -60,
             "label": "Build Vector",
-            "node_type": "NLParameterVector2SimpleNode",
+            "node_type": "NLParameterVector3SimpleNode",
             "links": [[4, 0, 0], [5, 0, 1]],
             "values": []
         }, {

@@ -49,6 +49,7 @@ _cat_icons = {
     'Logic': 'SETTINGS',
     'Materials': 'MATERIAL',
     'Math': 'CON_TRANSFORM',
+    'Network': 'COMMUNITY',
     'Mouse': 'MOUSE_MMB',
     'Nodes': 'NODETREE',
     'Objects': 'OBJECT_DATAMODE',
@@ -82,12 +83,12 @@ _main_menues = [
     'Events',
     'Game',
     'Input',
-    'Scene',
     'Values',
     'Animation',
     'Lights',
     'Nodes',
     'Objects',
+    'Scene',
     'Sound',
     'Logic',
     'Math',
@@ -96,10 +97,11 @@ _main_menues = [
     'Ray Casts',
     'Time',
     'File',
-    'Render',
+    'Network',
     'Data',
-    'UI',
     'Layout',
+    'Render',
+    'UI',
     'Utilities'
 ]
 
@@ -111,12 +113,13 @@ _cat_separators = [
 ]
 
 
-class NodeCategory(nodeitems_utils.NodeCategory):
+# class NodeCategory(nodeitems_utils.NodeCategory):
 
-    @staticmethod
-    def draw(self, layout, context):
-
-        layout.menu("NODE_MT_category_%s" % self.identifier)
+#     @staticmethod
+#     def draw(self, layout, context, separate=False):
+#         layout.menu("NODE_MT_category_%s" % self.identifier)
+#         if separate:
+#             layout.separator()
 
 
 class NodeItem(nodeitems_utils.NodeItem):
@@ -127,17 +130,22 @@ class NodeItem(nodeitems_utils.NodeItem):
         icon='DOT',
         label=None,
         settings={},
-        poll=None
+        poll=None,
+        separate=False
     ):
         self.nodetype = nodetype
         self._label = label
         self.icon = icon
         self.settings = settings
         self.poll = poll
+        self.separate = separate
 
     @staticmethod
-    def draw(self, layout, context):
+    def draw(self, layout, context, separate=False):
         default_context = bpy.app.translations.contexts.default
+
+        if separate or self.separate:
+            layout.separator()
 
         props = layout.operator(
             "node.add_node",
@@ -171,8 +179,13 @@ def register_node_categories(identifier, cat_list):
     def draw_node_item(self, context):
         layout = self.layout
         col = layout.column()
+        first_item = False
         for item in self.category.items(context):
-            item.draw(item, col, context)
+            sep = False
+            if first_item is False and isinstance(item, NodeItem):
+                first_item = True
+                sep = True
+            item.draw(item, col, context, sep)
 
     menu_types = []
     for cat in cat_list:
@@ -209,7 +222,7 @@ def register_node_categories(identifier, cat_list):
 
         for cat in li:
             layout.menu(
-                "NODE_MT_category_%s" % cat.identifier,
+                f"NODE_MT_category_{cat.identifier}",
                 icon=_cat_icons.get(cat.identifier, 'DISCLOSURE_TRI_RIGHT')
             )
             if cat.identifier in _cat_separators:

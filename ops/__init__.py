@@ -141,7 +141,7 @@ class NLMakeCustomLoopTree(bpy.types.Operator):
         tree = context.space_data.edit_tree
         if not tree:
             return False
-        if not (tree.bl_idname == bge_netlogic.ui.BGELogicTree.bl_idname):
+        if not (tree.bl_idname == bge_netlogic.ui.LogicNodeTree.bl_idname):
             return False
         elif tree:
             return True
@@ -227,7 +227,7 @@ class WaitForKeyOperator(bpy.types.Operator):
                 return {'FINISHED'}
             else:
                 value = event.type
-                if(self.socket):
+                if (self.socket):
                     self.socket.value = value
                 else:
                     self.node.value = value
@@ -236,14 +236,15 @@ class WaitForKeyOperator(bpy.types.Operator):
         return {'PASS_THROUGH'}
 
     def invoke(self, context, event):
+        print(self.node)
         self.socket = context.socket
         self.node = context.node
 
-        if(not self.socket) and (not self.node):
+        if (not self.socket) and (not self.node):
             utils.error("No socket or Node")
             return {'FINISHED'}
 
-        if(self.socket):
+        if (self.socket):
             self.socket.value = "Press a key..."
 
         else:
@@ -267,7 +268,7 @@ class NLImportProjectNodes(bpy.types.Operator):
         if not hasattr(context.space_data, 'tree_type'):
             return False
         tree_type = context.space_data.tree_type
-        return tree_type == bge_netlogic.ui.BGELogicTree.bl_idname
+        return tree_type == bge_netlogic.ui.LogicNodeTree.bl_idname
 
     def _create_directories(self):
         local_bge_netlogic_folder = bpy.path.abspath("//bgelogic")
@@ -397,7 +398,7 @@ class NLSelectTreeByNameOperator(bpy.types.Operator):
             g for g in bpy.data.node_groups if (
                 g.name == self.tree_name
             ) and (
-                g.bl_idname == bge_netlogic.ui.BGELogicTree.bl_idname
+                g.bl_idname == bge_netlogic.ui.LogicNodeTree.bl_idname
             )
         ]
         if len(blt_groups) != 1:
@@ -418,10 +419,9 @@ class NLAddListItemSocket(bpy.types.Operator):
         return True
 
     def execute(self, context):
-        socket = context.socket
         node = context.node
-
-        node.inputs.new(bge_netlogic.basicnodes.NLListItemSocket.bl_idname, 'Item')
+        node.inputs.new(bge_netlogic.basicnodes.NLListItemSocket.bl_idname, self.name)
+        node.set_new_input_name()
         return {"FINISHED"}
 
 
@@ -613,7 +613,7 @@ class NLUpdateTreeVersionOperator(bpy.types.Operator):
             'NLParameterTypeCast': self.update_typecast_node
         }
         for tree in bpy.data.node_groups:
-            if tree.bl_idname == bge_netlogic.ui.BGELogicTree.bl_idname:
+            if tree.bl_idname == bge_netlogic.ui.LogicNodeTree.bl_idname:
                 for node in tree.nodes:
                     f = cases.get(node.bl_idname, None)
                     if f:
@@ -802,7 +802,7 @@ class NLMakeGroupOperator(bpy.types.Operator):
             i += 1
 
     def group_make(self, group_name, add_nodes):
-        node_tree = bpy.data.node_groups.new(group_name, 'BGELogicTree')
+        node_tree = bpy.data.node_groups.new(group_name, 'LogicNodeTree')
         group_name = node_tree.name
 
         nodes = node_tree.nodes
@@ -911,7 +911,7 @@ class NLAdd4KeyTemplateOperator(bpy.types.Operator):
         tree = context.space_data.edit_tree
         if not tree:
             return False
-        if not (tree.bl_idname == bge_netlogic.ui.BGELogicTree.bl_idname):
+        if not (tree.bl_idname == bge_netlogic.ui.LogicNodeTree.bl_idname):
             return False
         elif tree:
             return True
@@ -1016,7 +1016,7 @@ class NLApplyLogicOperator(bpy.types.Operator):
         tree = context.space_data.edit_tree
         if not tree:
             return False
-        if not (tree.bl_idname == bge_netlogic.ui.BGELogicTree.bl_idname):
+        if not (tree.bl_idname == bge_netlogic.ui.LogicNodeTree.bl_idname):
             return False
         scene = context.scene
         for ob in scene.objects:
@@ -1175,7 +1175,7 @@ class NLGenerateLogicNetworkOperatorAll(bpy.types.Operator):
 
     def execute(self, context):
         for tree in bpy.data.node_groups:
-            if tree.bl_idname == bge_netlogic.ui.BGELogicTree.bl_idname:
+            if tree.bl_idname == bge_netlogic.ui.LogicNodeTree.bl_idname:
                 # try:
                 tree_code_generator.TreeCodeGenerator().write_code_for_tree(tree)
                 # except Exception as e:
@@ -1222,7 +1222,7 @@ class NLGenerateLogicNetworkOperator(bpy.types.Operator):
             return False
         if not tree:
             return False
-        if not (tree.bl_idname == bge_netlogic.ui.BGELogicTree.bl_idname):
+        if not (tree.bl_idname == bge_netlogic.ui.LogicNodeTree.bl_idname):
             return False
         return context.space_data.edit_tree is not None
 
@@ -1274,7 +1274,7 @@ class NLGenerateLogicNetworkOperator(bpy.types.Operator):
                     'Tree to edit not found! Updating All Trees.'
                 )
                 for tree in bpy.data.node_groups:
-                    if tree.bl_idname == bge_netlogic.ui.BGELogicTree.bl_idname:
+                    if tree.bl_idname == bge_netlogic.ui.LogicNodeTree.bl_idname:
                         tree_code_generator.TreeCodeGenerator().write_code_for_tree(tree)
                 utils.set_compile_status(utils.TREE_FAILED)
                 return {"FINISHED"}
