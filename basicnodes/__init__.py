@@ -104,7 +104,8 @@ _enum_vector_math_options = [
     ("", "Operation", ""),
     None,
     ("normalize", "Normalize", "Rescale all values to 0 - 1"),
-    ("lerp", "Lerp", "Liner Interpolation between the two vectors"),
+    ("lerp", "Lerp", "Linear Interpolation between the two vectors"),
+    ("slerp", "Spherpical Lerp", "Spherical Interpolation between the two vectors"),
     ("negate", "Negate", "Multiply all values by -1")
 ]
 
@@ -5960,10 +5961,10 @@ class NLVectorMath(NLParameterNode):
         v3 = self.inputs[4]
         ior = self.inputs[5]
 
-        v2.enabled = vtype in ['dot', 'cross', 'project', 'distance', 'faceforward', 'divide', 'multiply', 'subtract', 'add', 'lerp', 'multadd']
-        fac.enabled = vtype in ['lerp']
+        v2.enabled = vtype in ['dot', 'cross', 'project', 'distance', 'faceforward', 'divide', 'multiply', 'subtract', 'add', 'lerp', 'slerp', 'multadd']
+        fac.enabled = vtype in ['lerp', 'slerp']
         sca.enabled = vtype in ['scale']
-        v3.enabled = vtype in ['faceforward', 'multadd']
+        v3.enabled = vtype in ['faceforward', 'multadd', 'slerp']
         ior.enabled = vtype in ['refract']
 
     def get_input_sockets_field_names(self):
