@@ -15051,7 +15051,7 @@ class NLActionRotateTo(NLActionNode):
         self.inputs.new(NLConditionSocket.bl_idname, "Condition")
         self.inputs.new(NLGameObjectSocket.bl_idname, "Object")
         self.inputs.new(NLVec3FieldSocket.bl_idname, "Target")
-        self.inputs.new(NLPositiveFloatSocket.bl_idname, "Speed")
+        self.inputs.new(NLSocketAlphaFloat.bl_idname, "Speed")
         self.inputs.new(NLSocketLocalAxis.bl_idname, "Rot Axis")
         self.inputs.new(NLSocketOrientedLocalAxis.bl_idname, "Front")
         self.outputs.new(NLConditionSocket.bl_idname, "When Done")
