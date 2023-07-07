@@ -6224,7 +6224,7 @@ class NLObjectAttributeParameterNode(NLParameterNode):
         layout.prop(self, 'attr_name', text="")
 
     def update_draw(self):
-        if len(self.outputs) < 1:
+        if len(self.outputs) < 2:
             self.outputs[0].enabled = True
             return
         elif self.attr_name in [
