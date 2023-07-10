@@ -105,7 +105,7 @@ _enum_vector_math_options = [
     None,
     ("normalize", "Normalize", "Rescale all values to 0 - 1"),
     ("lerp", "Lerp", "Linear Interpolation between the two vectors"),
-    ("slerp", "Spherpical Lerp", "Spherical Interpolation between the two vectors"),
+    ("slerp", "Spherical Lerp", "Spherical Interpolation between the two vectors"),
     ("negate", "Negate", "Multiply all values by -1")
 ]
 
