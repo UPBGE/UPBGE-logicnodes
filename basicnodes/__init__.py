@@ -4537,7 +4537,6 @@ class LogicNodeCreateUICanvas(NLActionNode):
     bl_idname = "LogicNodeCreateUICanvas"
     bl_label = "Create Canvas"
     nl_category = "UI"
-    nl_subcat = 'Widgets'
     nl_module = 'actions'
 
     def init(self, context):
@@ -15053,8 +15052,12 @@ class NLActionRotateTo(NLActionNode):
         self.inputs.new(NLGameObjectSocket.bl_idname, "Object")
         self.inputs.new(NLVec3FieldSocket.bl_idname, "Target")
         self.inputs.new(NLSocketAlphaFloat.bl_idname, "Factor")
+        self.inputs[-1].value = 1.0
         self.inputs.new(NLSocketLocalAxis.bl_idname, "Rot Axis")
+        self.inputs[-1].value = '2'
+
         self.inputs.new(NLSocketOrientedLocalAxis.bl_idname, "Front")
+        self.inputs[-1].value = '1'
         self.outputs.new(NLConditionSocket.bl_idname, "When Done")
 
     def get_output_socket_varnames(self):
@@ -15190,7 +15193,7 @@ class NLActionFollowPath(NLActionNode):
 _nodes.append(NLActionFollowPath)
 
 
-_enum_predefined_math_fun = {
+_enum_predefined_math_fun = [
     ("User Defined", "User Defined", "A formula defined by the user"),
     ("abs(a)", "abs(a)", "absolute value of a"),
     ("acos(a)", "acos(a)", "arc cosine of a, radians"),
@@ -15221,7 +15224,7 @@ _enum_predefined_math_fun = {
     ("sqrt(a)", "sqrt(a)", "square root of a"),
     ("tan(a)", "tan(a)", "tangent of a, radians"),
     ("tanh(a)", "tanh(a)", "hyperbolic tangent of a")
-}
+]
 
 
 class NLParameterMathFun(NLParameterNode):
