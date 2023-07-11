@@ -6769,6 +6769,35 @@ class NLLimitRange(NLParameterNode):
 _nodes.append(NLLimitRange)
 
 
+class NLMapRangeNode(NLParameterNode):
+    bl_idname = "NLMapRangeNode"
+    bl_label = "Map Range"
+    nl_category = "Math"
+    nl_module = 'parameters'
+
+    def init(self, context):
+        NLParameterNode.init(self, context)
+        self.inputs.new(NLFloatFieldSocket.bl_idname, "Value")
+        self.inputs.new(NLFloatFieldSocket.bl_idname, "From Min")
+        self.inputs.new(NLFloatFieldSocket.bl_idname, "From Max")
+        self.inputs[-1].value = 1.0
+        self.inputs.new(NLFloatFieldSocket.bl_idname, "To Min")
+        self.inputs.new(NLFloatFieldSocket.bl_idname, "To Max")
+        self.inputs[-1].value = 1.0
+        self.outputs.new(NLParameterSocket.bl_idname, "Result")
+
+    def get_netlogic_class_name(self):
+        return "ULMapRange"
+
+    def get_input_sockets_field_names(self):
+        return ["value", "from_min", "from_max", "to_min", "to_max"]
+
+    def get_output_socket_varnames(self):
+        return ["OUT"]
+
+_nodes.append(NLMapRangeNode)
+
+
 class NLWithinRangeNode(NLParameterNode):
     bl_idname = "NLWithinRangeNode"
     bl_label = "Within Range"
