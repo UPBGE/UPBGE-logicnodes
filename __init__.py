@@ -341,6 +341,18 @@ def _abs_path(*relative_path_components):
     return abs_path
 
 
+#import modules and definitions
+utilities = _abs_import("utilities", _abs_path("utilities", "__init__.py"))
+ops = _abs_import("ops", _abs_path("ops", "__init__.py"))
+ui = _abs_import("ui", _abs_path("ui", "__init__.py"))
+node_menu = _abs_import("node_menu", _abs_path("ui", "node_menu.py"))
+ops.abstract_text_buffer = _abs_import("abstract_text_buffer", _abs_path("ops", "abstract_text_buffer.py"))
+ops.bl_text_buffer = _abs_import("bl_text_buffer", _abs_path("ops","bl_text_buffer.py"))
+ops.file_text_buffer = _abs_import("file_text_buffer", _abs_path("ops","file_text_buffer.py"))
+ops.uid_map = _abs_import("uid_map", _abs_path("ops", "uid_map.py"))
+ops.tree_code_generator = _abs_import("tree_code_generator", _abs_path("ops","tree_code_generator.py"))
+
+
 def load_nodes_from(abs_dir):
     print("loading project nodes and cells from {}".format(abs_dir))
     dir_file_names = os.listdir(abs_dir)
@@ -413,16 +425,7 @@ for f in [
         bpy.app.handlers.load_post.remove(f)
     bpy.app.handlers.load_post.append(f)
 
-#import modules and definitions
-utilities = _abs_import("utilities", _abs_path("utilities", "__init__.py"))
-ops = _abs_import("ops", _abs_path("ops", "__init__.py"))
-ui = _abs_import("ui", _abs_path("ui", "__init__.py"))
-node_menu = _abs_import("node_menu", _abs_path("ui", "node_menu.py"))
-ops.abstract_text_buffer = _abs_import("abstract_text_buffer", _abs_path("ops", "abstract_text_buffer.py"))
-ops.bl_text_buffer = _abs_import("bl_text_buffer", _abs_path("ops","bl_text_buffer.py"))
-ops.file_text_buffer = _abs_import("file_text_buffer", _abs_path("ops","file_text_buffer.py"))
-ops.uid_map = _abs_import("uid_map", _abs_path("ops", "uid_map.py"))
-ops.tree_code_generator = _abs_import("tree_code_generator", _abs_path("ops","tree_code_generator.py"))
+
 
 
 def update_node_colors(self, context):
@@ -774,15 +777,6 @@ def register():
         name='Open',
         description='Start the game with the on-screen console already open'
     )
-
-    # try:
-    #     import uplogic  # noqa
-    #     message = 'Uplogic Module already installed.'
-    #     print(f'[Logic Nodes][{utils.ansicol.BBLUE}NOTIFICATION{utils.ansicol.END}] {message}')
-    # except ImportError as e:
-    #     print(e)
-    #     message = 'Uplogic Module not installed, fetching latest version...'
-    #     print(f'[Logic Nodes][{utils.ansicol.BBLUE}NOTIFICATION{utils.ansicol.END}] {message}')
     get_uplogic_module()
 
 

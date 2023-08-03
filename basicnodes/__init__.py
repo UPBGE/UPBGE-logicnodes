@@ -13538,6 +13538,7 @@ class NLActionPlayActionNode(NLActionNode):
         self.inputs.new(NLFloatFieldSocket.bl_idname, "End")
         self.inputs.new(NLPositiveIntegerFieldSocket.bl_idname, "Layer")
         self.inputs.new(NLPositiveIntegerFieldSocket.bl_idname, "Priority")
+        self.inputs[-1].enabled = False
         self.inputs.new(NLPlayActionModeSocket.bl_idname, "Play Mode")
         self.inputs.new(NLBooleanSocket.bl_idname, "Stop When Done")
         self.inputs[-1].value = True
@@ -13553,6 +13554,7 @@ class NLActionPlayActionNode(NLActionNode):
         self.outputs.new(NLParameterSocket.bl_idname, "Current Frame")
 
     def update_draw(self):
+        self.inputs[6].enabled = False
         if self.inputs[7].value == 'bge.logic.KX_ACTION_MODE_LOOP':
             self.inputs[8].enabled = False
         else:

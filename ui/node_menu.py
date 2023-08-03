@@ -29,6 +29,7 @@ def draw_add_menu(self, context):
     layout.menu("LN_MT_physics_menu", text="Physics", icon="RIGHTARROW_THIN")
     layout.menu("LN_MT_raycast_menu", text="Ray Casts", icon="RIGHTARROW_THIN")
     layout.menu("LN_MT_time_menu", text="Time", icon="RIGHTARROW_THIN")
+    layout.menu("LN_MT_python_menu", text="Python", icon="RIGHTARROW_THIN")
     layout.separator()
     layout.menu("LN_MT_file_menu", text="File", icon="RIGHTARROW_THIN")
     layout.menu("LN_MT_network_menu", text="Network", icon="RIGHTARROW_THIN")
