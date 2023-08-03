@@ -1,7 +1,6 @@
 import bpy
 # import nodeitems_utils
 from bpy.app.handlers import persistent
-from bge_netlogic import nodeutils as nodeitems_utils
 import bge_netlogic.utilities as utils
 import bge_netlogic.audio as audio
 import os
@@ -256,13 +255,6 @@ def remove_project_user_nodes():
         node_categories.add(cat)
         print("unregister class ", cls)
         bpy.utils.unregister_class(cls)
-        pass
-    for cat in node_categories:
-        try:
-            nodeitems_utils.unregister_node_categories(cat)
-        except KeyError as ke:
-            print("Cannot unregister node category {}".format(cat))
-            print("KeyError: {}".format(ke))
     _loaded_nodes.clear()
     _loaded_sockets.clear()
     pass
@@ -291,15 +283,6 @@ def register_nodes(category_label, *cls):
         print("Register class {}".format(c))
         _loaded_nodes.append((category_label, c))
         bpy.utils.register_class(c)
-        node_item = nodeitems_utils.NodeItem(c.bl_idname)
-        node_items.append(node_item)
-    node_category = NodeCategory(category_label, category_label, items=node_items)
-    try:
-        nodeitems_utils.unregister_node_categories(category_label)
-    except KeyError:
-        print("Info: Node Category {} has not been registered before.".format(category_label))
-    nodeitems_utils.register_node_categories(category_label, [node_category])
-
 
 def _reload_module(m):
     python_version = sys.version_info
@@ -434,6 +417,7 @@ for f in [
 utilities = _abs_import("utilities", _abs_path("utilities", "__init__.py"))
 ops = _abs_import("ops", _abs_path("ops", "__init__.py"))
 ui = _abs_import("ui", _abs_path("ui", "__init__.py"))
+node_menu = _abs_import("node_menu", _abs_path("ui", "node_menu.py"))
 ops.abstract_text_buffer = _abs_import("abstract_text_buffer", _abs_path("ops", "abstract_text_buffer.py"))
 ops.bl_text_buffer = _abs_import("bl_text_buffer", _abs_path("ops","bl_text_buffer.py"))
 ops.file_text_buffer = _abs_import("file_text_buffer", _abs_path("ops","file_text_buffer.py"))
@@ -493,9 +477,39 @@ class NodeCategory():
         return enabled
 
     def draw(self, item, layout, context, separate=False):
-        layout.menu("NODE_MT_category_%s" % self.identifier, icon=nodeitems_utils._cat_icons.get(self.identifier, 'X'))
         if separate:
             layout.separator()
+
+
+
+class NodeSearch(bpy.types.Operator):
+    bl_idname = "an.node_search"
+    bl_label = "Node Search"
+    bl_options = {"REGISTER"}
+    bl_property = "item"
+
+    def getSearchItems(self, context):
+        # itemsByIdentifier.clear()
+        items = []
+        # for item in itertools.chain(iterSingleNodeItems()):
+        #     itemsByIdentifier[item.identifier] = item
+        #     items.append((item.identifier, item.searchTag, ""))
+        return items
+
+    item: bpy.props.EnumProperty(items=getSearchItems)
+
+    @classmethod
+    def poll(cls, context):
+        try: return context.space_data.node_tree.bl_idname == "an_AnimationNodeTree"
+        except: return False
+
+    def invoke(self, context, event):
+        context.window_manager.invoke_search_popup(self)
+        return {"CANCELLED"}
+
+    def execute(self, context):
+        # itemsByIdentifier[self.item].insert()
+        return {"FINISHED"}
 
 
 class LogicNodesAddonPreferences(bpy.types.AddonPreferences):
@@ -605,13 +619,19 @@ _registered_classes = [
     ops.NLRemoveListItemSocket,
     ops.NLAddListItemSocket,
     ops.NLLoadFontOperator,
+    ops.NLNodeSearch,
     # ops.NLStartGameHere,
     NLNodeTreeReference
 ]
 
 _registered_classes.extend(basicnodes._sockets)
 
+
 _registered_classes.extend(basicnodes._nodes)
+
+
+_registered_classes.extend(node_menu._items)
+
 
 _registered_classes.extend([
     NLAddonSettings,
@@ -653,67 +673,6 @@ _registered_classes = sorted(_registered_classes, key=_get_key_for_class)
 # Create the menu items that allow the user to add nodes to a tree
 
 
-def _list_menu_nodes():
-    proxy_map = {}
-
-    def get_param_list(c):
-        return proxy_map["Basic Uncategorized Parameters"]
-
-    def get_cond_list(c):
-        return proxy_map["Basic Uncategorized Conditions"]
-
-    def get_act_list(c):
-        return proxy_map["Basic Uncategorized Actions"]
-
-    def get_cat_list(cat):
-        catlist = proxy_map.get(cat)
-        if catlist is None:
-            catlist = []
-            proxy_map[cat] = catlist
-        return catlist
-
-    def get_node_item(node):
-        # if hasattr(node, 'bl_icon'):
-        return nodeitems_utils.NodeItem(node.bl_idname, icon=node.bl_icon, separate=node.nl_separate)
-        # else:
-        #     return nodeitems_utils.NodeItem(node.bl_idname)
-
-    cats = {}
-    for c in _registered_classes:
-        if hasattr(c, 'nl_subcat'):
-            if not cats.get(c.nl_category):
-                cats[c.nl_category] = {}
-            if not cats.get(c.nl_category).get(c.nl_subcat):
-                cats[c.nl_category][c.nl_subcat] = []
-            cats[c.nl_category][c.nl_subcat].append(get_node_item(c))
-
-    menu_nodes = []
-    for cat, subcats in cats.items():
-        for subcat, items in subcats.items():
-            new_subcat = NodeCategory(subcat, subcat, items=items)
-            menu_nodes.append(new_subcat)
-            get_cat_list(cat).append(new_subcat)
-
-    for c in _registered_classes:
-        if hasattr(c, "nl_category") and not hasattr(c, 'nl_subcat'):
-            get_cat_list(c.nl_category).append(get_node_item(c))
-        elif hasattr(c, 'nl_subcat'):
-            continue
-        elif issubclass(c, basicnodes.NLParameterNode):
-            get_param_list(c).append(nodeitems_utils.NodeItem(c.bl_idname))
-        elif issubclass(c, basicnodes.NLConditionNode):
-            get_cond_list(c).append(nodeitems_utils.NodeItem(c.bl_idname))
-        elif issubclass(c, basicnodes.NLActionNode):
-            get_act_list(c).append(nodeitems_utils.NodeItem(c.bl_idname))
-
-    pmap_keys = list(proxy_map.keys())
-    pmap_keys.sort()
-    for name in pmap_keys:
-        itemlist = proxy_map[name]
-        menu_nodes.append(NodeCategory(name, name, items=itemlist))
-    return menu_nodes
-
-
 def update_uplogic_module():
     try:
         os.system(f'"{sys.executable}" -m ensurepip')
@@ -737,16 +696,12 @@ def get_uplogic_module():
 def filter_components(self, item=bpy.types.Text):
     if not item.name.startswith('nl_'):
         return True
-    # for line in item.lines:
-    #     # print(line.body)
-    #     if re.match(re.compile('class.KX_PythonComponent.'), line.body):
-    #         print('Heureka')
-    #         return True
     return False
 
 
 # blender add-on registration callback
 def register():
+    bpy.types.NODE_MT_add.append(node_menu.draw_add_menu)
     bpy.app.handlers.game_pre.append(_generate_on_game_start)
     bpy.app.handlers.game_pre.append(_jump_in_game_cam)
     bpy.app.handlers.game_pre.append(_set_vr_mode)
@@ -754,18 +709,6 @@ def register():
     bpy.app.handlers.depsgraph_update_post.append(_watch_tree_names)
     for cls in _registered_classes:
         bpy.utils.register_class(cls)
-    menu_nodes = _list_menu_nodes()
-    layout_items = [
-        nodeitems_utils.NodeItem('NodeReroute'),
-        nodeitems_utils.NodeItem('NodeFrame')
-    ]
-    menu_nodes.append(NodeCategory('Layout', 'Layout', items=layout_items))
-    nodeitems_utils.register_node_categories("NETLOGIC_NODES", menu_nodes)
-    # audio.get_audio_system()
-
-    # rename_handle = object()
-    # subscribe_to = ui.LogicNodeTree, 'name'
-    # bpy.msgbus.subscribe_rna(key=subscribe_to, owner=rename_handle, args=(bpy.context,), notify=update_tree_name)
 
     bpy.types.Object.sound_occluder = bpy.props.BoolProperty(
         default=True,
@@ -825,7 +768,6 @@ def register():
     )
     bpy.types.Scene.use_screen_console = bpy.props.BoolProperty(
         name='Screen Console',
-        default=True,
         description='Print messages to an on-screen console.\nNeeds at least one uplogic import or Logic Node Tree.\nNote: Errors are not printed to this console'
     )
     bpy.types.Scene.screen_console_open = bpy.props.BoolProperty(
@@ -846,6 +788,7 @@ def register():
 
 # blender add-on unregistration callback
 def unregister():
+    bpy.types.NODE_MT_add.remove(node_menu.draw_add_menu)
     utils.debug('Removing Game Start Compile handler...')
     remove_f = []
     filter(lambda a: a.__name__ == '_generate_on_game_start', bpy.app.handlers.game_pre)
@@ -856,10 +799,7 @@ def unregister():
             remove_f.append(f)
     for f in remove_f:
         bpy.app.handlers.game_pre.remove(f)
-    # print("Unregister node category [{}]".format("NETLOGIC_NODES"))
-    nodeitems_utils.unregister_node_categories("NETLOGIC_NODES")
     for cls in reversed(_registered_classes):
-        # print("Unregister node class [{}]".format(cls.__name__))
         bpy.utils.unregister_class(cls)
     user_node_categories = set()
     for pair in _loaded_nodes:
@@ -869,7 +809,6 @@ def unregister():
         try:
             node_id = cls.__name__
             if hasattr(bpy.types, node_id):
-                # print("Unregister user node [{}]".format(node_id))
                 bpy.utils.unregister_class(getattr(bpy.types, node_id))
         except RuntimeError as ex:
             print("Custom node {} not unloaded [{}]".format(cls.__name__, ex))
@@ -880,13 +819,6 @@ def unregister():
         try:
             node_id = cls.__name__
             if hasattr(bpy.types, node_id):
-                # print("Unregister user socket [{}]".format(node_id))
                 bpy.utils.unregister_class(getattr(bpy.types, node_id))
         except RuntimeError as ex:
             print("Custom socket {} not unloaded [{}]".format(cls.__name__, ex))
-    for cat in user_node_categories:
-        # print("Unregister user node category [{}]".format(cat))
-        try:
-            nodeitems_utils.unregister_node_categories(cat)
-        except RuntimeError as ex:
-            print("Custom category {} not unloaded [{}]".format(cat, ex))

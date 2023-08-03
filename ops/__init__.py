@@ -802,7 +802,7 @@ class NLMakeGroupOperator(bpy.types.Operator):
             i += 1
 
     def group_make(self, group_name, add_nodes):
-        node_tree = bpy.data.node_groups.new(group_name, 'LogicNodeTree')
+        node_tree = bpy.data.node_groups.new(group_name, 'BGELogicTree')
         group_name = node_tree.name
 
         nodes = node_tree.nodes
@@ -1779,3 +1779,85 @@ class NLAddonGithubButton(bpy.types.Operator):
     def execute(self, context):
         webbrowser.open('https://github.com/IzaZed/Uchronian-Logic-UPBGE-Logic-Nodes/issues')
         return {"FINISHED"}
+
+
+import itertools
+from bpy.props import EnumProperty
+
+
+_node_items = {}
+
+
+class NLNodeSearch(bpy.types.Operator):
+    bl_idname = "bge_netlogic.node_search"
+    bl_label = "Node Search"
+    bl_options = {"REGISTER"}
+    bl_description = "Search for registered Logic Nodes"
+    bl_property = "node"
+
+    def getSearchItems(self, context):
+        items = []
+        _node_items.clear()
+        for item in itertools.chain(getNodeItems()):
+            _node_items[item.id] = item
+            items.append(item.packed)
+        return items
+
+    node: EnumProperty(items=getSearchItems)
+
+    @classmethod
+    def poll(cls, context):
+        try:
+            return context.space_data.node_tree.bl_idname == "BGELogicTree"
+        except:
+            return False
+
+    def invoke(self, context, event):
+        wm = context.window_manager           
+        wm.invoke_search_popup(self)
+        return {"FINISHED"}
+
+    def execute(self, context):
+        _node_items[self.node].add()
+        return {"FINISHED"}
+
+
+def getNodeItems():
+    for node in utils.iterLogicNodeClasses():
+        if not node.search_tags:
+            yield NodeItem(node)
+        else:
+            for tag in node.search_tags:
+                yield NodeItem(node, tag[0], tag[1])
+
+
+class NodeItem:
+
+    def __init__(self, node, label=None, settings={}):
+        self.node = node
+        self._label = label
+        self.settings = settings
+
+    @property
+    def label(self):
+        return self._label if self._label is not None else self.node.bl_label
+
+    @property
+    def id(self):
+        return self.node.bl_idname + self.label
+
+    @property
+    def packed(self):
+        return (
+            self.id,
+            self.label,
+            ''
+        )
+
+    def add(self):
+        bpy.ops.node.add_node(type=self.node.bl_idname)
+        node = bpy.context.space_data.node_tree.nodes[-1]
+        bpy.ops.node.translate_attach("INVOKE_DEFAULT")
+        for key, value in self.settings.items():
+            setattr(node, key, value)
+        # invokeTranslation()

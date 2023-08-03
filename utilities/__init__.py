@@ -496,3 +496,25 @@ def compute_initial_status_of_tree(tree_name, objects):
         if last_status is None: last_status = status
         elif last_status != status: return None#states are mixed in the list, return None
     return last_status#all states are the same
+
+
+def newNodeAtCursor(type):
+    bpy.ops.node.add_node(type=type)
+    return bpy.context.space_data.node_tree.nodes[-1]
+
+
+def invokeTranslation():
+    bpy.ops.node.translate_attach("INVOKE_DEFAULT")
+
+
+def iterLogicNodeClasses():
+    from bge_netlogic.basicnodes import NLNode
+    yield from iterSubclassesWithAttribute(NLNode, "bl_idname")
+
+
+def iterSubclassesWithAttribute(cls, attribute):
+    for subcls in cls.__subclasses__():
+        if hasattr(subcls, attribute):
+            yield subcls
+        else:
+            yield from iterSubclassesWithAttribute(subcls, attribute)
