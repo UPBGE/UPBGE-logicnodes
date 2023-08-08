@@ -1,11 +1,14 @@
 import bpy
 # import nodeitems_utils
 from bpy.app.handlers import persistent
-import bge_netlogic.utilities as utils
-import bge_netlogic.audio as audio
+# import bge_netlogic.utilities as utils
 import os
 import sys
 import time
+from .editor.sockets.socket import _sockets
+# from . import basicnodes
+from . import utilities as utils
+from . import audio
 
 
 bl_info = {
@@ -26,8 +29,6 @@ _current_user_nodes_parent_directory = None
 _update_queue = []
 _tree_to_name_map = {}
 _tree_code_writer_started = False
-
-UPLOGIC_INSTALLED = False
 
 
 def debug(*message):
@@ -192,15 +193,6 @@ def _set_vr_mode(self, context):
 
 
 def _consume_update_tree_code_queue():
-    # edit_tree = getattr(bpy.context.space_data, "edit_tree", None)
-    # if edit_tree:
-    #     # edit_tree = bpy.context.space_data.edit_tree
-    #     old_name = _tree_to_name_map.get(edit_tree)
-    #     if not old_name:
-    #         _tree_to_name_map[edit_tree] = edit_tree.name
-    #     else:
-    #         if old_name != edit_tree.name:
-    #             update_tree_name(edit_tree, old_name)
     if not _update_queue:
         return
     now = time.time()
@@ -484,37 +476,6 @@ class NodeCategory():
             layout.separator()
 
 
-
-class NodeSearch(bpy.types.Operator):
-    bl_idname = "an.node_search"
-    bl_label = "Node Search"
-    bl_options = {"REGISTER"}
-    bl_property = "item"
-
-    def getSearchItems(self, context):
-        # itemsByIdentifier.clear()
-        items = []
-        # for item in itertools.chain(iterSingleNodeItems()):
-        #     itemsByIdentifier[item.identifier] = item
-        #     items.append((item.identifier, item.searchTag, ""))
-        return items
-
-    item: bpy.props.EnumProperty(items=getSearchItems)
-
-    @classmethod
-    def poll(cls, context):
-        try: return context.space_data.node_tree.bl_idname == "an_AnimationNodeTree"
-        except: return False
-
-    def invoke(self, context, event):
-        context.window_manager.invoke_search_popup(self)
-        return {"CANCELLED"}
-
-    def execute(self, context):
-        # itemsByIdentifier[self.item].insert()
-        return {"FINISHED"}
-
-
 class LogicNodesAddonPreferences(bpy.types.AddonPreferences):
     bl_idname = __name__
 
@@ -627,7 +588,7 @@ _registered_classes = [
     NLNodeTreeReference
 ]
 
-_registered_classes.extend(basicnodes._sockets)
+_registered_classes.extend(_sockets)
 
 
 _registered_classes.extend(basicnodes._nodes)
@@ -639,12 +600,16 @@ _registered_classes.extend(node_menu._items)
 _registered_classes.extend([
     NLAddonSettings,
     LogicNodesAddonPreferences,
+    # ui.BGEComponentHelper,
+    # ui.BGE_PT_NLEditorPropertyPanel,
+    # ui.BGE_PT_HelpPanel,
+    # ui.BGE_PT_GameComponentPanel,
+    # ui.BGE_PT_PropertiesPanelObject,
     ui.BGEPropFilter,
     ui.BGEGroupName,
     ui.BGEGlobalValue,
     ui.BGEGlobalValueCategory,
     ui.BGE_PT_GameComponentHelperPanel,
-    # ui.BGEComponentHelper,
     ui.NL_UL_glcategory,
     ui.NL_UL_glvalue,
     ui.BGE_PT_LogicPanel,
@@ -652,13 +617,9 @@ _registered_classes.extend([
     ui.BGE_PT_ObjectTreeInfoPanel,
     ui.BGE_PT_GlobalValuePanel,
     ui.BGE_PT_LogicNodeSettingsScene,
-    # ui.BGE_PT_NLEditorPropertyPanel,
-    # ui.BGE_PT_HelpPanel,
-    # ui.BGE_PT_GameComponentPanel,
     ui.BGE_PT_LogicNodeSettingsObject,
     ui.BGE_PT_LogicTreeOptions,
     ui.BGE_PT_GamePropertyPanel3DView,
-    # ui.BGE_PT_PropertiesPanelObject,
     ui.BGE_PT_LogicTreeGroups
 ])
 
@@ -680,8 +641,6 @@ def update_uplogic_module():
     try:
         os.system(f'"{sys.executable}" -m ensurepip')
         os.system(f'"{sys.executable}" -m pip install uplogic --upgrade')
-        global UPLOGIC_INSTALLED
-        UPLOGIC_INSTALLED = True
     except Exception:
         pass
 
@@ -690,8 +649,6 @@ def get_uplogic_module():
     try:
         os.system(f'"{sys.executable}" -m ensurepip')
         os.system(f'"{sys.executable}" -m pip install uplogic')
-        global UPLOGIC_INSTALLED
-        UPLOGIC_INSTALLED = True
     except Exception:
         pass
 

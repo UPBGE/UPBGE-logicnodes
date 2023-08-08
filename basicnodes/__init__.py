@@ -3,60 +3,21 @@ import bpy
 import bge_netlogic
 from bge_netlogic import utilities as utils
 from ui import LogicNodeTree
-from utilities import make_valid_name
 from bpy.props import StringProperty
-from bpy.props import FloatProperty
-from bpy.props import PointerProperty
-from bpy.props import IntProperty
-from bpy.props import IntVectorProperty
-from bpy.props import FloatVectorProperty
 from bpy.props import BoolProperty
 from bpy.props import EnumProperty
-from bpy.props import BoolVectorProperty
-from bpy.props import CollectionProperty
-import socket
-import os
-
-
-TOO_OLD = bpy.app.version < (2, 80, 0)
+import socket  # used for automatically setting IP address for server node
 
 INVALID = 'INVALID'
-
-CONDITION_SOCKET_COLOR = utils.Color.RGBA(0.8, 0.2, 0.2, 1.0)
-PARAMETER_SOCKET_COLOR = utils.Color.RGBA(.631, .631, .631, 1.0)
-PARAM_BOOL_SOCKET_COLOR = utils.Color.RGBA(.8, 0.651, .839, 1.0)
-PARAM_INT_SOCKET_COLOR = utils.Color.RGBA(.349, 0.549, .361, 1.0)
-PARAM_COLOR_SOCKET_COLOR = utils.Color.RGBA(.78, .78, .161, 1.0)
-PARAM_LIST_SOCKET_COLOR = utils.Color.RGBA(0.74, .65, .48, 1.0)
-PARAM_DICT_SOCKET_COLOR = utils.Color.RGBA(0.58, 0.48, .74, 1.0)
-PARAM_OBJ_SOCKET_COLOR = utils.Color.RGBA(0.929, 0.620, .361, 1.0)
-PARAM_MAT_SOCKET_COLOR = utils.Color.RGBA(.922, .459, .51, 1.0)
-PARAM_GEOMTREE_SOCKET_COLOR = utils.Color.RGBA(.45, .8, .58, 1.0)
-PARAM_TEXT_SOCKET_COLOR = utils.Color.RGBA(.388, .220, .388, 1.0)
-PARAM_MESH_SOCKET_COLOR = utils.Color.RGBA(.0, .839, .639, 1.0)
-PARAM_COLL_SOCKET_COLOR = utils.Color.RGBA(0.961, 0.961, .961, 1.0)
-PARAM_SCENE_SOCKET_COLOR = utils.Color.RGBA(0.5, 0.5, 0.6, 1.0)
-PARAM_VECTOR_SOCKET_COLOR = utils.Color.RGBA(0.388, 0.388, 0.78, 1.0)
-PARAM_SOUND_SOCKET_COLOR = utils.Color.RGBA(.388, .220, .388, 1.0)
-PARAM_IMAGE_SOCKET_COLOR = utils.Color.RGBA(.388, .220, .388, 1.0)
-PARAM_LOGIC_BRICK_SOCKET_COLOR = utils.Color.RGBA(0.9, 0.9, 0.4, 1.0)
-PARAM_PYTHON_SOCKET_COLOR = utils.Color.RGBA(0.2, 0.7, 1, 1.0)
-ACTION_SOCKET_COLOR = utils.Color.RGBA(0.2, .7, .7, 1.0)
 
 CONDITION_NODE_COLOR = utils.Color.RGBA(0.2, 0.2, 0.2, 1)[:-1]
 PARAMETER_NODE_COLOR = utils.Color.RGBA(0.2, 0.2, 0.2, 1)[:-1]
 ACTION_NODE_COLOR = utils.Color.RGBA(0.2, 0.2, 0.2, 1)[:-1]
 PYTHON_NODE_COLOR = utils.Color.RGBA(0.2, 0.2, 0.2, 1)[:-1]
 
-_sockets = []
+
 _nodes = []
 
-
-_enum_local_axis = [
-    ("0", "X Axis", "The Local X Axis [Integer Value 0]"),
-    ("1", "Y Axis", "The Local Y Axis [Integer Value 1]"),
-    ("2", "Z Axis", "The Local Z Axis [Integer Value 2]")
-]
 
 _enum_look_axis = [
     ("0", "X Axis", "The Local X Axis [Integer Value 0]"),
@@ -118,20 +79,6 @@ _enum_type_casts = [
 ]
 
 
-_enum_distance_models = [
-    ('INVERSE', 'Inverse', 'Sound will fade exponentially (Realistic)'),
-    ('INVERSE_CLAMPED', 'Inverse Clamped',
-     'Sound will fade exponentially (Realistic, Clamped)'),
-    ('EXPONENT', 'Exponent', 'Sound will fade detemined by an exponent (Good audibility)'),
-    ('EXPONENT_CLAMPED', 'Exponent Clamped',
-     'Sound will fade detemined by an exponent (Good audibility, Clamped)'),
-    ('LINEAR', 'Linear', 'Sound will fade in a linear relation to distance'),
-    ('LINEAR_CLAMPED', 'Linear Clamped',
-     'Sound will fade in a linear relation to distance (Clamped)'),
-    ('NONE', 'None', "Don't use a distance model")
-]
-
-
 _enum_object_property_types = [
     ('GAME', 'Game Property', 'Edit Game Property'),
     ('ATTR', 'Attribute', 'Edit Internal Attribute (can be used in materials)')
@@ -177,72 +124,10 @@ _enum_constraint_types = [
     )
 ]
 
-
-_enum_ik_mode_values = [
-    ("None", "None", "Not set"),
-    (
-        "bge.logic.CONSTRAINT_IK_MODE_INSIDE",
-        "Inside",
-        "Keep the bone with IK Distance of target"
-    ),
-    (
-        "bge.logic.CONSTRAINT_IK_MODE_OUTSIDE",
-        "Outside",
-        "Keep the bone outside IK Distance of target"
-    ),
-    (
-        "bge.logic.CONSTRAINT_IK_MODE_ONSURFACE",
-        "On Surface",
-        "Keep the bone exactly at IK Distance of the target"
-    )
-]
-
-
-_enum_field_value_types = [
-    ("STRING", "String", "A String"),
-    ("FLOAT", "Float", "A Float value"),
-    ("INTEGER", "Integer", "An Integer value"),
-    ("BOOLEAN", "Bool", "A True/False value"),
-    ("FILE_PATH", "File Path", 'Choose a file path')
-]
-
-_enum_numeric_field_value_types = [
-    ("NONE", "None", "The None value"),
-    ("INTEGER", "Integer", "An Integer value"),
-    ("FLOAT", "Float", " A Float value"),
-    ("EXPRESSION", "Expression", "A numeric expression")
-]
-
-_enum_optional_float_value_types = [
-    ("NONE", "None", "No value"),
-    ("FLOAT", "Float", "A decimal value"),
-    ("EXPRESSION", "Expression", "A numeric expression")
-]
-
 _enum_vehicle_axis = [
     ("REAR", "Rear", "Apply to wheels without steering"),
     ("FRONT", "Front", "Apply to wheels with steering"),
     ("ALL", "All", "Apply to all wheels")
-]
-
-
-_enum_loop_count_values = [
-    (
-        "ONCE",
-        "Play",
-        (
-            'Play once when condition is TRUE, then wait for '
-            'the condition to become TRUE again to play it again.'
-        )
-    ), (
-        "INFINITE",
-        "Loop",
-        "When condition is TRUE, start repeating the sound until stopped."
-    ), (
-        "CUSTOM",
-        "Times",
-        "When the condition it TRUE, play the sound N times"
-    )
 ]
 
 
@@ -345,12 +230,6 @@ _enum_writable_member_names = [
     ("worldScale", "Scale", "The global scale of the object")
 ]
 
-_enum_mouse_buttons = [
-    ("bge.events.LEFTMOUSE", "Left Button", "Left Mouse Button"),
-    ("bge.events.MIDDLEMOUSE", "Middle Button", "Middle Mouse Button"),
-    ("bge.events.RIGHTMOUSE", "Right Button", "Right Mouse Button")
-]
-
 _enum_vsync_modes = [
     ("bge.render.VSYNC_OFF", "Off", "Disable Vsync"),
     ("bge.render.VSYNC_ON", "On", "Enable Vsync"),
@@ -407,13 +286,6 @@ _enum_string_ops = [
         "Last Index Of",
         "Position of the last occurence of A"
     )
-]
-
-_enum_quality_levels = [
-    ("LOW", "Low", "Set a lower quality to increase performance"),
-    ("MEDIUM", "Medium", "Set a medium quality for a balanced performance"),
-    ("HIGH", "High", "Set a high quality at the cost of performance"),
-    ("ULTRA", "Ultra", "Set a very high quality at the cost of performance")
 ]
 
 _enum_math_operations = [
@@ -481,24 +353,6 @@ _enum_controller_buttons_operators = [
 ]
 
 
-_enum_distance_checks = [
-    ("0", "AB = Dist", "AB Distance equal to Dist [Integer value 0]"),
-    ("1", "AB != Dist", "AB Distance not equal to Dist [Integer value 1]"),
-    ("2", "AB > Dist", "AB Distance greater than Dist [Integer value 2]"),
-    ("3", "AB < Dist", "AB Distance less than Dist [Integer value 3]"),
-    (
-        "4",
-        "AB >= Dist",
-        "AB Distance greater than or equal to Dist [Integer value 4]"
-    ),
-    (
-        "5",
-        "AB <= Dist",
-        "AB Distance less than or equal to Dist [Integer value 5]"
-    ),
-]
-
-
 _enum_play_mode_values = [
     ("bge.logic.KX_ACTION_MODE_PLAY", "Play", "Play the action once"),
     ("bge.logic.KX_ACTION_MODE_LOOP", "Loop", "Loop the action"),
@@ -514,15 +368,6 @@ _enum_play_mode_values = [
         "Ping Pong Stop",
         "Play the action in one direction then in the opposite one"
     )
-]
-
-_enum_blend_mode_values = [
-    (
-        "bge.logic.KX_ACTION_BLEND_BLEND",
-        "Blend",
-        "Blend layers using linear interpolation"
-    ),
-    ("bge.logic.KX_ACTION_BLEND_ADD", "Add", "Adds the layer together")
 ]
 
 _enum_spawn_types = [
@@ -551,7 +396,7 @@ _enum_msg_types = [
 ]
 
 
-OUTCELL = "__standard_logic_cell_value__"
+
 
 
 def filter_materials(self, item):
@@ -669,23 +514,24 @@ def parse_field_value(value_type, value):
 
 
 def update_tree_code(self, context):
-    utils.set_compile_status(utils.TREE_MODIFIED)
-    if utils.is_compile_status(utils.TREE_COMPILED_ALL):
-        return
-    if not hasattr(context.space_data, 'edit_tree'):
-        return
-    tree = context.space_data.edit_tree
-    if not tree:
-        return
-    for node in tree.nodes:
-        if isinstance(node, NLNode):
-            try:
-                node.update_draw()
-            except Exception:
-                pass
-    if not getattr(bpy.context.scene.logic_node_settings, 'auto_compile'):
-        return
-    bge_netlogic.update_current_tree_code()
+    pass
+    # utils.set_compile_status(utils.TREE_MODIFIED)
+    # if utils.is_compile_status(utils.TREE_COMPILED_ALL):
+    #     return
+    # if not hasattr(context.space_data, 'edit_tree'):
+    #     return
+    # tree = context.space_data.edit_tree
+    # if not tree:
+    #     return
+    # for node in tree.nodes:
+    #     if isinstance(node, NLNode):
+    #         try:
+    #             node.update_draw()
+    #         except Exception:
+    #             pass
+    # if not getattr(bpy.context.scene.logic_node_settings, 'auto_compile'):
+    #     return
+    # bge_netlogic.update_current_tree_code()
 
 
 def update_draw(self, context):
@@ -733,7 +579,7 @@ class NetLogicType:
 
 class NLSocket:
     valid_sockets: list = []
-    nl_color: list = PARAMETER_SOCKET_COLOR
+    nl_color: list = utils.Color.RGBA(.631, .631, .631, 1.0)
     type: StringProperty(default='VALUE')
     shape: StringProperty(default='')
 
@@ -903,7 +749,7 @@ class NLNode(NetLogicType):
 
         if output_map:
             varname = output_map[output_socket_index]
-            if varname is OUTCELL:
+            if varname is utils.OUTCELL:
                 return output_node_varname
             else:
                 return '{}.{}'.format(output_node_varname, varname)
@@ -920,292 +766,46 @@ class NLNode(NetLogicType):
 
 class NLConditionSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLConditionSocket"
-    bl_label = "Condition"
-    description = StringProperty(default='Execution Condition')
-    default_value: StringProperty(
-        name='Condition',
-        default="None"
-    )
-    type: StringProperty(default='MATERIAL')
-    shape: StringProperty(default='CIRCLE')
-    nl_color = CONDITION_SOCKET_COLOR
-
-    # def draw_color(self, context, node):
-    #     return CONDITION_SOCKET_COLOR
-
-    def shape_setup(self):
-        self.display_shape = self.shape
-
-    def draw(self, context, layout, node, text):
-        layout.label(text=text)
-
-    def get_unlinked_value(self):
-        return self.default_value
-
-
-_sockets.append(NLConditionSocket)
 
 
 class NodeSocketPseudoCondition(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLPseudoConditionSocket"
-    bl_label = "Condition"
-    value: BoolProperty(
-        name='Condition',
-        description=(
-            'Optional; When True, '
-            'perform with each frame, when False, never perform'
-        ),
-        update=update_tree_code)
-    type: StringProperty(default='MATERIAL')
-    nl_color = CONDITION_SOCKET_COLOR
-
-    def draw(self, context, layout, node, text):
-        if self.is_linked or self.is_output:
-            layout.label(text=text)
-        else:
-            label = text
-            layout.prop(self, "value", text=label)
-
-    def get_unlinked_value(self):
-        return "True" if self.value else "False"
-
-
-_sockets.append(NodeSocketPseudoCondition)
 
 
 class NLParameterSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLParameterSocket"
-    bl_label = "Parameter"
-    type: StringProperty(default='VALUE')
-    nl_color = PARAMETER_SOCKET_COLOR
-
-    def draw_color(self, context, node):
-        return self.nl_color
-
-    def validate(self, link, from_socket):
-        self.nl_color = from_socket.nl_color
-
-    def draw(self, context, layout, node, text):
-        layout.label(text=text)
-
-    def get_unlinked_value(self):
-        return "None"
-
-
-_sockets.append(NLParameterSocket)
 
 
 class NLDictSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLDictSocket"
-    bl_label = "Parameter"
-    type: StringProperty(default='MATERIAL')
-
-    def draw_color(self, context, node):
-        return PARAM_INT_SOCKET_COLOR
-
-    def draw(self, context, layout, node, text):
-        layout.label(text=text)
-
-    def get_unlinked_value(self):
-        return "None"
-
-
-_sockets.append(NLDictSocket)
 
 
 class NLUISocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLUISocket"
-    bl_label = "Parameter"
-    type: StringProperty(default='GEOMETRY')
-    nl_color = PARAM_MESH_SOCKET_COLOR
-
-    def draw(self, context, layout, node, text):
-        layout.label(text=text)
-
-    def get_unlinked_value(self):
-        return "None"
-
-
-_sockets.append(NLUISocket)
 
 
 class NLListSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLListSocket"
-    bl_label = "Parameter"
-    # type: StringProperty(default='SQUARE')
-    type: StringProperty(default='RGBA')
-    nl_color = PARAM_INT_SOCKET_COLOR
-
-    def draw(self, context, layout, node, text):
-        layout.label(text=text)
-
-    def get_unlinked_value(self):
-        return "None"
-
-
-_sockets.append(NLListSocket)
 
 
 class NLListItemSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLListItemSocket"
-    bl_label = "Parameter"
-
-    def draw_color(self, context, node):
-        return PARAMETER_SOCKET_COLOR
-
-    def draw(self, context, layout, node, text):
-        row = layout.row(align=True)
-        row.label(text=text)
-        row.operator(bge_netlogic.ops.NLRemoveListItemSocket.bl_idname, icon='X', text='')
-
-    def get_unlinked_value(self):
-        return None
-
-
-_sockets.append(NLListItemSocket)
 
 
 class NLCollisionMaskSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLCollisionMaskSocket"
-    bl_label = "Parameter"
-    slot_0: BoolProperty(default=True)
-    slot_1: BoolProperty(default=True)
-    slot_2: BoolProperty(default=True)
-    slot_3: BoolProperty(default=True)
-    slot_4: BoolProperty(default=True)
-    slot_5: BoolProperty(default=True)
-    slot_6: BoolProperty(default=True)
-    slot_7: BoolProperty(default=True)
-    slot_8: BoolProperty(default=True)
-    slot_9: BoolProperty(default=True)
-    slot_10: BoolProperty(default=True)
-    slot_11: BoolProperty(default=True)
-    slot_12: BoolProperty(default=True)
-    slot_13: BoolProperty(default=True)
-    slot_14: BoolProperty(default=True)
-    slot_15: BoolProperty(default=True)
-
-    def draw_color(self, context, node):
-        return PARAM_LIST_SOCKET_COLOR
-
-    def draw(self, context, layout, node, text):
-        if self.is_linked or self.is_output:
-            layout.label(text=text)
-        else:
-            col = layout.column(align=True)
-            col.scale_y = .8
-            row = col.row(align=True)
-            row2 = col.row(align=True)
-            idx = 0
-            while idx < 8:
-                row.prop(self, f'slot_{idx}', text='',
-                         emboss=True, icon='BLANK1')
-                idx += 1
-            while idx < 16:
-                row2.prop(self, f'slot_{idx}', text='',
-                          emboss=True, icon='BLANK1')
-                idx += 1
-
-    def get_unlinked_value(self):
-        slots = [self.get(f'slot_{idx}', 1) * (2**idx) for idx in range(16)]
-        return sum(slots)
-
-
-_sockets.append(NLCollisionMaskSocket)
 
 
 class NLLogicBrickSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLLogicBrickSocket"
-    bl_label = "Property"
-    value: StringProperty(
-        update=update_tree_code
-    )
-    ref_index: IntProperty(default=0)
-    use_custom: BoolProperty(
-        name='Free Edit',
-        update=update_tree_code
-    )
-    brick_type: StringProperty(default='controllers')
-
-    def draw_color(self, context, node):
-        return PARAMETER_SOCKET_COLOR
-
-    def draw(self, context, layout, node, text):
-        if self.is_output:
-            layout.label(text=self.name)
-        elif self.is_linked:
-            layout.label(text=self.name)
-        else:
-            col = layout.column(align=False)
-            tree = getattr(context.space_data, 'edit_tree', None)
-            if not tree:
-                return
-            game_object = None
-            game_obj_socket = self.node.inputs[self.ref_index]
-            if not game_obj_socket.use_owner:
-                game_object = game_obj_socket.value
-            else:
-                for obj in bpy.data.objects:
-                    if f'{utils.NLPREFIX}{tree.name}' in obj.game.properties:
-                        game_object = obj
-                        break
-            if self.name:
-                row = col.row()
-                row.label(text=self.name)
-                if not game_obj_socket.is_linked and game_object:
-                    row.prop(self, 'use_custom', text='', icon='GREASEPENCIL')
-            if game_object or game_obj_socket.is_linked:
-                if not game_obj_socket.is_linked and not self.use_custom:
-                    game = game_object.game
-                    col.prop_search(
-                        self,
-                        'value',
-                        game,
-                        self.brick_type,
-                        icon='NONE',
-                        text=''
-                    )
-                else:
-                    col.prop(self, 'value', text='')
-            else:
-                col.prop(self, 'value', text='')
-
-    def get_unlinked_value(self):
-        return '"{}"'.format(self.value)
-
-
-_sockets.append(NLLogicBrickSocket)
 
 
 class NLPythonSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLPythonSocket"
-    bl_label = "Python"
-
-    def draw_color(self, context, node):
-        return PARAM_PYTHON_SOCKET_COLOR
-
-    def draw(self, context, layout, node, text):
-        layout.label(text=text)
-
-    def get_unlinked_value(self):
-        return "None"
-
-
-_sockets.append(NLPythonSocket)
 
 
 class NLActionSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLActionSocket"
-    bl_label = "Action"
-
-    def draw_color(self, context, node):
-        return ACTION_SOCKET_COLOR
-
-    def draw(self, context, layout, node, text):
-        layout.label(text=text)
-
-
-_sockets.append(NLActionSocket)
 
 
 class NLAbstractNode(NLNode):
@@ -1220,13 +820,13 @@ class NLAbstractNode(NLNode):
     def insert_link(self, link):
         to_socket = link.to_socket
         from_socket = link.from_socket
-        try:
-            to_socket.validate(link, from_socket)
-        except Exception as e:
-            utils.error(e)
-            utils.debug(
-                'Receiving Node not a Logic Node Type, skipping validation.'
-            )
+        # try:
+        #     to_socket.validate(link, from_socket)
+        # except Exception as e:
+        #     utils.warning(e)
+        #     utils.debug(
+        #         'Receiving Node not a Logic Node Type, skipping validation.'
+        #     )
 
     def add_input(self, cls, name, socket_id):
         self.inputs.new(cls.bl_idname, name)
@@ -1241,14 +841,8 @@ class NLAbstractNode(NLNode):
     def update_draw(self):
         pass
 
-    def draw_buttons_ext(self, context, layout):
-        pass
-
     def update(self):
         update_tree_code(self, bpy.context)
-
-    # def draw_label(self):
-    #    return self.__class__.bl_label
 
 
 ###############################################################################
@@ -1315,1124 +909,102 @@ class NLParameterNode(bpy.types.Node, NLAbstractNode):
 
 class NLGameObjectSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLGameObjectSocket"
-    bl_label = "Object"
-    value: PointerProperty(
-        name='Object',
-        type=bpy.types.Object,
-        update=update_tree_code
-    )
-    use_owner: BoolProperty(
-        name='Use Owner',
-        update=update_tree_code,
-        description='Use the owner of this tree'
-    )
-    color = PARAM_OBJ_SOCKET_COLOR
-
-    def draw_color(self, context, node):
-        return self.color
-
-    def is_scene_logic(self):
-        return self.node.tree is bpy.context.scene.get('custom_mainloop_tree', None)
-
-    def draw(self, context, layout, node, text):
-        scene_logic = self.is_scene_logic()
-        if self.is_output:
-            layout.label(text=self.name)
-        elif self.is_linked:
-            layout.label(text=self.name)
-        else:
-            if not self.use_owner or scene_logic:
-                col = layout.column(align=False)
-                row = col.row()
-                if self.name:
-                    row.label(text=self.name)
-                if not scene_logic:
-                    row.prop(self, 'use_owner', icon='USER', text='')
-                col.prop_search(
-                    self,
-                    'value',
-                    bpy.context.scene,
-                    'objects',
-                    icon='NONE',
-                    text=''
-                )
-            else:
-                row = layout.row()
-                row.label(text=self.name)
-                row.prop(self, 'use_owner', icon='USER', text='')
-
-    def get_unlinked_value(self):
-        if self.use_owner and not self.is_scene_logic():
-            return '"NLO:U_O"'
-        if isinstance(self.value, bpy.types.Object):
-            return '"NLO:{}"'.format(self.value.name)
-
-
-_sockets.append(NLGameObjectSocket)
 
 
 class NLCameraSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLCameraSocket"
-    bl_label = "Camera"
-    value: PointerProperty(
-        name='Object',
-        type=bpy.types.Object,
-        poll=filter_camera,
-        update=update_tree_code
-    )
-    use_active: BoolProperty(
-        name='Use Active',
-        update=update_tree_code,
-        description='Use current active camera'
-    )
-
-    def draw_color(self, context, node):
-        return PARAM_OBJ_SOCKET_COLOR
-
-    def draw(self, context, layout, node, text):
-        if self.is_output:
-            layout.label(text=self.name)
-        elif self.is_linked:
-            layout.label(text=self.name)
-        else:
-            if not self.use_active:
-                col = layout.column(align=False)
-                row = col.row()
-                if self.name:
-                    row.label(text=self.name)
-                row.prop(self, 'use_active', icon='CAMERA_DATA', text='')
-                col.prop_search(
-                    self,
-                    'value',
-                    bpy.context.scene,
-                    'objects',
-                    icon='NONE',
-                    text=''
-                )
-            else:
-                row = layout.row()
-                row.label(text=self.name)
-                row.prop(self, 'use_active', icon='CAMERA_DATA', text='')
-
-    def get_unlinked_value(self):
-        if self.use_active:
-            return 'self.owner.scene.active_camera'
-        if isinstance(self.value, bpy.types.Object):
-            return '"NLO:{}"'.format(self.value.name)
-
-
-_sockets.append(NLCameraSocket)
 
 
 class NLSpeakerSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLSpeakerSocket"
-    bl_label = "Camera"
-    value: PointerProperty(
-        name='Object',
-        type=bpy.types.Object,
-        poll=filter_speaker,
-        update=update_tree_code
-    )
-
-    def draw_color(self, context, node):
-        return PARAM_OBJ_SOCKET_COLOR
-
-    def draw(self, context, layout, node, text):
-        if self.is_output:
-            layout.label(text=self.name)
-        elif self.is_linked:
-            layout.label(text=self.name)
-        else:
-            col = layout.column(align=False)
-            row = col.row()
-            if self.name:
-                row.label(text=self.name)
-            col.prop_search(
-                self,
-                'value',
-                bpy.context.scene,
-                'objects',
-                icon='NONE',
-                text=''
-            )
-
-    def get_unlinked_value(self):
-        if isinstance(self.value, bpy.types.Object):
-            return '"NLO:{}"'.format(self.value.name)
-
-
-_sockets.append(NLSpeakerSocket)
 
 
 class NLNavMeshSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLNavMeshSocket"
-    bl_label = "Object"
-    value: PointerProperty(
-        name='Object',
-        type=bpy.types.Object,
-        poll=filter_navmesh,
-        update=update_tree_code
-    )
-    use_owner: BoolProperty(
-        name='Use Owner',
-        update=update_tree_code,
-        description='Use the owner of this tree'
-    )
-
-    def draw_color(self, context, node):
-        return PARAM_OBJ_SOCKET_COLOR
-
-    def draw(self, context, layout, node, text):
-        if self.is_output:
-            layout.label(text=self.name)
-        elif self.is_linked:
-            layout.label(text=self.name)
-        else:
-            if not self.use_owner:
-                col = layout.column(align=False)
-                row = col.row()
-                if self.name:
-                    row.label(text=self.name)
-                row.prop(self, 'use_owner', icon='USER', text='')
-                col.prop_search(
-                    self,
-                    'value',
-                    bpy.context.scene,
-                    'objects',
-                    icon='NONE',
-                    text=''
-                )
-            else:
-                row = layout.row()
-                row.label(text=self.name)
-                row.prop(self, 'use_owner', icon='USER', text='')
-
-    def get_unlinked_value(self):
-        if self.use_owner:
-            return '"NLO:U_O"'
-        if isinstance(self.value, bpy.types.Object):
-            return '"NLO:{}"'.format(self.value.name)
-
-
-_sockets.append(NLNavMeshSocket)
 
 
 class NLLightObjectSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLLightObjectSocket"
-    bl_label = "Light"
-    value: PointerProperty(
-        name='Light',
-        type=bpy.types.Light,
-        poll=filter_lights,
-        update=update_tree_code
-    )
-    use_owner: BoolProperty(
-        name='Use Owner',
-        update=update_tree_code,
-        description='Use the owner of this tree'
-    )
-
-    def draw_color(self, context, node):
-        return PARAM_OBJ_SOCKET_COLOR
-
-    def draw(self, context, layout, node, text):
-        if self.is_output:
-            layout.label(text=self.name)
-        elif self.is_linked:
-            layout.label(text=self.name)
-        else:
-            if not self.use_owner:
-                col = layout.column(align=False)
-                row = col.row()
-                if self.name:
-                    row.label(text=self.name)
-                row.prop(self, 'use_owner', icon='USER', text='')
-                col.prop_search(
-                    self,
-                    'value',
-                    bpy.context.scene,
-                    'objects',
-                    icon='NONE',
-                    text=''
-                )
-            else:
-                row = layout.row()
-                row.label(text=self.name)
-                row.prop(self, 'use_owner', icon='USER', text='')
-
-    def get_unlinked_value(self):
-        if self.use_owner:
-            return '"NLO:U_O"'
-        if isinstance(self.value, bpy.types.Light):
-            return '"NLO:{}"'.format(self.value.name)
-
-
-_sockets.append(NLLightObjectSocket)
 
 
 class NLArmatureObjectSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLArmatureObjectSocket"
-    bl_label = "Armature"
-    value: PointerProperty(
-        name='Armature',
-        type=bpy.types.Armature,
-        poll=filter_armatures,
-        update=update_tree_code
-    )
-    use_owner: BoolProperty(
-        name='Use Owner',
-        update=update_tree_code,
-        description='Use the owner of this tree'
-    )
-
-    def draw_color(self, context, node):
-        return PARAM_OBJ_SOCKET_COLOR
-
-    def draw(self, context, layout, node, text):
-        if self.is_output:
-            layout.label(text=self.name)
-        elif self.is_linked:
-            layout.label(text=self.name)
-        else:
-            if not self.use_owner:
-                col = layout.column(align=False)
-                row = col.row()
-                if self.name:
-                    row.label(text=self.name)
-                row.prop(self, 'use_owner', icon='USER', text='')
-                col.prop_search(
-                    self,
-                    'value',
-                    bpy.context.scene,
-                    'objects',
-                    icon='NONE',
-                    text=''
-                )
-            else:
-                row = layout.row()
-                row.label(text=self.name)
-                row.prop(self, 'use_owner', icon='USER', text='')
-
-    def get_unlinked_value(self):
-        if self.use_owner:
-            return '"NLO:U_O"'
-        if isinstance(self.value, bpy.types.Object):
-            return '"NLO:{}"'.format(self.value.name)
-
-
-_sockets.append(NLArmatureObjectSocket)
 
 
 class NLCurveObjectSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLCurveObjectSocket"
-    bl_label = "Curve"
-    value: PointerProperty(
-        name='Armature',
-        type=bpy.types.Curve,
-        poll=filter_curves,
-        update=update_tree_code
-    )
-    use_owner: BoolProperty(
-        name='Use Owner',
-        update=update_tree_code,
-        description='Use the owner of this tree'
-    )
-
-    def draw_color(self, context, node):
-        return PARAM_OBJ_SOCKET_COLOR
-
-    def draw(self, context, layout, node, text):
-        if self.is_output:
-            layout.label(text=self.name)
-        elif self.is_linked:
-            layout.label(text=self.name)
-        else:
-            if not self.use_owner:
-                col = layout.column(align=False)
-                row = col.row()
-                if self.name:
-                    row.label(text=self.name)
-                row.prop(self, 'use_owner', icon='USER', text='')
-                col.prop_search(
-                    self,
-                    'value',
-                    bpy.context.scene,
-                    'objects',
-                    icon='NONE',
-                    text=''
-                )
-            else:
-                row = layout.row()
-                row.label(text=self.name)
-                row.prop(self, 'use_owner', icon='USER', text='')
-
-    def get_unlinked_value(self):
-        if self.value is None:
-            return "None"
-        if self.use_owner:
-            return '"NLO:U_O"'
-        return '"NLO:{}"'.format(self.value.name)
-
-
-_sockets.append(NLCurveObjectSocket)
 
 
 class NLGamePropertySocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLGamePropertySocket"
-    bl_label = "Property"
-    value: StringProperty(
-        update=update_tree_code
-    )
-    ref_index: IntProperty(default=0)
-    use_custom: BoolProperty(
-        name='Free Edit',
-        update=update_tree_code
-    )
-
-    def draw_color(self, context, node):
-        return PARAMETER_SOCKET_COLOR
-
-    def draw(self, context, layout, node, text):
-        mode = getattr(self.node, 'mode', 'GAME')
-        if self.is_output:
-            layout.label(text=self.name)
-        elif self.is_linked:
-            layout.label(text=self.name)
-        else:
-            col = layout.column(align=False)
-            tree = getattr(context.space_data, 'edit_tree', None)
-            if not tree:
-                return
-            game_object = None
-            game_obj_socket = self.node.inputs[self.ref_index]
-            if not game_obj_socket.use_owner:
-                game_object = game_obj_socket.value
-            else:
-                prop_name = f'{utils.NLPREFIX}{make_valid_name(tree.name)}'
-                for obj in bpy.data.objects:
-                    if prop_name in obj.game.properties:
-                        game_object = obj
-                        break
-            if self.name:
-                row = col.row()
-                row.label(text=self.name)
-                if not game_obj_socket.is_linked and game_object and mode == 'GAME':
-                    row.prop(self, 'use_custom', text='', icon='GREASEPENCIL')
-            if game_object or game_obj_socket.is_linked:
-                if not game_obj_socket.is_linked and not self.use_custom and mode == 'GAME':
-                    game = game_object.game
-                    col.prop_search(
-                        self,
-                        'value',
-                        game,
-                        'properties',
-                        icon='NONE',
-                        text=''
-                    )
-                else:
-                    col.prop(self, 'value', text='')
-            else:
-                col.prop(self, 'value', text='')
-
-    def get_unlinked_value(self):
-        return '"{}"'.format(self.value)
-
-
-_sockets.append(NLGamePropertySocket)
 
 
 class NLArmatureBoneSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLArmatureBoneSocket"
-    bl_label = "Property"
-    value: StringProperty(
-        update=update_tree_code
-    )
-    ref_index: IntProperty(default=0)
-
-    def draw_color(self, context, node):
-        return PARAMETER_SOCKET_COLOR
-
-    def draw(self, context, layout, node, text):
-        if self.is_output:
-            layout.label(text=self.name)
-        elif self.is_linked:
-            layout.label(text=self.name)
-        else:
-            col = layout.column(align=False)
-            tree = getattr(context.space_data, 'edit_tree', None)
-            if not tree:
-                return
-            game_object = None
-            game_obj_socket = self.node.inputs[self.ref_index]
-            if not game_obj_socket.use_owner:
-                game_object = game_obj_socket.value
-            else:
-                for obj in bpy.data.objects:
-                    if f'{utils.NLPREFIX}{tree.name}' in obj.game.properties:
-                        game_object = obj
-                        break
-            if self.name:
-                row = col.row()
-                row.label(text=self.name)
-            if game_object and isinstance(game_object.data, bpy.types.Armature):
-                if not game_obj_socket.is_linked:
-                    col.prop_search(
-                        self,
-                        'value',
-                        game_object.pose,
-                        'bones',
-                        icon='NONE',
-                        text=''
-                    )
-                    return
-            col.prop(self, 'value', text='')
-
-    def get_unlinked_value(self):
-        return '"{}"'.format(self.value)
-
-
-_sockets.append(NLArmatureBoneSocket)
 
 
 class NLBoneConstraintSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLBoneConstraintSocket"
-    bl_label = "Property"
-    value: StringProperty(
-        update=update_tree_code
-    )
-    ref_index: IntProperty(default=0)
-
-    def draw_color(self, context, node):
-        return PARAMETER_SOCKET_COLOR
-
-    def draw(self, context, layout, node, text):
-        if self.is_output:
-            layout.label(text=self.name)
-        elif self.is_linked:
-            layout.label(text=self.name)
-        else:
-            col = layout.column(align=False)
-            tree = getattr(context.space_data, 'edit_tree', None)
-            if not tree:
-                return
-            bone = None
-            bone_socket = self.node.inputs[self.ref_index]
-            armature_socket = self.node.inputs[bone_socket.ref_index]
-            if not armature_socket.is_linked and not armature_socket.use_owner:
-                armature = armature_socket.value
-                bone = armature.pose.bones[bone_socket.value]
-            if self.name:
-                row = col.row()
-                row.label(text=self.name)
-            if bone and not armature_socket.use_owner:
-                if not bone_socket.is_linked and not armature_socket.is_linked:
-                    col.prop_search(
-                        self,
-                        'value',
-                        bone,
-                        'constraints',
-                        text=''
-                    )
-                    return
-            else:
-                col.prop(self, 'value', text='')
-
-    def get_unlinked_value(self):
-        return '"{}"'.format(self.value)
-
-
-_sockets.append(NLBoneConstraintSocket)
 
 
 class NLGeomNodeTreeSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLGeomNodeTreeSocket"
-    bl_label = "Material"
-    value: PointerProperty(
-        name='Geometry Node Tree',
-        type=bpy.types.GeometryNodeTree,
-        poll=filter_geometry_nodes,
-        update=update_tree_code
-    )
-
-    def draw_color(self, context, node):
-        return PARAM_GEOMTREE_SOCKET_COLOR
-
-    def draw(self, context, layout, node, text):
-        if self.is_output:
-            layout.label(text=self.name)
-        elif self.is_linked:
-            layout.label(text=self.name)
-        else:
-            col = layout.column(align=False)
-            if self.name and self.is_linked:
-                col.label(text=self.name)
-            col.prop_search(
-                self,
-                'value',
-                bpy.data,
-                'node_groups',
-                icon='NONE',
-                text=''
-            )
-
-    def get_unlinked_value(self):
-        if isinstance(self.value, bpy.types.GeometryNodeTree):
-            return '"{}"'.format(self.value.name)
-
-
-_sockets.append(NLGeomNodeTreeSocket)
 
 
 class NLNodeGroupSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLNodeGroupSocket"
-    bl_label = "Node Tree"
-    value: PointerProperty(
-        name='Node Tree',
-        type=bpy.types.NodeTree,
-        poll=filter_node_groups,
-        update=update_tree_code
-    )
-
-    def draw_color(self, context, node):
-        return PARAM_SCENE_SOCKET_COLOR
-
-    def draw(self, context, layout, node, text):
-        if self.is_output:
-            layout.label(text=self.name)
-        elif self.is_linked:
-            layout.label(text=self.name)
-        else:
-            col = layout.column(align=False)
-            if self.name and self.is_linked:
-                col.label(text=self.name)
-            col.prop_search(
-                self,
-                'value',
-                bpy.data,
-                'node_groups',
-                icon='NONE',
-                text=''
-            )
-
-    def get_unlinked_value(self):
-        if isinstance(self.value, bpy.types.NodeTree):
-            return '"{}"'.format(self.value.name)
-
-
-_sockets.append(NLNodeGroupSocket)
 
 
 class NLNodeGroupNodeSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLNodeGroupNodeSocket"
-    bl_label = "Tree Node"
-    value: StringProperty(
-        name='Tree Node',
-        update=update_tree_code
-    )
-    ref_index: IntProperty(default=0)
-
-    def draw_color(self, context, node):
-        return PARAMETER_SOCKET_COLOR
-
-    def draw(self, context, layout, node, text):
-        if self.is_linked or self.is_output:
-            layout.label(text=text)
-        else:
-            tree_socket = self.node.inputs[self.ref_index]
-            tree = tree_socket.value
-            col = layout.column(align=False)
-            if tree and not tree_socket.is_linked:
-                col.prop_search(
-                    self,
-                    "value",
-                    bpy.data.node_groups[tree.name],
-                    'nodes',
-                    text=''
-                )
-            elif tree_socket.is_linked:
-                col.label(text=text)
-                col.prop(self, 'value', text='')
-            else:
-                col.label(text=self.name)
-
-    def get_unlinked_value(self):
-        return '"{}"'.format(self.value)
-
-
-_sockets.append(NLNodeGroupNodeSocket)
 
 
 class NLMaterialSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLMaterialSocket"
-    bl_label = "Material"
-    value: PointerProperty(
-        name='Material',
-        type=bpy.types.Material,
-        poll=filter_materials,
-        update=update_tree_code
-    )
-
-    def draw_color(self, context, node):
-        return PARAM_MAT_SOCKET_COLOR
-
-    def draw(self, context, layout, node, text):
-        if self.is_output:
-            layout.label(text=self.name)
-        elif self.is_linked:
-            layout.label(text=self.name)
-        else:
-            col = layout.column(align=False)
-            if self.name and self.is_linked:
-                col.label(text=self.name)
-            col.prop_search(
-                self,
-                'value',
-                bpy.data,
-                'materials',
-                icon='NONE',
-                text=''
-            )
-
-    def get_unlinked_value(self):
-        if isinstance(self.value, bpy.types.Material):
-            return '"{}"'.format(self.value.name)
-
-
-_sockets.append(NLMaterialSocket)
 
 
 class NLTreeNodeSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLTreeNodeSocket"
-    bl_label = "Tree Node"
-    value: StringProperty(
-        name='Tree Node',
-        update=update_tree_code
-    )
-    ref_index: IntProperty(default=0)
-
-    def draw_color(self, context, node):
-        return PARAMETER_SOCKET_COLOR
-
-    def draw(self, context, layout, node, text):
-        if self.is_linked or self.is_output:
-            layout.label(text=text)
-        else:
-            mat_socket = self.node.inputs[self.ref_index]
-            mat = mat_socket.value
-            col = layout.column(align=False)
-            if mat and not mat_socket.is_linked:
-                col.prop_search(
-                    self,
-                    "value",
-                    bpy.data.materials[mat.name].node_tree,
-                    'nodes',
-                    text=''
-                )
-            elif mat_socket.is_linked:
-                col.label(text=text)
-                col.prop(self, 'value', text='')
-            else:
-                col.label(text=self.name)
-
-    def get_unlinked_value(self):
-        return '"{}"'.format(self.value)
-
-
-_sockets.append(NLTreeNodeSocket)
 
 
 class NLSceneSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLSceneSocket"
-    bl_label = "Scene"
-    value: PointerProperty(
-        name='Scene',
-        type=bpy.types.Scene,
-        update=update_tree_code
-    )
-
-    def draw_color(self, context, node):
-        return PARAM_MAT_SOCKET_COLOR
-
-    def draw(self, context, layout, node, text):
-        if self.is_output:
-            layout.label(text=self.name)
-        elif self.is_linked:
-            layout.label(text=self.name)
-        else:
-            col = layout.column(align=False)
-            if self.name and self.is_linked:
-                col.label(text=self.name)
-            col.prop_search(
-                self,
-                'value',
-                bpy.data,
-                'scenes',
-                icon='NONE',
-                text=''
-            )
-
-    def get_unlinked_value(self):
-        if isinstance(self.value, bpy.types.Scene):
-            return '"{}"'.format(self.value.name)
-
-
-_sockets.append(NLSceneSocket)
 
 
 class NLTextIDSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLTextIDSocket"
-    bl_label = "Text"
-    value: PointerProperty(
-        name='Text',
-        type=bpy.types.Text,
-        poll=filter_texts,
-        update=update_tree_code
-    )
-
-    def draw_color(self, context, node):
-        return PARAM_TEXT_SOCKET_COLOR
-
-    def draw(self, context, layout, node, text):
-        if self.is_output:
-            layout.label(text=self.name)
-        elif self.is_linked:
-            layout.label(text=self.name)
-        else:
-            col = layout.column(align=False)
-            if text and self.is_linked:
-                col.label(text=self.name)
-            col.prop_search(
-                self,
-                'value',
-                bpy.data,
-                'texts',
-                icon='NONE',
-                text=''
-            )
-
-    def get_unlinked_value(self):
-        if isinstance(self.value, bpy.types.Text):
-            return '"{}"'.format(self.value.name.split('.')[0])
-
-
-_sockets.append(NLTextIDSocket)
 
 
 class NLMeshSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLMeshSocket"
-    bl_label = "Mesh"
-    value: PointerProperty(
-        name='Mesh',
-        type=bpy.types.Mesh,
-        update=update_tree_code
-    )
-
-    def draw_color(self, context, node):
-        return PARAM_MESH_SOCKET_COLOR
-
-    def draw(self, context, layout, node, text):
-        if self.is_output:
-            layout.label(text=self.name)
-        elif self.is_linked:
-            layout.label(text=self.name)
-        else:
-            col = layout.column(align=False)
-            if text and self.is_linked:
-                col.label(text=self.name)
-            col.prop_search(
-                self,
-                'value',
-                bpy.data,
-                'meshes',
-                icon='NONE',
-                text=''
-            )
-
-    def get_unlinked_value(self):
-        if isinstance(self.value, bpy.types.Mesh):
-            return '"{}"'.format(self.value.name)
-
-
-_sockets.append(NLMeshSocket)
 
 
 class NLGameObjectNameSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLGameObjectNameSocket"
-    bl_label = "Object"
-    value: PointerProperty(
-        name='Object',
-        type=bpy.types.Object,
-        update=update_tree_code
-    )
-
-    def draw_color(self, context, node):
-        return PARAM_OBJ_SOCKET_COLOR
-
-    def draw(self, context, layout, node, text):
-        if self.is_output:
-            layout.label(text=self.name)
-        elif self.is_linked:
-            layout.label(text=self.name)
-        else:
-            col = layout.column(align=False)
-            if text:
-                col.label(text=self.name)
-            col.prop_search(
-                self,
-                'value',
-                bpy.context.scene,
-                'objects',
-                icon='NONE',
-                text=''
-            )
-
-    def get_unlinked_value(self):
-        if isinstance(self.value, bpy.types.Object):
-            return '"{}"'.format(self.value.name)
-
-
-_sockets.append(NLGameObjectNameSocket)
 
 
 class NLCollectionSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLCollectionSocket"
-    bl_label = "Collection"
-    value: PointerProperty(
-        name='Collection',
-        type=bpy.types.Collection,
-        description=(
-            'Select a Collection. '
-            'Objects in that collection will be used for the node'
-        ),
-        update=update_tree_code
-    )
-
-    def draw_color(self, context, node):
-        return PARAM_COLL_SOCKET_COLOR
-
-    def draw(self, context, layout, node, text):
-        if self.is_output:
-            layout.label(text=self.name)
-        elif self.is_linked:
-            layout.label(text=self.name)
-        else:
-            col = layout.column(align=False)
-            if text and self.is_linked:
-                col.label(text=text)
-            col.prop_search(
-                self,
-                'value',
-                bpy.data,
-                'collections',
-                text=''
-            )
-
-    def get_unlinked_value(self):
-        if isinstance(self.value, bpy.types.Collection):
-            return '"{}"'.format(self.value.name)
-
-
-_sockets.append(NLCollectionSocket)
 
 
 class NLSocketLogicTree(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLSocketLogicTree"
-    bl_label = "Logic Tree"
-    value: PointerProperty(
-        name='Logic Tree',
-        type=bpy.types.NodeTree,
-        description=(
-            'Select a Logic Tree'
-        ),
-        poll=filter_logic_trees,
-        update=update_tree_code
-    )
-
-    def draw_color(self, context, node):
-        return PARAMETER_SOCKET_COLOR
-
-    def draw(self, context, layout, node, text):
-        icon = 'OUTLINER' if not TOO_OLD else 'PLUS'
-        if self.is_linked or self.is_output:
-            layout.label(text=text)
-        else:
-            col = layout.column(align=False)
-            if text and self.is_linked:
-                col.label(text=text)
-            col.prop_search(
-                self,
-                "value",
-                bpy.data,
-                'node_groups',
-                icon=icon,
-                text=''
-            )
-
-    def get_unlinked_value(self):
-        if isinstance(self.value, bpy.types.NodeTree):
-            return '"{}"'.format(self.value.name)
-
-
-_sockets.append(NLSocketLogicTree)
 
 
 class NLAnimationSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLAnimationSocket"
-    bl_label = "Action"
-    value: PointerProperty(
-        name='Action',
-        type=bpy.types.Action,
-        description='Select an Action',
-        update=update_tree_code
-    )
-
-    def draw_color(self, context, node):
-        return PARAMETER_SOCKET_COLOR
-
-    def draw(self, context, layout, node, text):
-        if self.is_linked or self.is_output:
-            layout.label(text=text)
-        else:
-            col = layout.column()
-            if text and self.is_linked:
-                col.label(text=text)
-            col.prop_search(
-                self,
-                "value",
-                bpy.data,
-                'actions',
-                icon='ACTION',
-                text=''
-            )
-
-    def get_unlinked_value(self):
-        if isinstance(self.value, bpy.types.Action):
-            return '"{}"'.format(self.value.name)
-
-
-_sockets.append(NLAnimationSocket)
 
 
 class NLSoundFileSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLSoundFileSocket"
-    bl_label = "String"
-    filepath_value: StringProperty(
-        subtype='FILE_PATH',
-        update=update_tree_code
-    )
-    sound_value: PointerProperty(
-        name='Sound',
-        type=bpy.types.Sound,
-        description='Select a Sound',
-        update=update_tree_code
-    )
-    use_path: BoolProperty(
-        update=update_tree_code
-    )
-
-    def draw_color(self, context, node):
-        return PARAM_SOUND_SOCKET_COLOR
-
-    def draw(self, context, layout, node, text):
-        if self.is_linked or self.is_output:
-            layout.label(text=text)
-        else:
-            col = layout.column()
-            row = col.row(align=True)
-            text = text if text else 'Sound'
-            row.label(text=text)
-            row2 = col.row(align=True)
-            if self.use_path:
-                row2.prop(self, "filepath_value", text='')
-            else:
-                row2.prop(self, "sound_value", text='')
-            row2.operator(
-                bge_netlogic.ops.NLLoadSoundOperator.bl_idname, icon='FILEBROWSER', text='')
-
-    def get_unlinked_value(self):
-        if not self.use_path and self.sound_value is None:
-            return '"None"'
-        path = str(self.filepath_value) if self.use_path else str(
-            self.sound_value.filepath)
-        path = path.replace('\\', '/')
-        if path.endswith('\\'):
-            path = path[:-1]
-        return '"{}"'.format(path)
-
-
-_sockets.append(NLSoundFileSocket)
 
 
 class NLImageSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLImageSocket"
-    bl_label = "Image"
-    value: PointerProperty(
-        name='Image',
-        type=bpy.types.Image,
-        description='Select an Image',
-        update=update_tree_code
-    )
-
-    def draw_color(self, context, node):
-        return PARAM_IMAGE_SOCKET_COLOR
-
-    def draw(self, context, layout, node, text):
-        if self.is_linked or self.is_output:
-            layout.label(text=text)
-        else:
-            col = layout.column()
-            if text:
-                row = col.row(align=True)
-                row.label(text=text)
-            row2 = col.row(align=True)
-            row2.prop(self, "value", text='')
-            row2.operator(
-                bge_netlogic.ops.NLLoadImageOperator.bl_idname, icon='FILEBROWSER', text='')
-
-    def get_unlinked_value(self):
-        if self.value is None:
-            return '"None"'
-        return '"{}"'.format(str(self.value.name))
-
-
-_sockets.append(NLImageSocket)
 
 
 class NLFontSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLFontSocket"
-    bl_label = "Font"
-    value: PointerProperty(
-        name='Font',
-        type=bpy.types.VectorFont,
-        description='Select a Font',
-        update=update_tree_code
-    )
-
-    def draw_color(self, context, node):
-        return PARAM_IMAGE_SOCKET_COLOR
-
-    def draw(self, context, layout, node, text):
-        if self.is_linked or self.is_output:
-            layout.label(text=text)
-        else:
-            col = layout.column()
-            if text:
-                row = col.row(align=True)
-                row.label(text=text)
-            row2 = col.row(align=True)
-            row2.prop(self, "value", text='')
-            row2.operator(
-                bge_netlogic.ops.NLLoadFontOperator.bl_idname, icon='FILEBROWSER', text='')
-
-    def get_unlinked_value(self):
-        if self.value is None:
-            return '""'
-        return '"{}"'.format(str(self.value.name))
-        # path = self.value.filepath.replace('\\', '/')
-        # return '"{}"'.format(os.path.join(path))
-
-
-_sockets.append(NLFontSocket)
 
 
 ###############################################################################
@@ -2442,72 +1014,10 @@ _sockets.append(NLFontSocket)
 
 class NLGlobalCatSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLGlobalCatSocket"
-    bl_label = "Category"
-    value: StringProperty(
-        update=update_tree_code
-    )
-
-    def draw_color(self, context, node):
-        return PARAMETER_SOCKET_COLOR
-
-    def draw(self, context, layout, node, text):
-        if self.is_linked or self.is_output:
-            layout.label(text=text)
-        else:
-            col = layout.column()
-            col.prop_search(
-                self,
-                "value",
-                context.scene,
-                'nl_global_categories',
-                icon='OUTLINER_COLLECTION',
-                text=''
-            )
-
-    def get_unlinked_value(self):
-        return '"{}"'.format(self.value)
-
-
-_sockets.append(NLGlobalCatSocket)
 
 
 class NLGlobalPropSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLGlobalPropSocket"
-    bl_label = "Category"
-    value: StringProperty(
-        update=update_tree_code
-    )
-    ref_index: IntProperty(
-        update=update_tree_code
-    )
-
-    def draw_color(self, context, node):
-        return PARAMETER_SOCKET_COLOR
-
-    def draw(self, context, layout, node, text):
-        if self.is_linked or self.is_output:
-            layout.label(text=text)
-        else:
-            col = layout.column()
-            ref_socket = self.node.inputs[self.ref_index]
-            if ref_socket.is_linked:
-                col.prop(self, 'value', text='')
-            else:
-                cat = context.scene.nl_global_categories[ref_socket.value]
-                col.prop_search(
-                    self,
-                    "value",
-                    cat,
-                    'content',
-                    icon='DOT',
-                    text=''
-                )
-
-    def get_unlinked_value(self):
-        return '"{}"'.format(self.value)
-
-
-_sockets.append(NLGlobalPropSocket)
 
 
 ###############################################################################
@@ -2517,1728 +1027,122 @@ _sockets.append(NLGlobalPropSocket)
 
 class NLSocketAlphaFloat(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLSocketAlphaFloat"
-    bl_label = "Factor"
-    value: FloatProperty(
-        name='Alpha Value',
-        description='Value range from 0 - 1',
-        min=0.0,
-        max=1.0,
-        update=update_tree_code
-    )
-
-    def draw_color(self, context, node):
-        return PARAMETER_SOCKET_COLOR
-
-    def draw(self, context, layout, node, text):
-        if self.is_linked or self.is_output:
-            layout.label(text=text)
-        else:
-            layout.prop(self, "value", slider=True, text=text)
-        pass
-
-    def get_unlinked_value(self):
-        return "{}".format(self.value)
-
-
-_sockets.append(NLSocketAlphaFloat)
-
-
-class NLSocketLogicOperator(bpy.types.NodeSocket, NLSocket):
-    bl_idname = "NLSocketLogicOperator"
-    bl_label = "Logic Operator"
-    value: EnumProperty(
-        name='Operation',
-        items=_enum_logic_operators,
-        update=update_tree_code
-    )
-
-    def draw_color(self, context, node):
-        return PARAMETER_SOCKET_COLOR
-
-    def draw(self, context, layout, node, text):
-        if self.is_linked or self.is_output:
-            layout.label(text=text)
-        else:
-            layout.prop(self, "value", text=text)
-
-    def get_unlinked_value(self):
-        self.value.replace('\\', '\\\\')
-        return "{}".format(self.value)
-
-
-_sockets.append(NLSocketLogicOperator)
-
-
-class NLSocketControllerButtons(bpy.types.NodeSocket, NLSocket):
-    bl_idname = "NLSocketControllerButtons"
-    bl_label = "Controller Buttons"
-    value: EnumProperty(
-        name='Button',
-        items=_enum_controller_buttons_operators,
-        update=update_tree_code
-    )
-
-    def draw_color(self, context, node):
-        return PARAMETER_SOCKET_COLOR
-
-    def draw(self, context, layout, node, text):
-        if self.is_linked or self.is_output:
-            layout.label(text=text)
-        else:
-            layout.prop(self, "value", text=text)
-
-    def get_unlinked_value(self):
-        return "{}".format(self.value)
-
-
-_sockets.append(NLSocketControllerButtons)
-
-
-class NLQualitySocket(bpy.types.NodeSocket, NLSocket):
-    bl_idname = "NLQualitySocket"
-    bl_label = "Quality"
-    value: EnumProperty(
-        name='Quality',
-        items=_enum_quality_levels,
-        update=update_tree_code
-    )
-
-    def draw_color(self, context, node):
-        return PARAMETER_SOCKET_COLOR
-
-    def draw(self, context, layout, node, text):
-        if self.is_linked or self.is_output:
-            layout.label(text=text)
-        else:
-            if text:
-                col = layout.column()
-                col.label(text=text)
-                col.prop(self, 'value', text='')
-            else:
-                layout.prop(self, "value", text='')
-
-    def get_unlinked_value(self):
-        return "'{}'".format(self.value)
-
-
-_sockets.append(NLQualitySocket)
-
-
-class NLSocketDistanceCheck(bpy.types.NodeSocket, NLSocket):
-    bl_idname = "NLSocketDistanceCheck"
-    bl_label = "Distance Operator"
-    value: EnumProperty(
-        name='Mode',
-        items=_enum_distance_checks,
-        update=update_tree_code
-    )
-    def draw_color(self, context, node): return PARAMETER_SOCKET_COLOR
-
-    def draw(self, context, layout, node, text):
-        if self.is_linked or self.is_output:
-            layout.label(text=text)
-        else:
-            layout.prop(self, "value", text=text)
-
-    def get_unlinked_value(self):
-        return "{}".format(self.value)
-
-
-_sockets.append(NLSocketDistanceCheck)
 
 
 class NLSocketLoopCount(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLSocketLoopCount"
-    bl_label = "Loop Count"
-    value: StringProperty(update=update_tree_code)
-
-    def update_value(self, context):
-        current_type = self.value_type
-        if current_type == "INFINITE":
-            self.value = "-1"
-        elif current_type == "ONCE":
-            self.value = "1"
-        elif current_type == "CUSTOM":
-            self.value = '{}'.format(int(self.integer_editor) - 1)
-    value_type: EnumProperty(
-        name='Loop Count',
-        items=_enum_loop_count_values,
-        update=update_value
-    )
-    integer_editor: IntProperty(
-        update=update_value,
-        min=1,
-        default=1,
-        description=(
-            'How many times the sound should '
-            'be repeated when the condition is TRUE'
-        )
-    )
-
-    def draw_color(self, context, node):
-        return PARAMETER_SOCKET_COLOR
-
-    def draw(self, context, layout, node, text):
-        if self.is_linked or self.is_output:
-            layout.label(text=text)
-        else:
-            current_type = self.value_type
-            if (current_type == "INFINITE") or (current_type == "ONCE"):
-                layout.label(text=text)
-                layout.prop(self, "value_type", text="")
-            else:
-                layout.prop(self, "integer_editor", text="")
-                layout.prop(self, "value_type", text="")
-
-    def get_unlinked_value(self):
-        current_type = self.value_type
-        if current_type == "INFINITE":
-            return "-1"
-        if current_type == "ONCE":
-            return "0"
-        return '{}'.format(self.value)
-
-
-_sockets.append(NLSocketLoopCount)
 
 
 class NLBooleanSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLBooleanSocket"
-    bl_label = "Boolean"
-    value: BoolProperty(update=update_tree_code)
-    use_toggle: BoolProperty(default=False)
-    true_label: StringProperty()
-    false_label: StringProperty()
-    type: StringProperty(default='STRING')
-
-    def draw_color(self, context, node):
-        return PARAM_BOOL_SOCKET_COLOR
-
-    def draw(self, context, layout, node, text):
-        if self.is_linked or self.is_output:
-            layout.label(text=text)
-        else:
-            label = text
-            status = self.value
-            if self.use_toggle:
-                if status:
-                    label = '{}: ON'.format(text)
-                else:
-                    label = '{}: OFF'.format(text)
-            if self.true_label and status:
-                label = self.true_label
-            if self.false_label and (not status):
-                label = self.false_label
-            layout.prop(self, "value", text=label, toggle=self.use_toggle)
-
-    def get_unlinked_value(self):
-        return "True" if self.value and self.enabled else "False"
-
-
-_sockets.append(NLBooleanSocket)
 
 
 class NLXYZSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLXYZSocket"
-    bl_label = "Boolean"
-    x: BoolProperty(update=update_tree_code, default=True)
-    y: BoolProperty(update=update_tree_code, default=True)
-    z: BoolProperty(update=update_tree_code, default=True)
-
-    def draw_color(self, context, node):
-        return PARAMETER_SOCKET_COLOR
-
-    def draw(self, context, layout, node, text):
-        if self.is_linked or self.is_output:
-            layout.label(text=text)
-        else:
-            row = layout.row()
-            row.prop(self, 'x', text="X")
-            row.prop(self, 'y', text="Y")
-            row.prop(self, 'z', text="Z")
-
-    def get_unlinked_value(self):
-        return "dict(x={}, y={}, z={})".format(self.x, self.y, self.z)
-
-
-_sockets.append(NLXYZSocket)
 
 
 class NLInvertedXYSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLInvertedXYSocket"
-    bl_label = "Boolean"
-    x: BoolProperty(update=update_tree_code)
-    y: BoolProperty(update=update_tree_code)
-
-    def draw_color(self, context, node):
-        return PARAMETER_SOCKET_COLOR
-
-    def draw(self, context, layout, node, text):
-        if self.is_linked or self.is_output:
-            layout.label(text=text)
-        else:
-            row = layout.row()
-            row.label(text='Inverted:')
-            row.prop(self, 'x', text="X")
-            row.prop(self, 'y', text="Y")
-
-    def get_unlinked_value(self):
-        return "dict(x={}, y={})".format(self.x, self.y)
-
-
-_sockets.append(NLInvertedXYSocket)
 
 
 class NLPositiveFloatSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLPositiveFloatSocket"
-    bl_label = "Positive Float"
-    value: FloatProperty(min=0.0, update=update_tree_code)
-
-    def draw_color(self, context, node):
-        return PARAMETER_SOCKET_COLOR
-
-    def draw(self, context, layout, node, text):
-        if self.is_linked or self.is_output:
-            layout.label(text=text)
-        else:
-            layout.prop(self, "value", text=text)
-
-    def get_unlinked_value(self):
-        return '{}'.format(self.value)
-
-
-_sockets.append(NLPositiveFloatSocket)
-
-
-class NLPositiveStepFloat(bpy.types.NodeSocket, NLSocket):
-    bl_idname = "NLPositiveStepFloat"
-    bl_label = "Float"
-    value: FloatProperty(min=1, default=1, update=update_tree_code)
-
-    def draw_color(self, context, node):
-        return PARAMETER_SOCKET_COLOR
-
-    def draw(self, context, layout, node, text):
-        if self.is_linked or self.is_output:
-            layout.label(text=text)
-        else:
-            layout.prop(self, "value", text=text)
-
-    def get_unlinked_value(self):
-        return '{}'.format(self.value)
-
-
-_sockets.append(NLPositiveStepFloat)
-
-
-class NLPosFloatFormatSocket(bpy.types.NodeSocket, NLSocket):
-    bl_idname = "NLPosFloatFormatSocket"
-    bl_label = "Positive Float"
-    value: FloatProperty(min=0.0, update=update_tree_code)
-
-    def draw_color(self, context, node):
-        return PARAMETER_SOCKET_COLOR
-
-    def draw(self, context, layout, node, text):
-        if self.is_linked or self.is_output:
-            layout.label(text=text)
-        else:
-            col = layout.column()
-            col.label(text=text)
-            col.prop(self, "value", text='')
-
-    def get_unlinked_value(self):
-        return '{}'.format(self.value)
-
-
-_sockets.append(NLPosFloatFormatSocket)
-
-
-class NLSocketOptionalPositiveFloat(bpy.types.NodeSocket, NLSocket):
-    bl_idname = "NLSocketOptionalPositiveFloat"
-    bl_label = "Positive Float"
-    use_this: BoolProperty(update=update_tree_code)
-    value: StringProperty(update=update_tree_code)
-
-    def update_value(self, context):
-        if self.use_this:
-            self.value = '{}'.format(self.float_editor)
-        else:
-            self.value = ""
-
-        update_tree_code(self, context)
-
-    float_editor: FloatProperty(
-        min=0.0,
-        update=update_value
-    )
-
-    def draw_color(self, context, node):
-        return PARAMETER_SOCKET_COLOR
-
-    def draw(self, context, layout, node, text):
-        if self.is_linked or self.is_output:
-            layout.label(text=text)
-        else:
-            layout.prop(self, 'use_this', text=text)
-            if self.use_this:
-                layout.prop(self, "float_editor", text=text)
-
-    def get_unlinked_value(self):
-        try:
-            return '{}'.format(float(self.value))
-        except ValueError:
-            return "None"
-
-
-_sockets.append(NLSocketOptionalPositiveFloat)
-
-
-class NLSocketIKMode(bpy.types.NodeSocket, NLSocket):
-    bl_idname = "NLSocketIKMode"
-    bl_label = "IK Mode"
-    value: EnumProperty(
-        name='IK Mode',
-        items=_enum_ik_mode_values,
-        update=update_tree_code
-    )
-
-    def draw_color(self, context, node):
-        return PARAMETER_SOCKET_COLOR
-
-    def draw(self, context, layout, node, text):
-        if self.is_linked or self.is_output:
-            layout.label(text=text)
-        else:
-            layout.prop(self, "value", text=text)
-
-    def get_unlinked_value(self):
-        return f'{self.value}'
-
-
-_sockets.append(NLSocketIKMode)
 
 
 class NLQuotedStringFieldSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLQuotedStringFieldSocket"
-    bl_label = "String"
-    value: StringProperty(update=update_tree_code)
-    formatted: BoolProperty(update=update_tree_code)
-
-    def draw_color(self, context, node):
-        return PARAMETER_SOCKET_COLOR
-
-    def draw(self, context, layout, node, text):
-        if self.is_linked or self.is_output:
-            layout.label(text=text)
-        elif not text:
-            layout.prop(self, "value", text='')
-        else:
-            if self.formatted:
-                col = layout.column()
-                row1 = col.row()
-                row1.label(text=text)
-                row2 = col.row()
-                row2.prop(self, 'value', text='')
-            else:
-                parts = layout.split(factor=.4)
-                parts.label(text=text)
-                parts.prop(self, "value", text='')
-
-    def get_unlinked_value(self):
-        return '"{}"'.format(self.value)
-
-
-_sockets.append(NLQuotedStringFieldSocket)
 
 
 class NLFilePathSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLFilePathSocket"
-    bl_label = "String"
-    value: StringProperty(
-        subtype='FILE_PATH',
-        update=update_tree_code
-    )
-
-    def draw_color(self, context, node):
-        return PARAMETER_SOCKET_COLOR
-
-    def draw(self, context, layout, node, text):
-        if self.is_linked or self.is_output:
-            layout.label(text=text)
-        else:
-            col = layout.column()
-            if text:
-                col.label(text=text)
-            col.prop(self, "value", text='')
-
-    def get_unlinked_value(self):
-        path = str(self.value)
-        path = path.replace('\\', '/')
-        if path.endswith('\\'):
-            path = path[:-1]
-        return '"{}"'.format(path)
-
-
-_sockets.append(NLFilePathSocket)
 
 
 class NLIntegerFieldSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLIntegerFieldSocket"
-    bl_label = "Integer"
-    value: IntProperty(update=update_tree_code)
-    type: StringProperty(default='INT')
-    nl_color = PARAM_INT_SOCKET_COLOR
-
-    def get_unlinked_value(self):
-        return '{}'.format(self.value)
-
-    def draw(self, context, layout, node, text):
-        if self.is_linked or self.is_output:
-            layout.label(text=text)
-        else:
-            layout.prop(self, "value", text=text)
-    pass
-
-
-_sockets.append(NLIntegerFieldSocket)
 
 
 class NLPositiveIntegerFieldSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLPositiveIntegerFieldSocket"
-    bl_label = "Integer"
-    value: IntProperty(min=0, default=0, update=update_tree_code)
-    type: StringProperty(default='INT')
-    nl_color = PARAM_INT_SOCKET_COLOR
-
-    def draw(self, context, layout, node, text):
-        if self.is_linked or self.is_output:
-            layout.label(text=text)
-        else:
-            layout.prop(self, "value", text=text)
-
-    def get_unlinked_value(self):
-        return '{}'.format(self.value)
-
-
-_sockets.append(NLPositiveIntegerFieldSocket)
-
-
-class NLCountSocket(bpy.types.NodeSocket, NLSocket):
-    bl_idname = "NLCountSocket"
-    bl_label = "Integer"
-    value: IntProperty(min=1, default=1, update=update_tree_code)
-    type: StringProperty(default='INT')
-    nl_color = PARAM_INT_SOCKET_COLOR
-
-    def draw(self, context, layout, node, text):
-        if self.is_linked or self.is_output:
-            layout.label(text=text)
-        else:
-            layout.prop(self, "value", text=text)
-
-    def get_unlinked_value(self):
-        return '{}'.format(self.value)
-
-
-_sockets.append(NLCountSocket)
 
 
 class NLPositiveIntCentSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLPositiveIntCentSocket"
-    bl_label = "Integer"
-    value: IntProperty(
-        min=0,
-        max=100,
-        default=0,
-        update=update_tree_code
-    )
-    type: StringProperty(default='INT')
-    nl_color = PARAM_INT_SOCKET_COLOR
-
-    def draw(self, context, layout, node, text):
-        if self.is_linked or self.is_output:
-            layout.label(text=text)
-        else:
-            layout.prop(self, "value", text=text)
-
-    def get_unlinked_value(self):
-        return '{}'.format(self.value)
-
-
-_sockets.append(NLPositiveIntCentSocket)
 
 
 class NLValueFieldSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLValueFieldSocket"
-    bl_label = "Value"
-    value: StringProperty(update=update_tree_code)
-
-    def on_type_changed(self, context):
-        if self.value_type == "BOOLEAN":
-            self.value = str(self.bool_editor)
-        if self.value_type == "STRING":
-            self.value = str(self.string_editor)
-        if self.value_type == "FILE_PATH":
-            self.value = str(self.path_editor)
-        update_tree_code(self, context)
-
-    value_type: EnumProperty(
-        name='Type',
-        items=_enum_field_value_types,
-        update=on_type_changed
-    )
-
-    def store_boolean_value(self, context):
-        self.value = str(self.bool_editor)
-        update_tree_code(self, context)
-
-    bool_editor: BoolProperty(update=store_boolean_value)
-
-    def store_int_value(self, context):
-        self.value = str(self.int_editor)
-
-    int_editor: IntProperty(update=store_int_value)
-
-    def store_float_value(self, context):
-        self.value = str(self.float_editor)
-
-    float_editor: FloatProperty(update=store_float_value)
-
-    def store_string_value(self, context):
-        self.value = self.string_editor
-
-    string_editor: StringProperty(update=store_string_value)
-
-    def store_path_value(self, context):
-        self.value = self.path_editor
-
-    path_editor: StringProperty(
-        update=store_path_value,
-        subtype='FILE_PATH'
-    )
-
-    def draw_color(self, context, node):
-        return PARAMETER_SOCKET_COLOR
-
-    def get_unlinked_value(self):
-        return socket_field(self)
-
-    def draw(self, context, layout, node, text):
-        if self.is_linked or self.is_output:
-            layout.label(text=text)
-        else:
-            col = layout.column()
-            if text:
-                name_row = col.row()
-                name_row.label(text=text)
-            val_line = col.row()
-            val_row = val_line.split()
-            if self.value_type == "BOOLEAN":
-                val_row.prop(self, "value_type", text="")
-                val_row.prop(self, "bool_editor", text="")
-            elif self.value_type == "INTEGER":
-                val_row.prop(self, "value_type", text="")
-                val_row.prop(self, "int_editor", text="")
-            elif self.value_type == "FLOAT":
-                val_row.prop(self, "value_type", text="")
-                val_row.prop(self, "float_editor", text="")
-            elif self.value_type == "STRING":
-                val_row.prop(self, "value_type", text="")
-                val_row.prop(self, "string_editor", text="")
-            elif self.value_type == "FILE_PATH":
-                val_row.prop(self, "value_type", text="")
-                val_row.prop(self, "path_editor", text="")
-
-
-_sockets.append(NLValueFieldSocket)
 
 
 class NLOptionalValueFieldSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLOptionalValueFieldSocket"
-    bl_label = "Value"
-    value: StringProperty(update=update_tree_code)
-
-    def on_type_changed(self, context):
-        if self.value_type == "BOOLEAN":
-            self.value = str(self.bool_editor)
-        if self.value_type == "STRING":
-            self.value = str(self.string_editor)
-        if self.value_type == "FILE_PATH":
-            self.value = str(self.path_editor)
-        update_tree_code(self, context)
-
-    value_type: EnumProperty(
-        name='Type',
-        items=_enum_field_value_types,
-        update=on_type_changed
-    )
-
-    use_value: BoolProperty(
-        update=update_tree_code
-    )
-
-    def store_boolean_value(self, context):
-        self.value = str(self.bool_editor)
-        update_tree_code(self, context)
-
-    bool_editor: BoolProperty(update=store_boolean_value)
-
-    def store_int_value(self, context):
-        self.value = str(self.int_editor)
-
-    int_editor: IntProperty(update=store_int_value)
-
-    def store_float_value(self, context):
-        self.value = str(self.float_editor)
-
-    float_editor: FloatProperty(update=store_float_value)
-
-    def store_string_value(self, context):
-        self.value = self.string_editor
-
-    string_editor: StringProperty(update=store_string_value)
-
-    def store_path_value(self, context):
-        self.value = self.path_editor
-
-    path_editor: StringProperty(
-        update=store_path_value,
-        subtype='FILE_PATH'
-    )
-
-    def draw_color(self, context, node):
-        return PARAMETER_SOCKET_COLOR
-
-    def get_unlinked_value(self):
-        return socket_field(self) if self.use_value or self.is_linked else "utils.STATUS_INVALID"
-
-    def draw(self, context, layout, node, text):
-        if self.is_linked or self.is_output:
-            layout.label(text=text)
-        else:
-            col = layout.column()
-            if text:
-                name_row = col.row()
-                name_row.label(text=text)
-                name_row.prop(self, "use_value", text="")
-            if not self.use_value:
-                return
-            val_line = col.row()
-            val_row = val_line.split()
-            if self.value_type == "BOOLEAN":
-                val_row.prop(self, "value_type", text="")
-                val_row.prop(self, "bool_editor", text="")
-            elif self.value_type == "INTEGER":
-                val_row.prop(self, "value_type", text="")
-                val_row.prop(self, "int_editor", text="")
-            elif self.value_type == "FLOAT":
-                val_row.prop(self, "value_type", text="")
-                val_row.prop(self, "float_editor", text="")
-            elif self.value_type == "STRING":
-                val_row.prop(self, "value_type", text="")
-                val_row.prop(self, "string_editor", text="")
-            elif self.value_type == "FILE_PATH":
-                val_row.prop(self, "value_type", text="")
-                val_row.prop(self, "path_editor", text="")
-
-
-_sockets.append(NLOptionalValueFieldSocket)
-
-
-class NLNumericFieldSocket(bpy.types.NodeSocket, NLSocket):
-    bl_idname = "NLNumericFieldSocket"
-    bl_label = "Value"
-
-    value_type: EnumProperty(
-        name='Type',
-        items=_enum_numeric_field_value_types,
-        update=update_tree_code
-    )
-    value: StringProperty(update=update_tree_code)
-
-    def draw_color(self, context, node):
-        return PARAMETER_SOCKET_COLOR
-
-    def get_unlinked_value(self):
-        return socket_field(self)
-
-    def draw(self, context, layout, node, text):
-        if self.is_linked or self.is_output:
-            layout.label(text=text)
-        else:
-            split = layout.split(factor=0.4)
-            split.label(text=text)
-            if self.value_type == "NONE":
-                split.prop(self, "value_type", text="")
-            else:
-                row = split.row(align=True)
-                row.prop(self, "value_type", text="")
-                row.prop(self, "value", text="")
-
-
-_sockets.append(NLNumericFieldSocket)
-
-
-class NLOptionalRadiansFieldSocket(bpy.types.NodeSocket, NLSocket):
-    bl_idname = "NLOptionalRadiansFieldSocket"
-    bl_label = "Value"
-    value: StringProperty(update=update_tree_code, default="0.0")
-
-    def store_radians(self, context):
-        self.radians = str(float(self.float_field))
-        update_tree_code(self, context)
-
-    def store_expression(self, context):
-        self.radians = self.string_field
-        update_tree_code(self, context)
-
-    def on_type_change(self, context):
-        if self.type == "NONE":
-            self.radians = "None"
-        if self.type == "EXPRESSION":
-            self.radians = self.expression_field
-        if self.type == "FLOAT":
-            self.radians = str(float(self.input_field))
-        update_tree_code(self, context)
-    float_field: FloatProperty(update=store_radians)
-    expression_field: StringProperty(update=store_expression)
-    input_type: EnumProperty(
-        name='Type',
-        items=_enum_optional_float_value_types,
-        update=on_type_change, default="FLOAT"
-    )
-
-    def draw_color(self, context, node): return PARAMETER_SOCKET_COLOR
-
-    def get_unlinked_value(self):
-        return "None" if self.input_type == "NONE" else self.radians
-
-    def draw(self, context, layout, node, text):
-        if self.is_linked or self.is_output:
-            layout.label(text=text)
-        else:
-            if self.input_type == "FLOAT":
-                row = layout.split(factor=0.6)
-                row.prop(self, "float_field", text=text)
-                row.prop(self, "input_type", text="")
-            elif self.input_type == "EXPRESSION":
-                row = layout.split(factor=0.6)
-                row.prop(self, "expression_field", text=text)
-                row.prop(self, "input_type", text="")
-            else:
-                layout.prop(self, "input_type", text=text)
-
-
-_sockets.append(NLOptionalRadiansFieldSocket)
-
-
-class NLSocketReadableMemberName(bpy.types.NodeSocket, NLSocket):
-    bl_idname = "NLSocketReadableMemberName"
-    bl_label = "Att. Name"
-    value: StringProperty(
-        update=update_tree_code,
-        default='worldPosition'
-    )
-    type: StringProperty(default='VECTOR')
-
-    def _set_value(self, context):
-        t = self.value_type
-        if t == "CUSTOM":
-            self.value = ""
-        else:
-            self.value = t
-        bge_netlogic.update_current_tree_code()
-    value_type: EnumProperty(
-        name='Attribute',
-        items=_enum_readable_member_names,
-        update=_set_value
-    )
-
-    def draw_color(self, context, node):
-        return PARAM_VECTOR_SOCKET_COLOR if (
-            self.value != 'name' and
-            self.value != 'visible'
-        ) else PARAMETER_SOCKET_COLOR
-
-    def get_unlinked_value(self):
-        return '"{}"'.format(self.value)
-
-    def draw(self, context, layout, node, text):
-        if self.is_linked or self.is_output:
-            layout.label(text=text)
-        else:
-            if self.value_type == "CUSTOM":
-                row = layout.row(align=True)
-                row.prop(self, "value_type", text="")
-                row.prop(self, "value", text="")
-                pass
-            else:
-                layout.prop(self, "value_type", text="")
-
-
-_sockets.append(NLSocketReadableMemberName)
 
 
 class NLKeyboardKeySocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLKeyboardKeySocket"
-    bl_label = "Key"
-    value: StringProperty(update=update_tree_code)
-    type: StringProperty(default='INT')
-    nl_color = PARAM_INT_SOCKET_COLOR
-
-    def get_unlinked_value(self):
-        return keyboard_key_string_to_bge_key(self.value)
-
-    def draw(self, context, layout, node, text):
-        if self.is_linked or self.is_output:
-            layout.label(text=text)
-        else:
-            label = self.value
-            if not label:
-                label = "Press & Choose"
-            layout.operator("bge_netlogic.waitforkey", text=label)
-
-
-_sockets.append(NLKeyboardKeySocket)
 
 
 class NLMouseButtonSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLMouseButtonSocket"
-    bl_label = "Mouse Button"
-    value: EnumProperty(
-        name='Button',
-        items=_enum_mouse_buttons, default="bge.events.LEFTMOUSE",
-        update=update_tree_code)
-    type: StringProperty(default='INT')
-    nl_color = PARAM_INT_SOCKET_COLOR
-
-    def get_unlinked_value(self):
-        return self.value
-
-    def draw(self, context, layout, node, text):
-        if self.is_linked or self.is_output:
-            layout.label(text=text)
-        else:
-            layout.prop(self, "value", text="")
-
-
-_sockets.append(NLMouseButtonSocket)
-
-
-class NLVSyncSocket(bpy.types.NodeSocket, NLSocket):
-    bl_idname = "NLVSyncSocket"
-    bl_label = "Vsync"
-    value: EnumProperty(
-        name='Mode',
-        items=_enum_vsync_modes, default="bge.render.VSYNC_OFF",
-        update=update_tree_code)
-
-    def draw_color(self, context, node):
-        return PARAMETER_SOCKET_COLOR
-
-    def get_unlinked_value(self):
-        return self.value
-
-    def draw(self, context, layout, node, text):
-        if self.is_linked or self.is_output:
-            layout.label(text=text)
-        else:
-            layout.prop(self, "value", text="")
-
-
-_sockets.append(NLVSyncSocket)
 
 
 class NLPlayActionModeSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLPlayActionModeSocket"
-    bl_label = "Play Mode"
-    value: EnumProperty(
-        name='Mode',
-        items=_enum_play_mode_values,
-        description="The play mode of the action",
-        update=update_tree_code
-    )
-
-    def get_unlinked_value(self):
-        return self.value
-
-    def draw_color(self, context, node):
-        return PARAMETER_SOCKET_COLOR
-
-    def draw(self, context, layout, node, text):
-        if self.is_linked or self.is_output:
-            layout.label(text=text)
-        else:
-            layout.prop(self, "value", text=text)
-
-
-_sockets.append(NLPlayActionModeSocket)
 
 
 class NLFloatFieldSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLFloatFieldSocket"
-    bl_label = "Float Value"
-    value: FloatProperty(default=0, update=update_tree_code)
-    valid_sockets = ['NLFloatFieldSocket']
-
-    def draw_color(self, context, node):
-        return PARAMETER_SOCKET_COLOR
-
-    def get_unlinked_value(self):
-        return "{}".format(self.value)
-
-    def draw(self, context, layout, node, text):
-        if self.is_linked or self.is_output:
-            layout.label(text=text)
-        else:
-            layout.prop(self, "value", text=text)
-
-
-_sockets.append(NLFloatFieldSocket)
 
 
 class NLFloatAngleSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLFloatAngleSocket"
-    bl_label = "Float Value"
-    value: FloatProperty(default=0, update=update_tree_code, unit='ROTATION')
-    valid_sockets = ['NLFloatFieldSocket']
-
-    def draw_color(self, context, node):
-        return PARAMETER_SOCKET_COLOR
-
-    def get_unlinked_value(self):
-        return "{}".format(self.value)
-
-    def draw(self, context, layout, node, text):
-        if self.is_linked or self.is_output:
-            layout.label(text=text)
-        else:
-            layout.prop(self, "value", text=text)
-
-
-_sockets.append(NLFloatAngleSocket)
 
 
 class NLTimeSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLTimeSocket"
-    bl_label = "Float Value"
-    value: FloatProperty(
-        min=0,
-        default=0,
-        subtype='TIME',
-        unit='TIME',
-        update=update_tree_code
-    )
-
-    def draw_color(self, context, node):
-        return PARAMETER_SOCKET_COLOR
-
-    def get_unlinked_value(self):
-        return "{}".format(self.value)
-
-    def draw(self, context, layout, node, text):
-        if self.is_linked or self.is_output:
-            layout.label(text=text)
-        else:
-            layout.prop(self, "value", text=text)
-
-
-_sockets.append(NLTimeSocket)
 
 
 class NLVec2FieldSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLVec2FieldSocket"
-    bl_label = "Float Value"
-    value_x: FloatProperty(default=0, update=update_tree_code)
-    value_y: FloatProperty(default=0, update=update_tree_code)
-    title: StringProperty(default='')
-    type: StringProperty(default='VECTOR')
-
-    def draw_color(self, context, node):
-        return PARAM_VECTOR_SOCKET_COLOR
-
-    def get_unlinked_value(self):
-        return "mathutils.Vector(({}, {}))".format(self.value_x, self.value_y)
-
-    def draw(self, context, layout, node, text):
-        if self.is_linked or self.is_output:
-            layout.label(text=text)
-        else:
-            column = layout.column()
-            if text != '':
-                column.label(text=text)
-            row = column.row(align=True)
-            row.prop(self, "value_x", text='')
-            row.prop(self, "value_y", text='')
-
-
-_sockets.append(NLVec2FieldSocket)
 
 
 class NLAngleLimitSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLAngleLimitSocket"
-    bl_label = "Float Value"
-    type: StringProperty(default='VECTOR')
-    value_x: FloatProperty(
-        default=0,
-        unit='ROTATION',
-        update=update_tree_code
-    )
-    value_y: FloatProperty(
-        default=0,
-        unit='ROTATION',
-        update=update_tree_code
-    )
-    title: StringProperty(default='')
-
-    def draw_color(self, context, node):
-        return PARAM_VECTOR_SOCKET_COLOR
-
-    def get_unlinked_value(self):
-        return "mathutils.Vector(({}, {}))".format(self.value_x, self.value_y)
-
-    def draw(self, context, layout, node, text):
-        if self.is_linked or self.is_output:
-            layout.label(text=text)
-        else:
-            column = layout.column()
-            if text != '':
-                column.label(text=text)
-            row = column.row(align=True)
-            row.prop(self, "value_x", text='')
-            row.prop(self, "value_y", text='')
-
-
-_sockets.append(NLAngleLimitSocket)
-
-
-class NLVec2PositiveFieldSocket(bpy.types.NodeSocket, NLSocket):
-    bl_idname = "NLVec2PositiveFieldSocket"
-    bl_label = "Float Value"
-    value_x: FloatProperty(
-        min=0.0,
-        default=0,
-        update=update_tree_code
-    )
-    value_y: FloatProperty(
-        min=0.0,
-        default=0,
-        update=update_tree_code
-    )
-    title: StringProperty(default='')
-    type: StringProperty(default='VECTOR')
-
-    def draw_color(self, context, node):
-        return PARAM_VECTOR_SOCKET_COLOR
-
-    def get_unlinked_value(self):
-        return "mathutils.Vector(({}, {}))".format(self.value_x, self.value_y)
-
-    def draw(self, context, layout, node, text):
-        if self.is_linked or self.is_output:
-            layout.label(text=text)
-        else:
-            column = layout.column()
-            # if self.title != '':
-            #     title = column.label(text=self.title)
-            row = column.row(align=True)
-            row.prop(self, "value_x", text='')
-            row.prop(self, "value_y", text='')
-
-
-_sockets.append(NLVec2PositiveFieldSocket)
 
 
 class NLVec3FieldSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLVec3FieldSocket"
-    bl_label = "Float Value"
-    type: StringProperty(default='VECTOR')
-    value_x: FloatProperty(default=0, update=update_tree_code)
-    value_y: FloatProperty(default=0, update=update_tree_code)
-    value_z: FloatProperty(default=0, update=update_tree_code)
-
-    def draw_color(self, context, node):
-        return PARAM_VECTOR_SOCKET_COLOR
-
-    def get_unlinked_value(self):
-        return "mathutils.Vector(({}, {}, {}))".format(
-            self.value_x,
-            self.value_y,
-            self.value_z
-        )
-
-    def draw(self, context, layout, node, text):
-        if self.is_linked or self.is_output:
-            layout.label(text=text)
-        else:
-            cont = layout.column(align=True)
-            if text != '':
-                cont.label(text=text)
-            if self.node.width >= 200:
-                cont = cont.row(align=True)
-            cont.prop(self, "value_x", text='X')
-            cont.prop(self, "value_y", text='Y')
-            cont.prop(self, "value_z", text='Z')
-
-
-_sockets.append(NLVec3FieldSocket)
-
-
-class NodeSocketMatrix3(bpy.types.NodeSocket, NLSocket):
-    bl_idname = "NodeSocketMatrix3"
-    bl_label = "Float Value"
-    type: StringProperty(default='VECTOR')
-    value_x: FloatProperty(default=0, update=update_tree_code)
-    value_y: FloatProperty(default=0, update=update_tree_code)
-    value_z: FloatProperty(default=0, update=update_tree_code)
-
-    def draw_color(self, context, node):
-        return PARAM_VECTOR_SOCKET_COLOR
-
-    def get_unlinked_value(self):
-        return "mathutils.Vector(({}, {}, {}))".format(
-            self.value_x,
-            self.value_y,
-            self.value_z
-        )
-
-    def draw(self, context, layout, node, text):
-        if self.is_linked or self.is_output:
-            layout.label(text=text)
-        else:
-            cont = layout.column(align=True)
-            if text != '':
-                cont.label(text=text)
-            if self.node.width >= 200:
-                cont = cont.row(align=True)
-            cont.prop(self, "value_x", text='X')
-            cont.prop(self, "value_y", text='Y')
-            cont.prop(self, "value_z", text='Z')
-
-
-_sockets.append(NodeSocketMatrix3)
 
 
 class NLVec3RotationSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLVec3RotationSocket"
-    bl_label = "Float Value"
-    type: StringProperty(default='VECTOR')
-    value_x: FloatProperty(
-        default=0,
-        unit='ROTATION',
-        update=update_tree_code
-    )
-    value_y: FloatProperty(
-        default=0,
-        unit='ROTATION',
-        update=update_tree_code
-    )
-    value_z: FloatProperty(
-        default=0,
-        unit='ROTATION',
-        update=update_tree_code
-    )
-
-    def draw_color(self, context, node):
-        return PARAM_VECTOR_SOCKET_COLOR
-
-    def get_unlinked_value(self):
-        return "mathutils.Vector(({}, {}, {}))".format(
-            self.value_x,
-            self.value_y,
-            self.value_z
-        )
-
-    def draw(self, context, layout, node, text):
-        if self.is_linked or self.is_output:
-            layout.label(text=text)
-        else:
-            cont = layout.column(align=True)
-            if text != '':
-                cont.label(text=text)
-            if self.node.width >= 200:
-                cont = cont.row(align=True)
-            cont.prop(self, "value_x", text='X')
-            cont.prop(self, "value_y", text='Y')
-            cont.prop(self, "value_z", text='Z')
-
-
-_sockets.append(NLVec3RotationSocket)
 
 
 class NLVelocitySocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLVelocitySocket"
-    bl_label = "Float Value"
-    type: StringProperty(default='VECTOR')
-    value_x: FloatProperty(
-        default=0,
-        unit='VELOCITY',
-        update=update_tree_code
-    )
-    value_y: FloatProperty(
-        default=0,
-        unit='VELOCITY',
-        update=update_tree_code
-    )
-    value_z: FloatProperty(
-        default=0,
-        unit='VELOCITY',
-        update=update_tree_code
-    )
-
-    def draw_color(self, context, node):
-        return PARAM_VECTOR_SOCKET_COLOR
-
-    def get_unlinked_value(self):
-        return "mathutils.Vector(({}, {}, {}))".format(
-            self.value_x,
-            self.value_y,
-            self.value_z
-        )
-
-    def draw(self, context, layout, node, text):
-        if self.is_linked or self.is_output:
-            layout.label(text=text)
-        else:
-            cont = layout.column(align=True)
-            if text != '':
-                cont.label(text=text)
-            if self.node.width >= 200:
-                cont = cont.row(align=True)
-            cont.prop(self, "value_x", text='X')
-            cont.prop(self, "value_y", text='Y')
-            cont.prop(self, "value_z", text='Z')
-
-
-_sockets.append(NLVelocitySocket)
-
-
-class NLVec3PositiveFieldSocket(bpy.types.NodeSocket, NLSocket):
-    bl_idname = "NLVec3PositiveFieldSocket"
-    bl_label = "Float Value"
-    type: StringProperty(default='VECTOR')
-    type: StringProperty(default='VECTOR')
-    value_x: FloatProperty(
-        min=0.0,
-        default=0,
-        update=update_tree_code
-    )
-    value_y: FloatProperty(
-        min=0.0,
-        default=0,
-        update=update_tree_code
-    )
-    value_z: FloatProperty(default=0, update=update_tree_code)
-    title: StringProperty(default='')
-
-    def draw_color(self, context, node):
-        return PARAM_VECTOR_SOCKET_COLOR
-
-    def get_unlinked_value(self):
-        return "mathutils.Vector(({}, {}, {}))".format(
-            self.value_x,
-            self.value_y,
-            self.value_z
-        )
-
-    def draw(self, context, layout, node, text):
-        if self.is_linked or self.is_output:
-            layout.label(text=text)
-        else:
-            cont = layout.column(align=True)
-            if text != '':
-                cont.label(text=text)
-            if self.node.width >= 200:
-                cont = cont.row(align=True)
-            cont.prop(self, "value_x", text='X')
-            cont.prop(self, "value_y", text='Y')
-            cont.prop(self, "value_z", text='Z')
-
-
-_sockets.append(NLVec3PositiveFieldSocket)
 
 
 class NLColorSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLColorSocket"
-    bl_label = "Float Value"
-    value: FloatVectorProperty(
-        subtype='COLOR_GAMMA',
-        min=0.0,
-        max=1.0,
-        size=3,
-        default=(1.0, 1.0, 1.0),
-        update=update_tree_code
-    )
-    type: StringProperty(default='RGBA')
-    nl_color = PARAM_COLOR_SOCKET_COLOR
-
-    def get_unlinked_value(self):
-        return "mathutils.Vector(({}, {}, {}))".format(
-            self.value[0],
-            self.value[1],
-            self.value[2]
-        )
-
-    def draw(self, context, layout, node, text):
-        if self.is_linked or self.is_output:
-            layout.label(text=text)
-        else:
-            row = layout.row()
-            row.label(text=text if text else 'Color')
-            row.prop(self, "value", text='')
-
-
-_sockets.append(NLColorSocket)
 
 
 class NLColorAlphaSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLColorAlphaSocket"
-    bl_label = "Float Value"
-    value: FloatVectorProperty(
-        subtype='COLOR_GAMMA',
-        min=0.0,
-        max=1.0,
-        size=4,
-        default=(1.0, 1.0, 1.0, 1.0),
-        update=update_tree_code
-    )
-    type: StringProperty(default='RGBA')
-    nl_color = PARAM_COLOR_SOCKET_COLOR
-
-    def get_unlinked_value(self):
-        return "mathutils.Vector(({}, {}, {}, {}))".format(
-            self.value[0],
-            self.value[1],
-            self.value[2],
-            self.value[3]
-        )
-
-    def draw(self, context, layout, node, text):
-        if self.is_linked or self.is_output:
-            layout.label(text=text)
-        else:
-            row = layout.row()
-            row.label(text=text if text else 'Color')
-            row.prop(self, "value", text='')
-
-
-_sockets.append(NLColorAlphaSocket)
-
-
-class NLBlendActionModeSocket(bpy.types.NodeSocket, NLSocket):
-    bl_idname = "NLBlendActionMode"
-    bl_label = "Blend Mode"
-    value: EnumProperty(
-        name='Blend Mode',
-        items=_enum_blend_mode_values,
-        description="The blend mode of the action",
-        update=update_tree_code
-    )
-
-    def get_unlinked_value(self):
-        return self.value
-
-    def draw_color(self, context, node):
-        return PARAMETER_SOCKET_COLOR
-
-    def draw(self, context, layout, node, text):
-        if self.is_linked or self.is_output:
-            layout.label(text=text)
-        else:
-            layout.prop(self, "value", text=text)
-
-
-_sockets.append(NLBlendActionModeSocket)
 
 
 class NLVectorSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLVectorSocket"
-    bl_label = "Parameter"
-    type: StringProperty(default='VECTOR')
-
-    def draw_color(self, context, node):
-        return PARAM_VECTOR_SOCKET_COLOR
-
-    def draw(self, context, layout, node, text):
-        layout.label(text=text)
-
-    def get_unlinked_value(self):
-        return "None"
-
-
-_sockets.append(NLVectorSocket)
-
-
-class NLSocketVectorField(bpy.types.NodeSocket, NLSocket):
-    bl_idname = "NLSocketVectorField"
-    bl_label = "Vector"
-    type: StringProperty(default='VECTOR')
-    value: StringProperty(
-        update=update_tree_code,
-        description=(
-            'Default to (0,0,0), '
-            'type numbers separated by space or '
-            'comma or anything but a dot'
-        )
-    )
-
-    def draw_color(self, context, node):
-        return PARAM_VECTOR_SOCKET_COLOR
-
-    def draw(self, context, layout, node, text):
-        if self.is_linked:
-            layout.label(text=text)
-        else:
-            layout.label(text=text)
-            layout.prop(self, "value", text="")
-
-    def get_unlinked_value(self):
-        return parse_field_value("VECTOR", self.value)
-
-
-_sockets.append(NLSocketVectorField)
-
-
-class NLOptionalSocketVectorField(bpy.types.NodeSocket, NLSocket):
-    bl_idname = "NLOptionalSocketVectorField"
-    bl_label = "Vector"
-    type: StringProperty(default='VECTOR')
-    value: StringProperty(
-        update=update_tree_code,
-        description=(
-            'Default to None, type numbers separated by space or comma '
-            'or anything but a dot'
-        )
-    )
-
-    def draw_color(self, context, node):
-        return PARAMETER_SOCKET_COLOR
-
-    def draw(self, context, layout, node, text):
-        if self.is_linked:
-            layout.label(text=text)
-        else:
-            layout.label(text=text)
-            layout.prop(self, "value", text="")
-
-    def get_unlinked_value(self):
-        if not self.value:
-            return "None"
-        return parse_field_value("VECTOR", self.value)
-
-
-_sockets.append(NLOptionalSocketVectorField)
-
-
-class NLSocketOptionalFilePath(bpy.types.NodeSocket, NLSocket):
-    bl_idname = "NLSocketOptionalFilePath"
-    bl_label = "File"
-    value: StringProperty(
-        update=update_tree_code,
-        description=(
-            'None if empty. Absolute or Relative path. '
-            'Relative paths start with //'
-        )
-    )
-
-    def draw_color(self, context, node):
-        return PARAMETER_SOCKET_COLOR
-
-    def draw(self, context, layout, node, text):
-        if self.is_linked:
-            layout.label(text=text)
-        else:
-            layout.prop(self, "value", text=text)
-
-    def get_unlinked_value(self):
-        if not self.value:
-            return "None"
-        return '"{}"'.format(self.value)
-
-
-_sockets.append(NLSocketOptionalFilePath)
-
-
-class NLSocketMouseWheelDirection(bpy.types.NodeSocket, NLSocket):
-    bl_idname = "NLSocketMouseWheelDirection"
-    bl_label = "Mouse Wheel"
-    value: EnumProperty(
-        name='Direction',
-        items=_enum_mouse_wheel_direction,
-        update=update_tree_code
-    )
-
-    def draw_color(self, context, node):
-        return PARAMETER_SOCKET_COLOR
-
-    def draw(self, context, layout, node, text):
-        if self.is_linked:
-            layout.label(text=text)
-        else:
-            layout.prop(self, "value", text="")
-
-    def get_unlinked_value(self):
-        return self.value
-
-
-_sockets.append(NLSocketMouseWheelDirection)
-
-
-class NLSocketDistanceModels(bpy.types.NodeSocket, NLSocket):
-    bl_idname = "NLSocketDistanceModels"
-    bl_label = "Distance Model"
-    value: EnumProperty(
-        name='Distance Model',
-        items=_enum_distance_models,
-        update=update_tree_code
-    )
-
-    def draw_color(self, context, node):
-        return PARAMETER_SOCKET_COLOR
-
-    def draw(self, context, layout, node, text):
-        if self.is_linked:
-            layout.label(text=text)
-        else:
-            col = layout.column()
-            col.label(text=text)
-            col.prop(self, "value", text="")
-
-    def get_unlinked_value(self):
-        return '"{}"'.format(self.value)
-
-
-_sockets.append(NLSocketDistanceModels)
-
-
-class NLVectorMathSocket(bpy.types.NodeSocket, NLSocket):
-    bl_idname = "NLVectorMathSocket"
-    bl_label = "Vector Math"
-    value: EnumProperty(
-        name='Operation',
-        items=_enum_vector_math_options,
-        update=update_tree_code
-    )
-
-    def draw_color(self, context, node):
-        return PARAMETER_SOCKET_COLOR
-
-    def draw(self, context, layout, node, text):
-        if self.is_linked:
-            layout.label(text=text)
-        else:
-            layout.prop(self, "value", text="")
-
-    def get_unlinked_value(self):
-        return "'{}'".format(self.value)
-
-
-_sockets.append(NLVectorMathSocket)
-
-
-class NLTypeCastSocket(bpy.types.NodeSocket, NLSocket):
-    bl_idname = "NLTypeCastSocket"
-    bl_label = "Types"
-    value: EnumProperty(
-        name='Type',
-        items=_enum_type_casts,
-        update=update_tree_code
-    )
-
-    def draw_color(self, context, node):
-        return PARAMETER_SOCKET_COLOR
-
-    def draw(self, context, layout, node, text):
-        if self.is_linked:
-            layout.label(text=text)
-        else:
-            layout.prop(self, "value", text="")
-
-    def get_unlinked_value(self):
-        return "'{}'".format(self.value)
-
-
-_sockets.append(NLTypeCastSocket)
-
-
-class NLConstraintTypeSocket(bpy.types.NodeSocket, NLSocket):
-    bl_idname = "NLConstraintTypeSocket"
-    bl_label = "Constraint Type"
-    value: EnumProperty(
-        name='Type',
-        items=_enum_constraint_types,
-        update=update_tree_code
-    )
-
-    def draw_color(self, context, node):
-        return PARAMETER_SOCKET_COLOR
-
-    def draw(self, context, layout, node, text):
-        if self.is_linked:
-            layout.label(text=text)
-        else:
-            layout.prop(self, "value", text="")
-
-    def get_unlinked_value(self):
-        return self.value
-
-
-_sockets.append(NLConstraintTypeSocket)
 
 
 class NLSocketLocalAxis(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLSocketLocalAxis"
-    bl_label = "Local Axis"
-    value: EnumProperty(
-        name='Axis',
-        items=_enum_local_axis,
-        update=update_tree_code
-    )
-
-    def draw_color(self, context, node):
-        return PARAMETER_SOCKET_COLOR
-
-    def draw(self, context, layout, node, text):
-        if self.is_linked:
-            layout.label(text=text)
-        else:
-            parts = layout.split()
-            parts.label(text=text)
-            parts.prop(self, "value", text='')
-
-    def get_unlinked_value(self):
-        return self.value
-
-
-_sockets.append(NLSocketLocalAxis)
 
 
 class NLSocketOrientedLocalAxis(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLSocketOrientedLocalAxis"
-    bl_label = "Local Axis"
-    value: EnumProperty(
-        name='Axis',
-        items=_enum_local_oriented_axis,
-        update=update_tree_code
-    )
-
-    def draw_color(self, context, node):
-        return PARAMETER_SOCKET_COLOR
-
-    def draw(self, context, layout, node, text):
-        if self.is_linked:
-            layout.label(text=text)
-        else:
-            parts = layout.split()
-            parts.label(text=text)
-            parts.prop(self, "value", text='')
-
-    def get_unlinked_value(self):
-        return self.value
 
 
-_sockets.append(NLSocketOrientedLocalAxis)
+class NLBlendActionModeSocket(bpy.types.NodeSocket, NLSocket):
+    bl_idname = "NLBlendActionMode"
 
 
 ###############################################################################
@@ -4336,7 +1240,7 @@ class NLGetVRControllerValues(NLParameterNode):
         name='Controller',
         items=_enum_vrcontroller_trigger_operators,
         default='0',
-        update=update_tree_code
+        update=update_draw
     )
 
     def draw_buttons(self, context, layout):
@@ -5430,7 +2334,7 @@ class NLGameObjectPropertyParameterNode(NLParameterNode):
         name='Mode',
         items=_enum_object_property_types,
         default='GAME',
-        update=update_tree_code
+        update=update_draw
     )
 
     def draw_buttons(self, context, layout):
@@ -5487,6 +2391,9 @@ class NLGetGeometryNodeValue(NLParameterNode):
             tree_name = tree.value.name
             node_name = nde.value
             target = bpy.data.node_groups[tree_name].nodes[node_name]
+            if len(target.inputs) < 1:
+                ipt.enabled = False
+                return
             limit = len(target.inputs) - 1
             if int(ipt.value) > limit:
                 ipt.value = limit
@@ -5756,7 +2663,7 @@ class NLGameObjectHasPropertyParameterNode(NLParameterNode):
         name='Mode',
         items=_enum_object_property_types,
         default='GAME',
-        update=update_tree_code
+        update=update_draw
     )
 
     def draw_buttons(self, context, layout):
@@ -6061,11 +2968,14 @@ class NLVectorMath(NLParameterNode):
         self.inputs.new(NLVec3FieldSocket.bl_idname, "Vector 3")
         self.inputs.new(NLFloatFieldSocket.bl_idname, "IOR")
         self.outputs.new(NLParameterSocket.bl_idname, 'Result')
+        self.update_draw()
 
     def get_netlogic_class_name(self):
         return "ULVectorMath"
 
     def update_draw(self):
+        if len(self.inputs) < 6:
+            return
         vtype = self.operator
         v2 = self.inputs[1]
         fac = self.inputs[2]
@@ -6136,7 +3046,7 @@ class NLVectorAngleCheck(NLParameterNode):
     operator: EnumProperty(
         name='Operation',
         items=_enum_logic_operators,
-        update=update_tree_code
+        update=update_draw
     )
 
     def init(self, context):
@@ -6261,7 +3171,7 @@ class NLActionGetCharacterInfo(NLParameterNode):
     nl_category = "Physics"
     nl_subcat = 'Character'
     nl_module = 'parameters'
-    local: BoolProperty(default=True, update=update_tree_code)
+    local: BoolProperty(default=True, update=update_draw)
 
     def init(self, context):
         NLActionNode.init(self, context)
@@ -6339,10 +3249,8 @@ class NLObjectAttributeParameterNode(NLParameterNode):
     def init(self, context):
         NLParameterNode.init(self, context)
         self.inputs.new(NLGameObjectSocket.bl_idname, "Object")
-        self.inputs.new(NLSocketReadableMemberName.bl_idname, "Value")
-        self.inputs[-1].value = 'worldPosition'
+        self.inputs.new(NLParameterSocket.bl_idname, "Value")
         self.inputs[-1].enabled = False
-        self.attr_name = self.inputs[-1].value
         self.outputs.new(NLParameterSocket.bl_idname, "Value")
         self.outputs.new(NLVec3FieldSocket.bl_idname, "Vector")
         self.outputs[-1].enabled = False
@@ -6751,7 +3659,7 @@ class NLArithmeticOpParameterNode(NLParameterNode):
     operator: EnumProperty(
         name='Operation',
         items=_enum_math_operations,
-        update=update_tree_code
+        update=update_draw
     )
 
     def init(self, context):
@@ -6793,7 +3701,7 @@ class NLThresholdNode(NLParameterNode):
     operator: EnumProperty(
         name='Operation',
         items=_enum_greater_less,
-        update=update_tree_code
+        update=update_draw
     )
 
     def init(self, context):
@@ -6832,7 +3740,7 @@ class NLRangedThresholdNode(NLParameterNode):
     nl_module = 'parameters'
     operator: EnumProperty(
         items=_enum_in_or_out,
-        update=update_tree_code
+        update=update_draw
     )
 
     def init(self, context):
@@ -6870,7 +3778,7 @@ class NLLimitRange(NLParameterNode):
 
     operator: EnumProperty(
         items=_enum_in_or_out,
-        update=update_tree_code
+        update=update_draw
     )
 
     def init(self, context):
@@ -6938,7 +3846,7 @@ class NLWithinRangeNode(NLParameterNode):
     operator: EnumProperty(
         name='Mode',
         items=_enum_in_or_out,
-        update=update_tree_code
+        update=update_draw
     )
 
     def init(self, context):
@@ -7181,7 +4089,7 @@ class NLParameterActionStatus(NLParameterNode):
         return ["game_object", "action_layer"]
 
     def get_output_socket_varnames(self):
-        return [OUTCELL, "ACTION_NAME", "ACTION_FRAME"]
+        return [utils.OUTCELL, "ACTION_NAME", "ACTION_FRAME"]
 
 
 _nodes.append(NLParameterActionStatus)
@@ -7510,18 +4418,26 @@ class NLParameterTypeCast(NLParameterNode):
     bl_label = "Typecast Value"
     nl_category = "Python"
     nl_module = 'parameters'
+    to_type: EnumProperty(items=_enum_type_casts, update=update_draw)
 
     def init(self, context):
         NLParameterNode.init(self, context)
         self.inputs.new(NLValueFieldSocket.bl_idname, "")
-        self.inputs.new(NLTypeCastSocket.bl_idname, '')
         self.outputs.new(NLParameterSocket.bl_idname, "Value")
+
+    def draw_buttons(self, context, layout) -> None:
+        layout.prop(self, 'to_type', text='')
 
     def get_netlogic_class_name(self):
         return "ULTypeCastValue"
 
     def get_input_sockets_field_names(self):
-        return ["value", 'to_type']
+        return ["value"]
+
+    def get_attributes(self):
+        return [
+            ('to_type', lambda: f'"{self.to_type}"')
+        ]
 
     def get_output_socket_varnames(self):
         return ["OUT"]
@@ -7833,7 +4749,7 @@ class NLParameterMatrixToEulerNode(NLParameterNode):
         name='Axis',
         items=_enum_vector_types,
         description="Output",
-        update=update_tree_code
+        update=update_draw
     )
 
     def init(self, context):
@@ -7890,7 +4806,7 @@ class NLOnUpdateConditionNode(NLConditionNode):
     nl_category = "Events"
     nl_module = 'conditions'
 
-    repeat: BoolProperty(update=update_tree_code)
+    repeat: BoolProperty(update=update_draw)
 
     def init(self, context):
         NLConditionNode.init(self, context)
@@ -7943,7 +4859,7 @@ class NLGamepadSticksCondition(NLParameterNode):
         name='Axis',
         items=_enum_controller_stick_operators,
         description="Gamepad Sticks",
-        update=update_tree_code
+        update=update_draw
     )
 
     def init(self, context):
@@ -7988,7 +4904,7 @@ class NLGamepadTriggerCondition(NLParameterNode):
         name='Axis',
         items=_enum_controller_trigger_operators,
         description="Left or Right Trigger",
-        update=update_tree_code
+        update=update_draw
     )
 
     def init(self, context):
@@ -8040,7 +4956,7 @@ class NLGamepadActive(NLConditionNode):
         return ["index"]
 
     def get_output_socket_varnames(self):
-        return [OUTCELL]
+        return [utils.OUTCELL]
 
 
 _nodes.append(NLGamepadActive)
@@ -8057,14 +4973,14 @@ class NLGamepadButtonsCondition(NLConditionNode):
         name='Button',
         items=_enum_controller_buttons_operators,
         description="Controller Buttons",
-        update=update_tree_code
+        update=update_draw
     )
     pulse: BoolProperty(
         description=(
             'ON: True until the button is released, '
             'OFF: True when pressed, then False until pressed again'
         ),
-        update=update_tree_code
+        update=update_draw
     )
 
     def init(self, context):
@@ -8110,14 +5026,14 @@ class NLGamepadButtonUpCondition(NLConditionNode):
         name='Button',
         items=_enum_controller_buttons_operators,
         description="Controller Buttons",
-        update=update_tree_code
+        update=update_draw
     )
     pulse: BoolProperty(
         description=(
             'ON: True until the button is released, '
             'OFF: True when pressed, then False until pressed again'
         ),
-        update=update_tree_code
+        update=update_draw
     )
 
     def init(self, context):
@@ -8171,7 +5087,7 @@ class NLKeyboardActive(NLConditionNode):
         return ["index"]
 
     def get_output_socket_varnames(self):
-        return [OUTCELL]
+        return [utils.OUTCELL]
 
 
 _nodes.append(NLKeyboardActive)
@@ -8188,7 +5104,7 @@ class NLKeyPressedCondition(NLConditionNode):
             'ON: True until the key is released, '
             'OFF: True when pressed, then False until pressed again'
         ),
-        update=update_tree_code)
+        update=update_draw)
 
     def init(self, context):
         NLConditionNode.init(self, context)
@@ -8229,7 +5145,7 @@ class NLKeyLoggerAction(NLActionNode):
             'ON: True until the key is released, '
             'OFF: True when pressed, then False until pressed again'
         ),
-        update=update_tree_code)
+        update=update_draw)
 
     def init(self, context):
         NLActionNode.init(self, context)
@@ -8277,7 +5193,7 @@ class NLKeyReleasedCondition(NLConditionNode):
             'OFF: True when pressed, then False until pressed again'
         ),
         default=True,
-        update=update_tree_code)
+        update=update_draw)
 
     def init(self, context):
         NLConditionNode.init(self, context)
@@ -8321,7 +5237,7 @@ class NLMousePressedCondition(NLConditionNode):
             'OFF: True when pressed, then False until pressed again'
         ),
         default=False,
-        update=update_tree_code)
+        update=update_draw)
 
     def init(self, context):
         NLConditionNode.init(self, context)
@@ -8368,7 +5284,7 @@ class NLMouseMovedCondition(NLConditionNode):
             'OFF: True when pressed, then False until pressed again'
         ),
         default=False,
-        update=update_tree_code)
+        update=update_draw)
 
     def init(self, context):
         NLConditionNode.init(self, context)
@@ -8411,7 +5327,7 @@ class NLMouseReleasedCondition(NLConditionNode):
             'OFF: True when pressed, then False until pressed again'
         ),
         default=False,
-        update=update_tree_code)
+        update=update_draw)
 
     def init(self, context):
         NLConditionNode.init(self, context)
@@ -8453,7 +5369,7 @@ class NLConditionOnceNode(NLConditionNode):
     advanced: BoolProperty(
         name='Offline Reset',
         description='Show Timer for when to reset if tree is inactive. Hidden sockets will not be reset',
-        update=update_tree_code
+        update=update_draw
     )
 
     def init(self, context):
@@ -8494,12 +5410,12 @@ class NLObjectPropertyOperator(NLConditionNode):
         name='Mode',
         items=_enum_object_property_types,
         default='GAME',
-        update=update_tree_code
+        update=update_draw
     )
     operator: EnumProperty(
         name='Operator',
         items=_enum_logic_operators,
-        update=update_tree_code
+        update=update_draw
     )
 
     def draw_buttons(self, context, layout):
@@ -8593,17 +5509,26 @@ class NLConditionMouseWheelMoved(NLConditionNode):
     nl_category = "Input"
     nl_subcat = 'Mouse'
     nl_module = 'conditions'
+    wheel_direction: EnumProperty(items=_enum_mouse_wheel_direction, default='3')
 
     def init(self, context):
         NLConditionNode.init(self, context)
-        self.inputs.new(NLSocketMouseWheelDirection.bl_idname, "")
         self.outputs.new(NLConditionSocket.bl_idname, "When Scrolled")
+        self.outputs.new(NLIntegerFieldSocket.bl_idname, "Difference")
+
+    def draw_buttons(self, context, layout):
+        layout.prop(self, 'wheel_direction', text='')
 
     def get_netlogic_class_name(self):
         return "ULMouseScrolled"
 
-    def get_input_sockets_field_names(self):
-        return ["wheel_direction"]
+    def get_output_socket_varnames(self):
+        return ['OUT', 'DIFF']
+
+    def get_attributes(self):
+        return [
+            ("wheel_direction", lambda: self.wheel_direction)
+        ]
 
 
 _nodes.append(NLConditionMouseWheelMoved)
@@ -8615,7 +5540,7 @@ class NLConditionCollisionNode(NLConditionNode):
     nl_category = "Physics"
     nl_module = 'conditions'
     pulse: BoolProperty(
-        update=update_tree_code)
+        update=update_draw)
 
     def init(self, context):
         NLConditionNode.init(self, context)
@@ -8648,7 +5573,7 @@ class NLConditionCollisionNode(NLConditionNode):
         return ["game_object", 'use_mat', 'prop', 'material']
 
     def get_output_socket_varnames(self):
-        return [OUTCELL, "TARGET", "OBJECTS", "POINT", "NORMAL"]
+        return [utils.OUTCELL, "TARGET", "OBJECTS", "POINT", "NORMAL"]
 
     def get_attributes(self):
         return [
@@ -8906,7 +5831,7 @@ class NLConditionLogicOperation(NLConditionNode):
     operator: EnumProperty(
         name='Operator',
         items=_enum_logic_operators,
-        update=update_tree_code
+        update=update_draw
     )
 
     def draw_buttons(self, context, layout):
@@ -8955,7 +5880,7 @@ class NLConditionCompareVecs(NLConditionNode):
     operator: EnumProperty(
         name='Operator',
         items=_enum_logic_operators,
-        update=update_tree_code
+        update=update_draw
     )
 
     def draw_buttons(self, context, layout):
@@ -8989,24 +5914,33 @@ _nodes.append(NLConditionCompareVecs)
 
 class NLConditionDistanceCheck(NLConditionNode):
     bl_idname = "NLConditionDistanceCheck"
-    bl_label = "Check Distance"
+    bl_label = "Compare Distance"
     nl_category = "Math"
     nl_module = 'conditions'
+    operation: EnumProperty(items=_enum_logic_operators)
 
     def init(self, context):
         NLConditionNode.init(self, context)
-        self.inputs.new(NLSocketDistanceCheck.bl_idname, "Check")
         self.inputs.new(NLVec3FieldSocket.bl_idname, "A")
         self.inputs.new(NLVec3FieldSocket.bl_idname, "B")
-        self.inputs.new(NLPositiveFloatSocket.bl_idname, "Dist.")
-        self.inputs.new(NLSocketOptionalPositiveFloat.bl_idname, "Hyst.")
+        self.inputs.new(NLPositiveFloatSocket.bl_idname, "Value")
         self.outputs.new(NLConditionSocket.bl_idname, "Out")
+        self.outputs.new(NLFloatFieldSocket.bl_idname, "Distance")
+    
+    def draw_buttons(self, context, layout):
+        layout.prop(self, 'operation', text='')
+
+    def get_output_socket_varnames(self):
+        return ['OUT', 'DIST']
 
     def get_netlogic_class_name(self):
         return "ULCheckDistance"
 
     def get_input_sockets_field_names(self):
-        return ["operator", "param_a", "param_b", "dist", "hyst"]
+        return ["param_a", "param_b", "dist"]
+
+    def get_attributes(self):
+        return [("operation", lambda: self.operation)]
 
 
 _nodes.append(NLConditionDistanceCheck)
@@ -9024,7 +5958,7 @@ class NLConditionValueChanged(NLConditionNode):
             'When ON, skip the first change. '
             'When OFF, compare the first value to None'
         ),
-        update=update_tree_code)
+        update=update_draw)
 
     def init(self, context):
         NLConditionNode.init(self, context)
@@ -9470,7 +6404,7 @@ class NLSetGameObjectGamePropertyActionNode(NLActionNode):
         name='Mode',
         items=_enum_object_property_types,
         default='GAME',
-        update=update_tree_code
+        update=update_draw
     )
 
     def draw_buttons(self, context, layout):
@@ -9733,7 +6667,7 @@ class NLSetMaterial(NLActionNode):
         NLActionNode.init(self, context)
         self.inputs.new(NLConditionSocket.bl_idname, "Condition")
         self.inputs.new(NLGameObjectSocket.bl_idname, "Object")
-        self.inputs.new(NLCountSocket.bl_idname, "Slot")
+        self.inputs.new(NLIntegerFieldSocket.bl_idname, "Slot")
         self.inputs.new(NLMaterialSocket.bl_idname, "Material")
         self.outputs.new(NLConditionSocket.bl_idname, "Done")
 
@@ -9956,7 +6890,7 @@ class NLToggleGameObjectGamePropertyActionNode(NLActionNode):
         name='Mode',
         items=_enum_object_property_types,
         default='GAME',
-        update=update_tree_code
+        update=update_draw
     )
 
     def draw_buttons(self, context, layout):
@@ -10001,12 +6935,12 @@ class NLAddToGameObjectGamePropertyActionNode(NLActionNode):
         name='Mode',
         items=_enum_object_property_types,
         default='GAME',
-        update=update_tree_code
+        update=update_draw
     )
     operator: EnumProperty(
         name='Operation',
         items=_enum_math_operations,
-        update=update_tree_code
+        update=update_draw
     )
 
     def init(self, context):
@@ -10058,12 +6992,12 @@ class NLClampedModifyProperty(NLActionNode):
         name='Mode',
         items=_enum_object_property_types,
         default='GAME',
-        update=update_tree_code
+        update=update_draw
     )
     operator: EnumProperty(
         name='Operation',
         items=_enum_math_operations,
-        update=update_tree_code
+        update=update_draw
     )
 
     def init(self, context):
@@ -10116,7 +7050,7 @@ class NLCopyPropertyFromObject(NLActionNode):
         name='Mode',
         items=_enum_object_property_types,
         default='GAME',
-        update=update_tree_code
+        update=update_draw
     )
 
     def draw_buttons(self, context, layout):
@@ -10434,7 +7368,7 @@ class NLVehicleApplyEngineForce(NLActionNode):
     value_type: EnumProperty(
         name='Axis',
         items=_enum_vehicle_axis,
-        update=update_tree_code
+        update=update_draw
     )
 
     def init(self, context):
@@ -10480,7 +7414,7 @@ class NLVehicleApplyBraking(NLActionNode):
     value_type: EnumProperty(
         name='Axis',
         items=_enum_vehicle_axis,
-        update=update_tree_code
+        update=update_draw
     )
 
     def init(self, context):
@@ -10526,7 +7460,7 @@ class NLVehicleApplySteering(NLActionNode):
     value_type: EnumProperty(
         name='Axis',
         items=_enum_vehicle_axis,
-        update=update_tree_code
+        update=update_draw
     )
 
     def init(self, context):
@@ -10571,7 +7505,7 @@ class NLVehicleSetAttributes(NLActionNode):
     value_type: EnumProperty(
         name='Axis',
         items=_enum_vehicle_axis,
-        update=update_tree_code
+        update=update_draw
     )
 
     def init(self, context):
@@ -10641,7 +7575,7 @@ class NLSetObjectAttributeActionNode(NLActionNode):
     value_type: EnumProperty(
         name='Attribute',
         items=_enum_writable_member_names,
-        update=update_tree_code,
+        update=update_draw,
         default='worldPosition'
     )
     search_tags = [
@@ -10698,7 +7632,7 @@ class NLSlowFollow(NLActionNode):
     value_type: EnumProperty(
         name='Attribute',
         items=_enum_writable_member_names,
-        update=update_tree_code,
+        update=update_draw,
         default='worldPosition'
     )
 
@@ -10740,7 +7674,7 @@ class NLActionRayCastNode(NLActionNode):
     advanced: BoolProperty(
         name='Advanced',
         description='Show advanced options for this node. Hidden sockets will not be reset',
-        update=update_tree_code
+        update=update_draw
     )
 
     def init(self, context):
@@ -10857,7 +7791,7 @@ class NLProjectileRayCast(NLActionNode):
         ]
 
     def get_output_socket_varnames(self):
-        return [OUTCELL, "PICKED_OBJECT", "POINT", "NORMAL", 'PARABOLA']
+        return [utils.OUTCELL, "PICKED_OBJECT", "POINT", "NORMAL", 'PARABOLA']
 
 
 _nodes.append(NLProjectileRayCast)
@@ -11060,7 +7994,7 @@ class NLActionSendMessage(NLActionNode):
         return ['condition', 'from_obj', 'to_obj', 'subject', 'body']
 
     def get_output_socket_varnames(self):
-        return [OUTCELL]
+        return [utils.OUTCELL]
 
 
 _nodes.append(NLActionSendMessage)
@@ -11255,12 +8189,15 @@ class NLActionSetVSync(NLActionNode):
     bl_label = "Set VSync"
     nl_category = 'Render'
     nl_module = 'actions'
+    vsync_mode: EnumProperty(items=_enum_vsync_modes)
 
     def init(self, context):
         NLActionNode.init(self, context)
         self.inputs.new(NLConditionSocket.bl_idname, 'Condition')
-        self.inputs.new(NLVSyncSocket.bl_idname, 'Vsync')
         self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+
+    def draw_buttons(self, context, layout) -> None:
+        layout.prop(self, 'vsync_mode', text='')
 
     def get_output_socket_varnames(self):
         return ["OUT"]
@@ -11268,8 +8205,13 @@ class NLActionSetVSync(NLActionNode):
     def get_netlogic_class_name(self):
         return "ULSetVSync"
 
+    def get_attributes(self):
+        return [
+            ('vsync_mode', lambda: self.vsync_mode)
+        ]
+
     def get_input_sockets_field_names(self):
-        return ["condition", "vsync_mode"]
+        return ["condition"]
 
 
 _nodes.append(NLActionSetVSync)
@@ -11726,7 +8668,7 @@ class NLActionApplyLocation(NLActionNode):
     nl_category = "Objects"
     nl_subcat = 'Transformation'
     nl_module = 'actions'
-    local: BoolProperty(default=True, update=update_tree_code)
+    local: BoolProperty(default=True, update=update_draw)
 
     def init(self, context):
         NLActionNode.init(self, context)
@@ -11767,15 +8709,13 @@ class NLActionApplyRotation(NLActionNode):
     nl_category = "Objects"
     nl_subcat = 'Transformation'
     nl_module = 'actions'
-    local: BoolProperty(default=True, update=update_tree_code)
+    local: BoolProperty(default=True, update=update_draw)
 
     def init(self, context):
         NLActionNode.init(self, context)
-        utils.register_inputs(
-            self,
-            NLConditionSocket, "Condition",
-            NLGameObjectSocket, "Object",
-            NLVec3RotationSocket, "Vector")
+        self.inputs.new(NLConditionSocket.bl_idname, 'Condition')
+        self.inputs.new(NLGameObjectSocket.bl_idname, 'Object')
+        self.inputs.new(NLVec3RotationSocket.bl_idname, 'Vector')
         self.outputs.new(NLConditionSocket.bl_idname, 'Done')
 
     def get_output_socket_varnames(self):
@@ -11808,7 +8748,7 @@ class NLActionApplyForce(NLActionNode):
     nl_category = "Objects"
     nl_subcat = 'Transformation'
     nl_module = 'actions'
-    local: BoolProperty(default=True, update=update_tree_code)
+    local: BoolProperty(default=True, update=update_draw)
 
     def init(self, context):
         NLActionNode.init(self, context)
@@ -11850,7 +8790,7 @@ class NLActionApplyImpulse(NLActionNode):
     nl_category = "Objects"
     nl_subcat = 'Transformation'
     nl_module = 'actions'
-    local: BoolProperty(default=False, update=update_tree_code)
+    local: BoolProperty(default=False, update=update_draw)
 
     def init(self, context):
         NLActionNode.init(self, context)
@@ -11894,7 +8834,7 @@ class NLGamepadLook(NLActionNode):
         name='Axis',
         items=_enum_controller_stick_operators,
         description="Gamepad Sticks",
-        update=update_tree_code
+        update=update_draw
     )
 
     def init(self, context):
@@ -11907,7 +8847,7 @@ class NLGamepadLook(NLActionNode):
         self.inputs.new(NLPositiveIntCentSocket.bl_idname, 'Index')
         self.inputs.new(NLPositiveFloatSocket.bl_idname, 'Sensitivity')
         self.inputs[-1].value = .25
-        self.inputs.new(NLPositiveStepFloat.bl_idname, 'Exponent')
+        self.inputs.new(NLPositiveFloatSocket.bl_idname, 'Exponent')
         self.inputs[-1].value = 2.3
         self.inputs.new(NLBooleanSocket.bl_idname, 'Cap Left / Right')
         self.inputs.new(NLAngleLimitSocket.bl_idname, '')
@@ -11920,6 +8860,8 @@ class NLGamepadLook(NLActionNode):
         self.outputs.new(NLConditionSocket.bl_idname, "Done")
 
     def update_draw(self):
+        if len(self.inputs) < 12:
+            return
         ipts = self.inputs
         ipts[8].enabled = ipts[7].value
         ipts[10].enabled = ipts[9].value
@@ -12094,10 +9036,10 @@ class NLActionSaveGame(NLActionNode):
     bl_icon = 'FILE_TICK'
     nl_category = "Game"
     nl_module = 'actions'
-    custom_path: BoolProperty(update=update_tree_code)
+    custom_path: BoolProperty(update=update_draw)
     path: StringProperty(
         subtype='FILE_PATH',
-        update=update_tree_code,
+        update=update_draw,
         description=(
             'Choose a Path to save the file to. '
             'Start with "./" to make it relative to the file path.'
@@ -12152,10 +9094,10 @@ class NLActionLoadGame(NLActionNode):
     bl_icon = 'FILE_FOLDER'
     nl_category = "Game"
     nl_module = 'actions'
-    custom_path: BoolProperty(update=update_tree_code)
+    custom_path: BoolProperty(update=update_draw)
     path: StringProperty(
         subtype='FILE_PATH',
-        update=update_tree_code,
+        update=update_draw,
         description=(
             'Choose a Path to save the file to. '
             'Start with "./" to make it relative to the file path.'
@@ -12211,10 +9153,10 @@ class NLActionSaveVariable(NLActionNode):
     nl_subcat = "Variables"
     nl_module = 'actions'
 
-    custom_path: BoolProperty(update=update_tree_code)
+    custom_path: BoolProperty(update=update_draw)
     path: StringProperty(
         subtype='DIR_PATH',
-        update=update_tree_code,
+        update=update_draw,
         description=(
             'Choose a Path to save the file to. '
             'Start with "./" to make it relative to the file path.'
@@ -12275,10 +9217,10 @@ class NLActionSaveVariables(NLActionNode):
     nl_subcat = "Variables"
     nl_module = 'actions'
 
-    custom_path: BoolProperty(update=update_tree_code)
+    custom_path: BoolProperty(update=update_draw)
     path: StringProperty(
         subtype='DIR_PATH',
-        update=update_tree_code,
+        update=update_draw,
         description=(
             'Choose a Path to save the file to. '
             'Start with "./" to make it relative to the file path.'
@@ -12442,10 +9384,10 @@ class NLActionLoadVariable(NLActionNode):
     nl_subcat = "Variables"
     nl_module = 'parameters'
 
-    custom_path: BoolProperty(update=update_tree_code)
+    custom_path: BoolProperty(update=update_draw)
     path: StringProperty(
         subtype='DIR_PATH',
-        update=update_tree_code,
+        update=update_draw,
         description=(
             'Choose a Path to save the file to. '
             'Start with "./" to make it relative to the file path.'
@@ -12504,10 +9446,10 @@ class NLActionLoadVariables(NLActionNode):
     nl_subcat = "Variables"
     nl_module = 'parameters'
 
-    custom_path: BoolProperty(update=update_tree_code)
+    custom_path: BoolProperty(update=update_draw)
     path: StringProperty(
         subtype='DIR_PATH',
-        update=update_tree_code,
+        update=update_draw,
         description=(
             'Choose a Path to save the file to. '
             'Start with "./" to make it relative to the file path.'
@@ -12563,10 +9505,10 @@ class NLActionRemoveVariable(NLActionNode):
     nl_subcat = "Variables"
     nl_module = 'actions'
 
-    custom_path: BoolProperty(update=update_tree_code)
+    custom_path: BoolProperty(update=update_draw)
     path: StringProperty(
         subtype='DIR_PATH',
-        update=update_tree_code,
+        update=update_draw,
         description=(
             'Choose a Path to save the file to. '
             'Start with "./" to make it relative to the file path.'
@@ -12625,10 +9567,10 @@ class NLActionClearVariables(NLActionNode):
     nl_subcat = "Variables"
     nl_module = 'actions'
 
-    custom_path: BoolProperty(update=update_tree_code)
+    custom_path: BoolProperty(update=update_draw)
     path: StringProperty(
         subtype='DIR_PATH',
-        update=update_tree_code,
+        update=update_draw,
         description=(
             'Choose a Path to save the file to. '
             'Start with "./" to make it relative to the file path.'
@@ -12685,10 +9627,10 @@ class NLActionListVariables(NLActionNode):
     nl_subcat = "Variables"
     nl_module = 'actions'
 
-    custom_path: BoolProperty(update=update_tree_code)
+    custom_path: BoolProperty(update=update_draw)
     path: StringProperty(
         subtype='DIR_PATH',
-        update=update_tree_code,
+        update=update_draw,
         description=(
             'Choose a Path to save the file to. '
             'Start with "./" to make it relative to the file path.'
@@ -12801,7 +9743,7 @@ class NLActionSetCharacterWalkDir(NLActionNode):
     nl_subcat = 'Character'
     nl_module = 'actions'
 
-    local: BoolProperty(default=True, update=update_tree_code)
+    local: BoolProperty(default=True, update=update_draw)
 
     def init(self, context):
         NLActionNode.init(self, context)
@@ -12841,7 +9783,7 @@ class NLActionSetCharacterVelocity(NLActionNode):
     nl_subcat = 'Character'
     nl_module = 'actions'
 
-    local: BoolProperty(default=True, update=update_tree_code)
+    local: BoolProperty(default=True, update=update_draw)
 
     def init(self, context):
         NLActionNode.init(self, context)
@@ -12882,7 +9824,7 @@ class NLActionApplyTorque(NLActionNode):
     nl_subcat = 'Transformation'
     nl_module = 'actions'
 
-    local: BoolProperty(default=True, update=update_tree_code)
+    local: BoolProperty(default=True, update=update_draw)
 
     def init(self, context):
         NLActionNode.init(self, context)
@@ -13064,6 +10006,7 @@ class NLActionAddPhysicsConstraint(NLActionNode):
     bl_icon = 'CONSTRAINT'
     nl_category = "Physics"
     nl_module = 'actions'
+    constraint: EnumProperty(items=_enum_constraint_types, update=update_draw)
 
     def init(self, context):
         NLActionNode.init(self, context)
@@ -13071,7 +10014,6 @@ class NLActionAddPhysicsConstraint(NLActionNode):
         self.inputs.new(NLGameObjectSocket.bl_idname, "Object")
         self.inputs.new(NLGameObjectSocket.bl_idname, "Target")
         self.inputs.new(NLQuotedStringFieldSocket.bl_idname, 'Name')
-        self.inputs.new(NLConstraintTypeSocket.bl_idname, "")
         self.inputs.new(NLBooleanSocket.bl_idname, 'Use World Space')
         self.inputs.new(NLVec3FieldSocket.bl_idname, 'Pivot')
         self.inputs.new(NLBooleanSocket.bl_idname, 'Limit Axis')
@@ -13080,18 +10022,22 @@ class NLActionAddPhysicsConstraint(NLActionNode):
         self.inputs[-1].value = True
         self.outputs.new(NLConditionSocket.bl_idname, 'Done')
 
+    def draw_buttons(self, context, layout) -> None:
+        layout.prop(self, 'constraint', text='')
+
     def update_draw(self):
-        state = self.inputs[4].value
-        if state == 'bge.constraints.POINTTOPOINT_CONSTRAINT':
+        if len(self.inputs) < 9:
+            return
+        if self.constraint == 'bge.constraints.POINTTOPOINT_CONSTRAINT':
+            self.inputs[6].enabled = False
             self.inputs[7].enabled = False
-            self.inputs[8].enabled = False
             return
         else:
-            self.inputs[7].enabled = True
-        if not self.inputs[7].value:
-            self.inputs[8].enabled = False
+            self.inputs[6].enabled = True
+        if not self.inputs[6].value:
+            self.inputs[7].enabled = False
         else:
-            self.inputs[8].enabled = True
+            self.inputs[7].enabled = True
 
     def get_output_socket_varnames(self):
         return ["OUT"]
@@ -13099,13 +10045,17 @@ class NLActionAddPhysicsConstraint(NLActionNode):
     def get_netlogic_class_name(self):
         return "ULAddPhysicsConstraint"
 
+    def get_attributes(self):
+        return [
+            ('constraint', lambda: self.constraint)
+        ]
+
     def get_input_sockets_field_names(self):
         return [
             "condition",
             "target",
             "child",
             "name",
-            "constraint",
             'use_world',
             "pivot",
             'use_limit',
@@ -13320,34 +10270,6 @@ class NLSetEeveeSMAA(NLActionNode):
 _nodes.append(NLSetEeveeSMAA)
 
 
-class NLSetEeveeSMAAQuality(NLActionNode):
-    bl_idname = "NLSetEeveeSMAAQuality"
-    bl_label = "Set SMAA Quality"
-    nl_category = 'Render'
-    nl_subcat = 'EEVEE Effects'
-    nl_module = 'actions'
-
-    def init(self, context):
-        NLActionNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, 'Condition')
-        self.inputs.new(NLQualitySocket.bl_idname, '')
-        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
-
-    def get_output_socket_varnames(self):
-        return ["OUT"]
-
-    def get_netlogic_class_name(self):
-        return "ULSetEeveeSMAAQuality"
-
-    def get_input_sockets_field_names(self):
-        return [
-            "condition",
-            "value"
-        ]
-
-
-_nodes.append(NLSetEeveeSMAAQuality)
-
 
 class NLSetLightEnergyAction(NLActionNode):
     bl_idname = "NLSetLightEnergyAction"
@@ -13526,7 +10448,7 @@ class NLActionPlayActionNode(NLActionNode):
     advanced: BoolProperty(
         name='Advanced',
         description='Show advanced options for this node. Hidden sockets will not be reset',
-        update=update_tree_code
+        update=update_draw
     )
 
     def init(self, context):
@@ -13542,18 +10464,25 @@ class NLActionPlayActionNode(NLActionNode):
         self.inputs.new(NLPlayActionModeSocket.bl_idname, "Play Mode")
         self.inputs.new(NLBooleanSocket.bl_idname, "Stop When Done")
         self.inputs[-1].value = True
+        self.inputs[-1].enabled = False
         self.inputs.new(NLSocketAlphaFloat.bl_idname, "Layer Weight")
         self.inputs[-1].value = 1.0
+        self.inputs[-1].enabled = False
         self.inputs.new(NLPositiveFloatSocket.bl_idname, "Speed")
         self.inputs[-1].value = 1.0
+        self.inputs[-1].enabled = False
         self.inputs.new(NLFloatFieldSocket.bl_idname, "Blendin")
+        self.inputs[-1].enabled = False
         self.inputs.new(NLBlendActionModeSocket.bl_idname, "Blend Mode")
+        self.inputs[-1].enabled = False
         self.outputs.new(NLConditionSocket.bl_idname, "Started")
         self.outputs.new(NLConditionSocket.bl_idname, "Running")
         self.outputs.new(NLConditionSocket.bl_idname, "On Finish")
         self.outputs.new(NLParameterSocket.bl_idname, "Current Frame")
 
     def update_draw(self):
+        if len(self.inputs) < 12:
+            return
         self.inputs[6].enabled = False
         if self.inputs[7].value == 'bge.logic.KX_ACTION_MODE_LOOP':
             self.inputs[8].enabled = False
@@ -13599,7 +10528,7 @@ class NLActionAlignAxisToVector(NLActionNode):
     nl_category = "Objects"
     nl_subcat = 'Transformation'
     nl_module = 'actions'
-    local: BoolProperty(default=True, update=update_tree_code)
+    local: BoolProperty(default=True, update=update_draw)
 
     def init(self, context):
         NLActionNode.init(self, context)
@@ -13719,7 +10648,7 @@ class NLActionMouseLookNode(NLActionNode):
     axis: EnumProperty(
         name='Axis',
         items=_enum_look_axis,
-        update=update_tree_code,
+        update=update_draw,
         default="1"
     )
 
@@ -13739,6 +10668,7 @@ class NLActionMouseLookNode(NLActionNode):
         self.inputs[-1].value_y = math.radians(89)
         self.inputs.new(NLSocketAlphaFloat.bl_idname, "Smoothing")
         self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+        self.update_draw()
 
     def draw_buttons(self, context, layout):
         r = layout.row(align=True)
@@ -13746,6 +10676,8 @@ class NLActionMouseLookNode(NLActionNode):
         r.prop(self, "axis", text="")
 
     def update_draw(self):
+        if len(self.inputs) < 10:
+            return
         if self.inputs[5].value:
             self.inputs[6].enabled = True
         else:
@@ -13843,7 +10775,7 @@ class NLActionMousePickNode(NLActionNode):
         return ["condition", "camera", "property", 'xray', "distance"]
 
     def get_output_socket_varnames(self):
-        return [OUTCELL, "OUTOBJECT", "OUTPOINT", "OUTNORMAL"]
+        return [utils.OUTCELL, "OUTOBJECT", "OUTPOINT", "OUTNORMAL"]
 
 
 _nodes.append(NLActionMousePickNode)
@@ -13877,7 +10809,7 @@ class NLActionCameraPickNode(NLActionNode):
         return ["condition", "camera", "aim", "property_name", "xray", "distance"]
 
     def get_output_socket_varnames(self):
-        return [OUTCELL, "PICKED_OBJECT", "PICKED_POINT", "PICKED_NORMAL"]
+        return [utils.OUTCELL, "PICKED_OBJECT", "PICKED_POINT", "PICKED_NORMAL"]
 
 
 _nodes.append(NLActionCameraPickNode)
@@ -14020,7 +10952,7 @@ class NLParameterAxisVector(NLParameterNode):
     axis: EnumProperty(
         name='Axis',
         items=_enum_local_oriented_axis,
-        update=update_tree_code
+        update=update_draw
     )
 
     def init(self, context):
@@ -14144,17 +11076,17 @@ class NLSetBoneConstraintInfluence(NLActionNode):
         self.inputs.new(NLSocketAlphaFloat.bl_idname, "Influence")
         self.outputs.new(NLConditionSocket.bl_idname, 'Done')
 
-    def update_draw(self):
-        self.inputs[2].enabled = (
-            self.inputs[1].value is not None or
-            self.inputs[1].is_linked or
-            self.inputs[1].use_owner
-        )
-        self.inputs[3].enabled = (
-            self.inputs[2].enabled and
-            (self.inputs[2].value != '' or
-             self.inputs[2].is_linked)
-        )
+    # def update_draw(self):
+    #     self.inputs[2].enabled = (
+    #         self.inputs[1].value is not None or
+    #         self.inputs[1].is_linked or
+    #         self.inputs[1].use_owner
+    #     )
+    #     self.inputs[3].enabled = (
+    #         self.inputs[2].enabled and
+    #         (self.inputs[2].value != '' or
+    #          self.inputs[2].is_linked)
+    #     )
 
     def get_output_socket_varnames(self):
         return ["OUT"]
@@ -14194,17 +11126,17 @@ class NLSetBoneConstraintTarget(NLActionNode):
         self.inputs.new(NLGameObjectSocket.bl_idname, "Target")
         self.outputs.new(NLConditionSocket.bl_idname, 'Done')
 
-    def update_draw(self):
-        self.inputs[2].enabled = (
-            self.inputs[1].value is not None or
-            self.inputs[1].is_linked or
-            self.inputs[1].use_owner
-        )
-        self.inputs[3].enabled = (
-            self.inputs[2].enabled and
-            (self.inputs[2].value != '' or
-             self.inputs[2].is_linked)
-        )
+    # def update_draw(self):
+    #     self.inputs[2].enabled = (
+    #         self.inputs[1].value is not None or
+    #         self.inputs[1].is_linked or
+    #         self.inputs[1].use_owner
+    #     )
+    #     self.inputs[3].enabled = (
+    #         self.inputs[2].enabled and
+    #         (self.inputs[2].value != '' or
+    #          self.inputs[2].is_linked)
+    #     )
 
     def get_output_socket_varnames(self):
         return ["OUT"]
@@ -14245,17 +11177,17 @@ class NLSetBoneConstraintAttribute(NLActionNode):
         self.inputs.new(NLValueFieldSocket.bl_idname, "")
         self.outputs.new(NLConditionSocket.bl_idname, 'Done')
 
-    def update_draw(self):
-        self.inputs[2].enabled = (
-            self.inputs[1].value is not None or
-            self.inputs[1].is_linked or
-            self.inputs[1].use_owner
-        )
-        self.inputs[3].enabled = (
-            self.inputs[2].enabled and
-            (self.inputs[2].value != '' or
-             self.inputs[2].is_linked)
-        )
+    # def update_draw(self):
+    #     self.inputs[2].enabled = (
+    #         self.inputs[1].value is not None or
+    #         self.inputs[1].is_linked or
+    #         self.inputs[1].use_owner
+    #     )
+    #     self.inputs[3].enabled = (
+    #         self.inputs[2].enabled and
+    #         (self.inputs[2].value != '' or
+    #          self.inputs[2].is_linked)
+    #     )
 
     def get_output_socket_varnames(self):
         return ["OUT"]
@@ -14504,7 +11436,7 @@ class NLActionStart3DSoundAdv(NLActionNode):
     advanced: BoolProperty(
         name='Advanced Features',
         description='Show advanced features for this sound. Hidden sockets will not be reset',
-        update=update_tree_code
+        update=update_draw
     )
 
     def init(self, context):
@@ -14525,12 +11457,14 @@ class NLActionStart3DSoundAdv(NLActionNode):
         self.inputs.new(NLBooleanSocket.bl_idname, "Enable Reverb")
         self.inputs.new(NLPositiveFloatSocket.bl_idname, "Attenuation")
         self.inputs[-1].value = 1.0
-        self.inputs.new(NLPosFloatFormatSocket.bl_idname, "Reference Distance")
+        self.inputs.new(NLFloatFieldSocket.bl_idname, "Reference Distance")
+        self.inputs[-1].format = True
         self.inputs[-1].value = 1.0
         self.inputs.new(NLVec2FieldSocket.bl_idname, "Cone Inner / Outer")
         self.inputs[-1].value_x = 360
         self.inputs[-1].value_y = 360
-        self.inputs.new(NLPosFloatFormatSocket.bl_idname, "Cone Outer Volume")
+        self.inputs.new(NLFloatFieldSocket.bl_idname, "Cone Outer Volume")
+        self.inputs[-1].format = True
         self.inputs[-1].value = 0.0
         self.inputs.new(NLBooleanSocket.bl_idname, "Ignore Timescale")
         self.outputs.new(NLConditionSocket.bl_idname, 'On Start')
@@ -14869,9 +11803,6 @@ class NLParameterGetGlobalValue(NLParameterNode):
         self.inputs.new(NLOptionalValueFieldSocket.bl_idname, "Default Value")
         self.outputs.new(NLParameterSocket.bl_idname, "Value")
 
-    def update_draw(self):
-        self.inputs[1].enabled = True if self.inputs[0].value or self.inputs[0].is_linked else False
-
     def get_input_sockets_field_names(self):
         return ["data_id", "key", 'default']
 
@@ -14923,7 +11854,7 @@ class NLActionCreateMessage(NLActionNode):
     advanced: BoolProperty(
         name='Advanced',
         description='Show advanced options for this node. Hidden sockets will not be reset',
-        update=update_tree_code
+        update=update_draw
     )
 
     def init(self, context):
@@ -14972,10 +11903,6 @@ class NLActionSetGlobalValue(NLActionNode):
         self.inputs.new(NLValueFieldSocket.bl_idname, "")
         self.inputs.new(NLBooleanSocket.bl_idname, "Persistent")
         self.outputs.new(NLConditionSocket.bl_idname, 'Done')
-
-    def update_draw(self):
-        self.inputs[2].enabled = True if self.inputs[1].value or self.inputs[1].is_linked else False
-        self.inputs[3].enabled = self.inputs[4].enabled = self.inputs[2].enabled
 
     def get_output_socket_varnames(self):
         return ["OUT"]
@@ -15140,7 +12067,7 @@ class NLParameterKeyboardKeyCode(NLParameterNode):
     nl_category = "Input"
     nl_subcat = 'Keyboard'
     nl_module = 'parameters'
-    value: StringProperty(update=update_tree_code)
+    value: StringProperty(update=update_draw)
 
     def init(self, context):
         NLParameterNode.init(self, context)
@@ -15341,8 +12268,10 @@ class NLActionFollowPath(NLActionNode):
         self.inputs[-1].value = .2
         self.inputs.new(NLBooleanSocket.bl_idname, "Look At")
         self.inputs[-1].value = True
-        self.inputs.new(NLSocketOptionalPositiveFloat.bl_idname, "Rot Speed")
+        self.inputs.new(NLSocketAlphaFloat.bl_idname, "Rot Speed")
+        self.inputs[-1].value = 1.0
         self.inputs.new(NLSocketLocalAxis.bl_idname, "Rot Axis")
+        self.inputs[-1].value = "2"
         self.inputs.new(NLSocketOrientedLocalAxis.bl_idname, "Front")
         self.outputs.new(NLConditionSocket.bl_idname, 'Done')
 
@@ -15420,7 +12349,7 @@ class NLParameterMathFun(NLParameterNode):
         update_tree_code(self, context)
 
     value: StringProperty(
-        update=update_tree_code
+        update=update_draw
     )
     predefined_formulas: EnumProperty(
         name='Operation',

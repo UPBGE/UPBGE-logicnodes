@@ -7,6 +7,7 @@ from bge_netlogic.basicnodes import NLAbstractNode
 from bge_netlogic.ops.file_text_buffer import FileTextBuffer
 from bge_netlogic.ops.abstract_text_buffer import AbstractTextBuffer
 from bge_netlogic.ops.uid_map import UIDMap
+# from ..editor.sockets.socket import NLSocket
 from time import time
 
 
@@ -351,6 +352,7 @@ class TreeCodeGenerator(object):
         for node in tree.nodes:
             prefix = None
             if not (
+                isinstance(node, bge_netlogic.basicnodes.NLNode) or
                 isinstance(node, bge_netlogic.basicnodes.NLNode)
             ):
                 # utils.debug("Skipping TreeNode of type {} because it is not an instance of NLNode".format(node.__class__.__name__))

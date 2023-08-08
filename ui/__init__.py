@@ -787,30 +787,12 @@ class BGE_PT_GameComponentHelperPanel(bpy.types.Panel):
         layout = self.layout
 
         ob = context.active_object
-        # row.operator("logic.python_component_register", text="Register", icon="PLUS")
-        # row.operator("logic.python_component_create", text="Create", icon="PLUS")
         layout.operator('bge_netlogic.reload_components', text='Reload Components', icon='RECOVER_LAST')
         row = layout.row()
         row.label(text=f'Add Component To {context.active_object.name}:')
         row = layout.row(align=True)
         row.prop(context.scene, 'nl_componenthelper', text='')
-        row.operator("bge_netlogic.add_component", text='', icon="PLUS")
-
-        # for i, c in enumerate(game.components):
-        #     box = layout.box()
-        #     row = box.row()
-        #     row.prop(c, "show_expanded", text="", emboss=False)
-        #     row.label(text=c.name)
-        #     row.operator("logic.python_component_reload", text="", icon='RECOVER_LAST').index = i
-        #     row.operator("logic.python_component_remove", text="", icon='X').index = i
-
-        #     if c.show_expanded and len(c.properties) > 0:
-        #         box = box.box()
-        #         for prop in c.properties:
-        #             row = box.row()
-        #             row.label(text=prop.name)
-        #             col = row.column()
-        #             col.prop(prop, "value", text="")
+        row.operator("bge_netlogic.add_component", text='Select Component', icon="PLUS")
 
 
 class LogicNodeTree(bpy.types.NodeTree):

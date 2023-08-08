@@ -3,6 +3,10 @@ import bpy
 
 _items = []
 
+def menu_item(obj):
+    global _items
+    _items.append(obj)
+
 
 def draw_add_menu(self, context):
     if context.space_data.tree_type != "BGELogicTree":
@@ -53,6 +57,7 @@ def insertNode(layout, type, text, icon="NONE", settings={}):
     return operator
 
 
+@menu_item
 class CustomEventsMenu(bpy.types.Menu):
     bl_idname = "LN_MT_custom_events_menu"
     bl_label = "Custom Events Menu"
@@ -63,9 +68,7 @@ class CustomEventsMenu(bpy.types.Menu):
         insertNode(layout, "NLParameterReceiveMessage", "Receive")
 
 
-_items.append(CustomEventsMenu)
-
-
+@menu_item
 class EventsMenu(bpy.types.Menu):
     bl_idname = "LN_MT_events_menu"
     bl_label = "Events Menu"
@@ -82,9 +85,7 @@ class EventsMenu(bpy.types.Menu):
         layout.menu("LN_MT_custom_events_menu", text="Custom", icon="RIGHTARROW_THIN")
 
 
-_items.append(EventsMenu)
-
-
+@menu_item
 class GameMenu(bpy.types.Menu):
     bl_idname = "LN_MT_game_menu"
     bl_label = "Game Menu"
@@ -98,9 +99,7 @@ class GameMenu(bpy.types.Menu):
         insertNode(layout, "NLActionSaveGame", "Save Game")
 
 
-_items.append(GameMenu)
-
-
+@menu_item
 class InputMenu(bpy.types.Menu):
     bl_idname = "LN_MT_input_menu"
     bl_label = "Input Menu"
@@ -113,9 +112,7 @@ class InputMenu(bpy.types.Menu):
         layout.menu("LN_MT_vr_menu", text="VR", icon="RIGHTARROW_THIN")
 
 
-_items.append(InputMenu)
-
-
+@menu_item
 class MouseMenu(bpy.types.Menu):
     bl_idname = "LN_MT_mouse_menu"
     bl_label = "Mouse Menu"
@@ -134,9 +131,7 @@ class MouseMenu(bpy.types.Menu):
         insertNode(layout, "NLConditionMouseWheelMoved", "Wheel")
 
 
-_items.append(MouseMenu)
-
-
+@menu_item
 class KeyboardMenu(bpy.types.Menu):
     bl_idname = "LN_MT_keyboard_menu"
     bl_label = "Keyboard Menu"
@@ -150,9 +145,7 @@ class KeyboardMenu(bpy.types.Menu):
         insertNode(layout, "NLKeyLoggerAction", "Logger")
 
 
-_items.append(KeyboardMenu)
-
-
+@menu_item
 class GamepadMenu(bpy.types.Menu):
     bl_idname = "LN_MT_gamepad_menu"
     bl_label = "Gamepad Menu"
@@ -168,9 +161,7 @@ class GamepadMenu(bpy.types.Menu):
         insertNode(layout, "NLGamepadVibration", "Vibration")
 
 
-_items.append(GamepadMenu)
-
-
+@menu_item
 class VRMenu(bpy.types.Menu):
     bl_idname = "LN_MT_vr_menu"
     bl_label = "VR Menu"
@@ -181,9 +172,7 @@ class VRMenu(bpy.types.Menu):
         insertNode(layout, "NLGetVRControllerValues", "VR Controller")
 
 
-_items.append(VRMenu)
-
-
+@menu_item
 class ValuesMenu(bpy.types.Menu):
     bl_idname = "LN_MT_values_menu"
     bl_label = "Values Menu"
@@ -205,9 +194,7 @@ class ValuesMenu(bpy.types.Menu):
         insertNode(layout, "NLConditionValueValidNode", "Value Valid")
 
 
-_items.append(ValuesMenu)
-
-
+@menu_item
 class SimpleValuesMenu(bpy.types.Menu):
     bl_idname = "LN_MT_simple_values_menu"
     bl_label = "Simple Values Menu"
@@ -220,9 +207,7 @@ class SimpleValuesMenu(bpy.types.Menu):
         insertNode(layout, "NLParameterStringValue", "String")
 
 
-_items.append(SimpleValuesMenu)
-
-
+@menu_item
 class GlobalValuesMenu(bpy.types.Menu):
     bl_idname = "LN_MT_global_values_menu"
     bl_label = "Global Values Menu"
@@ -234,9 +219,7 @@ class GlobalValuesMenu(bpy.types.Menu):
         insertNode(layout, "NLActionListGlobalValues", "List Global Category")
 
 
-_items.append(GlobalValuesMenu)
-
-
+@menu_item
 class VectorValuesMenu(bpy.types.Menu):
     bl_idname = "LN_MT_vector_values_menu"
     bl_label = "Vector Values Menu"
@@ -253,9 +236,7 @@ class VectorValuesMenu(bpy.types.Menu):
         insertNode(layout, "NLParameterEulerSimpleNode", "Euler")
 
 
-_items.append(VectorValuesMenu)
-
-
+@menu_item
 class RandomValuesMenu(bpy.types.Menu):
     bl_idname = "LN_MT_random_values_menu"
     bl_label = "Random Values Menu"
@@ -267,9 +248,7 @@ class RandomValuesMenu(bpy.types.Menu):
         insertNode(layout, "NLRandomVect", "Random Vector")
 
 
-_items.append(RandomValuesMenu)
-
-
+@menu_item
 class AnimationMenu(bpy.types.Menu):
     bl_idname = "LN_MT_animation_menu"
     bl_label = "Animation Menu"
@@ -285,9 +264,7 @@ class AnimationMenu(bpy.types.Menu):
         layout.menu("LN_MT_boneconstraints_menu", text="Bone Constraints", icon="RIGHTARROW_THIN")
 
 
-_items.append(AnimationMenu)
-
-
+@menu_item
 class ArmatureRigMenu(bpy.types.Menu):
     bl_idname = "LN_MT_armature_rig_menu"
     bl_label = "Armature / Rig Menu"
@@ -299,9 +276,7 @@ class ArmatureRigMenu(bpy.types.Menu):
         insertNode(layout, "NLActionSetBonePos", "Set Bone Position")
 
 
-_items.append(ArmatureRigMenu)
-
-
+@menu_item
 class BoneConstraintsMenu(bpy.types.Menu):
     bl_idname = "LN_MT_boneconstraints_menu"
     bl_label = "Bone Constraints Menu"
@@ -313,9 +288,7 @@ class BoneConstraintsMenu(bpy.types.Menu):
         insertNode(layout, "NLSetBoneConstraintTarget", "Set Target")
 
 
-_items.append(BoneConstraintsMenu)
-
-
+@menu_item
 class LightsMenu(bpy.types.Menu):
     bl_idname = "LN_MT_lights_menu"
     bl_label = "Lights Menu"
@@ -330,9 +303,7 @@ class LightsMenu(bpy.types.Menu):
         insertNode(layout, "NLMakeUniqueLight", "Make Unique")
 
 
-_items.append(LightsMenu)
-
-
+@menu_item
 class NodesMenu(bpy.types.Menu):
     bl_idname = "LN_MT_nodes_menu"
     bl_label = "Nodes Menu"
@@ -344,9 +315,7 @@ class NodesMenu(bpy.types.Menu):
         layout.menu("LN_MT_groupnodes_menu", text="Groups", icon="RIGHTARROW_THIN")
 
 
-_items.append(NodesMenu)
-
-
+@menu_item
 class MatNodesMenu(bpy.types.Menu):
     bl_idname = "LN_MT_matnodes_menu"
     bl_label = "Material Nodes Menu"
@@ -364,9 +333,7 @@ class MatNodesMenu(bpy.types.Menu):
         insertNode(layout, "NLSetMaterialNodeAttribute", "Set Node Value")
 
 
-_items.append(MatNodesMenu)
-
-
+@menu_item
 class GeoNodesMenu(bpy.types.Menu):
     bl_idname = "LN_MT_geonodes_menu"
     bl_label = "Geometry Nodes Menu"
@@ -380,9 +347,7 @@ class GeoNodesMenu(bpy.types.Menu):
         insertNode(layout, "NLSetGeometryNodeAttribute", "Set Node Value")
 
 
-_items.append(GeoNodesMenu)
-
-
+@menu_item
 class GroupNodesMenu(bpy.types.Menu):
     bl_idname = "LN_MT_groupnodes_menu"
     bl_label = "Node Groups Menu"
@@ -396,9 +361,7 @@ class GroupNodesMenu(bpy.types.Menu):
         insertNode(layout, "NLSetNodeTreeNodeAttribute", "Set Node Value")
 
 
-_items.append(GroupNodesMenu)
-
-
+@menu_item
 class ObjectsMenu(bpy.types.Menu):
     bl_idname = "LN_MT_objects_menu"
     bl_label = "Objects Menu"
@@ -430,9 +393,7 @@ class ObjectsMenu(bpy.types.Menu):
         insertNode(layout, "LogicNodeSpawnPool", "Spawn Pool")
 
 
-_items.append(ObjectsMenu)
-
-
+@menu_item
 class TransformMenu(bpy.types.Menu):
     bl_idname = "LN_MT_transform_menu"
     bl_label = "Transformation Menu"
@@ -454,9 +415,7 @@ class TransformMenu(bpy.types.Menu):
         insertNode(layout, "NLActionTranslate", "Translate")
 
 
-_items.append(TransformMenu)
-
-
+@menu_item
 class PropertyMenu(bpy.types.Menu):
     bl_idname = "LN_MT_property_menu"
     bl_label = "Properties Menu"
@@ -473,9 +432,7 @@ class PropertyMenu(bpy.types.Menu):
         insertNode(layout, "NLCopyPropertyFromObject", "Copy From Object")
 
 
-_items.append(PropertyMenu)
-
-
+@menu_item
 class ObjectDataMenu(bpy.types.Menu):
     bl_idname = "LN_MT_object_data_menu"
     bl_label = "Object Data Menu"
@@ -490,9 +447,7 @@ class ObjectDataMenu(bpy.types.Menu):
         # insertNode(layout, "NLSetObjectAttributeActionNode", "Set Position / Rotation / Scale etc.")
 
 
-_items.append(ObjectDataMenu)
-
-
+@menu_item
 class GetAttributesMenu(bpy.types.Menu):
     bl_idname = "LN_MT_getattributes_menu"
     bl_label = "Get Attributes Menu"
@@ -516,9 +471,7 @@ class GetAttributesMenu(bpy.types.Menu):
         insertNode(layout, "NLObjectAttributeParameterNode", "Get Color", settings={'attr_name': repr('color'), 'label': repr('Get Color')})
 
 
-_items.append(GetAttributesMenu)
-
-
+@menu_item
 class SetAttributesMenu(bpy.types.Menu):
     bl_idname = "LN_MT_setattributes_menu"
     bl_label = "Get Attributes Menu"
@@ -541,9 +494,7 @@ class SetAttributesMenu(bpy.types.Menu):
         insertNode(layout, "NLSetObjectAttributeActionNode", "Set Color", settings={'value_type': repr('color'), 'label': repr('Set Color')})
 
 
-_items.append(SetAttributesMenu)
-
-
+@menu_item
 class CurveMenu(bpy.types.Menu):
     bl_idname = "LN_MT_curve_menu"
     bl_label = "Curves Menu"
@@ -554,9 +505,7 @@ class CurveMenu(bpy.types.Menu):
         insertNode(layout, "NLSetCurvePoints", "Set Curve Points")
 
 
-_items.append(CurveMenu)
-
-
+@menu_item
 class SceneMenu(bpy.types.Menu):
     bl_idname = "LN_MT_scene_menu"
     bl_label = "Scene Menu"
@@ -578,9 +527,7 @@ class SceneMenu(bpy.types.Menu):
         # insertNode(layout, "NLSetCurvePoints", "Cursor Behaviour")
 
 
-_items.append(SceneMenu)
-
-
+@menu_item
 class CameraMenu(bpy.types.Menu):
     bl_idname = "LN_MT_camera_menu"
     bl_label = "Camera Menu"
@@ -595,9 +542,7 @@ class CameraMenu(bpy.types.Menu):
         insertNode(layout, "NLParameterWorldPosition", "Screen To World")
 
 
-_items.append(CameraMenu)
-
-
+@menu_item
 class PostFXMenu(bpy.types.Menu):
     bl_idname = "LN_MT_post_fx_menu"
     bl_label = "Post FX Menu"
@@ -610,9 +555,7 @@ class PostFXMenu(bpy.types.Menu):
         insertNode(layout, "NLToggleFilter", "Toggle Filter")
 
 
-_items.append(PostFXMenu)
-
-
+@menu_item
 class CollectionsMenu(bpy.types.Menu):
     bl_idname = "LN_MT_collections_menu"
     bl_label = "Collection Menu"
@@ -628,9 +571,7 @@ class CollectionsMenu(bpy.types.Menu):
         insertNode(layout, "NLRemoveOverlayCollection", "Remove Overlay Collections")
 
 
-_items.append(CollectionsMenu)
-
-
+@menu_item
 class SoundMenu(bpy.types.Menu):
     bl_idname = "LN_MT_sound_menu"
     bl_label = "Sound Menu"
@@ -646,9 +587,7 @@ class SoundMenu(bpy.types.Menu):
         insertNode(layout, "NLActionStopSound", "Stop Sound")
 
 
-_items.append(SoundMenu)
-
-
+@menu_item
 class LogicMenu(bpy.types.Menu):
     bl_idname = "LN_MT_logic_menu"
     bl_label = "Logic Menu"
@@ -669,9 +608,7 @@ class LogicMenu(bpy.types.Menu):
         insertNode(layout, "NLParameterSwitchValue", "True / False")
 
 
-_items.append(LogicMenu)
-
-
+@menu_item
 class LogicTreeMenu(bpy.types.Menu):
     bl_idname = "LN_MT_logic_tree_menu"
     bl_label = "Logic Tree Menu"
@@ -686,9 +623,7 @@ class LogicTreeMenu(bpy.types.Menu):
         insertNode(layout, "NLConditionLogitNetworkStatusNode", "Logic Network Status")
 
 
-_items.append(LogicTreeMenu)
-
-
+@menu_item
 class LogicBrickMenu(bpy.types.Menu):
     bl_idname = "LN_MT_logic_brick_menu"
     bl_label = "Logic Brick Menu"
@@ -705,9 +640,7 @@ class LogicBrickMenu(bpy.types.Menu):
         insertNode(layout, "NLGetSensorNode", "Sensor Positive")
 
 
-_items.append(LogicBrickMenu)
-
-
+@menu_item
 class MathMenu(bpy.types.Menu):
     bl_idname = "LN_MT_math_menu"
     bl_label = "Math Menu"
@@ -731,9 +664,7 @@ class MathMenu(bpy.types.Menu):
         insertNode(layout, "NLWithinRangeNode", "Within Range")
 
 
-_items.append(MathMenu)
-
-
+@menu_item
 class VectorMathMenu(bpy.types.Menu):
     bl_idname = "LN_MT_vector_math_menu"
     bl_label = "Vector Math Menu"
@@ -742,7 +673,7 @@ class VectorMathMenu(bpy.types.Menu):
         layout = self.layout
         insertNode(layout, "NLVectorAngle", "Angle")
         insertNode(layout, "NLVectorAngleCheck", "Check Angle")
-        insertNode(layout, "NLConditionDistanceCheck", "Check Distance")
+        insertNode(layout, "NLConditionDistanceCheck", "Compare Distance")
         insertNode(layout, "NLParameterAbsVector3Node", "Absolute Vector")
         insertNode(layout, "NLConditionCompareVecs", "Compare Vectors")
         insertNode(layout, "NLParameterEulerToMatrixNode", "XYZ to Matrix")
@@ -750,9 +681,7 @@ class VectorMathMenu(bpy.types.Menu):
         # insertNode(layout, "NLVectorLength", "Vector Length")
 
 
-_items.append(VectorMathMenu)
-
-
+@menu_item
 class PhysicsMenu(bpy.types.Menu):
     bl_idname = "LN_MT_physics_menu"
     bl_label = "Physics Menu"
@@ -775,9 +704,7 @@ class PhysicsMenu(bpy.types.Menu):
         insertNode(layout, "NLSetRigidBody", "Set Rigid Body")
 
 
-_items.append(PhysicsMenu)
-
-
+@menu_item
 class VehicleMenu(bpy.types.Menu):
     bl_idname = "LN_MT_vehicle_menu"
     bl_label = "Vehicle Menu"
@@ -792,9 +719,7 @@ class VehicleMenu(bpy.types.Menu):
         insertNode(layout, "NLVehicleApplySteering", "Steer")
 
 
-_items.append(VehicleMenu)
-
-
+@menu_item
 class CharacterMenu(bpy.types.Menu):
     bl_idname = "LN_MT_character_menu"
     bl_label = "Character Menu"
@@ -810,9 +735,7 @@ class CharacterMenu(bpy.types.Menu):
         insertNode(layout, "NLActionSetCharacterVelocity", "Set Velocity")
 
 
-_items.append(CharacterMenu)
-
-
+@menu_item
 class PythonMenu(bpy.types.Menu):
     bl_idname = "LN_MT_python_menu"
     bl_label = "Python Menu"
@@ -825,9 +748,7 @@ class PythonMenu(bpy.types.Menu):
         insertNode(layout, "NLParameterTypeCast", "Typecast")
 
 
-_items.append(PythonMenu)
-
-
+@menu_item
 class RaycastMenu(bpy.types.Menu):
     bl_idname = "LN_MT_raycast_menu"
     bl_label = "Raycast Menu"
@@ -840,9 +761,7 @@ class RaycastMenu(bpy.types.Menu):
         insertNode(layout, "NLProjectileRayCast", "Projectile Ray")
 
 
-_items.append(RaycastMenu)
-
-
+@menu_item
 class TimeMenu(bpy.types.Menu):
     bl_idname = "LN_MT_time_menu"
     bl_label = "Time Menu"
@@ -857,9 +776,7 @@ class TimeMenu(bpy.types.Menu):
         insertNode(layout, "NLConditionTimeElapsed", "Timer")
 
 
-_items.append(TimeMenu)
-
-
+@menu_item
 class FileMenu(bpy.types.Menu):
     bl_idname = "LN_MT_file_menu"
     bl_label = "File Menu"
@@ -873,9 +790,7 @@ class FileMenu(bpy.types.Menu):
         insertNode(layout, "NLLoadFileContent", "Load File Content")
 
 
-_items.append(FileMenu)
-
-
+@menu_item
 class NetworkMenu(bpy.types.Menu):
     bl_idname = "LN_MT_network_menu"
     bl_label = "File Menu"
@@ -890,9 +805,7 @@ class NetworkMenu(bpy.types.Menu):
         insertNode(layout, "LogicNodeSerializeData", "Serialize Data")
 
 
-_items.append(NetworkMenu)
-
-
+@menu_item
 class DataMenu(bpy.types.Menu):
     bl_idname = "LN_MT_data_menu"
     bl_label = "Data Menu"
@@ -904,9 +817,7 @@ class DataMenu(bpy.types.Menu):
         layout.menu("LN_MT_variable_menu", text="Variables", icon="RIGHTARROW_THIN")
 
 
-_items.append(DataMenu)
-
-
+@menu_item
 class ListMenu(bpy.types.Menu):
     bl_idname = "LN_MT_list_menu"
     bl_label = "List Menu"
@@ -927,9 +838,7 @@ class ListMenu(bpy.types.Menu):
         insertNode(layout, "NLDuplicateList", "Duplicate")
 
 
-_items.append(ListMenu)
-
-
+@menu_item
 class DictMenu(bpy.types.Menu):
     bl_idname = "LN_MT_dict_menu"
     bl_label = "Dictionary Menu"
@@ -944,9 +853,7 @@ class DictMenu(bpy.types.Menu):
         insertNode(layout, "NLSetDictDelKey", "Remove Key")
 
 
-_items.append(DictMenu)
-
-
+@menu_item
 class VariableMenu(bpy.types.Menu):
     bl_idname = "LN_MT_variable_menu"
     bl_label = "Variable Menu"
@@ -964,9 +871,7 @@ class VariableMenu(bpy.types.Menu):
         insertNode(layout, "NLActionListVariables", "List Saved Variables")
 
 
-_items.append(VariableMenu)
-
-
+@menu_item
 class LayoutMenu(bpy.types.Menu):
     bl_idname = "LN_MT_layout_menu"
     bl_label = "Layout Menu"
@@ -977,9 +882,7 @@ class LayoutMenu(bpy.types.Menu):
         insertNode(layout, "NodeFrame", "Frame")
 
 
-_items.append(LayoutMenu)
-
-
+@menu_item
 class RenderMenu(bpy.types.Menu):
     bl_idname = "LN_MT_render_menu"
     bl_label = "Render Menu"
@@ -999,9 +902,7 @@ class RenderMenu(bpy.types.Menu):
         insertNode(layout, "NLSetProfile", "Show Profile")
 
 
-_items.append(RenderMenu)
-
-
+@menu_item
 class DrawMenu(bpy.types.Menu):
     bl_idname = "LN_MT_draw_menu"
     bl_label = "Draw Menu"
@@ -1013,9 +914,7 @@ class DrawMenu(bpy.types.Menu):
         insertNode(layout, "NLDrawBox", "Box")
 
 
-_items.append(DrawMenu)
-
-
+@menu_item
 class EeveeMenu(bpy.types.Menu):
     bl_idname = "LN_MT_eevee_menu"
     bl_label = "EEVEE Menu"
@@ -1032,9 +931,7 @@ class EeveeMenu(bpy.types.Menu):
         insertNode(layout, "NLSetEeveeVolumetrics", "Set Volumetric Light")
 
 
-_items.append(EeveeMenu)
-
-
+@menu_item
 class UIMenu(bpy.types.Menu):
     bl_idname = "LN_MT_ui_menu"
     bl_label = "UI Menu"
@@ -1050,9 +947,7 @@ class UIMenu(bpy.types.Menu):
         insertNode(layout, "LogicNodeSetCustomCursor", "Set Custom Cursor")
 
 
-_items.append(UIMenu)
-
-
+@menu_item
 class WidgetMenu(bpy.types.Menu):
     bl_idname = "LN_MT_widget_menu"
     bl_label = "Widget Menu"
@@ -1068,9 +963,7 @@ class WidgetMenu(bpy.types.Menu):
         insertNode(layout, "LogicNodeCreateUISlider", "Create Slider")
 
 
-_items.append(WidgetMenu)
-
-
+@menu_item
 class UtilityMenu(bpy.types.Menu):
     bl_idname = "LN_MT_utility_menu"
     bl_label = "Utility Menu"
@@ -1079,6 +972,3 @@ class UtilityMenu(bpy.types.Menu):
         layout = self.layout
         insertNode(layout, "NLActionGetPerformanceProfileNode", "Get Profile")
         insertNode(layout, "NLActionPrint", "Print")
-
-
-_items.append(UtilityMenu)

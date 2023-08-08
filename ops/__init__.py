@@ -104,7 +104,8 @@ class NLMakeCustomMainLoop(bpy.types.Operator):
         main = bpy.data.texts.get(f'{name}.py')
         if main is None:
             main = bpy.data.texts.new(f'{name}.py')
-            main.write(f'''from uplogic import ULLoop
+            main.write(
+f'''from uplogic import ULLoop
 
 
 class {scene.name}Loop(ULLoop):
@@ -122,7 +123,8 @@ class {scene.name}Loop(ULLoop):
         pass
 
 
-{scene.name}Loop()''')
+{scene.name}Loop()'''
+)
         scene['__main__'] = f'{name}.py'
         scene.game_settings.use_frame_rate = False
         return {"FINISHED"}
@@ -191,7 +193,7 @@ class TreeCodeWriterOperator(bpy.types.Operator):
 
 
 class WaitForKeyOperator(bpy.types.Operator):
-    bl_idname = "bge_netlogic.waitforkey"
+    bl_idname = "logic_nodes.wait_for_key"
     bl_label = "Press a Key"
     bl_options = {'REGISTER', 'UNDO'}
     keycode: bpy.props.StringProperty()
@@ -426,7 +428,7 @@ class NLAddListItemSocket(bpy.types.Operator):
 
 
 class NLRemoveListItemSocket(bpy.types.Operator):
-    bl_idname = "bge_netlogic.remove_list_item_socket"
+    bl_idname = "logic_nodes.remove_list_item_socket"
     bl_label = "Remove"
     bl_options = {'REGISTER', 'UNDO'}
     bl_description = "Remove this socket"
@@ -1375,7 +1377,7 @@ class NLRemoveGlobalCatOperator(bpy.types.Operator):
 
 
 class NLLoadSoundOperator(bpy.types.Operator, ImportHelper):
-    bl_idname = "bge_netlogic.load_sound"
+    bl_idname = "logic_nodes.load_sound"
     bl_label = "Load Sound"
     bl_options = {'REGISTER', 'UNDO'}
     bl_description = "Load a sound file"
@@ -1400,7 +1402,7 @@ class NLLoadSoundOperator(bpy.types.Operator, ImportHelper):
 
 
 class NLLoadImageOperator(bpy.types.Operator, ImportHelper):
-    bl_idname = "bge_netlogic.load_image"
+    bl_idname = "logic_nodes.load_image"
     bl_label = "Load Image"
     bl_options = {'REGISTER', 'UNDO'}
     bl_description = "Load an image file"
@@ -1425,8 +1427,8 @@ class NLLoadImageOperator(bpy.types.Operator, ImportHelper):
 
 
 class NLLoadFontOperator(bpy.types.Operator, ImportHelper):
-    bl_idname = "bge_netlogic.load_font"
-    bl_label = "Load Image"
+    bl_idname = "logic_nodes.load_font"
+    bl_label = "Load Font"
     bl_options = {'REGISTER', 'UNDO'}
     bl_description = "Load an image file"
 
@@ -1445,7 +1447,6 @@ class NLLoadFontOperator(bpy.types.Operator, ImportHelper):
             relative_path=True,
             filter_font=True
         )
-        # .value = os.path.basename(self.filepath)
         return {'FINISHED'}
 
 

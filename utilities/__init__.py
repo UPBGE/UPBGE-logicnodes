@@ -18,6 +18,8 @@ STATUS_ICONS = {
 }
 
 NLPREFIX = 'NL__'
+LOGIC_NODE_IDENTIFIER = 'NL__'
+OUTCELL = "__standard_logic_cell_value__"
 
 
 def set_compile_status(status):
@@ -518,3 +520,71 @@ def iterSubclassesWithAttribute(cls, attribute):
             yield subcls
         else:
             yield from iterSubclassesWithAttribute(subcls, attribute)
+
+
+def update_draw(self, context):
+    from bge_netlogic.basicnodes import NLNode
+    if not hasattr(context.space_data, 'edit_tree'):
+        return
+    tree = context.space_data.edit_tree
+    for node in tree.nodes:
+        if hasattr(node, 'update_draw'):
+            try:
+                node.update_draw()
+            except Exception as e:
+                error(f'Failed node {node}, {e}')
+                pass
+
+def parse_value_type(value_type, value):
+    t = value_type
+    v = value
+
+    if t == "NONE":
+        return "None"
+
+    if t == "INTEGER":
+        try:
+            return int(v)
+        except ValueError:
+            return "0.0"
+
+    if t == "FLOAT":
+        try:
+            return float(v)
+        except ValueError:
+            return "0.0"
+
+    if t == "STRING":
+        return '"{}"'.format(v)
+
+    if t == "FILE_PATH":
+        return '"{}"'.format(v)
+
+    if t == "BOOLEAN":
+        return v
+
+    raise ValueError(
+        "Cannot parse enum {} type for NLValueFieldSocket".format(t)
+    )
+
+
+def key_event(ks):
+    ks = ks.replace("ASTERIX", "ASTER")
+
+    if ks == "NONE":
+        return "None"
+
+    if ks == "RET":
+        ks = "ENTER"
+
+    if ks.startswith("NUMPAD_"):
+        ks = ks.replace("NUMPAD_", "PAD")
+        if("SLASH" in ks or "ASTER" in ks or "PLUS" in ks):
+            ks = ks.replace("SLASH", "SLASHKEY")
+            ks = ks.replace("ASTER", "ASTERKEY")
+            ks = ks.replace("PLUS", "PLUSKEY")
+        return "bge.events.{}".format(ks)
+
+    x = "{}KEY".format(ks.replace("_", ""))
+
+    return "bge.events.{}".format(x)
