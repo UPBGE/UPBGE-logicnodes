@@ -921,6 +921,7 @@ class NLNode(NetLogicType):
 class NLConditionSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLConditionSocket"
     bl_label = "Condition"
+    nl_color = CONDITION_SOCKET_COLOR
     description = StringProperty(default='Execution Condition')
     default_value: StringProperty(
         name='Condition',
@@ -928,10 +929,6 @@ class NLConditionSocket(bpy.types.NodeSocket, NLSocket):
     )
     type: StringProperty(default='MATERIAL')
     shape: StringProperty(default='CIRCLE')
-    nl_color = CONDITION_SOCKET_COLOR
-
-    # def draw_color(self, context, node):
-    #     return CONDITION_SOCKET_COLOR
 
     def shape_setup(self):
         self.display_shape = self.shape
@@ -949,6 +946,7 @@ _sockets.append(NLConditionSocket)
 class NodeSocketPseudoCondition(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLPseudoConditionSocket"
     bl_label = "Condition"
+    nl_color = CONDITION_SOCKET_COLOR
     value: BoolProperty(
         name='Condition',
         description=(
@@ -957,7 +955,6 @@ class NodeSocketPseudoCondition(bpy.types.NodeSocket, NLSocket):
         ),
         update=update_tree_code)
     type: StringProperty(default='MATERIAL')
-    nl_color = CONDITION_SOCKET_COLOR
 
     def draw(self, context, layout, node, text):
         if self.is_linked or self.is_output:
@@ -976,11 +973,8 @@ _sockets.append(NodeSocketPseudoCondition)
 class NLParameterSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLParameterSocket"
     bl_label = "Parameter"
-    type: StringProperty(default='VALUE')
     nl_color = PARAMETER_SOCKET_COLOR
-
-    def draw_color(self, context, node):
-        return self.nl_color
+    type: StringProperty(default='VALUE')
 
     def validate(self, link, from_socket):
         self.nl_color = from_socket.nl_color
@@ -998,10 +992,8 @@ _sockets.append(NLParameterSocket)
 class NLDictSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLDictSocket"
     bl_label = "Parameter"
+    nl_color = PARAM_INT_SOCKET_COLOR
     type: StringProperty(default='MATERIAL')
-
-    def draw_color(self, context, node):
-        return PARAM_INT_SOCKET_COLOR
 
     def draw(self, context, layout, node, text):
         layout.label(text=text)
@@ -1016,8 +1008,8 @@ _sockets.append(NLDictSocket)
 class NLUISocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLUISocket"
     bl_label = "Parameter"
-    type: StringProperty(default='GEOMETRY')
     nl_color = PARAM_MESH_SOCKET_COLOR
+    type: StringProperty(default='GEOMETRY')
 
     def draw(self, context, layout, node, text):
         layout.label(text=text)
@@ -1032,9 +1024,9 @@ _sockets.append(NLUISocket)
 class NLListSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLListSocket"
     bl_label = "Parameter"
+    nl_color = PARAM_INT_SOCKET_COLOR
     # type: StringProperty(default='SQUARE')
     type: StringProperty(default='RGBA')
-    nl_color = PARAM_INT_SOCKET_COLOR
 
     def draw(self, context, layout, node, text):
         layout.label(text=text)
@@ -1049,9 +1041,7 @@ _sockets.append(NLListSocket)
 class NLListItemSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLListItemSocket"
     bl_label = "Parameter"
-
-    def draw_color(self, context, node):
-        return PARAMETER_SOCKET_COLOR
+    nl_color = PARAMETER_SOCKET_COLOR
 
     def draw(self, context, layout, node, text):
         row = layout.row(align=True)
@@ -1068,6 +1058,8 @@ _sockets.append(NLListItemSocket)
 class NLCollisionMaskSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLCollisionMaskSocket"
     bl_label = "Parameter"
+    nl_color = PARAM_LIST_SOCKET_COLOR
+
     slot_0: BoolProperty(default=True)
     slot_1: BoolProperty(default=True)
     slot_2: BoolProperty(default=True)
@@ -1084,9 +1076,6 @@ class NLCollisionMaskSocket(bpy.types.NodeSocket, NLSocket):
     slot_13: BoolProperty(default=True)
     slot_14: BoolProperty(default=True)
     slot_15: BoolProperty(default=True)
-
-    def draw_color(self, context, node):
-        return PARAM_LIST_SOCKET_COLOR
 
     def draw(self, context, layout, node, text):
         if self.is_linked or self.is_output:
@@ -1117,6 +1106,7 @@ _sockets.append(NLCollisionMaskSocket)
 class NLLogicBrickSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLLogicBrickSocket"
     bl_label = "Property"
+    nl_color = PARAMETER_SOCKET_COLOR
     value: StringProperty(
         update=update_tree_code
     )
@@ -1126,9 +1116,6 @@ class NLLogicBrickSocket(bpy.types.NodeSocket, NLSocket):
         update=update_tree_code
     )
     brick_type: StringProperty(default='controllers')
-
-    def draw_color(self, context, node):
-        return PARAMETER_SOCKET_COLOR
 
     def draw(self, context, layout, node, text):
         if self.is_output:
@@ -1180,9 +1167,7 @@ _sockets.append(NLLogicBrickSocket)
 class NLPythonSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLPythonSocket"
     bl_label = "Python"
-
-    def draw_color(self, context, node):
-        return PARAM_PYTHON_SOCKET_COLOR
+    nl_color = PARAM_PYTHON_SOCKET_COLOR
 
     def draw(self, context, layout, node, text):
         layout.label(text=text)
@@ -1197,9 +1182,7 @@ _sockets.append(NLPythonSocket)
 class NLActionSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLActionSocket"
     bl_label = "Action"
-
-    def draw_color(self, context, node):
-        return ACTION_SOCKET_COLOR
+    nl_color = ACTION_SOCKET_COLOR
 
     def draw(self, context, layout, node, text):
         layout.label(text=text)
@@ -1374,6 +1357,7 @@ _sockets.append(NLGameObjectSocket)
 class NLCameraSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLCameraSocket"
     bl_label = "Camera"
+    nl_color = PARAM_OBJ_SOCKET_COLOR
     value: PointerProperty(
         name='Object',
         type=bpy.types.Object,
@@ -1385,9 +1369,6 @@ class NLCameraSocket(bpy.types.NodeSocket, NLSocket):
         update=update_tree_code,
         description='Use current active camera'
     )
-
-    def draw_color(self, context, node):
-        return PARAM_OBJ_SOCKET_COLOR
 
     def draw(self, context, layout, node, text):
         if self.is_output:
@@ -1427,15 +1408,13 @@ _sockets.append(NLCameraSocket)
 class NLSpeakerSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLSpeakerSocket"
     bl_label = "Camera"
+    nl_color = PARAM_OBJ_SOCKET_COLOR
     value: PointerProperty(
         name='Object',
         type=bpy.types.Object,
         poll=filter_speaker,
         update=update_tree_code
     )
-
-    def draw_color(self, context, node):
-        return PARAM_OBJ_SOCKET_COLOR
 
     def draw(self, context, layout, node, text):
         if self.is_output:
@@ -1467,6 +1446,7 @@ _sockets.append(NLSpeakerSocket)
 class NLNavMeshSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLNavMeshSocket"
     bl_label = "Object"
+    nl_color = PARAM_OBJ_SOCKET_COLOR
     value: PointerProperty(
         name='Object',
         type=bpy.types.Object,
@@ -1478,9 +1458,6 @@ class NLNavMeshSocket(bpy.types.NodeSocket, NLSocket):
         update=update_tree_code,
         description='Use the owner of this tree'
     )
-
-    def draw_color(self, context, node):
-        return PARAM_OBJ_SOCKET_COLOR
 
     def draw(self, context, layout, node, text):
         if self.is_output:
@@ -1520,6 +1497,7 @@ _sockets.append(NLNavMeshSocket)
 class NLLightObjectSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLLightObjectSocket"
     bl_label = "Light"
+    nl_color = PARAM_OBJ_SOCKET_COLOR
     value: PointerProperty(
         name='Light',
         type=bpy.types.Light,
@@ -1531,9 +1509,6 @@ class NLLightObjectSocket(bpy.types.NodeSocket, NLSocket):
         update=update_tree_code,
         description='Use the owner of this tree'
     )
-
-    def draw_color(self, context, node):
-        return PARAM_OBJ_SOCKET_COLOR
 
     def draw(self, context, layout, node, text):
         if self.is_output:
@@ -1573,6 +1548,7 @@ _sockets.append(NLLightObjectSocket)
 class NLArmatureObjectSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLArmatureObjectSocket"
     bl_label = "Armature"
+    nl_color = PARAM_OBJ_SOCKET_COLOR
     value: PointerProperty(
         name='Armature',
         type=bpy.types.Armature,
@@ -1584,9 +1560,6 @@ class NLArmatureObjectSocket(bpy.types.NodeSocket, NLSocket):
         update=update_tree_code,
         description='Use the owner of this tree'
     )
-
-    def draw_color(self, context, node):
-        return PARAM_OBJ_SOCKET_COLOR
 
     def draw(self, context, layout, node, text):
         if self.is_output:
@@ -1626,6 +1599,7 @@ _sockets.append(NLArmatureObjectSocket)
 class NLCurveObjectSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLCurveObjectSocket"
     bl_label = "Curve"
+    nl_color = PARAM_OBJ_SOCKET_COLOR
     value: PointerProperty(
         name='Armature',
         type=bpy.types.Curve,
@@ -1637,9 +1611,6 @@ class NLCurveObjectSocket(bpy.types.NodeSocket, NLSocket):
         update=update_tree_code,
         description='Use the owner of this tree'
     )
-
-    def draw_color(self, context, node):
-        return PARAM_OBJ_SOCKET_COLOR
 
     def draw(self, context, layout, node, text):
         if self.is_output:
@@ -1680,6 +1651,7 @@ _sockets.append(NLCurveObjectSocket)
 class NLGamePropertySocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLGamePropertySocket"
     bl_label = "Property"
+    nl_color = PARAMETER_SOCKET_COLOR
     value: StringProperty(
         update=update_tree_code
     )
@@ -1688,9 +1660,6 @@ class NLGamePropertySocket(bpy.types.NodeSocket, NLSocket):
         name='Free Edit',
         update=update_tree_code
     )
-
-    def draw_color(self, context, node):
-        return PARAMETER_SOCKET_COLOR
 
     def draw(self, context, layout, node, text):
         mode = getattr(self.node, 'mode', 'GAME')
@@ -1744,13 +1713,11 @@ _sockets.append(NLGamePropertySocket)
 class NLArmatureBoneSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLArmatureBoneSocket"
     bl_label = "Property"
+    nl_color = PARAMETER_SOCKET_COLOR
     value: StringProperty(
         update=update_tree_code
     )
     ref_index: IntProperty(default=0)
-
-    def draw_color(self, context, node):
-        return PARAMETER_SOCKET_COLOR
 
     def draw(self, context, layout, node, text):
         if self.is_output:
@@ -1797,13 +1764,11 @@ _sockets.append(NLArmatureBoneSocket)
 class NLBoneConstraintSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLBoneConstraintSocket"
     bl_label = "Property"
+    nl_color = PARAMETER_SOCKET_COLOR
     value: StringProperty(
         update=update_tree_code
     )
     ref_index: IntProperty(default=0)
-
-    def draw_color(self, context, node):
-        return PARAMETER_SOCKET_COLOR
 
     def draw(self, context, layout, node, text):
         if self.is_output:
@@ -1847,15 +1812,13 @@ _sockets.append(NLBoneConstraintSocket)
 class NLGeomNodeTreeSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLGeomNodeTreeSocket"
     bl_label = "Material"
+    nl_color = PARAM_GEOMTREE_SOCKET_COLOR
     value: PointerProperty(
         name='Geometry Node Tree',
         type=bpy.types.GeometryNodeTree,
         poll=filter_geometry_nodes,
         update=update_tree_code
     )
-
-    def draw_color(self, context, node):
-        return PARAM_GEOMTREE_SOCKET_COLOR
 
     def draw(self, context, layout, node, text):
         if self.is_output:
@@ -1886,15 +1849,13 @@ _sockets.append(NLGeomNodeTreeSocket)
 class NLNodeGroupSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLNodeGroupSocket"
     bl_label = "Node Tree"
+    nl_color = PARAM_SCENE_SOCKET_COLOR
     value: PointerProperty(
         name='Node Tree',
         type=bpy.types.NodeTree,
         poll=filter_node_groups,
         update=update_tree_code
     )
-
-    def draw_color(self, context, node):
-        return PARAM_SCENE_SOCKET_COLOR
 
     def draw(self, context, layout, node, text):
         if self.is_output:
@@ -1925,14 +1886,12 @@ _sockets.append(NLNodeGroupSocket)
 class NLNodeGroupNodeSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLNodeGroupNodeSocket"
     bl_label = "Tree Node"
+    nl_color = PARAMETER_SOCKET_COLOR
     value: StringProperty(
         name='Tree Node',
         update=update_tree_code
     )
     ref_index: IntProperty(default=0)
-
-    def draw_color(self, context, node):
-        return PARAMETER_SOCKET_COLOR
 
     def draw(self, context, layout, node, text):
         if self.is_linked or self.is_output:
@@ -1965,15 +1924,13 @@ _sockets.append(NLNodeGroupNodeSocket)
 class NLMaterialSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLMaterialSocket"
     bl_label = "Material"
+    nl_color = PARAM_MAT_SOCKET_COLOR
     value: PointerProperty(
         name='Material',
         type=bpy.types.Material,
         poll=filter_materials,
         update=update_tree_code
     )
-
-    def draw_color(self, context, node):
-        return PARAM_MAT_SOCKET_COLOR
 
     def draw(self, context, layout, node, text):
         if self.is_output:
@@ -2004,14 +1961,12 @@ _sockets.append(NLMaterialSocket)
 class NLTreeNodeSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLTreeNodeSocket"
     bl_label = "Tree Node"
+    nl_color = PARAMETER_SOCKET_COLOR
     value: StringProperty(
         name='Tree Node',
         update=update_tree_code
     )
     ref_index: IntProperty(default=0)
-
-    def draw_color(self, context, node):
-        return PARAMETER_SOCKET_COLOR
 
     def draw(self, context, layout, node, text):
         if self.is_linked or self.is_output:
@@ -2044,14 +1999,12 @@ _sockets.append(NLTreeNodeSocket)
 class NLSceneSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLSceneSocket"
     bl_label = "Scene"
+    nl_color = PARAM_MAT_SOCKET_COLOR
     value: PointerProperty(
         name='Scene',
         type=bpy.types.Scene,
         update=update_tree_code
     )
-
-    def draw_color(self, context, node):
-        return PARAM_MAT_SOCKET_COLOR
 
     def draw(self, context, layout, node, text):
         if self.is_output:
@@ -2082,15 +2035,13 @@ _sockets.append(NLSceneSocket)
 class NLTextIDSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLTextIDSocket"
     bl_label = "Text"
+    nl_color = PARAM_TEXT_SOCKET_COLOR
     value: PointerProperty(
         name='Text',
         type=bpy.types.Text,
         poll=filter_texts,
         update=update_tree_code
     )
-
-    def draw_color(self, context, node):
-        return PARAM_TEXT_SOCKET_COLOR
 
     def draw(self, context, layout, node, text):
         if self.is_output:
@@ -2121,14 +2072,12 @@ _sockets.append(NLTextIDSocket)
 class NLMeshSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLMeshSocket"
     bl_label = "Mesh"
+    nl_color = PARAM_MESH_SOCKET_COLOR
     value: PointerProperty(
         name='Mesh',
         type=bpy.types.Mesh,
         update=update_tree_code
     )
-
-    def draw_color(self, context, node):
-        return PARAM_MESH_SOCKET_COLOR
 
     def draw(self, context, layout, node, text):
         if self.is_output:
@@ -2159,14 +2108,12 @@ _sockets.append(NLMeshSocket)
 class NLGameObjectNameSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLGameObjectNameSocket"
     bl_label = "Object"
+    nl_color = PARAM_OBJ_SOCKET_COLOR
     value: PointerProperty(
         name='Object',
         type=bpy.types.Object,
         update=update_tree_code
     )
-
-    def draw_color(self, context, node):
-        return PARAM_OBJ_SOCKET_COLOR
 
     def draw(self, context, layout, node, text):
         if self.is_output:
@@ -2197,6 +2144,7 @@ _sockets.append(NLGameObjectNameSocket)
 class NLCollectionSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLCollectionSocket"
     bl_label = "Collection"
+    nl_color = PARAM_COLL_SOCKET_COLOR
     value: PointerProperty(
         name='Collection',
         type=bpy.types.Collection,
@@ -2206,9 +2154,6 @@ class NLCollectionSocket(bpy.types.NodeSocket, NLSocket):
         ),
         update=update_tree_code
     )
-
-    def draw_color(self, context, node):
-        return PARAM_COLL_SOCKET_COLOR
 
     def draw(self, context, layout, node, text):
         if self.is_output:
@@ -2238,6 +2183,7 @@ _sockets.append(NLCollectionSocket)
 class NLSocketLogicTree(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLSocketLogicTree"
     bl_label = "Logic Tree"
+    nl_color = PARAMETER_SOCKET_COLOR
     value: PointerProperty(
         name='Logic Tree',
         type=bpy.types.NodeTree,
@@ -2247,9 +2193,6 @@ class NLSocketLogicTree(bpy.types.NodeSocket, NLSocket):
         poll=filter_logic_trees,
         update=update_tree_code
     )
-
-    def draw_color(self, context, node):
-        return PARAMETER_SOCKET_COLOR
 
     def draw(self, context, layout, node, text):
         icon = 'OUTLINER' if not TOO_OLD else 'PLUS'
@@ -2279,15 +2222,13 @@ _sockets.append(NLSocketLogicTree)
 class NLAnimationSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLAnimationSocket"
     bl_label = "Action"
+    nl_color = PARAMETER_SOCKET_COLOR
     value: PointerProperty(
         name='Action',
         type=bpy.types.Action,
         description='Select an Action',
         update=update_tree_code
     )
-
-    def draw_color(self, context, node):
-        return PARAMETER_SOCKET_COLOR
 
     def draw(self, context, layout, node, text):
         if self.is_linked or self.is_output:
@@ -2316,6 +2257,7 @@ _sockets.append(NLAnimationSocket)
 class NLSoundFileSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLSoundFileSocket"
     bl_label = "String"
+    nl_color = PARAM_SOUND_SOCKET_COLOR
     filepath_value: StringProperty(
         subtype='FILE_PATH',
         update=update_tree_code
@@ -2329,9 +2271,6 @@ class NLSoundFileSocket(bpy.types.NodeSocket, NLSocket):
     use_path: BoolProperty(
         update=update_tree_code
     )
-
-    def draw_color(self, context, node):
-        return PARAM_SOUND_SOCKET_COLOR
 
     def draw(self, context, layout, node, text):
         if self.is_linked or self.is_output:
@@ -2366,15 +2305,13 @@ _sockets.append(NLSoundFileSocket)
 class NLImageSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLImageSocket"
     bl_label = "Image"
+    nl_color = PARAM_IMAGE_SOCKET_COLOR
     value: PointerProperty(
         name='Image',
         type=bpy.types.Image,
         description='Select an Image',
         update=update_tree_code
     )
-
-    def draw_color(self, context, node):
-        return PARAM_IMAGE_SOCKET_COLOR
 
     def draw(self, context, layout, node, text):
         if self.is_linked or self.is_output:
@@ -2401,15 +2338,13 @@ _sockets.append(NLImageSocket)
 class NLFontSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLFontSocket"
     bl_label = "Font"
+    nl_color = PARAM_IMAGE_SOCKET_COLOR
     value: PointerProperty(
         name='Font',
         type=bpy.types.VectorFont,
         description='Select a Font',
         update=update_tree_code
     )
-
-    def draw_color(self, context, node):
-        return PARAM_IMAGE_SOCKET_COLOR
 
     def draw(self, context, layout, node, text):
         if self.is_linked or self.is_output:
@@ -2443,12 +2378,10 @@ _sockets.append(NLFontSocket)
 class NLGlobalCatSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLGlobalCatSocket"
     bl_label = "Category"
+    nl_color = PARAMETER_SOCKET_COLOR
     value: StringProperty(
         update=update_tree_code
     )
-
-    def draw_color(self, context, node):
-        return PARAMETER_SOCKET_COLOR
 
     def draw(self, context, layout, node, text):
         if self.is_linked or self.is_output:
@@ -2474,15 +2407,13 @@ _sockets.append(NLGlobalCatSocket)
 class NLGlobalPropSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLGlobalPropSocket"
     bl_label = "Category"
+    nl_color = PARAMETER_SOCKET_COLOR
     value: StringProperty(
         update=update_tree_code
     )
     ref_index: IntProperty(
         update=update_tree_code
     )
-
-    def draw_color(self, context, node):
-        return PARAMETER_SOCKET_COLOR
 
     def draw(self, context, layout, node, text):
         if self.is_linked or self.is_output:
@@ -2545,6 +2476,7 @@ class _NLSocket_Vec3(_NLSocket_Vec):
 class NLSocketAlphaFloat(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLSocketAlphaFloat"
     bl_label = "Factor"
+    nl_color = PARAMETER_SOCKET_COLOR
     value: FloatProperty(
         name='Alpha Value',
         description='Value range from 0 - 1',
@@ -2552,9 +2484,6 @@ class NLSocketAlphaFloat(bpy.types.NodeSocket, NLSocket):
         max=1.0,
         update=update_tree_code
     )
-
-    def draw_color(self, context, node):
-        return PARAMETER_SOCKET_COLOR
 
     def draw(self, context, layout, node, text):
         if self.is_linked or self.is_output:
@@ -2573,14 +2502,12 @@ _sockets.append(NLSocketAlphaFloat)
 class NLSocketLogicOperator(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLSocketLogicOperator"
     bl_label = "Logic Operator"
+    nl_color = PARAMETER_SOCKET_COLOR
     value: EnumProperty(
         name='Operation',
         items=_enum_logic_operators,
         update=update_tree_code
     )
-
-    def draw_color(self, context, node):
-        return PARAMETER_SOCKET_COLOR
 
     def draw(self, context, layout, node, text):
         if self.is_linked or self.is_output:
@@ -2599,14 +2526,12 @@ _sockets.append(NLSocketLogicOperator)
 class NLSocketControllerButtons(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLSocketControllerButtons"
     bl_label = "Controller Buttons"
+    nl_color = PARAMETER_SOCKET_COLOR
     value: EnumProperty(
         name='Button',
         items=_enum_controller_buttons_operators,
         update=update_tree_code
     )
-
-    def draw_color(self, context, node):
-        return PARAMETER_SOCKET_COLOR
 
     def draw(self, context, layout, node, text):
         if self.is_linked or self.is_output:
@@ -2624,14 +2549,12 @@ _sockets.append(NLSocketControllerButtons)
 class NLQualitySocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLQualitySocket"
     bl_label = "Quality"
+    nl_color = PARAMETER_SOCKET_COLOR
     value: EnumProperty(
         name='Quality',
         items=_enum_quality_levels,
         update=update_tree_code
     )
-
-    def draw_color(self, context, node):
-        return PARAMETER_SOCKET_COLOR
 
     def draw(self, context, layout, node, text):
         if self.is_linked or self.is_output:
@@ -2654,12 +2577,12 @@ _sockets.append(NLQualitySocket)
 class NLSocketDistanceCheck(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLSocketDistanceCheck"
     bl_label = "Distance Operator"
+    nl_color = PARAMETER_SOCKET_COLOR
     value: EnumProperty(
         name='Mode',
         items=_enum_distance_checks,
         update=update_tree_code
     )
-    def draw_color(self, context, node): return PARAMETER_SOCKET_COLOR
 
     def draw(self, context, layout, node, text):
         if self.is_linked or self.is_output:
@@ -2677,6 +2600,7 @@ _sockets.append(NLSocketDistanceCheck)
 class NLSocketLoopCount(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLSocketLoopCount"
     bl_label = "Loop Count"
+    nl_color = PARAMETER_SOCKET_COLOR
     value: StringProperty(update=update_tree_code)
 
     def update_value(self, context):
@@ -2701,9 +2625,6 @@ class NLSocketLoopCount(bpy.types.NodeSocket, NLSocket):
             'be repeated when the condition is TRUE'
         )
     )
-
-    def draw_color(self, context, node):
-        return PARAMETER_SOCKET_COLOR
 
     def draw(self, context, layout, node, text):
         if self.is_linked or self.is_output:
@@ -2732,14 +2653,12 @@ _sockets.append(NLSocketLoopCount)
 class NLBooleanSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLBooleanSocket"
     bl_label = "Boolean"
+    nl_color = PARAM_BOOL_SOCKET_COLOR
     value: BoolProperty(update=update_tree_code)
     use_toggle: BoolProperty(default=False)
     true_label: StringProperty()
     false_label: StringProperty()
     type: StringProperty(default='STRING')
-
-    def draw_color(self, context, node):
-        return PARAM_BOOL_SOCKET_COLOR
 
     def draw(self, context, layout, node, text):
         if self.is_linked or self.is_output:
@@ -2768,12 +2687,10 @@ _sockets.append(NLBooleanSocket)
 class NLXYZSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLXYZSocket"
     bl_label = "Boolean"
+    nl_color = PARAMETER_SOCKET_COLOR
     x: BoolProperty(update=update_tree_code, default=True)
     y: BoolProperty(update=update_tree_code, default=True)
     z: BoolProperty(update=update_tree_code, default=True)
-
-    def draw_color(self, context, node):
-        return PARAMETER_SOCKET_COLOR
 
     def draw(self, context, layout, node, text):
         if self.is_linked or self.is_output:
@@ -2794,11 +2711,9 @@ _sockets.append(NLXYZSocket)
 class NLInvertedXYSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLInvertedXYSocket"
     bl_label = "Boolean"
+    nl_color = PARAMETER_SOCKET_COLOR
     x: BoolProperty(update=update_tree_code)
     y: BoolProperty(update=update_tree_code)
-
-    def draw_color(self, context, node):
-        return PARAMETER_SOCKET_COLOR
 
     def draw(self, context, layout, node, text):
         if self.is_linked or self.is_output:
@@ -2819,10 +2734,8 @@ _sockets.append(NLInvertedXYSocket)
 class NLPositiveFloatSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLPositiveFloatSocket"
     bl_label = "Positive Float"
+    nl_color = PARAMETER_SOCKET_COLOR
     value: FloatProperty(min=0.0, update=update_tree_code)
-
-    def draw_color(self, context, node):
-        return PARAMETER_SOCKET_COLOR
 
     def draw(self, context, layout, node, text):
         if self.is_linked or self.is_output:
@@ -2840,10 +2753,8 @@ _sockets.append(NLPositiveFloatSocket)
 class NLPositiveStepFloat(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLPositiveStepFloat"
     bl_label = "Float"
+    nl_color = PARAMETER_SOCKET_COLOR
     value: FloatProperty(min=1, default=1, update=update_tree_code)
-
-    def draw_color(self, context, node):
-        return PARAMETER_SOCKET_COLOR
 
     def draw(self, context, layout, node, text):
         if self.is_linked or self.is_output:
@@ -2861,10 +2772,8 @@ _sockets.append(NLPositiveStepFloat)
 class NLPosFloatFormatSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLPosFloatFormatSocket"
     bl_label = "Positive Float"
+    nl_color = PARAMETER_SOCKET_COLOR
     value: FloatProperty(min=0.0, update=update_tree_code)
-
-    def draw_color(self, context, node):
-        return PARAMETER_SOCKET_COLOR
 
     def draw(self, context, layout, node, text):
         if self.is_linked or self.is_output:
@@ -2884,6 +2793,7 @@ _sockets.append(NLPosFloatFormatSocket)
 class NLSocketOptionalPositiveFloat(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLSocketOptionalPositiveFloat"
     bl_label = "Positive Float"
+    nl_color = PARAMETER_SOCKET_COLOR
     use_this: BoolProperty(update=update_tree_code)
     value: StringProperty(update=update_tree_code)
 
@@ -2899,9 +2809,6 @@ class NLSocketOptionalPositiveFloat(bpy.types.NodeSocket, NLSocket):
         min=0.0,
         update=update_value
     )
-
-    def draw_color(self, context, node):
-        return PARAMETER_SOCKET_COLOR
 
     def draw(self, context, layout, node, text):
         if self.is_linked or self.is_output:
@@ -2924,14 +2831,12 @@ _sockets.append(NLSocketOptionalPositiveFloat)
 class NLSocketIKMode(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLSocketIKMode"
     bl_label = "IK Mode"
+    nl_color = PARAMETER_SOCKET_COLOR
     value: EnumProperty(
         name='IK Mode',
         items=_enum_ik_mode_values,
         update=update_tree_code
     )
-
-    def draw_color(self, context, node):
-        return PARAMETER_SOCKET_COLOR
 
     def draw(self, context, layout, node, text):
         if self.is_linked or self.is_output:
@@ -2949,11 +2854,9 @@ _sockets.append(NLSocketIKMode)
 class NLQuotedStringFieldSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLQuotedStringFieldSocket"
     bl_label = "String"
+    nl_color = PARAMETER_SOCKET_COLOR
     value: StringProperty(update=update_tree_code)
     formatted: BoolProperty(update=update_tree_code)
-
-    def draw_color(self, context, node):
-        return PARAMETER_SOCKET_COLOR
 
     def draw(self, context, layout, node, text):
         if self.is_linked or self.is_output:
@@ -2982,13 +2885,11 @@ _sockets.append(NLQuotedStringFieldSocket)
 class NLFilePathSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLFilePathSocket"
     bl_label = "String"
+    nl_color = PARAMETER_SOCKET_COLOR
     value: StringProperty(
         subtype='FILE_PATH',
         update=update_tree_code
     )
-
-    def draw_color(self, context, node):
-        return PARAMETER_SOCKET_COLOR
 
     def draw(self, context, layout, node, text):
         if self.is_linked or self.is_output:
@@ -3013,9 +2914,9 @@ _sockets.append(NLFilePathSocket)
 class NLIntegerFieldSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLIntegerFieldSocket"
     bl_label = "Integer"
+    nl_color = PARAM_INT_SOCKET_COLOR
     value: IntProperty(update=update_tree_code)
     type: StringProperty(default='INT')
-    nl_color = PARAM_INT_SOCKET_COLOR
 
     def get_unlinked_value(self):
         return '{}'.format(self.value)
@@ -3034,9 +2935,9 @@ _sockets.append(NLIntegerFieldSocket)
 class NLPositiveIntegerFieldSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLPositiveIntegerFieldSocket"
     bl_label = "Integer"
+    nl_color = PARAM_INT_SOCKET_COLOR
     value: IntProperty(min=0, default=0, update=update_tree_code)
     type: StringProperty(default='INT')
-    nl_color = PARAM_INT_SOCKET_COLOR
 
     def draw(self, context, layout, node, text):
         if self.is_linked or self.is_output:
@@ -3054,9 +2955,9 @@ _sockets.append(NLPositiveIntegerFieldSocket)
 class NLCountSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLCountSocket"
     bl_label = "Integer"
+    nl_color = PARAM_INT_SOCKET_COLOR
     value: IntProperty(min=1, default=1, update=update_tree_code)
     type: StringProperty(default='INT')
-    nl_color = PARAM_INT_SOCKET_COLOR
 
     def draw(self, context, layout, node, text):
         if self.is_linked or self.is_output:
@@ -3074,6 +2975,7 @@ _sockets.append(NLCountSocket)
 class NLPositiveIntCentSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLPositiveIntCentSocket"
     bl_label = "Integer"
+    nl_color = PARAM_INT_SOCKET_COLOR
     value: IntProperty(
         min=0,
         max=100,
@@ -3081,7 +2983,6 @@ class NLPositiveIntCentSocket(bpy.types.NodeSocket, NLSocket):
         update=update_tree_code
     )
     type: StringProperty(default='INT')
-    nl_color = PARAM_INT_SOCKET_COLOR
 
     def draw(self, context, layout, node, text):
         if self.is_linked or self.is_output:
@@ -3099,6 +3000,7 @@ _sockets.append(NLPositiveIntCentSocket)
 class NLValueFieldSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLValueFieldSocket"
     bl_label = "Value"
+    nl_color = PARAMETER_SOCKET_COLOR
     value: StringProperty(update=update_tree_code)
 
     def on_type_changed(self, context):
@@ -3145,9 +3047,6 @@ class NLValueFieldSocket(bpy.types.NodeSocket, NLSocket):
         subtype='FILE_PATH'
     )
 
-    def draw_color(self, context, node):
-        return PARAMETER_SOCKET_COLOR
-
     def get_unlinked_value(self):
         return socket_field(self)
 
@@ -3184,6 +3083,7 @@ _sockets.append(NLValueFieldSocket)
 class NLOptionalValueFieldSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLOptionalValueFieldSocket"
     bl_label = "Value"
+    nl_color = PARAMETER_SOCKET_COLOR
     value: StringProperty(update=update_tree_code)
 
     def on_type_changed(self, context):
@@ -3234,9 +3134,6 @@ class NLOptionalValueFieldSocket(bpy.types.NodeSocket, NLSocket):
         subtype='FILE_PATH'
     )
 
-    def draw_color(self, context, node):
-        return PARAMETER_SOCKET_COLOR
-
     def get_unlinked_value(self):
         return socket_field(self) if self.use_value or self.is_linked else "utils.STATUS_INVALID"
 
@@ -3276,6 +3173,7 @@ _sockets.append(NLOptionalValueFieldSocket)
 class NLNumericFieldSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLNumericFieldSocket"
     bl_label = "Value"
+    nl_color = PARAMETER_SOCKET_COLOR
 
     value_type: EnumProperty(
         name='Type',
@@ -3283,9 +3181,6 @@ class NLNumericFieldSocket(bpy.types.NodeSocket, NLSocket):
         update=update_tree_code
     )
     value: StringProperty(update=update_tree_code)
-
-    def draw_color(self, context, node):
-        return PARAMETER_SOCKET_COLOR
 
     def get_unlinked_value(self):
         return socket_field(self)
@@ -3310,6 +3205,7 @@ _sockets.append(NLNumericFieldSocket)
 class NLOptionalRadiansFieldSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLOptionalRadiansFieldSocket"
     bl_label = "Value"
+    nl_color = PARAMETER_SOCKET_COLOR
     value: StringProperty(update=update_tree_code, default="0.0")
 
     def store_radians(self, context):
@@ -3335,8 +3231,6 @@ class NLOptionalRadiansFieldSocket(bpy.types.NodeSocket, NLSocket):
         items=_enum_optional_float_value_types,
         update=on_type_change, default="FLOAT"
     )
-
-    def draw_color(self, context, node): return PARAMETER_SOCKET_COLOR
 
     def get_unlinked_value(self):
         return "None" if self.input_type == "NONE" else self.radians
@@ -3383,10 +3277,9 @@ class NLSocketReadableMemberName(bpy.types.NodeSocket, NLSocket):
     )
 
     def draw_color(self, context, node):
-        return PARAM_VECTOR_SOCKET_COLOR if (
-            self.value != 'name' and
-            self.value != 'visible'
-        ) else PARAMETER_SOCKET_COLOR
+        if self.value in ["name", "visible"]:
+            return PARAMETER_SOCKET_COLOR
+        return PARAM_VECTOR_SOCKET_COLOR
 
     def get_unlinked_value(self):
         return '"{}"'.format(self.value)
@@ -3410,9 +3303,9 @@ _sockets.append(NLSocketReadableMemberName)
 class NLKeyboardKeySocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLKeyboardKeySocket"
     bl_label = "Key"
+    nl_color = PARAM_INT_SOCKET_COLOR
     value: StringProperty(update=update_tree_code)
     type: StringProperty(default='INT')
-    nl_color = PARAM_INT_SOCKET_COLOR
 
     def get_unlinked_value(self):
         return keyboard_key_string_to_bge_key(self.value)
@@ -3433,12 +3326,12 @@ _sockets.append(NLKeyboardKeySocket)
 class NLMouseButtonSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLMouseButtonSocket"
     bl_label = "Mouse Button"
+    nl_color = PARAM_INT_SOCKET_COLOR
     value: EnumProperty(
         name='Button',
         items=_enum_mouse_buttons, default="bge.events.LEFTMOUSE",
         update=update_tree_code)
     type: StringProperty(default='INT')
-    nl_color = PARAM_INT_SOCKET_COLOR
 
     def get_unlinked_value(self):
         return self.value
@@ -3456,13 +3349,11 @@ _sockets.append(NLMouseButtonSocket)
 class NLVSyncSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLVSyncSocket"
     bl_label = "Vsync"
+    nl_color = PARAMETER_SOCKET_COLOR
     value: EnumProperty(
         name='Mode',
         items=_enum_vsync_modes, default="bge.render.VSYNC_OFF",
         update=update_tree_code)
-
-    def draw_color(self, context, node):
-        return PARAMETER_SOCKET_COLOR
 
     def get_unlinked_value(self):
         return self.value
@@ -3480,6 +3371,7 @@ _sockets.append(NLVSyncSocket)
 class NLPlayActionModeSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLPlayActionModeSocket"
     bl_label = "Play Mode"
+    nl_color = PARAMETER_SOCKET_COLOR
     value: EnumProperty(
         name='Mode',
         items=_enum_play_mode_values,
@@ -3489,9 +3381,6 @@ class NLPlayActionModeSocket(bpy.types.NodeSocket, NLSocket):
 
     def get_unlinked_value(self):
         return self.value
-
-    def draw_color(self, context, node):
-        return PARAMETER_SOCKET_COLOR
 
     def draw(self, context, layout, node, text):
         if self.is_linked or self.is_output:
@@ -3506,11 +3395,9 @@ _sockets.append(NLPlayActionModeSocket)
 class NLFloatFieldSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLFloatFieldSocket"
     bl_label = "Float Value"
+    nl_color = PARAMETER_SOCKET_COLOR
     value: FloatProperty(default=0, update=update_tree_code)
     valid_sockets = ['NLFloatFieldSocket']
-
-    def draw_color(self, context, node):
-        return PARAMETER_SOCKET_COLOR
 
     def get_unlinked_value(self):
         return "{}".format(self.value)
@@ -3528,11 +3415,9 @@ _sockets.append(NLFloatFieldSocket)
 class NLFloatAngleSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLFloatAngleSocket"
     bl_label = "Float Value"
+    nl_color = PARAMETER_SOCKET_COLOR
     value: FloatProperty(default=0, update=update_tree_code, unit='ROTATION')
     valid_sockets = ['NLFloatFieldSocket']
-
-    def draw_color(self, context, node):
-        return PARAMETER_SOCKET_COLOR
 
     def get_unlinked_value(self):
         return "{}".format(self.value)
@@ -3550,6 +3435,7 @@ _sockets.append(NLFloatAngleSocket)
 class NLTimeSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLTimeSocket"
     bl_label = "Float Value"
+    nl_color = PARAMETER_SOCKET_COLOR
     value: FloatProperty(
         min=0,
         default=0,
@@ -3557,9 +3443,6 @@ class NLTimeSocket(bpy.types.NodeSocket, NLSocket):
         unit='TIME',
         update=update_tree_code
     )
-
-    def draw_color(self, context, node):
-        return PARAMETER_SOCKET_COLOR
 
     def get_unlinked_value(self):
         return "{}".format(self.value)
@@ -3631,6 +3514,7 @@ _sockets.append(NLVec3PositiveFieldSocket)
 class NLColorSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLColorSocket"
     bl_label = "Float Value"
+    nl_color = PARAM_COLOR_SOCKET_COLOR
     value: FloatVectorProperty(
         subtype='COLOR_GAMMA',
         min=0.0,
@@ -3640,7 +3524,6 @@ class NLColorSocket(bpy.types.NodeSocket, NLSocket):
         update=update_tree_code
     )
     type: StringProperty(default='RGBA')
-    nl_color = PARAM_COLOR_SOCKET_COLOR
 
     def get_unlinked_value(self):
         return "mathutils.Vector(({}, {}, {}))".format(
@@ -3664,6 +3547,7 @@ _sockets.append(NLColorSocket)
 class NLColorAlphaSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLColorAlphaSocket"
     bl_label = "Float Value"
+    nl_color = PARAM_COLOR_SOCKET_COLOR
     value: FloatVectorProperty(
         subtype='COLOR_GAMMA',
         min=0.0,
@@ -3673,7 +3557,6 @@ class NLColorAlphaSocket(bpy.types.NodeSocket, NLSocket):
         update=update_tree_code
     )
     type: StringProperty(default='RGBA')
-    nl_color = PARAM_COLOR_SOCKET_COLOR
 
     def get_unlinked_value(self):
         return "mathutils.Vector(({}, {}, {}, {}))".format(
@@ -3698,6 +3581,7 @@ _sockets.append(NLColorAlphaSocket)
 class NLBlendActionModeSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLBlendActionMode"
     bl_label = "Blend Mode"
+    nl_color = PARAMETER_SOCKET_COLOR
     value: EnumProperty(
         name='Blend Mode',
         items=_enum_blend_mode_values,
@@ -3707,9 +3591,6 @@ class NLBlendActionModeSocket(bpy.types.NodeSocket, NLSocket):
 
     def get_unlinked_value(self):
         return self.value
-
-    def draw_color(self, context, node):
-        return PARAMETER_SOCKET_COLOR
 
     def draw(self, context, layout, node, text):
         if self.is_linked or self.is_output:
@@ -3724,10 +3605,8 @@ _sockets.append(NLBlendActionModeSocket)
 class NLVectorSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLVectorSocket"
     bl_label = "Parameter"
+    nl_color = PARAM_VECTOR_SOCKET_COLOR
     type: StringProperty(default='VECTOR')
-
-    def draw_color(self, context, node):
-        return PARAM_VECTOR_SOCKET_COLOR
 
     def draw(self, context, layout, node, text):
         layout.label(text=text)
@@ -3742,6 +3621,7 @@ _sockets.append(NLVectorSocket)
 class NLSocketVectorField(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLSocketVectorField"
     bl_label = "Vector"
+    nl_color = PARAM_VECTOR_SOCKET_COLOR
     type: StringProperty(default='VECTOR')
     value: StringProperty(
         update=update_tree_code,
@@ -3751,9 +3631,6 @@ class NLSocketVectorField(bpy.types.NodeSocket, NLSocket):
             'comma or anything but a dot'
         )
     )
-
-    def draw_color(self, context, node):
-        return PARAM_VECTOR_SOCKET_COLOR
 
     def draw(self, context, layout, node, text):
         if self.is_linked:
@@ -3772,6 +3649,7 @@ _sockets.append(NLSocketVectorField)
 class NLOptionalSocketVectorField(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLOptionalSocketVectorField"
     bl_label = "Vector"
+    nl_color = PARAMETER_SOCKET_COLOR
     type: StringProperty(default='VECTOR')
     value: StringProperty(
         update=update_tree_code,
@@ -3780,9 +3658,6 @@ class NLOptionalSocketVectorField(bpy.types.NodeSocket, NLSocket):
             'or anything but a dot'
         )
     )
-
-    def draw_color(self, context, node):
-        return PARAMETER_SOCKET_COLOR
 
     def draw(self, context, layout, node, text):
         if self.is_linked:
@@ -3803,6 +3678,7 @@ _sockets.append(NLOptionalSocketVectorField)
 class NLSocketOptionalFilePath(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLSocketOptionalFilePath"
     bl_label = "File"
+    nl_color = PARAMETER_SOCKET_COLOR
     value: StringProperty(
         update=update_tree_code,
         description=(
@@ -3810,9 +3686,6 @@ class NLSocketOptionalFilePath(bpy.types.NodeSocket, NLSocket):
             'Relative paths start with //'
         )
     )
-
-    def draw_color(self, context, node):
-        return PARAMETER_SOCKET_COLOR
 
     def draw(self, context, layout, node, text):
         if self.is_linked:
@@ -3832,14 +3705,12 @@ _sockets.append(NLSocketOptionalFilePath)
 class NLSocketMouseWheelDirection(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLSocketMouseWheelDirection"
     bl_label = "Mouse Wheel"
+    nl_color = PARAMETER_SOCKET_COLOR
     value: EnumProperty(
         name='Direction',
         items=_enum_mouse_wheel_direction,
         update=update_tree_code
     )
-
-    def draw_color(self, context, node):
-        return PARAMETER_SOCKET_COLOR
 
     def draw(self, context, layout, node, text):
         if self.is_linked:
@@ -3857,14 +3728,12 @@ _sockets.append(NLSocketMouseWheelDirection)
 class NLSocketDistanceModels(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLSocketDistanceModels"
     bl_label = "Distance Model"
+    nl_color = PARAMETER_SOCKET_COLOR
     value: EnumProperty(
         name='Distance Model',
         items=_enum_distance_models,
         update=update_tree_code
     )
-
-    def draw_color(self, context, node):
-        return PARAMETER_SOCKET_COLOR
 
     def draw(self, context, layout, node, text):
         if self.is_linked:
@@ -3884,14 +3753,12 @@ _sockets.append(NLSocketDistanceModels)
 class NLVectorMathSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLVectorMathSocket"
     bl_label = "Vector Math"
+    nl_color = PARAMETER_SOCKET_COLOR
     value: EnumProperty(
         name='Operation',
         items=_enum_vector_math_options,
         update=update_tree_code
     )
-
-    def draw_color(self, context, node):
-        return PARAMETER_SOCKET_COLOR
 
     def draw(self, context, layout, node, text):
         if self.is_linked:
@@ -3909,14 +3776,12 @@ _sockets.append(NLVectorMathSocket)
 class NLTypeCastSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLTypeCastSocket"
     bl_label = "Types"
+    nl_color = PARAMETER_SOCKET_COLOR
     value: EnumProperty(
         name='Type',
         items=_enum_type_casts,
         update=update_tree_code
     )
-
-    def draw_color(self, context, node):
-        return PARAMETER_SOCKET_COLOR
 
     def draw(self, context, layout, node, text):
         if self.is_linked:
@@ -3934,14 +3799,12 @@ _sockets.append(NLTypeCastSocket)
 class NLConstraintTypeSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLConstraintTypeSocket"
     bl_label = "Constraint Type"
+    nl_color = PARAMETER_SOCKET_COLOR
     value: EnumProperty(
         name='Type',
         items=_enum_constraint_types,
         update=update_tree_code
     )
-
-    def draw_color(self, context, node):
-        return PARAMETER_SOCKET_COLOR
 
     def draw(self, context, layout, node, text):
         if self.is_linked:
@@ -3959,14 +3822,12 @@ _sockets.append(NLConstraintTypeSocket)
 class NLSocketLocalAxis(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLSocketLocalAxis"
     bl_label = "Local Axis"
+    nl_color = PARAMETER_SOCKET_COLOR
     value: EnumProperty(
         name='Axis',
         items=_enum_local_axis,
         update=update_tree_code
     )
-
-    def draw_color(self, context, node):
-        return PARAMETER_SOCKET_COLOR
 
     def draw(self, context, layout, node, text):
         if self.is_linked:
@@ -3986,14 +3847,12 @@ _sockets.append(NLSocketLocalAxis)
 class NLSocketOrientedLocalAxis(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLSocketOrientedLocalAxis"
     bl_label = "Local Axis"
+    nl_color = PARAMETER_SOCKET_COLOR
     value: EnumProperty(
         name='Axis',
         items=_enum_local_oriented_axis,
         update=update_tree_code
     )
-
-    def draw_color(self, context, node):
-        return PARAMETER_SOCKET_COLOR
 
     def draw(self, context, layout, node, text):
         if self.is_linked:
