@@ -2515,6 +2515,30 @@ _sockets.append(NLGlobalPropSocket)
 ###############################################################################
 
 # Mixin for Vector-Sockets
+class _NLSocket_Vec2(NLSocket):
+    title: StringProperty(default='') # doesn't seem to be used ?
+    bl_label = "Float Value"
+    nl_color = PARAM_VECTOR_SOCKET_COLOR # gets picked up by NLSocket.draw_color
+    type: StringProperty(default='VECTOR') # doesn't seem to be used ?
+    # PyProps into Vector instead of the original individual BPyProps
+    value_x= property(lambda s:s.value[0], lambda s,v:s.value.__setitem__(0, v))
+    value_y= property(lambda s:s.value[1], lambda s,v:s.value.__setitem__(1, v))
+
+    def get_unlinked_value(self):  # no longer individual calls
+        return f"mathutils.Vector({tuple(self.value)})"
+
+    def draw(self, context, layout, node, text):
+        if self.is_linked or self.is_output:
+            layout.label(text=text)
+        else:
+            column = layout.column()
+            if text != '':
+                column.label(text=text)
+            row = column.row(align=True)
+            row.prop(self, "value", text='', index=0)
+            row.prop(self, "value", text='', index=1)
+
+
 class _NLSocket_Vec3(NLSocket):
     bl_label = "Float Value"
     nl_color = PARAM_VECTOR_SOCKET_COLOR # gets picked up by NLSocket.draw_color
@@ -3569,105 +3593,24 @@ class NLTimeSocket(bpy.types.NodeSocket, NLSocket):
 _sockets.append(NLTimeSocket)
 
 #:# LOak
-class NLVec2FieldSocket(bpy.types.NodeSocket, NLSocket):
+#:#:#:
+class NLVec2FieldSocket(bpy.types.NodeSocket, _NLSocket_Vec2):
     bl_idname = "NLVec2FieldSocket"
-    bl_label = "Float Value"
-    value_x: FloatProperty(default=0, update=update_tree_code)
-    value_y: FloatProperty(default=0, update=update_tree_code)
-    title: StringProperty(default='')
-    type: StringProperty(default='VECTOR')
-
-    def draw_color(self, context, node):
-        return PARAM_VECTOR_SOCKET_COLOR
-
-    def get_unlinked_value(self):
-        return "mathutils.Vector(({}, {}))".format(self.value_x, self.value_y)
-
-    def draw(self, context, layout, node, text):
-        if self.is_linked or self.is_output:
-            layout.label(text=text)
-        else:
-            column = layout.column()
-            if text != '':
-                column.label(text=text)
-            row = column.row(align=True)
-            row.prop(self, "value_x", text='')
-            row.prop(self, "value_y", text='')
-
+    value: FloatVectorProperty(default=(0,0,0), update=update_tree_code, size=2)
 
 _sockets.append(NLVec2FieldSocket)
 
-
-class NLAngleLimitSocket(bpy.types.NodeSocket, NLSocket):
+class NLAngleLimitSocket(bpy.types.NodeSocket, _NLSocket_Vec2):
     bl_idname = "NLAngleLimitSocket"
-    bl_label = "Float Value"
-    type: StringProperty(default='VECTOR')
-    value_x: FloatProperty(
-        default=0,
-        unit='ROTATION',
-        update=update_tree_code
-    )
-    value_y: FloatProperty(
-        default=0,
-        unit='ROTATION',
-        update=update_tree_code
-    )
-    title: StringProperty(default='')
-
-    def draw_color(self, context, node):
-        return PARAM_VECTOR_SOCKET_COLOR
-
-    def get_unlinked_value(self):
-        return "mathutils.Vector(({}, {}))".format(self.value_x, self.value_y)
-
-    def draw(self, context, layout, node, text):
-        if self.is_linked or self.is_output:
-            layout.label(text=text)
-        else:
-            column = layout.column()
-            if text != '':
-                column.label(text=text)
-            row = column.row(align=True)
-            row.prop(self, "value_x", text='')
-            row.prop(self, "value_y", text='')
-
+    value: FloatVectorProperty(default=(0,0,0), update=update_tree_code, size=2,
+                               unit='ROTATION')
 
 _sockets.append(NLAngleLimitSocket)
 
-
-class NLVec2PositiveFieldSocket(bpy.types.NodeSocket, NLSocket):
+class NLVec2PositiveFieldSocket(bpy.types.NodeSocket, _NLSocket_Vec2):
     bl_idname = "NLVec2PositiveFieldSocket"
-    bl_label = "Float Value"
-    value_x: FloatProperty(
-        min=0.0,
-        default=0,
-        update=update_tree_code
-    )
-    value_y: FloatProperty(
-        min=0.0,
-        default=0,
-        update=update_tree_code
-    )
-    title: StringProperty(default='')
-    type: StringProperty(default='VECTOR')
-
-    def draw_color(self, context, node):
-        return PARAM_VECTOR_SOCKET_COLOR
-
-    def get_unlinked_value(self):
-        return "mathutils.Vector(({}, {}))".format(self.value_x, self.value_y)
-
-    def draw(self, context, layout, node, text):
-        if self.is_linked or self.is_output:
-            layout.label(text=text)
-        else:
-            column = layout.column()
-            # if self.title != '':
-            #     title = column.label(text=self.title)
-            row = column.row(align=True)
-            row.prop(self, "value_x", text='')
-            row.prop(self, "value_y", text='')
-
+    value: FloatVectorProperty(default=(0,0,0), update=update_tree_code, size=2,
+                               min=0.0)
 
 _sockets.append(NLVec2PositiveFieldSocket)
 
