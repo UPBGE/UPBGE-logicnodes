@@ -13,7 +13,7 @@ bl_info = {
     "description": (
         "A Node System to create game logic."
     ),
-    "author": "pgi, Leopold A-C (Iza Zed)",
+    "author": "pgi, Leopold A-C (Iza Zed), Teck-Freak / Lucyon Oak",
     "version": (2, 3),
     "blender": (3, 6, 0),
     "location": "View Menu",
