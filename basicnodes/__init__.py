@@ -2514,18 +2514,15 @@ _sockets.append(NLGlobalPropSocket)
 # Value Sockets
 ###############################################################################
 
-# Mixin / base for Vector-Sockets
-class _NLSocket_Vec3(NLSocket):     # Mixin for Vector-Sockets
+# Mixin for Vector-Sockets
+class _NLSocket_Vec3(NLSocket):
     bl_label = "Float Value"
     nl_color = PARAM_VECTOR_SOCKET_COLOR # gets picked up by NLSocket.draw_color
     type: StringProperty(default='VECTOR') # doesn't seem to be used ?
-    # PyProps Vector to grab individual BPyProps
-    @property
-    def value(self):
-        return (self.value_x, self.value_y, self.value_z)
-    @value.setter
-    def value(self, value):
-        self.value_x, self.value_y, self.value_z = value
+    # PyProps into Vector instead of the original individual BPyProps
+    value_x= property(lambda s:s.value[0], lambda s,v:s.value.__setitem__(0, v))
+    value_y= property(lambda s:s.value[1], lambda s,v:s.value.__setitem__(1, v))
+    value_z= property(lambda s:s.value[2], lambda s,v:s.value.__setitem__(2, v))
 
     def get_unlinked_value(self):  # no longer individual calls
         return f"mathutils.Vector({tuple(self.value)})"
@@ -2537,9 +2534,7 @@ class _NLSocket_Vec3(NLSocket):     # Mixin for Vector-Sockets
         if not self.is_linked or self.is_output:
             if self.node.width >= 200:
                 layout = layout.row(align=True)
-            layout.prop(self, "value_x", text="X")
-            layout.prop(self, "value_y", text="Y")
-            layout.prop(self, "value_z", text="Z")
+            layout.prop(self, "value", text="")
 
 
 class NLSocketAlphaFloat(bpy.types.NodeSocket, NLSocket):
@@ -3679,50 +3674,35 @@ _sockets.append(NLVec2PositiveFieldSocket)
 #:#:#: These are Vec3d-Sockets
 #: THUS     all of them do update=update_tree_code,
 #:                      have type=StringProperty("VECTOR")
+# NOTE: one might need to take a look into the addon update functionality
+#       Then again, that might be necessarry anyways.
 class NLVec3FieldSocket(bpy.types.NodeSocket, _NLSocket_Vec3):
     bl_idname = "NLVec3FieldSocket"
-    value_x: FloatProperty(default=0, update=update_tree_code)
-    value_y: FloatProperty(default=0, update=update_tree_code)
-    value_z: FloatProperty(default=0, update=update_tree_code)
+    value: FloatVectorProperty(default=(0,0,0), update=update_tree_code)
 
-_sockets.append(NLVec3FieldSocket)
-
-#:#:#:
 class NodeSocketMatrix3(bpy.types.NodeSocket, _NLSocket_Vec3):
     bl_idname = "NodeSocketMatrix3"
-    value_x: FloatProperty(default=0, update=update_tree_code)
-    value_y: FloatProperty(default=0, update=update_tree_code)
-    value_z: FloatProperty(default=0, update=update_tree_code)
+    value: FloatVectorProperty(default=(0,0,0), update=update_tree_code)
 
-_sockets.append(NodeSocketMatrix3)
-
-#:#:#:
 class NLVec3RotationSocket(bpy.types.NodeSocket, _NLSocket_Vec3):
     bl_idname = "NLVec3RotationSocket"
-    value_x: FloatProperty(default=0, unit='ROTATION', update=update_tree_code )
-    value_y: FloatProperty(default=0, unit='ROTATION', update=update_tree_code )
-    value_z: FloatProperty(default=0, unit='ROTATION', update=update_tree_code )
+    value: FloatVectorProperty(default=(0,0,0), update=update_tree_code,
+                               unit='ROTATION' )
 
-_sockets.append(NLVec3RotationSocket)
-
-#:#:#:
 class NLVelocitySocket(bpy.types.NodeSocket, _NLSocket_Vec3):
     bl_idname = "NLVelocitySocket"
-    value_x: FloatProperty(default=0, unit='VELOCITY', update=update_tree_code )
-    value_y: FloatProperty(default=0, unit='VELOCITY', update=update_tree_code )
-    value_z: FloatProperty(default=0, unit='VELOCITY', update=update_tree_code )
+    value: FloatVectorProperty(default=(0,0,0), update=update_tree_code,
+                               unit='VELOCITY' )
 
-_sockets.append(NLVelocitySocket)
-
-##?? are there reasons for xy positive but z not? Or for title=StringProperty("")?
-##!! used nowhere. => make all positive, remove title
 class NLVec3PositiveFieldSocket(bpy.types.NodeSocket, _NLSocket_Vec3):
     bl_idname = "NLVec3PositiveFieldSocket"
-    value_x: FloatProperty( min=0.0, default=0, update=update_tree_code )
-    value_y: FloatProperty( min=0.0, default=0, update=update_tree_code )
-    value_z: FloatProperty(default=0, update=update_tree_code)
+    value: FloatVectorProperty(default=(0,0,0), update=update_tree_code, min=0.0)
     title: StringProperty(default='') # not used anywhere
 
+_sockets.append(NLVec3FieldSocket)
+_sockets.append(NodeSocketMatrix3)
+_sockets.append(NLVec3RotationSocket)
+_sockets.append(NLVelocitySocket)
 _sockets.append(NLVec3PositiveFieldSocket)
 ### END LOak Mod
 
