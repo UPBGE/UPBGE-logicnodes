@@ -2514,6 +2514,33 @@ _sockets.append(NLGlobalPropSocket)
 # Value Sockets
 ###############################################################################
 
+# Mixin / base for Vector-Sockets
+class _NLSocket_Vec3(NLSocket):     # Mixin for Vector-Sockets
+    bl_label = "Float Value"
+    nl_color = PARAM_VECTOR_SOCKET_COLOR # gets picked up by NLSocket.draw_color
+    type: StringProperty(default='VECTOR') # doesn't seem to be used ?
+    # PyProps Vector to grab individual BPyProps
+    @property
+    def value(self):
+        return (self.value_x, self.value_y, self.value_z)
+    @value.setter
+    def value(self, value):
+        self.value_x, self.value_y, self.value_z = value
+
+    def get_unlinked_value(self):  # no longer individual calls
+        return f"mathutils.Vector({tuple(self.value)})"
+
+    def draw(self, context, layout, node, text):
+        layout = layout.column(align=True)
+        if text:
+            layout.label(text=text)
+        if not self.is_linked or self.is_output:
+            if self.node.width >= 200:
+                layout = layout.row(align=True)
+            layout.prop(self, "value_x", text="X")
+            layout.prop(self, "value_y", text="Y")
+            layout.prop(self, "value_z", text="Z")
+
 
 class NLSocketAlphaFloat(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLSocketAlphaFloat"
@@ -3475,7 +3502,7 @@ class NLPlayActionModeSocket(bpy.types.NodeSocket, NLSocket):
 
 _sockets.append(NLPlayActionModeSocket)
 
-
+### LOak MOD FROM HERE
 class NLFloatFieldSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLFloatFieldSocket"
     bl_label = "Float Value"
@@ -3546,7 +3573,7 @@ class NLTimeSocket(bpy.types.NodeSocket, NLSocket):
 
 _sockets.append(NLTimeSocket)
 
-
+#:# LOak
 class NLVec2FieldSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLVec2FieldSocket"
     bl_label = "Float Value"
@@ -3649,215 +3676,55 @@ class NLVec2PositiveFieldSocket(bpy.types.NodeSocket, NLSocket):
 
 _sockets.append(NLVec2PositiveFieldSocket)
 
-
-class NLVec3FieldSocket(bpy.types.NodeSocket, NLSocket):
+#:#:#: These are Vec3d-Sockets
+#: THUS     all of them do update=update_tree_code,
+#:                      have type=StringProperty("VECTOR")
+class NLVec3FieldSocket(bpy.types.NodeSocket, _NLSocket_Vec3):
     bl_idname = "NLVec3FieldSocket"
-    bl_label = "Float Value"
-    type: StringProperty(default='VECTOR')
     value_x: FloatProperty(default=0, update=update_tree_code)
     value_y: FloatProperty(default=0, update=update_tree_code)
     value_z: FloatProperty(default=0, update=update_tree_code)
-
-    def draw_color(self, context, node):
-        return PARAM_VECTOR_SOCKET_COLOR
-
-    def get_unlinked_value(self):
-        return "mathutils.Vector(({}, {}, {}))".format(
-            self.value_x,
-            self.value_y,
-            self.value_z
-        )
-
-    def draw(self, context, layout, node, text):
-        if self.is_linked or self.is_output:
-            layout.label(text=text)
-        else:
-            cont = layout.column(align=True)
-            if text != '':
-                cont.label(text=text)
-            if self.node.width >= 200:
-                cont = cont.row(align=True)
-            cont.prop(self, "value_x", text='X')
-            cont.prop(self, "value_y", text='Y')
-            cont.prop(self, "value_z", text='Z')
-
 
 _sockets.append(NLVec3FieldSocket)
 
-
-class NodeSocketMatrix3(bpy.types.NodeSocket, NLSocket):
+#:#:#:
+class NodeSocketMatrix3(bpy.types.NodeSocket, _NLSocket_Vec3):
     bl_idname = "NodeSocketMatrix3"
-    bl_label = "Float Value"
-    type: StringProperty(default='VECTOR')
     value_x: FloatProperty(default=0, update=update_tree_code)
     value_y: FloatProperty(default=0, update=update_tree_code)
     value_z: FloatProperty(default=0, update=update_tree_code)
 
-    def draw_color(self, context, node):
-        return PARAM_VECTOR_SOCKET_COLOR
-
-    def get_unlinked_value(self):
-        return "mathutils.Vector(({}, {}, {}))".format(
-            self.value_x,
-            self.value_y,
-            self.value_z
-        )
-
-    def draw(self, context, layout, node, text):
-        if self.is_linked or self.is_output:
-            layout.label(text=text)
-        else:
-            cont = layout.column(align=True)
-            if text != '':
-                cont.label(text=text)
-            if self.node.width >= 200:
-                cont = cont.row(align=True)
-            cont.prop(self, "value_x", text='X')
-            cont.prop(self, "value_y", text='Y')
-            cont.prop(self, "value_z", text='Z')
-
-
 _sockets.append(NodeSocketMatrix3)
 
-
-class NLVec3RotationSocket(bpy.types.NodeSocket, NLSocket):
+#:#:#:
+class NLVec3RotationSocket(bpy.types.NodeSocket, _NLSocket_Vec3):
     bl_idname = "NLVec3RotationSocket"
-    bl_label = "Float Value"
-    type: StringProperty(default='VECTOR')
-    value_x: FloatProperty(
-        default=0,
-        unit='ROTATION',
-        update=update_tree_code
-    )
-    value_y: FloatProperty(
-        default=0,
-        unit='ROTATION',
-        update=update_tree_code
-    )
-    value_z: FloatProperty(
-        default=0,
-        unit='ROTATION',
-        update=update_tree_code
-    )
-
-    def draw_color(self, context, node):
-        return PARAM_VECTOR_SOCKET_COLOR
-
-    def get_unlinked_value(self):
-        return "mathutils.Vector(({}, {}, {}))".format(
-            self.value_x,
-            self.value_y,
-            self.value_z
-        )
-
-    def draw(self, context, layout, node, text):
-        if self.is_linked or self.is_output:
-            layout.label(text=text)
-        else:
-            cont = layout.column(align=True)
-            if text != '':
-                cont.label(text=text)
-            if self.node.width >= 200:
-                cont = cont.row(align=True)
-            cont.prop(self, "value_x", text='X')
-            cont.prop(self, "value_y", text='Y')
-            cont.prop(self, "value_z", text='Z')
-
+    value_x: FloatProperty(default=0, unit='ROTATION', update=update_tree_code )
+    value_y: FloatProperty(default=0, unit='ROTATION', update=update_tree_code )
+    value_z: FloatProperty(default=0, unit='ROTATION', update=update_tree_code )
 
 _sockets.append(NLVec3RotationSocket)
 
-
-class NLVelocitySocket(bpy.types.NodeSocket, NLSocket):
+#:#:#:
+class NLVelocitySocket(bpy.types.NodeSocket, _NLSocket_Vec3):
     bl_idname = "NLVelocitySocket"
-    bl_label = "Float Value"
-    type: StringProperty(default='VECTOR')
-    value_x: FloatProperty(
-        default=0,
-        unit='VELOCITY',
-        update=update_tree_code
-    )
-    value_y: FloatProperty(
-        default=0,
-        unit='VELOCITY',
-        update=update_tree_code
-    )
-    value_z: FloatProperty(
-        default=0,
-        unit='VELOCITY',
-        update=update_tree_code
-    )
-
-    def draw_color(self, context, node):
-        return PARAM_VECTOR_SOCKET_COLOR
-
-    def get_unlinked_value(self):
-        return "mathutils.Vector(({}, {}, {}))".format(
-            self.value_x,
-            self.value_y,
-            self.value_z
-        )
-
-    def draw(self, context, layout, node, text):
-        if self.is_linked or self.is_output:
-            layout.label(text=text)
-        else:
-            cont = layout.column(align=True)
-            if text != '':
-                cont.label(text=text)
-            if self.node.width >= 200:
-                cont = cont.row(align=True)
-            cont.prop(self, "value_x", text='X')
-            cont.prop(self, "value_y", text='Y')
-            cont.prop(self, "value_z", text='Z')
-
+    value_x: FloatProperty(default=0, unit='VELOCITY', update=update_tree_code )
+    value_y: FloatProperty(default=0, unit='VELOCITY', update=update_tree_code )
+    value_z: FloatProperty(default=0, unit='VELOCITY', update=update_tree_code )
 
 _sockets.append(NLVelocitySocket)
 
-
-class NLVec3PositiveFieldSocket(bpy.types.NodeSocket, NLSocket):
+##?? are there reasons for xy positive but z not? Or for title=StringProperty("")?
+##!! used nowhere. => make all positive, remove title
+class NLVec3PositiveFieldSocket(bpy.types.NodeSocket, _NLSocket_Vec3):
     bl_idname = "NLVec3PositiveFieldSocket"
-    bl_label = "Float Value"
-    type: StringProperty(default='VECTOR')
-    type: StringProperty(default='VECTOR')
-    value_x: FloatProperty(
-        min=0.0,
-        default=0,
-        update=update_tree_code
-    )
-    value_y: FloatProperty(
-        min=0.0,
-        default=0,
-        update=update_tree_code
-    )
+    value_x: FloatProperty( min=0.0, default=0, update=update_tree_code )
+    value_y: FloatProperty( min=0.0, default=0, update=update_tree_code )
     value_z: FloatProperty(default=0, update=update_tree_code)
-    title: StringProperty(default='')
-
-    def draw_color(self, context, node):
-        return PARAM_VECTOR_SOCKET_COLOR
-
-    def get_unlinked_value(self):
-        return "mathutils.Vector(({}, {}, {}))".format(
-            self.value_x,
-            self.value_y,
-            self.value_z
-        )
-
-    def draw(self, context, layout, node, text):
-        if self.is_linked or self.is_output:
-            layout.label(text=text)
-        else:
-            cont = layout.column(align=True)
-            if text != '':
-                cont.label(text=text)
-            if self.node.width >= 200:
-                cont = cont.row(align=True)
-            cont.prop(self, "value_x", text='X')
-            cont.prop(self, "value_y", text='Y')
-            cont.prop(self, "value_z", text='Z')
-
+    title: StringProperty(default='') # not used anywhere
 
 _sockets.append(NLVec3PositiveFieldSocket)
-
+### END LOak Mod
 
 class NLColorSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLColorSocket"
@@ -6303,7 +6170,7 @@ class NLObjectAttributeParameterNode(NLParameterNode):
     nl_category = "Objects"
     nl_subcat = 'Object Data'
     nl_module = 'parameters'
-    
+
     names = {
         'worldPosition': 'World Position',
         'localPosition': 'Local Position',
@@ -6384,7 +6251,7 @@ class NLObjectAttributeParameterNode(NLParameterNode):
             self.outputs[0].enabled = True
             self.outputs[1].enabled = False
             self.outputs[2].enabled = False
-            
+
 
     def get_attributes(self):
         return [
@@ -7335,7 +7202,7 @@ class NLParameterPythonModuleFunction(NLActionNode):
         self.inputs[-1].name = 'Argument'
 
     def draw_buttons(self, context, layout):
-        op = layout.operator(bge_netlogic.ops.NLAddListItemSocket.bl_idname, text='Add Argument') 
+        op = layout.operator(bge_netlogic.ops.NLAddListItemSocket.bl_idname, text='Add Argument')
 
     def setup(
         self,
