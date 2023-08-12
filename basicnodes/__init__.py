@@ -2515,38 +2515,13 @@ _sockets.append(NLGlobalPropSocket)
 ###############################################################################
 
 # Mixin for Vector-Sockets
-class _NLSocket_Vec2(NLSocket):
-    title: StringProperty(default='') # doesn't seem to be used ?
+class _NLSocket_Vec(NLSocket): # shared mixin base for vector sockets
     bl_label = "Float Value"
     nl_color = PARAM_VECTOR_SOCKET_COLOR # gets picked up by NLSocket.draw_color
     type: StringProperty(default='VECTOR') # doesn't seem to be used ?
     # PyProps into Vector instead of the original individual BPyProps
     value_x= property(lambda s:s.value[0], lambda s,v:s.value.__setitem__(0, v))
     value_y= property(lambda s:s.value[1], lambda s,v:s.value.__setitem__(1, v))
-
-    def get_unlinked_value(self):  # no longer individual calls
-        return f"mathutils.Vector({tuple(self.value)})"
-
-    def draw(self, context, layout, node, text):
-        if self.is_linked or self.is_output:
-            layout.label(text=text)
-        else:
-            column = layout.column()
-            if text != '':
-                column.label(text=text)
-            row = column.row(align=True)
-            row.prop(self, "value", text='', index=0)
-            row.prop(self, "value", text='', index=1)
-
-
-class _NLSocket_Vec3(NLSocket):
-    bl_label = "Float Value"
-    nl_color = PARAM_VECTOR_SOCKET_COLOR # gets picked up by NLSocket.draw_color
-    type: StringProperty(default='VECTOR') # doesn't seem to be used ?
-    # PyProps into Vector instead of the original individual BPyProps
-    value_x= property(lambda s:s.value[0], lambda s,v:s.value.__setitem__(0, v))
-    value_y= property(lambda s:s.value[1], lambda s,v:s.value.__setitem__(1, v))
-    value_z= property(lambda s:s.value[2], lambda s,v:s.value.__setitem__(2, v))
 
     def get_unlinked_value(self):  # no longer individual calls
         return f"mathutils.Vector({tuple(self.value)})"
@@ -2556,9 +2531,15 @@ class _NLSocket_Vec3(NLSocket):
         if text:
             layout.label(text=text)
         if not self.is_linked or self.is_output:
-            if self.node.width >= 200:
+            if self.node.width >= 200:  # => maybe len(self.value)*70 ?
                 layout = layout.row(align=True)
             layout.prop(self, "value", text="")
+
+class _NLSocket_Vec2(_NLSocket_Vec):
+    title: StringProperty(default='') # doesn't seem to be used ?
+
+class _NLSocket_Vec3(_NLSocket_Vec):
+    value_z= property(lambda s:s.value[2], lambda s,v:s.value.__setitem__(2, v))
 
 
 class NLSocketAlphaFloat(bpy.types.NodeSocket, NLSocket):
@@ -3598,20 +3579,18 @@ class NLVec2FieldSocket(bpy.types.NodeSocket, _NLSocket_Vec2):
     bl_idname = "NLVec2FieldSocket"
     value: FloatVectorProperty(default=(0,0,0), update=update_tree_code, size=2)
 
-_sockets.append(NLVec2FieldSocket)
-
 class NLAngleLimitSocket(bpy.types.NodeSocket, _NLSocket_Vec2):
     bl_idname = "NLAngleLimitSocket"
     value: FloatVectorProperty(default=(0,0,0), update=update_tree_code, size=2,
                                unit='ROTATION')
-
-_sockets.append(NLAngleLimitSocket)
 
 class NLVec2PositiveFieldSocket(bpy.types.NodeSocket, _NLSocket_Vec2):
     bl_idname = "NLVec2PositiveFieldSocket"
     value: FloatVectorProperty(default=(0,0,0), update=update_tree_code, size=2,
                                min=0.0)
 
+_sockets.append(NLVec2FieldSocket)
+_sockets.append(NLAngleLimitSocket)
 _sockets.append(NLVec2PositiveFieldSocket)
 
 #:#:#: These are Vec3d-Sockets
