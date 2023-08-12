@@ -1442,17 +1442,9 @@ class NLSpeakerSocket(bpy.types.NodeSocket, NLSocket):
 
 _sockets.append(NLSpeakerSocket)
 
-
-class NLNavMeshSocket(bpy.types.NodeSocket, NLSocket):
-    bl_idname = "NLNavMeshSocket"
-    bl_label = "Object"
+### LOak MOD: extract draw & use_owner NOTE: maybe transfer get_unlinked_value ?
+class _NLSocket_object(NLSocket):
     nl_color = PARAM_OBJ_SOCKET_COLOR
-    value: PointerProperty(
-        name='Object',
-        type=bpy.types.Object,
-        poll=filter_navmesh,
-        update=update_tree_code
-    )
     use_owner: BoolProperty(
         name='Use Owner',
         update=update_tree_code,
@@ -1483,6 +1475,16 @@ class NLNavMeshSocket(bpy.types.NodeSocket, NLSocket):
                 row = layout.row()
                 row.label(text=self.name)
                 row.prop(self, 'use_owner', icon='USER', text='')
+
+class NLNavMeshSocket(bpy.types.NodeSocket, _NLSocket_object):
+    bl_idname = "NLNavMeshSocket"
+    bl_label = "Object"
+    value: PointerProperty(
+        name='Object',
+        type=bpy.types.Object,
+        poll=filter_navmesh,
+        update=update_tree_code
+    )
 
     def get_unlinked_value(self):
         if self.use_owner:
@@ -1490,50 +1492,17 @@ class NLNavMeshSocket(bpy.types.NodeSocket, NLSocket):
         if isinstance(self.value, bpy.types.Object):
             return '"NLO:{}"'.format(self.value.name)
 
-
 _sockets.append(NLNavMeshSocket)
 
-
-class NLLightObjectSocket(bpy.types.NodeSocket, NLSocket):
+class NLLightObjectSocket(bpy.types.NodeSocket, _NLSocket_object):
     bl_idname = "NLLightObjectSocket"
     bl_label = "Light"
-    nl_color = PARAM_OBJ_SOCKET_COLOR
     value: PointerProperty(
         name='Light',
         type=bpy.types.Light,
         poll=filter_lights,
         update=update_tree_code
     )
-    use_owner: BoolProperty(
-        name='Use Owner',
-        update=update_tree_code,
-        description='Use the owner of this tree'
-    )
-
-    def draw(self, context, layout, node, text):
-        if self.is_output:
-            layout.label(text=self.name)
-        elif self.is_linked:
-            layout.label(text=self.name)
-        else:
-            if not self.use_owner:
-                col = layout.column(align=False)
-                row = col.row()
-                if self.name:
-                    row.label(text=self.name)
-                row.prop(self, 'use_owner', icon='USER', text='')
-                col.prop_search(
-                    self,
-                    'value',
-                    bpy.context.scene,
-                    'objects',
-                    icon='NONE',
-                    text=''
-                )
-            else:
-                row = layout.row()
-                row.label(text=self.name)
-                row.prop(self, 'use_owner', icon='USER', text='')
 
     def get_unlinked_value(self):
         if self.use_owner:
@@ -1541,50 +1510,17 @@ class NLLightObjectSocket(bpy.types.NodeSocket, NLSocket):
         if isinstance(self.value, bpy.types.Light):
             return '"NLO:{}"'.format(self.value.name)
 
-
 _sockets.append(NLLightObjectSocket)
 
-
-class NLArmatureObjectSocket(bpy.types.NodeSocket, NLSocket):
+class NLArmatureObjectSocket(bpy.types.NodeSocket, _NLSocket_object):
     bl_idname = "NLArmatureObjectSocket"
     bl_label = "Armature"
-    nl_color = PARAM_OBJ_SOCKET_COLOR
     value: PointerProperty(
         name='Armature',
         type=bpy.types.Armature,
         poll=filter_armatures,
         update=update_tree_code
     )
-    use_owner: BoolProperty(
-        name='Use Owner',
-        update=update_tree_code,
-        description='Use the owner of this tree'
-    )
-
-    def draw(self, context, layout, node, text):
-        if self.is_output:
-            layout.label(text=self.name)
-        elif self.is_linked:
-            layout.label(text=self.name)
-        else:
-            if not self.use_owner:
-                col = layout.column(align=False)
-                row = col.row()
-                if self.name:
-                    row.label(text=self.name)
-                row.prop(self, 'use_owner', icon='USER', text='')
-                col.prop_search(
-                    self,
-                    'value',
-                    bpy.context.scene,
-                    'objects',
-                    icon='NONE',
-                    text=''
-                )
-            else:
-                row = layout.row()
-                row.label(text=self.name)
-                row.prop(self, 'use_owner', icon='USER', text='')
 
     def get_unlinked_value(self):
         if self.use_owner:
@@ -1592,50 +1528,17 @@ class NLArmatureObjectSocket(bpy.types.NodeSocket, NLSocket):
         if isinstance(self.value, bpy.types.Object):
             return '"NLO:{}"'.format(self.value.name)
 
-
 _sockets.append(NLArmatureObjectSocket)
 
-
-class NLCurveObjectSocket(bpy.types.NodeSocket, NLSocket):
+class NLCurveObjectSocket(bpy.types.NodeSocket, _NLSocket_object):
     bl_idname = "NLCurveObjectSocket"
     bl_label = "Curve"
-    nl_color = PARAM_OBJ_SOCKET_COLOR
     value: PointerProperty(
-        name='Armature',
+        name='Curve',
         type=bpy.types.Curve,
         poll=filter_curves,
         update=update_tree_code
     )
-    use_owner: BoolProperty(
-        name='Use Owner',
-        update=update_tree_code,
-        description='Use the owner of this tree'
-    )
-
-    def draw(self, context, layout, node, text):
-        if self.is_output:
-            layout.label(text=self.name)
-        elif self.is_linked:
-            layout.label(text=self.name)
-        else:
-            if not self.use_owner:
-                col = layout.column(align=False)
-                row = col.row()
-                if self.name:
-                    row.label(text=self.name)
-                row.prop(self, 'use_owner', icon='USER', text='')
-                col.prop_search(
-                    self,
-                    'value',
-                    bpy.context.scene,
-                    'objects',
-                    icon='NONE',
-                    text=''
-                )
-            else:
-                row = layout.row()
-                row.label(text=self.name)
-                row.prop(self, 'use_owner', icon='USER', text='')
 
     def get_unlinked_value(self):
         if self.value is None:
@@ -1644,9 +1547,8 @@ class NLCurveObjectSocket(bpy.types.NodeSocket, NLSocket):
             return '"NLO:U_O"'
         return '"NLO:{}"'.format(self.value.name)
 
-
 _sockets.append(NLCurveObjectSocket)
-
+# END LOak
 
 class NLGamePropertySocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLGamePropertySocket"
