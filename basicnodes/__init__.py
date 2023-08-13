@@ -9137,105 +9137,104 @@ class NLSetMaterialNodeValue(_NLActionNode_SetNodeSocketValue):
 _nodes.append(NLSetMaterialNodeValue)
 #--
 
-class NLSetGeometryNodeAttribute(NLActionNode):
+class _NLActionNode_SetNodeAttributeValue(NLActionNode):
     bl_idname = "NLSetGeometryNodeAttribute"
+    nl_subcat = 'Geometry'
+
     bl_label = "Set Node Value"
     bl_icon = 'DRIVER_TRANSFORM'
     nl_category = 'Nodes'
-    nl_subcat = 'Geometry'
     nl_module = 'actions'
+
+    # extracted to be overridden by child-classes
+    def _init_setup_target_sockets(self):
+        # add tree/material-reference socket, add node-reference socket
+        pass
 
     def init(self, context):
         NLActionNode.init(self, context)
         self.inputs.new(NLConditionSocket.bl_idname, "Condition")
+        # depending on the subcategory, child sets up individual reference-sockets
+        self._init_setup_target_sockets()
+        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Internal")
+        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Attribute")
+        self.inputs.new(NLValueFieldSocket.bl_idname, '')
+        self.outputs.new(NLConditionSocket.bl_idname, "Done")
+
+    def update_draw(self):
+        tree = self.inputs[1]
+        nde = self.inputs[2]
+        att = self.inputs[3]
+        itl = self.inputs[4]
+        val = self.inputs[5]
+        if (tree.value or tree.is_linked) and (nde.value or nde.is_linked):
+            att.enabled = val.enabled = itl.enabled = True
+        else:
+            att.enabled = val.enabled = itl.enabled = False
+
+    def get_netlogic_class_name(self):
+        return "ULSetNodeValue"
+
+    def get_input_sockets_field_names(self):
+        return [
+            "condition",
+            "tree_name",
+            'node_name',
+            'internal',
+            "attribute",
+            'value'
+        ]
+
+    def get_output_socket_varnames(self):
+        return ['OUT']
+
+#-- These set Node Attribute Values
+class NLSetGeometryNodeAttribute(_NLActionNode_SetNodeAttributeValue):
+    bl_idname = "NLSetGeometryNodeAttribute"
+    nl_subcat = 'Geometry'
+
+    def _init_setup_target_sockets(self):
         self.inputs.new(NLGeomNodeTreeSocket.bl_idname, 'Tree')
         self.inputs.new(NLNodeGroupNodeSocket.bl_idname, 'Node Name')
         self.inputs[-1].ref_index = 1
-        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Internal")
-        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Attribute")
-        self.inputs.new(NLValueFieldSocket.bl_idname, '')
-        self.outputs.new(NLConditionSocket.bl_idname, "Done")
-
-    def update_draw(self):
-        tree = self.inputs[1]
-        nde = self.inputs[2]
-        att = self.inputs[3]
-        itl = self.inputs[4]
-        val = self.inputs[5]
-        if (tree.value or tree.is_linked) and (nde.value or nde.is_linked):
-            att.enabled = val.enabled = itl.enabled = True
-        else:
-            att.enabled = val.enabled = itl.enabled = False
-
-    def get_netlogic_class_name(self):
-        return "ULSetNodeValue"
-
-    def get_input_sockets_field_names(self):
-        return [
-            "condition",
-            "tree_name",
-            'node_name',
-            'internal',
-            "attribute",
-            'value'
-        ]
-
-    def get_output_socket_varnames(self):
-        return ['OUT']
-
 
 _nodes.append(NLSetGeometryNodeAttribute)
 
-
-class NLSetNodeTreeNodeAttribute(NLActionNode):
+class NLSetNodeTreeNodeAttribute(_NLActionNode_SetNodeAttributeValue):
     bl_idname = "NLSetNodeTreeNodeAttribute"
-    bl_label = "Set Node Value"
-    bl_icon = 'DRIVER_TRANSFORM'
-    nl_category = 'Nodes'
     nl_subcat = 'Groups'
-    nl_module = 'actions'
 
-    def init(self, context):
-        NLActionNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, "Condition")
+    def _init_setup_target_sockets(self):
         self.inputs.new(NLNodeGroupSocket.bl_idname, 'Tree')
         self.inputs.new(NLNodeGroupNodeSocket.bl_idname, 'Node Name')
         self.inputs[-1].ref_index = 1
-        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Internal")
-        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Attribute")
-        self.inputs.new(NLValueFieldSocket.bl_idname, '')
-        self.outputs.new(NLConditionSocket.bl_idname, "Done")
 
-    def update_draw(self):
-        tree = self.inputs[1]
-        nde = self.inputs[2]
-        att = self.inputs[3]
-        itl = self.inputs[4]
-        val = self.inputs[5]
-        if (tree.value or tree.is_linked) and (nde.value or nde.is_linked):
-            att.enabled = val.enabled = itl.enabled = True
-        else:
-            att.enabled = val.enabled = itl.enabled = False
+_nodes.append(NLSetNodeTreeNodeAttribute)
+
+class NLSetMaterialNodeAttribute(_NLActionNode_SetNodeAttributeValue):
+    bl_idname = "NLSetMaterialNodeAttribute"
+    nl_subcat = 'Materials'
+
+    def _init_setup_target_sockets(self):
+        self.inputs.new(NLMaterialSocket.bl_idname, 'Material')
+        self.inputs.new(NLTreeNodeSocket.bl_idname, 'Node Name')
+        self.inputs[-1].ref_index = 1
 
     def get_netlogic_class_name(self):
-        return "ULSetNodeValue"
+        return "ULSetMatNodeValue"
 
     def get_input_sockets_field_names(self):
         return [
             "condition",
-            "tree_name",
+            "mat_name",
             'node_name',
             'internal',
             "attribute",
             'value'
         ]
 
-    def get_output_socket_varnames(self):
-        return ['OUT']
-
-
-_nodes.append(NLSetNodeTreeNodeAttribute)
-
+_nodes.append(NLSetMaterialNodeAttribute)
+#--
 
 class NLSetMaterial(NLActionNode):
     bl_idname = "NLSetMaterial"
@@ -9275,56 +9274,6 @@ class NLSetMaterial(NLActionNode):
 
 
 _nodes.append(NLSetMaterial)
-
-
-class NLSetMaterialNodeAttribute(NLActionNode):
-    bl_idname = "NLSetMaterialNodeAttribute"
-    bl_label = "Set Node Value"
-    bl_icon = 'DRIVER_TRANSFORM'
-    nl_category = 'Nodes'
-    nl_subcat = 'Materials'
-    nl_module = 'actions'
-
-    def init(self, context):
-        NLActionNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, "Condition")
-        self.inputs.new(NLMaterialSocket.bl_idname, 'Material')
-        self.inputs.new(NLTreeNodeSocket.bl_idname, 'Node Name')
-        self.inputs[-1].ref_index = 1
-        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Internal")
-        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Attribute")
-        self.inputs.new(NLValueFieldSocket.bl_idname, '')
-        self.outputs.new(NLConditionSocket.bl_idname, "Done")
-
-    def update_draw(self):
-        mat = self.inputs[1]
-        nde = self.inputs[2]
-        att = self.inputs[3]
-        itl = self.inputs[4]
-        val = self.inputs[5]
-        if (mat.value or mat.is_linked) and (nde.value or nde.is_linked):
-            att.enabled = val.enabled = itl.enabled = True
-        else:
-            att.enabled = val.enabled = itl.enabled = False
-
-    def get_netlogic_class_name(self):
-        return "ULSetMatNodeValue"
-
-    def get_input_sockets_field_names(self):
-        return [
-            "condition",
-            "mat_name",
-            'node_name',
-            'internal',
-            "attribute",
-            'value'
-        ]
-
-    def get_output_socket_varnames(self):
-        return ['OUT']
-
-
-_nodes.append(NLSetMaterialNodeAttribute)
 
 
 class NLPlayMaterialSequence(NLActionNode):
