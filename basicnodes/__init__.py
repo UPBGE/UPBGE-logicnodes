@@ -9043,19 +9043,24 @@ class _NLActionNode_SetNodeSocketValue(NLActionNode):
     # nl_subcat = 'Geometry' # overridden by each SetNodeSocketValue-Node
     nl_module = 'actions'
 
-    def init(self, context):
+    # extracted to be overridden by child-classes
+    def _init_setup_target_sockets(self):
+        # add tree/material-reference socket, add node-reference socket
+        pass
+
+    def init(self, context): # => modify to allow setup to accept init params?
         NLActionNode.init(self, context)
         self.inputs.new(NLConditionSocket.bl_idname, "Condition")
-        # depending on the subcategory, choose a tree-socket-type
-        if self.nl_subcat == "Geometry":
-            self.inputs.new(NLGeomNodeTreeSocket.bl_idname, 'Tree')
-        elif self.nl_subcat == "Groups":
-            self.inputs.new(NLNodeGroupSocket.bl_idname, 'Tree')
-        self.inputs.new(NLNodeGroupNodeSocket.bl_idname, 'Node Name')
-        self.inputs[-1].ref_index = 1
+        # depending on the subcategory, child sets up individual reference-sockets
+        self._init_setup_target_sockets()
+        # self.inputs[-1].ref_index = 1 # self.inputs['Node Name']
         self.inputs.new(NLPositiveIntegerFieldSocket.bl_idname, "Input")
         self.inputs.new(NLFloatFieldSocket.bl_idname, 'Value')
         self.outputs.new(NLConditionSocket.bl_idname, "Done")
+
+    @staticmethod  # extracted so NLSetMaterialNodeValue can override it
+    def _update_draw_get_target(tree_name, node_name):
+        return bpy.data.node_groups[tree_name].nodes[node_name]
 
     def update_draw(self):
         tree = self.inputs[1]
@@ -9071,7 +9076,7 @@ class _NLActionNode_SetNodeSocketValue(NLActionNode):
         if not tree.is_linked and not nde.is_linked and tree.value:
             tree_name = tree.value.name
             node_name = nde.value
-            target = bpy.data.node_groups[tree_name].nodes[node_name]
+            target = self._update_draw_get_target(tree_name, node_name)
             limit = len(target.inputs) - 1
             if int(ipt.value) > limit:
                 ipt.value = limit
@@ -9087,10 +9092,15 @@ class _NLActionNode_SetNodeSocketValue(NLActionNode):
     def get_output_socket_varnames(self):
         return ['OUT']
 
-
+#-- These set Node Socket Values
 class NLSetGeometryNodeValue(_NLActionNode_SetNodeSocketValue):
     bl_idname = "NLSetGeometryNodeValue"
     nl_subcat = 'Geometry'
+
+    def _init_setup_target_sockets(self):
+        self.inputs.new(NLGeomNodeTreeSocket.bl_idname, 'Tree')
+        self.inputs.new(NLNodeGroupNodeSocket.bl_idname, 'Node Name')
+        self.inputs[-1].ref_index = 1
 
 _nodes.append(NLSetGeometryNodeValue)
 
@@ -9098,8 +9108,34 @@ class NLSetNodeTreeNodeValue(_NLActionNode_SetNodeSocketValue):
     bl_idname = "NLSetNodeTreeNodeValue"
     nl_subcat = 'Groups'
 
+    def _init_setup_target_sockets(self):
+        self.inputs.new(NLNodeGroupSocket.bl_idname, 'Tree')
+        self.inputs.new(NLNodeGroupNodeSocket.bl_idname, 'Node Name')
+        self.inputs[-1].ref_index = 1
+
 _nodes.append(NLSetNodeTreeNodeValue)
 
+class NLSetMaterialNodeValue(_NLActionNode_SetNodeSocketValue):
+    bl_idname = "NLSetMaterialNodeValue"
+    nl_subcat = 'Materials'
+
+    def _init_setup_target_sockets(self):
+        self.inputs.new(NLMaterialSocket.bl_idname, 'Material')
+        self.inputs.new(NLTreeNodeSocket.bl_idname, 'Node Name')
+        self.inputs[-1].ref_index = 1
+
+    @staticmethod  # NOTE: here the 'tree-name' is the name of the material
+    def _update_draw_get_target(tree_name, node_name):
+        return bpy.data.materials[tree_name].node_tree.nodes[node_name]
+
+    def get_netlogic_class_name(self):
+        return "ULSetMatNodeSocket"
+
+    def get_input_sockets_field_names(self):
+        return [ "condition", "mat_name", 'node_name', "input_slot", 'value' ]
+
+_nodes.append(NLSetMaterialNodeValue)
+#--
 
 class NLSetGeometryNodeAttribute(NLActionNode):
     bl_idname = "NLSetGeometryNodeAttribute"
@@ -9239,64 +9275,6 @@ class NLSetMaterial(NLActionNode):
 
 
 _nodes.append(NLSetMaterial)
-
-
-class NLSetMaterialNodeValue(NLActionNode):
-    bl_idname = "NLSetMaterialNodeValue"
-    bl_label = "Set Socket Value"
-    bl_icon = 'TRIA_RIGHT'
-    nl_category = 'Nodes'
-    nl_subcat = 'Materials'
-    nl_module = 'actions'
-
-    def init(self, context):
-        NLActionNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, "Condition")
-        self.inputs.new(NLMaterialSocket.bl_idname, 'Material')
-        self.inputs.new(NLTreeNodeSocket.bl_idname, 'Node Name')
-        self.inputs[-1].ref_index = 1
-        self.inputs.new(NLPositiveIntegerFieldSocket.bl_idname, "Input")
-        self.inputs.new(NLFloatFieldSocket.bl_idname, 'Value')
-        self.outputs.new(NLConditionSocket.bl_idname, "Done")
-
-    def update_draw(self):
-        mat = self.inputs[1]
-        nde = self.inputs[2]
-        ipt = self.inputs[3]
-        val = self.inputs[4]
-        if mat.is_linked or nde.is_linked:
-            ipt.name = 'Input'
-        if (mat.value or mat.is_linked) and (nde.value or nde.is_linked):
-            ipt.enabled = val.enabled = True
-        else:
-            ipt.enabled = val.enabled = False
-        if not mat.is_linked and not nde.is_linked and mat.value:
-            mat_name = mat.value.name
-            node_name = nde.value
-            target = bpy.data.materials[mat_name].node_tree.nodes[node_name]
-            limit = len(target.inputs) - 1
-            if int(ipt.value) > limit:
-                ipt.value = limit
-            name = target.inputs[ipt.value].name
-            ipt.name = name
-
-    def get_netlogic_class_name(self):
-        return "ULSetMatNodeSocket"
-
-    def get_input_sockets_field_names(self):
-        return [
-            "condition",
-            "mat_name",
-            'node_name',
-            "input_slot",
-            'value'
-        ]
-
-    def get_output_socket_varnames(self):
-        return ['OUT']
-
-
-_nodes.append(NLSetMaterialNodeValue)
 
 
 class NLSetMaterialNodeAttribute(NLActionNode):
