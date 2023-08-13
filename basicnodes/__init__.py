@@ -1118,9 +1118,7 @@ class NLLogicBrickSocket(bpy.types.NodeSocket, NLSocket):
     brick_type: StringProperty(default='controllers')
 
     def draw(self, context, layout, node, text):
-        if self.is_output:
-            layout.label(text=self.name)
-        elif self.is_linked:
+        if self.is_linked or self.is_output:
             layout.label(text=self.name)
         else:
             col = layout.column(align=False)
@@ -1319,9 +1317,7 @@ class NLGameObjectSocket(bpy.types.NodeSocket, NLSocket):
 
     def draw(self, context, layout, node, text):
         scene_logic = self.is_scene_logic()
-        if self.is_output:
-            layout.label(text=self.name)
-        elif self.is_linked:
+        if self.is_linked or self.is_output:
             layout.label(text=self.name)
         else:
             if not self.use_owner or scene_logic:
@@ -1371,9 +1367,7 @@ class NLCameraSocket(bpy.types.NodeSocket, NLSocket):
     )
 
     def draw(self, context, layout, node, text):
-        if self.is_output:
-            layout.label(text=self.name)
-        elif self.is_linked:
+        if self.is_linked or self.is_output:
             layout.label(text=self.name)
         else:
             if not self.use_active:
@@ -1417,9 +1411,7 @@ class NLSpeakerSocket(bpy.types.NodeSocket, NLSocket):
     )
 
     def draw(self, context, layout, node, text):
-        if self.is_output:
-            layout.label(text=self.name)
-        elif self.is_linked:
+        if self.is_linked or self.is_output:
             layout.label(text=self.name)
         else:
             col = layout.column(align=False)
@@ -1452,9 +1444,7 @@ class _NLSocket_object(NLSocket):
     )
 
     def draw(self, context, layout, node, text):
-        if self.is_output:
-            layout.label(text=self.name)
-        elif self.is_linked:
+        if self.is_linked or self.is_output:
             layout.label(text=self.name)
         else:
             if not self.use_owner:
@@ -1565,9 +1555,7 @@ class NLGamePropertySocket(bpy.types.NodeSocket, NLSocket):
 
     def draw(self, context, layout, node, text):
         mode = getattr(self.node, 'mode', 'GAME')
-        if self.is_output:
-            layout.label(text=self.name)
-        elif self.is_linked:
+        if self.is_linked or self.is_output:
             layout.label(text=self.name)
         else:
             col = layout.column(align=False)
@@ -1622,9 +1610,7 @@ class NLArmatureBoneSocket(bpy.types.NodeSocket, NLSocket):
     ref_index: IntProperty(default=0)
 
     def draw(self, context, layout, node, text):
-        if self.is_output:
-            layout.label(text=self.name)
-        elif self.is_linked:
+        if self.is_linked or self.is_output:
             layout.label(text=self.name)
         else:
             col = layout.column(align=False)
@@ -1673,9 +1659,7 @@ class NLBoneConstraintSocket(bpy.types.NodeSocket, NLSocket):
     ref_index: IntProperty(default=0)
 
     def draw(self, context, layout, node, text):
-        if self.is_output:
-            layout.label(text=self.name)
-        elif self.is_linked:
+        if self.is_linked or self.is_output:
             layout.label(text=self.name)
         else:
             col = layout.column(align=False)
@@ -1723,9 +1707,7 @@ class NLGeomNodeTreeSocket(bpy.types.NodeSocket, NLSocket):
     )
 
     def draw(self, context, layout, node, text):
-        if self.is_output:
-            layout.label(text=self.name)
-        elif self.is_linked:
+        if self.is_linked or self.is_output:
             layout.label(text=self.name)
         else:
             col = layout.column(align=False)
@@ -1760,9 +1742,7 @@ class NLNodeGroupSocket(bpy.types.NodeSocket, NLSocket):
     )
 
     def draw(self, context, layout, node, text):
-        if self.is_output:
-            layout.label(text=self.name)
-        elif self.is_linked:
+        if self.is_linked or self.is_output:
             layout.label(text=self.name)
         else:
             col = layout.column(align=False)
@@ -1853,9 +1833,7 @@ class NLMaterialSocket(bpy.types.NodeSocket, NLSocket):
     )
 
     def draw(self, context, layout, node, text):
-        if self.is_output:
-            layout.label(text=self.name)
-        elif self.is_linked:
+        if self.is_linked or self.is_output:
             layout.label(text=self.name)
         else:
             col = layout.column(align=False)
@@ -1889,9 +1867,7 @@ class NLSceneSocket(bpy.types.NodeSocket, NLSocket):
     )
 
     def draw(self, context, layout, node, text):
-        if self.is_output:
-            layout.label(text=self.name)
-        elif self.is_linked:
+        if self.is_linked or self.is_output:
             layout.label(text=self.name)
         else:
             col = layout.column(align=False)
@@ -1926,9 +1902,7 @@ class NLTextIDSocket(bpy.types.NodeSocket, NLSocket):
     )
 
     def draw(self, context, layout, node, text):
-        if self.is_output:
-            layout.label(text=self.name)
-        elif self.is_linked:
+        if self.is_linked or self.is_output:
             layout.label(text=self.name)
         else:
             col = layout.column(align=False)
@@ -1962,9 +1936,7 @@ class NLMeshSocket(bpy.types.NodeSocket, NLSocket):
     )
 
     def draw(self, context, layout, node, text):
-        if self.is_output:
-            layout.label(text=self.name)
-        elif self.is_linked:
+        if self.is_linked or self.is_output:
             layout.label(text=self.name)
         else:
             col = layout.column(align=False)
@@ -1998,9 +1970,7 @@ class NLGameObjectNameSocket(bpy.types.NodeSocket, NLSocket):
     )
 
     def draw(self, context, layout, node, text):
-        if self.is_output:
-            layout.label(text=self.name)
-        elif self.is_linked:
+        if self.is_linked or self.is_output:
             layout.label(text=self.name)
         else:
             col = layout.column(align=False)
@@ -2038,9 +2008,7 @@ class NLCollectionSocket(bpy.types.NodeSocket, NLSocket):
     )
 
     def draw(self, context, layout, node, text):
-        if self.is_output:
-            layout.label(text=self.name)
-        elif self.is_linked:
+        if self.is_linked or self.is_output:
             layout.label(text=self.name)
         else:
             col = layout.column(align=False)
