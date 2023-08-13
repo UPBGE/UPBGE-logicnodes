@@ -9035,19 +9035,22 @@ class NLSetGameObjectGamePropertyActionNode(NLActionNode):
 
 _nodes.append(NLSetGameObjectGamePropertyActionNode)
 
-
-class NLSetGeometryNodeValue(NLActionNode):
-    bl_idname = "NLSetGeometryNodeValue"
+### LOak MOD
+class _NLActionNode_SetNodeSocketValue(NLActionNode):
     bl_label = "Set Socket Value"
     bl_icon = 'TRIA_RIGHT'
     nl_category = 'Nodes'
-    nl_subcat = 'Geometry'
+    # nl_subcat = 'Geometry' # overridden by each SetNodeSocketValue-Node
     nl_module = 'actions'
 
     def init(self, context):
         NLActionNode.init(self, context)
         self.inputs.new(NLConditionSocket.bl_idname, "Condition")
-        self.inputs.new(NLGeomNodeTreeSocket.bl_idname, 'Tree')
+        # depending on the subcategory, choose a tree-socket-type
+        if self.nl_subcat == "Geometry":
+            self.inputs.new(NLGeomNodeTreeSocket.bl_idname, 'Tree')
+        elif self.nl_subcat == "Groups":
+            self.inputs.new(NLNodeGroupSocket.bl_idname, 'Tree')
         self.inputs.new(NLNodeGroupNodeSocket.bl_idname, 'Node Name')
         self.inputs[-1].ref_index = 1
         self.inputs.new(NLPositiveIntegerFieldSocket.bl_idname, "Input")
@@ -9079,75 +9082,21 @@ class NLSetGeometryNodeValue(NLActionNode):
         return "ULSetNodeSocket"
 
     def get_input_sockets_field_names(self):
-        return [
-            "condition",
-            "tree_name",
-            'node_name',
-            "input_slot",
-            'value'
-        ]
+        return [ "condition", "tree_name", 'node_name', "input_slot", 'value' ]
 
     def get_output_socket_varnames(self):
         return ['OUT']
 
+
+class NLSetGeometryNodeValue(_NLActionNode_SetNodeSocketValue):
+    bl_idname = "NLSetGeometryNodeValue"
+    nl_subcat = 'Geometry'
 
 _nodes.append(NLSetGeometryNodeValue)
 
-
-class NLSetNodeTreeNodeValue(NLActionNode):
+class NLSetNodeTreeNodeValue(_NLActionNode_SetNodeSocketValue):
     bl_idname = "NLSetNodeTreeNodeValue"
-    bl_label = "Set Socket Value"
-    bl_icon = 'TRIA_RIGHT'
-    nl_category = 'Nodes'
     nl_subcat = 'Groups'
-    nl_module = 'actions'
-
-    def init(self, context):
-        NLActionNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, "Condition")
-        self.inputs.new(NLNodeGroupSocket.bl_idname, 'Tree')
-        self.inputs.new(NLNodeGroupNodeSocket.bl_idname, 'Node Name')
-        self.inputs[-1].ref_index = 1
-        self.inputs.new(NLPositiveIntegerFieldSocket.bl_idname, "Input")
-        self.inputs.new(NLFloatFieldSocket.bl_idname, 'Value')
-        self.outputs.new(NLConditionSocket.bl_idname, "Done")
-
-    def update_draw(self):
-        tree = self.inputs[1]
-        nde = self.inputs[2]
-        ipt = self.inputs[3]
-        val = self.inputs[4]
-        if tree.is_linked or nde.is_linked:
-            ipt.name = 'Input'
-        if (tree.value or tree.is_linked) and (nde.value or nde.is_linked):
-            ipt.enabled = val.enabled = True
-        else:
-            ipt.enabled = val.enabled = False
-        if not tree.is_linked and not nde.is_linked and tree.value:
-            tree_name = tree.value.name
-            node_name = nde.value
-            target = bpy.data.node_groups[tree_name].nodes[node_name]
-            limit = len(target.inputs) - 1
-            if int(ipt.value) > limit:
-                ipt.value = limit
-            name = target.inputs[ipt.value].name
-            ipt.name = name
-
-    def get_netlogic_class_name(self):
-        return "ULSetNodeSocket"
-
-    def get_input_sockets_field_names(self):
-        return [
-            "condition",
-            "tree_name",
-            'node_name',
-            "input_slot",
-            'value'
-        ]
-
-    def get_output_socket_varnames(self):
-        return ['OUT']
-
 
 _nodes.append(NLSetNodeTreeNodeValue)
 
