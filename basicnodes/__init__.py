@@ -4987,21 +4987,27 @@ class NLGameObjectPropertyParameterNode(NLParameterNode):
 
 _nodes.append(NLGameObjectPropertyParameterNode)
 
-
-class NLGetGeometryNodeValue(NLParameterNode):
-    bl_idname = "NLGetGeometryNodeValue"
+### LOak MOD -- extract base for getting values from a different tree
+class _NLParameterNode_GetNodeSocketValue(NLParameterNode):
     bl_label = "Get Socket Value"
     bl_icon = 'TRIA_RIGHT'
     nl_category = 'Nodes'
-    nl_subcat = 'Geometry'
     nl_module = 'parameters'
 
+    # extracted to be overridden by child-classes
+    def _init_setup_target_sockets(self):
+        # add tree/material-reference socket, add node-reference socket
+        pass
+
     def init(self, context):
-        NLActionNode.init(self, context)
-        self.inputs.new(NLGeomNodeTreeSocket.bl_idname, 'Tree')
-        self.inputs.new(NLNodeGroupNodeSocket.bl_idname, 'Node Name')
+        NLActionNode.init(self, context) # shouldn't it be NLParameterNode.init ?
+        self._init_setup_target_sockets()
         self.inputs.new(NLPositiveIntegerFieldSocket.bl_idname, "Input")
         self.outputs.new(NLParameterSocket.bl_idname, "Value")
+
+    @staticmethod  # extracted so NLGetMaterialNodeValue can override it
+    def _update_draw_get_target(tree_name, node_name):
+        return bpy.data.node_groups[tree_name].nodes[node_name]
 
     def update_draw(self):
         tree = self.inputs[0]
@@ -5016,7 +5022,7 @@ class NLGetGeometryNodeValue(NLParameterNode):
         if not tree.is_linked and not nde.is_linked and tree.value:
             tree_name = tree.value.name
             node_name = nde.value
-            target = bpy.data.node_groups[tree_name].nodes[node_name]
+            target = self._update_draw_get_target(tree_name, node_name)
             limit = len(target.inputs) - 1
             if int(ipt.value) > limit:
                 ipt.value = limit
@@ -5032,6 +5038,15 @@ class NLGetGeometryNodeValue(NLParameterNode):
     def get_output_socket_varnames(self):
         return ['OUT']
 
+#:':'
+class NLGetGeometryNodeValue(_NLParameterNode_GetNodeSocketValue):
+    bl_idname = "NLGetGeometryNodeValue"
+    nl_subcat = 'Geometry'
+
+    def _init_setup_target_sockets(self):
+        self.inputs.new(NLGeomNodeTreeSocket.bl_idname, 'Tree')
+        self.inputs.new(NLNodeGroupNodeSocket.bl_idname, 'Node Name')
+        # self.inputs[-1].ref_index = 1
 
 _nodes.append(NLGetGeometryNodeValue)
 
@@ -5074,51 +5089,15 @@ class NLGetGeometryNodeAttribute(NLParameterNode):
 
 _nodes.append(NLGetGeometryNodeAttribute)
 
-
-class NLGetNodeGroupNodeValue(NLParameterNode):
+#:':'
+class NLGetNodeGroupNodeValue(_NLParameterNode_GetNodeSocketValue):
     bl_idname = "NLGetNodeGroupNodeValue"
-    bl_label = "Get Socket Value"
-    bl_icon = 'TRIA_RIGHT'
-    nl_category = 'Nodes'
     nl_subcat = 'Groups'
-    nl_module = 'parameters'
 
-    def init(self, context):
-        NLActionNode.init(self, context)
+    def _init_setup_target_sockets(self):
         self.inputs.new(NLNodeGroupSocket.bl_idname, 'Tree')
         self.inputs.new(NLNodeGroupNodeSocket.bl_idname, 'Node Name')
-        self.inputs.new(NLPositiveIntegerFieldSocket.bl_idname, "Input")
-        self.outputs.new(NLParameterSocket.bl_idname, "Value")
-
-    def update_draw(self):
-        tree = self.inputs[0]
-        nde = self.inputs[1]
-        ipt = self.inputs[2]
-        if tree.is_linked or nde.is_linked:
-            ipt.name = 'Input'
-        if (tree.value or tree.is_linked) and (nde.value or nde.is_linked):
-            ipt.enabled = True
-        else:
-            ipt.enabled = False
-        if not tree.is_linked and not nde.is_linked and tree.value:
-            tree_name = tree.value.name
-            node_name = nde.value
-            target = bpy.data.node_groups[tree_name].nodes[node_name]
-            limit = len(target.inputs) - 1
-            if int(ipt.value) > limit:
-                ipt.value = limit
-            name = target.inputs[ipt.value].name
-            ipt.name = name
-
-    def get_netlogic_class_name(self):
-        return "ULGetNodeSocket"
-
-    def get_input_sockets_field_names(self):
-        return ["tree_name", 'node_name', "input_slot"]
-
-    def get_output_socket_varnames(self):
-        return ['OUT']
-
+        # self.inputs[-1].ref_index = 1
 
 _nodes.append(NLGetNodeGroupNodeValue)
 
@@ -5161,51 +5140,25 @@ class NLGetNodeTreeNodeAttribute(NLParameterNode):
 
 _nodes.append(NLGetNodeTreeNodeAttribute)
 
-
-class NLGetMaterialNodeValue(NLParameterNode):
+#:':'
+class NLGetMaterialNodeValue(_NLParameterNode_GetNodeSocketValue):
     bl_idname = "NLGetMaterialNodeValue"
-    bl_label = "Get Socket Value"
-    bl_icon = 'TRIA_RIGHT'
-    nl_category = 'Nodes'
     nl_subcat = 'Materials'
-    nl_module = 'parameters'
 
-    def init(self, context):
-        NLActionNode.init(self, context)
+    def _init_setup_target_sockets(self):
         self.inputs.new(NLMaterialSocket.bl_idname, 'Material')
         self.inputs.new(NLTreeNodeSocket.bl_idname, 'Node Name')
-        self.inputs.new(NLPositiveIntegerFieldSocket.bl_idname, "Input")
-        self.outputs.new(NLParameterSocket.bl_idname, "Value")
+        # self.inputs[-1].ref_index = 1
 
-    def update_draw(self):
-        mat = self.inputs[0]
-        nde = self.inputs[1]
-        ipt = self.inputs[2]
-        if mat.is_linked or nde.is_linked:
-            ipt.name = 'Input'
-        if (mat.value or mat.is_linked) and (nde.value or nde.is_linked):
-            ipt.enabled = True
-        else:
-            ipt.enabled = False
-        if not mat.is_linked and not nde.is_linked and mat.value:
-            mat_name = mat.value.name
-            node_name = nde.value
-            target = bpy.data.materials[mat_name].node_tree.nodes[node_name]
-            limit = len(target.inputs) - 1
-            if int(ipt.value) > limit:
-                ipt.value = limit
-            name = target.inputs[ipt.value].name
-            ipt.name = name
+    @staticmethod  # Note that here 'tree-name' is the name of the material
+    def _update_draw_get_target(tree_name, node_name):
+        return bpy.data.materials[tree_name].node_tree.nodes[node_name]
 
     def get_netlogic_class_name(self):
         return "ULGetMaterialSocket"
 
     def get_input_sockets_field_names(self):
         return ["mat_name", 'node_name', "input_slot"]
-
-    def get_output_socket_varnames(self):
-        return ['OUT']
-
 
 _nodes.append(NLGetMaterialNodeValue)
 
