@@ -5038,7 +5038,7 @@ class _NLParameterNode_GetNodeSocketValue(NLParameterNode):
     def get_output_socket_varnames(self):
         return ['OUT']
 
-#:':'
+#-- These get Node Socket Values
 class NLGetGeometryNodeValue(_NLParameterNode_GetNodeSocketValue):
     bl_idname = "NLGetGeometryNodeValue"
     nl_subcat = 'Geometry'
@@ -5050,6 +5050,38 @@ class NLGetGeometryNodeValue(_NLParameterNode_GetNodeSocketValue):
 
 _nodes.append(NLGetGeometryNodeValue)
 
+class NLGetNodeGroupNodeValue(_NLParameterNode_GetNodeSocketValue):
+    bl_idname = "NLGetNodeGroupNodeValue"
+    nl_subcat = 'Groups'
+
+    def _init_setup_target_sockets(self):
+        self.inputs.new(NLNodeGroupSocket.bl_idname, 'Tree')
+        self.inputs.new(NLNodeGroupNodeSocket.bl_idname, 'Node Name')
+        # self.inputs[-1].ref_index = 1
+
+_nodes.append(NLGetNodeGroupNodeValue)
+
+class NLGetMaterialNodeValue(_NLParameterNode_GetNodeSocketValue):
+    bl_idname = "NLGetMaterialNodeValue"
+    nl_subcat = 'Materials'
+
+    def _init_setup_target_sockets(self):
+        self.inputs.new(NLMaterialSocket.bl_idname, 'Material')
+        self.inputs.new(NLTreeNodeSocket.bl_idname, 'Node Name')
+        # self.inputs[-1].ref_index = 1
+
+    @staticmethod  # Note that here 'tree-name' is the name of the material
+    def _update_draw_get_target(tree_name, node_name):
+        return bpy.data.materials[tree_name].node_tree.nodes[node_name]
+
+    def get_netlogic_class_name(self):
+        return "ULGetMaterialSocket"
+
+    def get_input_sockets_field_names(self):
+        return ["mat_name", 'node_name', "input_slot"]
+
+_nodes.append(NLGetMaterialNodeValue)
+#--
 
 class NLGetGeometryNodeAttribute(NLParameterNode):
     bl_idname = "NLGetGeometryNodeAttribute"
@@ -5089,18 +5121,6 @@ class NLGetGeometryNodeAttribute(NLParameterNode):
 
 _nodes.append(NLGetGeometryNodeAttribute)
 
-#:':'
-class NLGetNodeGroupNodeValue(_NLParameterNode_GetNodeSocketValue):
-    bl_idname = "NLGetNodeGroupNodeValue"
-    nl_subcat = 'Groups'
-
-    def _init_setup_target_sockets(self):
-        self.inputs.new(NLNodeGroupSocket.bl_idname, 'Tree')
-        self.inputs.new(NLNodeGroupNodeSocket.bl_idname, 'Node Name')
-        # self.inputs[-1].ref_index = 1
-
-_nodes.append(NLGetNodeGroupNodeValue)
-
 
 class NLGetNodeTreeNodeAttribute(NLParameterNode):
     bl_idname = "NLGetNodeTreeNodeAttribute"
@@ -5139,28 +5159,6 @@ class NLGetNodeTreeNodeAttribute(NLParameterNode):
 
 
 _nodes.append(NLGetNodeTreeNodeAttribute)
-
-#:':'
-class NLGetMaterialNodeValue(_NLParameterNode_GetNodeSocketValue):
-    bl_idname = "NLGetMaterialNodeValue"
-    nl_subcat = 'Materials'
-
-    def _init_setup_target_sockets(self):
-        self.inputs.new(NLMaterialSocket.bl_idname, 'Material')
-        self.inputs.new(NLTreeNodeSocket.bl_idname, 'Node Name')
-        # self.inputs[-1].ref_index = 1
-
-    @staticmethod  # Note that here 'tree-name' is the name of the material
-    def _update_draw_get_target(tree_name, node_name):
-        return bpy.data.materials[tree_name].node_tree.nodes[node_name]
-
-    def get_netlogic_class_name(self):
-        return "ULGetMaterialSocket"
-
-    def get_input_sockets_field_names(self):
-        return ["mat_name", 'node_name', "input_slot"]
-
-_nodes.append(NLGetMaterialNodeValue)
 
 
 class NLGetMaterialNodeAttribute(NLParameterNode):
