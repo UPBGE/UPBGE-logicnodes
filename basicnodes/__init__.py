@@ -1784,9 +1784,11 @@ class NLNodeGroupSocket(bpy.types.NodeSocket, NLSocket):
 
 _sockets.append(NLNodeGroupSocket)
 
+### LOak MOD -- sockets to search for a node in a tree referenceed by another socket
+class _NLSocket_TreeNode(NLSocket):
+    @staticmethod # abstract. must be overridden
+    def _draw_get_tree_by_name(name): pass
 
-class NLNodeGroupNodeSocket(bpy.types.NodeSocket, NLSocket):
-    bl_idname = "NLNodeGroupNodeSocket"
     bl_label = "Tree Node"
     nl_color = PARAMETER_SOCKET_COLOR
     value: StringProperty(
@@ -1806,7 +1808,7 @@ class NLNodeGroupNodeSocket(bpy.types.NodeSocket, NLSocket):
                 col.prop_search(
                     self,
                     "value",
-                    bpy.data.node_groups[tree.name],
+                    self._draw_get_tree_by_name(tree.name),
                     'nodes',
                     text=''
                 )
@@ -1819,8 +1821,24 @@ class NLNodeGroupNodeSocket(bpy.types.NodeSocket, NLSocket):
     def get_unlinked_value(self):
         return '"{}"'.format(self.value)
 
+class NLNodeGroupNodeSocket(bpy.types.NodeSocket, _NLSocket_TreeNode):
+    bl_idname = "NLNodeGroupNodeSocket"
+
+    @staticmethod
+    def _draw_get_tree_by_name(name):
+        return bpy.data.node_groups[name]
 
 _sockets.append(NLNodeGroupNodeSocket)
+
+class NLTreeNodeSocket(bpy.types.NodeSocket, _NLSocket_TreeNode):
+    bl_idname = "NLTreeNodeSocket"
+
+    @staticmethod
+    def _draw_get_tree_by_name(name):
+        return bpy.data.materials[name].node_tree
+
+_sockets.append(NLTreeNodeSocket)
+#--
 
 
 class NLMaterialSocket(bpy.types.NodeSocket, NLSocket):
@@ -1858,44 +1876,6 @@ class NLMaterialSocket(bpy.types.NodeSocket, NLSocket):
 
 
 _sockets.append(NLMaterialSocket)
-
-
-class NLTreeNodeSocket(bpy.types.NodeSocket, NLSocket):
-    bl_idname = "NLTreeNodeSocket"
-    bl_label = "Tree Node"
-    nl_color = PARAMETER_SOCKET_COLOR
-    value: StringProperty(
-        name='Tree Node',
-        update=update_tree_code
-    )
-    ref_index: IntProperty(default=0)
-
-    def draw(self, context, layout, node, text):
-        if self.is_linked or self.is_output:
-            layout.label(text=text)
-        else:
-            mat_socket = self.node.inputs[self.ref_index]
-            mat = mat_socket.value
-            col = layout.column(align=False)
-            if mat and not mat_socket.is_linked:
-                col.prop_search(
-                    self,
-                    "value",
-                    bpy.data.materials[mat.name].node_tree,
-                    'nodes',
-                    text=''
-                )
-            elif mat_socket.is_linked:
-                col.label(text=text)
-                col.prop(self, 'value', text='')
-            else:
-                col.label(text=self.name)
-
-    def get_unlinked_value(self):
-        return '"{}"'.format(self.value)
-
-
-_sockets.append(NLTreeNodeSocket)
 
 
 class NLSceneSocket(bpy.types.NodeSocket, NLSocket):
