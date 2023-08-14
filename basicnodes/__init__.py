@@ -9095,6 +9095,10 @@ class NLAddToGameObjectGamePropertyActionNode(NLActionNode):
     bl_idname = "NLAddToGameObjectGamePropertyActionNode"
     bl_label = "Modify Property"
     bl_icon = 'ADD'
+
+    def get_netlogic_class_name(self):
+        return "ULModifyProperty"
+
     nl_category = "Objects"
     nl_subcat = 'Properties'
     nl_module = 'actions'
@@ -9118,9 +9122,6 @@ class NLAddToGameObjectGamePropertyActionNode(NLActionNode):
         self.inputs[-1].ref_index = 1
         self.inputs.new(NLFloatFieldSocket.bl_idname, "Value")
         self.outputs.new(NLConditionSocket.bl_idname, "Done")
-
-    def get_netlogic_class_name(self):
-        return "ULModifyProperty"
 
     def draw_buttons(self, context, layout):
         layout.prop(self, "mode", text="")
@@ -9152,6 +9153,10 @@ class NLClampedModifyProperty(NLActionNode):
     bl_idname = "NLClampedModifyProperty"
     bl_label = "Clamped Modify Property"
     bl_icon = 'ARROW_LEFTRIGHT'
+
+    def get_netlogic_class_name(self):
+        return "ULClampedModifyProperty"
+
     nl_category = "Objects"
     nl_subcat = 'Properties'
     nl_module = 'actions'
@@ -9180,9 +9185,6 @@ class NLClampedModifyProperty(NLActionNode):
     def draw_buttons(self, context, layout):
         layout.prop(self, "mode", text="")
         layout.prop(self, "operator", text="")
-
-    def get_netlogic_class_name(self):
-        return "ULClampedModifyProperty"
 
     def get_attributes(self):
         return [
@@ -12881,10 +12883,8 @@ class NLGetObjectVertices(NLParameterNode):
 
 _nodes.append(NLGetObjectVertices)
 
-
-class NLSetBoneConstraintInfluence(NLActionNode):
-    bl_idname = "NLSetBoneConstraintInfluence"
-    bl_label = "Set Influence"
+### LOak MOD -- for BoneConstraint set influence, target and Attribute
+class _NLActionNode_SetBoneConstraint(NLActionNode):
     bl_icon = 'CONSTRAINT_BONE'
     nl_category = "Animation"
     nl_subcat = 'Bone Constraints'
@@ -12898,7 +12898,7 @@ class NLSetBoneConstraintInfluence(NLActionNode):
         self.inputs[-1].ref_index = 1
         self.inputs.new(NLBoneConstraintSocket.bl_idname, "")
         self.inputs[-1].ref_index = 2
-        self.inputs.new(NLSocketAlphaFloat.bl_idname, "Influence")
+        self._init_setup_target_sockets()
         self.outputs.new(NLConditionSocket.bl_idname, 'Done')
 
     def update_draw(self):
@@ -12915,124 +12915,51 @@ class NLSetBoneConstraintInfluence(NLActionNode):
 
     def get_output_socket_varnames(self):
         return ["OUT"]
+
+class NLSetBoneConstraintInfluence(_NLActionNode_SetBoneConstraint):
+    bl_idname = "NLSetBoneConstraintInfluence"
+    bl_label = "Set Influence"
+
+    def _init_setup_target_sockets(self):
+        self.inputs.new(NLSocketAlphaFloat.bl_idname, "Influence")
 
     def get_netlogic_class_name(self):
         return "ULSetBoneConstraintInfluence"
 
     def get_input_sockets_field_names(self):
-        return [
-            "condition",
-            "armature",
-            "bone",
-            "constraint",
-            "influence"
-        ]
+        return [ "condition", "armature", "bone", "constraint", "influence" ]
 
-
-_nodes.append(NLSetBoneConstraintInfluence)
-
-
-class NLSetBoneConstraintTarget(NLActionNode):
+class NLSetBoneConstraintTarget(_NLActionNode_SetBoneConstraint):
     bl_idname = "NLSetBoneConstraintTarget"
     bl_label = "Set Target"
-    bl_icon = 'CONSTRAINT_BONE'
-    nl_category = "Animation"
-    nl_subcat = 'Bone Constraints'
-    nl_module = 'actions'
 
-    def init(self, context):
-        NLActionNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, "Condition")
-        self.inputs.new(NLArmatureObjectSocket.bl_idname, "Armature")
-        self.inputs.new(NLArmatureBoneSocket.bl_idname, "")
-        self.inputs[-1].ref_index = 1
-        self.inputs.new(NLBoneConstraintSocket.bl_idname, "")
-        self.inputs[-1].ref_index = 2
+    def _init_setup_target_sockets(self):
         self.inputs.new(NLGameObjectSocket.bl_idname, "Target")
-        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
-
-    def update_draw(self):
-        self.inputs[2].enabled = (
-            self.inputs[1].value is not None or
-            self.inputs[1].is_linked or
-            self.inputs[1].use_owner
-        )
-        self.inputs[3].enabled = (
-            self.inputs[2].enabled and
-            (self.inputs[2].value != '' or
-             self.inputs[2].is_linked)
-        )
-
-    def get_output_socket_varnames(self):
-        return ["OUT"]
 
     def get_netlogic_class_name(self):
         return "ULSetBoneConstraintTarget"
 
     def get_input_sockets_field_names(self):
-        return [
-            "condition",
-            "armature",
-            "bone",
-            "constraint",
-            "target"
-        ]
+        return [ "condition", "armature", "bone", "constraint", "target" ]
 
-
-_nodes.append(NLSetBoneConstraintTarget)
-
-
-class NLSetBoneConstraintAttribute(NLActionNode):
+class NLSetBoneConstraintAttribute(_NLActionNode_SetBoneConstraint):
     bl_idname = "NLSetBoneConstraintAttribute"
     bl_label = "Set Attribute"
-    bl_icon = 'CONSTRAINT_BONE'
-    nl_category = "Animation"
-    nl_subcat = 'Bone Constraints'
-    nl_module = 'actions'
 
-    def init(self, context):
-        NLActionNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, "Condition")
-        self.inputs.new(NLArmatureObjectSocket.bl_idname, "Armature")
-        self.inputs.new(NLArmatureBoneSocket.bl_idname, "")
-        self.inputs[-1].ref_index = 1
-        self.inputs.new(NLBoneConstraintSocket.bl_idname, "")
-        self.inputs[-1].ref_index = 2
+    def _init_setup_target_sockets(self):
         self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Attribute")
         self.inputs.new(NLValueFieldSocket.bl_idname, "")
-        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
-
-    def update_draw(self):
-        self.inputs[2].enabled = (
-            self.inputs[1].value is not None or
-            self.inputs[1].is_linked or
-            self.inputs[1].use_owner
-        )
-        self.inputs[3].enabled = (
-            self.inputs[2].enabled and
-            (self.inputs[2].value != '' or
-             self.inputs[2].is_linked)
-        )
-
-    def get_output_socket_varnames(self):
-        return ["OUT"]
 
     def get_netlogic_class_name(self):
         return "ULSetBoneConstraintAttribute"
 
     def get_input_sockets_field_names(self):
-        return [
-            "condition",
-            "armature",
-            "bone",
-            "constraint",
-            "attribute",
-            "value",
-        ]
+        return [ "condition", "armature", "bone", "constraint", "attribute", "value" ]
 
-
+_nodes.append(NLSetBoneConstraintInfluence)
+_nodes.append(NLSetBoneConstraintTarget)
 _nodes.append(NLSetBoneConstraintAttribute)
-
+#--
 
 class NLActionSetBonePos(NLActionNode):
     bl_idname = "NLActionSetBonePos"
