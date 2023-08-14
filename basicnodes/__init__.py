@@ -2785,7 +2785,8 @@ class NLPositiveIntCentSocket(bpy.types.NodeSocket, NLSocket):
 
 _sockets.append(NLPositiveIntCentSocket)
 
-
+### LOak MOD -- Single (optional) value of type bool/int/float/string/filepath BEGIN
+#   simplify? all store-hooks could be one single method thats also run for type
 class _NLSocket_ValueFieldSocket(bpy.types.NodeSocket, NLSocket):
     bl_label = "Value"
     nl_color = PARAMETER_SOCKET_COLOR
@@ -2849,7 +2850,7 @@ class _NLSocket_ValueFieldSocket(bpy.types.NodeSocket, NLSocket):
             val_row.prop(self, "string_editor", text="")
         elif self.value_type == "FILE_PATH":
             val_row.prop(self, "path_editor", text="")
-
+#-- These represent a single (optional) value of type bool/int/float/string/path
 class NLValueFieldSocket(_NLSocket_ValueFieldSocket):
     bl_idname = "NLValueFieldSocket"
 
@@ -2865,10 +2866,6 @@ class NLValueFieldSocket(_NLSocket_ValueFieldSocket):
                 name_row = col.row()
                 name_row.label(text=text)
             self._draw_value_type(col)
-
-
-_sockets.append(NLValueFieldSocket)
-
 
 class NLOptionalValueFieldSocket(_NLSocket_ValueFieldSocket):
     bl_idname = "NLOptionalValueFieldSocket"
@@ -2891,9 +2888,9 @@ class NLOptionalValueFieldSocket(_NLSocket_ValueFieldSocket):
                 return
             self._draw_value_type(col)
 
-
+_sockets.append(NLValueFieldSocket)
 _sockets.append(NLOptionalValueFieldSocket)
-
+#-- END
 
 class NLNumericFieldSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLNumericFieldSocket"
