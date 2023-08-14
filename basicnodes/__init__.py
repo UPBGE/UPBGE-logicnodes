@@ -11255,20 +11255,11 @@ class NLSetCharacterJumpSpeed(NLActionNode):
 
 _nodes.append(NLSetCharacterJumpSpeed)
 
-
-class _NLActionNode_GAME_save_load(NLActionNode):
-    nl_category = "Game"
-    nl_module = 'actions'
-
+### LOak MOD -- baseclasses for fileStorage-Nodes (savegames & variables)
+#                                               BEGIN FILE-STORAGE-NODES
+#   abstract: Expects path:StringProperty & _draw_buttons_get_custom_path_text
+class _NLActionNode_Storage(NLActionNode):
     custom_path: BoolProperty(update=update_tree_code)
-    path: StringProperty(
-        subtype='FILE_PATH',
-        update=update_tree_code,
-        description=(
-            'Choose a Path to save the file to. '
-            'Start with "./" to make it relative to the file path.'
-        )
-    )
 
     def get_attributes(self):
         s_path = self.path
@@ -11287,11 +11278,28 @@ class _NLActionNode_GAME_save_load(NLActionNode):
             self,
             "custom_path",
             toggle=True,
-            text="Custom Path" if self.custom_path else "File Path/Saves", #::
+            text=self._draw_buttons_get_custom_path_text(),
             icon='FILE_FOLDER'
         )
         if self.custom_path:
             layout.prop(self, "path", text='')
+#   for handling SaveGames
+class _NLActionNode_Storage_SaveGames(_NLActionNode_Storage):
+    nl_category = "Game"
+    nl_module = 'actions'
+
+    path: StringProperty(
+        subtype='FILE_PATH',
+        update=update_tree_code,
+        description=(
+            'Choose a Path to save the file to. '
+            'Start with "./" to make it relative to the file path.'
+        )
+    )
+
+    @staticmethod
+    def _draw_buttons_get_custom_path_text():
+        return "Custom Path" if self.custom_path else "File Path/Saves"
 
     def init(self, context):
         NLActionNode.init(self, context)
@@ -11304,36 +11312,11 @@ class _NLActionNode_GAME_save_load(NLActionNode):
 
     def get_output_socket_varnames(self):
         return ["OUT"]
-
-
-class NLActionSaveGame(_NLActionNode_GAME_save_load):
-    bl_idname = "NLActionSaveGame"
-    bl_label = "Save Game"
-    bl_icon = 'FILE_TICK'
-
-    def get_netlogic_class_name(self):
-        return "ULSaveGame"
-
-_nodes.append(NLActionSaveGame)
-
-
-class NLActionLoadGame(_NLActionNode_GAME_save_load):
-    bl_idname = "NLActionLoadGame"
-    bl_label = "Load Game"
-    bl_icon = 'FILE_FOLDER'
-
-    def get_netlogic_class_name(self):
-        return "ULLoadGame"
-
-_nodes.append(NLActionLoadGame)
-
-## _path mixin?
-    # save/load Game => "File Path/Saves"
-class _NLActionNode_Variable(NLActionNode):  # mixin for handling variables
+#   for handling Variables
+class _NLActionNode_Storage_Variables(_NLActionNode_Storage):
     nl_category = "Data"
     nl_subcat = "Variables"
 
-    custom_path: BoolProperty(update=update_tree_code)
     path: StringProperty(
         subtype='DIR_PATH',
         update=update_tree_code,
@@ -11343,31 +11326,33 @@ class _NLActionNode_Variable(NLActionNode):  # mixin for handling variables
         )
     )
 
-    def get_attributes(self):
-        s_path = self.path
-        if s_path.endswith('\\'):
-            s_path = s_path[:-1]
-        path_formatted = s_path.replace('\\', '/')
-        return [(
-            "path",
-            lambda: "'{}'".format(
-                path_formatted
-            ) if self.custom_path else "''"
-        )]
+    @staticmethod
+    def _draw_buttons_get_custom_path_text():
+        return "Custom Path" if self.custom_path else "File Path/Data"
 
-    def draw_buttons(self, context, layout):
-        layout.prop(
-            self,
-            "custom_path",
-            toggle=True,
-            text="Custom Path" if self.custom_path else "File Path/Data",  #::
-            icon='FILE_FOLDER'
-        )
-        if self.custom_path:
-            layout.prop(self, "path", text='')
+#-- These save/load a game
+class NLActionSaveGame(_NLActionNode_Storage_SaveGames):
+    bl_idname = "NLActionSaveGame"
+    bl_label = "Save Game"
+    bl_icon = 'FILE_TICK'
 
+    def get_netlogic_class_name(self):
+        return "ULSaveGame"
 
-class NLActionSaveVariable(_NLActionNode_Variable):
+class NLActionLoadGame(_NLActionNode_Storage_SaveGames):
+    bl_idname = "NLActionLoadGame"
+    bl_label = "Load Game"
+    bl_icon = 'FILE_FOLDER'
+
+    def get_netlogic_class_name(self):
+        return "ULLoadGame"
+
+_nodes.append(NLActionSaveGame)
+_nodes.append(NLActionLoadGame)
+#--
+
+#-- These save/load/list/delete variables       BEGIN VARIABLES
+class NLActionSaveVariable(_NLActionNode_Storage_Variables):
     bl_idname = "NLActionSaveVariable"
     bl_label = "Save Variable"
     nl_module = 'actions'
@@ -11391,11 +11376,7 @@ class NLActionSaveVariable(_NLActionNode_Variable):
     def get_output_socket_varnames(self):
         return ["OUT"]
 
-
-_nodes.append(NLActionSaveVariable)
-
-## plur
-class NLActionSaveVariables(_NLActionNode_Variable):
+class NLActionSaveVariables(_NLActionNode_Storage_Variables):
     bl_idname = "NLActionSaveVariables"
     bl_label = "Save Variable Dict"
     nl_module = 'actions'
@@ -11417,9 +11398,127 @@ class NLActionSaveVariables(_NLActionNode_Variable):
     def get_output_socket_varnames(self):
         return ["OUT"]
 
-
+_nodes.append(NLActionSaveVariable)
 _nodes.append(NLActionSaveVariables)
 
+class NLActionLoadVariable(_NLActionNode_Storage_Variables):
+    bl_idname = "NLActionLoadVariable"
+    bl_label = "Load Variable"
+    nl_module = 'parameters'
+
+    def init(self, context):
+        NLActionNode.init(self, context)
+        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, 'Filename')
+        self.inputs[-1].value = 'variables'
+        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, 'Name')
+        self.inputs[-1].value = 'var'
+        self.inputs.new(NLOptionalValueFieldSocket.bl_idname, 'Default Value')
+        self.outputs.new(NLParameterSocket.bl_idname, 'Value')
+
+    def get_netlogic_class_name(self):
+        return "ULLoadVariable"
+
+    def get_input_sockets_field_names(self):
+        return ['file_name', 'name', 'default_value']
+
+    def get_output_socket_varnames(self):
+        return ['VAR']
+
+class NLActionLoadVariables(_NLActionNode_Storage_Variables):
+    bl_idname = "NLActionLoadVariables"
+    bl_label = "Load Variable Dict"
+    nl_module = 'parameters'
+
+    def init(self, context):
+        NLActionNode.init(self, context)
+        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, 'Filename')
+        self.inputs[-1].value = 'variables'
+        self.outputs.new(NLDictSocket.bl_idname, 'Variables')
+
+    def get_netlogic_class_name(self):
+        return "ULLoadVariableDict"
+
+    def get_input_sockets_field_names(self):
+        return ["file_name", 'name']
+
+    def get_output_socket_varnames(self):
+        return ["VAR"]
+
+_nodes.append(NLActionLoadVariable)
+_nodes.append(NLActionLoadVariables)
+
+class NLActionListVariables(_NLActionNode_Storage_Variables):
+    bl_idname = "NLActionListVariables"
+    bl_label = "List Saved Variables"
+    nl_module = 'actions'
+
+    def init(self, context):
+        NLActionNode.init(self, context)
+        self.inputs.new(NodeSocketPseudoCondition.bl_idname, 'Condition')
+        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, 'Filename')
+        self.inputs[-1].value = 'variables'
+        self.inputs.new(NLBooleanSocket.bl_idname, 'Print')
+        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+        self.outputs.new(NLListSocket.bl_idname, 'List')
+
+    def get_netlogic_class_name(self):
+        return "ULListVariables"
+
+    def get_input_sockets_field_names(self):
+        return ["condition", 'file_name', 'print_list']
+
+    def get_output_socket_varnames(self):
+        return ["OUT", 'LIST']
+
+_nodes.append(NLActionListVariables)
+
+class NLActionRemoveVariable(_NLActionNode_Storage_Variables):
+    bl_idname = "NLActionRemoveVariable"
+    bl_label = "Remove Variable"
+    nl_module = 'actions'
+
+    def init(self, context):
+        NLActionNode.init(self, context)
+        self.inputs.new(NLConditionSocket.bl_idname, 'Condition')
+        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, 'Filename')
+        self.inputs[-1].value = 'variables'
+        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, 'Name')
+        self.inputs[-1].value = 'var'
+        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+
+    def get_netlogic_class_name(self):
+        return "ULRemoveVariable"
+
+    def get_input_sockets_field_names(self):
+        return ["condition", 'file_name', 'name']
+
+    def get_output_socket_varnames(self):
+        return ["OUT"]
+
+class NLActionClearVariables(_NLActionNode_Storage_Variables):
+    bl_idname = "NLActionClearVariables"
+    bl_label = "Clear Variables"
+    nl_module = 'actions'
+
+    def init(self, context):
+        NLActionNode.init(self, context)
+        self.inputs.new(NLConditionSocket.bl_idname, 'Condition')
+        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, 'Filename')
+        self.inputs[-1].value = 'variables'
+        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+
+    def get_netlogic_class_name(self):
+        return "ULClearVariables"
+
+    def get_input_sockets_field_names(self):
+        return ["condition", 'file_name']
+
+    def get_output_socket_varnames(self):
+        return ["OUT"]
+
+_nodes.append(NLActionRemoveVariable)
+_nodes.append(NLActionClearVariables)
+#-- END VARIABLES   END FILE-STORAGE-NODES
 
 class NLSetScene(NLActionNode):
     bl_idname = "NLSetScene"
@@ -11524,136 +11623,6 @@ class NLParameterSetAttribute(NLActionNode):
 
 
 _nodes.append(NLParameterSetAttribute)
-
-
-class NLActionLoadVariable(_NLActionNode_Variable):
-    bl_idname = "NLActionLoadVariable"
-    bl_label = "Load Variable"
-    nl_module = 'parameters'
-
-    def init(self, context):
-        NLActionNode.init(self, context)
-        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, 'Filename')
-        self.inputs[-1].value = 'variables'
-        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, 'Name')
-        self.inputs[-1].value = 'var'
-        self.inputs.new(NLOptionalValueFieldSocket.bl_idname, 'Default Value')
-        self.outputs.new(NLParameterSocket.bl_idname, 'Value')
-
-    def get_netlogic_class_name(self):
-        return "ULLoadVariable"
-
-    def get_input_sockets_field_names(self):
-        return ['file_name', 'name', 'default_value']
-
-    def get_output_socket_varnames(self):
-        return ['VAR']
-
-
-_nodes.append(NLActionLoadVariable)
-
-
-class NLActionLoadVariables(_NLActionNode_Variable):
-    bl_idname = "NLActionLoadVariables"
-    bl_label = "Load Variable Dict"
-    nl_module = 'parameters'
-
-    def init(self, context):
-        NLActionNode.init(self, context)
-        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, 'Filename')
-        self.inputs[-1].value = 'variables'
-        self.outputs.new(NLDictSocket.bl_idname, 'Variables')
-
-    def get_netlogic_class_name(self):
-        return "ULLoadVariableDict"
-
-    def get_input_sockets_field_names(self):
-        return ["file_name", 'name']
-
-    def get_output_socket_varnames(self):
-        return ["VAR"]
-
-
-_nodes.append(NLActionLoadVariables)
-
-
-class NLActionRemoveVariable(_NLActionNode_Variable):
-    bl_idname = "NLActionRemoveVariable"
-    bl_label = "Remove Variable"
-    nl_module = 'actions'
-
-    def init(self, context):
-        NLActionNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, 'Condition')
-        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, 'Filename')
-        self.inputs[-1].value = 'variables'
-        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, 'Name')
-        self.inputs[-1].value = 'var'
-        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
-
-    def get_netlogic_class_name(self):
-        return "ULRemoveVariable"
-
-    def get_input_sockets_field_names(self):
-        return ["condition", 'file_name', 'name']
-
-    def get_output_socket_varnames(self):
-        return ["OUT"]
-
-
-_nodes.append(NLActionRemoveVariable)
-
-
-class NLActionClearVariables(_NLActionNode_Variable):
-    bl_idname = "NLActionClearVariables"
-    bl_label = "Clear Variables"
-    nl_module = 'actions'
-
-    def init(self, context):
-        NLActionNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, 'Condition')
-        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, 'Filename')
-        self.inputs[-1].value = 'variables'
-        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
-
-    def get_netlogic_class_name(self):
-        return "ULClearVariables"
-
-    def get_input_sockets_field_names(self):
-        return ["condition", 'file_name']
-
-    def get_output_socket_varnames(self):
-        return ["OUT"]
-
-
-_nodes.append(NLActionClearVariables)
-
-
-class NLActionListVariables(_NLActionNode_Variable):
-    bl_idname = "NLActionListVariables"
-    bl_label = "List Saved Variables"
-    nl_module = 'actions'
-
-    def init(self, context):
-        NLActionNode.init(self, context)
-        self.inputs.new(NodeSocketPseudoCondition.bl_idname, 'Condition')
-        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, 'Filename')
-        self.inputs[-1].value = 'variables'
-        self.inputs.new(NLBooleanSocket.bl_idname, 'Print')
-        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
-        self.outputs.new(NLListSocket.bl_idname, 'List')
-
-    def get_netlogic_class_name(self):
-        return "ULListVariables"
-
-    def get_input_sockets_field_names(self):
-        return ["condition", 'file_name', 'print_list']
-
-    def get_output_socket_varnames(self):
-        return ["OUT", 'LIST']
-
-
-_nodes.append(NLActionListVariables)
 
 
 class NLActionSetCharacterJump(NLActionNode):
