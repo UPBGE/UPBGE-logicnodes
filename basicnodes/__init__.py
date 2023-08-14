@@ -9525,10 +9525,8 @@ class NLCreateVehicleFromParent(NLActionNode):
 
 _nodes.append(NLCreateVehicleFromParent)
 
-
-class NLVehicleApplyEngineForce(NLActionNode):
-    bl_idname = "NLVehicleApplyEngineForce"
-    bl_label = "Accelerate"
+#-- These are vehicular driving interactions (Accelerate/Decelerate/Steer)
+class _NLActionNode_VehicleSteering(NLActionNode):
     nl_category = "Physics"
     nl_subcat = 'Vehicle'
     nl_module = 'actions'
@@ -9538,14 +9536,16 @@ class NLVehicleApplyEngineForce(NLActionNode):
         update=update_tree_code
     )
 
+    def _init_setup_target_sockets(self): pass  # abstract
+
+
     def init(self, context):
         NLActionNode.init(self, context)
         self.inputs.new(NLConditionSocket.bl_idname, "Condition")
         self.inputs.new(NLGameObjectSocket.bl_idname, "Vehicle")
         self.inputs.new(NLPositiveIntegerFieldSocket.bl_idname, "Wheels")
         self.inputs[-1].value = 2
-        self.inputs.new(NLPositiveFloatSocket.bl_idname, "Power")
-        self.inputs[-1].value = 1
+        self._init_setup_target_sockets()
         self.outputs.new(NLConditionSocket.bl_idname, 'Done')
 
     def update_draw(self):
@@ -9556,112 +9556,51 @@ class NLVehicleApplyEngineForce(NLActionNode):
 
     def draw_buttons(self, context, layout):
         layout.prop(self, "value_type", text='')
+
+    def get_input_sockets_field_names(self):
+        return ["condition", "vehicle", "wheelcount", 'power']
+
+    def get_attributes(self):
+        return [
+            ("value_type", lambda: f'"{self.value_type}"'),
+        ]
+
+class NLVehicleApplyEngineForce(_NLActionNode_VehicleSteering):
+    bl_idname = "NLVehicleApplyEngineForce"
+    bl_label = "Accelerate"
 
     def get_netlogic_class_name(self):
         return "ULVehicleApplyForce"
 
-    def get_input_sockets_field_names(self):
-        return ["condition", "vehicle", "wheelcount", 'power']
-
-    def get_attributes(self):
-        return [
-            ("value_type", lambda: f'"{self.value_type}"'),
-        ]
-
-
-_nodes.append(NLVehicleApplyEngineForce)
-
-
-class NLVehicleApplyBraking(NLActionNode):
-    bl_idname = "NLVehicleApplyBraking"
-    bl_label = "Brake"
-    nl_category = "Physics"
-    nl_subcat = 'Vehicle'
-    nl_module = 'actions'
-    value_type: EnumProperty(
-        name='Axis',
-        items=_enum_vehicle_axis,
-        update=update_tree_code
-    )
-
-    def init(self, context):
-        NLActionNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, "Condition")
-        self.inputs.new(NLGameObjectSocket.bl_idname, "Vehicle")
-        self.inputs.new(NLPositiveIntegerFieldSocket.bl_idname, "Wheels")
-        self.inputs[-1].value = 2
+    def _init_setup_target_sockets(self):
         self.inputs.new(NLPositiveFloatSocket.bl_idname, "Power")
         self.inputs[-1].value = 1
-        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
 
-    def update_draw(self):
-        self.inputs[2].enabled = self.value_type != 'ALL'
-
-    def get_output_socket_varnames(self):
-        return ["OUT"]
-
-    def draw_buttons(self, context, layout):
-        layout.prop(self, "value_type", text='')
+class NLVehicleApplyBraking(_NLActionNode_VehicleSteering):
+    bl_idname = "NLVehicleApplyBraking"
+    bl_label = "Brake"
 
     def get_netlogic_class_name(self):
         return "ULVehicleApplyBraking"
 
-    def get_input_sockets_field_names(self):
-        return ["condition", "vehicle", "wheelcount", 'power']
+    def _init_setup_target_sockets(self):
+        self.inputs.new(NLPositiveFloatSocket.bl_idname, "Power")
+        self.inputs[-1].value = 1
 
-    def get_attributes(self):
-        return [
-            ("value_type", lambda: f'"{self.value_type}"'),
-        ]
-
-
-_nodes.append(NLVehicleApplyBraking)
-
-
-class NLVehicleApplySteering(NLActionNode):
+class NLVehicleApplySteering(_NLActionNode_VehicleSteering):
     bl_idname = "NLVehicleApplySteering"
     bl_label = "Steer"
-    nl_category = "Physics"
-    nl_subcat = 'Vehicle'
-    nl_module = 'actions'
-    value_type: EnumProperty(
-        name='Axis',
-        items=_enum_vehicle_axis,
-        update=update_tree_code
-    )
-
-    def init(self, context):
-        NLActionNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, "Condition")
-        self.inputs.new(NLGameObjectSocket.bl_idname, "Vehicle")
-        self.inputs.new(NLPositiveIntegerFieldSocket.bl_idname, "Wheels")
-        self.inputs[-1].value = 2
-        self.inputs.new(NLFloatFieldSocket.bl_idname, "Steer")
-        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
-
-    def update_draw(self):
-        self.inputs[2].enabled = self.value_type != 'ALL'
-
-    def get_output_socket_varnames(self):
-        return ["OUT"]
-
-    def draw_buttons(self, context, layout):
-        layout.prop(self, "value_type", text='')
 
     def get_netlogic_class_name(self):
         return "ULVehicleApplySteering"
 
-    def get_input_sockets_field_names(self):
-        return ["condition", "vehicle", "wheelcount", 'power']
+    def _init_setup_target_sockets(self):
+        self.inputs.new(NLFloatFieldSocket.bl_idname, "Steer")
 
-    def get_attributes(self):
-        return [
-            ("value_type", lambda: f'"{self.value_type}"'),
-        ]
-
-
+_nodes.append(NLVehicleApplyEngineForce)
+_nodes.append(NLVehicleApplyBraking)
 _nodes.append(NLVehicleApplySteering)
-
+#--
 
 class NLVehicleSetAttributes(NLActionNode):
     bl_idname = "NLVehicleSetAttributes"
