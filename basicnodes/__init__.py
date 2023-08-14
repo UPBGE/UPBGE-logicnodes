@@ -2786,8 +2786,7 @@ class NLPositiveIntCentSocket(bpy.types.NodeSocket, NLSocket):
 _sockets.append(NLPositiveIntCentSocket)
 
 
-class NLValueFieldSocket(bpy.types.NodeSocket, NLSocket):
-    bl_idname = "NLValueFieldSocket"
+class _NLSocket_ValueFieldSocket(bpy.types.NodeSocket, NLSocket):
     bl_label = "Value"
     nl_color = PARAMETER_SOCKET_COLOR
     value: StringProperty(update=update_tree_code)
@@ -2809,7 +2808,7 @@ class NLValueFieldSocket(bpy.types.NodeSocket, NLSocket):
 
     def store_boolean_value(self, context):
         self.value = str(self.bool_editor)
-        update_tree_code(self, context)
+        update_tree_code(self, context) # should happen anyways?
 
     bool_editor: BoolProperty(update=store_boolean_value)
 
@@ -2835,6 +2834,24 @@ class NLValueFieldSocket(bpy.types.NodeSocket, NLSocket):
         update=store_path_value,
         subtype='FILE_PATH'
     )
+
+    def _draw_value_type(self, col):
+        val_line = col.row()
+        val_row = val_line.split()
+        val_row.prop(self, "value_type", text="")
+        if self.value_type == "BOOLEAN":
+            val_row.prop(self, "bool_editor", text="")
+        elif self.value_type == "INTEGER":
+            val_row.prop(self, "int_editor", text="")
+        elif self.value_type == "FLOAT":
+            val_row.prop(self, "float_editor", text="")
+        elif self.value_type == "STRING":
+            val_row.prop(self, "string_editor", text="")
+        elif self.value_type == "FILE_PATH":
+            val_row.prop(self, "path_editor", text="")
+
+class NLValueFieldSocket(_NLSocket_ValueFieldSocket):
+    bl_idname = "NLValueFieldSocket"
 
     def get_unlinked_value(self):
         return socket_field(self)
@@ -2847,81 +2864,16 @@ class NLValueFieldSocket(bpy.types.NodeSocket, NLSocket):
             if text:
                 name_row = col.row()
                 name_row.label(text=text)
-            val_line = col.row()
-            val_row = val_line.split()
-            if self.value_type == "BOOLEAN":
-                val_row.prop(self, "value_type", text="")
-                val_row.prop(self, "bool_editor", text="")
-            elif self.value_type == "INTEGER":
-                val_row.prop(self, "value_type", text="")
-                val_row.prop(self, "int_editor", text="")
-            elif self.value_type == "FLOAT":
-                val_row.prop(self, "value_type", text="")
-                val_row.prop(self, "float_editor", text="")
-            elif self.value_type == "STRING":
-                val_row.prop(self, "value_type", text="")
-                val_row.prop(self, "string_editor", text="")
-            elif self.value_type == "FILE_PATH":
-                val_row.prop(self, "value_type", text="")
-                val_row.prop(self, "path_editor", text="")
+            self._draw_value_type(col)
 
 
 _sockets.append(NLValueFieldSocket)
 
 
-class NLOptionalValueFieldSocket(bpy.types.NodeSocket, NLSocket):
+class NLOptionalValueFieldSocket(_NLSocket_ValueFieldSocket):
     bl_idname = "NLOptionalValueFieldSocket"
-    bl_label = "Value"
-    nl_color = PARAMETER_SOCKET_COLOR
-    value: StringProperty(update=update_tree_code)
 
-    def on_type_changed(self, context):
-        if self.value_type == "BOOLEAN":
-            self.value = str(self.bool_editor)
-        if self.value_type == "STRING":
-            self.value = str(self.string_editor)
-        if self.value_type == "FILE_PATH":
-            self.value = str(self.path_editor)
-        update_tree_code(self, context)
-
-    value_type: EnumProperty(
-        name='Type',
-        items=_enum_field_value_types,
-        update=on_type_changed
-    )
-
-    use_value: BoolProperty(
-        update=update_tree_code
-    )
-
-    def store_boolean_value(self, context):
-        self.value = str(self.bool_editor)
-        update_tree_code(self, context)
-
-    bool_editor: BoolProperty(update=store_boolean_value)
-
-    def store_int_value(self, context):
-        self.value = str(self.int_editor)
-
-    int_editor: IntProperty(update=store_int_value)
-
-    def store_float_value(self, context):
-        self.value = str(self.float_editor)
-
-    float_editor: FloatProperty(update=store_float_value)
-
-    def store_string_value(self, context):
-        self.value = self.string_editor
-
-    string_editor: StringProperty(update=store_string_value)
-
-    def store_path_value(self, context):
-        self.value = self.path_editor
-
-    path_editor: StringProperty(
-        update=store_path_value,
-        subtype='FILE_PATH'
-    )
+    use_value: BoolProperty( update=update_tree_code )
 
     def get_unlinked_value(self):
         return socket_field(self) if self.use_value or self.is_linked else "utils.STATUS_INVALID"
@@ -2937,23 +2889,7 @@ class NLOptionalValueFieldSocket(bpy.types.NodeSocket, NLSocket):
                 name_row.prop(self, "use_value", text="")
             if not self.use_value:
                 return
-            val_line = col.row()
-            val_row = val_line.split()
-            if self.value_type == "BOOLEAN":
-                val_row.prop(self, "value_type", text="")
-                val_row.prop(self, "bool_editor", text="")
-            elif self.value_type == "INTEGER":
-                val_row.prop(self, "value_type", text="")
-                val_row.prop(self, "int_editor", text="")
-            elif self.value_type == "FLOAT":
-                val_row.prop(self, "value_type", text="")
-                val_row.prop(self, "float_editor", text="")
-            elif self.value_type == "STRING":
-                val_row.prop(self, "value_type", text="")
-                val_row.prop(self, "string_editor", text="")
-            elif self.value_type == "FILE_PATH":
-                val_row.prop(self, "value_type", text="")
-                val_row.prop(self, "path_editor", text="")
+            self._draw_value_type(col)
 
 
 _sockets.append(NLOptionalValueFieldSocket)
