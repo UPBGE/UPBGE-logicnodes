@@ -1327,8 +1327,7 @@ class NLGameObjectSocket(bpy.types.NodeSocket, NLSocket):
             if not self.use_owner or scene_logic:
                 col = layout.column(align=False)
                 row = col.row()
-                if self.name:
-                    row.label(text=self.name)
+                row.label(text=self.name)
                 if not scene_logic:
                     row.prop(self, 'use_owner', icon='USER', text='')
                 col.prop_search(
@@ -1374,12 +1373,11 @@ class NLCameraSocket(bpy.types.NodeSocket, NLSocket):
         if self.is_linked or self.is_output:
             layout.label(text=self.name)
         else:
+            col = layout.column(align=False)
+            row = col.row()
+            row.label(text=self.name)
+            row.prop(self, 'use_active', icon='CAMERA_DATA', text='')
             if not self.use_active:
-                col = layout.column(align=False)
-                row = col.row()
-                if self.name:
-                    row.label(text=self.name)
-                row.prop(self, 'use_active', icon='CAMERA_DATA', text='')
                 col.prop_search(
                     self,
                     'value',
@@ -1388,10 +1386,6 @@ class NLCameraSocket(bpy.types.NodeSocket, NLSocket):
                     icon='NONE',
                     text=''
                 )
-            else:
-                row = layout.row()
-                row.label(text=self.name)
-                row.prop(self, 'use_active', icon='CAMERA_DATA', text='')
 
     def get_unlinked_value(self):
         if self.use_active:
@@ -1420,8 +1414,7 @@ class NLSpeakerSocket(bpy.types.NodeSocket, NLSocket):
         else:
             col = layout.column(align=False)
             row = col.row()
-            if self.name:
-                row.label(text=self.name)
+            row.label(text=self.name)
             col.prop_search(
                 self,
                 'value',
@@ -1451,12 +1444,11 @@ class _NLSocket_object(NLSocket):
         if self.is_linked or self.is_output:
             layout.label(text=self.name)
         else:
+            col = layout.column(align=False)
+            row = col.row()
+            row.label(text=self.name)
+            row.prop(self, 'use_owner', icon='USER', text='')
             if not self.use_owner:
-                col = layout.column(align=False)
-                row = col.row()
-                if self.name:
-                    row.label(text=self.name)
-                row.prop(self, 'use_owner', icon='USER', text='')
                 col.prop_search(
                     self,
                     'value',
@@ -1465,10 +1457,6 @@ class _NLSocket_object(NLSocket):
                     icon='NONE',
                     text=''
                 )
-            else:
-                row = layout.row()
-                row.label(text=self.name)
-                row.prop(self, 'use_owner', icon='USER', text='')
 
 class NLNavMeshSocket(bpy.types.NodeSocket, _NLSocket_object):
     bl_idname = "NLNavMeshSocket"
@@ -1557,6 +1545,16 @@ class NLGamePropertySocket(bpy.types.NodeSocket, NLSocket):
         update=update_tree_code
     )
 
+    def _draw_get_game_object(self, game_obj_socket, tree):
+        """retrieve game_object or return None"""
+        if not game_obj_socket.use_owner:
+            return game_obj_socket.value
+        else:
+            prop_name = f'{utils.NLPREFIX}{make_valid_name(tree.name)}'
+            for obj in bpy.data.objects:
+                if prop_name in obj.game.properties:
+                    return obj
+
     def draw(self, context, layout, node, text):
         mode = getattr(self.node, 'mode', 'GAME')
         if self.is_linked or self.is_output:
@@ -1566,34 +1564,24 @@ class NLGamePropertySocket(bpy.types.NodeSocket, NLSocket):
             tree = getattr(context.space_data, 'edit_tree', None)
             if not tree:
                 return
-            game_object = None
             game_obj_socket = self.node.inputs[self.ref_index]
-            if not game_obj_socket.use_owner:
-                game_object = game_obj_socket.value
-            else:
-                prop_name = f'{utils.NLPREFIX}{make_valid_name(tree.name)}'
-                for obj in bpy.data.objects:
-                    if prop_name in obj.game.properties:
-                        game_object = obj
-                        break
+            game_object = self._draw_get_game_object(game_obj_socket, tree)
+            is_unlinked_obj = not game_obj_socket.is_linked and game_object
             if self.name:
                 row = col.row()
                 row.label(text=self.name)
-                if not game_obj_socket.is_linked and game_object and mode == 'GAME':
+                if is_unlinked_obj and mode=='GAME':
                     row.prop(self, 'use_custom', text='', icon='GREASEPENCIL')
-            if game_object or game_obj_socket.is_linked:
-                if not game_obj_socket.is_linked and not self.use_custom and mode == 'GAME':
-                    game = game_object.game
-                    col.prop_search(
-                        self,
-                        'value',
-                        game,
-                        'properties',
-                        icon='NONE',
-                        text=''
-                    )
-                else:
-                    col.prop(self, 'value', text='')
+
+            if is_unlinked_obj and mode=='GAME' and not self.use_custom:
+                col.prop_search(
+                    self,
+                    'value',
+                    game_object.game,
+                    'properties',
+                    icon='NONE',
+                    text=''
+                )
             else:
                 col.prop(self, 'value', text='')
 
@@ -1613,7 +1601,18 @@ class NLArmatureBoneSocket(bpy.types.NodeSocket, NLSocket):
     )
     ref_index: IntProperty()
 
+    def _draw_get_game_object(self, game_obj_socket, tree):
+        """retrieve game_object or return None"""
+        if not game_obj_socket.use_owner:
+            return game_obj_socket.value
+        else:
+            prop_name = f'{utils.NLPREFIX}{tree.name}'
+            for obj in bpy.data.objects:
+                if prop_name in obj.game.properties:
+                    return obj
+
     def draw(self, context, layout, node, text):
+        is_armature = isinstance(game_object.data, bpy.types.Armature)
         if self.is_linked or self.is_output:
             layout.label(text=self.name)
         else:
@@ -1621,29 +1620,22 @@ class NLArmatureBoneSocket(bpy.types.NodeSocket, NLSocket):
             tree = getattr(context.space_data, 'edit_tree', None)
             if not tree:
                 return
-            game_object = None
             game_obj_socket = self.node.inputs[self.ref_index]
-            if not game_obj_socket.use_owner:
-                game_object = game_obj_socket.value
-            else:
-                for obj in bpy.data.objects:
-                    if f'{utils.NLPREFIX}{tree.name}' in obj.game.properties:
-                        game_object = obj
-                        break
+            game_object = self._draw_get_game_object(game_obj_socket, tree)
+            is_unlinked_obj = not game_obj_socket.is_linked and game_object
             if self.name:
                 row = col.row()
                 row.label(text=self.name)
-            if game_object and isinstance(game_object.data, bpy.types.Armature):
-                if not game_obj_socket.is_linked:
-                    col.prop_search(
-                        self,
-                        'value',
-                        game_object.pose,
-                        'bones',
-                        icon='NONE',
-                        text=''
-                    )
-                    return
+            if is_unlinked_obj and is_armature:
+                col.prop_search(
+                    self,
+                    'value',
+                    game_object.pose,
+                    'bones',
+                    icon='NONE',
+                    text=''
+                )
+                return
             col.prop(self, 'value', text='')
 
     def get_unlinked_value(self):
