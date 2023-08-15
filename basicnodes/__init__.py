@@ -3155,16 +3155,16 @@ _sockets.append(NLTimeSocket)
 #:#:#:
 class NLVec2FieldSocket(bpy.types.NodeSocket, _NLSocket_Vec2):
     bl_idname = "NLVec2FieldSocket"
-    value: FloatVectorProperty(default=(0,0,0), update=update_tree_code, size=2)
+    value: FloatVectorProperty(default=(0,0), update=update_tree_code, size=2)
 
 class NLAngleLimitSocket(bpy.types.NodeSocket, _NLSocket_Vec2):
     bl_idname = "NLAngleLimitSocket"
-    value: FloatVectorProperty(default=(0,0,0), update=update_tree_code, size=2,
+    value: FloatVectorProperty(default=(0,0), update=update_tree_code, size=2,
                                unit='ROTATION')
 
 class NLVec2PositiveFieldSocket(bpy.types.NodeSocket, _NLSocket_Vec2):
     bl_idname = "NLVec2PositiveFieldSocket"
-    value: FloatVectorProperty(default=(0,0,0), update=update_tree_code, size=2,
+    value: FloatVectorProperty(default=(0,0), update=update_tree_code, size=2,
                                min=0.0)
 
 _sockets.append(NLVec2FieldSocket)
@@ -11051,8 +11051,7 @@ class _NLActionNode_Storage_SaveGames(_NLActionNode_Storage):
         )
     )
 
-    @staticmethod
-    def _draw_buttons_get_custom_path_text():
+    def _draw_buttons_get_custom_path_text(self):
         return "Custom Path" if self.custom_path else "File Path/Saves"
 
     def init(self, context):
@@ -11080,8 +11079,7 @@ class _NLActionNode_Storage_Variables(_NLActionNode_Storage):
         )
     )
 
-    @staticmethod
-    def _draw_buttons_get_custom_path_text():
+    def _draw_buttons_get_custom_path_text(self):
         return "Custom Path" if self.custom_path else "File Path/Data"
 
 #-- These save/load a game
