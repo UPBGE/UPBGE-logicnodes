@@ -5493,6 +5493,8 @@ class _NodeMixin_transform_local:
     def get_output_socket_varnames(self):
         return ["OUT"]
 
+    # Note how (spare for NLActionGetCharacterInfo) all set up sockets
+    #   Done, Condition, Object and Vector, with minor variation on the vector
 
 class NLActionGetCharacterInfo(_NodeMixin_transform_local, NLParameterNode):
     bl_idname = "NLActionGetCharacterInfo"
@@ -10772,12 +10774,10 @@ class NLActionApplyLocation(_NodeMixin_transform_local, NLActionNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
-        utils.register_inputs(
-            self,
-            NLConditionSocket, "Condition",
-            NLGameObjectSocket, "Object",
-            NLVec3FieldSocket, "Vector")
         self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+        self.inputs.new(NLConditionSocket.bl_idname, "Condition")
+        self.inputs.new(NLGameObjectSocket.bl_idname, "Object")
+        self.inputs.new(NLVec3FieldSocket.bl_idname, "Vector")
 
     def get_netlogic_class_name(self):
         return "ULApplyMovement"
@@ -10797,12 +10797,10 @@ class NLActionApplyRotation(_NodeMixin_transform_local, NLActionNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
-        utils.register_inputs(
-            self,
-            NLConditionSocket, "Condition",
-            NLGameObjectSocket, "Object",
-            NLVec3RotationSocket, "Vector")
         self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+        self.inputs.new(NLConditionSocket.bl_idname, "Condition")
+        self.inputs.new(NLGameObjectSocket.bl_idname, "Object")
+        self.inputs.new(NLVec3RotationSocket.bl_idname, "Vector")
 
     def get_netlogic_class_name(self):
         return "ULApplyRotation"
@@ -10822,13 +10820,10 @@ class NLActionApplyForce(_NodeMixin_transform_local, NLActionNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
-        utils.register_inputs(
-            self,
-            NLConditionSocket, "Condition",
-            NLGameObjectSocket, "Object",
-            NLVec3FieldSocket, "Vector"
-        )
         self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+        self.inputs.new(NLConditionSocket.bl_idname, "Condition")
+        self.inputs.new(NLGameObjectSocket.bl_idname, "Object")
+        self.inputs.new(NLVec3FieldSocket.bl_idname, "Vector")
 
     def get_netlogic_class_name(self):
         return "ULApplyForce"
@@ -10850,11 +10845,11 @@ class NLActionApplyImpulse(_NodeMixin_transform_local, NLActionNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
+        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
         self.inputs.new(NLConditionSocket.bl_idname, 'Condition')
         self.inputs.new(NLGameObjectSocket.bl_idname, 'Object')
         self.inputs.new(NLVec3FieldSocket.bl_idname, 'Point')
         self.inputs.new(NLVec3FieldSocket.bl_idname, 'Direction')
-        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
 
     def get_netlogic_class_name(self):
         return "ULApplyImpulse"
@@ -11501,10 +11496,10 @@ class NLActionSetCharacterWalkDir(_NodeMixin_transform_local, NLActionNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
+        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
         self.inputs.new(NLConditionSocket.bl_idname, "Condition")
         self.inputs.new(NLGameObjectSocket.bl_idname, "Object")
         self.inputs.new(NLVec3FieldSocket.bl_idname, "Vector")
-        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
 
     def get_netlogic_class_name(self):
         return "ULSetCharacterWalkDir"
@@ -11524,11 +11519,11 @@ class NLActionSetCharacterVelocity(_NodeMixin_transform_local, NLActionNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
+        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
         self.inputs.new(NLConditionSocket.bl_idname, "Condition")
         self.inputs.new(NLGameObjectSocket.bl_idname, "Object")
         self.inputs.new(NLVec3FieldSocket.bl_idname, "Velocity")
         self.inputs.new(NLPositiveFloatSocket.bl_idname, "Time")
-        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
 
     def get_netlogic_class_name(self):
         return "ULSetCharacterVelocity"
@@ -11548,12 +11543,10 @@ class NLActionApplyTorque(_NodeMixin_transform_local, NLActionNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
-        utils.register_inputs(
-            self,
-            NLConditionSocket, "Condition",
-            NLGameObjectSocket, "Object",
-            NLVec3FieldSocket, "Vector")
         self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+        self.inputs.new(NLConditionSocket.bl_idname, "Condition")
+        self.inputs.new(NLGameObjectSocket.bl_idname, "Object")
+        self.inputs.new(NLVec3FieldSocket.bl_idname, "Vector")
 
     def get_netlogic_class_name(self):
         return "ULApplyTorque"
@@ -12249,13 +12242,13 @@ class NLActionAlignAxisToVector(_NodeMixin_transform_local, NLActionNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
+        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
         self.inputs.new(NLConditionSocket.bl_idname, "Condition")
         self.inputs.new(NLGameObjectSocket.bl_idname, "Object")
         self.inputs.new(NLVec3FieldSocket.bl_idname, "Vector")
         self.inputs.new(NLSocketOrientedLocalAxis.bl_idname, "Axis")
         self.inputs.new(NLSocketAlphaFloat.bl_idname, "Factor")
         self.inputs[-1].value = 1.0
-        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
 
     def get_netlogic_class_name(self):
         return "ULAlignAxisToVector"
