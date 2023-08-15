@@ -746,7 +746,7 @@ class NLSocket:
     valid_sockets: list = []
     nl_color: list = PARAMETER_SOCKET_COLOR
     type: StringProperty(default='VALUE')
-    shape: StringProperty(default='')
+    shape: StringProperty()
 
     def __init__(self):
         self.socket_id = INVALID
@@ -1114,7 +1114,7 @@ class NLLogicBrickSocket(bpy.types.NodeSocket, NLSocket):
     value: StringProperty(
         update=update_tree_code
     )
-    ref_index: IntProperty(default=0)
+    ref_index: IntProperty()
     use_custom: BoolProperty(
         name='Free Edit',
         update=update_tree_code
@@ -1551,7 +1551,7 @@ class NLGamePropertySocket(bpy.types.NodeSocket, NLSocket):
     value: StringProperty(
         update=update_tree_code
     )
-    ref_index: IntProperty(default=0)
+    ref_index: IntProperty()
     use_custom: BoolProperty(
         name='Free Edit',
         update=update_tree_code
@@ -1611,7 +1611,7 @@ class NLArmatureBoneSocket(bpy.types.NodeSocket, NLSocket):
     value: StringProperty(
         update=update_tree_code
     )
-    ref_index: IntProperty(default=0)
+    ref_index: IntProperty()
 
     def draw(self, context, layout, node, text):
         if self.is_linked or self.is_output:
@@ -1660,7 +1660,7 @@ class NLBoneConstraintSocket(bpy.types.NodeSocket, NLSocket):
     value: StringProperty(
         update=update_tree_code
     )
-    ref_index: IntProperty(default=0)
+    ref_index: IntProperty()
 
     def draw(self, context, layout, node, text):
         if self.is_linked or self.is_output:
@@ -1779,7 +1779,7 @@ class _NLSocket_TreeNode(NLSocket):
         name='Tree Node',
         update=update_tree_code
     )
-    ref_index: IntProperty(default=0)
+    ref_index: IntProperty()
 
     def draw(self, context, layout, node, text):
         if self.is_linked or self.is_output:
@@ -2321,7 +2321,7 @@ class _NLSocket_Vec(NLSocket): # shared mixin base for vector sockets
             layout.prop(self, "value", text="")
 
 class _NLSocket_Vec2(_NLSocket_Vec):
-    title: StringProperty(default='') # doesn't seem to be used ?
+    title: StringProperty() # doesn't seem to be used ?
 
 class _NLSocket_Vec3(_NLSocket_Vec):
     value_z= property(lambda s:s.value[2], lambda s,v:s.value.__setitem__(2, v))
@@ -2746,7 +2746,7 @@ class NLPositiveIntegerFieldSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLPositiveIntegerFieldSocket"
     bl_label = "Integer"
     nl_color = PARAM_INT_SOCKET_COLOR
-    value: IntProperty(min=0, default=0, update=update_tree_code)
+    value: IntProperty(min=0, update=update_tree_code)
     type: StringProperty(default='INT')
 
     def get_unlinked_value(self):
@@ -2775,7 +2775,6 @@ class NLPositiveIntCentSocket(bpy.types.NodeSocket, NLSocket):
     value: IntProperty(
         min=0,
         max=100,
-        default=0,
         update=update_tree_code
     )
     type: StringProperty(default='INT')
@@ -3112,7 +3111,7 @@ class NLFloatFieldSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLFloatFieldSocket"
     bl_label = "Float Value"
     nl_color = PARAMETER_SOCKET_COLOR
-    value: FloatProperty(default=0, update=update_tree_code)
+    value: FloatProperty(update=update_tree_code)
     valid_sockets = ['NLFloatFieldSocket']
 
     def get_unlinked_value(self):
@@ -3125,7 +3124,7 @@ class NLFloatAngleSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLFloatAngleSocket"
     bl_label = "Float Value"
     nl_color = PARAMETER_SOCKET_COLOR
-    value: FloatProperty(default=0, update=update_tree_code, unit='ROTATION')
+    value: FloatProperty(update=update_tree_code, unit='ROTATION')
     valid_sockets = ['NLFloatFieldSocket']
 
     def get_unlinked_value(self):
@@ -3140,7 +3139,6 @@ class NLTimeSocket(bpy.types.NodeSocket, NLSocket):
     nl_color = PARAMETER_SOCKET_COLOR
     value: FloatProperty(
         min=0,
-        default=0,
         subtype='TIME',
         unit='TIME',
         update=update_tree_code
@@ -3155,17 +3153,15 @@ _sockets.append(NLTimeSocket)
 #:#:#:
 class NLVec2FieldSocket(bpy.types.NodeSocket, _NLSocket_Vec2):
     bl_idname = "NLVec2FieldSocket"
-    value: FloatVectorProperty(default=(0,0), update=update_tree_code, size=2)
+    value: FloatVectorProperty(update=update_tree_code, size=2)
 
 class NLAngleLimitSocket(bpy.types.NodeSocket, _NLSocket_Vec2):
     bl_idname = "NLAngleLimitSocket"
-    value: FloatVectorProperty(default=(0,0), update=update_tree_code, size=2,
-                               unit='ROTATION')
+    value: FloatVectorProperty(update=update_tree_code, size=2, unit='ROTATION')
 
 class NLVec2PositiveFieldSocket(bpy.types.NodeSocket, _NLSocket_Vec2):
     bl_idname = "NLVec2PositiveFieldSocket"
-    value: FloatVectorProperty(default=(0,0), update=update_tree_code, size=2,
-                               min=0.0)
+    value: FloatVectorProperty(update=update_tree_code, size=2, min=0.0)
 
 _sockets.append(NLVec2FieldSocket)
 _sockets.append(NLAngleLimitSocket)
@@ -3178,26 +3174,24 @@ _sockets.append(NLVec2PositiveFieldSocket)
 #       Then again, that might be necessarry anyways.
 class NLVec3FieldSocket(bpy.types.NodeSocket, _NLSocket_Vec3):
     bl_idname = "NLVec3FieldSocket"
-    value: FloatVectorProperty(default=(0,0,0), update=update_tree_code)
+    value: FloatVectorProperty(update=update_tree_code)
 
 class NodeSocketMatrix3(bpy.types.NodeSocket, _NLSocket_Vec3):
     bl_idname = "NodeSocketMatrix3"
-    value: FloatVectorProperty(default=(0,0,0), update=update_tree_code)
+    value: FloatVectorProperty(update=update_tree_code)
 
 class NLVec3RotationSocket(bpy.types.NodeSocket, _NLSocket_Vec3):
     bl_idname = "NLVec3RotationSocket"
-    value: FloatVectorProperty(default=(0,0,0), update=update_tree_code,
-                               unit='ROTATION' )
+    value: FloatVectorProperty(update=update_tree_code, unit='ROTATION')
 
 class NLVelocitySocket(bpy.types.NodeSocket, _NLSocket_Vec3):
     bl_idname = "NLVelocitySocket"
-    value: FloatVectorProperty(default=(0,0,0), update=update_tree_code,
-                               unit='VELOCITY' )
+    value: FloatVectorProperty(update=update_tree_code, unit='VELOCITY')
 
 class NLVec3PositiveFieldSocket(bpy.types.NodeSocket, _NLSocket_Vec3):
     bl_idname = "NLVec3PositiveFieldSocket"
-    value: FloatVectorProperty(default=(0,0,0), update=update_tree_code, min=0.0)
-    title: StringProperty(default='') # not used anywhere
+    value: FloatVectorProperty(update=update_tree_code, min=0.0)
+    title: StringProperty() # not used anywhere
 
 _sockets.append(NLVec3FieldSocket)
 _sockets.append(NodeSocketMatrix3)
