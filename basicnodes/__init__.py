@@ -11756,238 +11756,131 @@ class NLActionAddPhysicsConstraint(NLActionNode):
 
 _nodes.append(NLActionAddPhysicsConstraint)
 
-
-class NLSetGammaAction(NLActionNode):
-    bl_idname = "NLSetGammaAction"
-    bl_label = "Set Gamma"
+### LOak MOD  -- EEVEE-Effects mixin        BEGIN EEVEE-Effects
+class _EEVEE_Effects_mixin:
     nl_category = 'Render'
     nl_subcat = 'EEVEE Effects'
     nl_module = 'actions'
 
-    def init(self, context):
-        NLActionNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, 'Condition')
-        self.inputs.new(NLPositiveFloatSocket.bl_idname, 'Gamma')
-        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+    def get_input_sockets_field_names(self):
+        return [ "condition", "value" ]
 
     def get_output_socket_varnames(self):
         return ["OUT"]
+#--
+class NLSetGammaAction(_EEVEE_Effects_mixin, NLActionNode):
+    bl_idname = "NLSetGammaAction"
+    bl_label = "Set Gamma"
+
+    def init(self, context):
+        NLActionNode.init(self, context)
+        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+        self.inputs.new(NLConditionSocket.bl_idname, 'Condition')
+        self.inputs.new(NLPositiveFloatSocket.bl_idname, 'Gamma')
 
     def get_netlogic_class_name(self):
         return "ULSetGamma"
 
-    def get_input_sockets_field_names(self):
-        return [
-            "condition",
-            "value"
-        ]
-
-
-_nodes.append(NLSetGammaAction)
-
-
-class NLSetExposureAction(NLActionNode):
+class NLSetExposureAction(_EEVEE_Effects_mixin, NLActionNode):
     bl_idname = "NLSetExposureAction"
     bl_label = "Set Exposure"
-    nl_category = 'Render'
-    nl_subcat = 'EEVEE Effects'
-    nl_module = 'actions'
 
     def init(self, context):
         NLActionNode.init(self, context)
+        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
         self.inputs.new(NLConditionSocket.bl_idname, 'Condition')
         self.inputs.new(NLPositiveFloatSocket.bl_idname, 'Exposure')
-        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
-
-    def get_output_socket_varnames(self):
-        return ["OUT"]
 
     def get_netlogic_class_name(self):
         return "ULSetExposure"
 
-    def get_input_sockets_field_names(self):
-        return [
-            "condition",
-            "value"
-        ]
-
-
-_nodes.append(NLSetExposureAction)
-
-
-class NLSetEeveeAO(NLActionNode):
+class NLSetEeveeAO(_EEVEE_Effects_mixin, NLActionNode):
     bl_idname = "NLSetEeveeAO"
     bl_label = "Set Ambient Occlusion"
-    nl_category = 'Render'
-    nl_subcat = 'EEVEE Effects'
-    nl_module = 'actions'
 
     def init(self, context):
         NLActionNode.init(self, context)
+        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
         self.inputs.new(NLConditionSocket.bl_idname, 'Condition')
         self.inputs.new(NLBooleanSocket.bl_idname, 'Use AO')
-        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
-
-    def get_output_socket_varnames(self):
-        return ["OUT"]
 
     def get_netlogic_class_name(self):
         return "ULSetEeveeAO"
 
-    def get_input_sockets_field_names(self):
-        return [
-            "condition",
-            "value"
-        ]
-
-
-_nodes.append(NLSetEeveeAO)
-
-
-class NLSetEeveeBloom(NLActionNode):
+class NLSetEeveeBloom(_EEVEE_Effects_mixin, NLActionNode):
     bl_idname = "NLSetEeveeBloom"
     bl_label = "Set Bloom"
-    nl_category = 'Render'
-    nl_subcat = 'EEVEE Effects'
-    nl_module = 'actions'
 
     def init(self, context):
         NLActionNode.init(self, context)
+        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
         self.inputs.new(NLConditionSocket.bl_idname, 'Condition')
         self.inputs.new(NLBooleanSocket.bl_idname, 'Use Bloom')
-        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
-
-    def get_output_socket_varnames(self):
-        return ["OUT"]
 
     def get_netlogic_class_name(self):
         return "ULSetEeveeBloom"
 
-    def get_input_sockets_field_names(self):
-        return [
-            "condition",
-            "value"
-        ]
-
-
-_nodes.append(NLSetEeveeBloom)
-
-
-class NLSetEeveeSSR(NLActionNode):
+class NLSetEeveeSSR(_EEVEE_Effects_mixin, NLActionNode):
     bl_idname = "NLSetEeveeSSR"
     bl_label = "Set SSR"
-    nl_category = 'Render'
-    nl_subcat = 'EEVEE Effects'
-    nl_module = 'actions'
 
     def init(self, context):
         NLActionNode.init(self, context)
+        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
         self.inputs.new(NLConditionSocket.bl_idname, 'Condition')
         self.inputs.new(NLBooleanSocket.bl_idname, 'Use SSR')
-        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
-
-    def get_output_socket_varnames(self):
-        return ["OUT"]
 
     def get_netlogic_class_name(self):
         return "ULSetEeveeSSR"
 
-    def get_input_sockets_field_names(self):
-        return [
-            "condition",
-            "value"
-        ]
-
-
-_nodes.append(NLSetEeveeSSR)
-
-
-class NLSetEeveeVolumetrics(NLActionNode):
+class NLSetEeveeVolumetrics(_EEVEE_Effects_mixin, NLActionNode):
     bl_idname = "NLSetEeveeVolumetrics"
     bl_label = "Set Volumetric Light"
-    nl_category = 'Render'
-    nl_subcat = 'EEVEE Effects'
-    nl_module = 'actions'
 
     def init(self, context):
         NLActionNode.init(self, context)
+        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
         self.inputs.new(NLConditionSocket.bl_idname, 'Condition')
         self.inputs.new(NLBooleanSocket.bl_idname, 'Volumetrics')
-        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
-
-    def get_output_socket_varnames(self):
-        return ["OUT"]
 
     def get_netlogic_class_name(self):
         return "ULSetEeveeVolumetrics"
 
-    def get_input_sockets_field_names(self):
-        return [
-            "condition",
-            "value"
-        ]
-
-
-_nodes.append(NLSetEeveeVolumetrics)
-
-
-class NLSetEeveeSMAA(NLActionNode):
+class NLSetEeveeSMAA(_EEVEE_Effects_mixin, NLActionNode):
     bl_idname = "NLSetEeveeSMAA"
     bl_label = "Set SMAA"
-    nl_category = 'Render'
-    nl_subcat = 'EEVEE Effects'
-    nl_module = 'actions'
 
     def init(self, context):
         NLActionNode.init(self, context)
+        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
         self.inputs.new(NLConditionSocket.bl_idname, 'Condition')
         self.inputs.new(NLBooleanSocket.bl_idname, 'Use SMAA')
-        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
-
-    def get_output_socket_varnames(self):
-        return ["OUT"]
 
     def get_netlogic_class_name(self):
         return "ULSetEeveeSMAA"
 
-    def get_input_sockets_field_names(self):
-        return [
-            "condition",
-            "value"
-        ]
-
-
-_nodes.append(NLSetEeveeSMAA)
-
-
-class NLSetEeveeSMAAQuality(NLActionNode):
+class NLSetEeveeSMAAQuality(_EEVEE_Effects_mixin, NLActionNode):
     bl_idname = "NLSetEeveeSMAAQuality"
     bl_label = "Set SMAA Quality"
-    nl_category = 'Render'
-    nl_subcat = 'EEVEE Effects'
-    nl_module = 'actions'
 
     def init(self, context):
         NLActionNode.init(self, context)
+        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
         self.inputs.new(NLConditionSocket.bl_idname, 'Condition')
         self.inputs.new(NLQualitySocket.bl_idname, '')
-        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
-
-    def get_output_socket_varnames(self):
-        return ["OUT"]
 
     def get_netlogic_class_name(self):
         return "ULSetEeveeSMAAQuality"
 
-    def get_input_sockets_field_names(self):
-        return [
-            "condition",
-            "value"
-        ]
-
-
+_nodes.append(NLSetGammaAction)
+_nodes.append(NLSetExposureAction)
+_nodes.append(NLSetEeveeAO)
+_nodes.append(NLSetEeveeBloom)
+_nodes.append(NLSetEeveeSSR)
+_nodes.append(NLSetEeveeVolumetrics)
+_nodes.append(NLSetEeveeSMAA)
 _nodes.append(NLSetEeveeSMAAQuality)
-
+#-- END EEVEE-Effects
 
 class NLSetLightEnergyAction(NLActionNode):
     bl_idname = "NLSetLightEnergyAction"
