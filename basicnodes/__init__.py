@@ -6606,132 +6606,78 @@ class NLParameterPythonModuleFunction(NLActionNode):
 
 _nodes.append(NLParameterPythonModuleFunction)
 
+### LOak MOD --     BEGIN   Simple Value Input Nodes
+#   Is there a reason why file-path is not considered simple when the rest are?
+class _NodeMixin_ULSimpleValue:
+    nl_category = "Values"
+    nl_module = 'parameters'
 
-class NLParameterBooleanValue(NLParameterNode):
+    def get_netlogic_class_name(self):
+        return "ULSimpleValue"
+
+    def get_input_sockets_field_names(self):
+        return ["value"]
+
+    def get_output_socket_varnames(self):
+        return ["OUT"]
+
+class NLParameterBooleanValue(_NodeMixin_ULSimpleValue, NLParameterNode):
     bl_idname = "NLParameterBooleanValue"
     bl_label = "Boolean"
     bl_icon = 'CHECKBOX_HLT'
-    nl_category = "Values"
     nl_subcat = 'Simple'
-    nl_module = 'parameters'
 
     def init(self, context):
         NLParameterNode.init(self, context)
         self.inputs.new(NLBooleanSocket.bl_idname, "Bool")
         self.outputs.new(NLBooleanSocket.bl_idname, "Bool")
 
-    def get_netlogic_class_name(self):
-        return "ULSimpleValue"
-
-    def get_input_sockets_field_names(self):
-        return ["value"]
-
-    def get_output_socket_varnames(self):
-        return ["OUT"]
-
-
-_nodes.append(NLParameterBooleanValue)
-
-
-class NLParameterFileValue(NLParameterNode):
+class NLParameterFileValue(_NodeMixin_ULSimpleValue, NLParameterNode):
     bl_idname = "NLParameterFileValue"
     bl_label = "File Path"
-    nl_category = "Values"
-    nl_module = 'parameters'
 
     def init(self, context):
         NLParameterNode.init(self, context)
         self.inputs.new(NLFilePathSocket.bl_idname, "")
         self.outputs.new(NLFilePathSocket.bl_idname, "Path")
 
-    def get_netlogic_class_name(self):
-        return "ULSimpleValue"
-
-    def get_input_sockets_field_names(self):
-        return ["value"]
-
-    def get_output_socket_varnames(self):
-        return ["OUT"]
-
-
-_nodes.append(NLParameterFileValue)
-
-
-class NLParameterFloatValue(NLParameterNode):
+class NLParameterFloatValue(_NodeMixin_ULSimpleValue, NLParameterNode):
     bl_idname = "NLParameterFloatValue"
     bl_label = "Float"
-    nl_category = "Values"
     nl_subcat = 'Simple'
-    nl_module = 'parameters'
 
     def init(self, context):
         NLParameterNode.init(self, context)
         self.inputs.new(NLFloatFieldSocket.bl_idname, "")
         self.outputs.new(NLFloatFieldSocket.bl_idname, "Float")
 
-    def get_netlogic_class_name(self):
-        return "ULSimpleValue"
-
-    def get_input_sockets_field_names(self):
-        return ["value"]
-
-    def get_output_socket_varnames(self):
-        return ["OUT"]
-
-
-_nodes.append(NLParameterFloatValue)
-
-
-class NLParameterIntValue(NLParameterNode):
+class NLParameterIntValue(_NodeMixin_ULSimpleValue, NLParameterNode):
     bl_idname = "NLParameterIntValue"
     bl_label = "Integer"
-    nl_category = "Values"
     nl_subcat = 'Simple'
-    nl_module = 'parameters'
 
     def init(self, context):
         NLParameterNode.init(self, context)
         self.inputs.new(NLIntegerFieldSocket.bl_idname, "")
         self.outputs.new(NLIntegerFieldSocket.bl_idname, "Int")
 
-    def get_netlogic_class_name(self):
-        return "ULSimpleValue"
-
-    def get_input_sockets_field_names(self):
-        return ["value"]
-
-    def get_output_socket_varnames(self):
-        return ["OUT"]
-
-
-_nodes.append(NLParameterIntValue)
-
-
-class NLParameterStringValue(NLParameterNode):
+class NLParameterStringValue(_NodeMixin_ULSimpleValue, NLParameterNode):
     bl_idname = "NLParameterStringValue"
-    bl_icon = 'FONT_DATA'
     bl_label = "String"
-    nl_category = "Values"
+    bl_icon = 'FONT_DATA'
     nl_subcat = 'Simple'
-    nl_module = 'parameters'
 
     def init(self, context):
         NLParameterNode.init(self, context)
         self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "")
         self.outputs.new(NLQuotedStringFieldSocket.bl_idname, "String")
 
-    def get_netlogic_class_name(self):
-        return "ULSimpleValue"
-
-    def get_input_sockets_field_names(self):
-        return ["value"]
-
-    def get_output_socket_varnames(self):
-        return ["OUT"]
-
-
+_nodes.append(NLParameterBooleanValue)
+_nodes.append(NLParameterFileValue)
+_nodes.append(NLParameterFloatValue)
+_nodes.append(NLParameterIntValue)
 _nodes.append(NLParameterStringValue)
-
+#-- END Simple Value Input Nodes
 
 class NLParameterTypeCast(NLParameterNode):
     bl_idname = "NLParameterTypeCast"
