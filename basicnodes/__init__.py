@@ -5479,14 +5479,27 @@ class NLSensorValueNode(NLParameterNode):
 
 _nodes.append(NLSensorValueNode)
 
+class _NodeMixin_transform_local:
+    local: BoolProperty(default=True, update=update_tree_code)
 
-class NLActionGetCharacterInfo(NLParameterNode):
+    def draw_buttons(self, context, layout):
+        layout.prop(
+            self, "local", toggle=True, text="Local" if self.local else "Global"
+        )
+
+    def get_attributes(self):
+        return [("local", lambda: "True" if self.local else "False")]
+
+    def get_output_socket_varnames(self):
+        return ["OUT"]
+
+
+class NLActionGetCharacterInfo(_NodeMixin_transform_local, NLParameterNode):
     bl_idname = "NLActionGetCharacterInfo"
     bl_label = "Get Physics Info"
     nl_category = "Physics"
     nl_subcat = 'Character'
     nl_module = 'parameters'
-    local: BoolProperty(default=True, update=update_tree_code)
 
     def init(self, context):
         NLActionNode.init(self, context)
@@ -5497,26 +5510,14 @@ class NLActionGetCharacterInfo(NLParameterNode):
         self.outputs.new(NLVec3FieldSocket.bl_idname, 'Walk Direction')
         self.outputs.new(NLBooleanSocket.bl_idname, 'On Ground')
 
-    def draw_buttons(self, context, layout):
-        layout.prop(
-            self,
-            "local",
-            toggle=True,
-            text="Local" if self.local else "Global"
-        )
-
     def get_netlogic_class_name(self):
         return "ULCharacterInfo"
 
     def get_input_sockets_field_names(self):
         return ["game_object"]
 
-    def get_attributes(self):
-        return [("local", lambda: "True" if self.local else "False")]
-
     def get_output_socket_varnames(self):
         return ["MAX_JUMPS", "CUR_JUMP", "GRAVITY", 'WALKDIR', 'ON_GROUND']
-
 
 _nodes.append(NLActionGetCharacterInfo)
 
@@ -10762,13 +10763,12 @@ class NLActionSetAnimationFrame(NLActionNode):
 _nodes.append(NLActionSetAnimationFrame)
 
 
-class NLActionApplyLocation(NLActionNode):
+class NLActionApplyLocation(_NodeMixin_transform_local, NLActionNode):
     bl_idname = "NLActionApplyLocation"
     bl_label = "Apply Movement"
     nl_category = "Objects"
     nl_subcat = 'Transformation'
     nl_module = 'actions'
-    local: BoolProperty(default=True, update=update_tree_code)
 
     def init(self, context):
         NLActionNode.init(self, context)
@@ -10779,37 +10779,21 @@ class NLActionApplyLocation(NLActionNode):
             NLVec3FieldSocket, "Vector")
         self.outputs.new(NLConditionSocket.bl_idname, 'Done')
 
-    def get_output_socket_varnames(self):
-        return ["OUT"]
-
-    def draw_buttons(self, context, layout):
-        layout.prop(
-            self,
-            "local",
-            toggle=True,
-            text="Local" if self.local else "Global"
-        )
-
     def get_netlogic_class_name(self):
         return "ULApplyMovement"
 
     def get_input_sockets_field_names(self):
         return ["condition", "game_object", "movement"]
 
-    def get_attributes(self):
-        return [("local", lambda: "True" if self.local else "False")]
-
-
 _nodes.append(NLActionApplyLocation)
 
 
-class NLActionApplyRotation(NLActionNode):
+class NLActionApplyRotation(_NodeMixin_transform_local, NLActionNode):
     bl_idname = "NLActionApplyRotation"
     bl_label = "Apply Rotation"
     nl_category = "Objects"
     nl_subcat = 'Transformation'
     nl_module = 'actions'
-    local: BoolProperty(default=True, update=update_tree_code)
 
     def init(self, context):
         NLActionNode.init(self, context)
@@ -10820,37 +10804,21 @@ class NLActionApplyRotation(NLActionNode):
             NLVec3RotationSocket, "Vector")
         self.outputs.new(NLConditionSocket.bl_idname, 'Done')
 
-    def get_output_socket_varnames(self):
-        return ["OUT"]
-
-    def draw_buttons(self, context, layout):
-        layout.prop(
-            self,
-            "local",
-            toggle=True,
-            text="Local" if self.local else "Global"
-        )
-
     def get_netlogic_class_name(self):
         return "ULApplyRotation"
 
     def get_input_sockets_field_names(self):
         return ["condition", "game_object", "rotation"]
 
-    def get_attributes(self):
-        return [("local", lambda: "True" if self.local else "False")]
-
-
 _nodes.append(NLActionApplyRotation)
 
 
-class NLActionApplyForce(NLActionNode):
+class NLActionApplyForce(_NodeMixin_transform_local, NLActionNode):
     bl_idname = "NLActionApplyForce"
     bl_label = "Apply Force"
     nl_category = "Objects"
     nl_subcat = 'Transformation'
     nl_module = 'actions'
-    local: BoolProperty(default=True, update=update_tree_code)
 
     def init(self, context):
         NLActionNode.init(self, context)
@@ -10862,36 +10830,22 @@ class NLActionApplyForce(NLActionNode):
         )
         self.outputs.new(NLConditionSocket.bl_idname, 'Done')
 
-    def get_output_socket_varnames(self):
-        return ["OUT"]
-
-    def draw_buttons(self, context, layout):
-        layout.prop(
-            self,
-            "local",
-            toggle=True,
-            text="Local" if self.local else "Global"
-        )
-
     def get_netlogic_class_name(self):
         return "ULApplyForce"
 
     def get_input_sockets_field_names(self):
         return ["condition", "game_object", "force"]
 
-    def get_attributes(self):
-        return [("local", lambda: "True" if self.local else "False")]
-
-
 _nodes.append(NLActionApplyForce)
 
 
-class NLActionApplyImpulse(NLActionNode):
+class NLActionApplyImpulse(_NodeMixin_transform_local, NLActionNode):
     bl_idname = "NLActionApplyImpulse"
     bl_label = "Apply Impulse"
     nl_category = "Objects"
     nl_subcat = 'Transformation'
     nl_module = 'actions'
+
     local: BoolProperty(default=False, update=update_tree_code)
 
     def init(self, context):
@@ -10902,26 +10856,11 @@ class NLActionApplyImpulse(NLActionNode):
         self.inputs.new(NLVec3FieldSocket.bl_idname, 'Direction')
         self.outputs.new(NLConditionSocket.bl_idname, 'Done')
 
-    def get_output_socket_varnames(self):
-        return ["OUT"]
-
-    def draw_buttons(self, context, layout):
-        layout.prop(
-            self,
-            "local",
-            toggle=True,
-            text="Local" if self.local else "Global"
-        )
-
     def get_netlogic_class_name(self):
         return "ULApplyImpulse"
 
     def get_input_sockets_field_names(self):
         return ["condition", "game_object", "point", 'impulse']
-
-    def get_attributes(self):
-        return [("local", lambda: "True" if self.local else "False")]
-
 
 _nodes.append(NLActionApplyImpulse)
 
@@ -11553,14 +11492,12 @@ class NLActionSetCharacterGravity(NLActionNode):
 _nodes.append(NLActionSetCharacterGravity)
 
 
-class NLActionSetCharacterWalkDir(NLActionNode):
+class NLActionSetCharacterWalkDir(_NodeMixin_transform_local, NLActionNode):
     bl_idname = "NLActionSetCharacterWalkDir"
     bl_label = "Walk"
     nl_category = "Physics"
     nl_subcat = 'Character'
     nl_module = 'actions'
-
-    local: BoolProperty(default=True, update=update_tree_code)
 
     def init(self, context):
         NLActionNode.init(self, context)
@@ -11569,38 +11506,21 @@ class NLActionSetCharacterWalkDir(NLActionNode):
         self.inputs.new(NLVec3FieldSocket.bl_idname, "Vector")
         self.outputs.new(NLConditionSocket.bl_idname, 'Done')
 
-    def get_output_socket_varnames(self):
-        return ["OUT"]
-
-    def draw_buttons(self, context, layout):
-        layout.prop(
-            self,
-            "local",
-            toggle=True,
-            text="Local" if self.local else "Global"
-        )
-
     def get_netlogic_class_name(self):
         return "ULSetCharacterWalkDir"
 
     def get_input_sockets_field_names(self):
         return ["condition", "game_object", 'walkDir']
 
-    def get_attributes(self):
-        return [("local", lambda: "True" if self.local else "False")]
-
-
 _nodes.append(NLActionSetCharacterWalkDir)
 
 
-class NLActionSetCharacterVelocity(NLActionNode):
+class NLActionSetCharacterVelocity(_NodeMixin_transform_local, NLActionNode):
     bl_idname = "NLActionSetCharacterVelocity"
     bl_label = "Set Velocity"
     nl_category = "Physics"
     nl_subcat = 'Character'
     nl_module = 'actions'
-
-    local: BoolProperty(default=True, update=update_tree_code)
 
     def init(self, context):
         NLActionNode.init(self, context)
@@ -11610,38 +11530,21 @@ class NLActionSetCharacterVelocity(NLActionNode):
         self.inputs.new(NLPositiveFloatSocket.bl_idname, "Time")
         self.outputs.new(NLConditionSocket.bl_idname, 'Done')
 
-    def get_output_socket_varnames(self):
-        return ["OUT"]
-
-    def draw_buttons(self, context, layout):
-        layout.prop(
-            self,
-            "local",
-            toggle=True,
-            text="Local" if self.local else "Global"
-        )
-
     def get_netlogic_class_name(self):
         return "ULSetCharacterVelocity"
 
     def get_input_sockets_field_names(self):
         return ["condition", "game_object", 'vel', 'time']
 
-    def get_attributes(self):
-        return [("local", lambda: "True" if self.local else "False")]
-
-
 _nodes.append(NLActionSetCharacterVelocity)
 
 
-class NLActionApplyTorque(NLActionNode):
+class NLActionApplyTorque(_NodeMixin_transform_local, NLActionNode):
     bl_idname = "NLActionApplyTorque"
     bl_label = "Apply Torque"
     nl_category = "Objects"
     nl_subcat = 'Transformation'
     nl_module = 'actions'
-
-    local: BoolProperty(default=True, update=update_tree_code)
 
     def init(self, context):
         NLActionNode.init(self, context)
@@ -11652,26 +11555,11 @@ class NLActionApplyTorque(NLActionNode):
             NLVec3FieldSocket, "Vector")
         self.outputs.new(NLConditionSocket.bl_idname, 'Done')
 
-    def get_output_socket_varnames(self):
-        return ["OUT"]
-
-    def draw_buttons(self, context, layout):
-        layout.prop(
-            self,
-            "local",
-            toggle=True,
-            text="Local" if self.local else "Global"
-        )
-
     def get_netlogic_class_name(self):
         return "ULApplyTorque"
 
     def get_input_sockets_field_names(self):
         return ["condition", "game_object", "torque"]
-
-    def get_attributes(self):
-        return [("local", lambda: "True" if self.local else "False")]
-
 
 _nodes.append(NLActionApplyTorque)
 
@@ -12352,13 +12240,12 @@ class NLActionPlayActionNode(NLActionNode):
 _nodes.append(NLActionPlayActionNode)
 
 
-class NLActionAlignAxisToVector(NLActionNode):
+class NLActionAlignAxisToVector(_NodeMixin_transform_local, NLActionNode):
     bl_idname = "NLActionAlignAxisToVector"
     bl_label = "Align Axis to Vector"
     nl_category = "Objects"
     nl_subcat = 'Transformation'
     nl_module = 'actions'
-    local: BoolProperty(default=True, update=update_tree_code)
 
     def init(self, context):
         NLActionNode.init(self, context)
@@ -12370,26 +12257,11 @@ class NLActionAlignAxisToVector(NLActionNode):
         self.inputs[-1].value = 1.0
         self.outputs.new(NLConditionSocket.bl_idname, 'Done')
 
-    def draw_buttons(self, context, layout):
-        layout.prop(
-            self,
-            "local",
-            toggle=True,
-            text="Local" if self.local else "Global"
-        )
-
-    def get_output_socket_varnames(self):
-        return ["OUT"]
-
     def get_netlogic_class_name(self):
         return "ULAlignAxisToVector"
 
     def get_input_sockets_field_names(self):
         return ["condition", "game_object", "vector", "axis", 'factor']
-
-    def get_attributes(self):
-        return [("local", lambda: "True" if self.local else "False")]
-
 
 _nodes.append(NLActionAlignAxisToVector)
 
