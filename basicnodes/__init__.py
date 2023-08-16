@@ -6041,15 +6041,18 @@ class NLThresholdNode(NLParameterNode):
 _nodes.append(NLThresholdNode)
 
 
-class NLRangedThresholdNode(NLParameterNode):
-    bl_idname = "NLRangedThresholdNode"
-    bl_label = "Ranged Threshold"
+### LOak MOD -- Math-Range                                              BEGIN
+class _NLParameterNode_Range_mixin:
     nl_category = "Math"
     nl_module = 'parameters'
-    operator: EnumProperty(
-        items=_enum_in_or_out,
-        update=update_tree_code
-    )
+
+    def draw_buttons(self, context, layout):
+        layout.prop(self, "operator", text="")
+
+    def get_attributes(self):
+        return [ ("operator", lambda: f'"{self.operator}"') ]
+
+    operator: EnumProperty( items=_enum_in_or_out, update=update_tree_code )
 
     def init(self, context):
         NLParameterNode.init(self, context)
@@ -6057,63 +6060,30 @@ class NLRangedThresholdNode(NLParameterNode):
         self.inputs.new(NLVec2FieldSocket.bl_idname, "Threshold")
         self.outputs.new(NLParameterSocket.bl_idname, "Value")
 
-    def draw_buttons(self, context, layout):
-        layout.prop(self, "operator", text="")
+    def get_input_sockets_field_names(self):
+        return ["value", "threshold"]
 
-    def get_attributes(self):
-        return [
-            ("operator", lambda: f'"{self.operator}"')
-        ]
+    def get_output_socket_varnames(self):
+        return ['OUT']
+
+#--
+class NLRangedThresholdNode(_NLParameterNode_Range_mixin, NLParameterNode):
+    bl_idname = "NLRangedThresholdNode"
+    bl_label = "Ranged Threshold"
 
     def get_netlogic_class_name(self):
         return "ULRangedThreshold"
 
-    def get_input_sockets_field_names(self):
-        return ["value", "threshold"]
-
-    def get_output_socket_varnames(self):
-        return ['OUT']
-
-
-_nodes.append(NLRangedThresholdNode)
-
-
-class NLLimitRange(NLParameterNode):
+class NLLimitRange(_NLParameterNode_Range_mixin, NLParameterNode):
     bl_idname = "NLLimitRange"
     bl_label = "Limit Range"
-    nl_category = "Math"
-    nl_module = 'parameters'
-
-    operator: EnumProperty(
-        items=_enum_in_or_out,
-        update=update_tree_code
-    )
-
-    def init(self, context):
-        NLParameterNode.init(self, context)
-        self.inputs.new(NLFloatFieldSocket.bl_idname, "Value")
-        self.inputs.new(NLVec2FieldSocket.bl_idname, "Threshold")
-        self.outputs.new(NLParameterSocket.bl_idname, "Value")
-
-    def draw_buttons(self, context, layout):
-        layout.prop(self, "operator", text="")
-
-    def get_attributes(self):
-        return [
-            ("operator", lambda: f'"{self.operator}"')
-        ]
 
     def get_netlogic_class_name(self):
         return "ULLimitRange"
 
-    def get_input_sockets_field_names(self):
-        return ["value", "threshold"]
-
-    def get_output_socket_varnames(self):
-        return ['OUT']
-
-
+_nodes.append(NLRangedThresholdNode)
 _nodes.append(NLLimitRange)
+#-- END Math-Range
 
 
 class NLMapRangeNode(NLParameterNode):
@@ -6167,9 +6137,7 @@ class NLWithinRangeNode(NLParameterNode):
         layout.prop(self, "operator", text="")
 
     def get_attributes(self):
-        return [
-            ("operator", lambda: f'"{self.operator}"')
-        ]
+        return [ ("operator", lambda: f'"{self.operator}"') ]
 
     def get_netlogic_class_name(self):
         return "ULWithinRange"
