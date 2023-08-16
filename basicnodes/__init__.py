@@ -7208,113 +7208,6 @@ class NLGamepadActive(NLConditionNode):
 _nodes.append(NLGamepadActive)
 
 
-class NLGamepadButtonsCondition(NLConditionNode):
-    bl_idname = "NLGamepadButtonsCondition"
-    bl_label = "Button Down"
-    nl_category = "Input"
-    nl_subcat = 'Gamepad'
-    nl_module = 'conditions'
-
-    button: EnumProperty(
-        name='Button',
-        items=_enum_controller_buttons_operators,
-        description="Controller Buttons",
-        update=update_tree_code
-    )
-    pulse: BoolProperty(
-        description=(
-            'ON: True until the button is released, '
-            'OFF: True when pressed, then False until pressed again'
-        ),
-        update=update_tree_code
-    )
-
-    def init(self, context):
-        NLConditionNode.init(self, context)
-        self.inputs.new(NLPositiveIntCentSocket.bl_idname, 'Index')
-        self.outputs.new(NLConditionSocket.bl_idname, "Pressed")
-
-    def draw_buttons(self, context, layout):
-        layout.prop(
-            self,
-            "pulse",
-            text="Down" if self.pulse else "Tap",
-            toggle=True
-        )
-        layout.prop(self, "button", text='')
-
-    def get_netlogic_class_name(self):
-        return "ULGamepadButton"
-
-    def get_input_sockets_field_names(self):
-        return ["index"]
-
-    def get_output_socket_varnames(self):
-        return ["BUTTON"]
-
-    def get_attributes(self):
-        return [
-            ("pulse", lambda: f'{self.pulse}'),
-            ("button", lambda: f'{self.button}')
-        ]
-
-
-_nodes.append(NLGamepadButtonsCondition)
-
-
-class NLGamepadButtonUpCondition(NLConditionNode):
-    bl_idname = "NLGamepadButtonUpCondition"
-    bl_label = "Button Up"
-    nl_category = "Input"
-    nl_subcat = 'Gamepad'
-    nl_module = 'conditions'
-    button: EnumProperty(
-        name='Button',
-        items=_enum_controller_buttons_operators,
-        description="Controller Buttons",
-        update=update_tree_code
-    )
-    pulse: BoolProperty(
-        description=(
-            'ON: True until the button is released, '
-            'OFF: True when pressed, then False until pressed again'
-        ),
-        update=update_tree_code
-    )
-
-    def init(self, context):
-        NLConditionNode.init(self, context)
-        self.inputs.new(NLPositiveIntCentSocket.bl_idname, 'Index')
-        self.outputs.new(NLConditionSocket.bl_idname, "Released")
-
-    def draw_buttons(self, context, layout):
-        layout.prop(
-            self,
-            "pulse",
-            text="Down" if self.pulse else "Tap",
-            toggle=True
-        )
-        layout.prop(self, "button", text='')
-
-    def get_netlogic_class_name(self):
-        return "ULGamepadButtonUp"
-
-    def get_input_sockets_field_names(self):
-        return ["index"]
-
-    def get_output_socket_varnames(self):
-        return ["BUTTON"]
-
-    def get_attributes(self):
-        return [
-            ("pulse", lambda: f'{self.pulse}'),
-            ("button", lambda: f'{self.button}')
-        ]
-
-
-_nodes.append(NLGamepadButtonUpCondition)
-
-
 class NLKeyboardActive(NLConditionNode):
     bl_idname = "NLKeyboardActive"
     bl_label = "Keyboard Active"
@@ -7338,32 +7231,106 @@ class NLKeyboardActive(NLConditionNode):
 
 _nodes.append(NLKeyboardActive)
 
+def pulsed_KeyOrButton_input(type="simple"):
+    """For nodes handling Controller/Keyboard/Mouse or sensor (e.g. Collision)
+    inputs. Add props ("pulse", ["button"]), get_attributes and draw_buttons."""
+    props = {
+        "pulse": BoolProperty( update=update_tree_code,
+            description=(  'ON: True until the button/key is released, '
+                'OFF: True when pressed, then False until pressed again' )),
+    }
 
+    if type=="Gamepad": # gamepads have the additional enum-attribute "button"
+        props['button'] = EnumProperty( name='Button',
+            items=_enum_controller_buttons_operators,
+            description="Controller Buttons", update=update_tree_code )
+        def get_attributes(self):
+            return [ ("pulse", lambda: f'{self.pulse}'),
+                    ("button", lambda: f'{self.button}') ]
+        def draw_buttons(self, context, layout):
+            layout.prop( self, "pulse", toggle=True,
+                text="Down" if self.pulse else "Tap")
+            layout.prop(self, "button", text='')
+    else:
+        def get_attributes(self):
+            return [ ("pulse", lambda: f'{self.pulse}') ]
+        if type=="KeyTap":
+            pulsed_text = ["Key Tap", "Key Down"]
+        else:
+            pulsed_text = ["Once", "Each Frame"]
+        def draw_buttons(self, context, layout):
+            layout.prop( self, "pulse", toggle=True, text=pulsed_text[self.pulse])
+
+    def _wrapper(cls):
+        if "pulse" in cls.__annotations__:  # if "pulse" is defined by the class
+            del props["pulse"]              # ... directly, we want to retain it
+        cls.__annotations__.update(props)
+        cls.get_attributes = get_attributes
+        cls.draw_buttons = draw_buttons
+        return cls
+    return _wrapper
+
+@pulsed_KeyOrButton_input("Gamepad")
+class NLGamepadButtonsCondition(NLConditionNode):
+    bl_idname = "NLGamepadButtonsCondition"
+    bl_label = "Button Down"
+    nl_category = "Input"
+    nl_subcat = 'Gamepad'
+    nl_module = 'conditions'
+
+    def init(self, context):
+        NLConditionNode.init(self, context)
+        self.inputs.new(NLPositiveIntCentSocket.bl_idname, 'Index')
+        self.outputs.new(NLConditionSocket.bl_idname, "Pressed")
+
+    def get_netlogic_class_name(self):
+        return "ULGamepadButton"
+
+    def get_input_sockets_field_names(self):
+        return ["index"]
+
+    def get_output_socket_varnames(self):
+        return ["BUTTON"]
+
+_nodes.append(NLGamepadButtonsCondition)
+
+@pulsed_KeyOrButton_input("Gamepad")
+class NLGamepadButtonUpCondition(NLConditionNode):
+    bl_idname = "NLGamepadButtonUpCondition"
+    bl_label = "Button Up"
+    nl_category = "Input"
+    nl_subcat = 'Gamepad'
+    nl_module = 'conditions'
+
+    def init(self, context):
+        NLConditionNode.init(self, context)
+        self.inputs.new(NLPositiveIntCentSocket.bl_idname, 'Index')
+        self.outputs.new(NLConditionSocket.bl_idname, "Released")
+
+    def get_netlogic_class_name(self):
+        return "ULGamepadButtonUp"
+
+    def get_input_sockets_field_names(self):
+        return ["index"]
+
+    def get_output_socket_varnames(self):
+        return ["BUTTON"]
+
+_nodes.append(NLGamepadButtonUpCondition)
+
+
+@pulsed_KeyOrButton_input("KeyTap")
 class NLKeyPressedCondition(NLConditionNode):
     bl_idname = "NLKeyPressedCondition"
     bl_label = "Key Down"
     nl_category = "Input"
     nl_subcat = 'Keyboard'
     nl_module = 'conditions'
-    pulse: BoolProperty(
-        description=(
-            'ON: True until the key is released, '
-            'OFF: True when pressed, then False until pressed again'
-        ),
-        update=update_tree_code)
 
     def init(self, context):
         NLConditionNode.init(self, context)
         self.inputs.new(NLKeyboardKeySocket.bl_idname, "")
         self.outputs.new(NLConditionSocket.bl_idname, "If Pressed")
-
-    def draw_buttons(self, context, layout):
-        layout.prop(
-            self,
-            "pulse",
-            text="Key Down" if self.pulse else "Key Tap",
-            toggle=True
-        )
 
     def get_netlogic_class_name(self):
         return "ULKeyPressed"
@@ -7371,27 +7338,15 @@ class NLKeyPressedCondition(NLConditionNode):
     def get_input_sockets_field_names(self):
         return ["key_code"]
 
-    def get_attributes(self):
-        return [
-            ("pulse", lambda: f'{self.pulse}')
-        ]
-
-
 _nodes.append(NLKeyPressedCondition)
 
-
+@pulsed_KeyOrButton_input("KeyTap")
 class NLKeyLoggerAction(NLActionNode):
     bl_idname = "NLKeyLoggerAction"
     bl_label = "Logger"
     nl_category = "Input"
     nl_subcat = 'Keyboard'
     nl_module = 'actions'
-    pulse: BoolProperty(
-        description=(
-            'ON: True until the key is released, '
-            'OFF: True when pressed, then False until pressed again'
-        ),
-        update=update_tree_code)
 
     def init(self, context):
         NLActionNode.init(self, context)
@@ -7399,14 +7354,6 @@ class NLKeyLoggerAction(NLActionNode):
         self.outputs.new(NLConditionSocket.bl_idname, "Done")
         self.outputs.new(NLParameterSocket.bl_idname, "Key Code")
         self.outputs.new(NLParameterSocket.bl_idname, "Logged Char")
-
-    def draw_buttons(self, context, layout):
-        layout.prop(
-            self,
-            "pulse",
-            text="Key Down" if self.pulse else "Key Tap",
-            toggle=True
-        )
 
     def get_netlogic_class_name(self):
         return "ULKeyLogger"
@@ -7417,15 +7364,9 @@ class NLKeyLoggerAction(NLActionNode):
     def get_output_socket_varnames(self):
         return ["KEY_LOGGED", "KEY_CODE", "CHARACTER"]
 
-    def get_attributes(self):
-        return [
-            ("pulse", lambda: f'{self.pulse}')
-        ]
-
-
 _nodes.append(NLKeyLoggerAction)
 
-
+@pulsed_KeyOrButton_input()
 class NLKeyReleasedCondition(NLConditionNode):
     bl_idname = "NLKeyReleasedCondition"
     bl_label = "Key Up"
@@ -7433,26 +7374,11 @@ class NLKeyReleasedCondition(NLConditionNode):
     nl_subcat = 'Keyboard'
     nl_module = 'conditions'
 
-    pulse: BoolProperty(
-        description=(
-            'ON: True until the key is released, '
-            'OFF: True when pressed, then False until pressed again'
-        ),
-        default=True,
-        update=update_tree_code)
-
     def init(self, context):
         NLConditionNode.init(self, context)
         self.inputs.new(NLKeyboardKeySocket.bl_idname, "")
         self.outputs.new(NLConditionSocket.bl_idname, "If Released")
-
-    def draw_buttons(self, context, layout):
-        layout.prop(
-            self,
-            "pulse",
-            text="Each Frame" if self.pulse else "Once",
-            toggle=True
-        )
+        self.pulse = True
 
     def get_netlogic_class_name(self):
         return "ULKeyReleased"
@@ -7460,15 +7386,9 @@ class NLKeyReleasedCondition(NLConditionNode):
     def get_input_sockets_field_names(self):
         return ["key_code"]
 
-    def get_attributes(self):
-        return [
-            ("pulse", lambda: f'{self.pulse}')
-        ]
-
-
 _nodes.append(NLKeyReleasedCondition)
 
-
+@pulsed_KeyOrButton_input()
 class NLMousePressedCondition(NLConditionNode):
     bl_idname = "NLMousePressedCondition"
     bl_label = "Button"
@@ -7477,26 +7397,10 @@ class NLMousePressedCondition(NLConditionNode):
     nl_subcat = 'Mouse'
     nl_module = 'conditions'
 
-    pulse: BoolProperty(
-        description=(
-            'ON: True until the button is released, '
-            'OFF: True when pressed, then False until pressed again'
-        ),
-        default=False,
-        update=update_tree_code)
-
     def init(self, context):
         NLConditionNode.init(self, context)
         self.inputs.new(NLMouseButtonSocket.bl_idname, "")
         self.outputs.new(NLConditionSocket.bl_idname, "If Pressed")
-
-    def draw_buttons(self, context, layout):
-        layout.prop(
-            self,
-            "pulse",
-            text="Each Frame" if self.pulse else "Once",
-            toggle=True
-        )
 
     def get_netlogic_class_name(self):
         return "ULMousePressed"
@@ -7504,18 +7408,12 @@ class NLMousePressedCondition(NLConditionNode):
     def get_input_sockets_field_names(self):
         return ["mouse_button_code"]
 
-    def get_attributes(self):
-        return [
-            ("pulse", lambda: f'{self.pulse}')
-        ]
-
     def get_output_socket_varnames(self):
         return ['OUT']
 
-
 _nodes.append(NLMousePressedCondition)
 
-
+@pulsed_KeyOrButton_input()
 class NLMouseMovedCondition(NLConditionNode):
     bl_idname = "NLMouseMovedCondition"
     bl_label = "Moved"
@@ -7524,25 +7422,9 @@ class NLMouseMovedCondition(NLConditionNode):
     nl_subcat = 'Mouse'
     nl_module = 'conditions'
 
-    pulse: BoolProperty(
-        description=(
-            'ON: True until the button is released, '
-            'OFF: True when pressed, then False until pressed again'
-        ),
-        default=False,
-        update=update_tree_code)
-
     def init(self, context):
         NLConditionNode.init(self, context)
         self.outputs.new(NLConditionSocket.bl_idname, "If Moved")
-
-    def draw_buttons(self, context, layout):
-        layout.prop(
-            self,
-            "pulse",
-            text="Each Frame" if self.pulse else "Once",
-            toggle=True
-        )
 
     def get_netlogic_class_name(self):
         return "ULMouseMoved"
@@ -7550,15 +7432,9 @@ class NLMouseMovedCondition(NLConditionNode):
     def get_input_sockets_field_names(self):
         return ["mouse_button_code"]
 
-    def get_attributes(self):
-        return [
-            ("pulse", lambda: f'{self.pulse}')
-        ]
-
-
 _nodes.append(NLMouseMovedCondition)
 
-
+@pulsed_KeyOrButton_input()
 class NLMouseReleasedCondition(NLConditionNode):
     bl_idname = "NLMouseReleasedCondition"
     bl_label = "Button Up"
@@ -7567,26 +7443,10 @@ class NLMouseReleasedCondition(NLConditionNode):
     nl_subcat = 'Mouse'
     nl_module = 'conditions'
 
-    pulse: BoolProperty(
-        description=(
-            'ON: True until the button is released, '
-            'OFF: True when pressed, then False until pressed again'
-        ),
-        default=False,
-        update=update_tree_code)
-
     def init(self, context):
         NLConditionNode.init(self, context)
         self.inputs.new(NLMouseButtonSocket.bl_idname, "")
         self.outputs.new(NLConditionSocket.bl_idname, "If Released")
-
-    def draw_buttons(self, context, layout):
-        layout.prop(
-            self,
-            "pulse",
-            text="Each Frame" if self.pulse else "Once",
-            toggle=True
-        )
 
     def get_netlogic_class_name(self):
         return "ULMouseReleased"
@@ -7594,14 +7454,8 @@ class NLMouseReleasedCondition(NLConditionNode):
     def get_input_sockets_field_names(self):
         return ["mouse_button_code"]
 
-    def get_attributes(self):
-        return [
-            ("pulse", lambda: f'{self.pulse}')
-        ]
-
     def get_output_socket_varnames(self):
         return ['OUT']
-
 
 _nodes.append(NLMouseReleasedCondition)
 
@@ -7753,14 +7607,13 @@ class NLConditionMouseWheelMoved(NLConditionNode):
 
 _nodes.append(NLConditionMouseWheelMoved)
 
-
+@pulsed_KeyOrButton_input()
 class NLConditionCollisionNode(NLConditionNode):
     bl_idname = "NLConditionCollisionNode"
     bl_label = "Collision"
     nl_category = "Physics"
     nl_module = 'conditions'
-    pulse: BoolProperty(
-        update=update_tree_code)
+    pulse: BoolProperty(update=update_tree_code)
 
     def init(self, context):
         NLConditionNode.init(self, context)
@@ -7778,14 +7631,6 @@ class NLConditionCollisionNode(NLConditionNode):
         self.inputs[2].enabled = not self.inputs[1].value
         self.inputs[3].enabled = self.inputs[1].value
 
-    def draw_buttons(self, context, layout):
-        layout.prop(
-            self,
-            "pulse",
-            text="Each Frame" if self.pulse else "Once",
-            toggle=True
-        )
-
     def get_netlogic_class_name(self):
         return "ULCollision"
 
@@ -7794,12 +7639,6 @@ class NLConditionCollisionNode(NLConditionNode):
 
     def get_output_socket_varnames(self):
         return [OUTCELL, "TARGET", "OBJECTS", "POINT", "NORMAL"]
-
-    def get_attributes(self):
-        return [
-            ("pulse", lambda: f'{self.pulse}'),
-        ]
-
 
 _nodes.append(NLConditionCollisionNode)
 
