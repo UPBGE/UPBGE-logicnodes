@@ -4721,22 +4721,35 @@ class NLGetResolution(NLParameterNode):
 _nodes.append(NLGetResolution)
 
 
+def object_property_node(operator_items=None):
+    """Add props "mode" and optionally "operator" and draw_buttons for them"""
+    props = {
+        'mode': EnumProperty( name='Mode', default='GAME',
+            items=_enum_object_property_types, update=update_tree_code ),
+    }
+    if operator_items is None:
+        def draw_buttons(self, context, layout):
+            layout.prop(self, "mode", text="")
+    else:
+        props['operator']=EnumProperty( name='Operation',
+            items=_enum_math_operations, update=update_tree_code )
+        def draw_buttons(self, context, layout):
+            layout.prop(self, "mode", text="")
+            layout.prop(self, "operator", text="")
+    def _wrapper(cls):
+        cls.__annotations__.update(props)
+        cls.draw_buttons = draw_buttons
+        cls.nl_category = "Objects"
+        cls.nl_subcat = "Properties"
+        return cls
+    return _wrapper
+
+@object_property_node()
 class NLGameObjectPropertyParameterNode(NLParameterNode):
     bl_idname = "NLGameObjectPropertyParameterNode"
     bl_label = "Get Property"
     bl_icon = 'EXPORT'
-    nl_category = 'Objects'
-    nl_subcat = 'Properties'
     nl_module = 'parameters'
-    mode: EnumProperty(
-        name='Mode',
-        items=_enum_object_property_types,
-        default='GAME',
-        update=update_tree_code
-    )
-
-    def draw_buttons(self, context, layout):
-        layout.prop(self, "mode", text="")
 
     def init(self, context):
         NLParameterNode.init(self, context)
@@ -4955,23 +4968,12 @@ class NLGetMaterialNode(NLParameterNode):
 
 _nodes.append(NLGetMaterialNode)
 
-
+@object_property_node()
 class NLGameObjectHasPropertyParameterNode(NLParameterNode):
     bl_idname = "NLGameObjectHasPropertyParameterNode"
     bl_label = "Has Property"
     bl_icon = 'QUESTION'
-    nl_category = "Objects"
-    nl_subcat = 'Properties'
     nl_module = 'conditions'
-    mode: EnumProperty(
-        name='Mode',
-        items=_enum_object_property_types,
-        default='GAME',
-        update=update_tree_code
-    )
-
-    def draw_buttons(self, context, layout):
-        layout.prop(self, "mode", text="")
 
     def init(self, context):
         NLParameterNode.init(self, context)
@@ -7642,29 +7644,12 @@ class NLConditionOnceNode(NLConditionNode):
 
 _nodes.append(NLConditionOnceNode)
 
-
+@object_property_node(_enum_logic_operators)
 class NLObjectPropertyOperator(NLConditionNode):
     bl_idname = "NLObjectPropertyOperator"
     bl_label = "Evaluate Property"
     bl_icon = 'CON_TRANSLIKE'
     nl_module = 'conditions'
-    nl_category = "Objects"
-    nl_subcat = 'Properties'
-    mode: EnumProperty(
-        name='Mode',
-        items=_enum_object_property_types,
-        default='GAME',
-        update=update_tree_code
-    )
-    operator: EnumProperty(
-        name='Operator',
-        items=_enum_logic_operators,
-        update=update_tree_code
-    )
-
-    def draw_buttons(self, context, layout):
-        layout.prop(self, "mode", text="")
-        layout.prop(self, "operator", text='')
 
     def init(self, context):
         NLConditionNode.init(self, context)
@@ -8618,23 +8603,12 @@ class LogicNodeSendNetworkMessage(NLActionNode):
 
 _nodes.append(LogicNodeSendNetworkMessage)
 
-
+@object_property_node()
 class NLSetGameObjectGamePropertyActionNode(NLActionNode):
     bl_idname = "NLSetGameObjectGamePropertyActionNode"
     bl_label = "Set Property"
     bl_icon = 'IMPORT'
-    nl_category = "Objects"
-    nl_subcat = 'Properties'
     nl_module = 'actions'
-    mode: EnumProperty(
-        name='Mode',
-        items=_enum_object_property_types,
-        default='GAME',
-        update=update_tree_code
-    )
-
-    def draw_buttons(self, context, layout):
-        layout.prop(self, "mode", text="")
 
     def init(self, context):
         NLActionNode.init(self, context)
@@ -8980,23 +8954,12 @@ class NLPlayMaterialSequence(NLActionNode):
 
 _nodes.append(NLPlayMaterialSequence)
 
-
+@object_property_node()
 class NLToggleGameObjectGamePropertyActionNode(NLActionNode):
     bl_idname = "NLToggleGameObjectGamePropertyActionNode"
     bl_label = "Toggle Property"
     bl_icon = 'UV_SYNC_SELECT'
-    nl_category = "Objects"
-    nl_subcat = 'Properties'
     nl_module = 'actions'
-    mode: EnumProperty(
-        name='Mode',
-        items=_enum_object_property_types,
-        default='GAME',
-        update=update_tree_code
-    )
-
-    def draw_buttons(self, context, layout):
-        layout.prop(self, "mode", text="")
 
     def init(self, context):
         NLActionNode.init(self, context)
@@ -9025,7 +8988,7 @@ class NLToggleGameObjectGamePropertyActionNode(NLActionNode):
 
 _nodes.append(NLToggleGameObjectGamePropertyActionNode)
 
-
+@object_property_node(_enum_math_operations)
 class NLAddToGameObjectGamePropertyActionNode(NLActionNode):
     bl_idname = "NLAddToGameObjectGamePropertyActionNode"
     bl_label = "Modify Property"
@@ -9034,20 +8997,7 @@ class NLAddToGameObjectGamePropertyActionNode(NLActionNode):
     def get_netlogic_class_name(self):
         return "ULModifyProperty"
 
-    nl_category = "Objects"
-    nl_subcat = 'Properties'
     nl_module = 'actions'
-    mode: EnumProperty(
-        name='Mode',
-        items=_enum_object_property_types,
-        default='GAME',
-        update=update_tree_code
-    )
-    operator: EnumProperty(
-        name='Operation',
-        items=_enum_math_operations,
-        update=update_tree_code
-    )
 
     def init(self, context):
         NLActionNode.init(self, context)
@@ -9057,10 +9007,6 @@ class NLAddToGameObjectGamePropertyActionNode(NLActionNode):
         self.inputs[-1].ref_index = 1
         self.inputs.new(NLFloatFieldSocket.bl_idname, "Value")
         self.outputs.new(NLConditionSocket.bl_idname, "Done")
-
-    def draw_buttons(self, context, layout):
-        layout.prop(self, "mode", text="")
-        layout.prop(self, "operator", text="")
 
     def get_attributes(self):
         return [
@@ -9083,7 +9029,7 @@ class NLAddToGameObjectGamePropertyActionNode(NLActionNode):
 _nodes.append(NLAddToGameObjectGamePropertyActionNode)
 
 
-
+@object_property_node(_enum_math_operations)
 class NLClampedModifyProperty(NLActionNode):
     bl_idname = "NLClampedModifyProperty"
     bl_label = "Clamped Modify Property"
@@ -9092,20 +9038,7 @@ class NLClampedModifyProperty(NLActionNode):
     def get_netlogic_class_name(self):
         return "ULClampedModifyProperty"
 
-    nl_category = "Objects"
-    nl_subcat = 'Properties'
     nl_module = 'actions'
-    mode: EnumProperty(
-        name='Mode',
-        items=_enum_object_property_types,
-        default='GAME',
-        update=update_tree_code
-    )
-    operator: EnumProperty(
-        name='Operation',
-        items=_enum_math_operations,
-        update=update_tree_code
-    )
 
     def init(self, context):
         NLActionNode.init(self, context)
@@ -9116,10 +9049,6 @@ class NLClampedModifyProperty(NLActionNode):
         self.inputs.new(NLFloatFieldSocket.bl_idname, "Value")
         self.inputs.new(NLVec2FieldSocket.bl_idname, "Range")
         self.outputs.new(NLConditionSocket.bl_idname, "Done")
-
-    def draw_buttons(self, context, layout):
-        layout.prop(self, "mode", text="")
-        layout.prop(self, "operator", text="")
 
     def get_attributes(self):
         return [
@@ -9142,23 +9071,12 @@ class NLClampedModifyProperty(NLActionNode):
 
 _nodes.append(NLClampedModifyProperty)
 
-
+@object_property_node()
 class NLCopyPropertyFromObject(NLActionNode):
     bl_idname = "NLCopyPropertyFromObject"
     bl_label = "Copy From Object"
     bl_icon = 'PASTEDOWN'
-    nl_category = "Objects"
-    nl_subcat = 'Properties'
     nl_module = 'actions'
-    mode: EnumProperty(
-        name='Mode',
-        items=_enum_object_property_types,
-        default='GAME',
-        update=update_tree_code
-    )
-
-    def draw_buttons(self, context, layout):
-        layout.prop(self, "mode", text="")
 
     def init(self, context):
         NLActionNode.init(self, context)
@@ -9173,12 +9091,7 @@ class NLCopyPropertyFromObject(NLActionNode):
         return "ULCopyProperty"
 
     def get_input_sockets_field_names(self):
-        return [
-            "condition",
-            "from_object",
-            "to_object",
-            "property_name"
-        ]
+        return [ "condition", "from_object", "to_object", "property_name" ]
 
     def get_attributes(self):
         return [("mode", lambda: f'"{self.mode}"')]
