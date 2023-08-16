@@ -433,84 +433,38 @@ OUTCELL = "__standard_logic_cell_value__"
 
 
 def filter_materials(self, item):
-    if item.is_grease_pencil:
-        return False
-    return True
-
+    return not item.is_grease_pencil
 
 def filter_geometry_nodes(self, item):
-    if isinstance(item, bpy.types.GeometryNodeTree):
-        return True
-    return False
-
+    return isinstance(item, bpy.types.GeometryNodeTree)
 
 def filter_lights(self, item):
-    if (
-        isinstance(item.data, bpy.types.AreaLight)
-        or isinstance(item.data, bpy.types.PointLight)
-        or isinstance(item.data, bpy.types.SpotLight)
-        or isinstance(item.data, bpy.types.SunLight)
-    ):
-        return True
-    return False
-
+    return isinstance(item.data, (bpy.types.AreaLight, bpy.types.PointLight,
+                                  bpy.types.SpotLight, bpy.types.SunLight))
 
 def filter_texts(self, item):
-    if (
-        item.name.startswith('nl_')
-    ):
-        return False
-    return True
-
+    return not item.name.startswith('nl_')
 
 def filter_navmesh(self, item):
-    if item.game.physics_type == 'NAVMESH':
-        return True
-    return False
-
+    return item.game.physics_type == 'NAVMESH'
 
 def filter_camera(self, item):
-    if isinstance(item.data, bpy.types.Camera):
-        return True
-    return False
-
+    return isinstance(item.data, bpy.types.Camera)
 
 def filter_speaker(self, item):
-    if isinstance(item.data, bpy.types.Speaker):
-        return True
-    return False
-
+    return isinstance(item.data, bpy.types.Speaker)
 
 def filter_armatures(self, item):
-    if (
-        isinstance(item.data, bpy.types.Armature)
-    ):
-        return True
-    return False
-
+    return isinstance(item.data, bpy.types.Armature)
 
 def filter_curves(self, item):
-    if (
-        isinstance(item.data, bpy.types.Curve)
-    ):
-        return True
-    return False
-
+    return isinstance(item.data, bpy.types.Curve)
 
 def filter_logic_trees(self, item):
-    if (
-        isinstance(item, bge_netlogic.ui.LogicNodeTree)
-    ):
-        return True
-    return False
-
+    return isinstance(item, bge_netlogic.ui.LogicNodeTree)
 
 def filter_node_groups(self, item):
-    if (
-        isinstance(item, bpy.types.ShaderNodeTree)
-    ):
-        return True
-    return False
+    return isinstance(item, bpy.types.ShaderNodeTree)
 
 
 def parse_field_value(value_type, value):
@@ -532,17 +486,14 @@ def parse_field_value(value_type, value):
         except ValueError:
             return "0.0"
 
-    if t == "STRING":
-        return '"{}"'.format(v)
-
-    if t == "FILE_PATH":
-        return '"{}"'.format(v)
-
     if t == "BOOLEAN":
         return v
 
+    if value_type in ("STRING", "FILE_PATH"):
+        return f'"{value}"'
+
     raise ValueError(
-        "Cannot parse enum {} type for NLValueFieldSocket".format(t)
+        f"Cannot parse enum {value_type} type for NLValueFieldSocket"
     )
 
 
