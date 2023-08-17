@@ -51,17 +51,16 @@ PYTHON_NODE_COLOR = utils.Color.RGBA(0.2, 0.2, 0.2, 1)[:-1]
 _sockets = []
 _nodes = []
 
-def simple_draw(prop_name="value"):
+def simple_draw(prop_name="value", hide_output=True, label=None):
     def draw(self, context, layout, node, text):
-        if self.is_linked or self.is_output:
+        if self.is_linked or (hide_output and self.is_output):
             layout.label(text=text)
         else:
-            layout.prop(self, prop_name, text=text)
+            layout.prop(self, prop_name, text=text if label is None else label)
     def _wrapper(cls):
         cls.draw = draw
         return cls
     return _wrapper
-
 
 _enum_local_axis = [
     ("0", "X Axis", "The Local X Axis [Integer Value 0]"),
@@ -868,7 +867,8 @@ class NLListItemSocket(bpy.types.NodeSocket, NLSocket):
     def draw(self, context, layout, node, text):
         row = layout.row(align=True)
         row.label(text=text)
-        row.operator(bge_netlogic.ops.NLRemoveListItemSocket.bl_idname, icon='X', text='')
+        row.operator(bge_netlogic.ops.NLRemoveListItemSocket.bl_idname,
+            icon='X', text='')
 
     def get_unlinked_value(self):
         return None
@@ -907,15 +907,9 @@ class NLCollisionMaskSocket(bpy.types.NodeSocket, NLSocket):
             col.scale_y = .8
             row = col.row(align=True)
             row2 = col.row(align=True)
-            idx = 0
-            while idx < 8:
-                row.prop(self, f'slot_{idx}', text='',
+            for idx in range(16):
+                (row if idx<8 else row2).prop(self, f'slot_{idx}', text='',
                          emboss=True, icon='BLANK1')
-                idx += 1
-            while idx < 16:
-                row2.prop(self, f'slot_{idx}', text='',
-                          emboss=True, icon='BLANK1')
-                idx += 1
 
     def get_unlinked_value(self):
         slots = [self.get(f'slot_{idx}', 1) * (2**idx) for idx in range(16)]
@@ -929,14 +923,9 @@ class NLLogicBrickSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLLogicBrickSocket"
     bl_label = "Property"
     nl_color = PARAMETER_SOCKET_COLOR
-    value: StringProperty(
-        update=update_tree_code
-    )
+    value: StringProperty( update=update_tree_code )
     ref_index: IntProperty()
-    use_custom: BoolProperty(
-        name='Free Edit',
-        update=update_tree_code
-    )
+    use_custom: BoolProperty( name='Free Edit', update=update_tree_code )
     brick_type: StringProperty(default='controllers')
 
     def draw(self, context, layout, node, text):
@@ -963,11 +952,10 @@ class NLLogicBrickSocket(bpy.types.NodeSocket, NLSocket):
                     row.prop(self, 'use_custom', text='', icon='GREASEPENCIL')
             if game_object or game_obj_socket.is_linked:
                 if not game_obj_socket.is_linked and not self.use_custom:
-                    game = game_object.game
                     col.prop_search(
                         self,
                         'value',
-                        game,
+                        game_object.game,
                         self.brick_type,
                         icon='NONE',
                         text=''
@@ -1142,12 +1130,12 @@ class NLGameObjectSocket(bpy.types.NodeSocket, NLSocket):
         if self.is_linked or self.is_output:
             layout.label(text=self.name)
         else:
+            col = layout.column(align=False)
+            row = col.row()
+            row.label(text=self.name)
+            if not scene_logic:
+                row.prop(self, 'use_owner', icon='USER', text='')
             if not self.use_owner or scene_logic:
-                col = layout.column(align=False)
-                row = col.row()
-                row.label(text=self.name)
-                if not scene_logic:
-                    row.prop(self, 'use_owner', icon='USER', text='')
                 col.prop_search(
                     self,
                     'value',
@@ -1156,10 +1144,6 @@ class NLGameObjectSocket(bpy.types.NodeSocket, NLSocket):
                     icon='NONE',
                     text=''
                 )
-            else:
-                row = layout.row()
-                row.label(text=self.name)
-                row.prop(self, 'use_owner', icon='USER', text='')
 
     def get_unlinked_value(self):
         if self.use_owner and not self.is_scene_logic():
@@ -1467,9 +1451,7 @@ class NLBoneConstraintSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLBoneConstraintSocket"
     bl_label = "Property"
     nl_color = PARAMETER_SOCKET_COLOR
-    value: StringProperty(
-        update=update_tree_code
-    )
+    value: StringProperty(update=update_tree_code)
     ref_index: IntProperty()
 
     def draw(self, context, layout, node, text):
@@ -1487,18 +1469,10 @@ class NLBoneConstraintSocket(bpy.types.NodeSocket, NLSocket):
                 armature = armature_socket.value
                 bone = armature.pose.bones[bone_socket.value]
             if self.name:
-                row = col.row()
-                row.label(text=self.name)
+                col.label(text=self.name)
             if bone and not armature_socket.use_owner:
                 if not bone_socket.is_linked and not armature_socket.is_linked:
-                    col.prop_search(
-                        self,
-                        'value',
-                        bone,
-                        'constraints',
-                        text=''
-                    )
-                    return
+                    col.prop_search(self, 'value', bone, 'constraints', text='')
             else:
                 col.prop(self, 'value', text='')
 
@@ -1598,7 +1572,10 @@ class _NLSocket_TreeNode(NLSocket):
             tree_socket = self.node.inputs[self.ref_index]
             tree = tree_socket.value
             col = layout.column(align=False)
-            if tree and not tree_socket.is_linked:
+            if tree_socket.is_linked:
+                col.label(text=text)
+                col.prop(self, 'value', text='')
+            elif tree:
                 col.prop_search(
                     self,
                     "value",
@@ -1606,11 +1583,8 @@ class _NLSocket_TreeNode(NLSocket):
                     'nodes',
                     text=''
                 )
-            elif tree_socket.is_linked:
-                col.label(text=text)
-                col.prop(self, 'value', text='')
             else:
-                col.label(text=self.name)
+                col.label(text=text)
 
     def get_unlinked_value(self):
         return '"{}"'.format(self.value)
@@ -1941,16 +1915,14 @@ class NLSoundFileSocket(bpy.types.NodeSocket, NLSocket):
             layout.label(text=text)
         else:
             col = layout.column()
-            row = col.row(align=True)
-            text = text if text else 'Sound'
-            row.label(text=text)
+            col.label(text=text if text else 'Sound')
             row2 = col.row(align=True)
             if self.use_path:
                 row2.prop(self, "filepath_value", text='')
             else:
                 row2.prop(self, "sound_value", text='')
-            row2.operator(
-                bge_netlogic.ops.NLLoadSoundOperator.bl_idname, icon='FILEBROWSER', text='')
+            row2.operator( bge_netlogic.ops.NLLoadSoundOperator.bl_idname,
+                icon='FILEBROWSER', text='')
 
     def get_unlinked_value(self):
         if not self.use_path and self.sound_value is None:
@@ -1983,12 +1955,11 @@ class NLImageSocket(bpy.types.NodeSocket, NLSocket):
         else:
             col = layout.column()
             if text:
-                row = col.row(align=True)
-                row.label(text=text)
+                col.label(text=text)
             row2 = col.row(align=True)
             row2.prop(self, "value", text='')
-            row2.operator(
-                bge_netlogic.ops.NLLoadImageOperator.bl_idname, icon='FILEBROWSER', text='')
+            row2.operator( bge_netlogic.ops.NLLoadImageOperator.bl_idname,
+                icon='FILEBROWSER', text='')
 
     def get_unlinked_value(self):
         if self.value is None:
@@ -2016,12 +1987,11 @@ class NLFontSocket(bpy.types.NodeSocket, NLSocket):
         else:
             col = layout.column()
             if text:
-                row = col.row(align=True)
-                row.label(text=text)
+                col.label(text=text)
             row2 = col.row(align=True)
             row2.prop(self, "value", text='')
-            row2.operator(
-                bge_netlogic.ops.NLLoadFontOperator.bl_idname, icon='FILEBROWSER', text='')
+            row2.operator( bge_netlogic.ops.NLLoadFontOperator.bl_idname,
+                icon='FILEBROWSER', text='')
 
     def get_unlinked_value(self):
         if self.value is None:
@@ -2051,8 +2021,7 @@ class NLGlobalCatSocket(bpy.types.NodeSocket, NLSocket):
         if self.is_linked or self.is_output:
             layout.label(text=text)
         else:
-            col = layout.column()
-            col.prop_search(
+            layout.prop_search(
                 self,
                 "value",
                 context.scene,
@@ -2083,13 +2052,12 @@ class NLGlobalPropSocket(bpy.types.NodeSocket, NLSocket):
         if self.is_linked or self.is_output:
             layout.label(text=text)
         else:
-            col = layout.column()
             ref_socket = self.node.inputs[self.ref_index]
             if ref_socket.is_linked:
-                col.prop(self, 'value', text='')
+                layout.prop(self, 'value', text='')
             else:
                 cat = context.scene.nl_global_categories[ref_socket.value]
-                col.prop_search(
+                layout.prop_search(
                     self,
                     "value",
                     cat,
@@ -2154,7 +2122,6 @@ class NLSocketAlphaFloat(bpy.types.NodeSocket, NLSocket):
             layout.label(text=text)
         else:
             layout.prop(self, "value", slider=True, text=text)
-        pass
 
     def get_unlinked_value(self):
         return "{}".format(self.value)
@@ -2209,15 +2176,11 @@ class NLQualitySocket(bpy.types.NodeSocket, NLSocket):
     )
 
     def draw(self, context, layout, node, text):
-        if self.is_linked or self.is_output:
+        if text:
+            layout = layout.column()
             layout.label(text=text)
-        else:
-            if text:
-                col = layout.column()
-                col.label(text=text)
-                col.prop(self, 'value', text='')
-            else:
-                layout.prop(self, "value", text='')
+        if not self.is_linked and not self.is_output:
+            layout.prop(self, "value", text='')
 
     def get_unlinked_value(self):
         return "'{}'".format(self.value)
@@ -2276,13 +2239,11 @@ class NLSocketLoopCount(bpy.types.NodeSocket, NLSocket):
         if self.is_linked or self.is_output:
             layout.label(text=text)
         else:
-            current_type = self.value_type
-            if (current_type == "INFINITE") or (current_type == "ONCE"):
+            if self.value_type in ("INFINITE", "ONCE"):
                 layout.label(text=text)
-                layout.prop(self, "value_type", text="")
             else:
                 layout.prop(self, "integer_editor", text="")
-                layout.prop(self, "value_type", text="")
+            layout.prop(self, "value_type", text="")
 
     def get_unlinked_value(self):
         current_type = self.value_type
@@ -2310,17 +2271,9 @@ class NLBooleanSocket(bpy.types.NodeSocket, NLSocket):
         if self.is_linked or self.is_output:
             layout.label(text=text)
         else:
-            label = text
-            status = self.value
-            if self.use_toggle:
-                if status:
-                    label = '{}: ON'.format(text)
-                else:
-                    label = '{}: OFF'.format(text)
-            if self.true_label and status:
-                label = self.true_label
-            if self.false_label and (not status):
-                label = self.false_label
+            toggle_label = f"{text}: {'ON' if self.value else 'OFF'}"
+            status_label = self.true_label if self.value else self.false_label
+            label = status_label or (toggle_label if self.use_toggle else text)
             layout.prop(self, "value", text=label, toggle=self.use_toggle)
 
     def get_unlinked_value(self):
@@ -2489,19 +2442,10 @@ class NLQuotedStringFieldSocket(bpy.types.NodeSocket, NLSocket):
     def draw(self, context, layout, node, text):
         if self.is_linked or self.is_output:
             layout.label(text=text)
-        elif not text:
-            layout.prop(self, "value", text='')
-        else:
-            if self.formatted:
-                col = layout.column()
-                row1 = col.row()
-                row1.label(text=text)
-                row2 = col.row()
-                row2.prop(self, 'value', text='')
-            else:
-                parts = layout.split(factor=.4)
-                parts.label(text=text)
-                parts.prop(self, "value", text='')
+        elif text:
+            layout=layout.column() if self.formatted else layout.split(factor=.4)
+            layout.label(text=text)
+        layout.prop(self, "value", text='')
 
     def get_unlinked_value(self):
         return '"{}"'.format(self.value)
@@ -2722,12 +2666,9 @@ class NLNumericFieldSocket(bpy.types.NodeSocket, NLSocket):
         else:
             split = layout.split(factor=0.4)
             split.label(text=text)
-            if self.value_type == "NONE":
-                split.prop(self, "value_type", text="")
-            else:
-                row = split.row(align=True)
-                row.prop(self, "value_type", text="")
-                row.prop(self, "value", text="")
+            split.prop(self, "value_type", text="")
+            if not self.value_type == "NONE":
+                split.prop(self, "value", text="")
 
 
 _sockets.append(NLNumericFieldSocket)
@@ -2819,14 +2760,9 @@ class NLSocketReadableMemberName(bpy.types.NodeSocket, NLSocket):
         if self.is_linked or self.is_output:
             layout.label(text=text)
         else:
+            layout.prop(self, "value_type", text="")
             if self.value_type == "CUSTOM":
-                row = layout.row(align=True)
-                row.prop(self, "value_type", text="")
-                row.prop(self, "value", text="")
-                pass
-            else:
-                layout.prop(self, "value_type", text="")
-
+                layout.prop(self, "value", text="")
 
 _sockets.append(NLSocketReadableMemberName)
 
@@ -2845,15 +2781,13 @@ class NLKeyboardKeySocket(bpy.types.NodeSocket, NLSocket):
         if self.is_linked or self.is_output:
             layout.label(text=text)
         else:
-            label = self.value
-            if not label:
-                label = "Press & Choose"
+            label = self.value if self.value else "Press & Choose"
             layout.operator("bge_netlogic.waitforkey", text=label)
 
 
 _sockets.append(NLKeyboardKeySocket)
 
-
+@simple_draw("value", label="")
 class NLMouseButtonSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLMouseButtonSocket"
     bl_label = "Mouse Button"
@@ -2867,16 +2801,9 @@ class NLMouseButtonSocket(bpy.types.NodeSocket, NLSocket):
     def get_unlinked_value(self):
         return self.value
 
-    def draw(self, context, layout, node, text):
-        if self.is_linked or self.is_output:
-            layout.label(text=text)
-        else:
-            layout.prop(self, "value", text="")
-
-
 _sockets.append(NLMouseButtonSocket)
 
-
+@simple_draw("value", label="")
 class NLVSyncSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLVSyncSocket"
     bl_label = "Vsync"
@@ -2888,13 +2815,6 @@ class NLVSyncSocket(bpy.types.NodeSocket, NLSocket):
 
     def get_unlinked_value(self):
         return self.value
-
-    def draw(self, context, layout, node, text):
-        if self.is_linked or self.is_output:
-            layout.label(text=text)
-        else:
-            layout.prop(self, "value", text="")
-
 
 _sockets.append(NLVSyncSocket)
 
@@ -3125,10 +3045,8 @@ class NLSocketVectorField(bpy.types.NodeSocket, NLSocket):
     )
 
     def draw(self, context, layout, node, text):
-        if self.is_linked:
-            layout.label(text=text)
-        else:
-            layout.label(text=text)
+        layout.label(text=text)
+        if not self.is_linked:
             layout.prop(self, "value", text="")
 
     def get_unlinked_value(self):
@@ -3152,10 +3070,8 @@ class NLOptionalSocketVectorField(bpy.types.NodeSocket, NLSocket):
     )
 
     def draw(self, context, layout, node, text):
-        if self.is_linked:
-            layout.label(text=text)
-        else:
-            layout.label(text=text)
+        layout.label(text=text)
+        if not self.is_linked:
             layout.prop(self, "value", text="")
 
     def get_unlinked_value(self):
@@ -3166,7 +3082,7 @@ class NLOptionalSocketVectorField(bpy.types.NodeSocket, NLSocket):
 
 _sockets.append(NLOptionalSocketVectorField)
 
-
+@simple_draw("value", hide_output=False)
 class NLSocketOptionalFilePath(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLSocketOptionalFilePath"
     bl_label = "File"
@@ -3179,12 +3095,6 @@ class NLSocketOptionalFilePath(bpy.types.NodeSocket, NLSocket):
         )
     )
 
-    def draw(self, context, layout, node, text):
-        if self.is_linked:
-            layout.label(text=text)
-        else:
-            layout.prop(self, "value", text=text)
-
     def get_unlinked_value(self):
         if not self.value:
             return "None"
@@ -3193,7 +3103,7 @@ class NLSocketOptionalFilePath(bpy.types.NodeSocket, NLSocket):
 
 _sockets.append(NLSocketOptionalFilePath)
 
-
+@simple_draw("value", hide_output=False, label="")
 class NLSocketMouseWheelDirection(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLSocketMouseWheelDirection"
     bl_label = "Mouse Wheel"
@@ -3203,12 +3113,6 @@ class NLSocketMouseWheelDirection(bpy.types.NodeSocket, NLSocket):
         items=_enum_mouse_wheel_direction,
         update=update_tree_code
     )
-
-    def draw(self, context, layout, node, text):
-        if self.is_linked:
-            layout.label(text=text)
-        else:
-            layout.prop(self, "value", text="")
 
     def get_unlinked_value(self):
         return self.value
@@ -3241,7 +3145,7 @@ class NLSocketDistanceModels(bpy.types.NodeSocket, NLSocket):
 
 _sockets.append(NLSocketDistanceModels)
 
-
+@simple_draw("value", hide_output=False, label="")
 class NLVectorMathSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLVectorMathSocket"
     bl_label = "Vector Math"
@@ -3252,19 +3156,13 @@ class NLVectorMathSocket(bpy.types.NodeSocket, NLSocket):
         update=update_tree_code
     )
 
-    def draw(self, context, layout, node, text):
-        if self.is_linked:
-            layout.label(text=text)
-        else:
-            layout.prop(self, "value", text="")
-
     def get_unlinked_value(self):
         return "'{}'".format(self.value)
 
 
 _sockets.append(NLVectorMathSocket)
 
-
+@simple_draw("value", hide_output=False, label="")
 class NLTypeCastSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLTypeCastSocket"
     bl_label = "Types"
@@ -3275,19 +3173,13 @@ class NLTypeCastSocket(bpy.types.NodeSocket, NLSocket):
         update=update_tree_code
     )
 
-    def draw(self, context, layout, node, text):
-        if self.is_linked:
-            layout.label(text=text)
-        else:
-            layout.prop(self, "value", text="")
-
     def get_unlinked_value(self):
         return "'{}'".format(self.value)
 
 
 _sockets.append(NLTypeCastSocket)
 
-
+@simple_draw("value", hide_output=False, label="")
 class NLConstraintTypeSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLConstraintTypeSocket"
     bl_label = "Constraint Type"
@@ -3297,12 +3189,6 @@ class NLConstraintTypeSocket(bpy.types.NodeSocket, NLSocket):
         items=_enum_constraint_types,
         update=update_tree_code
     )
-
-    def draw(self, context, layout, node, text):
-        if self.is_linked:
-            layout.label(text=text)
-        else:
-            layout.prop(self, "value", text="")
 
     def get_unlinked_value(self):
         return self.value
