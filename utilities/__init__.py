@@ -22,6 +22,10 @@ LOGIC_NODE_IDENTIFIER = 'NL__'
 OUTCELL = "__standard_logic_cell_value__"
 
 
+ERROR_MESSAGES = []
+WARNING_MESSAGES = []
+
+
 def set_compile_status(status):
     try:
         bpy.context.scene.logic_node_settings.tree_compiled = status
@@ -248,6 +252,18 @@ def warn(message):
     else:
         os.system('color')
         print(f'[Logic Nodes][{ansicol.YELLOW}WARNING{ansicol.END}] ' + message)
+
+
+def deprecate(node, tree):
+    if not hasattr(bpy.types.Scene, 'logic_node_settings'):
+        return
+    if not bpy.context or not bpy.context.scene:
+        return
+    if not bpy.context.scene.logic_node_settings.use_node_debug:
+        return
+    else:
+        os.system('color')
+        print(f"[Logic Nodes][{ansicol.YELLOW}WARNING{ansicol.END}] Node '{node.name}' in tree '{tree.name}' is deprecated and will be removed in a future release!")
 
 
 def success(message):

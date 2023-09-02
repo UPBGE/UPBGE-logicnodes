@@ -1,6 +1,6 @@
 from .conditionsocket import NodeSocketLogicCondition
 from .parametersocket import NodeSocketLogicParameter
-from .pseudoconditionsocket import NodeSocketLogicPseudoCondition
+from .boolcondition import NodeSocketLogicBoolCondition
 from .dictsocket import NodeSocketLogicDictionary
 from .uisocket import NodeSocketLogicUI
 from .listsocket import NodeSocketLogicList
@@ -66,6 +66,9 @@ from .colorrgbasocket import NodeSocketLogicColorRGBA
 from .vectorsocket import NodeSocketLogicVector
 from .axissocket import NodeSocketLogicAxis
 from .axissignedsocket import NodeSocketLogicAxisSigned
+from .matrixsocket import NodeSocketLogicMatrix
+
+from .deprecated import *
 
 
 # SetVSync: REPLACE
@@ -76,3 +79,5 @@ from .axissignedsocket import NodeSocketLogicAxisSigned
 
 # Typecast: REPLACE
 # Add Constraint: REPLACE
+
+# Cursor Behavior: REMOVED

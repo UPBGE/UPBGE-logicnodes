@@ -1,16 +1,27 @@
 from ...utilities import error
 from ...utilities import debug
+from ...utilities import deprecate
 from ...utilities import OUTCELL
-from ...ui import LogicNodeTree
+from ...utilities import ERROR_MESSAGES
+from ...utilities import WARNING_MESSAGES
+from ..nodetree import LogicNodeTree
 from bpy.types import NodeReroute
 import bpy
+
+_nodes = []
+
+
+def node_type(obj):
+    _nodes.append(obj)
+    return obj
 
 
 class LogicNode:
     bl_icon = 'DOT'
-    nl_separate = False
     nl_module = None
+    nl_nodetype = 'INV'
     search_tags = []
+    deprecated = False
 
     @classmethod
     def poll(cls, node_tree):
@@ -41,6 +52,11 @@ class LogicNode:
         for key, val in settings.items():
             setattr(ipt, key, val)
 
+    def add_output(self, cls, name, settings={}):
+        ipt = self.outputs.new(cls.bl_idname, name)
+        for key, val in settings.items():
+            setattr(ipt, key, val)
+
     def free(self):
         pass
 
@@ -57,6 +73,7 @@ class LogicNode:
         uids
     ):
         text = ''
+        global ERROR_MESSAGES
         for t in self.get_attributes():
             field_name = t[0]
             field_value = t[1]
@@ -70,7 +87,17 @@ class LogicNode:
                     cell_varname,
                     uids
                 )
-                self.mute = False
+                # self.mute = False
+            except IndexError as e:
+                error(
+                    f"Index error for node '{self.name}'. This normally happens when a node has sockets added or removed in an update. Try re-adding the node to resolve this issue."
+                )
+                # self.mute = True
+                ERROR_MESSAGES.append(f'{self.name}: Index Error. FIX: Delete and re-add node; issue might be a linked input node as well.')
+                self.use_custom_color = True
+                self.color = (1, 0, 0)
+            except AttributeError:
+                ERROR_MESSAGES.append(f'{self.name}: Attribute Error. Select a valid entity for this node.')
             except Exception as e:
                 error(
                     f'Error occured when writing sockets for {self.__class__} Node: {e}\n'
@@ -80,7 +107,10 @@ class LogicNode:
                     f'\tNode: {self.label if self.label else self.name}\n'
                     '---END ERROR'
                 )
-                self.mute = True
+                # self.mute = True
+                ERROR_MESSAGES.append(f'{self.name}: Unknown Error: {e}')
+                self.use_custom_color = True
+                self.color = (1, 0, 0)
         return text
 
     def write_socket_field_initialization(
@@ -90,7 +120,7 @@ class LogicNode:
         uids
     ):
         text = ''
-        input_names = self.get_input_sockets_field_names()
+        input_names = self.get_input_names()
         input_socket_index = self._index_of(socket, self.inputs)
         field_name = None
         if input_names:
@@ -123,12 +153,24 @@ class LogicNode:
     def get_import_module(self):
         return self.nl_module
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return None
 
     def get_field_name_for_socket(self, socket):
         debug("not implemented in ", self)
         raise NotImplementedError()
+
+    def check(self, tree):
+        if self.deprecated:
+            deprecate(self, tree)
+            global WARNING_MESSAGES
+            WARNING_MESSAGES.append(f"Deprecated Node: '{self.name}' in '{self.tree.name}'. Delete to avoid issues.")
+            self.use_custom_color = True
+            self.color = (.8, .6, 0)
+        for socket in self.inputs:
+            socket.check(tree)
+        for socket in self.outputs:
+            socket.check(tree)
 
     def get_netlogic_class_name(self):
         raise NotImplementedError()
@@ -168,10 +210,10 @@ class LogicNode:
             output_node.outputs
         )
 
-        if not isinstance(output_node, LogicNode):
-            raise Exception('No NLNode')
+        if not hasattr(output_node, 'nl_module'): # xxx: if not isinstance(output_node, LogicNode):
+            raise Exception(f'Not a LogicNode type: {output_node.bl_label}')
         output_node_varname = uids.get_varname_for_node(output_node)
-        output_map = output_node.get_output_socket_varnames()
+        output_map = output_node.get_output_names()
 
         if output_map:
             varname = output_map[output_socket_index]
@@ -182,8 +224,47 @@ class LogicNode:
         else:
             return output_node_varname
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return None
 
     def update(self):
         pass
+
+
+class LogicNodeConditionType(bpy.types.Node, LogicNode):
+    nl_nodetype = 'CON'
+
+    def init(self, context):
+        self.use_custom_color = (
+            bpy
+            .context
+            .scene
+            .logic_node_settings
+            .use_custom_node_color
+        )
+
+
+class LogicNodeParameterType(bpy.types.Node, LogicNode):
+    nl_nodetype = 'PAR'
+
+    def init(self, context):
+        self.use_custom_color = (
+            bpy
+            .context
+            .scene
+            .logic_node_settings
+            .use_custom_node_color
+        )
+
+
+class LogicNodeActionType(bpy.types.Node, LogicNode):
+    nl_nodetype = 'ACT'
+
+    def init(self, context):
+        self.use_custom_color = (
+            bpy
+            .context
+            .scene
+            .logic_node_settings
+            .use_custom_node_color
+        )

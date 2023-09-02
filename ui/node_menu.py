@@ -122,13 +122,16 @@ class MouseMenu(bpy.types.Menu):
         insertNode(layout, "NLMousePressedCondition", "Button Down")
         insertNode(layout, "NLMouseReleasedCondition", "Button Up")
         insertNode(layout, "NLConditionMousePressedOn", "Button Over")
-        insertNode(layout, "NLActionSetMouseCursorVisibility", "Cursor Visibility")
-        insertNode(layout, "NLActionMouseLookNode", "Mouse Look")
+        layout.separator()
         insertNode(layout, "NLMouseDataParameter", "Mouse Status")
         insertNode(layout, "NLMouseMovedCondition", "Moved")
         insertNode(layout, "NLConditionMouseTargetingNode", "Over")
+        layout.separator()
+        insertNode(layout, "NLActionSetMouseCursorVisibility", "Cursor Visibility")
         insertNode(layout, "NLActionSetMousePosition", "Set Position")
-        insertNode(layout, "NLConditionMouseWheelMoved", "Wheel")
+        # insertNode(layout, "NLConditionMouseWheelMoved", "Wheel")
+        layout.separator()
+        insertNode(layout, "NLActionMouseLookNode", "Mouse Look")
 
 
 @menu_item
@@ -138,9 +141,10 @@ class KeyboardMenu(bpy.types.Menu):
 
     def draw(self, context):
         layout = self.layout
-        insertNode(layout, "NLKeyboardActive", "Keyboard Active")
         insertNode(layout, "NLKeyPressedCondition", "Key Down")
         insertNode(layout, "NLKeyReleasedCondition", "Key Up")
+        insertNode(layout, "NLKeyboardActive", "Keyboard Active")
+        layout.separator()
         insertNode(layout, "NLParameterKeyboardKeyCode", "Key Code")
         insertNode(layout, "NLKeyLoggerAction", "Logger")
 
@@ -152,13 +156,15 @@ class GamepadMenu(bpy.types.Menu):
 
     def draw(self, context):
         layout = self.layout
-        insertNode(layout, "NLGamepadActive", "Gamepad Active")
         insertNode(layout, "NLGamepadButtonsCondition", "Button Down")
         insertNode(layout, "NLGamepadButtonUpCondition", "Button Up")
-        insertNode(layout, "NLGamepadLook", "Gamepad Look")
+        insertNode(layout, "NLGamepadActive", "Gamepad Active")
+        layout.separator()
         insertNode(layout, "NLGamepadSticksCondition", "Sticks")
         insertNode(layout, "NLGamepadTriggerCondition", "Trigger")
         insertNode(layout, "NLGamepadVibration", "Vibration")
+        layout.separator()
+        insertNode(layout, "NLGamepadLook", "Gamepad Look")
 
 
 @menu_item
@@ -671,7 +677,7 @@ class VectorMathMenu(bpy.types.Menu):
 
     def draw(self, context):
         layout = self.layout
-        insertNode(layout, "NLVectorAngle", "Angle")
+        # insertNode(layout, "NLVectorAngle", "Angle")
         insertNode(layout, "NLVectorAngleCheck", "Check Angle")
         insertNode(layout, "NLConditionDistanceCheck", "Compare Distance")
         insertNode(layout, "NLParameterAbsVector3Node", "Absolute Vector")
@@ -768,12 +774,13 @@ class TimeMenu(bpy.types.Menu):
 
     def draw(self, context):
         layout = self.layout
-        insertNode(layout, "NLActionTimeFilter", "Pulsify")
-        insertNode(layout, "NLActionTimeDelay", "Delay")
         insertNode(layout, "NLParameterTimeNode", "Time Data")
         insertNode(layout, "LogicNodeTimeFactor", "Delta Factor")
-        insertNode(layout, "NLActionTimeBarrier", "Barrier")
+        layout.separator()
+        insertNode(layout, "NLActionTimeDelay", "Delay")
         insertNode(layout, "NLConditionTimeElapsed", "Timer")
+        insertNode(layout, "NLActionTimeFilter", "Pulsify")
+        insertNode(layout, "NLActionTimeBarrier", "Barrier")
 
 
 @menu_item

@@ -7,7 +7,7 @@ from bpy.props import BoolProperty
 
 
 @socket_type
-class NodeSocketLogicPseudoCondition(NodeSocket, NodeSocketLogic):
+class NodeSocketLogicBoolCondition(NodeSocket, NodeSocketLogic):
     bl_idname = "NLPseudoConditionSocket"
     bl_label = "Condition"
     value: BoolProperty(

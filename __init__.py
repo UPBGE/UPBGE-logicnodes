@@ -6,6 +6,9 @@ import os
 import sys
 import time
 from .editor.sockets.socket import _sockets
+from .editor.nodes.node import _nodes
+from .editor.nodetree import LogicNodeTree
+from .ops.nodesearch import LOGICNODES_OT_node_search
 # from . import basicnodes
 from . import utilities as utils
 from . import audio
@@ -334,7 +337,7 @@ def _abs_path(*relative_path_components):
 
 
 #import modules and definitions
-utilities = _abs_import("utilities", _abs_path("utilities", "__init__.py"))
+# utilities = _abs_import("utilities", _abs_path("utilities", "__init__.py"))
 ops = _abs_import("ops", _abs_path("ops", "__init__.py"))
 ui = _abs_import("ui", _abs_path("ui", "__init__.py"))
 node_menu = _abs_import("node_menu", _abs_path("ui", "node_menu.py"))
@@ -388,7 +391,7 @@ def request_tree_code_writer_start(dummy):
     global RENAMING
     RENAMING = True
     for tree in bpy.data.node_groups:
-        if isinstance(tree, ui.LogicNodeTree):
+        if isinstance(tree, LogicNodeTree):
             if tree.name != tree.old_name:
                 tree.update_name(False)
     RENAMING = False
@@ -402,7 +405,7 @@ def _watch_tree_names(self, context):
     else:
         RENAMING = True
         for tree in bpy.data.node_groups:
-            if isinstance(tree, ui.LogicNodeTree):
+            if isinstance(tree, LogicNodeTree):
                 if tree.name != tree.old_name:
                     tree.update_name()
         RENAMING = False
@@ -422,7 +425,7 @@ for f in [
 
 def update_node_colors(self, context):
     for tree in bpy.data.node_groups:
-        if isinstance(tree, ui.LogicNodeTree):
+        if isinstance(tree, LogicNodeTree):
             for node in tree.nodes:
                 if isinstance(node, bpy.types.NodeFrame):
                     continue
@@ -430,7 +433,7 @@ def update_node_colors(self, context):
 
 
 class NLNodeTreeReference(bpy.types.PropertyGroup):
-    tree: bpy.props.PointerProperty(type=ui.LogicNodeTree)
+    tree: bpy.props.PointerProperty(type=LogicNodeTree)
     tree_name: bpy.props.StringProperty()
     tree_initial_status: bpy.props.BoolProperty()
 
@@ -441,7 +444,7 @@ class NLAddonSettings(bpy.types.PropertyGroup):
     )
     use_node_debug: bpy.props.BoolProperty(default=True)
     use_node_notify: bpy.props.BoolProperty(default=True)
-    use_reload_text: bpy.props.BoolProperty(default=False)
+    use_reload_text: bpy.props.BoolProperty(default=True)
     use_generate_on_open: bpy.props.BoolProperty(default=False)
     use_generate_all: bpy.props.BoolProperty(default=True)
     auto_compile: bpy.props.BoolProperty(default=False)
@@ -468,7 +471,7 @@ class NodeCategory():
 
     @classmethod
     def poll(cls, context):
-        enabled = (context.space_data.tree_type == ui.LogicNodeTree.bl_idname)
+        enabled = (context.space_data.tree_type == LogicNodeTree.bl_idname)
         return enabled
 
     def draw(self, item, layout, context, separate=False):
@@ -541,7 +544,7 @@ class LogicNodesAddonPreferences(bpy.types.AddonPreferences):
 
 basicnodes = _abs_import("basicnodes", _abs_path("basicnodes", "__init__.py"))
 _registered_classes = [
-    ui.LogicNodeTree,
+    LogicNodeTree,
     ops.NLInstallUplogicModuleOperator,
     ops.NLInstallFakeBGEModuleOperator,
     ops.NLSelectTreeByNameOperator,
@@ -583,13 +586,13 @@ _registered_classes = [
     ops.NLRemoveListItemSocket,
     ops.NLAddListItemSocket,
     ops.NLLoadFontOperator,
-    ops.NLNodeSearch,
+    LOGICNODES_OT_node_search,
     # ops.NLStartGameHere,
     NLNodeTreeReference
 ]
 
 _registered_classes.extend(_sockets)
-
+_registered_classes.extend(_nodes)
 
 _registered_classes.extend(basicnodes._nodes)
 

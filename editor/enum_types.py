@@ -4,15 +4,18 @@ _enum_local_axis = [
     ("2", "Z Axis", "The Local Z Axis [Integer Value 2]")
 ]
 
+
 _enum_look_axis = [
     ("0", "X Axis", "The Local X Axis [Integer Value 0]"),
     ("1", "Y Axis", "The Local Y Axis [Integer Value 1]")
 ]
 
+
 _enum_vector_types = [
     ("0", "Vector", "Vector XYZ"),
     ("1", "Euler", "Euler XYZ")
 ]
+
 
 _enum_local_oriented_axis = [
     ("0", "+X Axis", "The Local X Axis [Integer Value 0]"),
@@ -22,6 +25,7 @@ _enum_local_oriented_axis = [
     ("4", "-Y Axis", "The Local Y Axis [Integer Value 4]"),
     ("5", "-Z Axis", "The Local Z Axis [Integer Value 5]")
 ]
+
 
 _enum_mouse_wheel_direction = [
     ("1", "Scroll Up", "Mouse Wheel Scrolled Up [1]"),
@@ -35,8 +39,10 @@ _enum_vector_math_options = [
     ("length", "Length", "Length of A"),
     ("distance", "Distance", "Distance between A and B"),
     None,
+    # ("angle_signed", "Signed Angle", "The angle between 2 vectors with respect to direction"),
     ("dot", "Dot Product", "A dot B"),
-    ("faceforward", "Faceforward", "Orients a vector A to point away from a surface B as defined by its normal C. Returns A if A.dot(B) < 0 else -A"),
+    ("angle", "Angle", "The angle between 2 vectors"),
+    # ("faceforward", None, "Orients a vector A to point away from a surface B as defined by its normal C. Returns A if A.dot(B) < 0 else -A"),
     ("refract", "Refract", "For a given incident vector A, a surface normal B and ratio of indices of refraction, Ior, refract returns the refraction vector, R"),
     ("reflect", "Reflect", "Reflect A around the normal B. B doesn't need to be normalized"),
     ("project", "Project", "Project this vector onto another"),
@@ -152,6 +158,7 @@ _enum_field_value_types = [
     ("FILE_PATH", "File Path", 'Choose a file path')
 ]
 
+
 _enum_numeric_field_value_types = [
     ("NONE", "None", "The None value"),
     ("INTEGER", "Integer", "An Integer value"),
@@ -159,11 +166,13 @@ _enum_numeric_field_value_types = [
     ("EXPRESSION", "Expression", "A numeric expression")
 ]
 
+
 _enum_optional_float_value_types = [
     ("NONE", "None", "No value"),
     ("FLOAT", "Float", "A decimal value"),
     ("EXPRESSION", "Expression", "A numeric expression")
 ]
+
 
 _enum_vehicle_axis = [
     ("REAR", "Rear", "Apply to wheels without steering"),
@@ -193,42 +202,42 @@ _enum_loop_count_values = [
 
 
 _enum_readable_member_names = [
-    ("worldPosition", "Position (Global)", "The World Position of the object"),
-    ("localPosition", "Position (Local)", "The local position of the object"),
+    ("worldPosition", "World Position", "The World Position of the object"),
+    ("localPosition", "Local Position", "The local position of the object"),
     (
         "worldOrientation",
-        "Rotation (Global)",
+        "World Orientation",
         "The World Orientation of the object"
     ), (
         "localOrientation",
-        "Rotation (Local)",
+        "Local Orientation",
         "The local orientation of the object"
     ), (
         "worldLinearVelocity",
-        "Linear Velocity (Global)",
+        "World Linear Velocity",
         "The local linear velocity of the object"
     ), (
         "localLinearVelocity",
-        "Linear Velocity (Local)",
+        "Local Linear Velocity",
         "The local linear velocity of the object"
     ), (
         "worldAngularVelocity",
-        "Angular Velocity (Global)",
+        "World Angular Velocity",
         "The local angular velocity of the object"
     ), (
         "localAngularVelocity",
-        "Angular Velocity (Local)",
+        "Local Angular Velocity",
         "The local angular velocity of the object"
     ), (
         "worldTransform",
-        "Transform (Global)",
+        "World Transform",
         (
             'The World Transform of the '
             'object'
         )
     ), (
         "localTransform",
-        "Transform (Local)",
+        "Local Transform",
         (
             'The local transform of the '
             'object'
@@ -245,57 +254,75 @@ _enum_readable_member_names = [
     )
 ]
 
+
 _enum_writable_member_names = [
-    ("color", "Color", "The solid color of the object"),
-    ("worldPosition", "Position (Global)", "The World Position of the object"),
-    ("localPosition", "Position (Local)", "The local position of the object"),
+    ("worldPosition", "World Position", "The World Position of the object"),
+    ("localPosition", "Local Position", "The local position of the object"),
     (
         "worldOrientation",
-        "Rotation (Global)",
+        "World Orientation",
         "The World Orientation of the object"
     ), (
         "localOrientation",
-        "Rotation (Local)",
+        "Local Orientation",
         "The local orientation of the object"
     ), (
         "worldLinearVelocity",
-        "Linear Velocity (Global)",
+        "World Linear Velocity",
         "The local linear velocity of the object"
     ), (
         "localLinearVelocity",
-        "Linear Velocity (Local)",
+        "Local Linear Velocity",
         "The local linear velocity of the object"
     ), (
         "worldAngularVelocity",
-        "Angular Velocity (Global)",
-        "The local rotational velocity of the object"
+        "World Angular Velocity",
+        "The local angular velocity of the object"
     ), (
         "localAngularVelocity",
-        "Angular Velocity (Local)",
-        "The local rotational velocity of the object"
+        "Local Angular Velocity",
+        "The local angular velocity of the object"
     ), (
         "worldTransform",
-        "Transform (Global)",
+        "World Transform",
         (
             'The World Transform of the '
             'object'
         )
     ), (
         "localTransform",
-        "Transform (Local)",
+        "Local Transform",
         (
             'The local transform of the '
             'object'
         )
     ),
-    ("worldScale", "Scale", "The global scale of the object")
+    ("worldScale", "World Scale", "The global scale of the object")
 ]
+
+
+_enum_matrix_dimensions = [
+    ('1', '3x3', 'A 3x3 Matrix.'),
+    ('2', '4x4', 'A 4x4 Matrix.')
+]
+
 
 _enum_mouse_buttons = [
     ("bge.events.LEFTMOUSE", "Left Button", "Left Mouse Button"),
     ("bge.events.MIDDLEMOUSE", "Middle Button", "Middle Mouse Button"),
     ("bge.events.RIGHTMOUSE", "Right Button", "Right Mouse Button")
 ]
+
+
+_enum_euler_orders = [
+    ("XYZ", "XYZ", "XYZ Order"),
+    ("XZY", "XZY", "XZY Order"),
+    ("YXZ", "YXZ", "YXZ Order"),
+    ("YZX", "YZX", "YZX Order"),
+    ("ZXY", "ZXY", "ZXY Order"),
+    ("ZYX", "ZYX", "ZYX Order")
+]
+
 
 _enum_vsync_modes = [
     ("bge.render.VSYNC_OFF", "Off", "Disable Vsync"),
@@ -309,6 +336,7 @@ _enum_vsync_modes = [
         )
     )
 ]
+
 
 _enum_string_ops = [
     ("0", "Postfix", "Insert A after String"),
@@ -355,12 +383,14 @@ _enum_string_ops = [
     )
 ]
 
+
 _enum_quality_levels = [
-    ("LOW", "Low", "Set a lower quality to increase performance"),
-    ("MEDIUM", "Medium", "Set a medium quality for a balanced performance"),
-    ("HIGH", "High", "Set a high quality at the cost of performance"),
-    ("ULTRA", "Ultra", "Set a very high quality at the cost of performance")
+    ("0", "Low", "Set a lower quality to increase performance"),
+    ("1", "Medium", "Set a medium quality for a balanced performance"),
+    ("2", "High", "Set a high quality at the cost of performance"),
+    ("3", "Ultra", "Set a very high quality at the cost of performance")
 ]
+
 
 _enum_math_operations = [
     ("ADD", "Add", "Sum A and B"),
@@ -373,15 +403,18 @@ _enum_math_operations = [
     ("MATMUL", "Matrix Multiply", "Transform A by B")
 ]
 
+
 _enum_greater_less = [
     ("GREATER", "Greater", "Value greater than Threshold"),
     ("LESS", "Less", "Value less than Threshold")
 ]
 
+
 _enum_in_or_out = [
     ("INSIDE", "Within", "Value is within Range"),
     ("OUTSIDE", "Outside", "Value is outside Range")
 ]
+
 
 _enum_logic_operators = [
     ("0", "Equal", "A equals B"),
@@ -398,10 +431,12 @@ _enum_controller_stick_operators = [
     ("1", "Right Stick", "Right Stick Values")
 ]
 
+
 _enum_controller_trigger_operators = [
     ("0", "Left Trigger", "Left Trigger Values"),
     ("1", "Right Trigger", "Right Trigger Values")
 ]
+
 
 _enum_vrcontroller_trigger_operators = [
     ("0", "Left", "Left Controller Values"),
@@ -444,6 +479,7 @@ _enum_play_mode_values = [
     )
 ]
 
+
 _enum_blend_mode_values = [
     (
         "bge.logic.KX_ACTION_BLEND_BLEND",
@@ -453,11 +489,13 @@ _enum_blend_mode_values = [
     ("bge.logic.KX_ACTION_BLEND_ADD", "Add", "Adds the layer together")
 ]
 
+
 _enum_spawn_types = [
     ("Simple", "Simple", "Spawn an instance without behavior"),
     ("SimpleBullet", "Simple Bullet", "Spawn a bullet that travels linearly along its local +Y axis"),
     ("PhysicsBullet", "Physical Bullet", "Spawn a bullet that travels along a trajectory aimed at its local +Y axis")
 ]
+
 
 _serialize_types = [
     ("builtin", "Built-In", "Serialize Built-In data type (int, float, bool, dict, etc.)"),
@@ -476,4 +514,86 @@ _enum_msg_types = [
     ("WARNING", "Warning", "Will print the message in yellow (on-screen console)"),
     ("ERROR", "Error", "Will print the message in red (on-screen console)"),
     ("SUCCESS", "Success", "Will print the message in green (on-screen console)")
+]
+
+
+_enum_python_types = [
+    ("0", "Module", "Run a whole file"),
+    ("1", "Function", "Run a single function from a .py file")
+]
+
+
+_writeable_widget_attrs = [
+    ("show", "Visibility", "Visibility of Widget and its children"),#
+    ("bg_color", "Color", "Background color"),#
+    ("opacity", "Opacity", "Opacity"),#
+    ("pos", "Position", "Widget Position (0-1 if set to relative)"),#
+    ("size", "Size", "Widget Size (0-1 if set to relative)"),#
+    ("angle", "Angle", "Widget Angle in degrees"),#
+    ("width", "Width", "Widget Width (0-1 if set to relative)"),#
+    ("height", "Height", "Widget Height (0-1 if set to relative)"),#
+    ("use_clipping", "Clipping", "Cut off child widgets if they go over the edges"),#
+    ("halign", "X Align", "Positioning direction along the X axis (Left-Right)"),#
+    ("valign", "Y Align", "Positioning direction along the Y axis (Top-Bottom)"),#
+    None,
+    ("border_width", "Border Width", "Border draw width"),#
+    ("border_color", "Border Color", "Border draw color"),#
+    None,
+    ("orientation", "Orientation", "Child widget arrangement mode (BoxLayout only)"),#
+    ("spacing", "Spacing", "Pixels in between child widgets (BoxLayout only)"),#
+    None,
+    ("hover_color", "Hover Color", "Color for when the mouse is over widget (Button only)"),#
+    None,
+    ("text", "Text", "Text (Label only)"),#
+    ("font", "Font", "Font to use for this label (Label only)"),
+    ("font_color", "Font Color", "Font Color (Label only)"),#
+    ("font_size", "Font Size", "Font Size (Label only)"),#
+    ("font_opacity", "Font Opacity", "Font Opacity (Label Only)"),#
+    ("line_height", "Line Height", "Line Height as factor (1 = Letter Height) (Label only)"),#
+    ("text_halign", "Text X Align", "Text X Alignment (Label only)"),#
+    ("text_valign", "Text Y Align", "Text Y Alignment (Label only)"),#
+    ("wrap", "Word Wrap", "Use the size of this label to wrap text (Label only)"),#
+    ("shadow", "Use Shadow", "Draw a shadow under the text (Label only)"),#
+    ("shadow_offset", "Shadow Offset", "Offset for the shadow font (Label only)"),#
+    ("shadow_color", "Shadow Color", "Color for the shadow font (Label only)"),#
+    None,
+    ("texture", "Image", "Texture to use as image (Image only)"),
+    None,
+    ("icon", "Icon", "Icon (Sprite) position on sheet (Icon only)"),
+    ("rows", "Rows", "Rows in the Icon (Sprite) sheet (Icon only)"),
+    ("cols", "Columns", "Columns in the Icon (Sprite) sheet (Icon only)")
+]
+
+
+_ui_layout_types = [
+    ("FloatLayout", "Float Layout", "A Layout that places its child widgets independent of its own position"),
+    ("RelativeLayout", "Relative Layout", "A Layout that places its child widgets relative to its own position"),
+    ("BoxLayout", "Box Layout", "A Layout that automatically places widgets in either rows or columns")
+]
+
+
+_ui_boxlayout_types = [
+    ("vertical", "Vertical", "Arrange child widgets horizontally"),
+    ("horizontal", "Horizontal", "Arrange child widgets horizontally")
+]
+
+
+_ui_slider_types = [
+    ("0", "Simple", "A knob sliding along a thin bar"),
+    ("1", "Framed", "A knob sliding inside a frame"),
+    ("2", "Progress", "A frame filled with color corresponding to knob position")
+]
+
+
+_ui_halign_types = [
+    ("left", "Left", "Start positioning from the left side of the widget"),
+    ("center", "Center", "Use the position as horizontal center"),
+    ("right", "Right", "Start positioning from the right side of the widget")
+]
+
+
+_ui_valign_types = [
+    ("bottom", "Bottom", "Start positioning from the bottom side of the widget"),
+    ("center", "Center", "Use the position as vertical center"),
+    ("top", "Top", "Start positioning from the top side of the widget")
 ]

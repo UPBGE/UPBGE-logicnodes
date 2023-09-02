@@ -2,6 +2,7 @@ import math
 import bpy
 import bge_netlogic
 from bge_netlogic import utilities as utils
+from  bge_netlogic.utilities import ERROR_MESSAGES, WARNING_MESSAGES
 from ui import LogicNodeTree
 from bpy.props import StringProperty
 from bpy.props import BoolProperty
@@ -626,6 +627,7 @@ class NLNode(NetLogicType):
         uids
     ):
         text = ''
+        global ERROR_MESSAGES
         for t in self.get_attributes():
             field_name = t[0]
             field_value = t[1]
@@ -639,7 +641,15 @@ class NLNode(NetLogicType):
                     cell_varname,
                     uids
                 )
-                self.mute = False
+                # self.mute = False
+            except IndexError as e:
+                utils.error(
+                    f"Index error for node '{self.name}'. This normally happens when a node has sockets added or removed in an update. Try re-adding the node to resolve this issue."
+                )
+                # self.mute = True
+                ERROR_MESSAGES.append(f'{self.name}: Index Error. FIX: Delete and re-add node; issue might be a linked input node as well.')
+                self.use_custom_color = True
+                self.color = (1, 0, 0)
             except Exception as e:
                 utils.error(
                     f'Error occured when writing sockets for {self.__class__} Node: {e}\n'
@@ -649,7 +659,10 @@ class NLNode(NetLogicType):
                     f'\tNode: {self.label if self.label else self.name}\n'
                     '---END ERROR'
                 )
-                self.mute = True
+                # self.mute = True
+                ERROR_MESSAGES.append(f'{self.name}: Unknown Error: {e}')
+                self.use_custom_color = True
+                self.color = (1, 0, 0)
         return text
 
     def write_socket_field_initialization(
@@ -659,7 +672,7 @@ class NLNode(NetLogicType):
         uids
     ):
         text = ''
-        input_names = self.get_input_sockets_field_names()
+        input_names = self.get_input_names()
         input_socket_index = self._index_of(socket, self.inputs)
         field_name = None
         if input_names:
@@ -697,7 +710,7 @@ class NLNode(NetLogicType):
     def get_import_module(self):
         return self.nl_module
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return None
 
     def get_field_name_for_socket(self, socket):
@@ -742,10 +755,10 @@ class NLNode(NetLogicType):
             output_node.outputs
         )
 
-        if not isinstance(output_node, NLNode):
+        if not hasattr(output_node, 'nl_module'):
             raise Exception('No NLNode')
         output_node_varname = uids.get_varname_for_node(output_node)
-        output_map = output_node.get_output_socket_varnames()
+        output_map = output_node.get_output_names()
 
         if output_map:
             varname = output_map[output_socket_index]
@@ -756,7 +769,7 @@ class NLNode(NetLogicType):
         else:
             return output_node_varname
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return None
 
     def update(self):
@@ -772,8 +785,8 @@ class NodeSocketPseudoCondition(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLPseudoConditionSocket"
 
 
-class NLParameterSocket(bpy.types.NodeSocket, NLSocket):
-    bl_idname = "NLParameterSocket"
+class NLParameterSocket(bpy.types.NodeSocket):
+    bl_idname = 'NLParameterSocket'
 
 
 class NLDictSocket(bpy.types.NodeSocket, NLSocket):
@@ -804,13 +817,10 @@ class NLPythonSocket(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLPythonSocket"
 
 
-class NLActionSocket(bpy.types.NodeSocket, NLSocket):
-    bl_idname = "NLActionSocket"
-
-
 class NLAbstractNode(NLNode):
     bl_icon = 'DOT'
     nl_separate = False
+    deprecated = False
     search_tags = []
 
     @classmethod
@@ -828,12 +838,30 @@ class NLAbstractNode(NLNode):
         #         'Receiving Node not a Logic Node Type, skipping validation.'
         #     )
 
-    def add_input(self, cls, name, socket_id):
-        self.inputs.new(cls.bl_idname, name)
-        self.inputs[-1].socket_id = socket_id
+    def add_input(self, cls, name, settings={}):
+        ipt = self.inputs.new(cls.bl_idname, name)
+        for key, val in settings.items():
+            setattr(ipt, key, val)
+
+    def add_output(self, cls, name, settings={}):
+        ipt = self.outputs.new(cls.bl_idname, name)
+        for key, val in settings.items():
+            setattr(ipt, key, val)
 
     def free(self):
         pass
+
+    def check(self, tree):
+        if self.deprecated:
+            global WARNING_MESSAGES
+            utils.deprecate(self, tree)
+            WARNING_MESSAGES.append(f"Deprecated Node: '{self.name}' in '{tree.name}'. Delete to avoid issues.")
+            self.use_custom_color = True
+            self.color = (.8, .6, 0)
+        for socket in self.inputs:
+            socket.check(tree)
+        for socket in self.outputs:
+            socket.check(tree)
 
     def draw_buttons(self, context, layout):
         pass
@@ -851,10 +879,7 @@ class NLAbstractNode(NLNode):
 
 
 class NLConditionNode(bpy.types.Node, NLAbstractNode):
-
-    @classmethod
-    def poll(cls, node_tree):
-        return isinstance(node_tree, LogicNodeTree)
+    nl_nodetype = 'CON'
 
     def init(self, context):
         self.use_custom_color = (
@@ -868,10 +893,7 @@ class NLConditionNode(bpy.types.Node, NLAbstractNode):
 
 
 class NLActionNode(bpy.types.Node, NLAbstractNode):
-
-    @classmethod
-    def poll(cls, node_tree):
-        return isinstance(node_tree, LogicNodeTree)
+    nl_nodetype = 'ACT'
 
     def init(self, context):
         self.use_custom_color = (
@@ -885,10 +907,7 @@ class NLActionNode(bpy.types.Node, NLAbstractNode):
 
 
 class NLParameterNode(bpy.types.Node, NLAbstractNode):
-
-    @classmethod
-    def poll(cls, node_tree):
-        return isinstance(node_tree, LogicNodeTree)
+    nl_nodetype = 'PAR'
 
     def init(self, context):
         self.use_custom_color = (
@@ -991,7 +1010,7 @@ class NLSocketLogicTree(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLSocketLogicTree"
 
 
-class NLAnimationSocket(bpy.types.NodeSocket, NLSocket):
+class NodeSocketLogicAnimation(bpy.types.NodeSocket, NLSocket):
     bl_idname = "NLAnimationSocket"
 
 
@@ -1153,1049 +1172,6 @@ class NLBlendActionModeSocket(bpy.types.NodeSocket, NLSocket):
 # Parameters
 
 
-class NLParameterFindChildByNameNode(NLParameterNode):
-    bl_idname = "NLParameterFindChildByNameNode"
-    bl_label = "Get Child By Name"
-    bl_icon = 'COMMUNITY'
-    nl_category = "Objects"
-    nl_module = 'parameters'
-
-    def init(self, context):
-        NLParameterNode.init(self, context)
-        self.inputs.new(NLGameObjectSocket.bl_idname, "Parent")
-        self.inputs.new(NLGameObjectNameSocket.bl_idname, "Child")
-        self.outputs.new(NLGameObjectSocket.bl_idname, "Child")
-
-    def get_netlogic_class_name(self):
-        return "ULChildByName"
-
-    def get_input_sockets_field_names(self):
-        return ["from_parent", "child"]
-
-    def get_output_socket_varnames(self):
-        return ['CHILD']
-
-
-_nodes.append(NLParameterFindChildByNameNode)
-
-
-class NLParameterFindChildByIndexNode(NLParameterNode):
-    bl_idname = "NLParameterFindChildByIndexNode"
-    bl_label = "Get Child By Index"
-    bl_icon = 'COMMUNITY'
-    nl_category = "Objects"
-    nl_module = 'parameters'
-
-    def init(self, context):
-        NLParameterNode.init(self, context)
-        self.inputs.new(NLGameObjectSocket.bl_idname, "Parent")
-        self.inputs.new(NLIntegerFieldSocket.bl_idname, "Index")
-        self.outputs.new(NLGameObjectSocket.bl_idname, "Child")
-
-    def get_netlogic_class_name(self):
-        return "ULChildByIndex"
-
-    def get_input_sockets_field_names(self):
-        return ["from_parent", "index"]
-
-    def get_output_socket_varnames(self):
-        return ['CHILD']
-
-
-_nodes.append(NLParameterFindChildByIndexNode)
-
-
-class NLParameterGetAttribute(NLParameterNode):
-    bl_idname = "NLParameterGetAttribute"
-    bl_label = "Get Object Attribute"
-    nl_category = "Python"
-    nl_module = 'parameters'
-
-    def init(self, context):
-        NLParameterNode.init(self, context)
-        self.inputs.new(NLPythonSocket.bl_idname, "Object Instance")
-        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Attribute")
-        self.outputs.new(NLParameterSocket.bl_idname, "Value")
-
-    def get_netlogic_class_name(self):
-        return "ULGetPyInstanceAttr"
-
-    def get_input_sockets_field_names(self):
-        return ['instance', 'attr']
-
-    def get_output_socket_varnames(self):
-        return ['OUT']
-
-
-_nodes.append(NLParameterGetAttribute)
-
-
-class NLGetVRControllerValues(NLParameterNode):
-    bl_idname = "NLGetVRControllerValues"
-    bl_label = "VR Controller"
-    nl_category = "Input"
-    nl_subcat = 'VR'
-    nl_module = 'parameters'
-    index: EnumProperty(
-        name='Controller',
-        items=_enum_vrcontroller_trigger_operators,
-        default='0',
-        update=update_draw
-    )
-
-    def draw_buttons(self, context, layout):
-        layout.prop(self, "index", text="")
-
-    def init(self, context):
-        NLParameterNode.init(self, context)
-        self.outputs.new(NLVec3FieldSocket.bl_idname, "Position")
-        self.outputs.new(NLVec3FieldSocket.bl_idname, "Orientation")
-        self.outputs.new(NLVec3FieldSocket.bl_idname, "Aim Position")
-        self.outputs.new(NLVec3FieldSocket.bl_idname, "Aim Orientation")
-        self.outputs.new(NLVec2FieldSocket.bl_idname, "Thumbstick")
-        self.outputs.new(NLFloatFieldSocket.bl_idname, "Trigger")
-
-    def get_netlogic_class_name(self):
-        return "ULGetVRControllerValues"
-
-    def get_attributes(self):
-        return [("index", lambda: f'{self.index}')]
-
-    def get_output_socket_varnames(self):
-        return ['POS', 'ORI', 'APOS', 'AORI', 'STICK', 'TRIGGER']
-
-
-_nodes.append(NLGetVRControllerValues)
-
-
-class NLGetVRHeadsetValues(NLParameterNode):
-    bl_idname = "NLGetVRHeadsetValues"
-    bl_label = "VR Headset"
-    nl_category = "Input"
-    nl_subcat = 'VR'
-    nl_module = 'parameters'
-
-    def init(self, context):
-        NLParameterNode.init(self, context)
-        self.outputs.new(NLVec3FieldSocket.bl_idname, "Position")
-        self.outputs.new(NLVec3FieldSocket.bl_idname, "Orientation")
-
-    def get_netlogic_class_name(self):
-        return "ULGetVRHeadsetValues"
-
-    def get_output_socket_varnames(self):
-        return ['POS', 'ORI']
-
-
-_nodes.append(NLGetVRHeadsetValues)
-
-
-class NLGetScene(NLParameterNode):
-    bl_idname = "NLGetScene"
-    bl_label = "Get Scene"
-    nl_category = "Scene"
-    nl_module = 'parameters'
-
-    def init(self, context):
-        NLParameterNode.init(self, context)
-        self.outputs.new(NLSceneSocket.bl_idname, "Scene")
-
-    def get_netlogic_class_name(self):
-        return "ULGetScene"
-
-    def get_output_socket_varnames(self):
-        return ['OUT']
-
-
-_nodes.append(NLGetScene)
-
-
-class NLParameterGetTimeScale(NLParameterNode):
-    bl_idname = "NLParameterGetTimeScale"
-    bl_label = "Get Timescale"
-    nl_category = "Scene"
-    nl_module = 'parameters'
-
-    def init(self, context):
-        NLParameterNode.init(self, context)
-        self.outputs.new(NLParameterSocket.bl_idname, "Timescale")
-
-    def get_netlogic_class_name(self):
-        return "ULGetTimeScale"
-
-    def get_output_socket_varnames(self):
-        return ['OUT']
-
-
-_nodes.append(NLParameterGetTimeScale)
-
-
-class NLParameterScreenPosition(NLParameterNode):
-    bl_idname = "NLParameterScreenPosition"
-    bl_label = "Screen Position"
-    nl_category = "Scene"
-    nl_subcat = 'Camera'
-    nl_module = 'parameters'
-
-    def init(self, context):
-        NLParameterNode.init(self, context)
-        self.inputs.new(NLGameObjectSocket.bl_idname, "Object / Vector 3")
-        self.inputs.new(NLCameraSocket.bl_idname, "Camera")
-        self.outputs.new(NLVec2FieldSocket.bl_idname, "Screen X")
-
-    def get_netlogic_class_name(self):
-        return "ULScreenPosition"
-
-    def get_input_sockets_field_names(self):
-        return ["game_object", "camera"]
-
-    def get_output_socket_varnames(self):
-        return ["OUT"]
-
-
-_nodes.append(NLParameterScreenPosition)
-
-
-class NLParameterWorldPosition(NLParameterNode):
-    bl_idname = "NLParameterWorldPosition"
-    bl_label = "World Position"
-    nl_category = "Scene"
-    nl_subcat = 'Camera'
-    nl_module = 'parameters'
-
-    def init(self, context):
-        NLParameterNode.init(self, context)
-        self.inputs.new(NLCameraSocket.bl_idname, "Camera")
-        self.inputs.new(NLFloatFieldSocket.bl_idname, "Screen X")
-        self.inputs.new(NLFloatFieldSocket.bl_idname, "Screen Y")
-        self.inputs.new(NLFloatFieldSocket.bl_idname, "Depth")
-        self.outputs.new(NLVec3FieldSocket.bl_idname, "World Position")
-
-    def get_netlogic_class_name(self):
-        return "ULWorldPosition"
-
-    def get_input_sockets_field_names(self):
-        return ["camera", "screen_x", "screen_y", "world_z"]
-
-    def get_output_socket_varnames(self):
-        return ["OUT"]
-
-
-_nodes.append(NLParameterWorldPosition)
-
-
-class NLCursorBehavior(NLActionNode):
-    bl_idname = "NLCursorBehavior"
-    bl_label = "Cursor Behaviour"
-    nl_category = "Scene"
-    nl_module = 'actions'
-
-    def init(self, context):
-        NLActionNode.init(self, context)
-        self.inputs.new(NodeSocketPseudoCondition.bl_idname, "Condition")
-        self.inputs.new(NLGameObjectSocket.bl_idname, "Cursor")
-        self.inputs.new(NLFloatFieldSocket.bl_idname, "Distance")
-        self.outputs.new(NLConditionSocket.bl_idname, "Done")
-
-    def get_netlogic_class_name(self):
-        return "ULCursorBehavior"
-
-    def get_output_socket_varnames(self):
-        return ["OUT"]
-
-    def get_input_sockets_field_names(self):
-        return ["condition", "cursor_object", "world_z"]
-
-
-_nodes.append(NLCursorBehavior)
-
-
-class LogicNodeSetCustomCursor(NLActionNode):
-    bl_idname = "LogicNodeSetCustomCursor"
-    bl_label = "Set Custom Cursor"
-    nl_category = "UI"
-    nl_module = 'actions'
-
-    def init(self, context):
-        NLActionNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, "Condition")
-        self.inputs[-1].description = 'Execution Condition'
-        self.inputs.new(NLImageSocket.bl_idname, "Texture")
-        self.inputs.new(NLVec2FieldSocket.bl_idname, "Size")
-        self.inputs[-1].value_x = 30
-        self.inputs[-1].value_y = 30
-        self.outputs.new(NLConditionSocket.bl_idname, "Done")
-        self.outputs.new(NLUISocket.bl_idname, "Cursor")
-
-    def get_netlogic_class_name(self):
-        return "ULSetCustomCursor"
-
-    def get_output_socket_varnames(self):
-        return ["OUT", 'CURSOR']
-
-    def get_input_sockets_field_names(self):
-        return ["condition", "texture", "size"]
-
-
-_nodes.append(LogicNodeSetCustomCursor)
-
-
-class LogicNodeCreateUICanvas(NLActionNode):
-    bl_idname = "LogicNodeCreateUICanvas"
-    bl_label = "Create Canvas"
-    nl_category = "UI"
-    nl_module = 'actions'
-
-    def init(self, context):
-        NLActionNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, "Condition")
-        self.outputs.new(NLConditionSocket.bl_idname, "Done")
-        self.outputs.new(NLUISocket.bl_idname, "Canvas")
-
-    def get_netlogic_class_name(self):
-        return "ULCreateUICanvas"
-
-    def get_output_socket_varnames(self):
-        return ["OUT", 'CANVAS']
-
-    def get_input_sockets_field_names(self):
-        return ["condition"]
-
-
-_nodes.append(LogicNodeCreateUICanvas)
-
-
-_writeable_widget_attrs = [
-    ("show", "Visibility", "Visibility of Widget and its children"),#
-    ("bg_color", "Color", "Background color"),#
-    ("opacity", "Opacity", "Opacity"),#
-    ("pos", "Position", "Widget Position (0-1 if set to relative)"),#
-    ("size", "Size", "Widget Size (0-1 if set to relative)"),#
-    ("angle", "Angle", "Widget Angle in degrees"),#
-    ("width", "Width", "Widget Width (0-1 if set to relative)"),#
-    ("height", "Height", "Widget Height (0-1 if set to relative)"),#
-    ("use_clipping", "Clipping", "Cut off child widgets if they go over the edges"),#
-    ("halign", "X Align", "Positioning direction along the X axis (Left-Right)"),#
-    ("valign", "Y Align", "Positioning direction along the Y axis (Top-Bottom)"),#
-    None,
-    ("border_width", "Border Width", "Border draw width"),#
-    ("border_color", "Border Color", "Border draw color"),#
-    None,
-    ("orientation", "Orientation", "Child widget arrangement mode (BoxLayout only)"),#
-    ("spacing", "Spacing", "Pixels in between child widgets (BoxLayout only)"),#
-    None,
-    ("hover_color", "Hover Color", "Color for when the mouse is over widget (Button only)"),#
-    None,
-    ("text", "Text", "Text (Label only)"),#
-    ("font", "Font", "Font to use for this label (Label only)"),
-    ("font_color", "Font Color", "Font Color (Label only)"),#
-    ("font_size", "Font Size", "Font Size (Label only)"),#
-    ("font_opacity", "Font Opacity", "Font Opacity (Label Only)"),#
-    ("line_height", "Line Height", "Line Height as factor (1 = Letter Height) (Label only)"),#
-    ("text_halign", "Text X Align", "Text X Alignment (Label only)"),#
-    ("text_valign", "Text Y Align", "Text Y Alignment (Label only)"),#
-    ("wrap", "Word Wrap", "Use the size of this label to wrap text (Label only)"),#
-    ("shadow", "Use Shadow", "Draw a shadow under the text (Label only)"),#
-    ("shadow_offset", "Shadow Offset", "Offset for the shadow font (Label only)"),#
-    ("shadow_color", "Shadow Color", "Color for the shadow font (Label only)"),#
-    None,
-    ("texture", "Image", "Texture to use as image (Image only)"),
-    None,
-    ("icon", "Icon", "Icon (Sprite) position on sheet (Icon only)"),
-    ("rows", "Rows", "Rows in the Icon (Sprite) sheet (Icon only)"),
-    ("cols", "Columns", "Columns in the Icon (Sprite) sheet (Icon only)")
-]
-
-
-class LogicNodeSetUIWidgetAttr(NLActionNode):
-    bl_idname = "LogicNodeSetUIWidgetAttr"
-    bl_label = "Set Widget Attribute"
-    nl_category = "UI"
-    nl_module = 'actions'
-    widget_attr: EnumProperty(items=_writeable_widget_attrs, name='', update=update_draw)
-
-
-    def init(self, context):
-        NLActionNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, "Condition")
-        self.inputs.new(NLUISocket.bl_idname, "Widget")
-        self.inputs.new(NLBooleanSocket.bl_idname, "")
-        self.inputs[-1].enabled = False
-        self.inputs.new(NLColorAlphaSocket.bl_idname, "")
-        self.inputs[-1].enabled = False
-        self.inputs.new(NLSocketAlphaFloat.bl_idname, "")
-        self.inputs[-1].enabled = False
-        self.inputs.new(NLVec2FieldSocket.bl_idname, "")
-        self.inputs[-1].enabled = False
-        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "")
-        self.inputs[-1].enabled = False
-        self.inputs.new(NLIntegerFieldSocket.bl_idname, "")
-        self.inputs[-1].enabled = False
-        self.inputs.new(NLFloatFieldSocket.bl_idname, "")
-        self.inputs[-1].enabled = False
-        self.inputs.new(NLFontSocket.bl_idname, "")
-        self.inputs[-1].enabled = False
-        self.inputs.new(NLImageSocket.bl_idname, "")
-        self.inputs[-1].enabled = False
-        self.inputs.new(NLFloatAngleSocket.bl_idname, "")
-        self.inputs[-1].enabled = False
-        self.outputs.new(NLConditionSocket.bl_idname, "Done")
-
-    def get_attributes(self):
-        return [
-            ("widget_attr", lambda: f'"{self.widget_attr}"')
-        ]
-
-    def draw_buttons(self, context, layout) -> None:
-        layout.prop(self, 'widget_attr', text='')
-
-    def update_draw(self):
-        for ipt in self.inputs:
-            ipt.enabled = False
-        self.inputs[0].enabled = True
-        self.inputs[1].enabled = True
-        if self.widget_attr in ['show', 'use_clipping', 'wrap', 'shadow']:
-            self.inputs[2].enabled = True
-        elif self.widget_attr in ['bg_color', 'border_color', 'shadow_color', 'font_color', 'hover_color']:
-            self.inputs[3].enabled = True
-        elif self.widget_attr in ['opacity', 'font_opacity']:
-            self.inputs[4].enabled = True
-        elif self.widget_attr in ['pos', 'size', 'shadow_offset']:
-            self.inputs[5].enabled = True
-        elif self.widget_attr in ['halign', 'valign', 'text', 'text_halign', 'text_valign', 'orientation']:
-            self.inputs[6].enabled = True
-        elif self.widget_attr in ['spacing', 'font_size', 'icon', 'rows', 'cols', 'border_width']:
-            self.inputs[7].enabled = True
-        elif self.widget_attr in ['width', 'height', 'line_height']:
-            self.inputs[8].enabled = True
-        elif self.widget_attr in ['font']:
-            self.inputs[9].enabled = True
-        elif self.widget_attr in ['texture']:
-            self.inputs[10].enabled = True
-        elif self.widget_attr in ['angle']:
-            self.inputs[11].enabled = True
-
-    def get_netlogic_class_name(self):
-        return "ULSetUIWidgetAttr"
-
-    def get_output_socket_varnames(self):
-        return ["OUT"]
-
-    def get_input_sockets_field_names(self):
-        return [
-            "condition",
-            'widget',
-            'bool_value',
-            'color_value',
-            'alpha_value',
-            'vec2_value',
-            'str_value',
-            'int_value',
-            'float_value',
-            'font_value',
-            'img_value',
-            'angle_value'
-        ]
-
-
-_nodes.append(LogicNodeSetUIWidgetAttr)
-
-
-class LogicNodeGetUIWidgetAttr(NLActionNode):
-    bl_idname = "LogicNodeGetUIWidgetAttr"
-    bl_label = "Get Widget Attribute"
-    nl_category = "UI"
-    nl_module = 'parameters'
-    widget_attr: EnumProperty(items=_writeable_widget_attrs, name='', update=update_draw)
-
-
-    def init(self, context):
-        NLActionNode.init(self, context)
-        self.inputs.new(NLUISocket.bl_idname, "Widget")
-        self.outputs.new(NLBooleanSocket.bl_idname, "")
-        self.outputs[-1].enabled = False
-        self.outputs.new(NLColorAlphaSocket.bl_idname, "")
-        self.outputs[-1].enabled = False
-        self.outputs.new(NLSocketAlphaFloat.bl_idname, "")
-        self.outputs[-1].enabled = False
-        self.outputs.new(NLVec2FieldSocket.bl_idname, "")
-        self.outputs[-1].enabled = False
-        self.outputs.new(NLQuotedStringFieldSocket.bl_idname, "")
-        self.outputs[-1].enabled = False
-        self.outputs.new(NLIntegerFieldSocket.bl_idname, "")
-        self.outputs[-1].enabled = False
-        self.outputs.new(NLFloatFieldSocket.bl_idname, "")
-        self.outputs[-1].enabled = False
-        self.outputs.new(NLFontSocket.bl_idname, "")
-        self.outputs[-1].enabled = False
-        self.outputs.new(NLImageSocket.bl_idname, "")
-        self.outputs[-1].enabled = False
-
-    def get_attributes(self):
-        return [
-            ("widget_attr", lambda: f'"{self.widget_attr}"')
-        ]
-
-    def draw_buttons(self, context, layout) -> None:
-        layout.prop(self, 'widget_attr', text='')
-
-    def update_draw(self):
-        for ipt in self.outputs:
-            ipt.enabled = False
-        if self.widget_attr in ['show', 'use_clipping', 'wrap', 'shadow']:
-            self.outputs[0].enabled = True
-        elif self.widget_attr in ['color', 'border_color', 'shadow_color', 'font_color', 'hover_color']:
-            self.outputs[1].enabled = True
-        elif self.widget_attr in ['opacity', 'font_opacity']:
-            self.outputs[2].enabled = True
-        elif self.widget_attr in ['pos', 'size', 'shadow_offset']:
-            self.outputs[3].enabled = True
-        elif self.widget_attr in ['halign', 'valign', 'text', 'text_halign', 'text_valign', 'orientation']:
-            self.outputs[4].enabled = True
-        elif self.widget_attr in ['spacing', 'font_size', 'icon', 'rows', 'cols', 'border_width']:
-            self.outputs[5].enabled = True
-        elif self.widget_attr in ['width', 'height', 'line_height']:
-            self.outputs[6].enabled = True
-        elif self.widget_attr in ['font']:
-            self.outputs[7].enabled = True
-        elif self.widget_attr in ['texture']:
-            self.outputs[8].enabled = True
-
-    def get_netlogic_class_name(self):
-        return "ULGetUIWidgetAttr"
-
-    def get_output_socket_varnames(self):
-        return ['BOOL', 'COLOR', 'ALPHA', 'VEC2', 'STR', 'INT', 'FLOAT', 'FONT', 'IMG']
-
-    def get_input_sockets_field_names(self):
-        return [
-            'widget'
-        ]
-
-
-_nodes.append(LogicNodeGetUIWidgetAttr)
-
-
-class LogicNodeAddUIWidget(NLActionNode):
-    bl_idname = "LogicNodeAddUIWidget"
-    bl_label = "Add Widget"
-    nl_category = "UI"
-    nl_module = 'actions'
-
-    def init(self, context):
-        NLActionNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, "Condition")
-        self.inputs.new(NLUISocket.bl_idname, "Parent")
-        self.inputs.new(NLUISocket.bl_idname, "Widget")
-        self.outputs.new(NLConditionSocket.bl_idname, "Done")
-
-    def get_netlogic_class_name(self):
-        return "ULAddUIWidget"
-
-    def get_output_socket_varnames(self):
-        return ["OUT"]
-
-    def get_input_sockets_field_names(self):
-        return ["condition", 'parent_widget', 'child_widget']
-
-
-_nodes.append(LogicNodeAddUIWidget)
-
-
-_ui_layout_types = [
-    ("FloatLayout", "Float Layout", "A Layout that places its child widgets independent of its own position"),
-    ("RelativeLayout", "Relative Layout", "A Layout that places its child widgets relative to its own position"),
-    ("BoxLayout", "Box Layout", "A Layout that automatically places widgets in either rows or columns")
-]
-
-_ui_boxlayout_types = [
-    ("vertical", "Vertical", "Arrange child widgets horizontally"),
-    ("horizontal", "Horizontal", "Arrange child widgets horizontally")
-]
-
-_ui_slider_types = [
-    ("0", "Simple", "A knob sliding along a thin bar"),
-    ("1", "Framed", "A knob sliding inside a frame"),
-    ("2", "Progress", "A frame filled with color corresponding to knob position")
-]
-
-_ui_halign_types = [
-    ("left", "Left", "Start positioning from the left side of the widget"),
-    ("center", "Center", "Use the position as horizontal center"),
-    ("right", "Right", "Start positioning from the right side of the widget")
-]
-
-_ui_valign_types = [
-    ("bottom", "Bottom", "Start positioning from the bottom side of the widget"),
-    ("center", "Center", "Use the position as vertical center"),
-    ("top", "Top", "Start positioning from the top side of the widget")
-]
-
-
-class LogicNodeCreateUILayout(NLActionNode):
-    bl_idname = "LogicNodeCreateUILayout"
-    bl_label = "Create Layout"
-    nl_subcat = 'Widgets'
-    nl_category = "UI"
-    nl_module = 'actions'
-    layout_type: EnumProperty(items=_ui_layout_types, name='Layout Type', update=update_draw)
-    boxlayout_type: EnumProperty(items=_ui_boxlayout_types, name='Orientation')
-    halign_type: EnumProperty(items=_ui_halign_types, name='X')
-    valign_type: EnumProperty(items=_ui_valign_types, name='Y')
-
-    def init(self, context):
-        NLActionNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, "Condition")
-        self.inputs.new(NLUISocket.bl_idname, "Parent")
-        self.inputs.new(NLBooleanSocket.bl_idname, "Relative Position")
-        self.inputs.new(NLVec2FieldSocket.bl_idname, "")
-        self.inputs.new(NLBooleanSocket.bl_idname, "Relative Size")
-        self.inputs.new(NLVec2FieldSocket.bl_idname, "")
-        self.inputs[-1].value_x = 100
-        self.inputs[-1].value_y = 100
-        self.inputs.new(NLFloatAngleSocket.bl_idname, "Angle")
-        self.inputs.new(NLColorAlphaSocket.bl_idname, "Color")
-        self.inputs[-1].value = [0, 0, 0, 0]
-        self.inputs.new(NLIntegerFieldSocket.bl_idname, "Border Width")
-        self.inputs[-1].value = 1
-        self.inputs.new(NLColorAlphaSocket.bl_idname, "Border Color")
-        self.inputs[-1].value = [0, 0, 0, 0]
-        self.inputs.new(NLFloatFieldSocket.bl_idname, "Spacing")
-        self.outputs.new(NLConditionSocket.bl_idname, "Done")
-        self.outputs.new(NLUISocket.bl_idname, "Layout")
-
-    def update_draw(self):
-        self.inputs[10].enabled = (self.layout_type == 'BoxLayout')
-
-    def draw_buttons(self, context, layout) -> None:
-        layout.prop(self, 'layout_type', text='')
-        if self.layout_type == 'BoxLayout':
-            layout.prop(self, 'boxlayout_type', text='')
-        layout.prop(self, 'halign_type', text='X')
-        layout.prop(self, 'valign_type', text='Y')
-
-    def get_netlogic_class_name(self):
-        return "ULCreateUILayout"
-
-    def get_output_socket_varnames(self):
-        return ["OUT", 'WIDGET']
-
-    def get_attributes(self):
-        return [
-            ("layout_type", lambda: f'"{self.layout_type}"'),
-            ("boxlayout_type", lambda: f'"{self.boxlayout_type}"'),
-            ("halign_type", lambda: f'"{self.halign_type}"'),
-            ("valign_type", lambda: f'"{self.valign_type}"')
-        ]
-
-    def get_input_sockets_field_names(self):
-        return [
-            "condition",
-            'parent',
-            'rel_pos',
-            "pos",
-            "rel_size",
-            "size",
-            "angle",
-            "color",
-            "border_width",
-            "border_color",
-            'spacing'
-        ]
-
-
-_nodes.append(LogicNodeCreateUILayout)
-
-
-class LogicNodeCreateUIButton(NLActionNode):
-    bl_idname = "LogicNodeCreateUIButton"
-    bl_label = "Create Button"
-    nl_category = "UI"
-    nl_subcat = 'Widgets'
-    nl_module = 'actions'
-    halign_type: EnumProperty(items=_ui_halign_types, name='X')
-    valign_type: EnumProperty(items=_ui_valign_types, name='Y')
-    text_halign_type: EnumProperty(items=_ui_halign_types, name='Text X', default='center')
-    text_valign_type: EnumProperty(items=_ui_valign_types, name='Text Y', default='center')
-
-    def init(self, context):
-        NLActionNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, "Condition")
-        self.inputs.new(NLUISocket.bl_idname, "Parent")
-        self.inputs.new(NLBooleanSocket.bl_idname, "Relative Position")
-        self.inputs.new(NLVec2FieldSocket.bl_idname, "")
-        self.inputs.new(NLBooleanSocket.bl_idname, "Relative Size")
-        self.inputs.new(NLVec2FieldSocket.bl_idname, "")
-        self.inputs[-1].value_x = 100
-        self.inputs[-1].value_y = 100
-        self.inputs.new(NLFloatAngleSocket.bl_idname, "Angle")
-        self.inputs.new(NLColorAlphaSocket.bl_idname, "Color")
-        self.inputs[-1].value = [0, 0, 0, 0]
-        self.inputs.new(NLColorAlphaSocket.bl_idname, "Hover Color")
-        self.inputs[-1].value = [0, 0, 0, .5]
-        self.inputs.new(NLIntegerFieldSocket.bl_idname, "Border Width")
-        self.inputs[-1].value = 1
-        self.inputs.new(NLColorAlphaSocket.bl_idname, "Border Color")
-        self.inputs[-1].value = [0, 0, 0, 0]
-        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Text")
-        self.inputs.new(NLVec2FieldSocket.bl_idname, "Text Position")
-        self.inputs[-1].value_x = .5
-        self.inputs[-1].value_y = .5
-        self.inputs.new(NLFontSocket.bl_idname, "Font")
-        self.inputs.new(NLIntegerFieldSocket.bl_idname, "Font Size")
-        self.inputs[-1].value = 12
-        self.inputs.new(NLFloatFieldSocket.bl_idname, "Line Height")
-        self.inputs[-1].value = 1.5
-        self.inputs.new(NLColorAlphaSocket.bl_idname, "Font Color")
-        self.inputs[-1].value = [1, 1, 1, 1]
-        self.outputs.new(NLConditionSocket.bl_idname, "Done")
-        self.outputs.new(NLUISocket.bl_idname, "Button")
-        self.outputs.new(NLConditionSocket.bl_idname, "On Click")
-        self.outputs.new(NLConditionSocket.bl_idname, "On Hover")
-        self.outputs.new(NLConditionSocket.bl_idname, "On Release")
-
-    def update_draw(self):
-        has_text = True if self.inputs[11].value else False
-        for ipt in [12, 13, 14, 15, 16]:
-            self.inputs[ipt].enabled = has_text
-
-    def draw_buttons(self, context, layout) -> None:
-        layout.prop(self, 'halign_type', text='X')
-        layout.prop(self, 'valign_type', text='Y')
-        if self.inputs[11].value:
-            layout.prop(self, 'text_halign_type', text='Text X')
-            layout.prop(self, 'text_valign_type', text='Text Y')
-
-    def get_netlogic_class_name(self):
-        return "ULCreateUIButton"
-
-    def get_output_socket_varnames(self):
-        return ["OUT", 'WIDGET', 'CLICK', 'HOVER', 'RELEASE']
-
-    def get_attributes(self):
-        return [
-            ("halign_type", lambda: f'"{self.halign_type}"'),
-            ("valign_type", lambda: f'"{self.valign_type}"'),
-            ("text_halign_type", lambda: f'"{self.text_halign_type}"'),
-            ("text_valign_type", lambda: f'"{self.text_valign_type}"')
-        ]
-
-    def get_input_sockets_field_names(self):
-        return [
-            "condition",
-            'parent',
-            'rel_pos',
-            "pos",
-            "rel_size",
-            "size",
-            "angle",
-            "color",
-            "hover_color",
-            "border_width",
-            "border_color",
-            "text",
-            "text_pos",
-            "font",
-            "font_size",
-            "line_height",
-            "font_color"
-        ]
-
-
-_nodes.append(LogicNodeCreateUIButton)
-
-
-class LogicNodeCreateUILabel(NLActionNode):
-    bl_idname = "LogicNodeCreateUILabel"
-    bl_label = "Create Label"
-    nl_category = "UI"
-    nl_subcat = 'Widgets'
-    nl_module = 'actions'
-    halign_type: EnumProperty(items=_ui_halign_types, name='X')
-    valign_type: EnumProperty(items=_ui_valign_types, name='Y')
-
-    def init(self, context):
-        NLActionNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, "Condition")
-        self.inputs.new(NLUISocket.bl_idname, "Parent")
-        self.inputs.new(NLBooleanSocket.bl_idname, "Relative Position")
-        self.inputs.new(NLVec2FieldSocket.bl_idname, "")
-        self.inputs.new(NLFloatAngleSocket.bl_idname, "Angle")
-        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Text")
-        self.inputs.new(NLFontSocket.bl_idname, "")
-        self.inputs.new(NLIntegerFieldSocket.bl_idname, "Font Size")
-        self.inputs[-1].value = 12
-        self.inputs.new(NLFloatFieldSocket.bl_idname, "Line Height")
-        self.inputs[-1].value = 1.5
-        self.inputs.new(NLColorAlphaSocket.bl_idname, "Font Color")
-        self.inputs[-1].value = [1, 1, 1, 1]
-        self.inputs.new(NLBooleanSocket.bl_idname, "Use Shadow")
-        self.inputs.new(NLVec2FieldSocket.bl_idname, "Shadow Offset")
-        self.inputs[-1].value_x = 1
-        self.inputs[-1].value_y = -1
-        self.inputs.new(NLColorAlphaSocket.bl_idname, "Shadow Color")
-        self.inputs[-1].value = [0, 0, 0, .5]
-        self.outputs.new(NLConditionSocket.bl_idname, "Done")
-        self.outputs.new(NLUISocket.bl_idname, "Label")
-
-    def update_draw(self):
-        shadow = self.inputs[10].value
-        self.inputs[11].enabled = shadow
-        self.inputs[12].enabled = shadow
-
-    def draw_buttons(self, context, layout) -> None:
-        layout.prop(self, 'halign_type', text='X')
-        layout.prop(self, 'valign_type', text='Y')
-
-    def get_netlogic_class_name(self):
-        return "ULCreateUILabel"
-
-    def get_output_socket_varnames(self):
-        return ["OUT", 'WIDGET']
-
-    def get_attributes(self):
-        return [
-            ("halign_type", lambda: f'"{self.halign_type}"'),
-            ("valign_type", lambda: f'"{self.valign_type}"')
-        ]
-
-    def get_input_sockets_field_names(self):
-        return [
-            "condition",
-            'parent',
-            'rel_pos',
-            "pos",
-            "angle",
-            "text",
-            "font",
-            "font_size",
-            "line_height",
-            "font_color",
-            "use_shadow",
-            "shadow_offset",
-            "shadow_color",
-        ]
-
-
-_nodes.append(LogicNodeCreateUILabel)
-
-
-class LogicNodeCreateUISlider(NLActionNode):
-    bl_idname = "LogicNodeCreateUISlider"
-    bl_label = "Create Slider"
-    nl_category = "UI"
-    nl_subcat = 'Widgets'
-    nl_module = 'actions'
-    slider_type: EnumProperty(items=_ui_slider_types, name='Type', update=update_draw)
-    orientation_type: EnumProperty(items=_ui_boxlayout_types, name='Orientation', default='horizontal')
-    halign_type: EnumProperty(items=_ui_halign_types, name='X')
-    valign_type: EnumProperty(items=_ui_valign_types, name='Y')
-
-    def init(self, context):
-        NLActionNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, "Condition")
-        self.inputs.new(NLUISocket.bl_idname, "Parent")
-        self.inputs.new(NLBooleanSocket.bl_idname, "Relative Position")
-        self.inputs.new(NLVec2FieldSocket.bl_idname, "")
-        self.inputs.new(NLBooleanSocket.bl_idname, "Relative Size")
-        self.inputs.new(NLVec2FieldSocket.bl_idname, "")
-        self.inputs[-1].value_x = 200
-        self.inputs[-1].value_y = 10
-        self.inputs.new(NLFloatAngleSocket.bl_idname, "Angle")
-        self.inputs.new(NLPositiveFloatSocket.bl_idname, "Bar Width")
-        self.inputs[-1].value = .5
-        self.inputs.new(NLPositiveIntegerFieldSocket.bl_idname, "Border Width")
-        self.inputs[-1].value = 1
-        self.inputs.new(NLColorAlphaSocket.bl_idname, "Border Color")
-        self.inputs.new(NLColorAlphaSocket.bl_idname, "Bar Color")
-        self.inputs[-1].value = (.1, .1, .1, .5)
-        self.inputs.new(NLColorAlphaSocket.bl_idname, "Bar Hover Color")
-        self.inputs[-1].value = (.1, .1, .1, .7)
-        self.inputs.new(NLImageSocket.bl_idname, "Bar Texture")
-        self.inputs[-1].enabled = False
-        self.inputs.new(NLPositiveFloatSocket.bl_idname, "Knob Size")
-        self.inputs[-1].value = 1.0
-        self.inputs.new(NLColorAlphaSocket.bl_idname, "Knob Color")
-        self.inputs[-1].value = (.7, .8, 1., 1.)
-        self.inputs.new(NLColorAlphaSocket.bl_idname, "Knob Hover Color")
-        self.inputs.new(NLImageSocket.bl_idname, "Knob Texture")
-        self.inputs[-1].enabled = False
-        self.inputs.new(NLPositiveIntegerFieldSocket.bl_idname, "Steps")
-        self.inputs.new(NLBooleanSocket.bl_idname, "Bar Control")
-        self.inputs[-1].value = True
-        self.outputs.new(NLConditionSocket.bl_idname, "Done")
-        self.outputs.new(NLUISocket.bl_idname, "Label")
-        self.outputs.new(NLParameterSocket.bl_idname, "Slider Value")
-        self.outputs.new(NLVec2FieldSocket.bl_idname, "Knob Position")
-
-    def draw_buttons(self, context, layout) -> None:
-        layout.prop(self, 'slider_type', text='')
-        layout.prop(self, 'orientation_type', text='')
-        layout.prop(self, 'halign_type', text='X')
-        layout.prop(self, 'valign_type', text='Y')
-
-    def update_draw(self):
-        self.inputs[7].enabled = self.slider_type == '0'
-        self.inputs[8].enabled = not self.inputs[7].enabled
-        self.inputs[15].enabled = self.inputs[7].enabled
-
-    def get_netlogic_class_name(self):
-        return "ULCreateUISlider"
-
-    def get_output_socket_varnames(self):
-        return ["OUT", 'WIDGET', 'VALUE', 'KNOB_POSITION']
-
-    def get_attributes(self):
-        return [
-            ("orientation_type", lambda: f'"{self.orientation_type}"'),
-            ("slider_type", lambda: f'"{self.slider_type}"'),
-            ("halign_type", lambda: f'"{self.halign_type}"'),
-            ("valign_type", lambda: f'"{self.valign_type}"')
-        ]
-
-    def get_input_sockets_field_names(self):
-        return [
-            "condition",
-            'parent',
-            'rel_pos',
-            'pos',
-            'rel_size',
-            'size',
-            'angle',
-            'bar_width',
-            'border_width',
-            'border_color',
-            'bar_color',
-            'bar_hover_color',
-            'bar_texture',
-            'knob_size',
-            'knob_color',
-            'knob_hover_color',
-            'knob_texture',
-            'steps',
-            'allow_bar_click'
-        ]
-
-
-_nodes.append(LogicNodeCreateUISlider)
-
-
-class LogicNodeCreateUIImage(NLActionNode):
-    bl_idname = "LogicNodeCreateUIImage"
-    bl_label = "Create Image"
-    nl_category = "UI"
-    nl_subcat = 'Widgets'
-    nl_module = 'actions'
-    halign_type: EnumProperty(items=_ui_halign_types, name='X')
-    valign_type: EnumProperty(items=_ui_valign_types, name='Y')
-
-    def init(self, context):
-        NLActionNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, "Condition")
-        self.inputs.new(NLUISocket.bl_idname, "Parent")
-        self.inputs.new(NLBooleanSocket.bl_idname, "Relative Position")
-        self.inputs.new(NLVec2FieldSocket.bl_idname, "")
-        self.inputs.new(NLBooleanSocket.bl_idname, "Relative Size")
-        self.inputs.new(NLVec2FieldSocket.bl_idname, "")
-        self.inputs.new(NLFloatAngleSocket.bl_idname, "Angle")
-        self.inputs.new(NLImageSocket.bl_idname, "")
-        self.outputs.new(NLConditionSocket.bl_idname, "Done")
-        self.outputs.new(NLUISocket.bl_idname, "Label")
-
-    def draw_buttons(self, context, layout) -> None:
-        layout.prop(self, 'halign_type', text='X')
-        layout.prop(self, 'valign_type', text='Y')
-
-    def get_netlogic_class_name(self):
-        return "ULCreateUIImage"
-
-    def get_output_socket_varnames(self):
-        return ["OUT", 'WIDGET']
-
-    def get_attributes(self):
-        return [
-            ("halign_type", lambda: f'"{self.halign_type}"'),
-            ("valign_type", lambda: f'"{self.valign_type}"')
-        ]
-
-    def get_input_sockets_field_names(self):
-        return [
-            "condition",
-            'parent',
-            'rel_pos',
-            "pos",
-            "rel_size",
-            "size",
-            "angle",
-            "texture"
-        ]
-
-
-_nodes.append(LogicNodeCreateUIImage)
-
-
-class NLOwnerGameObjectParameterNode(NLParameterNode):
-    """The owner of this logic tree.
-    Each Object that has this tree installed is
-    the "owner" of a logic tree
-    """
-    bl_idname = "NLOwnerGameObjectParameterNode"
-    bl_label = "Get Owner"
-    bl_icon = 'USER'
-    nl_category = "Objects"
-    nl_module = 'parameters'
-
-    def init(self, context):
-        NLParameterNode.init(self, context)
-        self.outputs.new(NLGameObjectSocket.bl_idname, "Owner Object")
-
-    def get_netlogic_class_name(self):
-        return "ULGetOwner"
-
-
-_nodes.append(NLOwnerGameObjectParameterNode)
-
-
-class NLGetVsyncNode(NLParameterNode):
-    bl_idname = "NLGetVsyncNode"
-    bl_label = "Get VSync"
-    nl_category = 'Render'
-    nl_module = 'parameters'
-
-    def init(self, context):
-        NLParameterNode.init(self, context)
-        self.outputs.new(NLParameterSocket.bl_idname, "Mode")
-
-    def get_netlogic_class_name(self):
-        return "ULGetVSync"
-
-    def get_output_socket_varnames(self):
-        return ['OUT']
-
-
-_nodes.append(NLGetVsyncNode)
-
-
-class NLGetFullscreen(NLParameterNode):
-    bl_idname = "NLGetFullscreen"
-    bl_label = "Get Fullscreen"
-    nl_category = 'Render'
-    nl_module = 'parameters'
-
-    def init(self, context):
-        NLParameterNode.init(self, context)
-        self.outputs.new(NLParameterSocket.bl_idname, "Fullscreen")
-
-    def get_netlogic_class_name(self):
-        return "ULGetFullscreen"
-
-    def get_output_socket_varnames(self):
-        return ['OUT']
-
-
-_nodes.append(NLGetFullscreen)
-
-
 class NLDrawLine(NLActionNode):
     bl_idname = "NLDrawLine"
     bl_label = "Line"
@@ -2205,13 +1181,13 @@ class NLDrawLine(NLActionNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
-        self.inputs.new(NodeSocketPseudoCondition.bl_idname, 'Condition')
-        self.inputs.new(NLColorSocket.bl_idname, 'Color')
-        self.inputs.new(NLVec3FieldSocket.bl_idname, 'From')
-        self.inputs.new(NLVec3FieldSocket.bl_idname, 'To')
-        self.outputs.new(NLConditionSocket.bl_idname, "Done")
+        self.add_input(NodeSocketPseudoCondition, 'Condition')
+        self.add_input(NLColorSocket, 'Color')
+        self.add_input(NLVec3FieldSocket, 'From')
+        self.add_input(NLVec3FieldSocket, 'To')
+        self.add_output(NLConditionSocket, "Done")
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return ['condition', 'color', 'from_point', 'to_point']
 
     def get_netlogic_class_name(self):
@@ -2239,17 +1215,17 @@ class NLDrawCube(NLActionNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
-        self.inputs.new(NodeSocketPseudoCondition.bl_idname, 'Condition')
-        self.inputs.new(NLColorSocket.bl_idname, 'Color')
-        self.inputs.new(NLVec3FieldSocket.bl_idname, 'Origin')
-        self.inputs.new(NLFloatFieldSocket.bl_idname, 'Width')
+        self.add_input(NodeSocketPseudoCondition, 'Condition')
+        self.add_input(NLColorSocket, 'Color')
+        self.add_input(NLVec3FieldSocket, 'Origin')
+        self.add_input(NLFloatFieldSocket, 'Width')
         self.inputs[-1].value = 1.0
-        self.outputs.new(NLConditionSocket.bl_idname, "Done")
+        self.add_output(NLConditionSocket, "Done")
 
     def get_attributes(self):
         return [("use_volume_origin", lambda: f'{self.use_volume_origin}')]
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return ['condition', 'color', 'origin', 'width']
 
     def get_netlogic_class_name(self):
@@ -2277,552 +1253,28 @@ class NLDrawBox(NLActionNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
-        self.inputs.new(NodeSocketPseudoCondition.bl_idname, 'Condition')
-        self.inputs.new(NLColorSocket.bl_idname, 'Color')
-        self.inputs.new(NLVec3FieldSocket.bl_idname, 'Origin')
-        self.inputs.new(NLFloatFieldSocket.bl_idname, 'Length (Y)')
+        self.add_input(NodeSocketPseudoCondition, 'Condition')
+        self.add_input(NLColorSocket, 'Color')
+        self.add_input(NLVec3FieldSocket, 'Origin')
+        self.add_input(NLFloatFieldSocket, 'Width (X)')
         self.inputs[-1].value = 1.0
-        self.inputs.new(NLFloatFieldSocket.bl_idname, 'Width (X)')
+        self.add_input(NLFloatFieldSocket, 'Length (Y)')
         self.inputs[-1].value = 1.0
-        self.inputs.new(NLFloatFieldSocket.bl_idname, 'Height (Z)')
+        self.add_input(NLFloatFieldSocket, 'Height (Z)')
         self.inputs[-1].value = 1.0
-        self.outputs.new(NLConditionSocket.bl_idname, "Done")
+        self.add_output(NLConditionSocket, "Done")
 
     def get_attributes(self):
         return [("use_volume_origin", lambda: f'{self.use_volume_origin}')]
 
-    def get_input_sockets_field_names(self):
-        return ['condition', 'color', 'origin', 'length', 'width', 'height']
+    def get_input_names(self):
+        return ['condition', 'color', 'origin', 'width', 'length', 'height']
 
     def get_netlogic_class_name(self):
         return "ULDrawBox"
 
 
 _nodes.append(NLDrawBox)
-
-
-class NLGetResolution(NLParameterNode):
-    bl_idname = "NLGetResolution"
-    bl_label = "Get Resolution"
-    nl_category = 'Render'
-    nl_module = 'parameters'
-
-    def init(self, context):
-        NLParameterNode.init(self, context)
-        self.outputs.new(NLParameterSocket.bl_idname, "Width")
-        self.outputs.new(NLParameterSocket.bl_idname, "Height")
-        self.outputs.new(NLVec2FieldSocket.bl_idname, "Resolution")
-
-    def get_netlogic_class_name(self):
-        return "ULGetResolution"
-
-    def get_output_socket_varnames(self):
-        return ['WIDTH', 'HEIGHT', 'RES']
-
-
-_nodes.append(NLGetResolution)
-
-
-class NLGameObjectPropertyParameterNode(NLParameterNode):
-    bl_idname = "NLGameObjectPropertyParameterNode"
-    bl_label = "Get Property"
-    bl_icon = 'EXPORT'
-    nl_category = 'Objects'
-    nl_subcat = 'Properties'
-    nl_module = 'parameters'
-    mode: EnumProperty(
-        name='Mode',
-        items=_enum_object_property_types,
-        default='GAME',
-        update=update_draw
-    )
-
-    def draw_buttons(self, context, layout):
-        layout.prop(self, "mode", text="")
-
-    def init(self, context):
-        NLParameterNode.init(self, context)
-        self.inputs.new(NLGameObjectSocket.bl_idname, "Object")
-        self.inputs.new(NLGamePropertySocket.bl_idname, "Property")
-        self.outputs.new(NLParameterSocket.bl_idname, "Property Value")
-
-    def get_netlogic_class_name(self):
-        return "ULGetProperty"
-
-    def get_input_sockets_field_names(self):
-        return ["game_object", "property_name"]
-
-    def get_attributes(self):
-        return [("mode", lambda: f'"{self.mode}"')]
-
-    def get_output_socket_varnames(self):
-        return ['OUT']
-
-
-_nodes.append(NLGameObjectPropertyParameterNode)
-
-
-class NLGetGeometryNodeValue(NLParameterNode):
-    bl_idname = "NLGetGeometryNodeValue"
-    bl_label = "Get Socket Value"
-    bl_icon = 'TRIA_RIGHT'
-    nl_category = 'Nodes'
-    nl_subcat = 'Geometry'
-    nl_module = 'parameters'
-
-    def init(self, context):
-        NLActionNode.init(self, context)
-        self.inputs.new(NLGeomNodeTreeSocket.bl_idname, 'Tree')
-        self.inputs.new(NLNodeGroupNodeSocket.bl_idname, 'Node Name')
-        self.inputs.new(NLPositiveIntegerFieldSocket.bl_idname, "Input")
-        self.outputs.new(NLParameterSocket.bl_idname, "Value")
-
-    def update_draw(self):
-        tree = self.inputs[0]
-        nde = self.inputs[1]
-        ipt = self.inputs[2]
-        if tree.is_linked or nde.is_linked:
-            ipt.name = 'Input'
-        if (tree.value or tree.is_linked) and (nde.value or nde.is_linked):
-            ipt.enabled = True
-        else:
-            ipt.enabled = False
-        if not tree.is_linked and not nde.is_linked and tree.value:
-            tree_name = tree.value.name
-            node_name = nde.value
-            target = bpy.data.node_groups[tree_name].nodes[node_name]
-            if len(target.inputs) < 1:
-                ipt.enabled = False
-                return
-            limit = len(target.inputs) - 1
-            if int(ipt.value) > limit:
-                ipt.value = limit
-            name = target.inputs[ipt.value].name
-            ipt.name = name
-
-    def get_netlogic_class_name(self):
-        return "ULGetNodeSocket"
-
-    def get_input_sockets_field_names(self):
-        return ["tree_name", 'node_name', "input_slot"]
-
-    def get_output_socket_varnames(self):
-        return ['OUT']
-
-
-_nodes.append(NLGetGeometryNodeValue)
-
-
-class NLGetGeometryNodeAttribute(NLParameterNode):
-    bl_idname = "NLGetGeometryNodeAttribute"
-    bl_label = "Get Node Value"
-    bl_icon = 'DRIVER_TRANSFORM'
-    nl_category = 'Nodes'
-    nl_subcat = 'Geometry'
-    nl_module = 'parameters'
-
-    def init(self, context):
-        NLActionNode.init(self, context)
-        self.inputs.new(NLGeomNodeTreeSocket.bl_idname, 'Tree')
-        self.inputs.new(NLNodeGroupNodeSocket.bl_idname, 'Node Name')
-        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Internal")
-        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Attribute")
-        self.outputs.new(NLParameterSocket.bl_idname, "Value")
-
-    def update_draw(self):
-        tree = self.inputs[0]
-        nde = self.inputs[1]
-        itl = self.inputs[2]
-        att = self.inputs[3]
-        if (tree.value or tree.is_linked) and (nde.value or nde.is_linked):
-            itl.enabled = att.enabled = True
-        else:
-            itl.enabled = att.enabled = False
-
-    def get_netlogic_class_name(self):
-        return "ULGetNodeAttribute"
-
-    def get_input_sockets_field_names(self):
-        return ["tree_name", 'node_name', "internal", 'attribute']
-
-    def get_output_socket_varnames(self):
-        return ['OUT']
-
-
-_nodes.append(NLGetGeometryNodeAttribute)
-
-
-class NLGetNodeGroupNodeValue(NLParameterNode):
-    bl_idname = "NLGetNodeGroupNodeValue"
-    bl_label = "Get Socket Value"
-    bl_icon = 'TRIA_RIGHT'
-    nl_category = 'Nodes'
-    nl_subcat = 'Groups'
-    nl_module = 'parameters'
-
-    def init(self, context):
-        NLActionNode.init(self, context)
-        self.inputs.new(NLNodeGroupSocket.bl_idname, 'Tree')
-        self.inputs.new(NLNodeGroupNodeSocket.bl_idname, 'Node Name')
-        self.inputs.new(NLPositiveIntegerFieldSocket.bl_idname, "Input")
-        self.outputs.new(NLParameterSocket.bl_idname, "Value")
-
-    def update_draw(self):
-        tree = self.inputs[0]
-        nde = self.inputs[1]
-        ipt = self.inputs[2]
-        if tree.is_linked or nde.is_linked:
-            ipt.name = 'Input'
-        if (tree.value or tree.is_linked) and (nde.value or nde.is_linked):
-            ipt.enabled = True
-        else:
-            ipt.enabled = False
-        if not tree.is_linked and not nde.is_linked and tree.value:
-            tree_name = tree.value.name
-            node_name = nde.value
-            target = bpy.data.node_groups[tree_name].nodes[node_name]
-            limit = len(target.inputs) - 1
-            if int(ipt.value) > limit:
-                ipt.value = limit
-            name = target.inputs[ipt.value].name
-            ipt.name = name
-
-    def get_netlogic_class_name(self):
-        return "ULGetNodeSocket"
-
-    def get_input_sockets_field_names(self):
-        return ["tree_name", 'node_name', "input_slot"]
-
-    def get_output_socket_varnames(self):
-        return ['OUT']
-
-
-_nodes.append(NLGetNodeGroupNodeValue)
-
-
-class NLGetNodeTreeNodeAttribute(NLParameterNode):
-    bl_idname = "NLGetNodeTreeNodeAttribute"
-    bl_label = "Get Node Value"
-    bl_icon = 'DRIVER_TRANSFORM'
-    nl_category = 'Nodes'
-    nl_subcat = 'Groups'
-    nl_module = 'parameters'
-
-    def init(self, context):
-        NLActionNode.init(self, context)
-        self.inputs.new(NLNodeGroupSocket.bl_idname, 'Tree')
-        self.inputs.new(NLNodeGroupNodeSocket.bl_idname, 'Node Name')
-        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Internal")
-        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Attribute")
-        self.outputs.new(NLParameterSocket.bl_idname, "Value")
-
-    def update_draw(self):
-        tree = self.inputs[0]
-        nde = self.inputs[1]
-        itl = self.inputs[2]
-        att = self.inputs[3]
-        if (tree.value or tree.is_linked) and (nde.value or nde.is_linked):
-            itl.enabled = att.enabled = True
-        else:
-            itl.enabled = att.enabled = False
-
-    def get_netlogic_class_name(self):
-        return "ULGetNodeAttribute"
-
-    def get_input_sockets_field_names(self):
-        return ["tree_name", 'node_name', "internal", 'attribute']
-
-    def get_output_socket_varnames(self):
-        return ['OUT']
-
-
-_nodes.append(NLGetNodeTreeNodeAttribute)
-
-
-class NLGetMaterialNodeValue(NLParameterNode):
-    bl_idname = "NLGetMaterialNodeValue"
-    bl_label = "Get Socket Value"
-    bl_icon = 'TRIA_RIGHT'
-    nl_category = 'Nodes'
-    nl_subcat = 'Materials'
-    nl_module = 'parameters'
-
-    def init(self, context):
-        NLActionNode.init(self, context)
-        self.inputs.new(NLMaterialSocket.bl_idname, 'Material')
-        self.inputs.new(NLTreeNodeSocket.bl_idname, 'Node Name')
-        self.inputs.new(NLPositiveIntegerFieldSocket.bl_idname, "Input")
-        self.outputs.new(NLParameterSocket.bl_idname, "Value")
-
-    def update_draw(self):
-        mat = self.inputs[0]
-        nde = self.inputs[1]
-        ipt = self.inputs[2]
-        if mat.is_linked or nde.is_linked:
-            ipt.name = 'Input'
-        if (mat.value or mat.is_linked) and (nde.value or nde.is_linked):
-            ipt.enabled = True
-        else:
-            ipt.enabled = False
-        if not mat.is_linked and not nde.is_linked and mat.value:
-            mat_name = mat.value.name
-            node_name = nde.value
-            target = bpy.data.materials[mat_name].node_tree.nodes[node_name]
-            limit = len(target.inputs) - 1
-            if int(ipt.value) > limit:
-                ipt.value = limit
-            name = target.inputs[ipt.value].name
-            ipt.name = name
-
-    def get_netlogic_class_name(self):
-        return "ULGetMaterialSocket"
-
-    def get_input_sockets_field_names(self):
-        return ["mat_name", 'node_name', "input_slot"]
-
-    def get_output_socket_varnames(self):
-        return ['OUT']
-
-
-_nodes.append(NLGetMaterialNodeValue)
-
-
-class NLGetMaterialNodeAttribute(NLParameterNode):
-    bl_idname = "NLGetMaterialNodeAttribute"
-    bl_label = "Get Node Value"
-    bl_icon = 'DRIVER_TRANSFORM'
-    nl_category = 'Nodes'
-    nl_subcat = 'Materials'
-    nl_module = 'parameters'
-
-    def init(self, context):
-        NLActionNode.init(self, context)
-        self.inputs.new(NLMaterialSocket.bl_idname, 'Material')
-        self.inputs.new(NLTreeNodeSocket.bl_idname, 'Node Name')
-        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Internal")
-        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Attribute")
-        self.outputs.new(NLParameterSocket.bl_idname, "Value")
-
-    def update_draw(self):
-        mat = self.inputs[0]
-        nde = self.inputs[1]
-        itl = self.inputs[2]
-        att = self.inputs[3]
-        if (mat.value or mat.is_linked) and (nde.value or nde.is_linked):
-            itl.enabled = att.enabled = True
-        else:
-            itl.enabled = att.enabled = False
-
-    def get_netlogic_class_name(self):
-        return "ULGetMaterialAttribute"
-
-    def get_input_sockets_field_names(self):
-        return ["mat_name", 'node_name', "internal", 'attribute']
-
-    def get_output_socket_varnames(self):
-        return ['OUT']
-
-
-_nodes.append(NLGetMaterialNodeAttribute)
-
-
-class NLGetMaterialNode(NLParameterNode):
-    bl_idname = "NLGetMaterialNode"
-    bl_label = "Get Node"
-    nl_category = 'Nodes'
-    nl_subcat = 'Materials'
-    nl_module = 'parameters'
-
-    def init(self, context):
-        NLActionNode.init(self, context)
-        self.inputs.new(NLMaterialSocket.bl_idname, 'Material')
-        self.inputs.new(NLTreeNodeSocket.bl_idname, 'Node Name')
-        self.outputs.new(NLParameterSocket.bl_idname, "Node")
-
-    def get_netlogic_class_name(self):
-        return "ULGetMaterialNode"
-
-    def get_input_sockets_field_names(self):
-        return ["mat_name", 'node_name']
-
-    def get_output_socket_varnames(self):
-        return ['OUT']
-
-
-_nodes.append(NLGetMaterialNode)
-
-
-class NLGameObjectHasPropertyParameterNode(NLParameterNode):
-    bl_idname = "NLGameObjectHasPropertyParameterNode"
-    bl_label = "Has Property"
-    bl_icon = 'QUESTION'
-    nl_category = "Objects"
-    nl_subcat = 'Properties'
-    nl_module = 'conditions'
-    mode: EnumProperty(
-        name='Mode',
-        items=_enum_object_property_types,
-        default='GAME',
-        update=update_draw
-    )
-
-    def draw_buttons(self, context, layout):
-        layout.prop(self, "mode", text="")
-
-    def init(self, context):
-        NLParameterNode.init(self, context)
-        self.inputs.new(NLGameObjectSocket.bl_idname, "Object")
-        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Name")
-        self.inputs[-1].value = 'prop'
-        self.outputs.new(NLConditionSocket.bl_idname, "If True")
-
-    def get_netlogic_class_name(self):
-        return "ULHasProperty"
-
-    def get_input_sockets_field_names(self):
-        return ["game_object", "property_name"]
-
-    def get_attributes(self):
-        return [("mode", lambda: f'"{self.mode}"')]
-
-    def get_output_socket_varnames(self):
-        return ['OUT']
-
-
-_nodes.append(NLGameObjectHasPropertyParameterNode)
-
-
-class NLGetDictKeyNode(NLParameterNode):
-    bl_idname = "NLGetDictKeyNode"
-    bl_label = 'Get Key'
-    nl_category = "Data"
-    nl_subcat = 'Dictionary'
-    nl_module = 'parameters'
-
-    def init(self, context):
-        NLParameterNode.init(self, context)
-        self.inputs.new(NLDictSocket.bl_idname, "Dictionary")
-        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Key")
-        self.inputs[-1].value = 'key'
-        self.inputs.new(NLOptionalValueFieldSocket.bl_idname, "Default Value")
-        self.outputs.new(NLParameterSocket.bl_idname, "Property Value")
-
-    def get_netlogic_class_name(self):
-        return "ULDictValue"
-
-    def get_input_sockets_field_names(self):
-        return ["dict", "key", 'default_value']
-
-    def get_output_socket_varnames(self):
-        return ['OUT']
-
-
-_nodes.append(NLGetDictKeyNode)
-
-
-class NLGetRandomListIndex(NLParameterNode):
-    bl_idname = "NLGetRandomListIndex"
-    bl_label = "Get Random Item"
-    nl_category = "Data"
-    nl_subcat = 'List'
-    nl_module = 'parameters'
-
-    def init(self, context):
-        NLParameterNode.init(self, context)
-        self.inputs.new(NLListSocket.bl_idname, "List")# .display_shape = 'SQUARE'
-        self.outputs.new(NLParameterSocket.bl_idname, "Value")
-
-    def get_netlogic_class_name(self):
-        return "ULListIndexRandom"
-
-    def get_input_sockets_field_names(self):
-        return ["items"]
-
-    def get_output_socket_varnames(self):
-        return ['OUT']
-
-
-_nodes.append(NLGetRandomListIndex)
-
-
-class NLDuplicateList(NLParameterNode):
-    bl_idname = "NLDuplicateList"
-    bl_label = "Duplicate"
-    bl_icon = 'CON_TRANSLIKE'
-    nl_category = "Data"
-    nl_subcat = 'List'
-    nl_module = 'parameters'
-
-    def init(self, context):
-        NLParameterNode.init(self, context)
-        self.inputs.new(NLListSocket.bl_idname, "List")
-        self.outputs.new(NLListSocket.bl_idname, "List")
-
-    def get_netlogic_class_name(self):
-        return "ULListDuplicate"
-
-    def get_input_sockets_field_names(self):
-        return ["items"]
-
-    def get_output_socket_varnames(self):
-        return ['OUT']
-
-
-_nodes.append(NLDuplicateList)
-
-
-class NLGetListIndexNode(NLParameterNode):
-    bl_idname = "NLGetListIndexNode"
-    bl_label = "Get Index"
-    nl_category = "Data"
-    nl_subcat = 'List'
-    nl_module = 'parameters'
-
-    def init(self, context):
-        NLParameterNode.init(self, context)
-        self.inputs.new(NLListSocket.bl_idname, "List")
-        self.inputs.new(NLIntegerFieldSocket.bl_idname, "Index")
-        self.outputs.new(NLParameterSocket.bl_idname, "Value")
-
-    def get_netlogic_class_name(self):
-        return "ULListIndex"
-
-    def get_input_sockets_field_names(self):
-        return ["items", "index"]
-
-    def get_output_socket_varnames(self):
-        return ['OUT']
-
-
-_nodes.append(NLGetListIndexNode)
-
-
-class NLGetActuatorValue(NLParameterNode):
-    bl_idname = "NLGetActuatorValue"
-    bl_label = "Get Actuator Value"
-    nl_category = "Logic"
-    nl_subcat = 'Bricks'
-    nl_module = 'parameters'
-
-    def init(self, context):
-        NLParameterNode.init(self, context)
-        self.inputs.new(NLGameObjectSocket.bl_idname, "Object")
-        self.inputs.new(NLLogicBrickSocket.bl_idname, "Actuator")
-        self.inputs[-1].brick_type = 'actuators'
-        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Field")
-        self.outputs.new(NLParameterSocket.bl_idname, "Value")
-
-    def get_netlogic_class_name(self):
-        return "ULGetActuatorValue"
-
-    def get_input_sockets_field_names(self):
-        return ["game_obj", "act_name", 'field']
-
-    def get_output_socket_varnames(self):
-        return ['OUT']
-
-
-_nodes.append(NLGetActuatorValue)
 
 
 class NLRunActuatorNode(NLActionNode):
@@ -2834,14 +1286,14 @@ class NLRunActuatorNode(NLActionNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, "Condition")
-        self.inputs.new(NLGameObjectSocket.bl_idname, 'Object')
-        self.inputs.new(NLLogicBrickSocket.bl_idname, "From Controller")
+        self.add_input(NLConditionSocket, "Condition")
+        self.add_input(NLGameObjectSocket, 'Object')
+        self.add_input(NLLogicBrickSocket, "From Controller")
         self.inputs[-1].ref_index = 1
-        self.inputs.new(NLLogicBrickSocket.bl_idname, "Actuator")
+        self.add_input(NLLogicBrickSocket, "Actuator")
         self.inputs[-1].ref_index = 1
         self.inputs[-1].brick_type = 'actuators'
-        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+        self.add_output(NLConditionSocket, 'Done')
 
     def get_controller(self):
         tree = getattr(bpy.context.space_data, 'edit_tree', None)
@@ -2870,13 +1322,13 @@ class NLRunActuatorNode(NLActionNode):
     def update_draw(self):
         self.inputs[3].enabled = self.get_controller()
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return ["OUT"]
 
     def get_netlogic_class_name(self):
         return "ULRunActuator"
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return ["condition", 'game_obj', 'cont_name', 'act_name']
 
 
@@ -2892,22 +1344,22 @@ class NLSetSensorValueNode(NLActionNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, "Condition")
-        self.inputs.new(NLGameObjectSocket.bl_idname, "Object")
-        self.inputs.new(NLLogicBrickSocket.bl_idname, "Sensor")
+        self.add_input(NLConditionSocket, "Condition")
+        self.add_input(NLGameObjectSocket, "Object")
+        self.add_input(NLLogicBrickSocket, "Sensor")
         self.inputs[-1].ref_index = 1
         self.inputs[-1].brick_type = 'sensors'
-        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Attribute")
-        self.inputs.new(NLValueFieldSocket.bl_idname, "")
-        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+        self.add_input(NLQuotedStringFieldSocket, "Attribute")
+        self.add_input(NLValueFieldSocket, "")
+        self.add_output(NLConditionSocket, 'Done')
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return ["OUT"]
 
     def get_netlogic_class_name(self):
         return "ULSetSensorValue"
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return ["condition", 'game_obj', 'sens_name', 'field', 'value']
 
 
@@ -2923,118 +1375,26 @@ class NLSetActuatorValueNode(NLActionNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, "Condition")
-        self.inputs.new(NLGameObjectSocket.bl_idname, "Object")
-        self.inputs.new(NLLogicBrickSocket.bl_idname, "Actuator")
+        self.add_input(NLConditionSocket, "Condition")
+        self.add_input(NLGameObjectSocket, "Object")
+        self.add_input(NLLogicBrickSocket, "Actuator")
         self.inputs[-1].ref_index = 1
         self.inputs[-1].brick_type = 'actuators'
-        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Attribute")
-        self.inputs.new(NLValueFieldSocket.bl_idname, "")
-        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+        self.add_input(NLQuotedStringFieldSocket, "Attribute")
+        self.add_input(NLValueFieldSocket, "")
+        self.add_output(NLConditionSocket, 'Done')
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return ["OUT"]
 
     def get_netlogic_class_name(self):
         return "ULSetActuatorValue"
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return ["condition", 'game_obj', 'act_name', 'field', 'value']
 
 
 _nodes.append(NLSetActuatorValueNode)
-
-
-class NLVectorMath(NLParameterNode):
-    bl_idname = "NLVectorMath"
-    bl_label = "Vector Math"
-    nl_category = "Math"
-    nl_subcat = 'Vector Math'
-    nl_module = 'parameters'
-
-    operator: EnumProperty(
-        name='Operation',
-        items=_enum_vector_math_options,
-        update=update_draw
-    )
-
-    def init(self, context):
-        NLParameterNode.init(self, context)
-        self.inputs.new(NLVec3FieldSocket.bl_idname, "Vector 1")
-        self.inputs.new(NLVec3FieldSocket.bl_idname, "Vector 2")
-        self.inputs.new(NLSocketAlphaFloat.bl_idname, "Factor")
-        self.inputs[-1].value = 1.0
-        self.inputs.new(NLFloatFieldSocket.bl_idname, "Scale")
-        self.inputs.new(NLVec3FieldSocket.bl_idname, "Vector 3")
-        self.inputs.new(NLFloatFieldSocket.bl_idname, "IOR")
-        self.outputs.new(NLParameterSocket.bl_idname, 'Result')
-        self.update_draw()
-
-    def get_netlogic_class_name(self):
-        return "ULVectorMath"
-
-    def update_draw(self):
-        if len(self.inputs) < 6:
-            return
-        vtype = self.operator
-        v2 = self.inputs[1]
-        fac = self.inputs[2]
-        sca = self.inputs[3]
-        v3 = self.inputs[4]
-        ior = self.inputs[5]
-
-        v2.enabled = vtype in ['dot', 'cross', 'project', 'distance', 'faceforward', 'divide', 'multiply', 'subtract', 'add', 'lerp', 'slerp', 'multadd']
-        fac.enabled = vtype in ['lerp', 'slerp']
-        sca.enabled = vtype in ['scale']
-        v3.enabled = vtype in ['faceforward', 'multadd', 'slerp']
-        ior.enabled = vtype in ['refract']
-
-    def get_input_sockets_field_names(self):
-        return ["vector", 'vector_2', 'factor', 'scale', 'vector_3', 'ior']
-
-    def get_output_socket_varnames(self):
-        return ["OUT"]
-
-    def draw_buttons(self, context, layout):
-        layout.prop(
-            self,
-            'operator',
-            text=''
-        )
-
-    def get_attributes(self):
-        return [
-            ("op", lambda: f'"{self.operator}"'),
-        ]
-
-
-_nodes.append(NLVectorMath)
-
-
-class NLVectorAngle(NLParameterNode):
-    bl_idname = "NLVectorAngle"
-    bl_label = "Angle"
-    nl_category = "Math"
-    nl_subcat = 'Vector Math'
-    nl_module = 'parameters'
-
-    def init(self, context):
-        NLParameterNode.init(self, context)
-        self.inputs.new(NLVec3FieldSocket.bl_idname, "Vector 1")
-        self.inputs.new(NLVec3FieldSocket.bl_idname, "Vector 2")
-        self.outputs.new(NLParameterSocket.bl_idname, 'Angle')
-
-    def get_netlogic_class_name(self):
-        return "ULVectorAngle"
-
-    def get_input_sockets_field_names(self):
-        return ["vector", 'vector_2']
-
-    def get_output_socket_varnames(self):
-        return ['OUT']
-
-
-_nodes.append(NLVectorAngle)
 
 
 class NLVectorAngleCheck(NLParameterNode):
@@ -3051,16 +1411,16 @@ class NLVectorAngleCheck(NLParameterNode):
 
     def init(self, context):
         NLParameterNode.init(self, context)
-        self.inputs.new(NLVec3FieldSocket.bl_idname, "Vector 1")
-        self.inputs.new(NLVec3FieldSocket.bl_idname, "Vector 2")
-        self.inputs.new(NLFloatFieldSocket.bl_idname, "Value")
-        self.outputs.new(NLConditionSocket.bl_idname, 'If True')
-        self.outputs.new(NLFloatFieldSocket.bl_idname, "Angle")
+        self.add_input(NLVec3FieldSocket, "Vector 1")
+        self.add_input(NLVec3FieldSocket, "Vector 2")
+        self.add_input(NLFloatFieldSocket, "Value")
+        self.add_output(NLConditionSocket, 'If True')
+        self.add_output(NLFloatFieldSocket, "Angle")
 
     def get_netlogic_class_name(self):
         return "ULVectorAngleCheck"
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return ["vector", 'vector_2', 'value']
 
     def draw_buttons(self, context, layout):
@@ -3070,7 +1430,7 @@ class NLVectorAngleCheck(NLParameterNode):
             text=''
         )
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return ['OUT', 'ANGLE']
 
     def get_attributes(self):
@@ -3091,18 +1451,18 @@ class NLGetSensorNode(NLConditionNode):
 
     def init(self, context):
         NLConditionNode.init(self, context)
-        self.inputs.new(NLGameObjectSocket.bl_idname, 'Object')
-        self.inputs.new(NLLogicBrickSocket.bl_idname, 'Sensor')
+        self.add_input(NLGameObjectSocket, 'Object')
+        self.add_input(NLLogicBrickSocket, 'Sensor')
         self.inputs[-1].brick_type = 'sensors'
-        self.outputs.new(NLConditionSocket.bl_idname, "Positive")
+        self.add_output(NLConditionSocket, "Positive")
 
     def get_netlogic_class_name(self):
         return "ULSensorPositive"
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return ['obj_name', 'sens_name']
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return ['OUT']
 
 
@@ -3118,353 +1478,23 @@ class NLControllerStatus(NLConditionNode):
 
     def init(self, context):
         NLConditionNode.init(self, context)
-        self.inputs.new(NLGameObjectSocket.bl_idname, 'Object')
-        self.inputs.new(NLLogicBrickSocket.bl_idname, 'Controller')
+        self.add_input(NLGameObjectSocket, 'Object')
+        self.add_input(NLLogicBrickSocket, 'Controller')
         self.inputs[-1].brick_type = 'controllers'
-        self.outputs.new(NLConditionSocket.bl_idname, "Status")
-        self.outputs.new(NLDictSocket.bl_idname, "Sensors")
+        self.add_output(NLConditionSocket, "Status")
+        self.add_output(NLDictSocket, "Sensors")
 
     def get_netlogic_class_name(self):
         return "ULControllerStatus"
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return ['obj_name', 'cont_name']
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return ['OUT', 'SENSORS']
 
 
 _nodes.append(NLControllerStatus)
-
-
-class NLSensorValueNode(NLParameterNode):
-    bl_idname = "NLSensorValueNode"
-    bl_label = "Get Sensor Value"
-    nl_category = 'Logic'
-    nl_subcat = 'Bricks'
-    nl_module = 'parameters'
-
-    def init(self, context):
-        NLParameterNode.init(self, context)
-        self.inputs.new(NLGameObjectSocket.bl_idname, 'Object')
-        self.inputs.new(NLLogicBrickSocket.bl_idname, 'Sensor')
-        self.inputs[-1].brick_type = 'sensors'
-        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, 'Field')
-        self.outputs.new(NLParameterSocket.bl_idname, "Value")
-
-    def get_netlogic_class_name(self):
-        return "ULGetSensorValue"
-
-    def get_input_sockets_field_names(self):
-        return ['game_obj', 'sens_name', "field"]
-
-    def get_output_socket_varnames(self):
-        return ['OUT']
-
-
-_nodes.append(NLSensorValueNode)
-
-
-class NLActionGetCharacterInfo(NLParameterNode):
-    bl_idname = "NLActionGetCharacterInfo"
-    bl_label = "Get Physics Info"
-    nl_category = "Physics"
-    nl_subcat = 'Character'
-    nl_module = 'parameters'
-    local: BoolProperty(default=True, update=update_draw)
-
-    def init(self, context):
-        NLActionNode.init(self, context)
-        self.inputs.new(NLGameObjectSocket.bl_idname, "Object")
-        self.outputs.new(NLIntegerFieldSocket.bl_idname, 'Max Jumps')
-        self.outputs.new(NLIntegerFieldSocket.bl_idname, 'Current Jump Count')
-        self.outputs.new(NLVec3FieldSocket.bl_idname, 'Gravity')
-        self.outputs.new(NLVec3FieldSocket.bl_idname, 'Walk Direction')
-        self.outputs.new(NLBooleanSocket.bl_idname, 'On Ground')
-
-    def draw_buttons(self, context, layout):
-        layout.prop(
-            self,
-            "local",
-            toggle=True,
-            text="Local" if self.local else "Global"
-        )
-
-    def get_netlogic_class_name(self):
-        return "ULCharacterInfo"
-
-    def get_input_sockets_field_names(self):
-        return ["game_object"]
-
-    def get_attributes(self):
-        return [("local", lambda: "True" if self.local else "False")]
-
-    def get_output_socket_varnames(self):
-        return ["MAX_JUMPS", "CUR_JUMP", "GRAVITY", 'WALKDIR', 'ON_GROUND']
-
-
-_nodes.append(NLActionGetCharacterInfo)
-
-
-class NLObjectAttributeParameterNode(NLParameterNode):
-    bl_idname = "NLObjectAttributeParameterNode"
-    bl_label = "Get Position / Rotation / Scale etc."
-    bl_icon = 'VIEW3D'
-    nl_category = "Objects"
-    nl_subcat = 'Object Data'
-    nl_module = 'parameters'
-    
-    names = {
-        'worldPosition': 'World Position',
-        'localPosition': 'Local Position',
-        'worldScale': 'World Scale',
-        'localScale': 'Local Scale',
-        'worldLinearVelocity': 'World Linear Velocity',
-        'localLinearVelocity': 'Local Linear Velocity',
-        'worldAngularVelocity': 'World Angular Velocity',
-        'localAngularVelocity': 'Local Angular Velocity',
-        'color': 'Color',
-        'worldOrientation': 'World Orientation',
-        'localOrientation': 'Local Orientation'
-    }
-
-    search_tags = [
-        ['Get World Position', {'attr_name': 'worldPosition'}],
-        ['Get World Rotation', {'attr_name': 'worldOrientation'}],
-        ['Get World Linear Velocity', {'attr_name': 'worldLinearVelocity'}],
-        ['Get World Angular Velocity', {'attr_name': 'worldAngularVelocity'}],
-        ['Get World Transform', {'attr_name': 'worldTransform'}],
-        ['Get Local Position', {'attr_name': 'localPosition'}],
-        ['Get Local Rotation', {'attr_name': 'localOrientation'}],
-        ['Get Local Linear Velocity', {'attr_name': 'localLinearVelocity'}],
-        ['Get Local Angular Velocity', {'attr_name': 'localAngularVelocity'}],
-        ['Get Local Transform', {'attr_name': 'localTransform'}],
-        ['Get Scale', {'attr_name': 'worldScale'}],
-        ['Get Color', {'attr_name': 'color'}],
-        ['Get Name', {'attr_name': 'name'}]
-    ]
-
-    attr_name: EnumProperty(items=_enum_readable_member_names, name="", default="worldPosition", update=update_draw)
-
-    def init(self, context):
-        NLParameterNode.init(self, context)
-        self.inputs.new(NLGameObjectSocket.bl_idname, "Object")
-        self.inputs.new(NLParameterSocket.bl_idname, "Value")
-        self.inputs[-1].enabled = False
-        self.outputs.new(NLParameterSocket.bl_idname, "Value")
-        self.outputs.new(NLVec3FieldSocket.bl_idname, "Vector")
-        self.outputs[-1].enabled = False
-        self.outputs.new(NLBooleanSocket.bl_idname, "Visible")
-        self.outputs[-1].enabled = False
-        self.update_draw()
-
-    def draw_buttons(self, context, layout) -> None:
-        layout.prop(self, 'attr_name', text="")
-
-    def update_draw(self):
-        if len(self.outputs) < 1:
-            return
-        if len(self.outputs) < 2:
-            self.outputs[0].enabled = True
-            return
-        elif self.attr_name in [
-            'worldPosition',
-            'localPosition',
-            'worldScale',
-            'localScale',
-            'worldLinearVelocity',
-            'localLinearVelocity',
-            'worldAngularVelocity',
-            'localAngularVelocity',
-            'color',
-            'worldOrientation',
-            'localOrientation',
-        ]:
-            self.outputs[0].enabled = False
-            self.outputs[1].enabled = True
-            self.outputs[1].name = self.names[self.attr_name]
-            self.outputs[2].enabled = False
-        elif self.attr_name == 'visible':
-            self.outputs[0].enabled = False
-            self.outputs[1].enabled = False
-            self.outputs[2].enabled = True
-        else:
-            self.outputs[0].enabled = True
-            self.outputs[1].enabled = False
-            self.outputs[2].enabled = False
-            
-
-    def get_attributes(self):
-        return [
-            ("attribute_name", lambda: f'"{self.attr_name}"')
-        ]
-
-    def get_netlogic_class_name(self):
-        return "ULObjectAttribute"
-
-    def get_input_sockets_field_names(self):
-        return ["game_object", "_attr_name"]
-
-    def get_output_socket_varnames(self):
-        return ["VAL", "VEC", "BOOL"]
-
-
-_nodes.append(NLObjectAttributeParameterNode)
-
-
-class NLActiveCameraParameterNode(NLParameterNode):
-    bl_idname = "NLActiveCameraParameterNode"
-    bl_label = "Active Camera"
-    nl_category = "Scene"
-    nl_subcat = 'Camera'
-    nl_module = 'parameters'
-
-    def init(self, context):
-        NLParameterNode.init(self, context)
-        self.outputs.new(NLGameObjectSocket.bl_idname, "Camera")
-
-    def get_netlogic_class_name(self):
-        return "ULActiveCamera"
-
-    def get_output_socket_varnames(self):
-        return ["OUT"]
-
-
-_nodes.append(NLActiveCameraParameterNode)
-
-
-class NLStoreValue(NLParameterNode):
-    bl_idname = "NLStoreValue"
-    bl_label = "Store Value"
-    nl_category = "Values"
-    nl_module = 'parameters'
-    initialize: BoolProperty(
-        name='Initialize',
-        description='Store a value in the first frame to avoid NoneType issues',
-        default=True
-    )
-
-    def init(self, context):
-        NLParameterNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, "Condition")
-        self.inputs.new(NLValueFieldSocket.bl_idname, "Value")
-        self.outputs.new(NLParameterSocket.bl_idname, "Stored Value")
-
-    def draw_buttons(self, context, layout):
-        layout.prop(self, "initialize")
-
-    def get_attributes(self):
-        return [
-            ("initialize", lambda: f'{self.initialize}')
-        ]
-
-    def get_input_sockets_field_names(self):
-        return ['condition', 'value']
-
-    def get_netlogic_class_name(self):
-        return "ULStoreValue"
-
-    def get_output_socket_varnames(self):
-        return ["OUT"]
-
-
-_nodes.append(NLStoreValue)
-
-
-class NLGetGravityNode(NLParameterNode):
-    bl_idname = "NLGetGravityNode"
-    bl_label = "Get Gravity"
-    nl_category = "Scene"
-    nl_module = 'parameters'
-
-    def init(self, context):
-        NLParameterNode.init(self, context)
-        self.outputs.new(NLVec3FieldSocket.bl_idname, "Gravity")
-
-    def get_netlogic_class_name(self):
-        return "ULGetGravity"
-
-    def get_output_socket_varnames(self):
-        return ["OUT"]
-
-
-_nodes.append(NLGetGravityNode)
-
-
-class NLGetCollectionNode(NLParameterNode):
-    bl_idname = "NLGetCollectionNode"
-    bl_label = "Get Collection"
-    bl_icon = 'OUTLINER_COLLECTION'
-    nl_category = "Scene"
-    nl_subcat = 'Collections'
-    nl_module = 'parameters'
-
-    def init(self, context):
-        NLParameterNode.init(self, context)
-        self.inputs.new(NLCollectionSocket.bl_idname, '')
-        self.outputs.new(NLCollectionSocket.bl_idname, "Collection")
-
-    def get_input_sockets_field_names(self):
-        return ['collection']
-
-    def get_netlogic_class_name(self):
-        return "ULGetCollection"
-
-    def get_output_socket_varnames(self):
-        return ["OUT"]
-
-
-_nodes.append(NLGetCollectionNode)
-
-
-class NLGetCollectionObjectsNode(NLParameterNode):
-    bl_idname = "NLGetCollectionObjectsNode"
-    bl_label = "Get Objects"
-    nl_category = "Scene"
-    nl_subcat = 'Collections'
-    nl_module = 'parameters'
-
-    def init(self, context):
-        NLParameterNode.init(self, context)
-        self.inputs.new(NLCollectionSocket.bl_idname, 'Collection')
-        self.outputs.new(NLListSocket.bl_idname, "Objects")
-
-    def get_input_sockets_field_names(self):
-        return ['collection']
-
-    def get_netlogic_class_name(self):
-        return "ULGetCollectionObjects"
-
-    def get_output_socket_varnames(self):
-        return ["OUT"]
-
-
-_nodes.append(NLGetCollectionObjectsNode)
-
-
-class NLGetCollectionObjectNamesNode(NLParameterNode):
-    bl_idname = "NLGetCollectionObjectNamesNode"
-    bl_label = "Get Object Names"
-    nl_category = "Scene"
-    nl_subcat = 'Collections'
-    nl_module = 'parameters'
-
-    def init(self, context):
-        NLParameterNode.init(self, context)
-        self.inputs.new(NLCollectionSocket.bl_idname, 'Collection')
-        self.outputs.new(NLListSocket.bl_idname, "Object Names")
-
-    def get_input_sockets_field_names(self):
-        return ['collection']
-
-    def get_netlogic_class_name(self):
-        return "ULGetCollectionObjectNames"
-
-    def get_output_socket_varnames(self):
-        return ["OUT"]
-
-
-_nodes.append(NLGetCollectionObjectNamesNode)
 
 
 class NLSetOverlayCollection(NLActionNode):
@@ -3476,12 +1506,12 @@ class NLSetOverlayCollection(NLActionNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, 'Condition')
-        self.inputs.new(NLCameraSocket.bl_idname, 'Camera')
-        self.inputs.new(NLCollectionSocket.bl_idname, 'Collection')
-        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+        self.add_input(NLConditionSocket, 'Condition')
+        self.add_input(NLCameraSocket, 'Camera')
+        self.add_input(NLCollectionSocket, 'Collection')
+        self.add_output(NLConditionSocket, 'Done')
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return ['condition', 'camera', 'collection']
 
     def get_netlogic_class_name(self):
@@ -3515,23 +1545,23 @@ class NLAddFilter(NLActionNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, 'Condition')
-        self.inputs.new(NLPositiveIntCentSocket.bl_idname, 'Pass Index')
-        self.inputs.new(NLFloatFieldSocket.bl_idname, 'Brightness')
+        self.add_input(NLConditionSocket, 'Condition')
+        self.add_input(NLPositiveIntCentSocket, 'Pass Index')
+        self.add_input(NLFloatFieldSocket, 'Brightness')
         self.inputs[-1].value = 1.0
-        self.inputs.new(NLFloatFieldSocket.bl_idname, 'Start')
+        self.add_input(NLFloatFieldSocket, 'Start')
         self.inputs[-1].value = .1
-        self.inputs.new(NLFloatFieldSocket.bl_idname, 'Density')
+        self.add_input(NLFloatFieldSocket, 'Density')
         self.inputs[-1].value = 0.5
-        self.inputs.new(NLFloatFieldSocket.bl_idname, 'Power')
+        self.add_input(NLFloatFieldSocket, 'Power')
         self.inputs[-1].value = 1.0
-        self.inputs.new(NLColorSocket.bl_idname, 'Color')
-        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+        self.add_input(NLColorSocket, 'Color')
+        self.add_output(NLConditionSocket, 'Done')
 
     def draw_buttons(self, context, layout):
         layout.prop(self, "filter_type")
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return ['condition', 'pass_idx', 'brightness', 'start', 'density', 'power', 'color', 'end']
 
     def get_attributes(self):
@@ -3539,7 +1569,7 @@ class NLAddFilter(NLActionNode):
             ("filter_type", lambda: f'"{self.filter_type}"')
         ]
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return ["OUT"]
 
     def get_netlogic_class_name(self):
@@ -3558,14 +1588,14 @@ class NLRemoveFilter(NLActionNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, 'Condition')
-        self.inputs.new(NLPositiveIntCentSocket.bl_idname, 'Pass Index')
-        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+        self.add_input(NLConditionSocket, 'Condition')
+        self.add_input(NLPositiveIntCentSocket, 'Pass Index')
+        self.add_output(NLConditionSocket, 'Done')
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return ['condition', 'pass_idx']
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return ["OUT"]
 
     def get_netlogic_class_name(self):
@@ -3584,14 +1614,14 @@ class NLToggleFilter(NLActionNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, 'Condition')
-        self.inputs.new(NLPositiveIntCentSocket.bl_idname, 'Pass Index')
-        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+        self.add_input(NLConditionSocket, 'Condition')
+        self.add_input(NLPositiveIntCentSocket, 'Pass Index')
+        self.add_output(NLConditionSocket, 'Done')
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return ['condition', 'pass_idx']
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return ["OUT"]
 
     def get_netlogic_class_name(self):
@@ -3610,15 +1640,15 @@ class NLSetFilterState(NLActionNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, 'Condition')
-        self.inputs.new(NLPositiveIntCentSocket.bl_idname, 'Pass Index')
-        self.inputs.new(NLBooleanSocket.bl_idname, 'State')
-        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+        self.add_input(NLConditionSocket, 'Condition')
+        self.add_input(NLPositiveIntCentSocket, 'Pass Index')
+        self.add_input(NLBooleanSocket, 'State')
+        self.add_output(NLConditionSocket, 'Done')
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return ['condition', 'pass_idx', 'state']
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return ["OUT"]
 
     def get_netlogic_class_name(self):
@@ -3637,11 +1667,11 @@ class NLRemoveOverlayCollection(NLActionNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, 'Condition')
-        self.inputs.new(NLCollectionSocket.bl_idname, 'Collection')
-        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+        self.add_input(NLConditionSocket, 'Condition')
+        self.add_input(NLCollectionSocket, 'Collection')
+        self.add_output(NLConditionSocket, 'Done')
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return ['condition', 'collection']
 
     def get_netlogic_class_name(self):
@@ -3649,450 +1679,6 @@ class NLRemoveOverlayCollection(NLActionNode):
 
 
 _nodes.append(NLRemoveOverlayCollection)
-
-
-class NLArithmeticOpParameterNode(NLParameterNode):
-    bl_idname = "NLArithmeticOpParameterNode"
-    bl_label = "Math"
-    nl_category = "Math"
-    nl_module = 'parameters'
-    operator: EnumProperty(
-        name='Operation',
-        items=_enum_math_operations,
-        update=update_draw
-    )
-
-    def init(self, context):
-        NLParameterNode.init(self, context)
-        self.inputs.new(NLFloatFieldSocket.bl_idname, "A")
-        self.inputs.new(NLFloatFieldSocket.bl_idname, "B")
-        self.outputs.new(NLParameterSocket.bl_idname, "")
-
-    def draw_buttons(self, context, layout):
-        layout.prop(self, "operator", text="")
-
-    def get_input_sockets_field_names(self):
-        return ['collection']
-
-    def get_attributes(self):
-        return [
-            ("operator", lambda: f'OPERATORS.get("{self.operator}")')
-        ]
-
-    def get_netlogic_class_name(self):
-        return "ULMath"
-
-    def get_input_sockets_field_names(self):
-        return ["operand_a", "operand_b"]
-
-    def get_output_socket_varnames(self):
-        return ["OUT"]
-
-
-_nodes.append(NLArithmeticOpParameterNode)
-
-
-class NLThresholdNode(NLParameterNode):
-    bl_idname = "NLThresholdNode"
-    bl_label = "Threshold"
-    nl_category = "Math"
-    nl_module = 'parameters'
-
-    operator: EnumProperty(
-        name='Operation',
-        items=_enum_greater_less,
-        update=update_draw
-    )
-
-    def init(self, context):
-        NLParameterNode.init(self, context)
-        self.inputs.new(NLBooleanSocket.bl_idname, "Else 0")
-        self.inputs[-1].value = True
-        self.inputs.new(NLFloatFieldSocket.bl_idname, "Value")
-        self.inputs.new(NLFloatFieldSocket.bl_idname, "Threshold")
-        self.outputs.new(NLParameterSocket.bl_idname, "Value")
-
-    def draw_buttons(self, context, layout):
-        layout.prop(self, "operator", text="")
-
-    def get_attributes(self):
-        return [
-            ("operator", lambda: f'"{self.operator}"')
-        ]
-
-    def get_netlogic_class_name(self):
-        return "ULThreshold"
-
-    def get_input_sockets_field_names(self):
-        return ['else_z', "value", "threshold"]
-
-    def get_output_socket_varnames(self):
-        return ["OUT"]
-
-
-_nodes.append(NLThresholdNode)
-
-
-class NLRangedThresholdNode(NLParameterNode):
-    bl_idname = "NLRangedThresholdNode"
-    bl_label = "Ranged Threshold"
-    nl_category = "Math"
-    nl_module = 'parameters'
-    operator: EnumProperty(
-        items=_enum_in_or_out,
-        update=update_draw
-    )
-
-    def init(self, context):
-        NLParameterNode.init(self, context)
-        self.inputs.new(NLFloatFieldSocket.bl_idname, "Value")
-        self.inputs.new(NLVec2FieldSocket.bl_idname, "Threshold")
-        self.outputs.new(NLParameterSocket.bl_idname, "Value")
-
-    def draw_buttons(self, context, layout):
-        layout.prop(self, "operator", text="")
-
-    def get_attributes(self):
-        return [
-            ("operator", lambda: f'"{self.operator}"')
-        ]
-
-    def get_netlogic_class_name(self):
-        return "ULRangedThreshold"
-
-    def get_input_sockets_field_names(self):
-        return ["value", "threshold"]
-
-    def get_output_socket_varnames(self):
-        return ['OUT']
-
-
-_nodes.append(NLRangedThresholdNode)
-
-
-class NLLimitRange(NLParameterNode):
-    bl_idname = "NLLimitRange"
-    bl_label = "Limit Range"
-    nl_category = "Math"
-    nl_module = 'parameters'
-
-    operator: EnumProperty(
-        items=_enum_in_or_out,
-        update=update_draw
-    )
-
-    def init(self, context):
-        NLParameterNode.init(self, context)
-        self.inputs.new(NLFloatFieldSocket.bl_idname, "Value")
-        self.inputs.new(NLVec2FieldSocket.bl_idname, "Threshold")
-        self.outputs.new(NLParameterSocket.bl_idname, "Value")
-
-    def draw_buttons(self, context, layout):
-        layout.prop(self, "operator", text="")
-
-    def get_attributes(self):
-        return [
-            ("operator", lambda: f'"{self.operator}"')
-        ]
-
-    def get_netlogic_class_name(self):
-        return "ULLimitRange"
-
-    def get_input_sockets_field_names(self):
-        return ["value", "threshold"]
-
-    def get_output_socket_varnames(self):
-        return ['OUT']
-
-
-_nodes.append(NLLimitRange)
-
-
-class NLMapRangeNode(NLParameterNode):
-    bl_idname = "NLMapRangeNode"
-    bl_label = "Map Range"
-    nl_category = "Math"
-    nl_module = 'parameters'
-
-    def init(self, context):
-        NLParameterNode.init(self, context)
-        self.inputs.new(NLFloatFieldSocket.bl_idname, "Value")
-        self.inputs.new(NLFloatFieldSocket.bl_idname, "From Min")
-        self.inputs.new(NLFloatFieldSocket.bl_idname, "From Max")
-        self.inputs[-1].value = 1.0
-        self.inputs.new(NLFloatFieldSocket.bl_idname, "To Min")
-        self.inputs.new(NLFloatFieldSocket.bl_idname, "To Max")
-        self.inputs[-1].value = 1.0
-        self.outputs.new(NLParameterSocket.bl_idname, "Result")
-
-    def get_netlogic_class_name(self):
-        return "ULMapRange"
-
-    def get_input_sockets_field_names(self):
-        return ["value", "from_min", "from_max", "to_min", "to_max"]
-
-    def get_output_socket_varnames(self):
-        return ["OUT"]
-
-_nodes.append(NLMapRangeNode)
-
-
-class NLWithinRangeNode(NLParameterNode):
-    bl_idname = "NLWithinRangeNode"
-    bl_label = "Within Range"
-    nl_category = "Math"
-    nl_module = 'parameters'
-
-    operator: EnumProperty(
-        name='Mode',
-        items=_enum_in_or_out,
-        update=update_draw
-    )
-
-    def init(self, context):
-        NLParameterNode.init(self, context)
-        self.inputs.new(NLFloatFieldSocket.bl_idname, "Value")
-        self.inputs.new(NLVec2FieldSocket.bl_idname, "Range")
-        self.outputs.new(NLConditionSocket.bl_idname, "If True")
-
-    def draw_buttons(self, context, layout):
-        layout.prop(self, "operator", text="")
-
-    def get_attributes(self):
-        return [
-            ("operator", lambda: f'"{self.operator}"')
-        ]
-
-    def get_netlogic_class_name(self):
-        return "ULWithinRange"
-
-    def get_input_sockets_field_names(self):
-        return ["value", "range"]
-
-    def get_output_socket_varnames(self):
-        return ['OUT']
-
-
-_nodes.append(NLWithinRangeNode)
-
-
-class NLClampValueNode(NLParameterNode):
-    bl_idname = "NLClampValueNode"
-    bl_label = "Clamp"
-    nl_category = "Math"
-    nl_module = 'parameters'
-
-    def init(self, context):
-        NLParameterNode.init(self, context)
-        self.inputs.new(NLFloatFieldSocket.bl_idname, "Value")
-        self.inputs.new(NLVec2FieldSocket.bl_idname, "")
-        self.outputs.new(NLParameterSocket.bl_idname, "Value")
-
-    def get_netlogic_class_name(self):
-        return "ULClamp"
-
-    def get_input_sockets_field_names(self):
-        return ["value", "range"]
-
-    def get_output_socket_varnames(self):
-        return ['OUT']
-
-
-_nodes.append(NLClampValueNode)
-
-
-class NLGetImage(NLParameterNode):
-    bl_idname = "NLGetImage"
-    bl_label = "Get Image"
-    bl_icon = 'IMAGE_DATA'
-    nl_category = "File"
-    nl_module = 'parameters'
-
-    def init(self, context):
-        NLParameterNode.init(self, context)
-        self.inputs.new(NLImageSocket.bl_idname, "Image")
-        self.outputs.new(NLImageSocket.bl_idname, 'Image')
-
-    def get_netlogic_class_name(self):
-        return "ULGetImage"
-
-    def get_input_sockets_field_names(self):
-        return ["image"]
-
-    def get_output_socket_varnames(self):
-        return ['OUT']
-
-
-_nodes.append(NLGetImage)
-
-
-class NLGetSound(NLParameterNode):
-    bl_idname = "NLGetSound"
-    bl_label = "Get Sound"
-    bl_icon = 'FILE_SOUND'
-    nl_category = "File"
-    nl_module = 'parameters'
-
-    def init(self, context):
-        NLParameterNode.init(self, context)
-        self.inputs.new(NLSoundFileSocket.bl_idname, "Sound File")
-        self.outputs.new(NLSoundFileSocket.bl_idname, 'Sound File')
-
-    def get_netlogic_class_name(self):
-        return "ULGetSound"
-
-    def get_input_sockets_field_names(self):
-        return ["sound"]
-
-    def get_output_socket_varnames(self):
-        return ['OUT']
-
-
-_nodes.append(NLGetSound)
-
-
-class LogicNodeGetFont(NLParameterNode):
-    bl_idname = "LogicNodeGetFont"
-    bl_label = "Get Font"
-    bl_icon = 'FILE_FONT'
-    nl_category = "File"
-    nl_module = 'parameters'
-
-    def init(self, context):
-        NLParameterNode.init(self, context)
-        self.inputs.new(NLFontSocket.bl_idname, "Font")
-        self.outputs.new(NLFontSocket.bl_idname, 'Font')
-
-    def get_netlogic_class_name(self):
-        return "ULGetFont"
-
-    def get_input_sockets_field_names(self):
-        return ["font"]
-
-    def get_output_socket_varnames(self):
-        return ['OUT']
-
-
-_nodes.append(LogicNodeGetFont)
-
-
-class LogicNodeSerializeData(NLParameterNode):
-    bl_idname = "LogicNodeSerializeData"
-    bl_label = "Serialize Data"
-    bl_icon = 'ALIGN_FLUSH'
-    nl_category = "Network"
-    nl_module = 'parameters'
-
-    serialize_as: EnumProperty(items=_serialize_types, name='Serialize As', description='Select the correct format to serialize a python object')
-
-    def init(self, context):
-        NLParameterNode.init(self, context)
-        self.inputs.new(NLParameterSocket.bl_idname, "Data")
-        self.outputs.new(NLParameterSocket.bl_idname, 'Data')
-
-    def draw_buttons(self, context, layout) -> None:
-        layout.prop(self, 'serialize_as', text='')
-
-    def get_netlogic_class_name(self):
-        return "ULSerializeData"
-
-    def get_attributes(self):
-        return [("serialize_as", lambda: f'"{self.serialize_as}"')]
-
-    def get_input_sockets_field_names(self):
-        return ["data"]
-
-    def get_output_socket_varnames(self):
-        return ['OUT']
-
-
-_nodes.append(LogicNodeSerializeData)
-
-
-class LogicNodeRebuildData(NLParameterNode):
-    bl_idname = "LogicNodeRebuildData"
-    bl_label = "Rebuild Data"
-    bl_icon = 'OBJECT_HIDDEN'
-    nl_category = "Network"
-    nl_module = 'parameters'
-
-    read_as: EnumProperty(items=_serialize_types, name='Read As', description='Select the correct format to read a python object')
-
-    def init(self, context):
-        NLParameterNode.init(self, context)
-        self.inputs.new(NLParameterSocket.bl_idname, "Data")
-        self.outputs.new(NLParameterSocket.bl_idname, 'Data')
-
-    def draw_buttons(self, context, layout) -> None:
-        layout.prop(self, 'read_as', text='')
-
-    def get_netlogic_class_name(self):
-        return "ULRebuildData"
-
-    def get_attributes(self):
-        return [("read_as", lambda: f'"{self.read_as}"')]
-
-    def get_input_sockets_field_names(self):
-        return ["data"]
-
-    def get_output_socket_varnames(self):
-        return ['OUT']
-
-
-_nodes.append(LogicNodeRebuildData)
-
-
-class NLInterpolateValueNode(NLParameterNode):
-    bl_idname = "NLInterpolateValueNode"
-    bl_label = "Interpolate"
-    nl_category = "Math"
-    nl_module = 'parameters'
-
-    def init(self, context):
-        NLParameterNode.init(self, context)
-        self.inputs.new(NLFloatFieldSocket.bl_idname, "From")
-        self.inputs.new(NLFloatFieldSocket.bl_idname, "To")
-        self.inputs.new(NLSocketAlphaFloat.bl_idname, "Factor")
-        self.outputs.new(NLParameterSocket.bl_idname, "Value")
-
-    def get_netlogic_class_name(self):
-        return "ULInterpolate"
-
-    def get_input_sockets_field_names(self):
-        return ["a", "b", "fac"]
-
-    def get_output_socket_varnames(self):
-        return ["OUT"]
-
-
-_nodes.append(NLInterpolateValueNode)
-
-
-class NLParameterActionStatus(NLParameterNode):
-    bl_idname = "NLParameterActionStatus"
-    bl_label = "Animation Status"
-    nl_category = "Animation"
-    nl_module = 'parameters'
-
-    def init(self, context):
-        NLParameterNode.init(self, context)
-        self.inputs.new(NLGameObjectSocket.bl_idname, "Object")
-        self.inputs.new(NLPositiveIntegerFieldSocket.bl_idname, "Layer")
-        self.outputs.new(NLConditionSocket.bl_idname, "Is Playing")
-        self.outputs.new(NLParameterSocket.bl_idname, "Action Name")
-        self.outputs.new(NLParameterSocket.bl_idname, "Action Frame")
-
-    def get_netlogic_class_name(self):
-        return "ULActionStatus"
-
-    def get_input_sockets_field_names(self):
-        return ["game_object", "action_layer"]
-
-    def get_output_socket_varnames(self):
-        return [utils.OUTCELL, "ACTION_NAME", "ACTION_FRAME"]
-
-
-_nodes.append(NLParameterActionStatus)
 
 
 class NLParameterSwitchValue(NLConditionNode):
@@ -4106,679 +1692,21 @@ class NLParameterSwitchValue(NLConditionNode):
     def init(self, context):
         NLConditionNode.init(self, context)
         self.hide = True
-        self.inputs.new(NodeSocketPseudoCondition.bl_idname, "Condition")
-        self.outputs.new(NodeSocketPseudoCondition.bl_idname, "True")
-        self.outputs.new(NodeSocketPseudoCondition.bl_idname, "False")
+        self.add_input(NodeSocketPseudoCondition, "Condition")
+        self.add_output(NodeSocketPseudoCondition, "True")
+        self.add_output(NodeSocketPseudoCondition, "False")
 
     def get_netlogic_class_name(self):
         return "ULTrueFalse"
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return ["state"]
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return ["TRUE", "FALSE"]
 
 
 _nodes.append(NLParameterSwitchValue)
-
-
-class NLParameterTimeNode(NLParameterNode):
-    bl_idname = "NLParameterTimeNode"
-    bl_label = "Time Data"
-    nl_category = 'Time'
-    nl_module = 'parameters'
-
-    def init(self, context):
-        NLParameterNode.init(self, context)
-        self.outputs.new(NLFloatFieldSocket.bl_idname, "Frames Per Second")
-        self.outputs.new(NLFloatFieldSocket.bl_idname, "Time Per Frame")
-        self.outputs.new(NLFloatFieldSocket.bl_idname, "Total Elapsed Time")
-
-    def get_output_socket_varnames(self):
-        return ["FPS", "TIME_PER_FRAME", "TIMELINE"]
-
-    def get_netlogic_class_name(self):
-        return "ULTimeData"
-
-
-_nodes.append(NLParameterTimeNode)
-
-
-class LogicNodeTimeFactor(NLParameterNode):
-    bl_idname = "LogicNodeTimeFactor"
-    bl_label = "Delta Factor"
-    nl_category = 'Time'
-    nl_module = 'parameters'
-
-    def init(self, context):
-        NLParameterNode.init(self, context)
-        self.outputs.new(NLFloatFieldSocket.bl_idname, "Time Factor")
-
-    def get_output_socket_varnames(self):
-        return ["TIMEFACTOR"]
-
-    def get_netlogic_class_name(self):
-        return "ULFPSFactor"
-
-
-_nodes.append(LogicNodeTimeFactor)
-
-
-class NLMouseDataParameter(NLParameterNode):
-    bl_idname = "NLMouseDataParameter"
-    bl_label = "Mouse Status"
-    bl_icon = 'OPTIONS'
-    nl_category = "Input"
-    nl_subcat = 'Mouse'
-    nl_module = 'parameters'
-
-    def init(self, context):
-        NLParameterNode.init(self, context)
-        self.outputs.new(NLParameterSocket.bl_idname, "Position")
-        self.outputs.new(NLParameterSocket.bl_idname, "Movement")
-        self.outputs.new(NLParameterSocket.bl_idname, "X Position")
-        self.outputs.new(NLParameterSocket.bl_idname, "Y Position")
-        self.outputs.new(NLParameterSocket.bl_idname, "X Movement")
-        self.outputs.new(NLParameterSocket.bl_idname, "Y Movement")
-        self.outputs.new(NLParameterSocket.bl_idname, "Wheel Difference")
-
-    def get_netlogic_class_name(self):
-        return "ULMouseData"
-
-    def get_output_socket_varnames(self):
-        return ["MXY0", "MDXY0", "MX", "MY", "MDX", "MDY", "MDWHEEL"]
-
-
-_nodes.append(NLMouseDataParameter)
-
-
-class NLParameterBoneStatus(NLParameterNode):
-    bl_idname = "NLParameterBoneStatus"
-    bl_label = "Bone Status"
-    nl_category = 'Animation'
-    nl_subcat = 'Armature / Rig'
-    nl_module = 'parameters'
-
-    def init(self, context):
-        NLParameterNode.init(self, context)
-        self.inputs.new(NLArmatureObjectSocket.bl_idname, "Armature Object")
-        self.inputs.new(NLArmatureBoneSocket.bl_idname, "Bone Name")
-        self.outputs.new(NLParameterSocket.bl_idname, "Position")
-        self.outputs.new(NLParameterSocket.bl_idname, "Rotation")
-        self.outputs.new(NLParameterSocket.bl_idname, "Scale")
-
-    def get_netlogic_class_name(self):
-        return "ULBoneStatus"
-
-    def get_input_sockets_field_names(self):
-        return ["armature", "bone_name"]
-
-    def get_output_socket_varnames(self):
-        return ["XYZ_POS", "XYZ_ROT", "XYZ_SCA"]
-
-
-_nodes.append(NLParameterBoneStatus)
-
-
-class NLParameterPythonModuleFunction(NLActionNode):
-    bl_idname = "NLParameterPythonModuleFunction"
-    bl_label = "Run Python Code"
-    nl_category = "Python"
-    nl_module = 'actions'
-
-    def init(self, context):
-        NLParameterNode.init(self, context)
-        self.inputs.new(NodeSocketPseudoCondition.bl_idname, "Condition")
-        self.inputs.new(NLTextIDSocket.bl_idname, "Module Name")
-        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Function")
-        self.inputs.new(NLListItemSocket.bl_idname, 'Argument')
-        self.outputs.new(NLConditionSocket.bl_idname, "Done")
-        self.outputs.new(NLParameterSocket.bl_idname, "Returned Value")
-
-    def get_netlogic_class_name(self):
-        return "ULRunPython"
-
-    def set_new_input_name(self):
-        self.inputs[-1].name = 'Argument'
-
-    def draw_buttons(self, context, layout):
-        op = layout.operator(bge_netlogic.ops.NLAddListItemSocket.bl_idname, text='Add Argument') 
-
-    def setup(
-        self,
-        cell_varname,
-        uids
-    ):
-        text = ''
-        socket = 0
-        while socket <= 2:
-            text += self.write_socket_field_initialization(
-                self.inputs[socket],
-                cell_varname,
-                uids
-            )
-            socket += 1
-        items = ''
-        while socket < len(self.inputs):
-            field_value = None
-            if self.inputs[socket].is_linked:
-                field_value = self.get_linked_socket_field_value(
-                    self.inputs[socket],
-                    cell_varname,
-                    None,
-                    uids
-                )
-            else:
-                field_value = self.inputs[socket].get_unlinked_value()
-            items += f'{field_value}, '
-            socket += 1
-        items = items[:-2]
-        line = f'        {cell_varname}.arg = [{items}]\n'
-        return text + line
-
-    def get_input_sockets_field_names(self):
-        return ['condition', "module_name", 'module_func']
-
-    def get_output_socket_varnames(self):
-        return ["OUT", "VAL"]
-
-
-_nodes.append(NLParameterPythonModuleFunction)
-
-
-class NLParameterBooleanValue(NLParameterNode):
-    bl_idname = "NLParameterBooleanValue"
-    bl_label = "Boolean"
-    bl_icon = 'CHECKBOX_HLT'
-    nl_category = "Values"
-    nl_subcat = 'Simple'
-    nl_module = 'parameters'
-
-    def init(self, context):
-        NLParameterNode.init(self, context)
-        self.inputs.new(NLBooleanSocket.bl_idname, "Bool")
-        self.outputs.new(NLBooleanSocket.bl_idname, "Bool")
-
-    def get_netlogic_class_name(self):
-        return "ULSimpleValue"
-
-    def get_input_sockets_field_names(self):
-        return ["value"]
-
-    def get_output_socket_varnames(self):
-        return ["OUT"]
-
-
-_nodes.append(NLParameterBooleanValue)
-
-
-class NLParameterFileValue(NLParameterNode):
-    bl_idname = "NLParameterFileValue"
-    bl_label = "File Path"
-    nl_category = "Values"
-    nl_module = 'parameters'
-
-    def init(self, context):
-        NLParameterNode.init(self, context)
-        self.inputs.new(NLFilePathSocket.bl_idname, "")
-        self.outputs.new(NLFilePathSocket.bl_idname, "Path")
-
-    def get_netlogic_class_name(self):
-        return "ULSimpleValue"
-
-    def get_input_sockets_field_names(self):
-        return ["value"]
-
-    def get_output_socket_varnames(self):
-        return ["OUT"]
-
-
-_nodes.append(NLParameterFileValue)
-
-
-class NLParameterFloatValue(NLParameterNode):
-    bl_idname = "NLParameterFloatValue"
-    bl_label = "Float"
-    nl_category = "Values"
-    nl_subcat = 'Simple'
-    nl_module = 'parameters'
-
-    def init(self, context):
-        NLParameterNode.init(self, context)
-        self.inputs.new(NLFloatFieldSocket.bl_idname, "")
-        self.outputs.new(NLFloatFieldSocket.bl_idname, "Float")
-
-    def get_netlogic_class_name(self):
-        return "ULSimpleValue"
-
-    def get_input_sockets_field_names(self):
-        return ["value"]
-
-    def get_output_socket_varnames(self):
-        return ["OUT"]
-
-
-_nodes.append(NLParameterFloatValue)
-
-
-class NLParameterIntValue(NLParameterNode):
-    bl_idname = "NLParameterIntValue"
-    bl_label = "Integer"
-    nl_category = "Values"
-    nl_subcat = 'Simple'
-    nl_module = 'parameters'
-
-    def init(self, context):
-        NLParameterNode.init(self, context)
-        self.inputs.new(NLIntegerFieldSocket.bl_idname, "")
-        self.outputs.new(NLIntegerFieldSocket.bl_idname, "Int")
-
-    def get_netlogic_class_name(self):
-        return "ULSimpleValue"
-
-    def get_input_sockets_field_names(self):
-        return ["value"]
-
-    def get_output_socket_varnames(self):
-        return ["OUT"]
-
-
-_nodes.append(NLParameterIntValue)
-
-
-class NLParameterStringValue(NLParameterNode):
-    bl_idname = "NLParameterStringValue"
-    bl_icon = 'FONT_DATA'
-    bl_label = "String"
-    nl_category = "Values"
-    nl_subcat = 'Simple'
-    nl_module = 'parameters'
-
-    def init(self, context):
-        NLParameterNode.init(self, context)
-        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "")
-        self.outputs.new(NLQuotedStringFieldSocket.bl_idname, "String")
-
-    def get_netlogic_class_name(self):
-        return "ULSimpleValue"
-
-    def get_input_sockets_field_names(self):
-        return ["value"]
-
-    def get_output_socket_varnames(self):
-        return ["OUT"]
-
-
-_nodes.append(NLParameterStringValue)
-
-
-class NLParameterTypeCast(NLParameterNode):
-    bl_idname = "NLParameterTypeCast"
-    bl_label = "Typecast Value"
-    nl_category = "Python"
-    nl_module = 'parameters'
-    to_type: EnumProperty(items=_enum_type_casts, update=update_draw)
-
-    def init(self, context):
-        NLParameterNode.init(self, context)
-        self.inputs.new(NLValueFieldSocket.bl_idname, "")
-        self.outputs.new(NLParameterSocket.bl_idname, "Value")
-
-    def draw_buttons(self, context, layout) -> None:
-        layout.prop(self, 'to_type', text='')
-
-    def get_netlogic_class_name(self):
-        return "ULTypeCastValue"
-
-    def get_input_sockets_field_names(self):
-        return ["value"]
-
-    def get_attributes(self):
-        return [
-            ('to_type', lambda: f'"{self.to_type}"')
-        ]
-
-    def get_output_socket_varnames(self):
-        return ["OUT"]
-
-
-_nodes.append(NLParameterTypeCast)
-
-
-class NLParameterVector2SimpleNode(NLParameterNode):
-    bl_idname = "NLParameterVector2SimpleNode"
-    bl_label = "Vector XY"
-    nl_category = "Values"
-    nl_subcat = 'Vectors'
-    nl_module = 'parameters'
-
-    def init(self, context):
-        NLParameterNode.init(self, context)
-        utils.register_inputs(
-            self,
-            NLFloatFieldSocket, "X",
-            NLFloatFieldSocket, "Y"
-        )
-        self.outputs.new(NLVectorSocket.bl_idname, "Vector")
-
-    def get_netlogic_class_name(self):
-        return "ULVectorXY"
-
-    def get_output_socket_varnames(self):
-        return ["OUTV"]
-
-    def get_input_sockets_field_names(self):
-        return ["input_x", "input_y"]
-
-
-_nodes.append(NLParameterVector2SimpleNode)
-
-
-class NLParameterVector2SplitNode(NLParameterNode):
-    bl_idname = "NLParameterVector2SplitNode"
-    bl_label = "Separate XY"
-    nl_category = "Values"
-    nl_subcat = 'Vectors'
-    nl_module = 'parameters'
-
-    def init(self, context):
-        NLParameterNode.init(self, context)
-        self.inputs.new(NLVec2FieldSocket.bl_idname, 'Vector')
-        self.outputs.new(NLFloatFieldSocket.bl_idname, "X")
-        self.outputs.new(NLFloatFieldSocket.bl_idname, "Y")
-
-    def get_netlogic_class_name(self):
-        return "ULVectorSplitXY"
-
-    def get_output_socket_varnames(self):
-        return ["OUTX", "OUTY"]
-
-    def get_input_sockets_field_names(self):
-        return ["input_v"]
-
-
-_nodes.append(NLParameterVector2SplitNode)
-
-
-class NLParameterVector3SplitNode(NLParameterNode):
-    bl_idname = "NLParameterVector3SplitNode"
-    bl_label = "Separate XYZ"
-    nl_category = "Values"
-    nl_subcat = 'Vectors'
-    nl_module = 'parameters'
-
-    def init(self, context):
-        NLParameterNode.init(self, context)
-        self.inputs.new(NLVec3FieldSocket.bl_idname, 'Vector')
-        self.outputs.new(NLFloatFieldSocket.bl_idname, "X")
-        self.outputs.new(NLFloatFieldSocket.bl_idname, "Y")
-        self.outputs.new(NLFloatFieldSocket.bl_idname, "Z")
-
-    def get_netlogic_class_name(self):
-        return "ULVectorSplitXYZ"
-
-    def get_output_socket_varnames(self):
-        return ["OUTX", "OUTY", 'OUTZ']
-
-    def get_input_sockets_field_names(self):
-        return ["input_v"]
-
-
-_nodes.append(NLParameterVector3SplitNode)
-
-
-class NLParameterAbsVector3Node(NLParameterNode):
-    bl_idname = "NLParameterAbsVector3Node"
-    bl_label = "Absolute Vector"
-    nl_category = "Math"
-    nl_subcat = 'Vector Math'
-    nl_module = 'parameters'
-
-    def init(self, context):
-        NLParameterNode.init(self, context)
-        utils.register_inputs(
-            self,
-            NLVec3FieldSocket, 'Vector'
-        )
-        self.outputs.new(NLVec3FieldSocket.bl_idname, "Vector")
-
-    def get_netlogic_class_name(self):
-        return "ULVectorAbsolute"
-
-    def get_output_socket_varnames(self):
-        return ["OUTV"]
-
-    def get_input_sockets_field_names(self):
-        return ["input_v"]
-
-
-_nodes.append(NLParameterAbsVector3Node)
-
-
-class NLVectorLength(NLParameterNode):
-    bl_idname = "NLVectorLength"
-    bl_label = "Vector Length"
-    nl_category = "Math"
-    nl_subcat = 'Vector Math'
-    nl_module = 'parameters'
-
-    def init(self, context):
-        NLParameterNode.init(self, context)
-        self.inputs.new(NLParameterSocket.bl_idname, 'Length')
-        self.outputs.new(NLVec3FieldSocket.bl_idname, "Vector")
-
-    def get_netlogic_class_name(self):
-        return "ULVectorLength"
-
-    def get_output_socket_varnames(self):
-        return ["OUTV"]
-
-    def get_input_sockets_field_names(self):
-        return ["input_v"]
-
-
-_nodes.append(NLVectorLength)
-
-
-class NLParameterVector3SimpleNode(NLParameterNode):
-    bl_idname = "NLParameterVector3SimpleNode"
-    bl_label = "Vector XYZ"
-    nl_category = "Values"
-    nl_subcat = 'Vectors'
-    nl_module = 'parameters'
-
-    def init(self, context):
-        NLParameterNode.init(self, context)
-        self.inputs.new(NLFloatFieldSocket.bl_idname, 'X')
-        self.inputs.new(NLFloatFieldSocket.bl_idname, 'Y')
-        self.inputs.new(NLFloatFieldSocket.bl_idname, 'Z')
-        self.outputs.new(NLVectorSocket.bl_idname, "Vector")
-
-    def get_netlogic_class_name(self):
-        return "ULVectorXYZ"
-
-    def get_output_socket_varnames(self):
-        return ["OUTV"]
-
-    def get_input_sockets_field_names(self):
-        return ["input_x", "input_y", "input_z"]
-
-
-_nodes.append(NLParameterVector3SimpleNode)
-
-
-class NLParameterVector4SimpleNode(NLParameterNode):
-    bl_idname = "NLParameterVector4SimpleNode"
-    bl_label = "Vector XYZW"
-    nl_category = "Values"
-    nl_subcat = 'Vectors'
-    nl_module = 'parameters'
-
-    def init(self, context):
-        NLParameterNode.init(self, context)
-        self.inputs.new(NLFloatFieldSocket.bl_idname, 'X')
-        self.inputs.new(NLFloatFieldSocket.bl_idname, 'Y')
-        self.inputs.new(NLFloatFieldSocket.bl_idname, 'Z')
-        self.inputs.new(NLFloatFieldSocket.bl_idname, 'W')
-        self.outputs.new(NLVectorSocket.bl_idname, "Vector")
-
-    def get_netlogic_class_name(self):
-        return "ULVectorXYZW"
-
-    def get_output_socket_varnames(self):
-        return ["OUTV"]
-
-    def get_input_sockets_field_names(self):
-        return ["input_x", "input_y", "input_z", 'input_w']
-
-
-_nodes.append(NLParameterVector4SimpleNode)
-
-
-class NLParameterRGBNode(NLParameterNode):
-    bl_idname = "NLParameterRGBNode"
-    bl_label = "Color RGB"
-    nl_category = "Values"
-    nl_subcat = 'Vectors'
-    nl_module = 'parameters'
-
-    def init(self, context):
-        NLParameterNode.init(self, context)
-        self.inputs.new(NLColorSocket.bl_idname, 'Color')
-        self.outputs.new(NLColorSocket.bl_idname, "Color")
-
-    def get_netlogic_class_name(self):
-        return "ULColorRGB"
-
-    def get_output_socket_varnames(self):
-        return ["OUTV"]
-
-    def get_input_sockets_field_names(self):
-        return ['color']
-
-
-_nodes.append(NLParameterRGBNode)
-
-
-class NLParameterRGBANode(NLParameterNode):
-    bl_idname = "NLParameterRGBANode"
-    bl_label = "Color RGBA"
-    nl_category = "Values"
-    nl_subcat = 'Vectors'
-    nl_module = 'parameters'
-
-    def init(self, context):
-        NLParameterNode.init(self, context)
-        self.inputs.new(NLColorAlphaSocket.bl_idname, "Color")
-        self.outputs.new(NLColorAlphaSocket.bl_idname, "Color")
-
-    def get_netlogic_class_name(self):
-        return "ULColorRGBA"
-
-    def get_output_socket_varnames(self):
-        return ["OUTV"]
-
-    def get_input_sockets_field_names(self):
-        return ['color']
-
-
-_nodes.append(NLParameterRGBANode)
-
-
-class NLParameterEulerSimpleNode(NLParameterNode):
-    bl_idname = "NLParameterEulerSimpleNode"
-    bl_label = "Euler"
-    nl_category = "Values"
-    nl_subcat = 'Vectors'
-    nl_module = 'parameters'
-
-    def init(self, context):
-        NLParameterNode.init(self, context)
-        self.inputs.new(NLFloatFieldSocket.bl_idname, 'X')
-        self.inputs.new(NLFloatFieldSocket.bl_idname, 'Y')
-        self.inputs.new(NLFloatFieldSocket.bl_idname, 'Z')
-        self.outputs.new(NLParameterSocket.bl_idname, "Euler")
-
-    def get_netlogic_class_name(self):
-        return "ULEuler"
-
-    def get_output_socket_varnames(self):
-        return ["OUTV"]
-
-    def get_input_sockets_field_names(self):
-        return ["input_x", "input_y", "input_z"]
-
-
-_nodes.append(NLParameterEulerSimpleNode)
-
-
-class NLParameterEulerToMatrixNode(NLParameterNode):
-    bl_idname = "NLParameterEulerToMatrixNode"
-    bl_label = "XYZ To Matrix"
-    nl_category = "Math"
-    nl_subcat = 'Vector Math'
-    nl_module = 'parameters'
-
-    def init(self, context):
-        NLParameterNode.init(self, context)
-        self.inputs.new(NLVec3FieldSocket.bl_idname, 'XYZ')
-        self.outputs.new(NLParameterSocket.bl_idname, "Matrix")
-
-    def get_netlogic_class_name(self):
-        return "ULEulerToMatrix"
-
-    def get_output_socket_varnames(self):
-        return ["OUT"]
-
-    def get_input_sockets_field_names(self):
-        return ["input_e"]
-
-
-_nodes.append(NLParameterEulerToMatrixNode)
-
-
-class NLParameterMatrixToEulerNode(NLParameterNode):
-    bl_idname = "NLParameterMatrixToEulerNode"
-    bl_label = "Matrix To XYZ"
-    nl_category = "Math"
-    nl_subcat = 'Vector Math'
-    nl_module = 'parameters'
-
-    output: EnumProperty(
-        name='Axis',
-        items=_enum_vector_types,
-        description="Output",
-        update=update_draw
-    )
-
-    def init(self, context):
-        NLParameterNode.init(self, context)
-        self.inputs.new(NLParameterSocket.bl_idname, 'Matrix')
-        self.outputs.new(NLVec3FieldSocket.bl_idname, "XYZ")
-
-    def get_netlogic_class_name(self):
-        return "ULMatrixToXYZ"
-
-    def draw_buttons(self, context, layout):
-        layout.prop(self, "output", text='')
-
-    def update_draw(self):
-        self.outputs[-1].name = 'Euler' if int(self.output) else 'Vector'
-
-    def get_output_socket_varnames(self):
-        return ["OUT"]
-
-    def get_input_sockets_field_names(self):
-        return ["input_m"]
-
-    def get_attributes(self):
-        return [
-            ("output", lambda: f'{self.output}'),
-        ]
-
-
-_nodes.append(NLParameterMatrixToEulerNode)
 
 
 class NLOnInitConditionNode(NLConditionNode):
@@ -4790,7 +1718,7 @@ class NLOnInitConditionNode(NLConditionNode):
 
     def init(self, context):
         NLConditionNode.init(self, context)
-        self.outputs.new(NLConditionSocket.bl_idname, "Init")
+        self.add_output(NLConditionSocket, "Init")
 
     def get_netlogic_class_name(self):
         return "ULOnInit"
@@ -4810,7 +1738,7 @@ class NLOnUpdateConditionNode(NLConditionNode):
 
     def init(self, context):
         NLConditionNode.init(self, context)
-        self.outputs.new(NLConditionSocket.bl_idname, "On Update")
+        self.add_output(NLConditionSocket, "On Update")
 
     def get_netlogic_class_name(self):
         return "ULOnUpdate"
@@ -4828,113 +1756,25 @@ class NLGamepadVibration(NLParameterNode):
 
     def init(self, context):
         NLParameterNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, 'Condition')
-        self.inputs.new(NLPositiveIntCentSocket.bl_idname, 'Index')
-        self.inputs.new(NLSocketAlphaFloat.bl_idname, 'Left')
-        self.inputs.new(NLSocketAlphaFloat.bl_idname, 'Right')
-        self.inputs.new(NLTimeSocket.bl_idname, 'Time')
+        self.add_input(NLConditionSocket, 'Condition')
+        self.add_input(NLPositiveIntCentSocket, 'Index')
+        self.add_input(NLSocketAlphaFloat, 'Left')
+        self.add_input(NLSocketAlphaFloat, 'Right')
+        self.add_input(NLTimeSocket, 'Time')
         self.inputs[-1].value = 1
-        self.outputs.new(NLConditionSocket.bl_idname, "Done")
+        self.add_output(NLConditionSocket, "Done")
 
     def get_netlogic_class_name(self):
         return "ULGamepadVibration"
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return ['condition', 'index', 'left', 'right', 'time']
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return ["DONE"]
 
 
 _nodes.append(NLGamepadVibration)
-
-
-class NLGamepadSticksCondition(NLParameterNode):
-    bl_idname = "NLGamepadSticksCondition"
-    bl_label = "Sticks"
-    nl_category = "Input"
-    nl_subcat = 'Gamepad'
-    nl_module = 'parameters'
-    axis: EnumProperty(
-        name='Axis',
-        items=_enum_controller_stick_operators,
-        description="Gamepad Sticks",
-        update=update_draw
-    )
-
-    def init(self, context):
-        NLParameterNode.init(self, context)
-        self.inputs.new(NLBooleanSocket.bl_idname, 'Inverted')
-        self.inputs.new(NLPositiveIntCentSocket.bl_idname, 'Index')
-        self.inputs.new(NLPositiveFloatSocket.bl_idname, 'Sensitivity')
-        self.inputs[-1].value = 1
-        self.inputs.new(NLPositiveFloatSocket.bl_idname, 'Threshold')
-        self.inputs[-1].value = 0.05
-        self.outputs.new(NLFloatFieldSocket.bl_idname, "Left / Right")
-        self.outputs.new(NLFloatFieldSocket.bl_idname, "Up / Down")
-
-    def draw_buttons(self, context, layout):
-        layout.prop(self, "axis", text='')
-
-    def get_netlogic_class_name(self):
-        return "ULGamepadSticks"
-
-    def get_input_sockets_field_names(self):
-        return ['inverted', "index", 'sensitivity', 'threshold']
-
-    def get_output_socket_varnames(self):
-        return ["X", "Y"]
-
-    def get_attributes(self):
-        return [
-            ("axis", lambda: f'{self.axis}')
-        ]
-
-
-_nodes.append(NLGamepadSticksCondition)
-
-
-class NLGamepadTriggerCondition(NLParameterNode):
-    bl_idname = "NLGamepadTriggerCondition"
-    bl_label = "Trigger"
-    nl_category = "Input"
-    nl_subcat = 'Gamepad'
-    nl_module = 'parameters'
-    axis: EnumProperty(
-        name='Axis',
-        items=_enum_controller_trigger_operators,
-        description="Left or Right Trigger",
-        update=update_draw
-    )
-
-    def init(self, context):
-        NLParameterNode.init(self, context)
-        self.inputs.new(NLPositiveIntCentSocket.bl_idname, 'Index')
-        self.inputs.new(NLFloatFieldSocket.bl_idname, 'Sensitivity')
-        self.inputs[-1].value = 1
-        self.inputs.new(NLFloatFieldSocket.bl_idname, 'Threshold')
-        self.inputs[-1].value = 0.05
-        self.outputs.new(NLFloatFieldSocket.bl_idname, "Value")
-
-    def draw_buttons(self, context, layout):
-        layout.prop(self, "axis", text='')
-
-    def get_netlogic_class_name(self):
-        return "ULGamepadTrigger"
-
-    def get_input_sockets_field_names(self):
-        return ["index", 'sensitivity', 'threshold']
-
-    def get_output_socket_varnames(self):
-        return ["VAL"]
-
-    def get_attributes(self):
-        return [
-            ("axis", lambda: f'{self.axis}'),
-        ]
-
-
-_nodes.append(NLGamepadTriggerCondition)
 
 
 class NLGamepadActive(NLConditionNode):
@@ -4946,16 +1786,16 @@ class NLGamepadActive(NLConditionNode):
 
     def init(self, context):
         NLConditionNode.init(self, context)
-        self.inputs.new(NLPositiveIntCentSocket.bl_idname, 'Index')
-        self.outputs.new(NLConditionSocket.bl_idname, 'Active')
+        self.add_input(NLPositiveIntCentSocket, 'Index')
+        self.add_output(NLConditionSocket, 'Active')
 
     def get_netlogic_class_name(self):
         return "ULGamepadActive"
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return ["index"]
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return [utils.OUTCELL]
 
 
@@ -4985,8 +1825,8 @@ class NLGamepadButtonsCondition(NLConditionNode):
 
     def init(self, context):
         NLConditionNode.init(self, context)
-        self.inputs.new(NLPositiveIntCentSocket.bl_idname, 'Index')
-        self.outputs.new(NLConditionSocket.bl_idname, "Pressed")
+        self.add_input(NLPositiveIntCentSocket, 'Index')
+        self.add_output(NLConditionSocket, "Pressed")
 
     def draw_buttons(self, context, layout):
         layout.prop(
@@ -5000,10 +1840,10 @@ class NLGamepadButtonsCondition(NLConditionNode):
     def get_netlogic_class_name(self):
         return "ULGamepadButton"
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return ["index"]
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return ["BUTTON"]
 
     def get_attributes(self):
@@ -5038,8 +1878,8 @@ class NLGamepadButtonUpCondition(NLConditionNode):
 
     def init(self, context):
         NLConditionNode.init(self, context)
-        self.inputs.new(NLPositiveIntCentSocket.bl_idname, 'Index')
-        self.outputs.new(NLConditionSocket.bl_idname, "Released")
+        self.add_input(NLPositiveIntCentSocket, 'Index')
+        self.add_output(NLConditionSocket, "Released")
 
     def draw_buttons(self, context, layout):
         layout.prop(
@@ -5053,10 +1893,10 @@ class NLGamepadButtonUpCondition(NLConditionNode):
     def get_netlogic_class_name(self):
         return "ULGamepadButtonUp"
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return ["index"]
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return ["BUTTON"]
 
     def get_attributes(self):
@@ -5078,15 +1918,15 @@ class NLKeyboardActive(NLConditionNode):
 
     def init(self, context):
         NLConditionNode.init(self, context)
-        self.outputs.new(NLConditionSocket.bl_idname, 'Active')
+        self.add_output(NLConditionSocket, 'Active')
 
     def get_netlogic_class_name(self):
         return "ULKeyboardActive"
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return ["index"]
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return [utils.OUTCELL]
 
 
@@ -5108,8 +1948,8 @@ class NLKeyPressedCondition(NLConditionNode):
 
     def init(self, context):
         NLConditionNode.init(self, context)
-        self.inputs.new(NLKeyboardKeySocket.bl_idname, "")
-        self.outputs.new(NLConditionSocket.bl_idname, "If Pressed")
+        self.add_input(NLKeyboardKeySocket, "")
+        self.add_output(NLConditionSocket, "If Pressed")
 
     def draw_buttons(self, context, layout):
         layout.prop(
@@ -5122,7 +1962,7 @@ class NLKeyPressedCondition(NLConditionNode):
     def get_netlogic_class_name(self):
         return "ULKeyPressed"
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return ["key_code"]
 
     def get_attributes(self):
@@ -5149,10 +1989,10 @@ class NLKeyLoggerAction(NLActionNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
-        self.inputs.new(NodeSocketPseudoCondition.bl_idname, "Condition")
-        self.outputs.new(NLConditionSocket.bl_idname, "Done")
-        self.outputs.new(NLParameterSocket.bl_idname, "Key Code")
-        self.outputs.new(NLParameterSocket.bl_idname, "Logged Char")
+        self.add_input(NodeSocketPseudoCondition, "Condition")
+        self.add_output(NLConditionSocket, "Done")
+        self.add_output(NLParameterSocket, "Key Code")
+        self.add_output(NLParameterSocket, "Logged Char")
 
     def draw_buttons(self, context, layout):
         layout.prop(
@@ -5165,10 +2005,10 @@ class NLKeyLoggerAction(NLActionNode):
     def get_netlogic_class_name(self):
         return "ULKeyLogger"
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return ["condition"]
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return ["KEY_LOGGED", "KEY_CODE", "CHARACTER"]
 
     def get_attributes(self):
@@ -5197,8 +2037,8 @@ class NLKeyReleasedCondition(NLConditionNode):
 
     def init(self, context):
         NLConditionNode.init(self, context)
-        self.inputs.new(NLKeyboardKeySocket.bl_idname, "")
-        self.outputs.new(NLConditionSocket.bl_idname, "If Released")
+        self.add_input(NLKeyboardKeySocket, "")
+        self.add_output(NLConditionSocket, "If Released")
 
     def draw_buttons(self, context, layout):
         layout.prop(
@@ -5211,7 +2051,7 @@ class NLKeyReleasedCondition(NLConditionNode):
     def get_netlogic_class_name(self):
         return "ULKeyReleased"
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return ["key_code"]
 
     def get_attributes(self):
@@ -5241,8 +2081,8 @@ class NLMousePressedCondition(NLConditionNode):
 
     def init(self, context):
         NLConditionNode.init(self, context)
-        self.inputs.new(NLMouseButtonSocket.bl_idname, "")
-        self.outputs.new(NLConditionSocket.bl_idname, "If Pressed")
+        self.add_input(NLMouseButtonSocket, "")
+        self.add_output(NLConditionSocket, "If Pressed")
 
     def draw_buttons(self, context, layout):
         layout.prop(
@@ -5255,7 +2095,7 @@ class NLMousePressedCondition(NLConditionNode):
     def get_netlogic_class_name(self):
         return "ULMousePressed"
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return ["mouse_button_code"]
 
     def get_attributes(self):
@@ -5263,7 +2103,7 @@ class NLMousePressedCondition(NLConditionNode):
             ("pulse", lambda: f'{self.pulse}')
         ]
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return ['OUT']
 
 
@@ -5288,7 +2128,7 @@ class NLMouseMovedCondition(NLConditionNode):
 
     def init(self, context):
         NLConditionNode.init(self, context)
-        self.outputs.new(NLConditionSocket.bl_idname, "If Moved")
+        self.add_output(NLConditionSocket, "If Moved")
 
     def draw_buttons(self, context, layout):
         layout.prop(
@@ -5301,7 +2141,7 @@ class NLMouseMovedCondition(NLConditionNode):
     def get_netlogic_class_name(self):
         return "ULMouseMoved"
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return ["mouse_button_code"]
 
     def get_attributes(self):
@@ -5331,8 +2171,8 @@ class NLMouseReleasedCondition(NLConditionNode):
 
     def init(self, context):
         NLConditionNode.init(self, context)
-        self.inputs.new(NLMouseButtonSocket.bl_idname, "")
-        self.outputs.new(NLConditionSocket.bl_idname, "If Released")
+        self.add_input(NLMouseButtonSocket, "")
+        self.add_output(NLConditionSocket, "If Released")
 
     def draw_buttons(self, context, layout):
         layout.prop(
@@ -5345,7 +2185,7 @@ class NLMouseReleasedCondition(NLConditionNode):
     def get_netlogic_class_name(self):
         return "ULMouseReleased"
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return ["mouse_button_code"]
 
     def get_attributes(self):
@@ -5353,7 +2193,7 @@ class NLMouseReleasedCondition(NLConditionNode):
             ("pulse", lambda: f'{self.pulse}')
         ]
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return ['OUT']
 
 
@@ -5374,9 +2214,9 @@ class NLConditionOnceNode(NLConditionNode):
 
     def init(self, context):
         NLConditionNode.init(self, context)
-        self.inputs.new(NodeSocketPseudoCondition.bl_idname, "Condition")
-        self.inputs.new(NLBooleanSocket.bl_idname, "Repeat")
-        self.inputs.new(NLPositiveFloatSocket.bl_idname, 'Reset After')
+        self.add_input(NodeSocketPseudoCondition, "Condition")
+        self.add_input(NLBooleanSocket, "Repeat")
+        self.add_input(NLPositiveFloatSocket, 'Reset After')
         self.inputs[-1].value = .5
         utils.register_outputs(self, NLConditionSocket, "Once")
 
@@ -5392,7 +2232,7 @@ class NLConditionOnceNode(NLConditionNode):
     def get_netlogic_class_name(self):
         return "ULOnce"
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return ["input_condition", 'repeat', 'reset_time']
 
 
@@ -5424,16 +2264,16 @@ class NLObjectPropertyOperator(NLConditionNode):
 
     def init(self, context):
         NLConditionNode.init(self, context)
-        self.inputs.new(NLGameObjectSocket.bl_idname, 'Object')
-        self.inputs.new(NLGamePropertySocket.bl_idname, "Property")
-        self.inputs.new(NLValueFieldSocket.bl_idname, '')
-        self.outputs.new(NLConditionSocket.bl_idname, 'If True')
-        self.outputs.new(NLParameterSocket.bl_idname, 'Value')
+        self.add_input(NLGameObjectSocket, 'Object')
+        self.add_input(NLGamePropertySocket, "Property")
+        self.add_input(NLValueFieldSocket, '')
+        self.add_output(NLConditionSocket, 'If True')
+        self.add_output(NLParameterSocket, 'Value')
 
     def get_netlogic_class_name(self):
         return "ULEvaluateProperty"
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return [
             "game_object",
             "property_name",
@@ -5446,7 +2286,7 @@ class NLObjectPropertyOperator(NLConditionNode):
             ("operator", lambda: f'LOGIC_OPERATORS[{self.operator}]')
         ]
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return ['OUT', "VAL"]
 
 
@@ -5468,7 +2308,7 @@ class NLConditionNextFrameNode(NLConditionNode):
     def get_netlogic_class_name(self):
         return "ULOnNextTick"
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return ["input_condition"]
 
 
@@ -5485,17 +2325,17 @@ class NLConditionMousePressedOn(NLConditionNode):
 
     def init(self, context):
         NLConditionNode.init(self, context)
-        self.inputs.new(NLMouseButtonSocket.bl_idname, "Mouse Button")
-        self.inputs.new(NLGameObjectSocket.bl_idname, "Object")
-        self.outputs.new(NLConditionSocket.bl_idname, "When Pressed On")
+        self.add_input(NLMouseButtonSocket, "Mouse Button")
+        self.add_input(NLGameObjectSocket, "Object")
+        self.add_output(NLConditionSocket, "When Pressed On")
 
     def get_netlogic_class_name(self):
         return "ULMousePressedOn"
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return ["mouse_button", "game_object"]
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return ['OUT']
 
 
@@ -5510,11 +2350,13 @@ class NLConditionMouseWheelMoved(NLConditionNode):
     nl_subcat = 'Mouse'
     nl_module = 'conditions'
     wheel_direction: EnumProperty(items=_enum_mouse_wheel_direction, default='3')
+    deprecated = True
 
     def init(self, context):
         NLConditionNode.init(self, context)
-        self.outputs.new(NLConditionSocket.bl_idname, "When Scrolled")
-        self.outputs.new(NLIntegerFieldSocket.bl_idname, "Difference")
+        self.add_input(NLParameterSocket, '', {'enabled': False})
+        self.add_output(NLConditionSocket, "When Scrolled")
+        self.add_output(NLIntegerFieldSocket, "Difference")
 
     def draw_buttons(self, context, layout):
         layout.prop(self, 'wheel_direction', text='')
@@ -5522,7 +2364,10 @@ class NLConditionMouseWheelMoved(NLConditionNode):
     def get_netlogic_class_name(self):
         return "ULMouseScrolled"
 
-    def get_output_socket_varnames(self):
+    def get_input_names(self):
+        return ['_old_direction']
+
+    def get_output_names(self):
         return ['OUT', 'DIFF']
 
     def get_attributes(self):
@@ -5544,15 +2389,15 @@ class NLConditionCollisionNode(NLConditionNode):
 
     def init(self, context):
         NLConditionNode.init(self, context)
-        self.inputs.new(NLGameObjectSocket.bl_idname, "Object")
-        self.inputs.new(NLBooleanSocket.bl_idname, 'Use Material')
-        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Property")
-        self.inputs.new(NLMaterialSocket.bl_idname, 'Material')
-        self.outputs.new(NLConditionSocket.bl_idname, "When Colliding")
-        self.outputs.new(NLGameObjectSocket.bl_idname, "Colliding Object")
-        self.outputs.new(NLListSocket.bl_idname, "Colliding Objects")
-        self.outputs.new(NLVec3FieldSocket.bl_idname, "Point")
-        self.outputs.new(NLVec3FieldSocket.bl_idname, "Normal")
+        self.add_input(NLGameObjectSocket, "Object")
+        self.add_input(NLBooleanSocket, 'Use Material')
+        self.add_input(NLQuotedStringFieldSocket, "Property")
+        self.add_input(NLMaterialSocket, 'Material')
+        self.add_output(NLConditionSocket, "When Colliding")
+        self.add_output(NLGameObjectSocket, "Colliding Object")
+        self.add_output(NLListSocket, "Colliding Objects")
+        self.add_output(NLVec3FieldSocket, "Point")
+        self.add_output(NLVec3FieldSocket, "Normal")
 
     def update_draw(self):
         self.inputs[2].enabled = not self.inputs[1].value
@@ -5569,10 +2414,10 @@ class NLConditionCollisionNode(NLConditionNode):
     def get_netlogic_class_name(self):
         return "ULCollision"
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return ["game_object", 'use_mat', 'prop', 'material']
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return [utils.OUTCELL, "TARGET", "OBJECTS", "POINT", "NORMAL"]
 
     def get_attributes(self):
@@ -5594,20 +2439,20 @@ class NLConditionMouseTargetingNode(NLConditionNode):
 
     def init(self, context):
         NLConditionNode.init(self, context)
-        self.inputs.new(NLGameObjectSocket.bl_idname, "Object")
-        self.outputs.new(NLConditionSocket.bl_idname, "On Mouse Enter")
-        self.outputs.new(NLConditionSocket.bl_idname, "On Mouse Over")
-        self.outputs.new(NLConditionSocket.bl_idname, "On Mouse Exit")
-        self.outputs.new(NLParameterSocket.bl_idname, "Point")
-        self.outputs.new(NLParameterSocket.bl_idname, "Normal")
+        self.add_input(NLGameObjectSocket, "Object")
+        self.add_output(NLConditionSocket, "On Mouse Enter")
+        self.add_output(NLConditionSocket, "On Mouse Over")
+        self.add_output(NLConditionSocket, "On Mouse Exit")
+        self.add_output(NLParameterSocket, "Point")
+        self.add_output(NLParameterSocket, "Normal")
 
     def get_netlogic_class_name(self):
         return "ULMouseOver"
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return ["game_object"]
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return [
             "MOUSE_ENTERED",
             "MOUSE_OVER",
@@ -5631,14 +2476,14 @@ class NLConditionAndNode(NLConditionNode):
     def init(self, context):
         NLConditionNode.init(self, context)
         self.hide = True
-        self.inputs.new(NLConditionSocket.bl_idname, "A")
-        self.inputs.new(NLConditionSocket.bl_idname, "B")
-        self.outputs.new(NLConditionSocket.bl_idname, "If A and B")
+        self.add_input(NLConditionSocket, "A")
+        self.add_input(NLConditionSocket, "B")
+        self.add_output(NLConditionSocket, "If A and B")
 
     def get_netlogic_class_name(self):
         return "ULAnd"
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return ["ca", "cb"]
 
 
@@ -5656,14 +2501,14 @@ class NLConditionAndNotNode(NLConditionNode):
     def init(self, context):
         NLConditionNode.init(self, context)
         self.hide = True
-        self.inputs.new(NLConditionSocket.bl_idname, "A")
-        self.inputs.new(NLConditionSocket.bl_idname, "B")
-        self.outputs.new(NLConditionSocket.bl_idname, "If A and not B")
+        self.add_input(NLConditionSocket, "A")
+        self.add_input(NLConditionSocket, "B")
+        self.add_output(NLConditionSocket, "If A and not B")
 
     def get_netlogic_class_name(self):
         return "ULAndNot"
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return ["condition_a", "condition_b"]
 
 
@@ -5681,14 +2526,14 @@ class NLConditionOrNode(NLConditionNode):
     def init(self, context):
         NLConditionNode.init(self, context)
         self.hide = True
-        self.inputs.new(NLConditionSocket.bl_idname, 'A')
-        self.inputs.new(NLConditionSocket.bl_idname, 'B')
-        self.outputs.new(NLConditionSocket.bl_idname, 'A or B')
+        self.add_input(NLConditionSocket, 'A')
+        self.add_input(NLConditionSocket, 'B')
+        self.add_output(NLConditionSocket, 'A or B')
 
     def get_netlogic_class_name(self):
         return "ULOr"
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return ["ca", "cb"]
 
 
@@ -5706,13 +2551,13 @@ class NLConditionOrList(NLConditionNode):
     def init(self, context):
         NLConditionNode.init(self, context)
         self.hide = True
-        self.inputs.new(NLConditionSocket.bl_idname, "A")
-        self.inputs.new(NLConditionSocket.bl_idname, "B")
-        self.inputs.new(NLConditionSocket.bl_idname, "C")
-        self.inputs.new(NLConditionSocket.bl_idname, "D")
-        self.inputs.new(NLConditionSocket.bl_idname, "E")
-        self.inputs.new(NLConditionSocket.bl_idname, "F")
-        self.outputs.new(NLConditionSocket.bl_idname, "Or...")
+        self.add_input(NLConditionSocket, "A")
+        self.add_input(NLConditionSocket, "B")
+        self.add_input(NLConditionSocket, "C")
+        self.add_input(NLConditionSocket, "D")
+        self.add_input(NLConditionSocket, "E")
+        self.add_input(NLConditionSocket, "F")
+        self.add_output(NLConditionSocket, "Or...")
 
     def update_draw(self):
         for x in range(5):
@@ -5727,7 +2572,7 @@ class NLConditionOrList(NLConditionNode):
     def get_netlogic_class_name(self):
         return "ULOrList"
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return [
             "ca",
             "cb",
@@ -5752,19 +2597,19 @@ class NLConditionAndList(NLConditionNode):
     def init(self, context):
         NLConditionNode.init(self, context)
         self.hide = True
-        self.inputs.new(NLConditionSocket.bl_idname, "A")
+        self.add_input(NLConditionSocket, "A")
         self.inputs[-1].default_value = "True"
-        self.inputs.new(NLConditionSocket.bl_idname, "B")
+        self.add_input(NLConditionSocket, "B")
         self.inputs[-1].default_value = "True"
-        self.inputs.new(NLConditionSocket.bl_idname, "C")
+        self.add_input(NLConditionSocket, "C")
         self.inputs[-1].default_value = "True"
-        self.inputs.new(NLConditionSocket.bl_idname, "D")
+        self.add_input(NLConditionSocket, "D")
         self.inputs[-1].default_value = "True"
-        self.inputs.new(NLConditionSocket.bl_idname, "E")
+        self.add_input(NLConditionSocket, "E")
         self.inputs[-1].default_value = "True"
-        self.inputs.new(NLConditionSocket.bl_idname, "F")
+        self.add_input(NLConditionSocket, "F")
         self.inputs[-1].default_value = "True"
-        self.outputs.new(NLConditionSocket.bl_idname, "If All True")
+        self.add_output(NLConditionSocket, "If All True")
 
     def update_draw(self):
         for x in range(5):
@@ -5779,7 +2624,7 @@ class NLConditionAndList(NLConditionNode):
     def get_netlogic_class_name(self):
         return "ULAndList"
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return [
             "ca",
             "cb",
@@ -5803,19 +2648,19 @@ class NLConditionValueTriggerNode(NLConditionNode):
 
     def init(self, context):
         NLConditionNode.init(self, context)
-        self.inputs.new(NLParameterSocket.bl_idname, "Value")
-        self.inputs.new(NLValueFieldSocket.bl_idname, "")
+        self.add_input(NLParameterSocket, "Value")
+        self.add_input(NLValueFieldSocket, "")
         self.inputs[-1].value_type = "BOOLEAN"
         self.inputs[-1].value = "True"
-        self.outputs.new(NLConditionSocket.bl_idname, "When Changed To")
+        self.add_output(NLConditionSocket, "When Changed To")
 
     def get_netlogic_class_name(self):
         return "ULValueChangedTo"
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return ["monitored_value", "trigger_value"]
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return ['OUT']
 
 
@@ -5839,10 +2684,10 @@ class NLConditionLogicOperation(NLConditionNode):
 
     def init(self, context):
         NLConditionNode.init(self, context)
-        self.inputs.new(NLValueFieldSocket.bl_idname, "")
-        self.inputs.new(NLValueFieldSocket.bl_idname, "")
-        self.inputs.new(NLPositiveFloatSocket.bl_idname, "Threshold")
-        self.outputs.new(NLConditionSocket.bl_idname, "If True")
+        self.add_input(NLValueFieldSocket, "")
+        self.add_input(NLValueFieldSocket, "")
+        self.add_input(NLPositiveFloatSocket, "Threshold")
+        self.add_output(NLConditionSocket, "If True")
 
     def update_draw(self):
         numerics = ['INTEGER', 'FLOAT']
@@ -5855,7 +2700,7 @@ class NLConditionLogicOperation(NLConditionNode):
     def get_netlogic_class_name(self):
         return "ULCompare"
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return ["param_a", "param_b", 'threshold']
 
     def get_attributes(self):
@@ -5863,7 +2708,7 @@ class NLConditionLogicOperation(NLConditionNode):
             ("operator", lambda: f'{self.operator}'),
         ]
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return ['RESULT']
 
 
@@ -5888,19 +2733,19 @@ class NLConditionCompareVecs(NLConditionNode):
 
     def init(self, context):
         NLConditionNode.init(self, context)
-        self.inputs.new(NLXYZSocket.bl_idname, "")
-        self.inputs.new(NLPositiveFloatSocket.bl_idname, "Threshold")
-        self.inputs.new(NLVec3FieldSocket.bl_idname, "Compare This")
-        self.inputs.new(NLVec3FieldSocket.bl_idname, "To This")
-        self.outputs.new(NLConditionSocket.bl_idname, "If True")
+        self.add_input(NLXYZSocket, "")
+        self.add_input(NLPositiveFloatSocket, "Threshold")
+        self.add_input(NLVec3FieldSocket, "Vector A")
+        self.add_input(NLVec3FieldSocket, "Vector B")
+        self.add_output(NLConditionSocket, "If True")
 
     def get_netlogic_class_name(self):
         return "ULCompareVectors"
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return ['all', 'threshold', "param_a", "param_b"]
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return ['OUT']
 
     def get_attributes(self):
@@ -5921,23 +2766,24 @@ class NLConditionDistanceCheck(NLConditionNode):
 
     def init(self, context):
         NLConditionNode.init(self, context)
-        self.inputs.new(NLVec3FieldSocket.bl_idname, "A")
-        self.inputs.new(NLVec3FieldSocket.bl_idname, "B")
-        self.inputs.new(NLPositiveFloatSocket.bl_idname, "Value")
-        self.outputs.new(NLConditionSocket.bl_idname, "Out")
-        self.outputs.new(NLFloatFieldSocket.bl_idname, "Distance")
+        self.add_input(NLVec3FieldSocket, "A")
+        self.add_input(NLVec3FieldSocket, "B")
+        self.add_input(NLPositiveFloatSocket, "Value")
+        self.add_input(NLFloatFieldSocket, "Hyst", {'enabled': False})
+        self.add_output(NLConditionSocket, "Out")
+        self.add_output(NLFloatFieldSocket, "Distance")
     
     def draw_buttons(self, context, layout):
         layout.prop(self, 'operation', text='')
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return ['OUT', 'DIST']
 
     def get_netlogic_class_name(self):
         return "ULCheckDistance"
 
-    def get_input_sockets_field_names(self):
-        return ["param_a", "param_b", "dist"]
+    def get_input_names(self):
+        return ["param_a", "param_b", "dist", '_old_hyst']
 
     def get_attributes(self):
         return [("operation", lambda: self.operation)]
@@ -5963,9 +2809,9 @@ class NLConditionValueChanged(NLConditionNode):
     def init(self, context):
         NLConditionNode.init(self, context)
         utils.register_inputs(self, NLParameterSocket, "Value")
-        self.outputs.new(NLConditionSocket.bl_idname, "If Changed")
-        self.outputs.new(NLParameterSocket.bl_idname, "Old Value")
-        self.outputs.new(NLParameterSocket.bl_idname, "New Value")
+        self.add_output(NLConditionSocket, "If Changed")
+        self.add_output(NLParameterSocket, "Old Value")
+        self.add_output(NLParameterSocket, "New Value")
 
     def draw_buttons(self, context, layout):
         layout.prop(
@@ -5978,13 +2824,13 @@ class NLConditionValueChanged(NLConditionNode):
     def get_netlogic_class_name(self):
         return "ULOnValueChanged"
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return ["current_value"]
 
     def get_attributes(self):
         return [("initialize", lambda: "True" if self.initialize else "False")]
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return ['OUT', "OLD", "NEW"]
 
 
@@ -5999,14 +2845,14 @@ class NLConditionTimeElapsed(NLConditionNode):
 
     def init(self, context):
         NLConditionNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, "Set Timer")
-        self.inputs.new(NLTimeSocket.bl_idname, "Seconds")
-        self.outputs.new(NLConditionSocket.bl_idname, "When Elapsed")
+        self.add_input(NLConditionSocket, "Set Timer")
+        self.add_input(NLTimeSocket, "Seconds")
+        self.add_output(NLConditionSocket, "When Elapsed")
 
     def get_netlogic_class_name(self):
         return "ULTimer"
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return ["condition", "delta_time"]
 
 
@@ -6030,7 +2876,7 @@ class NLConditionNotNoneNode(NLConditionNode):
     def get_netlogic_class_name(self):
         return "ULNotNone"
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return ["checked_value"]
 
 
@@ -6048,13 +2894,13 @@ class NLConditionNoneNode(NLConditionNode):
     def init(self, context):
         NLConditionNode.init(self, context)
         self.hide = True
-        self.inputs.new(NLParameterSocket.bl_idname, "Value")
-        self.outputs.new(NLConditionSocket.bl_idname, "If None")
+        self.add_input(NLParameterSocket, "Value")
+        self.add_output(NLConditionSocket, "If None")
 
     def get_netlogic_class_name(self):
         return "ULNone"
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return ["checked_value"]
 
 
@@ -6069,13 +2915,13 @@ class NLConditionValueValidNode(NLConditionNode):
 
     def init(self, context):
         NLConditionNode.init(self, context)
-        self.inputs.new(NLParameterSocket.bl_idname, "Value")
-        self.outputs.new(NLConditionSocket.bl_idname, "If Valid")
+        self.add_input(NLParameterSocket, "Value")
+        self.add_output(NLConditionSocket, "If Valid")
 
     def get_netlogic_class_name(self):
         return "ULValueValid"
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return ["checked_value"]
 
 
@@ -6085,21 +2931,25 @@ _nodes.append(NLConditionValueValidNode)
 class NLConditionNotNode(NLConditionNode):
     bl_idname = "NLConditionNotNode"
     bl_label = "Not"
+    
+    bl_width_min = 60
+    bl_width_default = 80
     nl_category = "Logic"
     nl_module = 'conditions'
 
     def init(self, context):
         NLConditionNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, "Condition")
-        self.outputs.new(NLConditionSocket.bl_idname, "If Not")
+        self.hide = True
+        self.add_input(NLConditionSocket, "Condition")
+        self.add_output(NLConditionSocket, "If Not")
 
     def get_netlogic_class_name(self):
         return "ULNot"
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return ["condition"]
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return ['OUT']
 
 
@@ -6115,18 +2965,18 @@ class NLConditionLogicNetworkStatusNode(NLConditionNode):
 
     def init(self, context):
         NLConditionNode.init(self, context)
-        self.inputs.new(NLGameObjectSocket.bl_idname, "Object")
-        self.inputs.new(NLSocketLogicTree.bl_idname, "Tree Name")
-        self.outputs.new(NLConditionSocket.bl_idname, "If Running")
-        self.outputs.new(NLConditionSocket.bl_idname, "If Stopped")
+        self.add_input(NLGameObjectSocket, "Object")
+        self.add_input(NLSocketLogicTree, "Tree Name")
+        self.add_output(NLConditionSocket, "If Running")
+        self.add_output(NLConditionSocket, "If Stopped")
 
     def get_netlogic_class_name(self):
         return "ULLogicTreeStatus"
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return ["game_object", "tree_name"]
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return ["IFRUNNING", "IFSTOPPED"]
 
 
@@ -6142,24 +2992,24 @@ class NLAddObjectActionNode(NLActionNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, "Condition")
-        self.inputs.new(NLGameObjectNameSocket.bl_idname, "Object to Add")
-        self.inputs.new(
+        self.add_input(NLConditionSocket, "Condition")
+        self.add_input(NLGameObjectNameSocket, "Object to Add")
+        self.add_input(
             NLGameObjectSocket.bl_idname,
             "Copy Data From (Optional)"
         )
-        self.inputs.new(NLPositiveIntegerFieldSocket.bl_idname, "Life")
-        self.inputs.new(NLBooleanSocket.bl_idname, "Full Copy")
-        self.outputs.new(NLConditionSocket.bl_idname, "Done")
-        self.outputs.new(NLGameObjectSocket.bl_idname, "Added Object")
+        self.add_input(NLPositiveIntegerFieldSocket, "Life")
+        self.add_input(NLBooleanSocket, "Full Copy")
+        self.add_output(NLConditionSocket, "Done")
+        self.add_output(NLGameObjectSocket, "Added Object")
 
     def get_netlogic_class_name(self):
         return "ULAddObject"
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return ["condition", "name", 'reference', "life", 'full_copy']
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return ['OUT', 'OBJ']
 
 
@@ -6187,24 +3037,24 @@ class LogicNodeSpawnPool(NLActionNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, "Create Pool")
-        self.inputs.new(NLConditionSocket.bl_idname, "Spawn")
-        self.inputs.new(NLGameObjectSocket.bl_idname, "Spawner")
-        self.inputs.new(NLGameObjectNameSocket.bl_idname, "Object Instance")
-        self.inputs.new(NLPositiveIntegerFieldSocket.bl_idname, "Amount")
+        self.add_input(NLConditionSocket, "Create Pool")
+        self.add_input(NLConditionSocket, "Spawn")
+        self.add_input(NLGameObjectSocket, "Spawner")
+        self.add_input(NLGameObjectNameSocket, "Object Instance")
+        self.add_input(NLPositiveIntegerFieldSocket, "Amount")
         self.inputs[-1].value = 10
-        self.inputs.new(NLPositiveIntegerFieldSocket.bl_idname, "Life")
+        self.add_input(NLPositiveIntegerFieldSocket, "Life")
         self.inputs[-1].value = 3
-        self.inputs.new(NLPositiveFloatSocket.bl_idname, "Speed")
+        self.add_input(NLPositiveFloatSocket, "Speed")
         self.inputs[-1].value = 75.0
-        self.inputs.new(NLBooleanSocket.bl_idname, "Visualize")
-        self.outputs.new(NLConditionSocket.bl_idname, "Pool Created")
-        self.outputs.new(NLConditionSocket.bl_idname, "Spawned")
-        self.outputs.new(NLConditionSocket.bl_idname, "On Hit")
-        self.outputs.new(NLGameObjectSocket.bl_idname, "Hit Object")
-        self.outputs.new(NLVectorSocket.bl_idname, "Hit Point")
-        self.outputs.new(NLVectorSocket.bl_idname, "Hit Normal")
-        self.outputs.new(NLVectorSocket.bl_idname, "Hit Direction")
+        self.add_input(NLBooleanSocket, "Visualize")
+        self.add_output(NLConditionSocket, "Pool Created")
+        self.add_output(NLConditionSocket, "Spawned")
+        self.add_output(NLConditionSocket, "On Hit")
+        self.add_output(NLGameObjectSocket, "Hit Object")
+        self.add_output(NLVectorSocket, "Hit Point")
+        self.add_output(NLVectorSocket, "Hit Normal")
+        self.add_output(NLVectorSocket, "Hit Direction")
 
     def draw_buttons(self, context, layout) -> None:
         layout.prop(self, 'create_on_init', text='On Startup')
@@ -6226,7 +3076,7 @@ class LogicNodeSpawnPool(NLActionNode):
     def get_netlogic_class_name(self):
         return "ULSpawnPool"
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return [
             "condition",
             'spawn',
@@ -6244,7 +3094,7 @@ class LogicNodeSpawnPool(NLActionNode):
             ("spawn_type", lambda: f'"{self.spawn_type}"')
         ]
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return ['OUT', 'SPAWNED', 'ONHIT', 'HITOBJECT', 'HITPOINT', 'HITNORMAL', 'HITDIR']
 
 
@@ -6267,18 +3117,18 @@ class LogicNodeLocalServer(NLActionNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, "Start")
-        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "IP")
+        self.add_input(NLConditionSocket, "Start")
+        self.add_input(NLQuotedStringFieldSocket, "IP")
         self.inputs[-1].value = socket.gethostbyname(socket.gethostname())
-        self.inputs.new(NLPositiveIntegerFieldSocket.bl_idname, "Port")
+        self.add_input(NLPositiveIntegerFieldSocket, "Port")
         self.inputs[-1].value = 8303
-        self.inputs.new(NLConditionSocket.bl_idname, "Stop")
-        self.outputs.new(NLConditionSocket.bl_idname, "Started")
-        self.outputs.new(NLConditionSocket.bl_idname, "Running")
-        self.outputs.new(NLConditionSocket.bl_idname, "Stopped")
-        self.outputs.new(NLParameterSocket.bl_idname, "Server")
-        self.outputs.new(NLConditionSocket.bl_idname, "Received")
-        self.outputs.new(NLDictSocket.bl_idname, "Message")
+        self.add_input(NLConditionSocket, "Stop")
+        self.add_output(NLConditionSocket, "Started")
+        self.add_output(NLConditionSocket, "Running")
+        self.add_output(NLConditionSocket, "Stopped")
+        self.add_output(NLParameterSocket, "Server")
+        self.add_output(NLConditionSocket, "Received")
+        self.add_output(NLDictSocket, "Message")
 
     def draw_buttons(self, context, layout) -> None:
         layout.prop(self, 'on_init', text='On Startup')
@@ -6286,7 +3136,7 @@ class LogicNodeLocalServer(NLActionNode):
     def get_netlogic_class_name(self):
         return "ULLocalServer"
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return [
             "start_cond",
             "ip_address",
@@ -6299,7 +3149,7 @@ class LogicNodeLocalServer(NLActionNode):
             ("on_init", lambda: f'{self.on_init}')
         ]
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return ['STARTED', 'RUNNING', 'STOPPED', 'SERVER', 'RECEIVED', 'MSG']
 
 
@@ -6322,17 +3172,17 @@ class LogicNodeLocalClient(NLActionNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, "Connect")
-        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "IP")
-        self.inputs.new(NLPositiveIntegerFieldSocket.bl_idname, "Port")
+        self.add_input(NLConditionSocket, "Connect")
+        self.add_input(NLQuotedStringFieldSocket, "IP")
+        self.add_input(NLPositiveIntegerFieldSocket, "Port")
         self.inputs[-1].value = 8303
-        self.inputs.new(NLConditionSocket.bl_idname, "Disconnect")
-        self.outputs.new(NLConditionSocket.bl_idname, "Connect")
-        self.outputs.new(NLConditionSocket.bl_idname, "Connected")
-        self.outputs.new(NLConditionSocket.bl_idname, "Disconnect")
-        self.outputs.new(NLParameterSocket.bl_idname, "Client")
-        self.outputs.new(NLConditionSocket.bl_idname, "Received")
-        self.outputs.new(NLDictSocket.bl_idname, "Message")
+        self.add_input(NLConditionSocket, "Disconnect")
+        self.add_output(NLConditionSocket, "Connect")
+        self.add_output(NLConditionSocket, "Connected")
+        self.add_output(NLConditionSocket, "Disconnect")
+        self.add_output(NLParameterSocket, "Client")
+        self.add_output(NLConditionSocket, "Received")
+        self.add_output(NLDictSocket, "Message")
 
     def draw_buttons(self, context, layout) -> None:
         layout.prop(self, 'on_init', text='On Startup')
@@ -6340,7 +3190,7 @@ class LogicNodeLocalClient(NLActionNode):
     def get_netlogic_class_name(self):
         return "ULLocalClient"
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return [
             "connect_cond",
             "ip_address",
@@ -6353,7 +3203,7 @@ class LogicNodeLocalClient(NLActionNode):
             ("on_init", lambda: f'{self.on_init}')
         ]
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return ['CONNECT', 'CONNECTED', 'DISCONNECT', 'CLIENT', 'RECEIVED', 'MSG']
 
 
@@ -6369,16 +3219,16 @@ class LogicNodeSendNetworkMessage(NLActionNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, "Condition")
-        self.inputs.new(NLParameterSocket.bl_idname, "Server / Client")
-        self.inputs.new(NLParameterSocket.bl_idname, "Data")
-        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Subject")
-        self.outputs.new(NLConditionSocket.bl_idname, "Done")
+        self.add_input(NLConditionSocket, "Condition")
+        self.add_input(NLParameterSocket, "Server / Client")
+        self.add_input(NLParameterSocket, "Data")
+        self.add_input(NLQuotedStringFieldSocket, "Subject")
+        self.add_output(NLConditionSocket, "Done")
 
     def get_netlogic_class_name(self):
         return "ULSendNetworkMessage"
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return [
             "condition",
             "entity",
@@ -6386,7 +3236,7 @@ class LogicNodeSendNetworkMessage(NLActionNode):
             'subject'
         ]
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return ['OUT']
 
 
@@ -6412,17 +3262,17 @@ class NLSetGameObjectGamePropertyActionNode(NLActionNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, "Condition")
-        self.inputs.new(NLGameObjectSocket.bl_idname, "Object")
-        self.inputs.new(NLGamePropertySocket.bl_idname, "Property")
+        self.add_input(NLConditionSocket, "Condition")
+        self.add_input(NLGameObjectSocket, "Object")
+        self.add_input(NLGamePropertySocket, "Property")
         self.inputs[-1].ref_index = 1
-        self.inputs.new(NLValueFieldSocket.bl_idname, "")
-        self.outputs.new(NLConditionSocket.bl_idname, "Done")
+        self.add_input(NLValueFieldSocket, "")
+        self.add_output(NLConditionSocket, "Done")
 
     def get_netlogic_class_name(self):
         return "ULSetProperty"
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return [
             "condition",
             "game_object",
@@ -6433,7 +3283,7 @@ class NLSetGameObjectGamePropertyActionNode(NLActionNode):
     def get_attributes(self):
         return [("mode", lambda: f'"{self.mode}"')]
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return ['OUT']
 
 
@@ -6450,13 +3300,13 @@ class NLSetGeometryNodeValue(NLActionNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, "Condition")
-        self.inputs.new(NLGeomNodeTreeSocket.bl_idname, 'Tree')
-        self.inputs.new(NLNodeGroupNodeSocket.bl_idname, 'Node Name')
+        self.add_input(NLConditionSocket, "Condition")
+        self.add_input(NLGeomNodeTreeSocket, 'Tree')
+        self.add_input(NLNodeGroupNodeSocket, 'Node Name')
         self.inputs[-1].ref_index = 1
-        self.inputs.new(NLPositiveIntegerFieldSocket.bl_idname, "Input")
-        self.inputs.new(NLFloatFieldSocket.bl_idname, 'Value')
-        self.outputs.new(NLConditionSocket.bl_idname, "Done")
+        self.add_input(NLPositiveIntegerFieldSocket, "Input")
+        self.add_input(NLFloatFieldSocket, 'Value')
+        self.add_output(NLConditionSocket, "Done")
 
     def update_draw(self):
         tree = self.inputs[1]
@@ -6482,7 +3332,7 @@ class NLSetGeometryNodeValue(NLActionNode):
     def get_netlogic_class_name(self):
         return "ULSetNodeSocket"
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return [
             "condition",
             "tree_name",
@@ -6491,7 +3341,7 @@ class NLSetGeometryNodeValue(NLActionNode):
             'value'
         ]
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return ['OUT']
 
 
@@ -6508,13 +3358,13 @@ class NLSetNodeTreeNodeValue(NLActionNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, "Condition")
-        self.inputs.new(NLNodeGroupSocket.bl_idname, 'Tree')
-        self.inputs.new(NLNodeGroupNodeSocket.bl_idname, 'Node Name')
+        self.add_input(NLConditionSocket, "Condition")
+        self.add_input(NLNodeGroupSocket, 'Tree')
+        self.add_input(NLNodeGroupNodeSocket, 'Node Name')
         self.inputs[-1].ref_index = 1
-        self.inputs.new(NLPositiveIntegerFieldSocket.bl_idname, "Input")
-        self.inputs.new(NLFloatFieldSocket.bl_idname, 'Value')
-        self.outputs.new(NLConditionSocket.bl_idname, "Done")
+        self.add_input(NLPositiveIntegerFieldSocket, "Input")
+        self.add_input(NLFloatFieldSocket, 'Value')
+        self.add_output(NLConditionSocket, "Done")
 
     def update_draw(self):
         tree = self.inputs[1]
@@ -6540,7 +3390,7 @@ class NLSetNodeTreeNodeValue(NLActionNode):
     def get_netlogic_class_name(self):
         return "ULSetNodeSocket"
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return [
             "condition",
             "tree_name",
@@ -6549,7 +3399,7 @@ class NLSetNodeTreeNodeValue(NLActionNode):
             'value'
         ]
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return ['OUT']
 
 
@@ -6566,14 +3416,14 @@ class NLSetGeometryNodeAttribute(NLActionNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, "Condition")
-        self.inputs.new(NLGeomNodeTreeSocket.bl_idname, 'Tree')
-        self.inputs.new(NLNodeGroupNodeSocket.bl_idname, 'Node Name')
+        self.add_input(NLConditionSocket, "Condition")
+        self.add_input(NLGeomNodeTreeSocket, 'Tree')
+        self.add_input(NLNodeGroupNodeSocket, 'Node Name')
         self.inputs[-1].ref_index = 1
-        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Internal")
-        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Attribute")
-        self.inputs.new(NLValueFieldSocket.bl_idname, '')
-        self.outputs.new(NLConditionSocket.bl_idname, "Done")
+        self.add_input(NLQuotedStringFieldSocket, "Internal")
+        self.add_input(NLQuotedStringFieldSocket, "Attribute")
+        self.add_input(NLValueFieldSocket, '')
+        self.add_output(NLConditionSocket, "Done")
 
     def update_draw(self):
         tree = self.inputs[1]
@@ -6589,7 +3439,7 @@ class NLSetGeometryNodeAttribute(NLActionNode):
     def get_netlogic_class_name(self):
         return "ULSetNodeValue"
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return [
             "condition",
             "tree_name",
@@ -6599,7 +3449,7 @@ class NLSetGeometryNodeAttribute(NLActionNode):
             'value'
         ]
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return ['OUT']
 
 
@@ -6616,14 +3466,14 @@ class NLSetNodeTreeNodeAttribute(NLActionNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, "Condition")
-        self.inputs.new(NLNodeGroupSocket.bl_idname, 'Tree')
-        self.inputs.new(NLNodeGroupNodeSocket.bl_idname, 'Node Name')
+        self.add_input(NLConditionSocket, "Condition")
+        self.add_input(NLNodeGroupSocket, 'Tree')
+        self.add_input(NLNodeGroupNodeSocket, 'Node Name')
         self.inputs[-1].ref_index = 1
-        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Internal")
-        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Attribute")
-        self.inputs.new(NLValueFieldSocket.bl_idname, '')
-        self.outputs.new(NLConditionSocket.bl_idname, "Done")
+        self.add_input(NLQuotedStringFieldSocket, "Internal")
+        self.add_input(NLQuotedStringFieldSocket, "Attribute")
+        self.add_input(NLValueFieldSocket, '')
+        self.add_output(NLConditionSocket, "Done")
 
     def update_draw(self):
         tree = self.inputs[1]
@@ -6639,7 +3489,7 @@ class NLSetNodeTreeNodeAttribute(NLActionNode):
     def get_netlogic_class_name(self):
         return "ULSetNodeValue"
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return [
             "condition",
             "tree_name",
@@ -6649,7 +3499,7 @@ class NLSetNodeTreeNodeAttribute(NLActionNode):
             'value'
         ]
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return ['OUT']
 
 
@@ -6665,11 +3515,11 @@ class NLSetMaterial(NLActionNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, "Condition")
-        self.inputs.new(NLGameObjectSocket.bl_idname, "Object")
-        self.inputs.new(NLIntegerFieldSocket.bl_idname, "Slot")
-        self.inputs.new(NLMaterialSocket.bl_idname, "Material")
-        self.outputs.new(NLConditionSocket.bl_idname, "Done")
+        self.add_input(NLConditionSocket, "Condition")
+        self.add_input(NLGameObjectSocket, "Object")
+        self.add_input(NLIntegerFieldSocket, "Slot")
+        self.add_input(NLMaterialSocket, "Material")
+        self.add_output(NLConditionSocket, "Done")
 
     def get_netlogic_class_name(self):
         return "ULSetMaterial"
@@ -6681,7 +3531,7 @@ class NLSetMaterial(NLActionNode):
         if self.inputs[2].value > len(obj_socket.value.material_slots):
             self.inputs[2].value = len(obj_socket.value.material_slots)
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return [
             "condition",
             "game_object",
@@ -6689,7 +3539,7 @@ class NLSetMaterial(NLActionNode):
             "mat_name",
         ]
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return ['OUT']
 
 
@@ -6706,13 +3556,13 @@ class NLSetMaterialNodeValue(NLActionNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, "Condition")
-        self.inputs.new(NLMaterialSocket.bl_idname, 'Material')
-        self.inputs.new(NLTreeNodeSocket.bl_idname, 'Node Name')
+        self.add_input(NLConditionSocket, "Condition")
+        self.add_input(NLMaterialSocket, 'Material')
+        self.add_input(NLTreeNodeSocket, 'Node Name')
         self.inputs[-1].ref_index = 1
-        self.inputs.new(NLPositiveIntegerFieldSocket.bl_idname, "Input")
-        self.inputs.new(NLFloatFieldSocket.bl_idname, 'Value')
-        self.outputs.new(NLConditionSocket.bl_idname, "Done")
+        self.add_input(NLPositiveIntegerFieldSocket, "Input")
+        self.add_input(NLFloatFieldSocket, 'Value')
+        self.add_output(NLConditionSocket, "Done")
 
     def update_draw(self):
         mat = self.inputs[1]
@@ -6738,7 +3588,7 @@ class NLSetMaterialNodeValue(NLActionNode):
     def get_netlogic_class_name(self):
         return "ULSetMatNodeSocket"
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return [
             "condition",
             "mat_name",
@@ -6747,7 +3597,7 @@ class NLSetMaterialNodeValue(NLActionNode):
             'value'
         ]
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return ['OUT']
 
 
@@ -6764,14 +3614,14 @@ class NLSetMaterialNodeAttribute(NLActionNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, "Condition")
-        self.inputs.new(NLMaterialSocket.bl_idname, 'Material')
-        self.inputs.new(NLTreeNodeSocket.bl_idname, 'Node Name')
+        self.add_input(NLConditionSocket, "Condition")
+        self.add_input(NLMaterialSocket, 'Material')
+        self.add_input(NLTreeNodeSocket, 'Node Name')
         self.inputs[-1].ref_index = 1
-        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Internal")
-        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Attribute")
-        self.inputs.new(NLValueFieldSocket.bl_idname, '')
-        self.outputs.new(NLConditionSocket.bl_idname, "Done")
+        self.add_input(NLQuotedStringFieldSocket, "Internal")
+        self.add_input(NLQuotedStringFieldSocket, "Attribute")
+        self.add_input(NLValueFieldSocket, '')
+        self.add_output(NLConditionSocket, "Done")
 
     def update_draw(self):
         mat = self.inputs[1]
@@ -6787,7 +3637,7 @@ class NLSetMaterialNodeAttribute(NLActionNode):
     def get_netlogic_class_name(self):
         return "ULSetMatNodeValue"
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return [
             "condition",
             "mat_name",
@@ -6797,7 +3647,7 @@ class NLSetMaterialNodeAttribute(NLActionNode):
             'value'
         ]
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return ['OUT']
 
 
@@ -6813,23 +3663,23 @@ class NLPlayMaterialSequence(NLActionNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, "Condition")
-        self.inputs.new(NLMaterialSocket.bl_idname, 'Material')
-        self.inputs.new(NLTreeNodeSocket.bl_idname, 'Node Name')
+        self.add_input(NLConditionSocket, "Condition")
+        self.add_input(NLMaterialSocket, 'Material')
+        self.add_input(NLTreeNodeSocket, 'Node Name')
         self.inputs[-1].ref_index = 1
-        self.inputs.new(NLPlayActionModeSocket.bl_idname, "Mode")
+        self.add_input(NLPlayActionModeSocket, "Mode")
         self.inputs[-1].enabled = False
-        self.inputs.new(NLBooleanSocket.bl_idname, 'Continue')
+        self.add_input(NLBooleanSocket, 'Continue')
         self.inputs[-1].enabled = False
-        self.inputs.new(NLVec2FieldSocket.bl_idname, "Frames")
+        self.add_input(NLVec2FieldSocket, "Frames")
         self.inputs[-1].enabled = False
-        self.inputs.new(NLPositiveFloatSocket.bl_idname, "FPS")
+        self.add_input(NLPositiveFloatSocket, "FPS")
         self.inputs[-1].value = 60
         self.inputs[-1].enabled = False
-        self.outputs.new(NLConditionSocket.bl_idname, "On Start")
-        self.outputs.new(NLConditionSocket.bl_idname, "Running")
-        self.outputs.new(NLConditionSocket.bl_idname, "On Finish")
-        self.outputs.new(NLParameterSocket.bl_idname, "Current Frame")
+        self.add_output(NLConditionSocket, "On Start")
+        self.add_output(NLConditionSocket, "Running")
+        self.add_output(NLConditionSocket, "On Finish")
+        self.add_output(NLParameterSocket, "Current Frame")
 
     def draw_buttons(self, context, layout):
         mat = self.inputs[1].value
@@ -6861,7 +3711,7 @@ class NLPlayMaterialSequence(NLActionNode):
     def get_netlogic_class_name(self):
         return "ULPaySequence"
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return [
             "condition",
             "mat_name",
@@ -6872,7 +3722,7 @@ class NLPlayMaterialSequence(NLActionNode):
             'fps'
         ]
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return ['ON_START', 'RUNNING', 'ON_FINISH', 'FRAME']
 
 
@@ -6898,16 +3748,16 @@ class NLToggleGameObjectGamePropertyActionNode(NLActionNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, "Condition")
-        self.inputs.new(NLGameObjectSocket.bl_idname, "Object")
-        self.inputs.new(NLGamePropertySocket.bl_idname, "Property")
+        self.add_input(NLConditionSocket, "Condition")
+        self.add_input(NLGameObjectSocket, "Object")
+        self.add_input(NLGamePropertySocket, "Property")
         self.inputs[-1].ref_index = 1
-        self.outputs.new(NLConditionSocket.bl_idname, "Done")
+        self.add_output(NLConditionSocket, "Done")
 
     def get_netlogic_class_name(self):
         return "ULToggleProperty"
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return [
             "condition",
             "game_object",
@@ -6917,7 +3767,7 @@ class NLToggleGameObjectGamePropertyActionNode(NLActionNode):
     def get_attributes(self):
         return [("mode", lambda: f'"{self.mode}"')]
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return ['OUT']
 
 
@@ -6945,12 +3795,12 @@ class NLAddToGameObjectGamePropertyActionNode(NLActionNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, "Condition")
-        self.inputs.new(NLGameObjectSocket.bl_idname, "Object")
-        self.inputs.new(NLGamePropertySocket.bl_idname, "Property")
+        self.add_input(NLConditionSocket, "Condition")
+        self.add_input(NLGameObjectSocket, "Object")
+        self.add_input(NLGamePropertySocket, "Property")
         self.inputs[-1].ref_index = 1
-        self.inputs.new(NLFloatFieldSocket.bl_idname, "Value")
-        self.outputs.new(NLConditionSocket.bl_idname, "Done")
+        self.add_input(NLFloatFieldSocket, "Value")
+        self.add_output(NLConditionSocket, "Done")
 
     def get_netlogic_class_name(self):
         return "ULModifyProperty"
@@ -6965,7 +3815,7 @@ class NLAddToGameObjectGamePropertyActionNode(NLActionNode):
             ("operator", lambda: f'OPERATORS.get("{self.operator}")')
         ]
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return [
             "condition",
             "game_object",
@@ -6973,7 +3823,7 @@ class NLAddToGameObjectGamePropertyActionNode(NLActionNode):
             "property_value"
         ]
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return ['OUT']
 
 
@@ -7002,13 +3852,13 @@ class NLClampedModifyProperty(NLActionNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, "Condition")
-        self.inputs.new(NLGameObjectSocket.bl_idname, "Object")
-        self.inputs.new(NLGamePropertySocket.bl_idname, "Property")
+        self.add_input(NLConditionSocket, "Condition")
+        self.add_input(NLGameObjectSocket, "Object")
+        self.add_input(NLGamePropertySocket, "Property")
         self.inputs[-1].ref_index = 1
-        self.inputs.new(NLFloatFieldSocket.bl_idname, "Value")
-        self.inputs.new(NLVec2FieldSocket.bl_idname, "Range")
-        self.outputs.new(NLConditionSocket.bl_idname, "Done")
+        self.add_input(NLFloatFieldSocket, "Value")
+        self.add_input(NLVec2FieldSocket, "Range")
+        self.add_output(NLConditionSocket, "Done")
 
     def draw_buttons(self, context, layout):
         layout.prop(self, "mode", text="")
@@ -7023,7 +3873,7 @@ class NLClampedModifyProperty(NLActionNode):
             ("operator", lambda: f'OPERATORS.get("{self.operator}")')
         ]
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return [
             "condition",
             "game_object",
@@ -7032,7 +3882,7 @@ class NLClampedModifyProperty(NLActionNode):
             'range'
         ]
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return ['OUT']
 
 
@@ -7058,17 +3908,17 @@ class NLCopyPropertyFromObject(NLActionNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, "Condition")
-        self.inputs.new(NLGameObjectSocket.bl_idname, "Copy From")
-        self.inputs.new(NLGameObjectSocket.bl_idname, "To")
-        self.inputs.new(NLGamePropertySocket.bl_idname, "Property")
+        self.add_input(NLConditionSocket, "Condition")
+        self.add_input(NLGameObjectSocket, "Copy From")
+        self.add_input(NLGameObjectSocket, "To")
+        self.add_input(NLGamePropertySocket, "Property")
         self.inputs[-1].ref_index = 1
-        self.outputs.new(NLConditionSocket.bl_idname, "Done")
+        self.add_output(NLConditionSocket, "Done")
 
     def get_netlogic_class_name(self):
         return "ULCopyProperty"
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return [
             "condition",
             "from_object",
@@ -7079,7 +3929,7 @@ class NLCopyPropertyFromObject(NLActionNode):
     def get_attributes(self):
         return [("mode", lambda: f'"{self.mode}"')]
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return ['OUT']
 
 
@@ -7094,20 +3944,20 @@ class NLValueSwitch(NLParameterNode):
 
     def init(self, context):
         NLParameterNode.init(self, context)
-        self.inputs.new(NLBooleanSocket.bl_idname, "A if True, else B")
-        self.inputs.new(NLValueFieldSocket.bl_idname, "")
+        self.add_input(NLBooleanSocket, "A if True, else B")
+        self.add_input(NLValueFieldSocket, "")
         self.inputs[-1].value = 'A'
-        self.inputs.new(NLValueFieldSocket.bl_idname, "")
+        self.add_input(NLValueFieldSocket, "")
         self.inputs[-1].value = 'B'
-        self.outputs.new(NLParameterSocket.bl_idname, "A or B")
+        self.add_output(NLParameterSocket, "A or B")
 
     def get_netlogic_class_name(self):
         return "ULValueSwitch"
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return ["condition", 'val_a', 'val_b']
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return ['VAL']
 
 
@@ -7125,25 +3975,25 @@ class NLValueSwitchList(NLParameterNode):
     def init(self, context):
         NLParameterNode.init(self, context)
         self.hide = True
-        self.inputs.new(NLBooleanSocket.bl_idname, "if A")
-        self.inputs.new(NLValueFieldSocket.bl_idname, "")
+        self.add_input(NLBooleanSocket, "if A")
+        self.add_input(NLValueFieldSocket, "")
         self.inputs[-1].value = "A"
-        self.inputs.new(NLBooleanSocket.bl_idname, "elif B")
-        self.inputs.new(NLValueFieldSocket.bl_idname, "")
+        self.add_input(NLBooleanSocket, "elif B")
+        self.add_input(NLValueFieldSocket, "")
         self.inputs[-1].value = "B"
-        self.inputs.new(NLBooleanSocket.bl_idname, "elif C")
-        self.inputs.new(NLValueFieldSocket.bl_idname, "")
+        self.add_input(NLBooleanSocket, "elif C")
+        self.add_input(NLValueFieldSocket, "")
         self.inputs[-1].value = "C"
-        self.inputs.new(NLBooleanSocket.bl_idname, "elif D")
-        self.inputs.new(NLValueFieldSocket.bl_idname, "")
+        self.add_input(NLBooleanSocket, "elif D")
+        self.add_input(NLValueFieldSocket, "")
         self.inputs[-1].value = "D"
-        self.inputs.new(NLBooleanSocket.bl_idname, "elif E")
-        self.inputs.new(NLValueFieldSocket.bl_idname, "")
+        self.add_input(NLBooleanSocket, "elif E")
+        self.add_input(NLValueFieldSocket, "")
         self.inputs[-1].value = "E"
-        self.inputs.new(NLBooleanSocket.bl_idname, "elif F")
-        self.inputs.new(NLValueFieldSocket.bl_idname, "")
+        self.add_input(NLBooleanSocket, "elif F")
+        self.add_input(NLValueFieldSocket, "")
         self.inputs[-1].value = "F"
-        self.outputs.new(NLParameterSocket.bl_idname,
+        self.add_output(NLParameterSocket.bl_idname,
                          "A or B or C or D or E or F")
 
     def update_draw(self):
@@ -7159,7 +4009,7 @@ class NLValueSwitchList(NLParameterNode):
     def get_netlogic_class_name(self):
         return "ULValueSwitchList"
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return [
             "ca", 'val_a',
             "cb", 'val_b',
@@ -7169,7 +4019,7 @@ class NLValueSwitchList(NLParameterNode):
             "cf", 'val_f'
         ]
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return ['VAL']
 
 
@@ -7196,35 +4046,35 @@ class NLValueSwitchListCompare(NLParameterNode):
     def init(self, context):
         NLParameterNode.init(self, context)
         self.hide = True
-        self.inputs.new(NLValueFieldSocket.bl_idname, "Switch:")
+        self.add_input(NLValueFieldSocket, "Switch:")
         self.inputs[-1].value = "_None_"
-        self.inputs.new(NLValueFieldSocket.bl_idname, "Default")
+        self.add_input(NLValueFieldSocket, "Default")
         self.inputs[-1].value = "_None_"
-        self.inputs.new(NLValueFieldSocket.bl_idname, "Case A")
+        self.add_input(NLValueFieldSocket, "Case A")
         self.inputs[-1].value = "_None_"
-        self.inputs.new(NLValueFieldSocket.bl_idname, "")
+        self.add_input(NLValueFieldSocket, "")
         self.inputs[-1].value = "_None_"
-        self.inputs.new(NLValueFieldSocket.bl_idname, "Case B")
+        self.add_input(NLValueFieldSocket, "Case B")
         self.inputs[-1].value = "_None_"
-        self.inputs.new(NLValueFieldSocket.bl_idname, "")
+        self.add_input(NLValueFieldSocket, "")
         self.inputs[-1].value = "_None_"
-        self.inputs.new(NLValueFieldSocket.bl_idname, "Case C")
+        self.add_input(NLValueFieldSocket, "Case C")
         self.inputs[-1].value = "_None_"
-        self.inputs.new(NLValueFieldSocket.bl_idname, "")
+        self.add_input(NLValueFieldSocket, "")
         self.inputs[-1].value = "_None_"
-        self.inputs.new(NLValueFieldSocket.bl_idname, "Case D")
+        self.add_input(NLValueFieldSocket, "Case D")
         self.inputs[-1].value = "_None_"
-        self.inputs.new(NLValueFieldSocket.bl_idname, "")
+        self.add_input(NLValueFieldSocket, "")
         self.inputs[-1].value = "_None_"
-        self.inputs.new(NLValueFieldSocket.bl_idname, "Case E")
+        self.add_input(NLValueFieldSocket, "Case E")
         self.inputs[-1].value = "_None_"
-        self.inputs.new(NLValueFieldSocket.bl_idname, "")
+        self.add_input(NLValueFieldSocket, "")
         self.inputs[-1].value = "_None_"
-        self.inputs.new(NLValueFieldSocket.bl_idname, "Case F")
+        self.add_input(NLValueFieldSocket, "Case F")
         self.inputs[-1].value = "_None_"
-        self.inputs.new(NLValueFieldSocket.bl_idname, "")
+        self.add_input(NLValueFieldSocket, "")
         self.inputs[-1].value = "_None_"
-        self.outputs.new(
+        self.add_output(
             NLParameterSocket.bl_idname,
             "Output Case"
         )
@@ -7242,7 +4092,7 @@ class NLValueSwitchListCompare(NLParameterNode):
     def get_netlogic_class_name(self):
         return "ULValueSwitchListCompare"
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return [
             "p0", "val_default",
             "pa", 'val_a',
@@ -7258,7 +4108,7 @@ class NLValueSwitchListCompare(NLParameterNode):
             ("operator", lambda: f'{self.operator}'),
         ]
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return ['RESULT']
 
 
@@ -7273,16 +4123,16 @@ class NLInvertValueNode(NLParameterNode):
 
     def init(self, context):
         NLParameterNode.init(self, context)
-        self.inputs.new(NLFloatFieldSocket.bl_idname, "Value")
-        self.outputs.new(NLParameterSocket.bl_idname, "Value")
+        self.add_input(NLFloatFieldSocket, "Value")
+        self.add_output(NLParameterSocket, "Value")
 
     def get_netlogic_class_name(self):
         return "ULInvertValue"
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return ["value"]
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return ['OUT']
 
 
@@ -7297,16 +4147,16 @@ class NLAbsoluteValue(NLParameterNode):
 
     def init(self, context):
         NLParameterNode.init(self, context)
-        self.inputs.new(NLFloatFieldSocket.bl_idname, "Value")
-        self.outputs.new(NLParameterSocket.bl_idname, "Value")
+        self.add_input(NLFloatFieldSocket, "Value")
+        self.add_output(NLParameterSocket, "Value")
 
     def get_netlogic_class_name(self):
         return "ULAbsoluteValue"
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return ["value"]
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return ['OUT']
 
 
@@ -7322,29 +4172,29 @@ class NLCreateVehicleFromParent(NLActionNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, "Condition")
-        self.inputs.new(NLGameObjectSocket.bl_idname, "Collider")
-        self.inputs.new(NLFloatFieldSocket.bl_idname, "Suspension")
+        self.add_input(NLConditionSocket, "Condition")
+        self.add_input(NLGameObjectSocket, "Collider")
+        self.add_input(NLFloatFieldSocket, "Suspension")
         self.inputs[-1].value = 0.06
-        self.inputs.new(NLFloatFieldSocket.bl_idname, "Stiffness")
+        self.add_input(NLFloatFieldSocket, "Stiffness")
         self.inputs[-1].value = 50
-        self.inputs.new(NLFloatFieldSocket.bl_idname, "Damping")
+        self.add_input(NLFloatFieldSocket, "Damping")
         self.inputs[-1].value = 5
-        self.inputs.new(NLFloatFieldSocket.bl_idname, "Friction")
+        self.add_input(NLFloatFieldSocket, "Friction")
         self.inputs[-1].value = 2
-        self.inputs.new(NLPositiveFloatSocket.bl_idname, "Wheel Modifier")
+        self.add_input(NLPositiveFloatSocket, "Wheel Modifier")
         self.inputs[-1].value = 1
-        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
-        self.outputs.new(NLParameterSocket.bl_idname, 'Vehicle Constraint')
-        self.outputs.new(NLListSocket.bl_idname, 'Wheels')
+        self.add_output(NLConditionSocket, 'Done')
+        self.add_output(NLParameterSocket, 'Vehicle Constraint')
+        self.add_output(NLListSocket, 'Wheels')
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return ["OUT", 'VEHICLE', 'WHEELS']
 
     def get_netlogic_class_name(self):
         return "ULCreateVehicle"
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return [
             "condition",
             "game_object",
@@ -7373,18 +4223,18 @@ class NLVehicleApplyEngineForce(NLActionNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, "Condition")
-        self.inputs.new(NLGameObjectSocket.bl_idname, "Vehicle")
-        self.inputs.new(NLPositiveIntegerFieldSocket.bl_idname, "Wheels")
+        self.add_input(NLConditionSocket, "Condition")
+        self.add_input(NLGameObjectSocket, "Vehicle")
+        self.add_input(NLPositiveIntegerFieldSocket, "Wheels")
         self.inputs[-1].value = 2
-        self.inputs.new(NLPositiveFloatSocket.bl_idname, "Power")
+        self.add_input(NLPositiveFloatSocket, "Power")
         self.inputs[-1].value = 1
-        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+        self.add_output(NLConditionSocket, 'Done')
 
     def update_draw(self):
         self.inputs[2].enabled = self.value_type != 'ALL'
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return ["OUT"]
 
     def draw_buttons(self, context, layout):
@@ -7393,7 +4243,7 @@ class NLVehicleApplyEngineForce(NLActionNode):
     def get_netlogic_class_name(self):
         return "ULVehicleApplyForce"
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return ["condition", "vehicle", "wheelcount", 'power']
 
     def get_attributes(self):
@@ -7419,18 +4269,18 @@ class NLVehicleApplyBraking(NLActionNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, "Condition")
-        self.inputs.new(NLGameObjectSocket.bl_idname, "Vehicle")
-        self.inputs.new(NLPositiveIntegerFieldSocket.bl_idname, "Wheels")
+        self.add_input(NLConditionSocket, "Condition")
+        self.add_input(NLGameObjectSocket, "Vehicle")
+        self.add_input(NLPositiveIntegerFieldSocket, "Wheels")
         self.inputs[-1].value = 2
-        self.inputs.new(NLPositiveFloatSocket.bl_idname, "Power")
+        self.add_input(NLPositiveFloatSocket, "Power")
         self.inputs[-1].value = 1
-        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+        self.add_output(NLConditionSocket, 'Done')
 
     def update_draw(self):
         self.inputs[2].enabled = self.value_type != 'ALL'
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return ["OUT"]
 
     def draw_buttons(self, context, layout):
@@ -7439,7 +4289,7 @@ class NLVehicleApplyBraking(NLActionNode):
     def get_netlogic_class_name(self):
         return "ULVehicleApplyBraking"
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return ["condition", "vehicle", "wheelcount", 'power']
 
     def get_attributes(self):
@@ -7465,17 +4315,17 @@ class NLVehicleApplySteering(NLActionNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, "Condition")
-        self.inputs.new(NLGameObjectSocket.bl_idname, "Vehicle")
-        self.inputs.new(NLPositiveIntegerFieldSocket.bl_idname, "Wheels")
+        self.add_input(NLConditionSocket, "Condition")
+        self.add_input(NLGameObjectSocket, "Vehicle")
+        self.add_input(NLPositiveIntegerFieldSocket, "Wheels")
         self.inputs[-1].value = 2
-        self.inputs.new(NLFloatFieldSocket.bl_idname, "Steer")
-        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+        self.add_input(NLFloatFieldSocket, "Steer")
+        self.add_output(NLConditionSocket, 'Done')
 
     def update_draw(self):
         self.inputs[2].enabled = self.value_type != 'ALL'
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return ["OUT"]
 
     def draw_buttons(self, context, layout):
@@ -7484,7 +4334,7 @@ class NLVehicleApplySteering(NLActionNode):
     def get_netlogic_class_name(self):
         return "ULVehicleApplySteering"
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return ["condition", "vehicle", "wheelcount", 'power']
 
     def get_attributes(self):
@@ -7510,19 +4360,19 @@ class NLVehicleSetAttributes(NLActionNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, "Condition")
-        self.inputs.new(NLGameObjectSocket.bl_idname, "Collider")
-        self.inputs.new(NLPositiveIntegerFieldSocket.bl_idname, "Wheels")
+        self.add_input(NLConditionSocket, "Condition")
+        self.add_input(NLGameObjectSocket, "Collider")
+        self.add_input(NLPositiveIntegerFieldSocket, "Wheels")
         self.inputs[-1].value = 2
-        self.inputs.new(NLBooleanSocket.bl_idname, "Suspension")
-        self.inputs.new(NLFloatFieldSocket.bl_idname, "")
-        self.inputs.new(NLBooleanSocket.bl_idname, "Stiffness")
-        self.inputs.new(NLFloatFieldSocket.bl_idname, "")
-        self.inputs.new(NLBooleanSocket.bl_idname, "Damping")
-        self.inputs.new(NLFloatFieldSocket.bl_idname, "")
-        self.inputs.new(NLBooleanSocket.bl_idname, "Friction")
-        self.inputs.new(NLFloatFieldSocket.bl_idname, "")
-        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+        self.add_input(NLBooleanSocket, "Suspension")
+        self.add_input(NLFloatFieldSocket, "")
+        self.add_input(NLBooleanSocket, "Stiffness")
+        self.add_input(NLFloatFieldSocket, "")
+        self.add_input(NLBooleanSocket, "Damping")
+        self.add_input(NLFloatFieldSocket, "")
+        self.add_input(NLBooleanSocket, "Friction")
+        self.add_input(NLFloatFieldSocket, "")
+        self.add_output(NLConditionSocket, 'Done')
 
     def update_draw(self):
         self.inputs[2].enabled = self.value_type != 'ALL'
@@ -7532,7 +4382,7 @@ class NLVehicleSetAttributes(NLActionNode):
         ipts[8].enabled = ipts[7].value
         ipts[10].enabled = ipts[9].value
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return ["OUT"]
 
     def draw_buttons(self, context, layout):
@@ -7541,7 +4391,7 @@ class NLVehicleSetAttributes(NLActionNode):
     def get_netlogic_class_name(self):
         return "ULVehicleSetAttributes"
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return [
             "condition",
             "vehicle",
@@ -7595,13 +4445,13 @@ class NLSetObjectAttributeActionNode(NLActionNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, "Condition")
-        self.inputs.new(NLXYZSocket.bl_idname, "")
-        self.inputs.new(NLGameObjectSocket.bl_idname, "Object")
-        self.inputs.new(NLVec3FieldSocket.bl_idname, "Value")
-        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+        self.add_input(NLConditionSocket, "Condition")
+        self.add_input(NLXYZSocket, "")
+        self.add_input(NLGameObjectSocket, "Object")
+        self.add_input(NLVec3FieldSocket, "Value")
+        self.add_output(NLConditionSocket, 'Done')
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return ["OUT"]
 
     def draw_buttons(self, context, layout):
@@ -7610,7 +4460,7 @@ class NLSetObjectAttributeActionNode(NLActionNode):
     def get_netlogic_class_name(self):
         return "ULSetGameObjectAttribue"
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return ["condition", "xyz", "game_object", "attribute_value"]
 
     def get_attributes(self):
@@ -7638,14 +4488,14 @@ class NLSlowFollow(NLActionNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, "Condition")
-        self.inputs.new(NLGameObjectSocket.bl_idname, "Object")
-        self.inputs.new(NLGameObjectSocket.bl_idname, "Target")
-        self.inputs.new(NLSocketAlphaFloat.bl_idname, "Factor")
+        self.add_input(NLConditionSocket, "Condition")
+        self.add_input(NLGameObjectSocket, "Object")
+        self.add_input(NLGameObjectSocket, "Target")
+        self.add_input(NLSocketAlphaFloat, "Factor")
         self.inputs[-1].value = .1
-        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+        self.add_output(NLConditionSocket, 'Done')
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return ["OUT"]
 
     def draw_buttons(self, context, layout):
@@ -7654,7 +4504,7 @@ class NLSlowFollow(NLActionNode):
     def get_netlogic_class_name(self):
         return "ULSlowFollow"
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return ["condition", "game_object", "target", "factor"]
 
     def get_attributes(self):
@@ -7679,27 +4529,30 @@ class NLActionRayCastNode(NLActionNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, "Condition")
-        self.inputs.new(NLVec3FieldSocket.bl_idname, "Origin")
-        self.inputs.new(NLVec3FieldSocket.bl_idname, "Aim")
-        self.inputs.new(NLBooleanSocket.bl_idname, "Local")
-        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Property")
-        self.inputs.new(NLMaterialSocket.bl_idname, "Material")
-        self.inputs.new(NLBooleanSocket.bl_idname, "Exclude")
-        self.inputs.new(NLBooleanSocket.bl_idname, 'X-Ray')
-        self.inputs.new(NLBooleanSocket.bl_idname, "Custom Distance")
-        self.inputs.new(NLPositiveFloatSocket.bl_idname, "Distance")
+        self.add_input(NLConditionSocket, "Condition")
+        self.add_input(NLVec3FieldSocket, "Origin")
+        self.add_input(NLVec3FieldSocket, "Aim")
+        self.add_input(NLBooleanSocket, "Local")
+        self.add_input(NLQuotedStringFieldSocket, "Property")
+        self.add_input(NLMaterialSocket, "Material")
+        self.add_input(NLBooleanSocket, "Exclude")
+        self.add_input(NLBooleanSocket, 'X-Ray')
+        self.add_input(NLBooleanSocket, "Custom Distance")
+        self.add_input(NLPositiveFloatSocket, "Distance")
         self.inputs[-1].value = 100.0
-        self.inputs.new(NLBooleanSocket.bl_idname, 'Visualize')
-        self.outputs.new(NLConditionSocket.bl_idname, "Has Result")
-        self.outputs.new(NLGameObjectSocket.bl_idname, "Picked Object")
-        self.outputs.new(NLVec3FieldSocket.bl_idname, "Picked Point")
-        self.outputs.new(NLVec3FieldSocket.bl_idname, "Picked Normal")
-        self.outputs.new(NLVec3FieldSocket.bl_idname, "Ray Direction")
-        self.outputs.new(NLParameterSocket.bl_idname, "Face Material Name")
-        self.outputs.new(NLVec2FieldSocket.bl_idname, "UV Coords")
+        self.add_input(NLBooleanSocket, 'Visualize')
+        self.add_output(NLConditionSocket, "Has Result")
+        self.add_output(NLGameObjectSocket, "Picked Object")
+        self.add_output(NLVec3FieldSocket, "Picked Point")
+        self.add_output(NLVec3FieldSocket, "Picked Normal")
+        self.add_output(NLVec3FieldSocket, "Ray Direction")
+        self.add_output(NLParameterSocket, "Face Material Name")
+        self.add_output(NLVec2FieldSocket, "UV Coords")
+        self.update_draw()
 
     def update_draw(self):
+        if len(self.outputs) < 7:
+            return
         ipts = self.inputs
         opts = self.outputs
         adv = [
@@ -7724,7 +4577,7 @@ class NLActionRayCastNode(NLActionNode):
     def get_attributes(self):
         return [("advanced", lambda: "True" if self.advanced else "False")]
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return [
             "condition",
             "origin",
@@ -7739,7 +4592,7 @@ class NLActionRayCastNode(NLActionNode):
             "visualize"
         ]
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return ['RESULT', "PICKED_OBJECT", "POINT", "NORMAL", "DIRECTION", "MATERIAL", "UV"]
 
 
@@ -7754,29 +4607,29 @@ class NLProjectileRayCast(NLActionNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, "Condition")
-        self.inputs.new(NLVec3FieldSocket.bl_idname, "Origin")
-        self.inputs.new(NLVec3FieldSocket.bl_idname, "Aim")
-        self.inputs.new(NLBooleanSocket.bl_idname, 'Local')
-        self.inputs.new(NLPositiveFloatSocket.bl_idname, "Power")
+        self.add_input(NLConditionSocket, "Condition")
+        self.add_input(NLVec3FieldSocket, "Origin")
+        self.add_input(NLVec3FieldSocket, "Aim")
+        self.add_input(NLBooleanSocket, 'Local')
+        self.add_input(NLPositiveFloatSocket, "Power")
         self.inputs[-1].value = 10.0
-        self.inputs.new(NLPositiveFloatSocket.bl_idname, "Distance")
+        self.add_input(NLPositiveFloatSocket, "Distance")
         self.inputs[-1].value = 20.0
-        self.inputs.new(NLSocketAlphaFloat.bl_idname, "Resolution")
+        self.add_input(NLSocketAlphaFloat, "Resolution")
         self.inputs[-1].value = 0.9
-        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Property")
-        self.inputs.new(NLBooleanSocket.bl_idname, 'X-Ray')
-        self.inputs.new(NLBooleanSocket.bl_idname, 'Visualize')
-        self.outputs.new(NLConditionSocket.bl_idname, "Has Result")
-        self.outputs.new(NLGameObjectSocket.bl_idname, "Picked Object")
-        self.outputs.new(NLVec3FieldSocket.bl_idname, "Picked Point")
-        self.outputs.new(NLVec3FieldSocket.bl_idname, "Picked Normal")
-        self.outputs.new(NLListSocket.bl_idname, "Parabola")
+        self.add_input(NLQuotedStringFieldSocket, "Property")
+        self.add_input(NLBooleanSocket, 'X-Ray')
+        self.add_input(NLBooleanSocket, 'Visualize')
+        self.add_output(NLConditionSocket, "Has Result")
+        self.add_output(NLGameObjectSocket, "Picked Object")
+        self.add_output(NLVec3FieldSocket, "Picked Point")
+        self.add_output(NLVec3FieldSocket, "Picked Normal")
+        self.add_output(NLListSocket, "Parabola")
 
     def get_netlogic_class_name(self):
         return "ULProjectileRayCast"
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return [
             "condition",
             "origin",
@@ -7790,7 +4643,7 @@ class NLProjectileRayCast(NLActionNode):
             "visualize"
         ]
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return [utils.OUTCELL, "PICKED_OBJECT", "POINT", "NORMAL", 'PARABOLA']
 
 
@@ -7808,18 +4661,18 @@ class NLStartLogicNetworkActionNode(NLActionNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, 'Condition')
-        self.inputs.new(NLGameObjectSocket.bl_idname, 'Object')
-        self.inputs.new(NLSocketLogicTree.bl_idname, 'Tree Name')
-        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+        self.add_input(NLConditionSocket, 'Condition')
+        self.add_input(NLGameObjectSocket, 'Object')
+        self.add_input(NLSocketLogicTree, 'Tree Name')
+        self.add_output(NLConditionSocket, 'Done')
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return ["OUT"]
 
     def get_netlogic_class_name(self):
         return "ULStartSubNetwork"
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return ["condition", "game_object", "logic_network_name"]
 
 
@@ -7835,18 +4688,18 @@ class NLStopLogicNetworkActionNode(NLActionNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, 'Condition')
-        self.inputs.new(NLGameObjectSocket.bl_idname, 'Object')
-        self.inputs.new(NLSocketLogicTree.bl_idname, 'Tree Name')
-        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+        self.add_input(NLConditionSocket, 'Condition')
+        self.add_input(NLGameObjectSocket, 'Object')
+        self.add_input(NLSocketLogicTree, 'Tree Name')
+        self.add_output(NLConditionSocket, 'Done')
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return ["OUT"]
 
     def get_netlogic_class_name(self):
         return "ULStopSubNetwork"
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return ["condition", "game_object", "logic_network_name"]
 
 
@@ -7862,23 +4715,23 @@ class NLActionSetGameObjectVisibility(NLActionNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, "Condition")
-        self.inputs.new(NLGameObjectSocket.bl_idname, "Object")
-        self.inputs.new(NLBooleanSocket.bl_idname, "Visible")
+        self.add_input(NLConditionSocket, "Condition")
+        self.add_input(NLGameObjectSocket, "Object")
+        self.add_input(NLBooleanSocket, "Visible")
         socket = self.inputs[-1]
         socket.use_toggle = True
         socket.true_label = "Visible"
         socket.false_label = "Not Visibile"
-        self.inputs.new(NLBooleanSocket.bl_idname, "Include Children")
-        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+        self.add_input(NLBooleanSocket, "Include Children")
+        self.add_output(NLConditionSocket, 'Done')
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return ["OUT"]
 
     def get_netlogic_class_name(self):
         return "ULSetVisibility"
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return ["condition", "game_object", "visible", "recursive"]
 
 
@@ -7895,23 +4748,23 @@ class NLActionSetCollectionVisibility(NLActionNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, "Condition")
-        self.inputs.new(NLCollectionSocket.bl_idname, "Collection")
-        self.inputs.new(NLBooleanSocket.bl_idname, "Visible")
+        self.add_input(NLConditionSocket, "Condition")
+        self.add_input(NLCollectionSocket, "Collection")
+        self.add_input(NLBooleanSocket, "Visible")
         socket = self.inputs[-1]
         socket.use_toggle = True
         socket.true_label = "Visible"
         socket.false_label = "Not Visibile"
-        self.inputs.new(NLBooleanSocket.bl_idname, "Include Children")
-        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+        self.add_input(NLBooleanSocket, "Include Children")
+        self.add_output(NLConditionSocket, 'Done')
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return ["OUT"]
 
     def get_netlogic_class_name(self):
         return "ULSetCollectionVisibility"
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return ["condition", "collection", "visible", "recursive"]
 
 
@@ -7928,18 +4781,18 @@ class NLSetCurvePoints(NLActionNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, "Condition")
-        self.inputs.new(NLCurveObjectSocket.bl_idname, "Curve")
-        self.inputs.new(NLListSocket.bl_idname, "Points")
-        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+        self.add_input(NLConditionSocket, "Condition")
+        self.add_input(NLCurveObjectSocket, "Curve")
+        self.add_input(NLListSocket, "Points")
+        self.add_output(NLConditionSocket, 'Done')
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return ["OUT"]
 
     def get_netlogic_class_name(self):
         return "ULSetCurvePoints"
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return ["condition", "curve_object", "points"]
 
 
@@ -7955,16 +4808,16 @@ class NLActionFindObjectNode(NLParameterNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
-        self.inputs.new(NLGameObjectSocket.bl_idname, "Object")
-        self.outputs.new(NLGameObjectSocket.bl_idname, "Object")
+        self.add_input(NLGameObjectSocket, "Object")
+        self.add_output(NLGameObjectSocket, "Object")
 
     def get_netlogic_class_name(self):
         return "ULGetObject"
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return ["game_object"]
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return ['OUT']
 
 
@@ -7980,20 +4833,20 @@ class NLActionSendMessage(NLActionNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, "Condition")
-        self.inputs.new(NLGameObjectSocket.bl_idname, "From")
-        self.inputs.new(NLGameObjectNameSocket.bl_idname, "To")
-        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Subject")
-        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Body")
-        self.outputs.new(NLConditionSocket.bl_idname, "Done")
+        self.add_input(NLConditionSocket, "Condition")
+        self.add_input(NLGameObjectSocket, "From")
+        self.add_input(NLGameObjectNameSocket, "To")
+        self.add_input(NLQuotedStringFieldSocket, "Subject")
+        self.add_input(NLQuotedStringFieldSocket, "Body")
+        self.add_output(NLConditionSocket, "Done")
 
     def get_netlogic_class_name(self):
         return "ULSendMessage"
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return ['condition', 'from_obj', 'to_obj', 'subject', 'body']
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return [utils.OUTCELL]
 
 
@@ -8009,17 +4862,17 @@ class NLActionSetActiveCamera(NLActionNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, 'Condition')
-        self.inputs.new(NLGameObjectSocket.bl_idname, 'Camera')
-        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+        self.add_input(NLConditionSocket, 'Condition')
+        self.add_input(NLGameObjectSocket, 'Camera')
+        self.add_output(NLConditionSocket, 'Done')
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return ["OUT"]
 
     def get_netlogic_class_name(self):
         return "ULSetCamera"
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return ["condition", "camera"]
 
 
@@ -8035,18 +4888,18 @@ class NLActionSetCameraFov(NLActionNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, 'Condition')
-        self.inputs.new(NLGameObjectSocket.bl_idname, 'Camera')
-        self.inputs.new(NLFloatFieldSocket.bl_idname, 'FOV')
-        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+        self.add_input(NLConditionSocket, 'Condition')
+        self.add_input(NLGameObjectSocket, 'Camera')
+        self.add_input(NLFloatFieldSocket, 'FOV')
+        self.add_output(NLConditionSocket, 'Done')
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return ["OUT"]
 
     def get_netlogic_class_name(self):
         return "ULSetCameraFOV"
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return ["condition", "camera", 'fov']
 
 
@@ -8062,19 +4915,19 @@ class NLActionSetCameraOrthoScale(NLActionNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, 'Condition')
-        self.inputs.new(NLGameObjectSocket.bl_idname, 'Camera')
-        self.inputs.new(NLFloatFieldSocket.bl_idname, 'Scale')
+        self.add_input(NLConditionSocket, 'Condition')
+        self.add_input(NLGameObjectSocket, 'Camera')
+        self.add_input(NLFloatFieldSocket, 'Scale')
         self.inputs[-1].value = 1.0
-        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+        self.add_output(NLConditionSocket, 'Done')
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return ["OUT"]
 
     def get_netlogic_class_name(self):
         return "ULSetCameraOrthoScale"
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return ["condition", "camera", 'scale']
 
 
@@ -8089,20 +4942,20 @@ class NLActionSetResolution(NLActionNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, 'Condition')
-        self.inputs.new(NLIntegerFieldSocket.bl_idname, 'X')
+        self.add_input(NLConditionSocket, 'Condition')
+        self.add_input(NLIntegerFieldSocket, 'X')
         self.inputs[-1].value = 1920
-        self.inputs.new(NLIntegerFieldSocket.bl_idname, 'Y')
+        self.add_input(NLIntegerFieldSocket, 'Y')
         self.inputs[-1].value = 1080
-        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+        self.add_output(NLConditionSocket, 'Done')
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return ["OUT"]
 
     def get_netlogic_class_name(self):
         return "ULSetResolution"
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return ["condition", "x_res", 'y_res']
 
 
@@ -8117,17 +4970,17 @@ class NLActionSetFullscreen(NLActionNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, 'Condition')
-        self.inputs.new(NLBooleanSocket.bl_idname, 'Fullscreen')
-        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+        self.add_input(NLConditionSocket, 'Condition')
+        self.add_input(NLBooleanSocket, 'Fullscreen')
+        self.add_output(NLConditionSocket, 'Done')
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return ["OUT"]
 
     def get_netlogic_class_name(self):
         return "ULSetFullscreen"
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return ["condition", "use_fullscreen"]
 
 
@@ -8142,17 +4995,17 @@ class NLSetProfile(NLActionNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, 'Condition')
-        self.inputs.new(NLBooleanSocket.bl_idname, 'Show')
-        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+        self.add_input(NLConditionSocket, 'Condition')
+        self.add_input(NLBooleanSocket, 'Show')
+        self.add_output(NLConditionSocket, 'Done')
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return ["OUT"]
 
     def get_netlogic_class_name(self):
         return "ULSetProfile"
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return ["condition", "use_profile"]
 
 
@@ -8167,17 +5020,17 @@ class NLShowFramerate(NLActionNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, 'Condition')
-        self.inputs.new(NLBooleanSocket.bl_idname, 'Show')
-        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+        self.add_input(NLConditionSocket, 'Condition')
+        self.add_input(NLBooleanSocket, 'Show')
+        self.add_output(NLConditionSocket, 'Done')
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return ["OUT"]
 
     def get_netlogic_class_name(self):
         return "ULShowFramerate"
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return ["condition", "use_framerate"]
 
 
@@ -8193,13 +5046,13 @@ class NLActionSetVSync(NLActionNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, 'Condition')
-        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+        self.add_input(NLConditionSocket, 'Condition')
+        self.add_output(NLConditionSocket, 'Done')
 
     def draw_buttons(self, context, layout) -> None:
         layout.prop(self, 'vsync_mode', text='')
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return ["OUT"]
 
     def get_netlogic_class_name(self):
@@ -8210,7 +5063,7 @@ class NLActionSetVSync(NLActionNode):
             ('vsync_mode', lambda: self.vsync_mode)
         ]
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return ["condition"]
 
 
@@ -8226,9 +5079,9 @@ class NLInitEmptyDict(NLParameterNode):
 
     def init(self, context):
         NLParameterNode.init(self, context)
-        self.outputs.new(NLDictSocket.bl_idname, 'Dictionary')
+        self.add_output(NLDictSocket, 'Dictionary')
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return ['DICT']
 
     def get_netlogic_class_name(self):
@@ -8247,17 +5100,17 @@ class NLInitNewDict(NLParameterNode):
 
     def init(self, context):
         NLParameterNode.init(self, context)
-        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, 'Key')
-        self.inputs.new(NLValueFieldSocket.bl_idname, '')
-        self.outputs.new(NLDictSocket.bl_idname, 'Dictionary')
+        self.add_input(NLQuotedStringFieldSocket, 'Key')
+        self.add_input(NLValueFieldSocket, '')
+        self.add_output(NLDictSocket, 'Dictionary')
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return ['DICT']
 
     def get_netlogic_class_name(self):
         return "ULInitNewDict"
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return ['key', 'val']
 
 
@@ -8273,20 +5126,20 @@ class NLSetDictKeyValue(NLActionNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, 'Condition')
-        self.inputs.new(NLDictSocket.bl_idname, 'Dictionary')
-        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, 'Key')
-        self.inputs.new(NLValueFieldSocket.bl_idname, '')
-        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
-        self.outputs.new(NLDictSocket.bl_idname, 'Dictionary')
+        self.add_input(NLConditionSocket, 'Condition')
+        self.add_input(NLDictSocket, 'Dictionary')
+        self.add_input(NLQuotedStringFieldSocket, 'Key')
+        self.add_input(NLValueFieldSocket, '')
+        self.add_output(NLConditionSocket, 'Done')
+        self.add_output(NLDictSocket, 'Dictionary')
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return ["OUT", "DICT"]
 
     def get_netlogic_class_name(self):
         return "ULSetDictKey"
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return ["condition", 'dict', 'key', 'val']
 
 
@@ -8302,20 +5155,20 @@ class NLSetDictDelKey(NLActionNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, 'Condition')
-        self.inputs.new(NLDictSocket.bl_idname, 'Dictionary')
-        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, 'Key')
-        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
-        self.outputs.new(NLDictSocket.bl_idname, 'Dictionary')
-        self.outputs.new(NLParameterSocket.bl_idname, 'Value')
+        self.add_input(NLConditionSocket, 'Condition')
+        self.add_input(NLDictSocket, 'Dictionary')
+        self.add_input(NLQuotedStringFieldSocket, 'Key')
+        self.add_output(NLConditionSocket, 'Done')
+        self.add_output(NLDictSocket, 'Dictionary')
+        self.add_output(NLParameterSocket, 'Value')
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return ["OUT", "DICT", 'VALUE']
 
     def get_netlogic_class_name(self):
         return "ULPopDictKey"
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return ["condition", 'dict', 'key']
 
 
@@ -8331,16 +5184,16 @@ class NLInitEmptyList(NLParameterNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
-        self.inputs.new(NLIntegerFieldSocket.bl_idname, 'Length')
-        self.outputs.new(NLListSocket.bl_idname, 'List')
+        self.add_input(NLIntegerFieldSocket, 'Length')
+        self.add_output(NLListSocket, 'List')
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return ['LIST']
 
     def get_netlogic_class_name(self):
         return "ULInitEmptyList"
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return ['length']
 
 
@@ -8356,9 +5209,9 @@ class NLInitNewList(NLParameterNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
-        self.inputs.new(NLListItemSocket.bl_idname, 'Item')
-        self.inputs.new(NLListItemSocket.bl_idname, 'Item')
-        self.outputs.new(NLListSocket.bl_idname, 'List')
+        self.add_input(NLListItemSocket, 'Item')
+        self.add_input(NLListItemSocket, 'Item')
+        self.add_output(NLListSocket, 'List')
 
     def draw_buttons(self, context, layout):
         layout.operator(bge_netlogic.ops.NLAddListItemSocket.bl_idname)
@@ -8387,7 +5240,7 @@ class NLInitNewList(NLParameterNode):
         items = items[:-2]
         return f'        {cell_varname}.items = [{items}]\n'
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return ['LIST']
 
     def get_netlogic_class_name(self):
@@ -8406,18 +5259,18 @@ class NLExtendList(NLParameterNode):
 
     def init(self, context):
         NLParameterNode.init(self, context)
-        self.inputs.new(NLListSocket.bl_idname, 'List 1')
-        self.inputs.new(NLListSocket.bl_idname, 'List 2')
-        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
-        self.outputs.new(NLListSocket.bl_idname, 'List')
+        self.add_input(NLListSocket, 'List 1')
+        self.add_input(NLListSocket, 'List 2')
+        self.add_output(NLConditionSocket, 'Done')
+        self.add_output(NLListSocket, 'List')
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return ["OUT", "LIST"]
 
     def get_netlogic_class_name(self):
         return "ULExtendList"
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return ['list_1', 'list_2']
 
 
@@ -8433,19 +5286,19 @@ class NLAppendListItem(NLActionNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, 'Condition')
-        self.inputs.new(NLListSocket.bl_idname, 'List')
-        self.inputs.new(NLValueFieldSocket.bl_idname, '')
-        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
-        self.outputs.new(NLListSocket.bl_idname, 'List')
+        self.add_input(NLConditionSocket, 'Condition')
+        self.add_input(NLListSocket, 'List')
+        self.add_input(NLValueFieldSocket, '')
+        self.add_output(NLConditionSocket, 'Done')
+        self.add_output(NLListSocket, 'List')
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return ["OUT", "LIST"]
 
     def get_netlogic_class_name(self):
         return "ULAppendListItem"
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return ["condition", 'items', 'val']
 
 
@@ -8461,20 +5314,20 @@ class NLSetListIndex(NLActionNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, 'Condition')
-        self.inputs.new(NLListSocket.bl_idname, 'List')
-        self.inputs.new(NLIntegerFieldSocket.bl_idname, 'Index')
-        self.inputs.new(NLValueFieldSocket.bl_idname, '')
-        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
-        self.outputs.new(NLListSocket.bl_idname, 'List')
+        self.add_input(NLConditionSocket, 'Condition')
+        self.add_input(NLListSocket, 'List')
+        self.add_input(NLIntegerFieldSocket, 'Index')
+        self.add_input(NLValueFieldSocket, '')
+        self.add_output(NLConditionSocket, 'Done')
+        self.add_output(NLListSocket, 'List')
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return ["OUT", "LIST"]
 
     def get_netlogic_class_name(self):
         return "ULSetListIndex"
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return ["condition", 'items', 'index', 'val']
 
 
@@ -8490,19 +5343,19 @@ class NLRemoveListValue(NLActionNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, 'Condition')
-        self.inputs.new(NLListSocket.bl_idname, 'List')
-        self.inputs.new(NLValueFieldSocket.bl_idname, '')
-        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
-        self.outputs.new(NLListSocket.bl_idname, 'List')
+        self.add_input(NLConditionSocket, 'Condition')
+        self.add_input(NLListSocket, 'List')
+        self.add_input(NLValueFieldSocket, '')
+        self.add_output(NLConditionSocket, 'Done')
+        self.add_output(NLListSocket, 'List')
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return ["OUT", "LIST"]
 
     def get_netlogic_class_name(self):
         return "ULRemoveListValue"
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return ["condition", 'items', 'val']
 
 
@@ -8518,19 +5371,19 @@ class NLRemoveListIndex(NLActionNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, 'Condition')
-        self.inputs.new(NLListSocket.bl_idname, 'List')
-        self.inputs.new(NLIntegerFieldSocket.bl_idname, 'Index')
-        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
-        self.outputs.new(NLListSocket.bl_idname, 'List')
+        self.add_input(NLConditionSocket, 'Condition')
+        self.add_input(NLListSocket, 'List')
+        self.add_input(NLIntegerFieldSocket, 'Index')
+        self.add_output(NLConditionSocket, 'Done')
+        self.add_output(NLListSocket, 'List')
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return ["OUT", "LIST"]
 
     def get_netlogic_class_name(self):
         return "ULRemoveListIndex"
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return ["condition", 'items', 'idx']
 
 
@@ -8546,20 +5399,20 @@ class NLActionInstallSubNetwork(NLActionNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, "Condition")
-        self.inputs.new(NLGameObjectSocket.bl_idname, "Target Object")
-        self.inputs.new(NLSocketLogicTree.bl_idname, "Tree Name")
-        self.inputs.new(NLBooleanSocket.bl_idname, "Initialize")
+        self.add_input(NLConditionSocket, "Condition")
+        self.add_input(NLGameObjectSocket, "Target Object")
+        self.add_input(NLSocketLogicTree, "Tree Name")
+        self.add_input(NLBooleanSocket, "Initialize")
         self.inputs[-1].use_toggle = True
-        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+        self.add_output(NLConditionSocket, 'Done')
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return ["OUT"]
 
     def get_netlogic_class_name(self):
         return "ULInstallSubNetwork"
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return ["condition", "target_object", "tree_name", "initial_status"]
 
 
@@ -8575,18 +5428,18 @@ class NLActionExecuteNetwork(NLActionNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
-        self.inputs.new(NodeSocketPseudoCondition.bl_idname, "Condition")
-        self.inputs.new(NLGameObjectSocket.bl_idname, "Target Object")
-        self.inputs.new(NLSocketLogicTree.bl_idname, "Tree Name")
-        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+        self.add_input(NodeSocketPseudoCondition, "Condition")
+        self.add_input(NLGameObjectSocket, "Target Object")
+        self.add_input(NLSocketLogicTree, "Tree Name")
+        self.add_output(NLConditionSocket, 'Done')
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return ["OUT"]
 
     def get_netlogic_class_name(self):
         return "ULExecuteSubNetwork"
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return ["condition", "target_object", "tree_name"]
 
 
@@ -8601,21 +5454,21 @@ class NLActionStopAnimation(NLActionNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, "Condition")
-        self.inputs.new(NLGameObjectSocket.bl_idname, "Object")
-        self.inputs.new(
+        self.add_input(NLConditionSocket, "Condition")
+        self.add_input(NLGameObjectSocket, "Object")
+        self.add_input(
             NLPositiveIntegerFieldSocket.bl_idname,
             "Animation Layer"
         )
-        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+        self.add_output(NLConditionSocket, 'Done')
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return ["OUT"]
 
     def get_netlogic_class_name(self):
         return "ULStopAction"
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return ["condition", "game_object", "action_layer"]
 
 
@@ -8630,24 +5483,24 @@ class NLActionSetAnimationFrame(NLActionNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, "Condition")
-        self.inputs.new(NLGameObjectSocket.bl_idname, "Object")
-        self.inputs.new(NLAnimationSocket.bl_idname, "Action")
-        self.inputs.new(NLPositiveIntegerFieldSocket.bl_idname, "Layer")
-        self.inputs.new(NLPositiveFloatSocket.bl_idname, "Frame")
-        self.inputs.new(NLBooleanSocket.bl_idname, "Freeze")
+        self.add_input(NLConditionSocket, "Condition")
+        self.add_input(NLGameObjectSocket, "Object")
+        self.add_input(NodeSocketLogicAnimation, "Action")
+        self.add_input(NLPositiveIntegerFieldSocket, "Layer")
+        self.add_input(NLPositiveFloatSocket, "Frame")
+        self.add_input(NLBooleanSocket, "Freeze")
         self.inputs[-1].value = True
-        self.inputs.new(NLSocketAlphaFloat.bl_idname, "Layer Weight")
+        self.add_input(NLSocketAlphaFloat, "Layer Weight")
         self.inputs[-1].value = 1.0
-        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+        self.add_output(NLConditionSocket, 'Done')
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return ["OUT"]
 
     def get_netlogic_class_name(self):
         return "ULSetActionFrame"
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return [
             "condition",
             "game_object",
@@ -8677,9 +5530,9 @@ class NLActionApplyLocation(NLActionNode):
             NLConditionSocket, "Condition",
             NLGameObjectSocket, "Object",
             NLVec3FieldSocket, "Vector")
-        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+        self.add_output(NLConditionSocket, 'Done')
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return ["OUT"]
 
     def draw_buttons(self, context, layout):
@@ -8693,7 +5546,7 @@ class NLActionApplyLocation(NLActionNode):
     def get_netlogic_class_name(self):
         return "ULApplyMovement"
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return ["condition", "game_object", "movement"]
 
     def get_attributes(self):
@@ -8713,12 +5566,12 @@ class NLActionApplyRotation(NLActionNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, 'Condition')
-        self.inputs.new(NLGameObjectSocket.bl_idname, 'Object')
-        self.inputs.new(NLVec3RotationSocket.bl_idname, 'Vector')
-        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+        self.add_input(NLConditionSocket, 'Condition')
+        self.add_input(NLGameObjectSocket, 'Object')
+        self.add_input(NLVec3RotationSocket, 'Vector')
+        self.add_output(NLConditionSocket, 'Done')
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return ["OUT"]
 
     def draw_buttons(self, context, layout):
@@ -8732,7 +5585,7 @@ class NLActionApplyRotation(NLActionNode):
     def get_netlogic_class_name(self):
         return "ULApplyRotation"
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return ["condition", "game_object", "rotation"]
 
     def get_attributes(self):
@@ -8758,9 +5611,9 @@ class NLActionApplyForce(NLActionNode):
             NLGameObjectSocket, "Object",
             NLVec3FieldSocket, "Vector"
         )
-        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+        self.add_output(NLConditionSocket, 'Done')
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return ["OUT"]
 
     def draw_buttons(self, context, layout):
@@ -8774,7 +5627,7 @@ class NLActionApplyForce(NLActionNode):
     def get_netlogic_class_name(self):
         return "ULApplyForce"
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return ["condition", "game_object", "force"]
 
     def get_attributes(self):
@@ -8794,13 +5647,13 @@ class NLActionApplyImpulse(NLActionNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, 'Condition')
-        self.inputs.new(NLGameObjectSocket.bl_idname, 'Object')
-        self.inputs.new(NLVec3FieldSocket.bl_idname, 'Point')
-        self.inputs.new(NLVec3FieldSocket.bl_idname, 'Direction')
-        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+        self.add_input(NLConditionSocket, 'Condition')
+        self.add_input(NLGameObjectSocket, 'Object')
+        self.add_input(NLVec3FieldSocket, 'Point')
+        self.add_input(NLVec3FieldSocket, 'Direction')
+        self.add_output(NLConditionSocket, 'Done')
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return ["OUT"]
 
     def draw_buttons(self, context, layout):
@@ -8814,7 +5667,7 @@ class NLActionApplyImpulse(NLActionNode):
     def get_netlogic_class_name(self):
         return "ULApplyImpulse"
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return ["condition", "game_object", "point", 'impulse']
 
     def get_attributes(self):
@@ -8839,25 +5692,25 @@ class NLGamepadLook(NLActionNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, 'Condition')
-        self.inputs.new(NLGameObjectSocket.bl_idname, 'Main Object')
-        self.inputs.new(NLGameObjectSocket.bl_idname, 'Head Object (Optional)')
-        self.inputs.new(NLInvertedXYSocket.bl_idname, 'Inverted')
+        self.add_input(NLConditionSocket, 'Condition')
+        self.add_input(NLGameObjectSocket, 'Main Object')
+        self.add_input(NLGameObjectSocket, 'Head Object (Optional)')
+        self.add_input(NLInvertedXYSocket, 'Inverted')
         self.inputs[-1].x = True
-        self.inputs.new(NLPositiveIntCentSocket.bl_idname, 'Index')
-        self.inputs.new(NLPositiveFloatSocket.bl_idname, 'Sensitivity')
+        self.add_input(NLPositiveIntCentSocket, 'Index')
+        self.add_input(NLPositiveFloatSocket, 'Sensitivity')
         self.inputs[-1].value = .25
-        self.inputs.new(NLPositiveFloatSocket.bl_idname, 'Exponent')
+        self.add_input(NLPositiveFloatSocket, 'Exponent')
         self.inputs[-1].value = 2.3
-        self.inputs.new(NLBooleanSocket.bl_idname, 'Cap Left / Right')
-        self.inputs.new(NLAngleLimitSocket.bl_idname, '')
-        self.inputs.new(NLBooleanSocket.bl_idname, 'Cap Up / Down')
-        self.inputs.new(NLAngleLimitSocket.bl_idname, '')
+        self.add_input(NLBooleanSocket, 'Cap Left / Right')
+        self.add_input(NLAngleLimitSocket, '')
+        self.add_input(NLBooleanSocket, 'Cap Up / Down')
+        self.add_input(NLAngleLimitSocket, '')
         self.inputs[-1].value_x = math.radians(89)
         self.inputs[-1].value_y = math.radians(89)
-        self.inputs.new(NLPositiveFloatSocket.bl_idname, 'Threshold')
+        self.add_input(NLPositiveFloatSocket, 'Threshold')
         self.inputs[-1].value = 0.1
-        self.outputs.new(NLConditionSocket.bl_idname, "Done")
+        self.add_output(NLConditionSocket, "Done")
 
     def update_draw(self):
         if len(self.inputs) < 12:
@@ -8872,7 +5725,7 @@ class NLGamepadLook(NLActionNode):
     def get_netlogic_class_name(self):
         return "ULGamepadLook"
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return [
             'condition',
             'main_obj',
@@ -8888,7 +5741,7 @@ class NLGamepadLook(NLActionNode):
             'threshold'
         ]
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return ["DONE"]
 
     def get_attributes(self):
@@ -8908,17 +5761,17 @@ class NLUILayout(NLParameterNode):
 
     def init(self, context):
         NLParameterNode.init(self, context)
-        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, 'Name')
-        self.outputs.new(NLParameterSocket.bl_idname, 'Layout')
-        self.outputs.new(NLListSocket.bl_idname, 'Widgets')
+        self.add_input(NLQuotedStringFieldSocket, 'Name')
+        self.add_output(NLParameterSocket, 'Layout')
+        self.add_output(NLListSocket, 'Widgets')
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return ["OUT"]
 
     def get_netlogic_class_name(self):
         return "ULUILayout"
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return ["condition", "game_object"]
 
 
@@ -8933,18 +5786,18 @@ class NLSetCollisionGroup(NLActionNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, 'Condition')
-        self.inputs.new(NLGameObjectSocket.bl_idname, 'Object')
-        self.inputs.new(NLCollisionMaskSocket.bl_idname, 'Group')
-        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+        self.add_input(NLConditionSocket, 'Condition')
+        self.add_input(NLGameObjectSocket, 'Object')
+        self.add_input(NLCollisionMaskSocket, 'Group')
+        self.add_output(NLConditionSocket, 'Done')
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return ["OUT"]
 
     def get_netlogic_class_name(self):
         return "ULSetCollisionGroup"
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return ["condition", "game_object", 'slots']
 
 
@@ -8959,18 +5812,18 @@ class NLSetCollisionMask(NLActionNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, 'Condition')
-        self.inputs.new(NLGameObjectSocket.bl_idname, 'Object')
-        self.inputs.new(NLCollisionMaskSocket.bl_idname, 'Mask')
-        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+        self.add_input(NLConditionSocket, 'Condition')
+        self.add_input(NLGameObjectSocket, 'Object')
+        self.add_input(NLCollisionMaskSocket, 'Mask')
+        self.add_output(NLConditionSocket, 'Done')
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return ["OUT"]
 
     def get_netlogic_class_name(self):
         return "ULSetCollisionMask"
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return ["condition", "game_object", 'slots']
 
 
@@ -8986,17 +5839,17 @@ class NLActionCharacterJump(NLActionNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, 'Condition')
-        self.inputs.new(NLGameObjectSocket.bl_idname, 'Object')
-        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+        self.add_input(NLConditionSocket, 'Condition')
+        self.add_input(NLGameObjectSocket, 'Object')
+        self.add_output(NLConditionSocket, 'Done')
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return ["OUT"]
 
     def get_netlogic_class_name(self):
         return "ULCharacterJump"
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return ["condition", "game_object"]
 
 
@@ -9012,18 +5865,18 @@ class NLSetCharacterJumpSpeed(NLActionNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, 'Condition')
-        self.inputs.new(NLGameObjectSocket.bl_idname, 'Object')
-        self.inputs.new(NLPositiveFloatSocket.bl_idname, 'Force')
-        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+        self.add_input(NLConditionSocket, 'Condition')
+        self.add_input(NLGameObjectSocket, 'Object')
+        self.add_input(NLPositiveFloatSocket, 'Force')
+        self.add_output(NLConditionSocket, 'Done')
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return ["OUT"]
 
     def get_netlogic_class_name(self):
         return "ULSetCharacterJumpSpeed"
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return ["condition", "game_object", "force"]
 
 
@@ -9048,9 +5901,9 @@ class NLActionSaveGame(NLActionNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, 'Condition')
-        self.inputs.new(NLPositiveIntegerFieldSocket.bl_idname, 'Slot')
-        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+        self.add_input(NLConditionSocket, 'Condition')
+        self.add_input(NLPositiveIntegerFieldSocket, 'Slot')
+        self.add_output(NLConditionSocket, 'Done')
 
     def draw_buttons(self, context, layout):
         layout.prop(
@@ -9066,7 +5919,7 @@ class NLActionSaveGame(NLActionNode):
     def get_netlogic_class_name(self):
         return "ULSaveGame"
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return ["condition", 'slot']
 
     def get_attributes(self):
@@ -9081,7 +5934,7 @@ class NLActionSaveGame(NLActionNode):
             ) if self.custom_path else "''"
         )]
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return ["OUT"]
 
 
@@ -9106,9 +5959,9 @@ class NLActionLoadGame(NLActionNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, 'Condition')
-        self.inputs.new(NLPositiveIntegerFieldSocket.bl_idname, 'Slot')
-        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+        self.add_input(NLConditionSocket, 'Condition')
+        self.add_input(NLPositiveIntegerFieldSocket, 'Slot')
+        self.add_output(NLConditionSocket, 'Done')
 
     def draw_buttons(self, context, layout):
         layout.prop(
@@ -9124,7 +5977,7 @@ class NLActionLoadGame(NLActionNode):
     def get_netlogic_class_name(self):
         return "ULLoadGame"
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return ["condition", 'slot']
 
     def get_attributes(self):
@@ -9139,7 +5992,7 @@ class NLActionLoadGame(NLActionNode):
             ) if self.custom_path else "''"
         )]
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return ["OUT"]
 
 
@@ -9165,13 +6018,13 @@ class NLActionSaveVariable(NLActionNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, 'Condition')
-        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, 'Filename')
+        self.add_input(NLConditionSocket, 'Condition')
+        self.add_input(NLQuotedStringFieldSocket, 'Filename')
         self.inputs[-1].value = 'variables'
-        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, 'Variable')
+        self.add_input(NLQuotedStringFieldSocket, 'Variable')
         self.inputs[-1].value = 'var'
-        self.inputs.new(NLValueFieldSocket.bl_idname, '')
-        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+        self.add_input(NLValueFieldSocket, '')
+        self.add_output(NLConditionSocket, 'Done')
 
     def draw_buttons(self, context, layout):
         r = layout.row()
@@ -9188,7 +6041,7 @@ class NLActionSaveVariable(NLActionNode):
     def get_netlogic_class_name(self):
         return "ULSaveVariable"
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return ["condition", 'file_name', 'name', 'val']
 
     def get_attributes(self):
@@ -9203,7 +6056,7 @@ class NLActionSaveVariable(NLActionNode):
             ) if self.custom_path else "''"
         )]
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return ["OUT"]
 
 
@@ -9229,11 +6082,11 @@ class NLActionSaveVariables(NLActionNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, 'Condition')
-        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, 'Filename')
+        self.add_input(NLConditionSocket, 'Condition')
+        self.add_input(NLQuotedStringFieldSocket, 'Filename')
         self.inputs[-1].value = 'variables'
-        self.inputs.new(NLDictSocket.bl_idname, 'Variables')
-        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+        self.add_input(NLDictSocket, 'Variables')
+        self.add_output(NLConditionSocket, 'Done')
 
     def draw_buttons(self, context, layout):
         r = layout.row()
@@ -9250,7 +6103,7 @@ class NLActionSaveVariables(NLActionNode):
     def get_netlogic_class_name(self):
         return "ULSaveVariableDict"
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return ["condition", 'file_name', 'val']
 
     def get_attributes(self):
@@ -9265,7 +6118,7 @@ class NLActionSaveVariables(NLActionNode):
             ) if self.custom_path else "''"
         )]
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return ["OUT"]
 
 
@@ -9280,17 +6133,17 @@ class NLSetScene(NLActionNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, 'Condition')
-        self.inputs.new(NLSceneSocket.bl_idname, "Scene")
-        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+        self.add_input(NLConditionSocket, 'Condition')
+        self.add_input(NLSceneSocket, "Scene")
+        self.add_output(NLConditionSocket, 'Done')
 
     def get_netlogic_class_name(self):
         return "ULSetScene"
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return ['condition', 'scene']
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return ['OUT']
 
 
@@ -9305,21 +6158,21 @@ class NLLoadScene(NLActionNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, 'Condition')
-        self.inputs.new(NLSceneSocket.bl_idname, "Scene")
-        self.outputs.new(NLConditionSocket.bl_idname, 'Loaded')
-        self.outputs.new(NLConditionSocket.bl_idname, 'Updated')
-        self.outputs.new(NLParameterSocket.bl_idname, 'Status')
-        self.outputs.new(NLParameterSocket.bl_idname, 'Datatype')
-        self.outputs.new(NLParameterSocket.bl_idname, 'Item')
+        self.add_input(NLConditionSocket, 'Condition')
+        self.add_input(NLSceneSocket, "Scene")
+        self.add_output(NLConditionSocket, 'Loaded')
+        self.add_output(NLConditionSocket, 'Updated')
+        self.add_output(NLParameterSocket, 'Status')
+        self.add_output(NLParameterSocket, 'Datatype')
+        self.add_output(NLParameterSocket, 'Item')
 
     def get_netlogic_class_name(self):
         return "ULLoadScene"
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return ['condition', 'scene']
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return ['OUT', 'UPDATED', 'STATUS', 'DATATYPE', 'ITEM']
 
 
@@ -9334,20 +6187,20 @@ class NLLoadFileContent(NLActionNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, 'Condition')
-        self.outputs.new(NLConditionSocket.bl_idname, 'Loaded')
-        self.outputs.new(NLConditionSocket.bl_idname, 'Updated')
-        self.outputs.new(NLParameterSocket.bl_idname, 'Status')
-        self.outputs.new(NLParameterSocket.bl_idname, 'Datatype')
-        self.outputs.new(NLParameterSocket.bl_idname, 'Item')
+        self.add_input(NLConditionSocket, 'Condition')
+        self.add_output(NLConditionSocket, 'Loaded')
+        self.add_output(NLConditionSocket, 'Updated')
+        self.add_output(NLParameterSocket, 'Status')
+        self.add_output(NLParameterSocket, 'Datatype')
+        self.add_output(NLParameterSocket, 'Item')
 
     def get_netlogic_class_name(self):
         return "ULLoadFileContent"
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return ['condition']
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return ['OUT', 'UPDATED', 'STATUS', 'DATATYPE', 'ITEM']
 
 
@@ -9362,15 +6215,15 @@ class NLParameterSetAttribute(NLActionNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, 'Condition')
-        self.inputs.new(NLPythonSocket.bl_idname, "Object Instance")
-        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Attribute")
-        self.inputs.new(NLValueFieldSocket.bl_idname, "")
+        self.add_input(NLConditionSocket, 'Condition')
+        self.add_input(NLPythonSocket, "Object Instance")
+        self.add_input(NLQuotedStringFieldSocket, "Attribute")
+        self.add_input(NLValueFieldSocket, "")
 
     def get_netlogic_class_name(self):
         return "ULSetPyInstanceAttr"
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return ['condition', 'instance', 'attr', 'value']
 
 
@@ -9396,12 +6249,12 @@ class NLActionLoadVariable(NLActionNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
-        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, 'Filename')
+        self.add_input(NLQuotedStringFieldSocket, 'Filename')
         self.inputs[-1].value = 'variables'
-        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, 'Name')
+        self.add_input(NLQuotedStringFieldSocket, 'Name')
         self.inputs[-1].value = 'var'
-        self.inputs.new(NLOptionalValueFieldSocket.bl_idname, 'Default Value')
-        self.outputs.new(NLParameterSocket.bl_idname, 'Value')
+        self.add_input(NLOptionalValueFieldSocket, 'Default Value')
+        self.add_output(NLParameterSocket, 'Value')
 
     def draw_buttons(self, context, layout):
         layout.prop(
@@ -9417,7 +6270,7 @@ class NLActionLoadVariable(NLActionNode):
     def get_netlogic_class_name(self):
         return "ULLoadVariable"
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return ['file_name', 'name', 'default_value']
 
     def get_attributes(self):
@@ -9432,7 +6285,7 @@ class NLActionLoadVariable(NLActionNode):
             ) if self.custom_path else "''"
         )]
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return ['VAR']
 
 
@@ -9458,9 +6311,9 @@ class NLActionLoadVariables(NLActionNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
-        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, 'Filename')
+        self.add_input(NLQuotedStringFieldSocket, 'Filename')
         self.inputs[-1].value = 'variables'
-        self.outputs.new(NLDictSocket.bl_idname, 'Variables')
+        self.add_output(NLDictSocket, 'Variables')
 
     def draw_buttons(self, context, layout):
         layout.prop(
@@ -9476,7 +6329,7 @@ class NLActionLoadVariables(NLActionNode):
     def get_netlogic_class_name(self):
         return "ULLoadVariableDict"
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return ["file_name", 'name']
 
     def get_attributes(self):
@@ -9491,7 +6344,7 @@ class NLActionLoadVariables(NLActionNode):
             ) if self.custom_path else "''"
         )]
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return ["VAR"]
 
 
@@ -9517,12 +6370,12 @@ class NLActionRemoveVariable(NLActionNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, 'Condition')
-        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, 'Filename')
+        self.add_input(NLConditionSocket, 'Condition')
+        self.add_input(NLQuotedStringFieldSocket, 'Filename')
         self.inputs[-1].value = 'variables'
-        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, 'Name')
+        self.add_input(NLQuotedStringFieldSocket, 'Name')
         self.inputs[-1].value = 'var'
-        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+        self.add_output(NLConditionSocket, 'Done')
 
     def draw_buttons(self, context, layout):
         layout.prop(
@@ -9538,7 +6391,7 @@ class NLActionRemoveVariable(NLActionNode):
     def get_netlogic_class_name(self):
         return "ULRemoveVariable"
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return ["condition", 'file_name', 'name']
 
     def get_attributes(self):
@@ -9553,7 +6406,7 @@ class NLActionRemoveVariable(NLActionNode):
             ) if self.custom_path else "''"
         )]
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return ["OUT"]
 
 
@@ -9579,10 +6432,10 @@ class NLActionClearVariables(NLActionNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, 'Condition')
-        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, 'Filename')
+        self.add_input(NLConditionSocket, 'Condition')
+        self.add_input(NLQuotedStringFieldSocket, 'Filename')
         self.inputs[-1].value = 'variables'
-        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+        self.add_output(NLConditionSocket, 'Done')
 
     def draw_buttons(self, context, layout):
         layout.prop(
@@ -9598,7 +6451,7 @@ class NLActionClearVariables(NLActionNode):
     def get_netlogic_class_name(self):
         return "ULClearVariables"
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return ["condition", 'file_name']
 
     def get_attributes(self):
@@ -9613,7 +6466,7 @@ class NLActionClearVariables(NLActionNode):
             ) if self.custom_path else "''"
         )]
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return ["OUT"]
 
 
@@ -9639,12 +6492,12 @@ class NLActionListVariables(NLActionNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
-        self.inputs.new(NodeSocketPseudoCondition.bl_idname, 'Condition')
-        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, 'Filename')
+        self.add_input(NodeSocketPseudoCondition, 'Condition')
+        self.add_input(NLQuotedStringFieldSocket, 'Filename')
         self.inputs[-1].value = 'variables'
-        self.inputs.new(NLBooleanSocket.bl_idname, 'Print')
-        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
-        self.outputs.new(NLListSocket.bl_idname, 'List')
+        self.add_input(NLBooleanSocket, 'Print')
+        self.add_output(NLConditionSocket, 'Done')
+        self.add_output(NLListSocket, 'List')
 
     def draw_buttons(self, context, layout):
         layout.prop(
@@ -9660,7 +6513,7 @@ class NLActionListVariables(NLActionNode):
     def get_netlogic_class_name(self):
         return "ULListVariables"
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return ["condition", 'file_name', 'print_list']
 
     def get_attributes(self):
@@ -9675,7 +6528,7 @@ class NLActionListVariables(NLActionNode):
             ) if self.custom_path else "''"
         )]
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return ["OUT", 'LIST']
 
 
@@ -9691,18 +6544,18 @@ class NLActionSetCharacterJump(NLActionNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, "Condition")
-        self.inputs.new(NLGameObjectSocket.bl_idname, "Object")
-        self.inputs.new(NLPositiveIntegerFieldSocket.bl_idname, "Max Jumps")
-        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+        self.add_input(NLConditionSocket, "Condition")
+        self.add_input(NLGameObjectSocket, "Object")
+        self.add_input(NLPositiveIntegerFieldSocket, "Max Jumps")
+        self.add_output(NLConditionSocket, 'Done')
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return ["OUT"]
 
     def get_netlogic_class_name(self):
         return "ULSetCharacterMaxJumps"
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return ["condition", "game_object", 'max_jumps']
 
 
@@ -9717,19 +6570,19 @@ class NLActionSetCharacterGravity(NLActionNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, "Condition")
-        self.inputs.new(NLGameObjectSocket.bl_idname, "Object")
-        self.inputs.new(NLVelocitySocket.bl_idname, "Gravity")
+        self.add_input(NLConditionSocket, "Condition")
+        self.add_input(NLGameObjectSocket, "Object")
+        self.add_input(NLVelocitySocket, "Gravity")
         self.inputs[-1].value_z = -9.8
-        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+        self.add_output(NLConditionSocket, 'Done')
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return ["OUT"]
 
     def get_netlogic_class_name(self):
         return "ULSetCharacterGravity"
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return ["condition", "game_object", 'gravity']
 
 
@@ -9747,12 +6600,12 @@ class NLActionSetCharacterWalkDir(NLActionNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, "Condition")
-        self.inputs.new(NLGameObjectSocket.bl_idname, "Object")
-        self.inputs.new(NLVec3FieldSocket.bl_idname, "Vector")
-        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+        self.add_input(NLConditionSocket, "Condition")
+        self.add_input(NLGameObjectSocket, "Object")
+        self.add_input(NLVec3FieldSocket, "Vector")
+        self.add_output(NLConditionSocket, 'Done')
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return ["OUT"]
 
     def draw_buttons(self, context, layout):
@@ -9766,7 +6619,7 @@ class NLActionSetCharacterWalkDir(NLActionNode):
     def get_netlogic_class_name(self):
         return "ULSetCharacterWalkDir"
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return ["condition", "game_object", 'walkDir']
 
     def get_attributes(self):
@@ -9787,13 +6640,13 @@ class NLActionSetCharacterVelocity(NLActionNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, "Condition")
-        self.inputs.new(NLGameObjectSocket.bl_idname, "Object")
-        self.inputs.new(NLVec3FieldSocket.bl_idname, "Velocity")
-        self.inputs.new(NLPositiveFloatSocket.bl_idname, "Time")
-        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+        self.add_input(NLConditionSocket, "Condition")
+        self.add_input(NLGameObjectSocket, "Object")
+        self.add_input(NLVec3FieldSocket, "Velocity")
+        self.add_input(NLPositiveFloatSocket, "Time")
+        self.add_output(NLConditionSocket, 'Done')
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return ["OUT"]
 
     def draw_buttons(self, context, layout):
@@ -9807,7 +6660,7 @@ class NLActionSetCharacterVelocity(NLActionNode):
     def get_netlogic_class_name(self):
         return "ULSetCharacterVelocity"
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return ["condition", "game_object", 'vel', 'time']
 
     def get_attributes(self):
@@ -9833,9 +6686,9 @@ class NLActionApplyTorque(NLActionNode):
             NLConditionSocket, "Condition",
             NLGameObjectSocket, "Object",
             NLVec3FieldSocket, "Vector")
-        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+        self.add_output(NLConditionSocket, 'Done')
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return ["OUT"]
 
     def draw_buttons(self, context, layout):
@@ -9849,7 +6702,7 @@ class NLActionApplyTorque(NLActionNode):
     def get_netlogic_class_name(self):
         return "ULApplyTorque"
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return ["condition", "game_object", "torque"]
 
     def get_attributes(self):
@@ -9868,17 +6721,17 @@ class NLActionEndObjectNode(NLActionNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, "Condition")
-        self.inputs.new(NLGameObjectSocket.bl_idname, "Object")
-        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+        self.add_input(NLConditionSocket, "Condition")
+        self.add_input(NLGameObjectSocket, "Object")
+        self.add_output(NLConditionSocket, 'Done')
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return ["OUT"]
 
     def get_netlogic_class_name(self):
         return "ULEndObject"
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return ["condition", "game_object"]
 
 
@@ -9893,18 +6746,18 @@ class NLActionSetTimeScale(NLActionNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, "Condition")
-        self.inputs.new(NLPositiveFloatSocket.bl_idname, "Timescale")
+        self.add_input(NLConditionSocket, "Condition")
+        self.add_input(NLPositiveFloatSocket, "Timescale")
         self.inputs[-1].value = 1
-        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+        self.add_output(NLConditionSocket, 'Done')
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return ["OUT"]
 
     def get_netlogic_class_name(self):
         return "ULSetTimeScale"
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return ["condition", "timescale"]
 
 
@@ -9919,18 +6772,18 @@ class NLActionSetGravity(NLActionNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, "Condition")
-        self.inputs.new(NLVelocitySocket.bl_idname, "Gravity")
+        self.add_input(NLConditionSocket, "Condition")
+        self.add_input(NLVelocitySocket, "Gravity")
         self.inputs[-1].value_z = -9.8
-        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+        self.add_output(NLConditionSocket, 'Done')
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return ["OUT"]
 
     def get_netlogic_class_name(self):
         return "ULSetGravity"
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return ["condition", "gravity"]
 
 
@@ -9947,20 +6800,20 @@ class NLActionReplaceMesh(NLActionNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, "Condition")
-        self.inputs.new(NLGameObjectSocket.bl_idname, "Object")
-        self.inputs.new(NLMeshSocket.bl_idname, "New Mesh Name")
-        self.inputs.new(NLBooleanSocket.bl_idname, "Use Display")
-        self.inputs.new(NLBooleanSocket.bl_idname, "Use Physics")
-        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+        self.add_input(NLConditionSocket, "Condition")
+        self.add_input(NLGameObjectSocket, "Object")
+        self.add_input(NLMeshSocket, "New Mesh Name")
+        self.add_input(NLBooleanSocket, "Use Display")
+        self.add_input(NLBooleanSocket, "Use Physics")
+        self.add_output(NLConditionSocket, 'Done')
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return ["OUT"]
 
     def get_netlogic_class_name(self):
         return "ULReplaceMesh"
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return [
             "condition",
             "target_game_object",
@@ -9982,18 +6835,18 @@ class NLActionRemovePhysicsConstraint(NLActionNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, "Condition")
-        self.inputs.new(NLGameObjectSocket.bl_idname, "Object")
-        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Name")
-        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+        self.add_input(NLConditionSocket, "Condition")
+        self.add_input(NLGameObjectSocket, "Object")
+        self.add_input(NLQuotedStringFieldSocket, "Name")
+        self.add_output(NLConditionSocket, 'Done')
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return ["OUT"]
 
     def get_netlogic_class_name(self):
         return "ULRemovePhysicsConstraint"
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return ["condition", "object", "name"]
 
 
@@ -10010,17 +6863,18 @@ class NLActionAddPhysicsConstraint(NLActionNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, "Condition")
-        self.inputs.new(NLGameObjectSocket.bl_idname, "Object")
-        self.inputs.new(NLGameObjectSocket.bl_idname, "Target")
-        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, 'Name')
-        self.inputs.new(NLBooleanSocket.bl_idname, 'Use World Space')
-        self.inputs.new(NLVec3FieldSocket.bl_idname, 'Pivot')
-        self.inputs.new(NLBooleanSocket.bl_idname, 'Limit Axis')
-        self.inputs.new(NLVec3FieldSocket.bl_idname, 'Axis Limits')
-        self.inputs.new(NLBooleanSocket.bl_idname, 'Linked Collision')
+        self.add_input(NLConditionSocket, "Condition")
+        self.add_input(NLGameObjectSocket, "Object")
+        self.add_input(NLGameObjectSocket, "Target")
+        self.add_input(NLQuotedStringFieldSocket, 'Name')
+        self.add_input(NLBooleanSocket, 'Use World Space')
+        self.add_input(NLVec3FieldSocket, 'Pivot')
+        self.add_input(NLBooleanSocket, 'Limit Axis')
+        self.add_input(NLVec3FieldSocket, 'Axis Limits')
+        self.add_input(NLBooleanSocket, 'Linked Collision')
         self.inputs[-1].value = True
-        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+        self.add_output(NLConditionSocket, 'Done')
+        self.update_draw()
 
     def draw_buttons(self, context, layout) -> None:
         layout.prop(self, 'constraint', text='')
@@ -10039,7 +6893,7 @@ class NLActionAddPhysicsConstraint(NLActionNode):
         else:
             self.inputs[7].enabled = True
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return ["OUT"]
 
     def get_netlogic_class_name(self):
@@ -10050,7 +6904,7 @@ class NLActionAddPhysicsConstraint(NLActionNode):
             ('constraint', lambda: self.constraint)
         ]
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return [
             "condition",
             "target",
@@ -10076,17 +6930,17 @@ class NLSetGammaAction(NLActionNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, 'Condition')
-        self.inputs.new(NLPositiveFloatSocket.bl_idname, 'Gamma')
-        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+        self.add_input(NLConditionSocket, 'Condition')
+        self.add_input(NLPositiveFloatSocket, 'Gamma')
+        self.add_output(NLConditionSocket, 'Done')
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return ["OUT"]
 
     def get_netlogic_class_name(self):
         return "ULSetGamma"
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return [
             "condition",
             "value"
@@ -10105,17 +6959,17 @@ class NLSetExposureAction(NLActionNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, 'Condition')
-        self.inputs.new(NLPositiveFloatSocket.bl_idname, 'Exposure')
-        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+        self.add_input(NLConditionSocket, 'Condition')
+        self.add_input(NLPositiveFloatSocket, 'Exposure')
+        self.add_output(NLConditionSocket, 'Done')
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return ["OUT"]
 
     def get_netlogic_class_name(self):
         return "ULSetExposure"
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return [
             "condition",
             "value"
@@ -10134,17 +6988,17 @@ class NLSetEeveeAO(NLActionNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, 'Condition')
-        self.inputs.new(NLBooleanSocket.bl_idname, 'Use AO')
-        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+        self.add_input(NLConditionSocket, 'Condition')
+        self.add_input(NLBooleanSocket, 'Use AO')
+        self.add_output(NLConditionSocket, 'Done')
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return ["OUT"]
 
     def get_netlogic_class_name(self):
         return "ULSetEeveeAO"
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return [
             "condition",
             "value"
@@ -10163,17 +7017,17 @@ class NLSetEeveeBloom(NLActionNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, 'Condition')
-        self.inputs.new(NLBooleanSocket.bl_idname, 'Use Bloom')
-        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+        self.add_input(NLConditionSocket, 'Condition')
+        self.add_input(NLBooleanSocket, 'Use Bloom')
+        self.add_output(NLConditionSocket, 'Done')
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return ["OUT"]
 
     def get_netlogic_class_name(self):
         return "ULSetEeveeBloom"
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return [
             "condition",
             "value"
@@ -10192,17 +7046,17 @@ class NLSetEeveeSSR(NLActionNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, 'Condition')
-        self.inputs.new(NLBooleanSocket.bl_idname, 'Use SSR')
-        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+        self.add_input(NLConditionSocket, 'Condition')
+        self.add_input(NLBooleanSocket, 'Use SSR')
+        self.add_output(NLConditionSocket, 'Done')
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return ["OUT"]
 
     def get_netlogic_class_name(self):
         return "ULSetEeveeSSR"
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return [
             "condition",
             "value"
@@ -10221,17 +7075,17 @@ class NLSetEeveeVolumetrics(NLActionNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, 'Condition')
-        self.inputs.new(NLBooleanSocket.bl_idname, 'Volumetrics')
-        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+        self.add_input(NLConditionSocket, 'Condition')
+        self.add_input(NLBooleanSocket, 'Volumetrics')
+        self.add_output(NLConditionSocket, 'Done')
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return ["OUT"]
 
     def get_netlogic_class_name(self):
         return "ULSetEeveeVolumetrics"
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return [
             "condition",
             "value"
@@ -10247,20 +7101,21 @@ class NLSetEeveeSMAA(NLActionNode):
     nl_category = 'Render'
     nl_subcat = 'EEVEE Effects'
     nl_module = 'actions'
+    deprecated = True
 
     def init(self, context):
         NLActionNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, 'Condition')
-        self.inputs.new(NLBooleanSocket.bl_idname, 'Use SMAA')
-        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+        self.add_input(NLConditionSocket, 'Condition')
+        self.add_input(NLBooleanSocket, 'Use SMAA')
+        self.add_output(NLConditionSocket, 'Done')
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return ["OUT"]
 
     def get_netlogic_class_name(self):
         return "ULSetEeveeSMAA"
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return [
             "condition",
             "value"
@@ -10279,18 +7134,18 @@ class NLSetLightEnergyAction(NLActionNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, 'Condition')
-        self.inputs.new(NLLightObjectSocket.bl_idname, 'Light Object')
-        self.inputs.new(NLFloatFieldSocket.bl_idname, 'Energy')
-        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+        self.add_input(NLConditionSocket, 'Condition')
+        self.add_input(NLLightObjectSocket, 'Light Object')
+        self.add_input(NLFloatFieldSocket, 'Energy')
+        self.add_output(NLConditionSocket, 'Done')
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return ["OUT"]
 
     def get_netlogic_class_name(self):
         return "ULSetLightEnergy"
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return [
             "condition",
             "lamp",
@@ -10309,18 +7164,18 @@ class NLMakeUniqueLight(NLActionNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, 'Condition')
-        self.inputs.new(NLLightObjectSocket.bl_idname, 'Light Object')
-        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
-        self.outputs.new(NLLightObjectSocket.bl_idname, 'Light')
+        self.add_input(NLConditionSocket, 'Condition')
+        self.add_input(NLLightObjectSocket, 'Light Object')
+        self.add_output(NLConditionSocket, 'Done')
+        self.add_output(NLLightObjectSocket, 'Light')
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return ["OUT", 'LIGHT']
 
     def get_netlogic_class_name(self):
         return "ULMakeUniqueLight"
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return [
             "condition",
             "light",
@@ -10338,18 +7193,18 @@ class NLSetLightShadowAction(NLActionNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, 'Condition')
-        self.inputs.new(NLLightObjectSocket.bl_idname, 'Light Object')
-        self.inputs.new(NLBooleanSocket.bl_idname, 'Use Shadow')
-        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+        self.add_input(NLConditionSocket, 'Condition')
+        self.add_input(NLLightObjectSocket, 'Light Object')
+        self.add_input(NLBooleanSocket, 'Use Shadow')
+        self.add_output(NLConditionSocket, 'Done')
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return ["OUT"]
 
     def get_netlogic_class_name(self):
         return "ULSetLightShadow"
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return [
             "condition",
             "lamp",
@@ -10369,18 +7224,18 @@ class NLSetLightColorAction(NLActionNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, "Condition")
-        self.inputs.new(NLLightObjectSocket.bl_idname, "Light Object")
-        self.inputs.new(NLColorSocket.bl_idname, "Color")
-        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+        self.add_input(NLConditionSocket, "Condition")
+        self.add_input(NLLightObjectSocket, "Light Object")
+        self.add_input(NLColorSocket, "Color")
+        self.add_output(NLConditionSocket, 'Done')
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return ["OUT"]
 
     def get_netlogic_class_name(self):
         return "ULSetLightColor"
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return [
             "condition",
             "lamp",
@@ -10399,16 +7254,16 @@ class NLGetLightEnergy(NLParameterNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
-        self.inputs.new(NLLightObjectSocket.bl_idname, "Light Object")
-        self.outputs.new(NLParameterSocket.bl_idname, 'Enery')
+        self.add_input(NLLightObjectSocket, "Light Object")
+        self.add_output(NLParameterSocket, 'Enery')
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return ['ENERGY']
 
     def get_netlogic_class_name(self):
         return "ULGetLightEnergy"
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return ["lamp"]
 
 
@@ -10423,16 +7278,16 @@ class NLGetLightColorAction(NLParameterNode):
 
     def init(self, context):
         NLParameterNode.init(self, context)
-        self.inputs.new(NLLightObjectSocket.bl_idname, "Light Object")
-        self.outputs.new(NLColorSocket.bl_idname, 'Color')
+        self.add_input(NLLightObjectSocket, "Light Object")
+        self.add_output(NLColorSocket, 'Color')
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return ['COLOR']
 
     def get_netlogic_class_name(self):
         return "ULGetLightColor"
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return ["lamp"]
 
 
@@ -10453,32 +7308,32 @@ class NLActionPlayActionNode(NLActionNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, "Condition")
-        self.inputs.new(NLGameObjectSocket.bl_idname, "Object / Armature")
-        self.inputs.new(NLAnimationSocket.bl_idname, "Action")
-        self.inputs.new(NLFloatFieldSocket.bl_idname, "Start")
-        self.inputs.new(NLFloatFieldSocket.bl_idname, "End")
-        self.inputs.new(NLPositiveIntegerFieldSocket.bl_idname, "Layer")
-        self.inputs.new(NLPositiveIntegerFieldSocket.bl_idname, "Priority")
+        self.add_input(NLConditionSocket, "Condition")
+        self.add_input(NLGameObjectSocket, "Object / Armature")
+        self.add_input(NodeSocketLogicAnimation, "Action")
+        self.add_input(NLFloatFieldSocket, "Start")
+        self.add_input(NLFloatFieldSocket, "End")
+        self.add_input(NLPositiveIntegerFieldSocket, "Layer")
+        self.add_input(NLPositiveIntegerFieldSocket, "Priority")
         self.inputs[-1].enabled = False
-        self.inputs.new(NLPlayActionModeSocket.bl_idname, "Play Mode")
-        self.inputs.new(NLBooleanSocket.bl_idname, "Stop When Done")
+        self.add_input(NLPlayActionModeSocket, "Play Mode")
+        self.add_input(NLBooleanSocket, "Stop When Done")
         self.inputs[-1].value = True
         self.inputs[-1].enabled = False
-        self.inputs.new(NLSocketAlphaFloat.bl_idname, "Layer Weight")
+        self.add_input(NLSocketAlphaFloat, "Layer Weight")
         self.inputs[-1].value = 1.0
         self.inputs[-1].enabled = False
-        self.inputs.new(NLPositiveFloatSocket.bl_idname, "Speed")
+        self.add_input(NLPositiveFloatSocket, "Speed")
         self.inputs[-1].value = 1.0
         self.inputs[-1].enabled = False
-        self.inputs.new(NLFloatFieldSocket.bl_idname, "Blendin")
+        self.add_input(NLFloatFieldSocket, "Blendin")
         self.inputs[-1].enabled = False
-        self.inputs.new(NLBlendActionModeSocket.bl_idname, "Blend Mode")
+        self.add_input(NLBlendActionModeSocket, "Blend Mode")
         self.inputs[-1].enabled = False
-        self.outputs.new(NLConditionSocket.bl_idname, "Started")
-        self.outputs.new(NLConditionSocket.bl_idname, "Running")
-        self.outputs.new(NLConditionSocket.bl_idname, "On Finish")
-        self.outputs.new(NLParameterSocket.bl_idname, "Current Frame")
+        self.add_output(NLConditionSocket, "Started")
+        self.add_output(NLConditionSocket, "Running")
+        self.add_output(NLConditionSocket, "On Finish")
+        self.add_output(NLParameterSocket, "Current Frame")
 
     def update_draw(self):
         if len(self.inputs) < 12:
@@ -10498,7 +7353,7 @@ class NLActionPlayActionNode(NLActionNode):
     def get_netlogic_class_name(self):
         return "ULPlayAction"
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return [
             "condition",
             "game_object",
@@ -10515,7 +7370,7 @@ class NLActionPlayActionNode(NLActionNode):
             "blend_mode"
         ]
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return ["STARTED", "RUNNING", "FINISHED", "FRAME"]
 
 
@@ -10532,13 +7387,13 @@ class NLActionAlignAxisToVector(NLActionNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, "Condition")
-        self.inputs.new(NLGameObjectSocket.bl_idname, "Object")
-        self.inputs.new(NLVec3FieldSocket.bl_idname, "Vector")
-        self.inputs.new(NLSocketOrientedLocalAxis.bl_idname, "Axis")
-        self.inputs.new(NLSocketAlphaFloat.bl_idname, "Factor")
+        self.add_input(NLConditionSocket, "Condition")
+        self.add_input(NLGameObjectSocket, "Object")
+        self.add_input(NLVec3FieldSocket, "Vector")
+        self.add_input(NLSocketOrientedLocalAxis, "Axis")
+        self.add_input(NLSocketAlphaFloat, "Factor")
         self.inputs[-1].value = 1.0
-        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+        self.add_output(NLConditionSocket, 'Done')
 
     def draw_buttons(self, context, layout):
         layout.prop(
@@ -10548,13 +7403,13 @@ class NLActionAlignAxisToVector(NLActionNode):
             text="Local" if self.local else "Global"
         )
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return ["OUT"]
 
     def get_netlogic_class_name(self):
         return "ULAlignAxisToVector"
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return ["condition", "game_object", "vector", "axis", 'factor']
 
     def get_attributes(self):
@@ -10574,14 +7429,14 @@ class NLActionTimeBarrier(NLConditionNode):
 
     def init(self, context):
         NLConditionNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, 'Condition')
-        self.inputs.new(NLTimeSocket.bl_idname, 'Time')
-        self.outputs.new(NLConditionSocket.bl_idname, 'Out')
+        self.add_input(NLConditionSocket, 'Condition')
+        self.add_input(NLTimeSocket, 'Time')
+        self.add_output(NLConditionSocket, 'Out')
 
     def get_netlogic_class_name(self):
         return 'ULBarrier'
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return ['condition', 'time']
 
 
@@ -10597,14 +7452,14 @@ class NLActionTimeDelay(NLActionNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, 'Condition')
-        self.inputs.new(NLTimeSocket.bl_idname, 'Delay')
-        self.outputs.new(NLConditionSocket.bl_idname, 'Out')
+        self.add_input(NLConditionSocket, 'Condition')
+        self.add_input(NLTimeSocket, 'Delay')
+        self.add_output(NLConditionSocket, 'Out')
 
     def get_netlogic_class_name(self):
         return 'ULTimeDelay'
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return ['condition', 'delay']
 
 
@@ -10623,15 +7478,15 @@ class NLActionTimeFilter(NLConditionNode):
 
     def init(self, context):
         NLConditionNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, "Condition")
-        self.inputs.new(NLTimeSocket.bl_idname, "Gap")
+        self.add_input(NLConditionSocket, "Condition")
+        self.add_input(NLTimeSocket, "Gap")
         self.inputs[-1].value = 1.0
-        self.outputs.new(NLConditionSocket.bl_idname, "Out")
+        self.add_output(NLConditionSocket, "Out")
 
     def get_netlogic_class_name(self):
         return "ULPulsify"
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return ["condition", "delay"]
 
 
@@ -10654,20 +7509,20 @@ class NLActionMouseLookNode(NLActionNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, "Condition")
-        self.inputs.new(NLGameObjectSocket.bl_idname, "Main Object")
-        self.inputs.new(NLGameObjectSocket.bl_idname, "Head (Optional)")
-        self.inputs.new(NLInvertedXYSocket.bl_idname, "")
-        self.inputs.new(NLFloatFieldSocket.bl_idname, "Sensitivity")
+        self.add_input(NLConditionSocket, "Condition")
+        self.add_input(NLGameObjectSocket, "Main Object")
+        self.add_input(NLGameObjectSocket, "Head (Optional)")
+        self.add_input(NLInvertedXYSocket, "")
+        self.add_input(NLFloatFieldSocket, "Sensitivity")
         self.inputs[-1].value = 1.0
-        self.inputs.new(NLBooleanSocket.bl_idname, "Cap Left / Right")
-        self.inputs.new(NLAngleLimitSocket.bl_idname, "")
-        self.inputs.new(NLBooleanSocket.bl_idname, "Cap Up / Down")
-        self.inputs.new(NLAngleLimitSocket.bl_idname, "")
+        self.add_input(NLBooleanSocket, "Cap Left / Right")
+        self.add_input(NLAngleLimitSocket, "")
+        self.add_input(NLBooleanSocket, "Cap Up / Down")
+        self.add_input(NLAngleLimitSocket, "")
         self.inputs[-1].value_x = math.radians(-89)
         self.inputs[-1].value_y = math.radians(89)
-        self.inputs.new(NLSocketAlphaFloat.bl_idname, "Smoothing")
-        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+        self.add_input(NLSocketAlphaFloat, "Smoothing")
+        self.add_output(NLConditionSocket, 'Done')
         self.update_draw()
 
     def draw_buttons(self, context, layout):
@@ -10687,7 +7542,7 @@ class NLActionMouseLookNode(NLActionNode):
         else:
             self.inputs[8].enabled = False
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return ["OUT"]
 
     def get_netlogic_class_name(self):
@@ -10696,7 +7551,7 @@ class NLActionMouseLookNode(NLActionNode):
     def get_attributes(self):
         return [("axis", lambda: self.axis)]
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return [
             "condition",
             "game_object_x",
@@ -10725,9 +7580,9 @@ class NLActionPrint(NLActionNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
-        self.inputs.new(NodeSocketPseudoCondition.bl_idname, "Condition")
-        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Value")
-        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+        self.add_input(NodeSocketPseudoCondition, "Condition")
+        self.add_input(NLQuotedStringFieldSocket, "Value")
+        self.add_output(NLConditionSocket, 'Done')
 
     def draw_buttons(self, context, layout) -> None:
         layout.prop(self, 'msg_type', text='')
@@ -10735,13 +7590,13 @@ class NLActionPrint(NLActionNode):
     def get_attributes(self):
         return [("msg_type", lambda: f'"{self.msg_type}"')]
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return ["OUT"]
 
     def get_netlogic_class_name(self):
         return "ULPrintValue"
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return ["condition", "value"]
 
 
@@ -10757,24 +7612,24 @@ class NLActionMousePickNode(NLActionNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, "Condition")
-        self.inputs.new(NLGameObjectSocket.bl_idname, "Camera")
-        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Property")
-        self.inputs.new(NLBooleanSocket.bl_idname, 'X-Ray')
-        self.inputs.new(NLFloatFieldSocket.bl_idname, "Distance")
+        self.add_input(NLConditionSocket, "Condition")
+        self.add_input(NLGameObjectSocket, "Camera")
+        self.add_input(NLQuotedStringFieldSocket, "Property")
+        self.add_input(NLBooleanSocket, 'X-Ray')
+        self.add_input(NLFloatFieldSocket, "Distance")
         self.inputs[-1].value = 100.0
-        self.outputs.new(NLConditionSocket.bl_idname, "Has Result")
-        self.outputs.new(NLGameObjectSocket.bl_idname, "Picked Object")
-        self.outputs.new(NLVectorSocket.bl_idname, "Picked Point")
-        self.outputs.new(NLVectorSocket.bl_idname, "Picked Normal")
+        self.add_output(NLConditionSocket, "Has Result")
+        self.add_output(NLGameObjectSocket, "Picked Object")
+        self.add_output(NLVectorSocket, "Picked Point")
+        self.add_output(NLVectorSocket, "Picked Normal")
 
     def get_netlogic_class_name(self):
         return "ULMouseRayCast"
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return ["condition", "camera", "property", 'xray', "distance"]
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return [utils.OUTCELL, "OUTOBJECT", "OUTPOINT", "OUTNORMAL"]
 
 
@@ -10790,25 +7645,25 @@ class NLActionCameraPickNode(NLActionNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, "Condition")
-        self.inputs.new(NLGameObjectSocket.bl_idname, "Camera")
-        self.inputs.new(NLVec2FieldSocket.bl_idname, "Aim")
-        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Property")
-        self.inputs.new(NLBooleanSocket.bl_idname, 'X-Ray')
-        self.inputs.new(NLFloatFieldSocket.bl_idname, "Distance")
+        self.add_input(NLConditionSocket, "Condition")
+        self.add_input(NLGameObjectSocket, "Camera")
+        self.add_input(NLVec2FieldSocket, "Aim")
+        self.add_input(NLQuotedStringFieldSocket, "Property")
+        self.add_input(NLBooleanSocket, 'X-Ray')
+        self.add_input(NLFloatFieldSocket, "Distance")
         self.inputs[-1].value = 100.0
-        self.outputs.new(NLConditionSocket.bl_idname, "Has Result")
-        self.outputs.new(NLGameObjectSocket.bl_idname, "Picked Object")
-        self.outputs.new(NLVectorSocket.bl_idname, "Picked Point")
-        self.outputs.new(NLVectorSocket.bl_idname, "Picked Normal")
+        self.add_output(NLConditionSocket, "Has Result")
+        self.add_output(NLGameObjectSocket, "Picked Object")
+        self.add_output(NLVectorSocket, "Picked Point")
+        self.add_output(NLVectorSocket, "Picked Normal")
 
     def get_netlogic_class_name(self):
         return "ULCameraRayCast"
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return ["condition", "camera", "aim", "property_name", "xray", "distance"]
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return [utils.OUTCELL, "PICKED_OBJECT", "PICKED_POINT", "PICKED_NORMAL"]
 
 
@@ -10824,24 +7679,24 @@ class NLActionSetParentNode(NLActionNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, "Condition")
-        self.inputs.new(NLGameObjectSocket.bl_idname, "Child Object")
-        self.inputs.new(NLGameObjectSocket.bl_idname, "Parent Object")
-        self.inputs.new(NLBooleanSocket.bl_idname, "Compound")
+        self.add_input(NLConditionSocket, "Condition")
+        self.add_input(NLGameObjectSocket, "Child Object")
+        self.add_input(NLGameObjectSocket, "Parent Object")
+        self.add_input(NLBooleanSocket, "Compound")
         self.inputs[-1].value = True
         self.inputs[-1].enabled = False
-        self.inputs.new(NLBooleanSocket.bl_idname, "Ghost")
+        self.add_input(NLBooleanSocket, "Ghost")
         self.inputs[-1].value = True
         self.inputs[-1].enabled = False
-        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+        self.add_output(NLConditionSocket, 'Done')
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return ["OUT"]
 
     def get_netlogic_class_name(self):
         return "ULSetParent"
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return [
             "condition",
             "child_object",
@@ -10863,17 +7718,17 @@ class NLActionRemoveParentNode(NLActionNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, "Condition")
-        self.inputs.new(NLGameObjectSocket.bl_idname, "Child Object")
-        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+        self.add_input(NLConditionSocket, "Condition")
+        self.add_input(NLGameObjectSocket, "Child Object")
+        self.add_output(NLConditionSocket, 'Done')
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return ["OUT"]
 
     def get_netlogic_class_name(self):
         return "ULRemoveParent"
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return ["condition", "child_object"]
 
 
@@ -10889,21 +7744,21 @@ class NLActionGetPerformanceProfileNode(NLActionNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
-        self.inputs.new(NodeSocketPseudoCondition.bl_idname, "Condition")
-        self.inputs.new(NLBooleanSocket.bl_idname, "Print Profile")
-        self.inputs.new(NLBooleanSocket.bl_idname, "Evaluated Nodes")
-        self.inputs.new(NLBooleanSocket.bl_idname, "Nodes per Second")
-        self.inputs.new(NLBooleanSocket.bl_idname, "Nodes per Tick")
-        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
-        self.outputs.new(NLParameterSocket.bl_idname, 'Profile')
+        self.add_input(NodeSocketPseudoCondition, "Condition")
+        self.add_input(NLBooleanSocket, "Print Profile")
+        self.add_input(NLBooleanSocket, "Evaluated Nodes")
+        self.add_input(NLBooleanSocket, "Nodes per Second")
+        self.add_input(NLBooleanSocket, "Nodes per Tick")
+        self.add_output(NLConditionSocket, 'Done')
+        self.add_output(NLParameterSocket, 'Profile')
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return ["OUT", "DATA"]
 
     def get_netlogic_class_name(self):
         return "ULGetPerformanceProfile"
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return [
             "condition",
             "print_profile",
@@ -10925,16 +7780,16 @@ class NLParameterGameObjectParent(NLParameterNode):
 
     def init(self, context):
         NLParameterNode.init(self, context)
-        self.inputs.new(NLGameObjectSocket.bl_idname, "Child Object")
-        self.outputs.new(NLGameObjectSocket.bl_idname, "Parent Object")
+        self.add_input(NLGameObjectSocket, "Child Object")
+        self.add_output(NLGameObjectSocket, "Parent Object")
 
     def get_netlogic_class_name(self):
         return "ULGetParent"
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return ["game_object"]
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return ["OUT"]
 
 
@@ -10957,8 +7812,8 @@ class NLParameterAxisVector(NLParameterNode):
 
     def init(self, context):
         NLParameterNode.init(self, context)
-        self.inputs.new(NLGameObjectSocket.bl_idname, "Object")
-        self.outputs.new(NLVec3FieldSocket.bl_idname, "Vector")
+        self.add_input(NLGameObjectSocket, "Object")
+        self.add_output(NLVec3FieldSocket, "Vector")
 
     def draw_buttons(self, context, layout):
         layout.prop(self, 'axis', text='')
@@ -10966,13 +7821,13 @@ class NLParameterAxisVector(NLParameterNode):
     def get_netlogic_class_name(self):
         return "ULAxisVector"
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return ["game_object"]
 
     def get_attributes(self):
         return [("axis", lambda: self.axis)]
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return ["OUT"]
 
 
@@ -10989,16 +7844,16 @@ class NLGetObjectDataName(NLParameterNode):
 
     def init(self, context):
         NLParameterNode.init(self, context)
-        self.inputs.new(NLGameObjectSocket.bl_idname, "Object")
-        self.outputs.new(NLParameterSocket.bl_idname, "Name")
+        self.add_input(NLGameObjectSocket, "Object")
+        self.add_output(NLParameterSocket, "Name")
 
     def get_netlogic_class_name(self):
         return "ULObjectDataName"
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return ["game_object"]
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return ["OUT"]
 
 
@@ -11015,16 +7870,16 @@ class NLGetCurvePoints(NLParameterNode):
 
     def init(self, context):
         NLParameterNode.init(self, context)
-        self.inputs.new(NLCurveObjectSocket.bl_idname, "Curve")
-        self.outputs.new(NLListSocket.bl_idname, "Points")
+        self.add_input(NLCurveObjectSocket, "Curve")
+        self.add_output(NLListSocket, "Points")
 
     def get_netlogic_class_name(self):
         return "ULGetCurvePoints"
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return ["curve"]
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return ["OUT"]
 
 
@@ -11041,16 +7896,16 @@ class NLGetObjectVertices(NLParameterNode):
 
     def init(self, context):
         NLParameterNode.init(self, context)
-        self.inputs.new(NLGameObjectSocket.bl_idname, "Object")
-        self.outputs.new(NLListSocket.bl_idname, "Vertices")
+        self.add_input(NLGameObjectSocket, "Object")
+        self.add_output(NLListSocket, "Vertices")
 
     def get_netlogic_class_name(self):
         return "ULObjectDataVertices"
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return ["game_object"]
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return ["OUT"]
 
 
@@ -11067,14 +7922,14 @@ class NLSetBoneConstraintInfluence(NLActionNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, "Condition")
-        self.inputs.new(NLArmatureObjectSocket.bl_idname, "Armature")
-        self.inputs.new(NLArmatureBoneSocket.bl_idname, "")
+        self.add_input(NLConditionSocket, "Condition")
+        self.add_input(NLArmatureObjectSocket, "Armature")
+        self.add_input(NLArmatureBoneSocket, "")
         self.inputs[-1].ref_index = 1
-        self.inputs.new(NLBoneConstraintSocket.bl_idname, "")
+        self.add_input(NLBoneConstraintSocket, "")
         self.inputs[-1].ref_index = 2
-        self.inputs.new(NLSocketAlphaFloat.bl_idname, "Influence")
-        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+        self.add_input(NLSocketAlphaFloat, "Influence")
+        self.add_output(NLConditionSocket, 'Done')
 
     # def update_draw(self):
     #     self.inputs[2].enabled = (
@@ -11088,13 +7943,13 @@ class NLSetBoneConstraintInfluence(NLActionNode):
     #          self.inputs[2].is_linked)
     #     )
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return ["OUT"]
 
     def get_netlogic_class_name(self):
         return "ULSetBoneConstraintInfluence"
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return [
             "condition",
             "armature",
@@ -11117,14 +7972,14 @@ class NLSetBoneConstraintTarget(NLActionNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, "Condition")
-        self.inputs.new(NLArmatureObjectSocket.bl_idname, "Armature")
-        self.inputs.new(NLArmatureBoneSocket.bl_idname, "")
+        self.add_input(NLConditionSocket, "Condition")
+        self.add_input(NLArmatureObjectSocket, "Armature")
+        self.add_input(NLArmatureBoneSocket, "")
         self.inputs[-1].ref_index = 1
-        self.inputs.new(NLBoneConstraintSocket.bl_idname, "")
+        self.add_input(NLBoneConstraintSocket, "")
         self.inputs[-1].ref_index = 2
-        self.inputs.new(NLGameObjectSocket.bl_idname, "Target")
-        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+        self.add_input(NLGameObjectSocket, "Target")
+        self.add_output(NLConditionSocket, 'Done')
 
     # def update_draw(self):
     #     self.inputs[2].enabled = (
@@ -11138,13 +7993,13 @@ class NLSetBoneConstraintTarget(NLActionNode):
     #          self.inputs[2].is_linked)
     #     )
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return ["OUT"]
 
     def get_netlogic_class_name(self):
         return "ULSetBoneConstraintTarget"
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return [
             "condition",
             "armature",
@@ -11167,15 +8022,15 @@ class NLSetBoneConstraintAttribute(NLActionNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, "Condition")
-        self.inputs.new(NLArmatureObjectSocket.bl_idname, "Armature")
-        self.inputs.new(NLArmatureBoneSocket.bl_idname, "")
+        self.add_input(NLConditionSocket, "Condition")
+        self.add_input(NLArmatureObjectSocket, "Armature")
+        self.add_input(NLArmatureBoneSocket, "")
         self.inputs[-1].ref_index = 1
-        self.inputs.new(NLBoneConstraintSocket.bl_idname, "")
+        self.add_input(NLBoneConstraintSocket, "")
         self.inputs[-1].ref_index = 2
-        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Attribute")
-        self.inputs.new(NLValueFieldSocket.bl_idname, "")
-        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+        self.add_input(NLQuotedStringFieldSocket, "Attribute")
+        self.add_input(NLValueFieldSocket, "")
+        self.add_output(NLConditionSocket, 'Done')
 
     # def update_draw(self):
     #     self.inputs[2].enabled = (
@@ -11189,13 +8044,13 @@ class NLSetBoneConstraintAttribute(NLActionNode):
     #          self.inputs[2].is_linked)
     #     )
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return ["OUT"]
 
     def get_netlogic_class_name(self):
         return "ULSetBoneConstraintAttribute"
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return [
             "condition",
             "armature",
@@ -11219,20 +8074,20 @@ class NLActionSetBonePos(NLActionNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, "Condition")
-        self.inputs.new(NLArmatureObjectSocket.bl_idname, "Armature")
-        self.inputs.new(NLArmatureBoneSocket.bl_idname, "Bone Name")
+        self.add_input(NLConditionSocket, "Condition")
+        self.add_input(NLArmatureObjectSocket, "Armature")
+        self.add_input(NLArmatureBoneSocket, "Bone Name")
         self.inputs[-1].ref_index = 1
-        self.inputs.new(NLVec3FieldSocket.bl_idname, "Set Pos")
-        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+        self.add_input(NLVec3FieldSocket, "Set Pos")
+        self.add_output(NLConditionSocket, 'Done')
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return ["OUT"]
 
     def get_netlogic_class_name(self):
         return "ULSetBonePosition"
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return ["condition", "armature", "bone_name", "set_translation"]
 
 
@@ -11249,25 +8104,25 @@ class NLActionEditBoneNode(NLActionNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, "Condition")
-        self.inputs.new(NLArmatureObjectSocket.bl_idname, "Armature")
-        self.inputs.new(NLArmatureBoneSocket.bl_idname, "Bone Name")
+        self.add_input(NLConditionSocket, "Condition")
+        self.add_input(NLArmatureObjectSocket, "Armature")
+        self.add_input(NLArmatureBoneSocket, "Bone Name")
         self.inputs[-1].ref_index = 1
-        self.inputs.new(NLVec3FieldSocket.bl_idname, "Set Pos")
-        self.inputs.new(NLVec3FieldSocket.bl_idname, "Set Rot")
-        self.inputs.new(NLVec3FieldSocket.bl_idname, "Set Scale")
-        self.inputs.new(NLVec3FieldSocket.bl_idname, "Translate")
-        self.inputs.new(NLVec3FieldSocket.bl_idname, "Rotate")
-        self.inputs.new(NLVec3FieldSocket.bl_idname, "Scale")
-        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+        self.add_input(NLVec3FieldSocket, "Set Pos")
+        self.add_input(NLVec3FieldSocket, "Set Rot")
+        self.add_input(NLVec3FieldSocket, "Set Scale")
+        self.add_input(NLVec3FieldSocket, "Translate")
+        self.add_input(NLVec3FieldSocket, "Rotate")
+        self.add_input(NLVec3FieldSocket, "Scale")
+        self.add_output(NLConditionSocket, 'Done')
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return ["OUT"]
 
     def get_netlogic_class_name(self):
         return "ULEditBone"
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return [
             "condition",
             "armature",
@@ -11293,20 +8148,20 @@ class NLActionSetDynamicsNode(NLActionNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, "Condition")
-        self.inputs.new(NLGameObjectSocket.bl_idname, "Object")
-        self.inputs.new(NLBooleanSocket.bl_idname, "Active")
-        self.inputs.new(NLBooleanSocket.bl_idname, "Ghost")
+        self.add_input(NLConditionSocket, "Condition")
+        self.add_input(NLGameObjectSocket, "Object")
+        self.add_input(NLBooleanSocket, "Active")
+        self.add_input(NLBooleanSocket, "Ghost")
         self.inputs[-1].value = False
-        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+        self.add_output(NLConditionSocket, 'Done')
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return ["OUT"]
 
     def get_netlogic_class_name(self):
         return "ULSetDynamics"
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return ["condition", "game_object", "activate", 'ghost']
 
 
@@ -11322,20 +8177,20 @@ class NLActionSetPhysicsNode(NLActionNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, "Condition")
-        self.inputs.new(NLGameObjectSocket.bl_idname, "Object")
-        self.inputs.new(NLBooleanSocket.bl_idname, "Active")
-        self.inputs.new(NLBooleanSocket.bl_idname, "Cut Constraints")
+        self.add_input(NLConditionSocket, "Condition")
+        self.add_input(NLGameObjectSocket, "Object")
+        self.add_input(NLBooleanSocket, "Active")
+        self.add_input(NLBooleanSocket, "Cut Constraints")
         self.inputs[-1].value = False
-        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+        self.add_output(NLConditionSocket, 'Done')
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return ["OUT"]
 
     def get_netlogic_class_name(self):
         return "ULSetPhysics"
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return ["condition", "game_object", "activate", 'free_const']
 
 
@@ -11351,19 +8206,19 @@ class NLSetRigidBody(NLActionNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, "Condition")
-        self.inputs.new(NLGameObjectSocket.bl_idname, "Object")
-        self.inputs.new(NLBooleanSocket.bl_idname, "Enabled")
+        self.add_input(NLConditionSocket, "Condition")
+        self.add_input(NLGameObjectSocket, "Object")
+        self.add_input(NLBooleanSocket, "Enabled")
         self.inputs[-1].value = True
-        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+        self.add_output(NLConditionSocket, 'Done')
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return ["OUT"]
 
     def get_netlogic_class_name(self):
         return "ULSetRigidBody"
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return ["condition", "game_object", "activate"]
 
 
@@ -11380,20 +8235,20 @@ class NLActionSetMousePosition(NLActionNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, "Condition")
-        self.inputs.new(NLFloatFieldSocket.bl_idname, "Screen X")
+        self.add_input(NLConditionSocket, "Condition")
+        self.add_input(NLFloatFieldSocket, "Screen X")
         self.inputs[-1].value = 0.5
-        self.inputs.new(NLFloatFieldSocket.bl_idname, "Screen Y")
+        self.add_input(NLFloatFieldSocket, "Screen Y")
         self.inputs[-1].value = 0.5
-        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+        self.add_output(NLConditionSocket, 'Done')
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return ["OUT"]
 
     def get_netlogic_class_name(self):
         return "ULSetMousePosition"
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return ["condition", "screen_x", "screen_y"]
 
 
@@ -11410,17 +8265,17 @@ class NLActionSetMouseCursorVisibility(NLActionNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, "Condition")
-        self.inputs.new(NLBooleanSocket.bl_idname, "Visible")
-        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+        self.add_input(NLConditionSocket, "Condition")
+        self.add_input(NLBooleanSocket, "Visible")
+        self.add_output(NLConditionSocket, 'Done')
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return ["OUT"]
 
     def get_netlogic_class_name(self):
         return "ULSetCursorVisibility"
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return ["condition", "visibility_status"]
 
 
@@ -11441,35 +8296,35 @@ class NLActionStart3DSoundAdv(NLActionNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, "Condition")
-        self.inputs.new(NLGameObjectSocket.bl_idname, "Speaker")
-        self.inputs.new(NLSoundFileSocket.bl_idname, "Sound File")
-        self.inputs.new(NLBooleanSocket.bl_idname, "Use Occlusion")
-        self.inputs.new(NLSocketAlphaFloat.bl_idname, 'Transition')
+        self.add_input(NLConditionSocket, "Condition")
+        self.add_input(NLGameObjectSocket, "Speaker")
+        self.add_input(NLSoundFileSocket, "Sound File")
+        self.add_input(NLBooleanSocket, "Use Occlusion")
+        self.add_input(NLSocketAlphaFloat, 'Transition')
         self.inputs[-1].value = .1
-        self.inputs.new(NLSocketAlphaFloat.bl_idname, 'Lowpass')
+        self.add_input(NLSocketAlphaFloat, 'Lowpass')
         self.inputs[-1].value = .1
-        self.inputs.new(NLSocketLoopCount.bl_idname, "Mode")
-        self.inputs.new(NLPositiveFloatSocket.bl_idname, "Pitch")
+        self.add_input(NLSocketLoopCount, "Mode")
+        self.add_input(NLPositiveFloatSocket, "Pitch")
         self.inputs[-1].value = 1.0
-        self.inputs.new(NLPositiveFloatSocket.bl_idname, "Volume")
+        self.add_input(NLPositiveFloatSocket, "Volume")
         self.inputs[-1].value = 1.0
-        self.inputs.new(NLBooleanSocket.bl_idname, "Enable Reverb")
-        self.inputs.new(NLPositiveFloatSocket.bl_idname, "Attenuation")
+        self.add_input(NLBooleanSocket, "Enable Reverb")
+        self.add_input(NLPositiveFloatSocket, "Attenuation")
         self.inputs[-1].value = 1.0
-        self.inputs.new(NLFloatFieldSocket.bl_idname, "Reference Distance")
+        self.add_input(NLFloatFieldSocket, "Reference Distance")
         self.inputs[-1].format = True
         self.inputs[-1].value = 1.0
-        self.inputs.new(NLVec2FieldSocket.bl_idname, "Cone Inner / Outer")
+        self.add_input(NLVec2FieldSocket, "Cone Inner / Outer")
         self.inputs[-1].value_x = 360
         self.inputs[-1].value_y = 360
-        self.inputs.new(NLFloatFieldSocket.bl_idname, "Cone Outer Volume")
+        self.add_input(NLFloatFieldSocket, "Cone Outer Volume")
         self.inputs[-1].format = True
         self.inputs[-1].value = 0.0
-        self.inputs.new(NLBooleanSocket.bl_idname, "Ignore Timescale")
-        self.outputs.new(NLConditionSocket.bl_idname, 'On Start')
-        self.outputs.new(NLConditionSocket.bl_idname, 'On Finish')
-        self.outputs.new(NLParameterSocket.bl_idname, 'Sound')
+        self.add_input(NLBooleanSocket, "Ignore Timescale")
+        self.add_output(NLConditionSocket, 'On Start')
+        self.add_output(NLConditionSocket, 'On Finish')
+        self.add_output(NLParameterSocket, 'Sound')
 
     def update_draw(self):
         self.inputs[4].enabled = self.inputs[5].enabled = self.inputs[3].value
@@ -11484,13 +8339,13 @@ class NLActionStart3DSoundAdv(NLActionNode):
     def draw_buttons(self, context, layout):
         layout.prop(self, 'advanced', text='Advanced', icon='SETTINGS')
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return ["DONE", 'ON_FINISH', "HANDLE"]
 
     def get_netlogic_class_name(self):
         return "ULStartSound3D"
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return [
             "condition",
             "speaker",
@@ -11522,29 +8377,29 @@ class NLPlaySpeaker(NLActionNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, "Condition")
-        self.inputs.new(NLSpeakerSocket.bl_idname, "Speaker")
-        self.inputs.new(NLBooleanSocket.bl_idname, "Use Occlusion")
-        self.inputs.new(NLSocketAlphaFloat.bl_idname, 'Transition')
+        self.add_input(NLConditionSocket, "Condition")
+        self.add_input(NLSpeakerSocket, "Speaker")
+        self.add_input(NLBooleanSocket, "Use Occlusion")
+        self.add_input(NLSocketAlphaFloat, 'Transition')
         self.inputs[-1].value = .1
-        self.inputs.new(NLSocketAlphaFloat.bl_idname, 'Lowpass')
+        self.add_input(NLSocketAlphaFloat, 'Lowpass')
         self.inputs[-1].value = .1
-        self.inputs.new(NLSocketLoopCount.bl_idname, "Mode")
-        self.inputs.new(NLBooleanSocket.bl_idname, "Ignore Timescale")
-        self.outputs.new(NLConditionSocket.bl_idname, 'On Start')
-        self.outputs.new(NLConditionSocket.bl_idname, 'On Finish')
-        self.outputs.new(NLParameterSocket.bl_idname, 'Sound')
+        self.add_input(NLSocketLoopCount, "Mode")
+        self.add_input(NLBooleanSocket, "Ignore Timescale")
+        self.add_output(NLConditionSocket, 'On Start')
+        self.add_output(NLConditionSocket, 'On Finish')
+        self.add_output(NLParameterSocket, 'Sound')
 
     def update_draw(self):
         self.inputs[3].enabled = self.inputs[4].enabled = self.inputs[2].value
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return ["DONE", 'ON_FINISH', "HANDLE"]
 
     def get_netlogic_class_name(self):
         return "ULStartSpeaker"
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return [
             "condition",
             "speaker",
@@ -11568,25 +8423,25 @@ class NLActionStartSound(NLActionNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, "Condition")
-        self.inputs.new(NLSoundFileSocket.bl_idname, "Sound File")
-        self.inputs.new(NLSocketLoopCount.bl_idname, "Mode")
-        self.inputs.new(NLPositiveFloatSocket.bl_idname, "Pitch")
+        self.add_input(NLConditionSocket, "Condition")
+        self.add_input(NLSoundFileSocket, "Sound File")
+        self.add_input(NLSocketLoopCount, "Mode")
+        self.add_input(NLPositiveFloatSocket, "Pitch")
         self.inputs[-1].value = 1.0
-        self.inputs.new(NLSocketAlphaFloat.bl_idname, "Volume")
+        self.add_input(NLSocketAlphaFloat, "Volume")
         self.inputs[-1].value = 1.0
-        self.inputs.new(NLBooleanSocket.bl_idname, "Ignore Timescale")
-        self.outputs.new(NLConditionSocket.bl_idname, 'On Start')
-        self.outputs.new(NLConditionSocket.bl_idname, 'On Finish')
-        self.outputs.new(NLParameterSocket.bl_idname, 'Sound')
+        self.add_input(NLBooleanSocket, "Ignore Timescale")
+        self.add_output(NLConditionSocket, 'On Start')
+        self.add_output(NLConditionSocket, 'On Finish')
+        self.add_output(NLParameterSocket, 'Sound')
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return ["DONE", 'ON_FINISH', "HANDLE"]
 
     def get_netlogic_class_name(self):
         return "ULStartSound"
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return [
             "condition",
             "sound",
@@ -11609,13 +8464,13 @@ class NLActionStopAllSounds(NLActionNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, "Condition")
-        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+        self.add_input(NLConditionSocket, "Condition")
+        self.add_output(NLConditionSocket, 'Done')
 
     def get_netlogic_class_name(self):
         return "ULStopAllSounds"
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return ["condition"]
 
 
@@ -11631,14 +8486,14 @@ class NLActionStopSound(NLActionNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, "Condition")
-        self.inputs.new(NLParameterSocket.bl_idname, "Sound")
-        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+        self.add_input(NLConditionSocket, "Condition")
+        self.add_input(NLParameterSocket, "Sound")
+        self.add_output(NLConditionSocket, 'Done')
 
     def get_netlogic_class_name(self):
         return "ULStopSound"
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return ["condition", "sound"]
 
 
@@ -11654,14 +8509,14 @@ class NLActionPauseSound(NLActionNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, "Condition")
-        self.inputs.new(NLParameterSocket.bl_idname, "Sound")
-        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+        self.add_input(NLConditionSocket, "Condition")
+        self.add_input(NLParameterSocket, "Sound")
+        self.add_output(NLConditionSocket, 'Done')
 
     def get_netlogic_class_name(self):
         return "ULPauseSound"
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return ["condition", "sound"]
 
 
@@ -11677,14 +8532,14 @@ class NLActionResumeSound(NLActionNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, "Condition")
-        self.inputs.new(NLParameterSocket.bl_idname, "Sound")
-        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+        self.add_input(NLConditionSocket, "Condition")
+        self.add_input(NLParameterSocket, "Sound")
+        self.add_output(NLConditionSocket, 'Done')
 
     def get_netlogic_class_name(self):
         return "ULResumeSound"
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return ["condition", "sound"]
 
 
@@ -11700,12 +8555,12 @@ class NLActionEndGame(NLActionNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, "Condition")
+        self.add_input(NLConditionSocket, "Condition")
 
     def get_netlogic_class_name(self):
         return "ULEndGame"
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return ["condition"]
 
 
@@ -11721,16 +8576,16 @@ class NLActionRestartGame(NLActionNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, "Condition")
-        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+        self.add_input(NLConditionSocket, "Condition")
+        self.add_output(NLConditionSocket, 'Done')
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return ["OUT"]
 
     def get_netlogic_class_name(self):
         return "ULRestartGame"
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return ["condition"]
 
 
@@ -11745,17 +8600,17 @@ class NLActionStartGame(NLActionNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, "Condition")
-        self.inputs.new(NLFilePathSocket.bl_idname, "File name")
-        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+        self.add_input(NLConditionSocket, "Condition")
+        self.add_input(NLFilePathSocket, "File name")
+        self.add_output(NLConditionSocket, 'Done')
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return ["OUT"]
 
     def get_netlogic_class_name(self):
         return "ULLoadBlendFile"
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return ["condition", "file_name"]
 
 
@@ -11771,15 +8626,15 @@ class NLParameterReceiveMessage(NLParameterNode):
 
     def init(self, context):
         NLParameterNode.init(self, context)
-        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Subject")
-        self.outputs.new(NLConditionSocket.bl_idname, "Received")
-        self.outputs.new(NLParameterSocket.bl_idname, "Content")
-        self.outputs.new(NLGameObjectSocket.bl_idname, "Messenger")
+        self.add_input(NLQuotedStringFieldSocket, "Subject")
+        self.add_output(NLConditionSocket, "Received")
+        self.add_output(NLParameterSocket, "Content")
+        self.add_output(NLGameObjectSocket, "Messenger")
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return ['subject']
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return ["OUT", 'BODY', 'TARGET']
 
     def get_netlogic_class_name(self):
@@ -11798,18 +8653,18 @@ class NLParameterGetGlobalValue(NLParameterNode):
 
     def init(self, context):
         NLParameterNode.init(self, context)
-        self.inputs.new(NLGlobalCatSocket.bl_idname, "Category")
-        self.inputs.new(NLGlobalPropSocket.bl_idname, "Property")
-        self.inputs.new(NLOptionalValueFieldSocket.bl_idname, "Default Value")
-        self.outputs.new(NLParameterSocket.bl_idname, "Value")
+        self.add_input(NLGlobalCatSocket, "Category")
+        self.add_input(NLGlobalPropSocket, "Property")
+        self.add_input(NLOptionalValueFieldSocket, "Default Value")
+        self.add_output(NLParameterSocket, "Value")
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return ["data_id", "key", 'default']
 
     def get_netlogic_class_name(self):
         return "ULGetGlobalValue"
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return ["OUT"]
 
 
@@ -11825,16 +8680,16 @@ class NLActionListGlobalValues(NLActionNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, "Condition")
-        self.inputs.new(NLGlobalCatSocket.bl_idname, "Category")
-        self.inputs.new(NLBooleanSocket.bl_idname, 'Print')
-        self.outputs.new(NLConditionSocket.bl_idname, "Done")
-        self.outputs.new(NLDictSocket.bl_idname, "Value")
+        self.add_input(NLConditionSocket, "Condition")
+        self.add_input(NLGlobalCatSocket, "Category")
+        self.add_input(NLBooleanSocket, 'Print')
+        self.add_output(NLConditionSocket, "Done")
+        self.add_output(NLDictSocket, "Value")
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return ['condition', "data_id", 'print_d']
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return ["OUT", "VALUE"]
 
     def get_netlogic_class_name(self):
@@ -11859,12 +8714,12 @@ class NLActionCreateMessage(NLActionNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, "Condition")
-        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Subject")
-        self.inputs.new(NLOptionalValueFieldSocket.bl_idname, "Content")
-        self.inputs.new(NLGameObjectSocket.bl_idname, "Messenger")
+        self.add_input(NLConditionSocket, "Condition")
+        self.add_input(NLQuotedStringFieldSocket, "Subject")
+        self.add_input(NLOptionalValueFieldSocket, "Content")
+        self.add_input(NLGameObjectSocket, "Messenger")
         self.inputs[-1].use_owner = True
-        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+        self.add_output(NLConditionSocket, 'Done')
 
     def update_draw(self):
         adv = [2, 3]
@@ -11874,10 +8729,10 @@ class NLActionCreateMessage(NLActionNode):
     def draw_buttons(self, context, layout):
         layout.prop(self, 'advanced', text='Advanced', icon='SETTINGS')
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return ["OUT"]
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return ["condition", "subject", "body", 'target']
 
     def get_netlogic_class_name(self):
@@ -11896,18 +8751,18 @@ class NLActionSetGlobalValue(NLActionNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
-        self.inputs.new(NodeSocketPseudoCondition.bl_idname, "Condition")
-        self.inputs.new(NLGlobalCatSocket.bl_idname, "Category")
-        self.inputs.new(NLGlobalPropSocket.bl_idname, "Property")
+        self.add_input(NodeSocketPseudoCondition, "Condition")
+        self.add_input(NLGlobalCatSocket, "Category")
+        self.add_input(NLGlobalPropSocket, "Property")
         self.inputs[-1].ref_index = 1
-        self.inputs.new(NLValueFieldSocket.bl_idname, "")
-        self.inputs.new(NLBooleanSocket.bl_idname, "Persistent")
-        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+        self.add_input(NLValueFieldSocket, "")
+        self.add_input(NLBooleanSocket, "Persistent")
+        self.add_output(NLConditionSocket, 'Done')
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return ["OUT"]
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return ["condition", "data_id", "key", "value", 'persistent']
 
     def get_netlogic_class_name(self):
@@ -11925,16 +8780,16 @@ class NLParameterFormattedString(NLParameterNode):
 
     def init(self, context):
         NLParameterNode.init(self, context)
-        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "Format String")
+        self.add_input(NLQuotedStringFieldSocket, "Format String")
         self.inputs[-1].formatted = True
         self.inputs[-1].value = "A is {} and B is {}"
-        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "A")
+        self.add_input(NLQuotedStringFieldSocket, "A")
         self.inputs[-1].value = "Hello"
-        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "B")
+        self.add_input(NLQuotedStringFieldSocket, "B")
         self.inputs[-1].value = "World"
-        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "C")
-        self.inputs.new(NLQuotedStringFieldSocket.bl_idname, "D")
-        self.outputs.new(NLParameterSocket.bl_idname, "String")
+        self.add_input(NLQuotedStringFieldSocket, "C")
+        self.add_input(NLQuotedStringFieldSocket, "D")
+        self.add_output(NLParameterSocket, "String")
 
     def update_draw(self):
         string = self.inputs[0].value
@@ -11946,13 +8801,13 @@ class NLParameterFormattedString(NLParameterNode):
             else:
                 self.inputs[ipt].enabled = False
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return ["format_string", "value_a", "value_b", "value_c", "value_d"]
 
     def get_netlogic_class_name(self):
         return "ULFormattedString"
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return ["OUT"]
 
 
@@ -11968,17 +8823,17 @@ class NLActionRandomInteger(NLActionNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
-        self.inputs.new(NLIntegerFieldSocket.bl_idname, "Max")
-        self.inputs.new(NLIntegerFieldSocket.bl_idname, "Min")
-        self.outputs.new(NLParameterSocket.bl_idname, "Value")
+        self.add_input(NLIntegerFieldSocket, "Max")
+        self.add_input(NLIntegerFieldSocket, "Min")
+        self.add_output(NLParameterSocket, "Value")
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return ["max_value", "min_value"]
 
     def get_netlogic_class_name(self):
         return "ULRandomInt"
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return ["OUT_A"]
 
 
@@ -11994,17 +8849,17 @@ class NLActionRandomFloat(NLActionNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
-        self.inputs.new(NLFloatFieldSocket.bl_idname, "Max")
-        self.inputs.new(NLFloatFieldSocket.bl_idname, "Min")
-        self.outputs.new(NLParameterSocket.bl_idname, "Value")
+        self.add_input(NLFloatFieldSocket, "Max")
+        self.add_input(NLFloatFieldSocket, "Min")
+        self.add_output(NLParameterSocket, "Value")
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return ["max_value", "min_value"]
 
     def get_netlogic_class_name(self):
         return "ULRandomFloat"
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return ["OUT_A"]
 
 
@@ -12020,16 +8875,16 @@ class NLRandomVect(NLActionNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
-        self.inputs.new(NLXYZSocket.bl_idname, "")
-        self.outputs.new(NLVectorSocket.bl_idname, "Vector")
+        self.add_input(NLXYZSocket, "")
+        self.add_output(NLVectorSocket, "Vector")
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return ['xyz']
 
     def get_netlogic_class_name(self):
         return "ULRandomVect"
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return ["OUT_A"]
 
 
@@ -12044,17 +8899,17 @@ class NLParameterDistance(NLParameterNode):
 
     def init(self, context):
         NLParameterNode.init(self, context)
-        self.inputs.new(NLVec3FieldSocket.bl_idname, "A")
-        self.inputs.new(NLVec3FieldSocket.bl_idname, "B")
-        self.outputs.new(NLParameterSocket.bl_idname, "Distance")
+        self.add_input(NLVec3FieldSocket, "A")
+        self.add_input(NLVec3FieldSocket, "B")
+        self.add_output(NLParameterSocket, "Distance")
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return ["parama", "paramb"]
 
     def get_netlogic_class_name(self):
         return "ULDistance"
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return ["OUT"]
 
 
@@ -12071,10 +8926,10 @@ class NLParameterKeyboardKeyCode(NLParameterNode):
 
     def init(self, context):
         NLParameterNode.init(self, context)
-        self.inputs.new(NLKeyboardKeySocket.bl_idname, "")
-        self.outputs.new(NLParameterSocket.bl_idname, "Code")
+        self.add_input(NLKeyboardKeySocket, "")
+        self.add_output(NLParameterSocket, "Code")
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return ["key_code"]
 
     def get_netlogic_class_name(self):
@@ -12093,17 +8948,17 @@ class NLActionMoveTo(NLActionNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, "Condition")
-        self.inputs.new(NLGameObjectSocket.bl_idname, "Object")
-        self.inputs.new(NLVec3FieldSocket.bl_idname, "Target Location")
-        self.inputs.new(NLBooleanSocket.bl_idname, "Move as Dynamic")
-        self.inputs.new(NLPositiveFloatSocket.bl_idname, "Speed")
+        self.add_input(NLConditionSocket, "Condition")
+        self.add_input(NLGameObjectSocket, "Object")
+        self.add_input(NLVec3FieldSocket, "Target Location")
+        self.add_input(NLBooleanSocket, "Move as Dynamic")
+        self.add_input(NLPositiveFloatSocket, "Speed")
         self.inputs[-1].value = 1.0
-        self.inputs.new(NLFloatFieldSocket.bl_idname, "Stop At Distance")
+        self.add_input(NLFloatFieldSocket, "Stop At Distance")
         self.inputs[-1].value = 0.5
-        self.outputs.new(NLConditionSocket.bl_idname, "When Done")
+        self.add_output(NLConditionSocket, "When Done")
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return [
             "condition",
             "moving_object",
@@ -12129,15 +8984,15 @@ class NLActionTranslate(NLActionNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, "Condition")
-        self.inputs.new(NLGameObjectSocket.bl_idname, "Object")
-        self.inputs.new(NLBooleanSocket.bl_idname, "Local")
-        self.inputs.new(NLVec3FieldSocket.bl_idname, "Vector")
-        self.inputs.new(NLFloatFieldSocket.bl_idname, "Speed")
+        self.add_input(NLConditionSocket, "Condition")
+        self.add_input(NLGameObjectSocket, "Object")
+        self.add_input(NLBooleanSocket, "Local")
+        self.add_input(NLVec3FieldSocket, "Vector")
+        self.add_input(NLFloatFieldSocket, "Speed")
         self.inputs[-1].value = 1.0
-        self.outputs.new(NLConditionSocket.bl_idname, "When Done")
+        self.add_output(NLConditionSocket, "When Done")
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return ["condition", "moving_object", "local", "vect", "speed"]
 
     def get_netlogic_class_name(self):
@@ -12156,22 +9011,22 @@ class NLActionRotateTo(NLActionNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, "Condition")
-        self.inputs.new(NLGameObjectSocket.bl_idname, "Object")
-        self.inputs.new(NLVec3FieldSocket.bl_idname, "Target")
-        self.inputs.new(NLSocketAlphaFloat.bl_idname, "Factor")
+        self.add_input(NLConditionSocket, "Condition")
+        self.add_input(NLGameObjectSocket, "Object")
+        self.add_input(NLVec3FieldSocket, "Target")
+        self.add_input(NLSocketAlphaFloat, "Factor")
         self.inputs[-1].value = 1.0
-        self.inputs.new(NLSocketLocalAxis.bl_idname, "Rot Axis")
+        self.add_input(NLSocketLocalAxis, "Rot Axis")
         self.inputs[-1].value = '2'
 
-        self.inputs.new(NLSocketOrientedLocalAxis.bl_idname, "Front")
+        self.add_input(NLSocketOrientedLocalAxis, "Front")
         self.inputs[-1].value = '1'
-        self.outputs.new(NLConditionSocket.bl_idname, "When Done")
+        self.add_output(NLConditionSocket, "When Done")
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return ["OUT"]
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return [
             "condition",
             "moving_object",
@@ -12197,34 +9052,34 @@ class NLActionNavigate(NLActionNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, "Condition")
-        self.inputs.new(NLGameObjectSocket.bl_idname, "Moving Object")
-        self.inputs.new(NLGameObjectSocket.bl_idname, "Rotating Object")
-        self.inputs.new(NLNavMeshSocket.bl_idname, "Navmesh Object")
-        self.inputs.new(NLVec3FieldSocket.bl_idname, "Destination")
-        self.inputs.new(NLBooleanSocket.bl_idname, "Move as Dynamic")
-        self.inputs.new(NLPositiveFloatSocket.bl_idname, "Lin Speed")
+        self.add_input(NLConditionSocket, "Condition")
+        self.add_input(NLGameObjectSocket, "Moving Object")
+        self.add_input(NLGameObjectSocket, "Rotating Object")
+        self.add_input(NLNavMeshSocket, "Navmesh Object")
+        self.add_input(NLVec3FieldSocket, "Destination")
+        self.add_input(NLBooleanSocket, "Move as Dynamic")
+        self.add_input(NLPositiveFloatSocket, "Lin Speed")
         self.inputs[-1].value = 1.0
-        self.inputs.new(NLPositiveFloatSocket.bl_idname, "Reach Threshold")
+        self.add_input(NLPositiveFloatSocket, "Reach Threshold")
         self.inputs[-1].value = 1.0
-        self.inputs.new(NLBooleanSocket.bl_idname, "Look At")
+        self.add_input(NLBooleanSocket, "Look At")
         self.inputs[-1].value = True
-        self.inputs.new(NLSocketLocalAxis.bl_idname, "Rot Axis")
-        self.inputs.new(NLSocketOrientedLocalAxis.bl_idname, "Front")
-        self.inputs.new(NLFloatFieldSocket.bl_idname, "Rot Speed")
+        self.add_input(NLSocketLocalAxis, "Rot Axis")
+        self.add_input(NLSocketOrientedLocalAxis, "Front")
+        self.add_input(NLFloatFieldSocket, "Rot Speed")
         self.inputs[-1].value = 1.0
-        self.inputs.new(NLBooleanSocket.bl_idname, "Visualize")
-        self.outputs.new(NLConditionSocket.bl_idname, "Done")
-        self.outputs.new(NLConditionSocket.bl_idname, "When Reached")
-        self.outputs.new(NLListSocket.bl_idname, "Next Point")
+        self.add_input(NLBooleanSocket, "Visualize")
+        self.add_output(NLConditionSocket, "Done")
+        self.add_output(NLConditionSocket, "When Reached")
+        self.add_output(NLListSocket, "Next Point")
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return ["OUT", "FINISHED", "POINT"]
 
     def get_netlogic_class_name(self):
         return "ULMoveToWithNavmesh"
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return [
             "condition",
             "moving_object",
@@ -12254,34 +9109,34 @@ class NLActionFollowPath(NLActionNode):
 
     def init(self, context):
         NLActionNode.init(self, context)
-        self.inputs.new(NLConditionSocket.bl_idname, "Condition")
-        self.inputs.new(NLGameObjectSocket.bl_idname, "Moving Object")
-        self.inputs.new(NLGameObjectSocket.bl_idname, "Rotating Object")
-        self.inputs.new(NLListSocket.bl_idname, "Path Points")
-        self.inputs.new(NLBooleanSocket.bl_idname, "Loop")
-        self.inputs.new(NLBooleanSocket.bl_idname, "Continue")
-        self.inputs.new(NLNavMeshSocket.bl_idname, "Optional Navmesh")
-        self.inputs.new(NLBooleanSocket.bl_idname, "Move as Dynamic")
-        self.inputs.new(NLPositiveFloatSocket.bl_idname, "Lin Speed")
+        self.add_input(NLConditionSocket, "Condition")
+        self.add_input(NLGameObjectSocket, "Moving Object")
+        self.add_input(NLGameObjectSocket, "Rotating Object")
+        self.add_input(NLListSocket, "Path Points")
+        self.add_input(NLBooleanSocket, "Loop")
+        self.add_input(NLBooleanSocket, "Continue")
+        self.add_input(NLNavMeshSocket, "Optional Navmesh")
+        self.add_input(NLBooleanSocket, "Move as Dynamic")
+        self.add_input(NLPositiveFloatSocket, "Lin Speed")
         self.inputs[-1].value = 1.0
-        self.inputs.new(NLPositiveFloatSocket.bl_idname, "Reach Threshold")
+        self.add_input(NLPositiveFloatSocket, "Reach Threshold")
         self.inputs[-1].value = .2
-        self.inputs.new(NLBooleanSocket.bl_idname, "Look At")
+        self.add_input(NLBooleanSocket, "Look At")
         self.inputs[-1].value = True
-        self.inputs.new(NLSocketAlphaFloat.bl_idname, "Rot Speed")
+        self.add_input(NLSocketAlphaFloat, "Rot Speed")
         self.inputs[-1].value = 1.0
-        self.inputs.new(NLSocketLocalAxis.bl_idname, "Rot Axis")
+        self.add_input(NLSocketLocalAxis, "Rot Axis")
         self.inputs[-1].value = "2"
-        self.inputs.new(NLSocketOrientedLocalAxis.bl_idname, "Front")
-        self.outputs.new(NLConditionSocket.bl_idname, 'Done')
+        self.add_input(NLSocketOrientedLocalAxis, "Front")
+        self.add_output(NLConditionSocket, 'Done')
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return ["OUT"]
 
     def get_netlogic_class_name(self):
         return "ULFollowPath"
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return [
             "condition",
             "moving_object",
@@ -12359,9 +9214,9 @@ class NLParameterMathFun(NLParameterNode):
 
     def init(self, context):
         NLParameterNode.init(self, context)
-        self.inputs.new(NLFloatFieldSocket.bl_idname, "a")
-        self.inputs.new(NLFloatFieldSocket.bl_idname, "b")
-        self.outputs.new(NLParameterSocket.bl_idname, "Result")
+        self.add_input(NLFloatFieldSocket, "a")
+        self.add_input(NLFloatFieldSocket, "b")
+        self.add_output(NLParameterSocket, "Result")
         self.value = "a + b"
 
     def draw_buttons(self, context, layout):
@@ -12369,7 +9224,7 @@ class NLParameterMathFun(NLParameterNode):
         if self.predefined_formulas == 'User Defined':
             layout.prop(self, "value", text="Formula")
 
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return ["a", "b"]
 
     def get_attributes(self):
@@ -12378,7 +9233,7 @@ class NLParameterMathFun(NLParameterNode):
     def get_netlogic_class_name(self):
         return "ULFormula"
 
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return ["OUT"]
 
 

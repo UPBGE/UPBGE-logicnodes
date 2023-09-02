@@ -8,6 +8,9 @@ import bge_netlogic.audio as audio
 from bpy_extras.io_utils import ImportHelper
 import webbrowser
 
+from bge_netlogic.utilities import ERROR_MESSAGES
+from bge_netlogic.utilities import WARNING_MESSAGES
+
 
 NODE_ATTRS = [
     'value',
@@ -238,7 +241,6 @@ class WaitForKeyOperator(bpy.types.Operator):
         return {'PASS_THROUGH'}
 
     def invoke(self, context, event):
-        print(self.node)
         self.socket = context.socket
         self.node = context.node
 
@@ -411,7 +413,7 @@ class NLSelectTreeByNameOperator(bpy.types.Operator):
 
 
 class NLAddListItemSocket(bpy.types.Operator):
-    bl_idname = "bge_netlogic.add_list_item_socket"
+    bl_idname = "logic_nodes.add_list_item_socket"
     bl_label = "Add Socket"
     bl_options = {'REGISTER', 'UNDO'}
     bl_description = "Add a socket to this node"
@@ -424,6 +426,7 @@ class NLAddListItemSocket(bpy.types.Operator):
         node = context.node
         node.inputs.new(bge_netlogic.basicnodes.NLListItemSocket.bl_idname, self.name)
         node.set_new_input_name()
+        # node.add_input('NLListItemSocket', 'Item')
         return {"FINISHED"}
 
 
@@ -1176,6 +1179,10 @@ class NLGenerateLogicNetworkOperatorAll(bpy.types.Operator):
         return BLTextBuffer(blender_text_data)
 
     def execute(self, context):
+        global ERROR_MESSAGES
+        ERROR_MESSAGES.clear()
+        global WARNING_MESSAGES
+        WARNING_MESSAGES.clear()
         for tree in bpy.data.node_groups:
             if tree.bl_idname == bge_netlogic.ui.LogicNodeTree.bl_idname:
                 # try:
@@ -1188,6 +1195,24 @@ class NLGenerateLogicNetworkOperatorAll(bpy.types.Operator):
             context.region.tag_redraw()
         except Exception:
             utils.warn("Couldn't redraw panel, code updated.")
+        
+        if ERROR_MESSAGES or WARNING_MESSAGES:
+            def error_log(self, context):
+                self.layout.label(text=f"Warnings, these may or may not be problematic, but it is recommended to resolve these.", icon='CONSOLE')
+                self.layout.label(text=f"Concerned nodes have been marked YELLOW.")
+                if WARNING_MESSAGES:
+                    self.layout.separator()
+                for e in WARNING_MESSAGES:
+                    self.layout.label(text=f'{e}')
+                if ERROR_MESSAGES:
+                    self.layout.separator()
+                    self.layout.label(text=f"Errors, these have to be resolved for the tree to work.", icon="ERROR")
+                    self.layout.label(text=f"Concerned nodes have been marked RED.")
+                    self.layout.separator()
+                for e in ERROR_MESSAGES:
+                    self.layout.label(text=f'{e}')
+
+            bpy.context.window_manager.popup_menu(error_log, title="Something happened during compilation.", icon='INFO')
         return {"FINISHED"}
 
 
@@ -1780,56 +1805,6 @@ class NLAddonGithubButton(bpy.types.Operator):
     def execute(self, context):
         webbrowser.open('https://github.com/IzaZed/Uchronian-Logic-UPBGE-Logic-Nodes/issues')
         return {"FINISHED"}
-
-
-import itertools
-from bpy.props import EnumProperty
-
-
-_node_items = {}
-
-
-class NLNodeSearch(bpy.types.Operator):
-    bl_idname = "bge_netlogic.node_search"
-    bl_label = "Node Search"
-    bl_options = {"REGISTER"}
-    bl_description = "Search for registered Logic Nodes"
-    bl_property = "node"
-
-    def getSearchItems(self, context):
-        items = []
-        _node_items.clear()
-        for item in itertools.chain(getNodeItems()):
-            _node_items[item.id] = item
-            items.append(item.packed)
-        return items
-
-    node: EnumProperty(items=getSearchItems)
-
-    @classmethod
-    def poll(cls, context):
-        try:
-            return context.space_data.node_tree.bl_idname == "BGELogicTree"
-        except:
-            return False
-
-    def invoke(self, context, event):
-        wm = context.window_manager           
-        wm.invoke_search_popup(self)
-        return {"FINISHED"}
-
-    def execute(self, context):
-        _node_items[self.node].add()
-        return {"FINISHED"}
-
-
-def getNodeItems():
-    for node in utils.iterLogicNodeClasses():
-        if not node.search_tags:
-            yield NodeItem(node)
-        else:
-            for tag in node.search_tags:
-                yield NodeItem(node, tag[0], tag[1])
 
 
 class NodeItem:

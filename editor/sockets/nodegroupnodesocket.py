@@ -15,7 +15,6 @@ class NodeSocketLogicNodeGroupNode(NodeSocket, NodeSocketLogic):
     value: StringProperty(
         name='Tree Node',
         update=update_draw
-        # update=update_tree_code
     )
     ref_index: IntProperty(default=0)
 

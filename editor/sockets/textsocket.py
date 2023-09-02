@@ -42,4 +42,4 @@ class NodeSocketLogicText(NodeSocket, NodeSocketLogic):
 
     def get_unlinked_value(self):
         if isinstance(self.value, Text):
-            return '"{}"'.format(self.value.name.split('.')[0])
+            return '"{}"'.format(self.value.name)

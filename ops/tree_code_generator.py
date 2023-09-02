@@ -351,18 +351,18 @@ class TreeCodeGenerator(object):
         # node_cellvar_list = []
         for node in tree.nodes:
             prefix = None
-            if not (
-                isinstance(node, bge_netlogic.basicnodes.NLNode) or
-                isinstance(node, bge_netlogic.basicnodes.NLNode)
-            ):
+            if not hasattr(node, 'nl_module') or node.mute:
                 # utils.debug("Skipping TreeNode of type {} because it is not an instance of NLNode".format(node.__class__.__name__))
                 continue
-            if isinstance(node, bge_netlogic.basicnodes.NLActionNode):
-                prefix = "ACT"
-            elif isinstance(node, bge_netlogic.basicnodes.NLConditionNode):
-                prefix = "CON"
-            elif isinstance(node, bge_netlogic.basicnodes.NLParameterNode):
-                prefix = "PAR"
+            if hasattr(node, 'nl_module'):
+                node.check(tree)
+                prefix = node.nl_module
+            # if isinstance(node, bge_netlogic.basicnodes.NLActionNode):
+            #     prefix = "ACT"
+            # elif isinstance(node, bge_netlogic.basicnodes.NLConditionNode):
+            #     prefix = "CON"
+            # elif isinstance(node, bge_netlogic.basicnodes.NLParameterNode):
+            #     prefix = "PAR"
             else:
                 raise ValueError(
                         "netlogic node {} must extend one of NLActionNode, NLConditionNode or NLParameterNode".format(

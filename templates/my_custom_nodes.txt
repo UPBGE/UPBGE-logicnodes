@@ -20,11 +20,11 @@ class CustomParameterNode(bpy.types.Node, NLParameterNode):
         return "my_custom_cells.CustomParameterCell"
 
     # Input names with lowercase letters is a convention
-    def get_input_sockets_field_names(self):
+    def get_input_names(self):
         return ["my_input"]
 
     # Output names with capital letters is a convention
-    def get_output_socket_varnames(self):
+    def get_output_names(self):
         return ["MY_OUTPUT"]
 
 

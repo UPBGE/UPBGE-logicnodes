@@ -1,4 +1,6 @@
+from ...utilities import warn
 from ...utilities import Color
+from ...utilities import WARNING_MESSAGES
 
 
 CONDITION_SOCKET_COLOR = Color.RGBA(0.8, 0.2, 0.2, 1.0)
@@ -33,14 +35,30 @@ _sockets = []
 
 def socket_type(obj):
     _sockets.append(obj)
+    return obj
 
 
 class NodeSocketLogic:
+    bl_idname = ''
     valid_sockets: list = []
+    deprecated = False
     nl_color: list = PARAMETER_SOCKET_COLOR
+
+    @classmethod
+    def get_id(cls):
+        return cls.bl_idname
 
     def __init__(self):
         self.valid_sockets = []
+
+    def check(self, tree):
+        if self.deprecated:
+            global WARNING_MESSAGES
+            warn(f"Socket '{self.name if self.name else self.bl_label}' of node '{self.node.name}' in tree '{tree.name}' is deprecated and will be removed in a future version! Using default value for now, re-add node to avoid issues.")
+            WARNING_MESSAGES.append(f"Deprecated Socket: '{self.node.name}': '{self.name if self.name else self.bl_label}' in '{tree.name}'. Delete and re-add node to avoid issues.")
+            if not self.node.deprecated:
+                self.node.use_custom_color = True
+                self.node.color = (.8, .6, 0)
 
     def draw_color(self, context, node):
         return self.nl_color

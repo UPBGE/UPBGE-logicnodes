@@ -54,5 +54,5 @@ class NodeSocketLogicArmature(NodeSocket, NodeSocketLogic):
     def get_unlinked_value(self):
         if self.use_owner:
             return '"NLO:U_O"'
-        if isinstance(self.value, Armature):
+        if self.value is not None and isinstance(self.value.data, Armature):
             return '"NLO:{}"'.format(self.value.name)

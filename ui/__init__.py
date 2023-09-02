@@ -1,7 +1,7 @@
 import bpy
 import bge_netlogic
 import bge_netlogic.utilities as utils
-from utilities import make_valid_name
+# from utilities import make_valid_name
 from bpy.types import NodeReroute
 from time import time
 
@@ -570,12 +570,14 @@ class BGE_PT_LogicTreeInfoPanel(bpy.types.Panel):
         row.label(text=obj.name)
         row = row.row(align=True)
         row.alignment = 'RIGHT'
+        row.prop(prop, 'value', text='')
         op = row.operator(
             bge_netlogic.ops.NLSelectAppliedObject.bl_idname,
             text="",
             icon="RESTRICT_SELECT_OFF"
         )
         op.applied_object = obj.name
+
         op = row.operator(
             bge_netlogic.ops.NLRemoveTreeByNameOperator.bl_idname,
             text="",
@@ -830,7 +832,7 @@ class LogicNodeTree(bpy.types.NodeTree):
                     ref.tree_name = self.name
                     new_comp_name = f'nl_{clsname.lower()}.{clsname}'
                     for i, c in enumerate(obj.game.components):
-                        check_name = make_valid_name(self.old_name)
+                        check_name = utils.make_valid_name(self.old_name)
                         if c.name == check_name:
                             active_object = bpy.context.object
                             bpy.context.view_layer.objects.active = obj
