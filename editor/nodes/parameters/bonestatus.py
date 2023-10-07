@@ -9,20 +9,17 @@ from ...sockets import NodeSocketLogicVectorXYZ
 class LogicNodeBoneStatus(LogicNodeParameterType):
     bl_idname = "NLParameterBoneStatus"
     bl_label = "Bone Status"
-    nl_category = 'Animation'
-    nl_subcat = 'Armature / Rig'
     nl_module = 'parameters'
 
     def init(self, context):
-        LogicNodeParameterType.init(self, context)
         self.add_input(NodeSocketLogicArmature, "Armature Object")
         self.add_input(NodeSocketLogicBone, "Bone Name")
         self.add_output(NodeSocketLogicVectorXYZ, "Position")
         self.add_output(NodeSocketLogicVectorXYZ, "Rotation")
         self.add_output(NodeSocketLogicVectorXYZ, "Scale")
+        LogicNodeParameterType.init(self, context)
 
-    def get_netlogic_class_name(self):
-        return "ULBoneStatus"
+    nl_class = "ULBoneStatus"
 
     def get_input_names(self):
         return ["armature", "bone_name"]

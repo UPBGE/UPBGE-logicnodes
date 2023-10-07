@@ -55,7 +55,14 @@ class LogicNodeTree(NodeTree):
             success(f'Successfully Renamed {self.old_name} to {self.name}')
         self.old_name = self.name
 
+    def mark_invalid_links(self):
+        '''Mark invalid links, must be called from a timer'''
+        for link in self.links:
+            if hasattr(link.to_socket, 'validate'):
+                link.to_socket.validate(link, link.from_socket)
+
     def update(self):
+        bpy.app.timers.register(self.mark_invalid_links)
         start = time()
         for n in self.nodes:
             if isinstance(n, NodeReroute):

@@ -1,6 +1,7 @@
 from .socket import NodeSocketLogic
 from .socket import PARAMETER_SOCKET_COLOR
 from .socket import socket_type
+from .socket import update_draw
 from ...utilities import LOGIC_NODE_IDENTIFIER
 from ...utilities import make_valid_name
 from bpy.types import NodeSocket
@@ -14,6 +15,7 @@ import bpy
 class NodeSocketLogicGameProperty(NodeSocket, NodeSocketLogic):
     bl_idname = "NLGamePropertySocket"
     bl_label = "Property"
+
     value: StringProperty(
         # update=update_tree_code
     )
@@ -23,11 +25,10 @@ class NodeSocketLogicGameProperty(NodeSocket, NodeSocketLogic):
         # update=update_tree_code
     )
 
-    def draw_color(self, context, node):
-        return PARAMETER_SOCKET_COLOR
+    color = PARAMETER_SOCKET_COLOR
 
     def draw(self, context, layout, node, text):
-        mode = getattr(self.node, 'mode', 'GAME')
+        mode = getattr(self.node, 'mode', '0')
         if self.is_output:
             layout.label(text=self.name)
         elif self.is_linked:
@@ -50,10 +51,10 @@ class NodeSocketLogicGameProperty(NodeSocket, NodeSocketLogic):
             if self.name:
                 row = col.row()
                 row.label(text=self.name)
-                if not game_obj_socket.is_linked and game_object and mode == 'GAME':
+                if not game_obj_socket.is_linked and game_object and not mode:
                     row.prop(self, 'use_custom', text='', icon='GREASEPENCIL')
             if game_object or game_obj_socket.is_linked:
-                if not game_obj_socket.is_linked and not self.use_custom and mode == 'GAME':
+                if not game_obj_socket.is_linked and not self.use_custom and mode == '0':
                     game = game_object.game
                     col.prop_search(
                         self,

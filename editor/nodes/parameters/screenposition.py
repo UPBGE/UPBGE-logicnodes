@@ -8,19 +8,16 @@ from ...sockets import NodeSocketLogicCamera
 @node_type
 class LogicNodeScreenPosition(LogicNodeParameterType):
     bl_idname = "NLParameterScreenPosition"
-    bl_label = "Screen Position"
-    nl_category = "Scene"
-    nl_subcat = 'Camera'
+    bl_label = "World To Screen"
     nl_module = 'parameters'
 
     def init(self, context):
-        LogicNodeParameterType.init(self, context)
         self.add_input(NodeSocketLogicVectorXYZ, 'Point')
         self.add_input(NodeSocketLogicCamera, 'Camera', {'use_active': True})
         self.add_output(NodeSocketLogicVectorXY, 'On Screen')
+        LogicNodeParameterType.init(self, context)
 
-    def get_netlogic_class_name(self):
-        return "ULScreenPosition"
+    nl_class = "ULScreenPosition"
 
     def get_input_names(self):
         return ["game_object", "camera"]

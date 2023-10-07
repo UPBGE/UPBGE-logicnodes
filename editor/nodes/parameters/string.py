@@ -8,17 +8,14 @@ class LogicNodeString(LogicNodeParameterType):
     bl_idname = "NLParameterStringValue"
     bl_icon = 'FONT_DATA'
     bl_label = "String"
-    nl_category = "Values"
-    nl_subcat = 'Simple'
     nl_module = 'parameters'
 
     def init(self, context):
-        LogicNodeParameterType.init(self, context)
         self.add_input(NodeSocketLogicString, "")
         self.add_output(NodeSocketLogicString, "String")
+        LogicNodeParameterType.init(self, context)
 
-    def get_netlogic_class_name(self):
-        return "ULSimpleValue"
+    nl_class = "ULSimpleValue"
 
     def get_input_names(self):
         return ["value"]

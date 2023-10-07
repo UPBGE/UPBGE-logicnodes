@@ -8,16 +8,14 @@ class LogicNodeGetSound(LogicNodeParameterType):
     bl_idname = "NLGetSound"
     bl_label = "Get Sound"
     bl_icon = 'FILE_SOUND'
-    nl_category = "File"
     nl_module = 'parameters'
 
     def init(self, context):
-        LogicNodeParameterType.init(self, context)
         self.add_input(NodeSocketLogicSoundFile, "Sound File")
         self.add_output(NodeSocketLogicSoundFile, 'Sound File')
+        LogicNodeParameterType.init(self, context)
 
-    def get_netlogic_class_name(self):
-        return "ULGetSound"
+    nl_class = "ULGetSound"
 
     def get_input_names(self):
         return ["sound"]

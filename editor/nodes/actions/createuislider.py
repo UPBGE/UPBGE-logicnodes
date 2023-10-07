@@ -14,7 +14,6 @@ from ...enum_types import _ui_slider_types
 from ...enum_types import _ui_boxlayout_types
 from ...enum_types import _ui_halign_types
 from ...enum_types import _ui_valign_types
-from ....utilities import update_draw
 from bpy.props import EnumProperty
 
 
@@ -22,16 +21,21 @@ from bpy.props import EnumProperty
 class LogicNodeCreateUISlider(LogicNodeActionType):
     bl_idname = "LogicNodeCreateUISlider"
     bl_label = "Create Slider"
-    nl_category = "UI"
-    nl_subcat = 'Widgets'
     nl_module = 'actions'
+
+    def update_draw(self, context=None):
+        if not self.ready:
+            return
+        self.inputs[7].enabled = self.slider_type == '0'
+        self.inputs[8].enabled = not self.inputs[7].enabled
+        self.inputs[15].enabled = self.inputs[7].enabled
+
     slider_type: EnumProperty(items=_ui_slider_types, name='Type', update=update_draw)
     orientation_type: EnumProperty(items=_ui_boxlayout_types, name='Orientation', default='horizontal')
     halign_type: EnumProperty(items=_ui_halign_types, name='X')
     valign_type: EnumProperty(items=_ui_valign_types, name='Y')
 
     def init(self, context):
-        LogicNodeActionType.init(self, context)
         self.add_input(NodeSocketLogicCondition, "Condition")
         self.add_input(NodeSocketLogicUI, "Parent")
         self.add_input(NodeSocketLogicBoolean, "Relative Position")
@@ -55,7 +59,7 @@ class LogicNodeCreateUISlider(LogicNodeActionType):
         self.add_output(NodeSocketLogicUI, "Label")
         self.add_output(NodeSocketLogicFloat, "Slider Value")
         self.add_output(NodeSocketLogicVectorXY, "Knob Position")
-        self.update_draw()
+        LogicNodeActionType.init(self, context)
 
     def draw_buttons(self, context, layout) -> None:
         layout.prop(self, 'slider_type', text='')
@@ -63,25 +67,17 @@ class LogicNodeCreateUISlider(LogicNodeActionType):
         layout.prop(self, 'halign_type', text='X')
         layout.prop(self, 'valign_type', text='Y')
 
-    def update_draw(self):
-        if len(self.inputs) < 16:
-            return
-        self.inputs[7].enabled = self.slider_type == '0'
-        self.inputs[8].enabled = not self.inputs[7].enabled
-        self.inputs[15].enabled = self.inputs[7].enabled
-
-    def get_netlogic_class_name(self):
-        return "ULCreateUISlider"
+    nl_class = "ULCreateUISlider"
 
     def get_output_names(self):
         return ["OUT", 'WIDGET', 'VALUE', 'KNOB_POSITION']
 
     def get_attributes(self):
         return [
-            ("orientation_type", lambda: f'"{self.orientation_type}"'),
-            ("slider_type", lambda: f'"{self.slider_type}"'),
-            ("halign_type", lambda: f'"{self.halign_type}"'),
-            ("valign_type", lambda: f'"{self.valign_type}"')
+            ("orientation_type", f'"{self.orientation_type}"'),
+            ("slider_type", f'"{self.slider_type}"'),
+            ("halign_type", f'"{self.halign_type}"'),
+            ("valign_type", f'"{self.valign_type}"')
         ]
 
     def get_input_names(self):

@@ -3,25 +3,21 @@ from ..node import LogicNodeParameterType
 from ...sockets import NodeSocketLogicIntegerPositiveCent
 from ...sockets import NodeSocketLogicFloat
 from ....utilities import WARNING_MESSAGES
-from ....utilities import update_draw
-from bpy.props import EnumProperty
 
 
 @node_type
 class LogicNodeGamepadTrigger(LogicNodeParameterType):
     bl_idname = "NLGamepadTriggerCondition"
-    bl_label = "Trigger"
-    nl_category = "Input"
-    nl_subcat = 'Gamepad'
+    bl_label = "Gamepad Trigger"
     nl_module = 'parameters'
 
     def init(self, context):
-        LogicNodeParameterType.init(self, context)
         self.add_input(NodeSocketLogicIntegerPositiveCent, 'Index')
         self.add_input(NodeSocketLogicFloat, 'Sensitivity', {'value': 1.0})
         self.add_input(NodeSocketLogicFloat, 'Threshold', {'value': 0.05})
         self.add_output(NodeSocketLogicFloat, "Left Trigger")
         self.add_output(NodeSocketLogicFloat, "Right Trigger")
+        LogicNodeParameterType.init(self, context)
 
     def check(self, tree):
         super().check(tree)
@@ -31,8 +27,7 @@ class LogicNodeGamepadTrigger(LogicNodeParameterType):
             self.use_custom_color = True
             self.color = (.8, .6, 0)
 
-    def get_netlogic_class_name(self):
-        return "ULGamepadTrigger"
+    nl_class = "ULGamepadTrigger"
 
     def get_input_names(self):
         return ["index", 'sensitivity', 'threshold']

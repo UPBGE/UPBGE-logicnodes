@@ -1,6 +1,7 @@
 from .socket import NodeSocketLogic
 from .socket import PARAM_TEXT_SOCKET_COLOR
 from .socket import socket_type
+from .socket import update_draw
 from ..filter_types import filter_texts
 from bpy.types import Text
 from bpy.types import NodeSocket
@@ -19,8 +20,7 @@ class NodeSocketLogicText(NodeSocket, NodeSocketLogic):
         # update=update_tree_code
     )
 
-    def draw_color(self, context, node):
-        return PARAM_TEXT_SOCKET_COLOR
+    color = PARAM_TEXT_SOCKET_COLOR
 
     def draw(self, context, layout, node, text):
         if self.is_output:

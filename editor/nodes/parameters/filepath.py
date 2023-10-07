@@ -7,16 +7,14 @@ from ...sockets import NodeSocketLogicFilePath
 class LogicNodeFilePath(LogicNodeParameterType):
     bl_idname = "NLParameterFileValue"
     bl_label = "File Path"
-    nl_category = "Values"
     nl_module = 'parameters'
 
     def init(self, context):
-        LogicNodeParameterType.init(self, context)
         self.add_input(NodeSocketLogicFilePath, "")
         self.add_output(NodeSocketLogicFilePath, "Path")
+        LogicNodeParameterType.init(self, context)
 
-    def get_netlogic_class_name(self):
-        return "ULSimpleValue"
+    nl_class = "ULSimpleValue"
 
     def get_input_names(self):
         return ["value"]

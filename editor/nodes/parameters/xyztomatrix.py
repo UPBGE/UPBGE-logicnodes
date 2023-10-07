@@ -8,17 +8,14 @@ from ...sockets import NodeSocketLogicMatrix
 class LogicNodeXYZtoMatrix(LogicNodeParameterType):
     bl_idname = "NLParameterEulerToMatrixNode"
     bl_label = "XYZ To Matrix"
-    nl_category = "Math"
-    nl_subcat = 'Vector Math'
     nl_module = 'parameters'
 
     def init(self, context):
-        LogicNodeParameterType.init(self, context)
         self.add_input(NodeSocketLogicVectorXYZ, 'XYZ')
         self.add_output(NodeSocketLogicMatrix, "Matrix")
+        LogicNodeParameterType.init(self, context)
 
-    def get_netlogic_class_name(self):
-        return "ULEulerToMatrix"
+    nl_class = "ULEulerToMatrix"
 
     def get_output_names(self):
         return ["OUT"]

@@ -204,6 +204,7 @@ class WaitForKeyOperator(bpy.types.Operator):
     def __init__(self):
         self.socket = None
         self.node = None
+        self._old_val = None
 
     def __del__(self):
         pass
@@ -228,14 +229,12 @@ class WaitForKeyOperator(bpy.types.Operator):
                 event.type == "MIDDLEMOUSE" or
                 event.type == "RIGHTMOUSE"
             ):
-                self.socket.value = "Press & Choose"
-                return {'FINISHED'}
+                self.socket.value = self._old_val
+                # self.socket.value = "Press & Choose"
+                return {'CANCELLED'}
             else:
                 value = event.type
-                if (self.socket):
-                    self.socket.value = value
-                else:
-                    self.node.value = value
+                self.socket.value = value
                 self.cleanup(context)
                 return {'FINISHED'}
         return {'PASS_THROUGH'}
@@ -248,11 +247,8 @@ class WaitForKeyOperator(bpy.types.Operator):
             utils.error("No socket or Node")
             return {'FINISHED'}
 
-        if (self.socket):
-            self.socket.value = "Press a key..."
-
-        else:
-            self.node.value = "Press a key..."
+        self._old_val = self.socket.value
+        self.socket.value = "Press a key..."
         try:
             context.region.tag_redraw()
         except Exception:
@@ -424,7 +420,7 @@ class NLAddListItemSocket(bpy.types.Operator):
 
     def execute(self, context):
         node = context.node
-        node.inputs.new(bge_netlogic.basicnodes.NLListItemSocket.bl_idname, self.name)
+        node.inputs.new('NLListItemSocket', self.name)
         node.set_new_input_name()
         # node.add_input('NLListItemSocket', 'Item')
         return {"FINISHED"}
@@ -443,7 +439,6 @@ class NLRemoveListItemSocket(bpy.types.Operator):
     def execute(self, context):
         socket = context.socket
         node = context.node
-
         node.inputs.remove(socket)
         return {"FINISHED"}
 
@@ -695,7 +690,6 @@ class NLUpdateTreeVersionOperator(bpy.types.Operator):
             self.restore_input(tree, node, replacer, 0)
             self.restore_input(tree, node, replacer, 1, 2)
             self.restore_outputs(tree, node, replacer)
-            replacer.update_draw()
             tree.nodes.remove(node)
 
     def update_charinfo_node(self, tree, node):

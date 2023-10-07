@@ -13,7 +13,6 @@ from ...sockets import NodeSocketLogicFont
 from ...sockets import NodeSocketLogicImage
 from ...sockets import NodeSocketLogicFloatAngle
 from ...enum_types import _writeable_widget_attrs
-from ....utilities import update_draw
 from bpy.props import EnumProperty
 
 
@@ -21,12 +20,26 @@ from bpy.props import EnumProperty
 class LogicNodeSetUIWidgetAttr(LogicNodeActionType):
     bl_idname = "LogicNodeSetUIWidgetAttr"
     bl_label = "Set Widget Attribute"
-    nl_category = "UI"
     nl_module = 'actions'
+
+    def update_draw(self, context=None):
+        if not self.ready:
+            return
+        attr = self.widget_attr
+        self.inputs[2].enabled = attr in ['show', 'use_clipping', 'wrap', 'shadow']
+        self.inputs[3].enabled = attr in ['bg_color', 'border_color', 'shadow_color', 'font_color', 'hover_color']
+        self.inputs[4].enabled = attr in ['opacity', 'font_opacity']
+        self.inputs[5].enabled = attr in ['pos', 'size', 'shadow_offset']
+        self.inputs[6].enabled = attr in ['halign', 'valign', 'text', 'text_halign', 'text_valign', 'orientation']
+        self.inputs[7].enabled = attr in ['spacing', 'font_size', 'icon', 'rows', 'cols', 'border_width']
+        self.inputs[8].enabled = attr in ['width', 'height', 'line_height']
+        self.inputs[9].enabled = attr in ['font']
+        self.inputs[10].enabled = attr in ['texture']
+        self.inputs[11].enabled = attr in ['angle']
+
     widget_attr: EnumProperty(items=_writeable_widget_attrs, name='', update=update_draw)
 
     def init(self, context):
-        LogicNodeActionType.init(self, context)
         self.add_input(NodeSocketLogicCondition, "Condition")
         self.add_input(NodeSocketLogicUI, "Widget")
         self.add_input(NodeSocketLogicBoolean, "")
@@ -40,28 +53,15 @@ class LogicNodeSetUIWidgetAttr(LogicNodeActionType):
         self.add_input(NodeSocketLogicImage, "", {'enabled': False})
         self.add_input(NodeSocketLogicFloatAngle, "", {'enabled': False})
         self.add_output(NodeSocketLogicCondition, "Done")
+        LogicNodeActionType.init(self, context)
 
     def get_attributes(self):
-        return [("widget_attr", lambda: f'"{self.widget_attr}"')]
+        return [("widget_attr", f'"{self.widget_attr}"')]
 
     def draw_buttons(self, context, layout) -> None:
         layout.prop(self, 'widget_attr', text='')
 
-    def update_draw(self):
-        attr = self.widget_attr
-        self.inputs[2].enabled = attr in ['show', 'use_clipping', 'wrap', 'shadow']
-        self.inputs[3].enabled = attr in ['bg_color', 'border_color', 'shadow_color', 'font_color', 'hover_color']
-        self.inputs[4].enabled = attr in ['opacity', 'font_opacity']
-        self.inputs[5].enabled = attr in ['pos', 'size', 'shadow_offset']
-        self.inputs[6].enabled = attr in ['halign', 'valign', 'text', 'text_halign', 'text_valign', 'orientation']
-        self.inputs[7].enabled = attr in ['spacing', 'font_size', 'icon', 'rows', 'cols', 'border_width']
-        self.inputs[8].enabled = attr in ['width', 'height', 'line_height']
-        self.inputs[9].enabled = attr in ['font']
-        self.inputs[10].enabled = attr in ['texture']
-        self.inputs[11].enabled = attr in ['angle']
-
-    def get_netlogic_class_name(self):
-        return "ULSetUIWidgetAttr"
+    nl_class = "ULSetUIWidgetAttr"
 
     def get_output_names(self):
         return ["OUT"]

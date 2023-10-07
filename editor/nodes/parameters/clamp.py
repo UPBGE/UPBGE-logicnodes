@@ -9,19 +9,17 @@ from ...sockets import NodeSocketLogicFloat
 class LogicNodeClamp(LogicNodeParameterType):
     bl_idname = "NLClampValueNode"
     bl_label = "Clamp"
-    nl_category = "Math"
     nl_module = 'parameters'
 
     def init(self, context):
-        LogicNodeParameterType.init(self, context)
         self.add_input(NodeSocketLogicFloat, "Value")
         self.add_input(NodeSocketLogicVectorXY, "", {'enabled': False})
         self.add_input(NodeSocketLogicFloat, "Min")
         self.add_input(NodeSocketLogicFloat, "Max")
         self.add_output(NodeSocketLogicFloat, "Value")
+        LogicNodeParameterType.init(self, context)
 
-    def get_netlogic_class_name(self):
-        return "ULClamp"
+    nl_class = "ULClamp"
 
     def get_input_names(self):
         return ["value", "range", "min_value", "max_value"]

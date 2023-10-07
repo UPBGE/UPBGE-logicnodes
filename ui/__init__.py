@@ -567,10 +567,12 @@ class BGE_PT_LogicTreeInfoPanel(bpy.types.Panel):
     def draw_owner(self, obj, container, prop, tree):
         layout = container.box()
         row = layout.split()
-        row.label(text=obj.name)
+        name = row.row()
+        name.alignment = 'LEFT'
+        name.prop(prop, 'value', text='')
+        name.label(text=obj.name)
         row = row.row(align=True)
         row.alignment = 'RIGHT'
-        row.prop(prop, 'value', text='')
         op = row.operator(
             bge_netlogic.ops.NLSelectAppliedObject.bl_idname,
             text="",

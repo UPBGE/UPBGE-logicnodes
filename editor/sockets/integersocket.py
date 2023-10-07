@@ -1,7 +1,8 @@
 from .socket import NodeSocketLogic
 from .socket import PARAM_INT_SOCKET_COLOR
+from .socket import SOCKET_TYPE_INT
 from .socket import socket_type
-from ...utilities import update_draw
+from .socket import update_draw
 from bpy.types import NodeSocket
 from bpy.props import IntProperty
 from bpy.props import StringProperty
@@ -11,9 +12,11 @@ from bpy.props import StringProperty
 class NodeSocketLogicInteger(NodeSocket, NodeSocketLogic):
     bl_idname = "NLIntegerFieldSocket"
     bl_label = "Integer"
+    nl_type = SOCKET_TYPE_INT
+    color = PARAM_INT_SOCKET_COLOR
+
     value: IntProperty(update=update_draw)
     type: StringProperty(default='INT')
-    nl_color = PARAM_INT_SOCKET_COLOR
 
     def get_unlinked_value(self):
         return '{}'.format(self.value)

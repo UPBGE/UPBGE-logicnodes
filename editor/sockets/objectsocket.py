@@ -1,5 +1,7 @@
 from .socket import NodeSocketLogic
 from .socket import PARAM_OBJ_SOCKET_COLOR
+from .socket import SOCKET_TYPE_OBJECT
+from .socket import SOCKET_TYPE_STRING
 from .socket import socket_type
 from bpy.types import NodeSocket
 from bpy.types import Object
@@ -12,23 +14,21 @@ import bpy
 class NodeSocketLogicObject(NodeSocket, NodeSocketLogic):
     bl_idname = "NLGameObjectSocket"
     bl_label = "Object"
-    value: PointerProperty(
-        name='Object',
-        type=Object,
-        # update=update_tree_code
-    )
-    use_owner: BoolProperty(
-        name='Use Owner',
-        # update=update_tree_code,
-        description='Use the owner of this tree'
-    )
+    nl_type = SOCKET_TYPE_OBJECT
+    valid_sockets = [SOCKET_TYPE_OBJECT, SOCKET_TYPE_STRING]
     color = PARAM_OBJ_SOCKET_COLOR
 
-    def draw_color(self, context, node):
-        return self.color
+    value: PointerProperty(name='Object', type=Object)
+    use_owner: BoolProperty(
+        name='Use Owner',
+        description='Use the owner of this tree'
+    )
 
     def is_scene_logic(self):
-        return self.node.tree is bpy.context.scene.get('custom_mainloop_tree', None)
+        return self.node.tree is bpy.context.scene.get(
+            'custom_mainloop_tree',
+            None
+        )
 
     def draw(self, context, layout, node, text):
         scene_logic = self.is_scene_logic()

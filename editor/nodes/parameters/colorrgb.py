@@ -7,17 +7,14 @@ from ...sockets import NodeSocketLogicColorRGB
 class LogicNodeColorRGB(LogicNodeParameterType):
     bl_idname = "NLParameterRGBNode"
     bl_label = "Color RGB"
-    nl_category = "Values"
-    nl_subcat = 'Vectors'
     nl_module = 'parameters'
 
     def init(self, context):
-        LogicNodeParameterType.init(self, context)
         self.add_input(NodeSocketLogicColorRGB, 'Color')
         self.add_output(NodeSocketLogicColorRGB, "Color")
+        LogicNodeParameterType.init(self, context)
 
-    def get_netlogic_class_name(self):
-        return "ULColorRGB"
+    nl_class = "ULColorRGB"
 
     def get_output_names(self):
         return ["OUTV"]

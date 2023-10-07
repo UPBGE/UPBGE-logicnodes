@@ -3,7 +3,6 @@ from ..node import LogicNodeParameterType
 from ...sockets import NodeSocketLogicFloat
 from ...sockets import NodeSocketLogicParameter
 from ...enum_types import _enum_math_operations
-from ....utilities import update_draw
 from bpy.props import EnumProperty
 
 
@@ -11,19 +10,18 @@ from bpy.props import EnumProperty
 class LogicNodeMath(LogicNodeParameterType):
     bl_idname = "NLArithmeticOpParameterNode"
     bl_label = "Math"
-    nl_category = "Math"
     nl_module = 'parameters'
+
     operator: EnumProperty(
         name='Operation',
-        items=_enum_math_operations,
-        update=update_draw
+        items=_enum_math_operations
     )
 
     def init(self, context):
-        LogicNodeParameterType.init(self, context)
         self.add_input(NodeSocketLogicFloat, "A")
         self.add_input(NodeSocketLogicFloat, "B")
         self.add_output(NodeSocketLogicParameter, "")
+        LogicNodeParameterType.init(self, context)
 
     def draw_buttons(self, context, layout):
         layout.prop(self, "operator", text="")
@@ -36,8 +34,7 @@ class LogicNodeMath(LogicNodeParameterType):
             ("operator", f'OPERATORS.get("{self.operator}")')
         ]
 
-    def get_netlogic_class_name(self):
-        return "ULMath"
+    nl_class = "ULMath"
 
     def get_input_names(self):
         return ["operand_a", "operand_b"]

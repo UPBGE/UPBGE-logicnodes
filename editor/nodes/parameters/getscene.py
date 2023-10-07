@@ -7,15 +7,13 @@ from ...sockets import NodeSocketLogicScene
 class LogicNodeGetScene(LogicNodeParameterType):
     bl_idname = "NLGetScene"
     bl_label = "Get Scene"
-    nl_category = "Scene"
     nl_module = 'parameters'
 
     def init(self, context):
-        LogicNodeParameterType.init(self, context)
         self.add_output(NodeSocketLogicScene, 'Scene')
+        LogicNodeParameterType.init(self, context)
 
-    def get_netlogic_class_name(self):
-        return "ULGetScene"
+    nl_class = "ULGetScene"
 
     def get_output_names(self):
         return ['OUT']

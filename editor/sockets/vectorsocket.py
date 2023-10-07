@@ -1,6 +1,7 @@
 from .socket import NodeSocketLogic
 from .socket import PARAM_VECTOR_SOCKET_COLOR
 from .socket import socket_type
+from .socket import update_draw
 from bpy.types import NodeSocket
 from bpy.props import StringProperty
 
@@ -11,8 +12,7 @@ class NodeSocketLogicVector(NodeSocket, NodeSocketLogic):
     bl_label = "Parameter"
     type: StringProperty(default='VECTOR')
 
-    def draw_color(self, context, node):
-        return PARAM_VECTOR_SOCKET_COLOR
+    color = PARAM_VECTOR_SOCKET_COLOR
 
     def draw(self, context, layout, node, text):
         layout.label(text=text)

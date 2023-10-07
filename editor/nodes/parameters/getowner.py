@@ -12,12 +12,10 @@ class LogicNodeGetOwner(LogicNodeParameterType):
     bl_idname = "NLOwnerGameObjectParameterNode"
     bl_label = "Get Owner"
     bl_icon = 'USER'
-    nl_category = "Objects"
     nl_module = 'parameters'
 
     def init(self, context):
-        LogicNodeParameterType.init(self, context)
         self.add_output(NodeSocketLogicObject, "Owner Object")
+        LogicNodeParameterType.init(self, context)
 
-    def get_netlogic_class_name(self):
-        return "ULGetOwner"
+    nl_class = "ULGetOwner"

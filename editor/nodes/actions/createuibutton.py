@@ -19,8 +19,6 @@ from bpy.props import EnumProperty
 class LogicNodeCreateUIButton(LogicNodeActionType):
     bl_idname = "LogicNodeCreateUIButton"
     bl_label = "Create Button"
-    nl_category = "UI"
-    nl_subcat = 'Widgets'
     nl_module = 'actions'
     halign_type: EnumProperty(items=_ui_halign_types, name='X')
     valign_type: EnumProperty(items=_ui_valign_types, name='Y')
@@ -28,7 +26,6 @@ class LogicNodeCreateUIButton(LogicNodeActionType):
     text_valign_type: EnumProperty(items=_ui_valign_types, name='Text Y', default='center')
 
     def init(self, context):
-        LogicNodeActionType.init(self, context)
         self.add_input(NodeSocketLogicCondition, "Condition")
         self.add_input(NodeSocketLogicUI, "Parent")
         self.add_input(NodeSocketLogicBoolean, "Relative Position")
@@ -51,9 +48,9 @@ class LogicNodeCreateUIButton(LogicNodeActionType):
         self.add_output(NodeSocketLogicCondition, "On Click")
         self.add_output(NodeSocketLogicCondition, "On Hover")
         self.add_output(NodeSocketLogicCondition, "On Release")
-        self.update_draw()
+        LogicNodeActionType.init(self, context)
 
-    def update_draw(self):
+    def update_draw(self, context=None):
         if len(self.inputs) < 17:
             return
         has_text = True if self.inputs[11].value else False
@@ -67,18 +64,17 @@ class LogicNodeCreateUIButton(LogicNodeActionType):
             layout.prop(self, 'text_halign_type', text='Text X')
             layout.prop(self, 'text_valign_type', text='Text Y')
 
-    def get_netlogic_class_name(self):
-        return "ULCreateUIButton"
+    nl_class = "ULCreateUIButton"
 
     def get_output_names(self):
         return ["OUT", 'WIDGET', 'CLICK', 'HOVER', 'RELEASE']
 
     def get_attributes(self):
         return [
-            ("halign_type", lambda: f'"{self.halign_type}"'),
-            ("valign_type", lambda: f'"{self.valign_type}"'),
-            ("text_halign_type", lambda: f'"{self.text_halign_type}"'),
-            ("text_valign_type", lambda: f'"{self.text_valign_type}"')
+            ("halign_type", f'"{self.halign_type}"'),
+            ("valign_type", f'"{self.valign_type}"'),
+            ("text_halign_type", f'"{self.text_halign_type}"'),
+            ("text_valign_type", f'"{self.text_valign_type}"')
         ]
 
     def get_input_names(self):

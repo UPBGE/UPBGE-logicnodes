@@ -8,9 +8,7 @@ from bpy.types import NodeSocket
 class NodeSocketLogicAction(NodeSocket, NodeSocketLogic):
     bl_idname = "NLActionSocket"
     bl_label = "Action"
-
-    def draw_color(self, context, node):
-        return ACTION_SOCKET_COLOR
+    color = ACTION_SOCKET_COLOR
 
     def draw(self, context, layout, node, text):
         layout.label(text=text)

@@ -16,8 +16,7 @@ class NodeSocketLogicBone(NodeSocket, NodeSocketLogic):
     value: StringProperty()
     ref_index: IntProperty(default=0)
 
-    def draw_color(self, context, node):
-        return PARAMETER_SOCKET_COLOR
+    color = PARAMETER_SOCKET_COLOR
 
     def draw(self, context, layout, node, text):
         if self.is_output:

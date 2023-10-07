@@ -1,7 +1,7 @@
 from ..node import node_type
 from ..node import LogicNodeParameterType
 from ...sockets import NodeSocketLogicParameter
-from ...sockets import NodeSocketLogicTreeNode
+from ...sockets import NodeSocketLogicMaterialNode
 from ...sockets import NodeSocketLogicMaterial
 from ...sockets import NodeSocketLogicString
 
@@ -11,19 +11,19 @@ class LogicNodeGetMaterialNodeAttr(LogicNodeParameterType):
     bl_idname = "NLGetMaterialNodeAttribute"
     bl_label = "Get Node Value"
     bl_icon = 'DRIVER_TRANSFORM'
-    nl_category = 'Nodes'
-    nl_subcat = 'Materials'
     nl_module = 'parameters'
 
     def init(self, context):
-        LogicNodeParameterType.init(self, context)
         self.add_input(NodeSocketLogicMaterial, 'Material')
-        self.add_input(NodeSocketLogicTreeNode, 'Node Name')
+        self.add_input(NodeSocketLogicMaterialNode, 'Node Name')
         self.add_input(NodeSocketLogicString, "Internal")
         self.add_input(NodeSocketLogicString, "Attribute")
         self.add_output(NodeSocketLogicParameter, "Value")
+        LogicNodeParameterType.init(self, context)
 
-    def update_draw(self):
+    def update_draw(self, context=None):
+        if not self.ready:
+            return
         mat = self.inputs[0]
         nde = self.inputs[1]
         itl = self.inputs[2]
@@ -33,8 +33,7 @@ class LogicNodeGetMaterialNodeAttr(LogicNodeParameterType):
         else:
             itl.enabled = att.enabled = False
 
-    def get_netlogic_class_name(self):
-        return "ULGetMaterialAttribute"
+    nl_class = "ULGetMaterialAttribute"
 
     def get_input_names(self):
         return ["mat_name", 'node_name', "internal", 'attribute']

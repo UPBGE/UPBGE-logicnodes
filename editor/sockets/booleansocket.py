@@ -1,7 +1,8 @@
 from .socket import NodeSocketLogic
 from .socket import PARAM_BOOL_SOCKET_COLOR
+from .socket import SOCKET_TYPE_BOOL
 from .socket import socket_type
-from ...utilities import update_draw
+from .socket import update_draw
 from bpy.types import NodeSocket
 from bpy.props import BoolProperty
 from bpy.props import BoolProperty
@@ -12,11 +13,12 @@ import bpy
 class NodeSocketLogicBoolean(NodeSocket, NodeSocketLogic):
     bl_idname = "NLBooleanSocket"
     bl_label = "Boolean"
+
     value: BoolProperty(update=update_draw)
     use_toggle: BoolProperty(default=False)
+    nl_type = SOCKET_TYPE_BOOL
 
-    def draw_color(self, context, node):
-        return PARAM_BOOL_SOCKET_COLOR
+    color = PARAM_BOOL_SOCKET_COLOR
 
     def draw(self, context, layout, node, text):
         if self.is_linked or self.is_output:

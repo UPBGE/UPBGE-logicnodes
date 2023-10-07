@@ -8,18 +8,15 @@ from ...sockets import NodeSocketLogicVectorXY
 class LogicNodeSeparateXY(LogicNodeParameterType):
     bl_idname = "NLParameterVector2SplitNode"
     bl_label = "Separate XY"
-    nl_category = "Values"
-    nl_subcat = 'Vectors'
     nl_module = 'parameters'
 
     def init(self, context):
-        LogicNodeParameterType.init(self, context)
         self.add_input(NodeSocketLogicVectorXY, 'Vector')
         self.add_output(NodeSocketLogicFloat, "X")
         self.add_output(NodeSocketLogicFloat, "Y")
+        LogicNodeParameterType.init(self, context)
 
-    def get_netlogic_class_name(self):
-        return "ULVectorSplitXY"
+    nl_class = "ULVectorSplitXY"
 
     def get_output_names(self):
         return ["OUTX", "OUTY"]

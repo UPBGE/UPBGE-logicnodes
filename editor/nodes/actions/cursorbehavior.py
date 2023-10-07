@@ -10,19 +10,18 @@ from ...sockets import NodeSocketLogicCondition
 class LogicNodeCursorBehavior(LogicNodeActionType):
     bl_idname = "NLCursorBehavior"
     bl_label = "Cursor Behaviour"
-    nl_category = "Scene"
     nl_module = 'actions'
     deprecated = True
+    deprecation_message = 'Node will be removed in future update.'
 
     def init(self, context):
-        LogicNodeActionType.init(self, context)
         self.add_input(NodeSocketLogicBoolCondition, "Condition")
         self.add_input(NodeSocketLogicObject, "Cursor")
         self.add_input(NodeSocketLogicFloat, "Distance")
         self.add_output(NodeSocketLogicCondition, "Done")
+        LogicNodeActionType.init(self, context)
 
-    def get_netlogic_class_name(self):
-        return "ULCursorBehavior"
+    nl_class = "ULCursorBehavior"
 
     def get_output_names(self):
         return ["OUT"]

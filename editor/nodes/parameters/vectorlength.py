@@ -8,18 +8,16 @@ from ...sockets import NodeSocketLogicFloat
 class LogicNodeVectorLength(LogicNodeParameterType):
     bl_idname = "NLVectorLength"
     bl_label = "Vector Length"
-    nl_category = "Math"
-    nl_subcat = 'Vector Math'
     nl_module = 'parameters'
     deprecated = True
+    deprecation_message = 'Replaced by "Random Value" Node.'
 
     def init(self, context):
-        LogicNodeParameterType.init(self, context)
         self.add_input(NodeSocketLogicVectorXYZ, "Vector")
         self.add_output(NodeSocketLogicFloat, 'Length')
+        LogicNodeParameterType.init(self, context)
 
-    def get_netlogic_class_name(self):
-        return "ULVectorLength"
+    nl_class = "ULVectorLength"
 
     def get_output_names(self):
         return ["OUTV"]

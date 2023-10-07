@@ -538,15 +538,16 @@ def iterSubclassesWithAttribute(cls, attribute):
             yield from iterSubclassesWithAttribute(subcls, attribute)
 
 
-def update_draw(self, context):
-    from bge_netlogic.basicnodes import NLNode
+def update_draw(self, context=None):
+    return
+    # from bge_netlogic.basicnodes import NLNode
     if not hasattr(context.space_data, 'edit_tree'):
         return
     tree = context.space_data.edit_tree
     for node in tree.nodes:
         if hasattr(node, 'update_draw'):
             try:
-                node.update_draw()
+                node.update_draw(context)
             except Exception as e:
                 error(f'Failed node {node}, {e}')
                 pass

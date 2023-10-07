@@ -7,7 +7,6 @@ from ...sockets import NodeSocketLogicFloat
 class LogicNodeTimeData(LogicNodeParameterType):
     bl_idname = "NLParameterTimeNode"
     bl_label = "Time Data"
-    nl_category = 'Time'
     nl_module = 'parameters'
 
     search_tags = [
@@ -19,13 +18,12 @@ class LogicNodeTimeData(LogicNodeParameterType):
     ]
 
     def init(self, context):
-        LogicNodeParameterType.init(self, context)
         self.add_output(NodeSocketLogicFloat, "Time")
         self.add_output(NodeSocketLogicFloat, "Delta (Frametime)")
         self.add_output(NodeSocketLogicFloat, "FPS")
+        LogicNodeParameterType.init(self, context)
 
     def get_output_names(self):
         return ["TIMELINE", "TIME_PER_FRAME", "FPS"]
 
-    def get_netlogic_class_name(self):
-        return "ULTimeData"
+    nl_class = "ULTimeData"

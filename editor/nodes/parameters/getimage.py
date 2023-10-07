@@ -8,16 +8,14 @@ class LogicNodeGetImage(LogicNodeParameterType):
     bl_idname = "NLGetImage"
     bl_label = "Get Image"
     bl_icon = 'IMAGE_DATA'
-    nl_category = "File"
     nl_module = 'parameters'
 
     def init(self, context):
-        LogicNodeParameterType.init(self, context)
         self.add_input(NodeSocketLogicImage, "Image")
         self.add_output(NodeSocketLogicImage, 'Image')
+        LogicNodeParameterType.init(self, context)
 
-    def get_netlogic_class_name(self):
-        return "ULGetImage"
+    nl_class = "ULGetImage"
 
     def get_input_names(self):
         return ["image"]

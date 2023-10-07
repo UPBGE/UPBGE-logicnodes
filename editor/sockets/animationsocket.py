@@ -17,9 +17,7 @@ class NodeSocketLogicAnimation(NodeSocket, NodeSocketLogic):
         description='Select an Action'
         # update=update_tree_code
     )
-
-    def draw_color(self, context, node):
-        return PARAMETER_SOCKET_COLOR
+    color = PARAMETER_SOCKET_COLOR
 
     def draw(self, context, layout, node, text):
         if self.is_linked or self.is_output:

@@ -1,8 +1,8 @@
 from .socket import NodeSocketLogic
 from .socket import PARAM_VECTOR_SOCKET_COLOR
 from .socket import socket_type
+from .socket import update_draw
 from ..enum_types import _enum_matrix_dimensions
-from ...utilities import update_draw
 from bpy.types import NodeSocket
 from bpy.props import FloatProperty
 from bpy.props import StringProperty
@@ -17,28 +17,27 @@ class NodeSocketLogicMatrix(NodeSocket, NodeSocketLogic):
 
     dimensions: EnumProperty(items=_enum_matrix_dimensions)
 
-    value_xx: FloatProperty(default=0, update=update_draw)
-    value_xy: FloatProperty(default=0, update=update_draw)
-    value_xz: FloatProperty(default=0, update=update_draw)
-    value_xw: FloatProperty(default=0, update=update_draw)
+    value_xx: FloatProperty(default=0)
+    value_xy: FloatProperty(default=0)
+    value_xz: FloatProperty(default=0)
+    value_xw: FloatProperty(default=0)
 
-    value_yx: FloatProperty(default=0, update=update_draw)
-    value_yy: FloatProperty(default=0, update=update_draw)
-    value_yz: FloatProperty(default=0, update=update_draw)
-    value_yw: FloatProperty(default=0, update=update_draw)
+    value_yx: FloatProperty(default=0)
+    value_yy: FloatProperty(default=0)
+    value_yz: FloatProperty(default=0)
+    value_yw: FloatProperty(default=0)
 
-    value_zx: FloatProperty(default=0, update=update_draw)
-    value_zy: FloatProperty(default=0, update=update_draw)
-    value_zz: FloatProperty(default=0, update=update_draw)
-    value_zw: FloatProperty(default=0, update=update_draw)
+    value_zx: FloatProperty(default=0)
+    value_zy: FloatProperty(default=0)
+    value_zz: FloatProperty(default=0)
+    value_zw: FloatProperty(default=0)
 
-    value_wx: FloatProperty(default=0, update=update_draw)
-    value_wy: FloatProperty(default=0, update=update_draw)
-    value_wz: FloatProperty(default=0, update=update_draw)
-    value_ww: FloatProperty(default=0, update=update_draw)
+    value_wx: FloatProperty(default=0)
+    value_wy: FloatProperty(default=0)
+    value_wz: FloatProperty(default=0)
+    value_ww: FloatProperty(default=0)
 
-    def draw_color(self, context, node):
-        return PARAM_VECTOR_SOCKET_COLOR
+    color = PARAM_VECTOR_SOCKET_COLOR
 
     def get_unlinked_value(self):
         return "mathutils.Matrix(([{}, {}, {}, {}], [{}, {}, {}, {}], [{}, {}, {}, {}], [{}, {}, {}, {}]))".format(

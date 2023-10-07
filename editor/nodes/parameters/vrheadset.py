@@ -7,17 +7,14 @@ from ...sockets import NodeSocketLogicVectorXYZ
 class LogicNodeVRHeadset(LogicNodeParameterType):
     bl_idname = "NLGetVRHeadsetValues"
     bl_label = "VR Headset"
-    nl_category = "Input"
-    nl_subcat = 'VR'
     nl_module = 'parameters'
 
     def init(self, context):
-        LogicNodeParameterType.init(self, context)
         self.add_output(NodeSocketLogicVectorXYZ, "Position")
         self.add_output(NodeSocketLogicVectorXYZ, "Orientation")
+        LogicNodeParameterType.init(self, context)
 
-    def get_netlogic_class_name(self):
-        return "ULGetVRHeadsetValues"
+    nl_class = "ULGetVRHeadsetValues"
 
     def get_output_names(self):
         return ['POS', 'ORI']

@@ -10,7 +10,6 @@ from bpy.props import BoolProperty
 class LogicNodeStoreValue(LogicNodeParameterType):
     bl_idname = "NLStoreValue"
     bl_label = "Store Value"
-    nl_category = "Values"
     nl_module = 'parameters'
 
     initialize: BoolProperty(
@@ -20,10 +19,10 @@ class LogicNodeStoreValue(LogicNodeParameterType):
     )
 
     def init(self, context):
-        LogicNodeParameterType.init(self, context)
         self.add_input(NodeSocketLogicCondition, "Condition")
         self.add_input(NodeSocketLogicValue, "Value")
         self.add_output(NodeSocketLogicParameter, "Stored Value")
+        LogicNodeParameterType.init(self, context)
 
     def draw_buttons(self, context, layout):
         layout.prop(self, "initialize")
@@ -34,8 +33,7 @@ class LogicNodeStoreValue(LogicNodeParameterType):
     def get_input_names(self):
         return ['condition', 'value']
 
-    def get_netlogic_class_name(self):
-        return "ULStoreValue"
+    nl_class = "ULStoreValue"
 
     def get_output_names(self):
         return ["OUT"]

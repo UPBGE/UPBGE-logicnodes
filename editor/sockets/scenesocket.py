@@ -1,6 +1,7 @@
 from .socket import NodeSocketLogic
 from .socket import PARAM_MAT_SOCKET_COLOR
 from .socket import socket_type
+from .socket import update_draw
 from bpy.types import Scene
 from bpy.types import NodeSocket
 from bpy.props import PointerProperty
@@ -16,8 +17,7 @@ class NodeSocketLogicScene(NodeSocket, NodeSocketLogic):
         type=Scene
     )
 
-    def draw_color(self, context, node):
-        return PARAM_MAT_SOCKET_COLOR
+    color = PARAM_MAT_SOCKET_COLOR
 
     def draw(self, context, layout, node, text):
         if self.is_output:

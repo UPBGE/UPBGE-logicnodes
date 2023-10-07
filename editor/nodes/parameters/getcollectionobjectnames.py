@@ -8,20 +8,17 @@ from ...sockets import NodeSocketLogicList
 class LogicNodeGetCollectionObjectNames(LogicNodeParameterType):
     bl_idname = "NLGetCollectionObjectNamesNode"
     bl_label = "Get Object Names"
-    nl_category = "Scene"
-    nl_subcat = 'Collections'
     nl_module = 'parameters'
 
     def init(self, context):
-        LogicNodeParameterType.init(self, context)
         self.add_input(NodeSocketLogicCollection, 'Collection')
         self.add_output(NodeSocketLogicList, "Object Names")
+        LogicNodeParameterType.init(self, context)
 
     def get_input_names(self):
         return ['collection']
 
-    def get_netlogic_class_name(self):
-        return "ULGetCollectionObjectNames"
+    nl_class = "ULGetCollectionObjectNames"
 
     def get_output_names(self):
         return ["OUT"]

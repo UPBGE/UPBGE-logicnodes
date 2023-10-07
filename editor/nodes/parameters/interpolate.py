@@ -9,18 +9,16 @@ from ...sockets import NodeSocketLogicParameter
 class LogicNodeInterpolate(LogicNodeParameterType):
     bl_idname = "NLInterpolateValueNode"
     bl_label = "Interpolate"
-    nl_category = "Math"
     nl_module = 'parameters'
 
     def init(self, context):
-        LogicNodeParameterType.init(self, context)
         self.add_input(NodeSocketLogicFloat, "From")
         self.add_input(NodeSocketLogicFloat, "To")
         self.add_input(NodeSocketLogicFloatFactor, "Factor")
         self.add_output(NodeSocketLogicParameter, "Value")
+        LogicNodeParameterType.init(self, context)
 
-    def get_netlogic_class_name(self):
-        return "ULInterpolate"
+    nl_class = "ULInterpolate"
 
     def get_input_names(self):
         return ["a", "b", "fac"]

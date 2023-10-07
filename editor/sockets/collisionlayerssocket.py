@@ -26,8 +26,7 @@ class NodeSocketLogicCollisionLayers(NodeSocket, NodeSocketLogic):
     slot_14: BoolProperty(default=True)
     slot_15: BoolProperty(default=True)
 
-    def draw_color(self, context, node):
-        return PARAM_LIST_SOCKET_COLOR
+    color = PARAM_LIST_SOCKET_COLOR
 
     def draw(self, context, layout, node, text):
         if self.is_linked or self.is_output:

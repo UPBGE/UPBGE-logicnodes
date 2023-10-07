@@ -1,7 +1,7 @@
 from ..node import node_type
 from ..node import LogicNodeParameterType
 from ...sockets import NodeSocketLogicParameter
-from ...sockets import NodeSocketLogicTreeNode
+from ...sockets import NodeSocketLogicMaterialNode
 from ...sockets import NodeSocketLogicMaterial
 from ...sockets import NodeSocketLogicIntegerPositive
 import bpy
@@ -12,18 +12,18 @@ class LogicNodeGetMaterialSocket(LogicNodeParameterType):
     bl_idname = "NLGetMaterialNodeValue"
     bl_label = "Get Socket Value"
     bl_icon = 'TRIA_RIGHT'
-    nl_category = 'Nodes'
-    nl_subcat = 'Materials'
     nl_module = 'parameters'
 
     def init(self, context):
-        LogicNodeParameterType.init(self, context)
         self.add_input(NodeSocketLogicMaterial, 'Material')
-        self.add_input(NodeSocketLogicTreeNode, 'Node Name')
+        self.add_input(NodeSocketLogicMaterialNode, 'Node Name')
         self.add_input(NodeSocketLogicIntegerPositive, "Input")
         self.add_output(NodeSocketLogicParameter, "Value")
+        LogicNodeParameterType.init(self, context)
 
-    def update_draw(self):
+    def update_draw(self, context=None):
+        if not self.ready:
+            return
         mat = self.inputs[0]
         nde = self.inputs[1]
         ipt = self.inputs[2]
@@ -46,8 +46,7 @@ class LogicNodeGetMaterialSocket(LogicNodeParameterType):
             name = target.inputs[ipt.value].name
             ipt.name = name
 
-    def get_netlogic_class_name(self):
-        return "ULGetMaterialSocket"
+    nl_class = "ULGetMaterialSocket"
 
     def get_input_names(self):
         return ["mat_name", 'node_name', "input_slot"]

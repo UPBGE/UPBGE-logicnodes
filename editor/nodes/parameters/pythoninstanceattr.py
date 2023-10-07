@@ -9,17 +9,15 @@ from ...sockets import NodeSocketLogicParameter
 class LogicNodePythonInstanceAttr(LogicNodeParameterType):
     bl_idname = "NLParameterGetAttribute"
     bl_label = "Get Instance Attribute"
-    nl_category = "Python"
     nl_module = 'parameters'
 
     def init(self, context):
-        LogicNodeParameterType.init(self, context)
         self.add_input(NodeSocketLogicPython, 'Parent')
         self.add_input(NodeSocketLogicString, 'Index')
         self.add_output(NodeSocketLogicParameter, 'Child')
+        LogicNodeParameterType.init(self, context)
 
-    def get_netlogic_class_name(self):
-        return "ULGetPyInstanceAttr"
+    nl_class = "ULGetPyInstanceAttr"
 
     def get_input_names(self):
         return ['instance', 'attr']

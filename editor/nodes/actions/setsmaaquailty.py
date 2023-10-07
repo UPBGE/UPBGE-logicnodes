@@ -8,22 +8,20 @@ from ...sockets import NodeSocketLogicInteger
 class LogicNodeSetSMAAQuality(LogicNodeActionType):
     bl_idname = "NLSetEeveeSMAAQuality"
     bl_label = "Set SMAA Quality"
-    nl_category = 'Render'
-    nl_subcat = 'EEVEE Effects'
     nl_module = 'actions'
     deprecated = True
+    deprecation_message = 'Node will be removed in future update.'
 
     def init(self, context):
-        LogicNodeActionType.init(self, context)
         self.add_input(NodeSocketLogicCondition, 'Condition')
         self.add_input(NodeSocketLogicInteger, 'Quality')
         self.add_output(NodeSocketLogicCondition, 'Done')
+        LogicNodeActionType.init(self, context)
 
     def get_output_names(self):
         return ["OUT"]
 
-    def get_netlogic_class_name(self):
-        return "ULSetEeveeSMAAQuality"
+    nl_class = "ULSetEeveeSMAAQuality"
 
     def get_input_names(self):
         return [

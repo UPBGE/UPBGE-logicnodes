@@ -112,7 +112,7 @@ class TreeCodeGenerator(object):
 
     def get_netlogic_module_for_node(self, node):
         try:
-            netlogic_class = node.get_netlogic_class_name()
+            netlogic_class = node.nl_class
             lastdot = netlogic_class.rfind(".")
             if lastdot < 0:
                 return None  # assuming basicnodes
@@ -194,7 +194,7 @@ class TreeCodeGenerator(object):
         for n in tree.nodes:
             try:
                 mod = n.get_import_module()
-                clsname = n.get_netlogic_class_name()
+                clsname = n.nl_class
                 if clsname not in imp and mod:
                     imp.append(clsname)
                     # writer.write_line(f'from uplogic.nodes.{mod} import {clsname}')
@@ -369,7 +369,9 @@ class TreeCodeGenerator(object):
                                 node.__class__.__name__))
             varname = "{0}{1:04d}".format(prefix, cell_uid)
             uid_map._register(varname, cell_uid, node)
-            text += f'        {varname} = {node.get_netlogic_class_name()}()\n'
+
+            # XXX: use attribute on node instead of function?
+            text += f'        {varname} = {node.nl_class}()\n'
             cell_uid += 1
         for uid in range(0, cell_uid):
             tree_node = uid_map._get_node_for_uid(uid)

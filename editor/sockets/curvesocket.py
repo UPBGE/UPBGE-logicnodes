@@ -1,6 +1,7 @@
 from .socket import NodeSocketLogic
 from .socket import PARAM_OBJ_SOCKET_COLOR
 from .socket import socket_type
+from .socket import update_draw
 from ..filter_types import filter_curves
 from bpy.types import NodeSocket
 from bpy.types import Curve
@@ -25,8 +26,7 @@ class NodeSocketLogicCurve(NodeSocket, NodeSocketLogic):
         description='Use the owner of this tree'
     )
 
-    def draw_color(self, context, node):
-        return PARAM_OBJ_SOCKET_COLOR
+    color = PARAM_OBJ_SOCKET_COLOR
 
     def draw(self, context, layout, node, text):
         if self.is_output:

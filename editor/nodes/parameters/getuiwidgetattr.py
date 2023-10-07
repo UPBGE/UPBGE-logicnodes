@@ -12,7 +12,6 @@ from ...sockets import NodeSocketLogicFont
 from ...sockets import NodeSocketLogicImage
 from ...enum_types import _writeable_widget_attrs
 from ...name_maps import _ui_widget_attributes
-from ....utilities import update_draw
 from bpy.props import EnumProperty
 
 
@@ -20,36 +19,11 @@ from bpy.props import EnumProperty
 class LogicNodeGetUIWidgetAttr(LogicNodeParameterType):
     bl_idname = "LogicNodeGetUIWidgetAttr"
     bl_label = "Get Widget Attribute"
-    nl_category = "UI"
     nl_module = 'parameters'
-    widget_attr: EnumProperty(
-        items=_writeable_widget_attrs,
-        name='',
-        update=update_draw
-    )
 
-    def init(self, context):
-        LogicNodeParameterType.init(self, context)
-        self.add_input(NodeSocketLogicUI, "Widget")
-        self.add_output(NodeSocketLogicBoolean, "Visibility")
-        self.add_output(NodeSocketLogicColorRGBA, "", {'enabled': False})
-        self.add_output(NodeSocketLogicFloatFactor, "", {'enabled': False})
-        self.add_output(NodeSocketLogicVectorXY, "", {'enabled': False})
-        self.add_output(NodeSocketLogicString, "", {'enabled': False})
-        self.add_output(NodeSocketLogicInteger, "", {'enabled': False})
-        self.add_output(NodeSocketLogicFloat, "", {'enabled': False})
-        self.add_output(NodeSocketLogicFont, "", {'enabled': False})
-        self.add_output(NodeSocketLogicImage, "", {'enabled': False})
-
-    def get_attributes(self):
-        return [
-            ("widget_attr", lambda: f'"{self.widget_attr}"')
-        ]
-
-    def draw_buttons(self, context, layout) -> None:
-        layout.prop(self, 'widget_attr', text='')
-
-    def update_draw(self):
+    def update_draw(self, context=None):
+        if not self.ready:
+            return
         attr = self.widget_attr
         self.outputs[0].enabled = attr in ['show', 'use_clipping', 'wrap', 'shadow']
         self.outputs[1].enabled = attr in ['bg_color', 'border_color', 'shadow_color', 'font_color', 'hover_color']
@@ -63,8 +37,34 @@ class LogicNodeGetUIWidgetAttr(LogicNodeParameterType):
         for socket in self.outputs:
             socket.name = _ui_widget_attributes.get(attr)
 
-    def get_netlogic_class_name(self):
-        return "ULGetUIWidgetAttr"
+    widget_attr: EnumProperty(
+        items=_writeable_widget_attrs,
+        name='',
+        update=update_draw
+    )
+
+    def init(self, context):
+        self.add_input(NodeSocketLogicUI, "Widget")
+        self.add_output(NodeSocketLogicBoolean, "Visibility")
+        self.add_output(NodeSocketLogicColorRGBA, "", {'enabled': False})
+        self.add_output(NodeSocketLogicFloatFactor, "", {'enabled': False})
+        self.add_output(NodeSocketLogicVectorXY, "", {'enabled': False})
+        self.add_output(NodeSocketLogicString, "", {'enabled': False})
+        self.add_output(NodeSocketLogicInteger, "", {'enabled': False})
+        self.add_output(NodeSocketLogicFloat, "", {'enabled': False})
+        self.add_output(NodeSocketLogicFont, "", {'enabled': False})
+        self.add_output(NodeSocketLogicImage, "", {'enabled': False})
+        LogicNodeParameterType.init(self, context)
+
+    def get_attributes(self):
+        return [
+            ("widget_attr", f'"{self.widget_attr}"')
+        ]
+
+    def draw_buttons(self, context, layout) -> None:
+        layout.prop(self, 'widget_attr', text='')
+
+    nl_class = "ULGetUIWidgetAttr"
 
     def get_output_names(self):
         return ['BOOL', 'COLOR', 'ALPHA', 'VEC2', 'STR', 'INT', 'FLOAT', 'FONT', 'IMG']

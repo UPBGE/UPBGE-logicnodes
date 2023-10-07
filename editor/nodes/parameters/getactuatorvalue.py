@@ -10,20 +10,16 @@ from ...sockets import NodeSocketLogicBrick
 class LogicNodeGetActuatorValue(LogicNodeParameterType):
     bl_idname = "NLGetActuatorValue"
     bl_label = "Get Actuator Value"
-    nl_category = "Logic"
-    nl_subcat = 'Bricks'
     nl_module = 'parameters'
 
     def init(self, context):
-        LogicNodeParameterType.init(self, context)
         self.add_input(NodeSocketLogicObject, "Object")
-        self.add_input(NodeSocketLogicBrick, "Actuator")
-        self.inputs[-1].brick_type = 'actuators'
+        self.add_input(NodeSocketLogicBrick, "Actuator", {'brick_type': 'actuators'})
         self.add_input(NodeSocketLogicString, "Field")
         self.add_output(NodeSocketLogicParameter, "Value")
+        LogicNodeParameterType.init(self, context)
 
-    def get_netlogic_class_name(self):
-        return "ULGetActuatorValue"
+    nl_class = "ULGetActuatorValue"
 
     def get_input_names(self):
         return ["game_obj", "act_name", 'field']

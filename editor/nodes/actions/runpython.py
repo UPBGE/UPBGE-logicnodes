@@ -3,10 +3,8 @@ from ..node import LogicNodeActionType
 from ...sockets import NodeSocketLogicBoolCondition
 from ...sockets import NodeSocketLogicText
 from ...sockets import NodeSocketLogicString
-from ...sockets import NodeSocketLogicListItem
 from ...sockets import NodeSocketLogicParameter
 from ...enum_types import _enum_python_types
-from ....utilities import update_draw
 from bpy.props import EnumProperty
 
 
@@ -14,29 +12,31 @@ from bpy.props import EnumProperty
 class LogicNodeRunPython(LogicNodeActionType):
     bl_idname = "NLParameterPythonModuleFunction"
     bl_label = "Run Python Code"
-    nl_category = "Python"
     nl_module = 'actions'
+
+    def update_draw(self, context=None):
+        if not self.ready:
+            return
+        for i, ipt in enumerate(self.inputs):
+            enabled = int(self.mode) > 0
+            if i > 1:
+                ipt.enabled = enabled
+            self.outputs[1].enabled = enabled
+
     mode: EnumProperty(items=_enum_python_types, update=update_draw)
 
     def init(self, context):
-        LogicNodeActionType.init(self, context)
         self.add_input(NodeSocketLogicBoolCondition, "Condition")
         self.add_input(NodeSocketLogicText, "Module Name")
         self.add_input(NodeSocketLogicString, "Function")
         self.add_output(NodeSocketLogicBoolCondition, "Done")
         self.add_output(NodeSocketLogicParameter, "Returned Value")
-        self.update_draw()
+        LogicNodeActionType.init(self, context)
 
-    def get_netlogic_class_name(self):
-        return "ULRunPython"
+    nl_class = "ULRunPython"
 
     def set_new_input_name(self):
         self.inputs[-1].name = 'Argument'
-
-    def update_draw(self):
-        for i, ipt in enumerate(self.inputs):
-            if i > 1:
-                ipt.enabled = int(self.mode) > 0
 
     def draw_buttons(self, context, layout):
         layout.prop(self, 'mode', text='')
@@ -88,4 +88,4 @@ class LogicNodeRunPython(LogicNodeActionType):
         return ["OUT", "VAL"]
 
     def get_attributes(self):
-        return [('mode', lambda: self.mode)]
+        return [('mode', self.mode)]

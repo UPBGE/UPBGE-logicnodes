@@ -1,27 +1,43 @@
 from ...utilities import error
 from ...utilities import debug
+from ...utilities import warn
 from ...utilities import deprecate
 from ...utilities import OUTCELL
 from ...utilities import ERROR_MESSAGES
 from ...utilities import WARNING_MESSAGES
 from ..nodetree import LogicNodeTree
 from bpy.types import NodeReroute
+from bpy.props import StringProperty
+from bpy.props import BoolProperty
 import bpy
+
 
 _nodes = []
 
 
 def node_type(obj):
+    if obj.nl_module is None:
+        error(f'{obj.bl_label}: Uplogic Module not defined! Node not registered.')
+        return
     _nodes.append(obj)
     return obj
 
 
 class LogicNode:
-    bl_icon = 'DOT'
     nl_module = None
+    nl_class = None
     nl_nodetype = 'INV'
     search_tags = []
     deprecated = False
+    deprecation_message = 'Delete to avoid issues.'
+    nl_label: StringProperty(default='')
+    ready: BoolProperty(default=False)
+
+    def update_draw(self, context=None):
+        pass
+
+    def draw_label(self):
+        return self.label if self.label else self.nl_label
 
     @classmethod
     def poll(cls, node_tree):
@@ -39,13 +55,17 @@ class LogicNode:
     def insert_link(self, link):
         to_socket = link.to_socket
         from_socket = link.from_socket
-        # try:
-        #     to_socket.validate(link, from_socket)
-        # except Exception as e:
-        #     utils.warning(e)
-        #     utils.debug(
-        #         'Receiving Node not a Logic Node Type, skipping validation.'
-        #     )
+        try:
+            to_socket.validate(link, from_socket)
+        except Exception as e:
+            warn(e)
+            debug(
+                'Receiving Node not a Logic Node Type, skipping validation.'
+            )
+
+    def set_ready(self):
+        self.ready = True
+        self.update_draw(bpy.context)
 
     def add_input(self, cls, name, settings={}):
         ipt = self.inputs.new(cls.bl_idname, name)
@@ -81,18 +101,21 @@ class LogicNode:
                 field_value = field_value()
             text += f'        {cell_varname}.{field_name} = {field_value}\n'
         for socket in self.inputs:
+
+            # Skip hidden Sockets to avoid clutter
+            if not socket.enabled:
+                continue
+
             try:
                 text += self.write_socket_field_initialization(
                     socket,
                     cell_varname,
                     uids
                 )
-                # self.mute = False
             except IndexError as e:
                 error(
                     f"Index error for node '{self.name}'. This normally happens when a node has sockets added or removed in an update. Try re-adding the node to resolve this issue."
                 )
-                # self.mute = True
                 ERROR_MESSAGES.append(f'{self.name}: Index Error. FIX: Delete and re-add node; issue might be a linked input node as well.')
                 self.use_custom_color = True
                 self.color = (1, 0, 0)
@@ -107,7 +130,6 @@ class LogicNode:
                     f'\tNode: {self.label if self.label else self.name}\n'
                     '---END ERROR'
                 )
-                # self.mute = True
                 ERROR_MESSAGES.append(f'{self.name}: Unknown Error: {e}')
                 self.use_custom_color = True
                 self.color = (1, 0, 0)
@@ -164,16 +186,15 @@ class LogicNode:
         if self.deprecated:
             deprecate(self, tree)
             global WARNING_MESSAGES
-            WARNING_MESSAGES.append(f"Deprecated Node: '{self.name}' in '{self.tree.name}'. Delete to avoid issues.")
+            WARNING_MESSAGES.append(
+                f"Deprecated Node: '{self.name}' in '{self.tree.name}'. {self.deprecation_message}"
+            )
             self.use_custom_color = True
             self.color = (.8, .6, 0)
         for socket in self.inputs:
             socket.check(tree)
         for socket in self.outputs:
             socket.check(tree)
-
-    def get_netlogic_class_name(self):
-        raise NotImplementedError()
 
     def _index_of(self, item, a_iterable):
         i = 0
@@ -235,36 +256,18 @@ class LogicNodeConditionType(bpy.types.Node, LogicNode):
     nl_nodetype = 'CON'
 
     def init(self, context):
-        self.use_custom_color = (
-            bpy
-            .context
-            .scene
-            .logic_node_settings
-            .use_custom_node_color
-        )
+        self.set_ready()
 
 
 class LogicNodeParameterType(bpy.types.Node, LogicNode):
     nl_nodetype = 'PAR'
 
     def init(self, context):
-        self.use_custom_color = (
-            bpy
-            .context
-            .scene
-            .logic_node_settings
-            .use_custom_node_color
-        )
+        self.set_ready()
 
 
 class LogicNodeActionType(bpy.types.Node, LogicNode):
     nl_nodetype = 'ACT'
 
     def init(self, context):
-        self.use_custom_color = (
-            bpy
-            .context
-            .scene
-            .logic_node_settings
-            .use_custom_node_color
-        )
+        self.set_ready()

@@ -11,8 +11,8 @@
                     "index": 0,
                     "value": "D"
                 }, {
-                    "index": "pulse",
-                    "value": true
+                    "index": "input_type",
+                    "value": "1"
                 }
             ]
         }, {
@@ -26,8 +26,8 @@
                     "index": 0,
                     "value": "A"
                 }, {
-                    "index": "pulse",
-                    "value": true
+                    "index": "input_type",
+                    "value": "1"
                 }
             ]
         }, {
@@ -41,8 +41,8 @@
                     "index": 0,
                     "value": "W"
                 }, {
-                    "index": "pulse",
-                    "value": true
+                    "index": "input_type",
+                    "value": "1"
                 }
             ]
         }, {
@@ -56,8 +56,8 @@
                     "index": 0,
                     "value": "S"
                 }, {
-                    "index": "pulse",
-                    "value": true
+                    "index": "input_type",
+                    "value": "1"
                 }
             ]
         }, {

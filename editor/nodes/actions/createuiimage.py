@@ -15,14 +15,12 @@ from bpy.props import EnumProperty
 class LogicNodeCreateUIImage(LogicNodeActionType):
     bl_idname = "LogicNodeCreateUIImage"
     bl_label = "Create Image"
-    nl_category = "UI"
     nl_subcat = 'Widgets'
     nl_module = 'actions'
     halign_type: EnumProperty(items=_ui_halign_types, name='X')
     valign_type: EnumProperty(items=_ui_valign_types, name='Y')
 
     def init(self, context):
-        LogicNodeActionType.init(self, context)
         self.add_input(NodeSocketLogicCondition, "Condition")
         self.add_input(NodeSocketLogicUI, "Parent")
         self.add_input(NodeSocketLogicBoolean, "Relative Position")
@@ -33,21 +31,21 @@ class LogicNodeCreateUIImage(LogicNodeActionType):
         self.add_input(NodeSocketLogicImage, "")
         self.add_output(NodeSocketLogicCondition, "Done")
         self.add_output(NodeSocketLogicUI, "Label")
+        LogicNodeActionType.init(self, context)
 
     def draw_buttons(self, context, layout) -> None:
         layout.prop(self, 'halign_type', text='X')
         layout.prop(self, 'valign_type', text='Y')
 
-    def get_netlogic_class_name(self):
-        return "ULCreateUIImage"
+    nl_class = "ULCreateUIImage"
 
     def get_output_names(self):
         return ["OUT", 'WIDGET']
 
     def get_attributes(self):
         return [
-            ("halign_type", lambda: f'"{self.halign_type}"'),
-            ("valign_type", lambda: f'"{self.valign_type}"')
+            ("halign_type", f'"{self.halign_type}"'),
+            ("valign_type", f'"{self.valign_type}"')
         ]
 
     def get_input_names(self):

@@ -1,7 +1,7 @@
 from .socket import NodeSocketLogic
 from .socket import PARAMETER_SOCKET_COLOR
 from .socket import socket_type
-from ...utilities import update_draw
+from .socket import update_draw
 from bpy.types import NodeSocket
 from bpy.props import FloatProperty
 
@@ -10,11 +10,13 @@ from bpy.props import FloatProperty
 class NodeSocketLogicFloatAngle(NodeSocket, NodeSocketLogic):
     bl_idname = "NLFloatAngleSocket"
     bl_label = "Float Value"
-    value: FloatProperty(default=0, update=update_draw, unit='ROTATION')
-    valid_sockets = ['NLFloatFieldSocket']
 
-    def draw_color(self, context, node):
-        return PARAMETER_SOCKET_COLOR
+    value: FloatProperty(
+        default=0,
+        update=update_draw,
+        unit='ROTATION'
+    )
+    color = PARAMETER_SOCKET_COLOR
 
     def get_unlinked_value(self):
         return "{}".format(self.value)

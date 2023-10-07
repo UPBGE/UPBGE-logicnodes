@@ -11,19 +11,17 @@ class LogicNodeGroupNodeAttr(LogicNodeParameterType):
     bl_idname = "NLGetNodeTreeNodeAttribute"
     bl_label = "Get Node Value"
     bl_icon = 'DRIVER_TRANSFORM'
-    nl_category = 'Nodes'
-    nl_subcat = 'Groups'
     nl_module = 'parameters'
 
     def init(self, context):
-        LogicNodeParameterType.init(self, context)
         self.add_input(NodeSocketLogicNodeGroup, 'Tree')
         self.add_input(NodeSocketLogicNodeGroupNode, 'Node Name')
         self.add_input(NodeSocketLogicString, "Internal")
         self.add_input(NodeSocketLogicString, "Attribute")
         self.add_output(NodeSocketLogicParameter, "Value")
+        LogicNodeParameterType.init(self, context)
 
-    def update_draw(self):
+    def update_draw(self, context=None):
         tree = self.inputs[0]
         nde = self.inputs[1]
         itl = self.inputs[2]
@@ -33,8 +31,7 @@ class LogicNodeGroupNodeAttr(LogicNodeParameterType):
         else:
             itl.enabled = att.enabled = False
 
-    def get_netlogic_class_name(self):
-        return "ULGetNodeAttribute"
+    nl_class = "ULGetNodeAttribute"
 
     def get_input_names(self):
         return ["tree_name", 'node_name', "internal", 'attribute']

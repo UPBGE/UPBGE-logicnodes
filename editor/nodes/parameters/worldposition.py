@@ -8,21 +8,18 @@ from ...sockets import NodeSocketLogicVectorXYZ
 @node_type
 class LogicNodeWorldPosition(LogicNodeParameterType):
     bl_idname = "NLParameterWorldPosition"
-    bl_label = "World Position"
-    nl_category = "Scene"
-    nl_subcat = 'Camera'
+    bl_label = "Screen To World"
     nl_module = 'parameters'
 
     def init(self, context):
-        LogicNodeParameterType.init(self, context)
         self.add_input(NodeSocketLogicCamera, "Camera", {'use_active': True})
         self.add_input(NodeSocketLogicFloat, "Screen X")
         self.add_input(NodeSocketLogicFloat, "Screen Y")
         self.add_input(NodeSocketLogicFloat, "Depth")
         self.add_output(NodeSocketLogicVectorXYZ, "World Position")
+        LogicNodeParameterType.init(self, context)
 
-    def get_netlogic_class_name(self):
-        return "ULWorldPosition"
+    nl_class = "ULWorldPosition"
 
     def get_input_names(self):
         return ["camera", "screen_x", "screen_y", "world_z"]

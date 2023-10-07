@@ -10,7 +10,6 @@ class LogicNodeRebuildData(LogicNodeParameterType):
     bl_idname = "LogicNodeRebuildData"
     bl_label = "Rebuild Data"
     bl_icon = 'OBJECT_HIDDEN'
-    nl_category = "Network"
     nl_module = 'parameters'
 
     read_as: EnumProperty(
@@ -20,15 +19,14 @@ class LogicNodeRebuildData(LogicNodeParameterType):
     )
 
     def init(self, context):
-        LogicNodeParameterType.init(self, context)
         self.add_input(NodeSocketLogicParameter, "Data")
         self.add_output(NodeSocketLogicParameter, 'Data')
+        LogicNodeParameterType.init(self, context)
 
     def draw_buttons(self, context, layout):
         layout.prop(self, 'read_as', text='')
 
-    def get_netlogic_class_name(self):
-        return "ULRebuildData"
+    nl_class = "ULRebuildData"
 
     def get_attributes(self):
         return [("read_as", f'"{self.read_as}"')]

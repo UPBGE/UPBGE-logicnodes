@@ -10,24 +10,21 @@ from bpy.props import EnumProperty
 class LogicNodeEuler(LogicNodeParameterType):
     bl_idname = "NLParameterEulerSimpleNode"
     bl_label = "Euler"
-    nl_category = "Values"
-    nl_subcat = 'Vectors'
     nl_module = 'parameters'
 
     euler_order: EnumProperty(items=_enum_euler_orders)
 
     def init(self, context):
-        LogicNodeParameterType.init(self, context)
         self.add_input(NodeSocketLogicFloat, 'X')
         self.add_input(NodeSocketLogicFloat, 'Y')
         self.add_input(NodeSocketLogicFloat, 'Z')
         self.add_output(NodeSocketLogicVectorXYZ, "Euler")
+        LogicNodeParameterType.init(self, context)
 
     def draw_buttons(self, context, layout) -> None:
         layout.prop(self, 'euler_order', text='')
 
-    def get_netlogic_class_name(self):
-        return "ULEuler"
+    nl_class = "ULEuler"
 
     def get_output_names(self):
         return ["OUTV"]

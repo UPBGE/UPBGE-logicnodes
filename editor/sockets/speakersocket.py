@@ -1,6 +1,7 @@
 from .socket import NodeSocketLogic
 from .socket import PARAM_OBJ_SOCKET_COLOR
 from .socket import socket_type
+from .socket import update_draw
 from ..filter_types import filter_speaker
 from bpy.types import NodeSocket
 from bpy.types import Object
@@ -19,8 +20,7 @@ class NodeSocketLogicSpeaker(NodeSocket, NodeSocketLogic):
         # update=update_tree_code
     )
 
-    def draw_color(self, context, node):
-        return PARAM_OBJ_SOCKET_COLOR
+    color = PARAM_OBJ_SOCKET_COLOR
 
     def draw(self, context, layout, node, text):
         if self.is_output:

@@ -1,7 +1,7 @@
 from .socket import NodeSocketLogic
 from .socket import PARAMETER_SOCKET_COLOR
 from .socket import socket_type
-from ...utilities import update_draw
+from .socket import update_draw
 from bpy.types import NodeSocket
 from bpy.props import StringProperty
 from bpy.props import IntProperty
@@ -12,14 +12,14 @@ import bpy
 class NodeSocketLogicNodeGroupNode(NodeSocket, NodeSocketLogic):
     bl_idname = "NLNodeGroupNodeSocket"
     bl_label = "Tree Node"
+
     value: StringProperty(
         name='Tree Node',
         update=update_draw
     )
     ref_index: IntProperty(default=0)
 
-    def draw_color(self, context, node):
-        return PARAMETER_SOCKET_COLOR
+    color = PARAMETER_SOCKET_COLOR
 
     def draw(self, context, layout, node, text):
         if self.is_linked or self.is_output:

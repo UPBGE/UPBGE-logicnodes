@@ -85,8 +85,8 @@ _enum_distance_models = [
 
 
 _enum_object_property_types = [
-    ('GAME', 'Game Property', 'Edit Game Property'),
-    ('ATTR', 'Attribute', 'Edit Internal Attribute (can be used in materials)')
+    ('0', 'Game Property', 'Edit Game Property'),
+    ('1', 'Attribute', 'Edit Internal Attribute (can be used in materials)')
 ]
 
 
@@ -462,20 +462,27 @@ _enum_controller_buttons_operators = [
 ]
 
 
+_enum_input_types = [
+    ('0', 'Tap', 'True if the input is first activated'),
+    ('1', 'Down', 'True if the input is held down'),
+    ('2', 'Up', 'True if the input is released')
+]
+
+
 _enum_play_mode_values = [
-    ("bge.logic.KX_ACTION_MODE_PLAY", "Play", "Play the action once"),
-    ("bge.logic.KX_ACTION_MODE_LOOP", "Loop", "Loop the action"),
+    ("bge.logic.KX_ACTION_MODE_PLAY", "Play", "Play the action once (0)"),
+    ("bge.logic.KX_ACTION_MODE_LOOP", "Loop", "Loop the action (1)"),
     (
         "bge.logic.KX_ACTION_MODE_PING_PONG",
         "Ping Pong",
-        "Play the action in one direction then in the opposite one"
+        "Play the action in one direction then in the opposite one (2)"
     ),
-    ("bge.logic.KX_ACTION_MODE_PLAY + 3", "Play Stop", "Play the action once"),
-    ("bge.logic.KX_ACTION_MODE_LOOP + 3", "Loop Stop", "Loop the action"),
+    ("bge.logic.KX_ACTION_MODE_PLAY + 3", "Play Stop", "Play the action once (3)"),
+    ("bge.logic.KX_ACTION_MODE_LOOP + 3", "Loop Stop", "Loop the action (4)"),
     (
         "bge.logic.KX_ACTION_MODE_PING_PONG + 3",
         "Ping Pong Stop",
-        "Play the action in one direction then in the opposite one"
+        "Play the action in one direction then in the opposite one (5)"
     )
 ]
 
@@ -491,9 +498,10 @@ _enum_blend_mode_values = [
 
 
 _enum_spawn_types = [
-    ("Simple", "Simple", "Spawn an instance without behavior"),
-    ("SimpleBullet", "Simple Bullet", "Spawn a bullet that travels linearly along its local +Y axis"),
-    ("PhysicsBullet", "Physical Bullet", "Spawn a bullet that travels along a trajectory aimed at its local +Y axis")
+    ("0", "Simple", "Spawn an instance without behavior"),
+    ("1", "Simple Bullet", "Spawn a bullet that travels linearly along its local +Y axis"),
+    ("2", "Physical Bullet", "Spawn a bullet that travels along a trajectory aimed at its local +Y axis"),
+    ("3", "Instance", "Spawn an instance of an object with its logic, physics and children"),
 ]
 
 
@@ -596,4 +604,63 @@ _ui_valign_types = [
     ("bottom", "Bottom", "Start positioning from the bottom side of the widget"),
     ("center", "Center", "Use the position as vertical center"),
     ("top", "Top", "Start positioning from the top side of the widget")
+]
+
+_enum_math_functions = [
+    ("User Defined", "User Defined", "A formula defined by the user"),
+    ("abs(a)", "abs(a)", "absolute value of a"),
+    ("acos(a)", "acos(a)", "arc cosine of a, radians"),
+    ("acosh(a)", "acosh(a)", "inverse hyperbolic cosine of a"),
+    ("asin(a)", "asin(a)", "arc sine of a, radians"),
+    ("asinh(a)", "asinh(a)", "inverse hyperbolic cosing of a"),
+    ("atan(a)", "atan(a)", "arc tangent of a, radians"),
+    ("atan2(a,b)", "atan2(a,b)", "atan(a / b), radians"),
+    ("atanh(a)", "atanh(a)", "inverse hyperbolic tangent of a"),
+    ("ceil(a)", "ceil(a)", "smallest integer value = or > to a"),
+    ("cos(a)", "cos(a)", "cosine of a, radians"),
+    ("cosh(a)", "cosh(a)", "hyperbolic cosine of a"),
+    ("curt(a)", "curt(a)", "cubic root of a"),
+    ("degrees(a)", "degrees(a)", "convert a from radians to degrees"),
+    ("e", "e", "the e constant"),
+    ("exp(a)", "exp(e)", "e to the power a"),
+    ("floor(a)", "floor(a)", "largest integer value < or = to a"),
+    ("hypot(a,b)", "hypot(a,b)", "sqrt(a*a + b*b)"),
+    ("log(a)", "log(a)", "natural log of a"),
+    ("log10(a)", "log10(a)", "base 10 log of a"),
+    ("mod(a,b)", "mod(a,b)", "a modulo b"),
+    ("pi", "pi", "the PI constant"),
+    ("pow(a,b)", "pow(a,b)", "a to the power b"),
+    ("radians(a)", "radians(a)", "convert a from degrees to radians"),
+    ("sign(a)", "sign(a)", "0 if a is 0, -1 if a < 0, 1 if a > 0"),
+    ("sin(a)", "sin(a)", "sine of a, radians"),
+    ("sinh(a)", "sinh(a)", "hyperbolic sine of a"),
+    ("sqrt(a)", "sqrt(a)", "square root of a"),
+    ("tan(a)", "tan(a)", "tangent of a, radians"),
+    ("tanh(a)", "tanh(a)", "hyperbolic tangent of a")
+]
+
+
+_logic_gates = [
+    ("0", "And", "True if A and B are True"),
+    ("1", "Or", "True if A or B or both are True"),
+    ("2", "Xor", "True only if either A or B is True, not both"),
+    ("3", "Not", "True if A is False"),
+    ("4", "Nand", "False if A and B are True"),
+    ("5", "Nor", "True if A and B are False"),
+    ("6", "Xnor", "True if A equals B"),
+    ("7", "And Not", "True if A is True and B is False")
+]
+
+
+_logic_gates_list = [
+    ("0", "And", "True if A and B are True"),
+    ("1", "Or", "True if A or B or both are True")
+]
+
+
+_random_value_types = [
+    ("0", "Float", "True if A or B or both are True"),
+    ("1", "Integer", "True if A and B are True"),
+    ("2", "Vector", "True if A or B or both are True"),
+    ("3", "Boolean", "True if A or B or both are True")
 ]

@@ -1,7 +1,9 @@
 from .socket import NodeSocketLogic
 from .socket import PARAM_VECTOR_SOCKET_COLOR
+from .socket import SOCKET_TYPE_VECTOR
+from .socket import SOCKET_TYPE_COLOR
 from .socket import socket_type
-from ...utilities import update_draw
+from .socket import update_draw
 from bpy.types import NodeSocket
 from bpy.props import FloatProperty
 from bpy.props import StringProperty
@@ -11,13 +13,15 @@ from bpy.props import StringProperty
 class NodeSocketLogicVectorXYZ(NodeSocket, NodeSocketLogic):
     bl_idname = "NLVec3FieldSocket"
     bl_label = "Float Value"
+
     type: StringProperty(default='VECTOR')
     value_x: FloatProperty(default=0, update=update_draw)
     value_y: FloatProperty(default=0, update=update_draw)
     value_z: FloatProperty(default=0, update=update_draw)
 
-    def draw_color(self, context, node):
-        return PARAM_VECTOR_SOCKET_COLOR
+    color = PARAM_VECTOR_SOCKET_COLOR
+    nl_type = SOCKET_TYPE_VECTOR
+    valid_sockets = [SOCKET_TYPE_VECTOR, SOCKET_TYPE_COLOR]
 
     def get_unlinked_value(self):
         return "mathutils.Vector(({}, {}, {}))".format(

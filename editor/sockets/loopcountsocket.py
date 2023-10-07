@@ -1,8 +1,8 @@
 from .socket import NodeSocketLogic
 from .socket import PARAMETER_SOCKET_COLOR
 from .socket import socket_type
+from .socket import update_draw
 from ..enum_types import _enum_loop_count_values
-from ...utilities import update_draw
 from bpy.types import NodeSocket
 from bpy.props import StringProperty
 from bpy.props import EnumProperty
@@ -13,7 +13,9 @@ from bpy.props import IntProperty
 class NodeSocketLogicLoopCount(NodeSocket, NodeSocketLogic):
     bl_idname = "NLSocketLoopCount"
     bl_label = "Loop Count"
-    value: StringProperty(update=update_draw)
+
+    value: StringProperty(
+        update=update_draw)
 
     def update_value(self, context):
         current_type = self.value_type
@@ -38,8 +40,7 @@ class NodeSocketLogicLoopCount(NodeSocket, NodeSocketLogic):
         )
     )
 
-    def draw_color(self, context, node):
-        return PARAMETER_SOCKET_COLOR
+    color = PARAMETER_SOCKET_COLOR
 
     def draw(self, context, layout, node, text):
         if self.is_linked or self.is_output:

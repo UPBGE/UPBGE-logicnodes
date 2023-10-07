@@ -23,7 +23,7 @@ from .geometrynodetreesocket import NodeSocketLogicGeometryNodeTree
 from .nodegroupsocket import NodeSocketLogicNodeGroup
 from .nodegroupnodesocket import NodeSocketLogicNodeGroupNode
 from .materialsocket import NodeSocketLogicMaterial
-from .treenodesocket import NodeSocketLogicTreeNode
+from .materialnodesocket import NodeSocketLogicMaterialNode
 from .scenesocket import NodeSocketLogicScene
 from .textsocket import NodeSocketLogicText
 from .meshsocket import NodeSocketLogicMesh
@@ -42,7 +42,7 @@ from .booleansocket import NodeSocketLogicBoolean
 from .xyzsocket import NodeSocketLogicXYZ
 from .invertxysocket import NodeSocketLogicInvertXY
 from .floatpositivesocket import NodeSocketLogicFloatPositive
-from .stringsocket import NodeSocketLogicString
+from .stringsocket import NodeSocketLogicString, NLQuotedStringFieldSocket
 from .filepathsocket import NodeSocketLogicFilePath
 from .integerpositivesocket import NodeSocketLogicIntegerPositive
 from .integersocket import NodeSocketLogicInteger

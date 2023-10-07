@@ -8,8 +8,6 @@ from ...sockets import NodeSocketLogicVectorXYZ
 class LogicNodeCombineXYZW(LogicNodeParameterType):
     bl_idname = "NLParameterVector4SimpleNode"
     bl_label = "Combine XYZW"
-    nl_category = "Values"
-    nl_subcat = 'Vectors'
     nl_module = 'parameters'
 
     search_tags = [
@@ -18,15 +16,14 @@ class LogicNodeCombineXYZW(LogicNodeParameterType):
     ]
 
     def init(self, context):
-        LogicNodeParameterType.init(self, context)
         self.add_input(NodeSocketLogicFloat, 'X')
         self.add_input(NodeSocketLogicFloat, 'Y')
         self.add_input(NodeSocketLogicFloat, 'Z')
         self.add_input(NodeSocketLogicFloat, 'W')
         self.add_output(NodeSocketLogicVectorXYZ, "Vector")
+        LogicNodeParameterType.init(self, context)
 
-    def get_netlogic_class_name(self):
-        return "ULVectorXYZW"
+    nl_class = "ULVectorXYZW"
 
     def get_output_names(self):
         return ["OUTV"]

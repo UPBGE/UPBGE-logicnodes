@@ -1,7 +1,7 @@
 from .socket import NodeSocketLogic
-from .socket import PARAM_TEXT_SOCKET_COLOR
+from .socket import PARAMETER_SOCKET_COLOR
 from .socket import socket_type
-from ...utilities import update_draw
+from .socket import update_draw
 from bpy.types import NodeSocket
 from bpy.props import FloatProperty
 
@@ -10,6 +10,7 @@ from bpy.props import FloatProperty
 class NodeSocketLogicFloatFactor(NodeSocket, NodeSocketLogic):
     bl_idname = "NLSocketAlphaFloat"
     bl_label = "Factor"
+
     value: FloatProperty(
         name='Alpha Value',
         description='Value range from 0 - 1',
@@ -18,8 +19,7 @@ class NodeSocketLogicFloatFactor(NodeSocket, NodeSocketLogic):
         update=update_draw
     )
 
-    def draw_color(self, context, node):
-        return PARAM_TEXT_SOCKET_COLOR
+    color = PARAMETER_SOCKET_COLOR
 
     def draw(self, context, layout, node, text):
         if self.is_linked or self.is_output:

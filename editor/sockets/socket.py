@@ -1,6 +1,10 @@
 from ...utilities import warn
 from ...utilities import Color
 from ...utilities import WARNING_MESSAGES
+from bpy.props import FloatVectorProperty
+from bpy.types import NodeLink
+from bpy.types import NodeSocket
+from bpy.types import NodeReroute
 
 
 CONDITION_SOCKET_COLOR = Color.RGBA(0.8, 0.2, 0.2, 1.0)
@@ -29,6 +33,20 @@ PARAMETER_NODE_COLOR = Color.RGBA(0.2, 0.2, 0.2, 1)[:-1]
 ACTION_NODE_COLOR = Color.RGBA(0.2, 0.2, 0.2, 1)[:-1]
 PYTHON_NODE_COLOR = Color.RGBA(0.2, 0.2, 0.2, 1)[:-1]
 
+SOCKET_TYPE_GENERIC = 0
+SOCKET_TYPE_CONDITION = 1
+SOCKET_TYPE_NUMERIC = 2
+SOCKET_TYPE_INT = 3
+SOCKET_TYPE_INT_POSITIVE = 4
+SOCKET_TYPE_FLOAT = 5
+SOCKET_TYPE_FLOAT_POSITIVE = 6
+SOCKET_TYPE_STRING = 7
+SOCKET_TYPE_BOOL = 8
+SOCKET_TYPE_VECTOR = 9
+SOCKET_TYPE_COLOR = 10
+SOCKET_TYPE_OBJECT = 11
+SOCKET_TYPE_DATA = 12
+
 
 _sockets = []
 
@@ -37,19 +55,38 @@ def socket_type(obj):
     _sockets.append(obj)
     return obj
 
+def update_draw(self, context=None):
+    print('Hello')
+    if hasattr(context, 'node'):
+        context.node.update_draw(context)
 
 class NodeSocketLogic:
     bl_idname = ''
     valid_sockets: list = []
     deprecated = False
-    nl_color: list = PARAMETER_SOCKET_COLOR
+    color = None
+    nl_type = SOCKET_TYPE_GENERIC
+    nl_color: FloatVectorProperty(
+        subtype='COLOR_GAMMA',
+        min=0.0,
+        max=1.0,
+        size=4,
+        default=PARAMETER_SOCKET_COLOR
+    )
+
+    def update_draw(self, context=None):
+        pass
 
     @classmethod
     def get_id(cls):
         return cls.bl_idname
 
+    def update_draw(self, context=None):
+        pass
+
     def __init__(self):
-        self.valid_sockets = []
+        if self.color:
+            self.nl_color = self.color
 
     def check(self, tree):
         if self.deprecated:
@@ -63,8 +100,19 @@ class NodeSocketLogic:
     def draw_color(self, context, node):
         return self.nl_color
 
-    def validate(self, from_socket):
-        pass
+    def validate(self, link: NodeLink, from_socket: NodeSocket):
+        # while isinstance(from_socket.node, NodeReroute):
+        #     links = from_socket.node.inputs[0].links
+        #     if len(links) > 0:
+        #         from_socket = links[0].from_socket
+        #     else:
+        #         link.is_valid = False
+        #         return
+        if len(self.valid_sockets) < 1 or not hasattr(from_socket, 'nl_type'):
+            link.is_valid = True
+            return
+        link.is_valid = from_socket.nl_type in self.valid_sockets
+
 
     def get_unlinked_value(self):
         raise NotImplementedError()

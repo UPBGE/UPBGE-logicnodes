@@ -10,19 +10,17 @@ from ...sockets import NodeSocketLogicUI
 class LogicNodeSetCustomCursor(LogicNodeActionType):
     bl_idname = "LogicNodeSetCustomCursor"
     bl_label = "Set Custom Cursor"
-    nl_category = "UI"
     nl_module = 'actions'
 
     def init(self, context):
-        LogicNodeActionType.init(self, context)
         self.add_input(NodeSocketLogicCondition, "Condition")
         self.add_input(NodeSocketLogicImage, "Texture")
         self.add_input(NodeSocketLogicVectorXY, "Size", {'value_x': 30, 'value_y': 30})
         self.add_output(NodeSocketLogicCondition, "Done")
         self.add_output(NodeSocketLogicUI, "Cursor")
+        LogicNodeActionType.init(self, context)
 
-    def get_netlogic_class_name(self):
-        return "ULSetCustomCursor"
+    nl_class = "ULSetCustomCursor"
 
     def get_output_names(self):
         return ["OUT", 'CURSOR']

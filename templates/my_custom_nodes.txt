@@ -16,8 +16,7 @@ class CustomParameterNode(bpy.types.Node, NLParameterNode):
         self.inputs.new(NLIntegerFieldSocket.bl_idname, "My Input")
         self.outputs.new(NLParameterSocket.bl_idname, "My Output")
 
-    def get_netlogic_class_name(self):
-        return "my_custom_cells.CustomParameterCell"
+    nl_class = "my_custom_cells.CustomParameterCell"
 
     # Input names with lowercase letters is a convention
     def get_input_names(self):

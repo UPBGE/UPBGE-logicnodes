@@ -1,21 +1,18 @@
 from .socket import NodeSocketLogic
 from .socket import PARAMETER_SOCKET_COLOR
 from .socket import socket_type
-from ...utilities import update_draw
+from .socket import update_draw
 from bpy.types import NodeSocket
 from bpy.props import StringProperty
 from bpy.props import BoolProperty
 
 
-@socket_type
-class NodeSocketLogicString(NodeSocket, NodeSocketLogic):
-    bl_idname = "NLQuotedStringFieldSocket"
-    bl_label = "String"
+class Base(NodeSocket, NodeSocketLogic):
+
     value: StringProperty(update=update_draw)
     formatted: BoolProperty(update=update_draw)
 
-    def draw_color(self, context, node):
-        return PARAMETER_SOCKET_COLOR
+    color = PARAMETER_SOCKET_COLOR
 
     def draw(self, context, layout, node, text):
         if self.is_linked or self.is_output:
@@ -36,3 +33,15 @@ class NodeSocketLogicString(NodeSocket, NodeSocketLogic):
 
     def get_unlinked_value(self):
         return '"{}"'.format(self.value)
+
+
+@socket_type
+class NodeSocketLogicString(Base):
+    bl_idname = "NodeSocketLogicString"
+    bl_label = "String"
+
+
+@socket_type
+class NLQuotedStringFieldSocket(Base):
+    bl_idname = "NLQuotedStringFieldSocket"
+    bl_label = "String"

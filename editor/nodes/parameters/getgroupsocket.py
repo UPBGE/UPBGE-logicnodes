@@ -12,20 +12,17 @@ class LogicNodeGetGroupSocket(LogicNodeParameterType):
     bl_idname = "NLGetNodeGroupNodeValue"
     bl_label = "Get Socket Value"
     bl_icon = 'TRIA_RIGHT'
-    nl_category = 'Nodes'
-    nl_subcat = 'Groups'
     nl_module = 'parameters'
 
     def init(self, context):
-        LogicNodeParameterType.init(self, context)
         self.add_input(NodeSocketLogicNodeGroup, 'Tree')
         self.add_input(NodeSocketLogicNodeGroupNode, 'Node Name')
         self.add_input(NodeSocketLogicIntegerPositive, "Input")
         self.add_output(NodeSocketLogicParameter, "Value")
-        self.update_draw()
+        LogicNodeParameterType.init(self, context)
 
-    def update_draw(self):
-        if len(self.inputs) < 3:
+    def update_draw(self, context=None):
+        if not self.ready:
             return
         tree = self.inputs[0]
         nde = self.inputs[1]
@@ -49,8 +46,7 @@ class LogicNodeGetGroupSocket(LogicNodeParameterType):
             name = target.inputs[ipt.value].name
             ipt.name = name
 
-    def get_netlogic_class_name(self):
-        return "ULGetNodeSocket"
+    nl_class = "ULGetNodeSocket"
 
     def get_input_names(self):
         return ["tree_name", 'node_name', "input_slot"]

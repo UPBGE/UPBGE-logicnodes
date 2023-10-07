@@ -7,15 +7,13 @@ from ...sockets import NodeSocketLogicParameter
 class LogicNodeGetTimescale(LogicNodeParameterType):
     bl_idname = "NLParameterGetTimeScale"
     bl_label = "Get Timescale"
-    nl_category = "Scene"
     nl_module = 'parameters'
 
     def init(self, context):
-        LogicNodeParameterType.init(self, context)
         self.add_output(NodeSocketLogicParameter, 'Timescale')
+        LogicNodeParameterType.init(self, context)
 
-    def get_netlogic_class_name(self):
-        return "ULGetTimeScale"
+    nl_class = "ULGetTimeScale"
 
     def get_output_names(self):
         return ['OUT']

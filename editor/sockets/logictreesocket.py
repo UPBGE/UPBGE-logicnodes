@@ -1,6 +1,7 @@
 from .socket import NodeSocketLogic
 from .socket import PARAMETER_SOCKET_COLOR
 from .socket import socket_type
+from .socket import update_draw
 from ..filter_types import filter_logic_trees
 from bpy.types import NodeTree
 from bpy.types import NodeSocket
@@ -22,8 +23,7 @@ class NodeSocketLogicTree(NodeSocket, NodeSocketLogic):
         # update=update_tree_code
     )
 
-    def draw_color(self, context, node):
-        return PARAMETER_SOCKET_COLOR
+    color = PARAMETER_SOCKET_COLOR
 
     def draw(self, context, layout, node, text):
         icon = 'OUTLINER'

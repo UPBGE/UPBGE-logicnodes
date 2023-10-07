@@ -1,5 +1,6 @@
 from .socket import NodeSocketLogic
-from .socket import PARAM_OBJ_SOCKET_COLOR
+from .socket import PARAMETER_SOCKET_COLOR
+from .socket import SOCKET_TYPE_STRING
 from .socket import socket_type
 from bpy.types import Object
 from bpy.types import NodeSocket
@@ -14,11 +15,12 @@ class NodeSocketLogicObjectName(NodeSocket, NodeSocketLogic):
     value: PointerProperty(
         name='Object',
         type=Object
-        # update=update_tree_code
     )
+    deprecated = True
 
-    def draw_color(self, context, node):
-        return PARAM_OBJ_SOCKET_COLOR
+    color = PARAMETER_SOCKET_COLOR
+    nl_type = SOCKET_TYPE_STRING
+    valid_sockets = [SOCKET_TYPE_STRING]
 
     def draw(self, context, layout, node, text):
         if self.is_output:

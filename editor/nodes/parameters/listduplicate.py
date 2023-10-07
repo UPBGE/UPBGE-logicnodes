@@ -8,17 +8,18 @@ class LogicNodeListDuplicate(LogicNodeParameterType):
     bl_idname = "NLDuplicateList"
     bl_label = "Duplicate"
     bl_icon = 'CON_TRANSLIKE'
-    nl_category = "Data"
-    nl_subcat = 'List'
     nl_module = 'parameters'
 
+    search_tags = [
+        ['Duplicate List', {}]
+    ]
+
     def init(self, context):
-        LogicNodeParameterType.init(self, context)
         self.add_input(NodeSocketLogicList, "List")
         self.add_output(NodeSocketLogicList, "List")
+        LogicNodeParameterType.init(self, context)
 
-    def get_netlogic_class_name(self):
-        return "ULListDuplicate"
+    nl_class = "ULListDuplicate"
 
     def get_input_names(self):
         return ["items"]

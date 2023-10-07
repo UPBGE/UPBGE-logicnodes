@@ -19,14 +19,11 @@ from bpy.props import EnumProperty
 class LogicNodeCreateUILabel(LogicNodeActionType):
     bl_idname = "LogicNodeCreateUILabel"
     bl_label = "Create Label"
-    nl_category = "UI"
-    nl_subcat = 'Widgets'
     nl_module = 'actions'
     halign_type: EnumProperty(items=_ui_halign_types, name='X')
     valign_type: EnumProperty(items=_ui_valign_types, name='Y')
 
     def init(self, context):
-        LogicNodeActionType.init(self, context)
         self.add_input(NodeSocketLogicCondition, "Condition")
         self.add_input(NodeSocketLogicUI, "Parent")
         self.add_input(NodeSocketLogicBoolean, "Relative Position")
@@ -42,9 +39,9 @@ class LogicNodeCreateUILabel(LogicNodeActionType):
         self.add_input(NodeSocketLogicColorRGBA, "Shadow Color", {'value': [0, 0, 0, .5]})
         self.add_output(NodeSocketLogicCondition, "Done")
         self.add_output(NodeSocketLogicUI, "Label")
-        self.update_draw()
+        LogicNodeActionType.init(self, context)
 
-    def update_draw(self):
+    def update_draw(self, context=None):
         if len(self.inputs) < 13:
             return
         shadow = self.inputs[10].value
@@ -55,16 +52,15 @@ class LogicNodeCreateUILabel(LogicNodeActionType):
         layout.prop(self, 'halign_type', text='X')
         layout.prop(self, 'valign_type', text='Y')
 
-    def get_netlogic_class_name(self):
-        return "ULCreateUILabel"
+    nl_class = "ULCreateUILabel"
 
     def get_output_names(self):
         return ["OUT", 'WIDGET']
 
     def get_attributes(self):
         return [
-            ("halign_type", lambda: f'"{self.halign_type}"'),
-            ("valign_type", lambda: f'"{self.valign_type}"')
+            ("halign_type", f'"{self.halign_type}"'),
+            ("valign_type", f'"{self.valign_type}"')
         ]
 
     def get_input_names(self):

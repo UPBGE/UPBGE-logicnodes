@@ -1,9 +1,9 @@
 from .socket import NodeSocketLogic
 from .socket import PARAMETER_SOCKET_COLOR
 from .socket import socket_type
+from .socket import update_draw
 from ..enum_types import _enum_field_value_types
 from ...utilities import parse_value_type
-from ...utilities import update_draw
 from bpy.types import NodeSocket
 from bpy.props import FloatProperty
 from bpy.props import StringProperty
@@ -16,6 +16,7 @@ from bpy.props import IntProperty
 class NodeSocketLogicValueOptional(NodeSocket, NodeSocketLogic):
     bl_idname = "NLOptionalValueFieldSocket"
     bl_label = "Value"
+
     value: StringProperty(update=update_draw)
 
     def on_type_changed(self, context):
@@ -25,7 +26,6 @@ class NodeSocketLogicValueOptional(NodeSocket, NodeSocketLogic):
             self.value = str(self.string_editor)
         if self.value_type == "FILE_PATH":
             self.value = str(self.path_editor)
-        update_draw(self, context)
 
     value_type: EnumProperty(
         name='Type',
@@ -33,13 +33,10 @@ class NodeSocketLogicValueOptional(NodeSocket, NodeSocketLogic):
         update=on_type_changed
     )
 
-    use_value: BoolProperty(
-        update=update_draw
-    )
+    use_value: BoolProperty()
 
     def store_boolean_value(self, context):
         self.value = str(self.bool_editor)
-        update_draw(self, context)
 
     bool_editor: BoolProperty(update=store_boolean_value)
 
@@ -66,8 +63,7 @@ class NodeSocketLogicValueOptional(NodeSocket, NodeSocketLogic):
         subtype='FILE_PATH'
     )
 
-    def draw_color(self, context, node):
-        return PARAMETER_SOCKET_COLOR
+    color = PARAMETER_SOCKET_COLOR
 
     def get_unlinked_value(self):
         return parse_value_type(self.value_type, self.value) if self.use_value or self.is_linked else "utils.STATUS_INVALID"

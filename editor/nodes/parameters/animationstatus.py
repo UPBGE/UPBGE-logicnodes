@@ -12,19 +12,17 @@ from ....utilities import OUTCELL
 class LogicNodeAnimationStatus(LogicNodeParameterType):
     bl_idname = "NLParameterActionStatus"
     bl_label = "Animation Status"
-    nl_category = "Animation"
     nl_module = 'parameters'
 
     def init(self, context):
-        LogicNodeParameterType.init(self, context)
         self.add_input(NodeSocketLogicObject, "Object")
         self.add_input(NodeSocketLogicIntegerPositive, "Layer")
         self.add_output(NodeSocketLogicCondition, "Is Playing")
         self.add_output(NodeSocketLogicString, "Action Name")
         self.add_output(NodeSocketLogicFloat, "Action Frame")
+        LogicNodeParameterType.init(self, context)
 
-    def get_netlogic_class_name(self):
-        return "ULActionStatus"
+    nl_class = "ULActionStatus"
 
     def get_input_names(self):
         return ["game_object", "action_layer"]

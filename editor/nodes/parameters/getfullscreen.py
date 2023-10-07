@@ -7,15 +7,13 @@ from ...sockets import NodeSocketLogicParameter
 class LogicNodeGetFullscreen(LogicNodeParameterType):
     bl_idname = "NLGetFullscreen"
     bl_label = "Get Fullscreen"
-    nl_category = 'Render'
     nl_module = 'parameters'
 
     def init(self, context):
-        LogicNodeParameterType.init(self, context)
         self.add_output(NodeSocketLogicParameter, "Fullscreen")
+        LogicNodeParameterType.init(self, context)
 
-    def get_netlogic_class_name(self):
-        return "ULGetFullscreen"
+    nl_class = "ULGetFullscreen"
 
     def get_output_names(self):
         return ['OUT']

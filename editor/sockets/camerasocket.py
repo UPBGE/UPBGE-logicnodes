@@ -25,8 +25,7 @@ class NodeSocketLogicCamera(NodeSocket, NodeSocketLogic):
         description='Use current active camera'
     )
 
-    def draw_color(self, context, node):
-        return PARAM_OBJ_SOCKET_COLOR
+    color = PARAM_OBJ_SOCKET_COLOR
 
     def draw(self, context, layout, node, text):
         if self.is_output:

@@ -1,7 +1,7 @@
 from .socket import NodeSocketLogic
 from .socket import PARAMETER_SOCKET_COLOR
 from .socket import socket_type
-from ...utilities import update_draw
+from .socket import update_draw
 from bpy.types import NodeSocket
 from bpy.props import StringProperty
 
@@ -10,13 +10,13 @@ from bpy.props import StringProperty
 class NodeSocketLogicFilePath(NodeSocket, NodeSocketLogic):
     bl_idname = "NLFilePathSocket"
     bl_label = "String"
+
     value: StringProperty(
         subtype='FILE_PATH',
         update=update_draw
     )
 
-    def draw_color(self, context, node):
-        return PARAMETER_SOCKET_COLOR
+    color = PARAMETER_SOCKET_COLOR
 
     def draw(self, context, layout, node, text):
         if self.is_linked or self.is_output:

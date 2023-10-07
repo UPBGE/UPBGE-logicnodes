@@ -1,6 +1,7 @@
 from .socket import NodeSocketLogic
 from .socket import PARAMETER_SOCKET_COLOR
 from .socket import socket_type
+from .socket import update_draw
 from ...utilities import LOGIC_NODE_IDENTIFIER
 from bpy.types import NodeSocket
 from bpy.props import StringProperty
@@ -23,8 +24,7 @@ class NodeSocketLogicBrick(NodeSocket, NodeSocketLogic):
     )
     brick_type: StringProperty(default='controllers')
 
-    def draw_color(self, context, node):
-        return PARAMETER_SOCKET_COLOR
+    color = PARAMETER_SOCKET_COLOR
 
     def draw(self, context, layout, node, text):
         if self.is_output:

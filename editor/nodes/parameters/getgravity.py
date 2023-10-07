@@ -7,15 +7,13 @@ from ...sockets import NodeSocketLogicVectorXYZ
 class LogicNodeGetGravity(LogicNodeParameterType):
     bl_idname = "NLGetGravityNode"
     bl_label = "Get Gravity"
-    nl_category = "Scene"
     nl_module = 'parameters'
 
     def init(self, context):
-        LogicNodeParameterType.init(self, context)
         self.add_output(NodeSocketLogicVectorXYZ, "Gravity")
+        LogicNodeParameterType.init(self, context)
 
-    def get_netlogic_class_name(self):
-        return "ULGetGravity"
+    nl_class = "ULGetGravity"
 
     def get_output_names(self):
         return ["OUT"]

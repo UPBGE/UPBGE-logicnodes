@@ -21,8 +21,7 @@ class NodeSocketLogicCollection(NodeSocket, NodeSocketLogic):
         # update=update_tree_code
     )
 
-    def draw_color(self, context, node):
-        return PARAM_COLL_SOCKET_COLOR
+    color = PARAM_COLL_SOCKET_COLOR
 
     def draw(self, context, layout, node, text):
         if self.is_output:

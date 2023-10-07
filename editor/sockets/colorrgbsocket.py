@@ -1,7 +1,7 @@
 from .socket import NodeSocketLogic
 from .socket import PARAM_COLOR_SOCKET_COLOR
 from .socket import socket_type
-from ...utilities import update_draw
+from .socket import update_draw
 from bpy.types import NodeSocket
 from bpy.props import FloatVectorProperty
 from bpy.props import StringProperty
@@ -11,6 +11,7 @@ from bpy.props import StringProperty
 class NodeSocketLogicColorRGB(NodeSocket, NodeSocketLogic):
     bl_idname = "NLColorSocket"
     bl_label = "Float Value"
+
     value: FloatVectorProperty(
         subtype='COLOR_GAMMA',
         min=0.0,
@@ -20,7 +21,7 @@ class NodeSocketLogicColorRGB(NodeSocket, NodeSocketLogic):
         update=update_draw
     )
     type: StringProperty(default='RGBA')
-    nl_color = PARAM_COLOR_SOCKET_COLOR
+    color = PARAM_COLOR_SOCKET_COLOR
 
     def get_unlinked_value(self):
         return "mathutils.Vector(({}, {}, {}))".format(

@@ -7,22 +7,19 @@ from ...sockets import NodeSocketLogicParameter
 
 
 @node_type
-class LogicNodeGetDictKey(LogicNodeParameterType):
+class LogicNodeDictGetKey(LogicNodeParameterType):
     bl_idname = "NLGetDictKeyNode"
-    bl_label = 'Get Key'
-    nl_category = "Data"
-    nl_subcat = 'Dictionary'
+    bl_label = 'Get Dictionary Key'
     nl_module = 'parameters'
 
     def init(self, context):
-        LogicNodeParameterType.init(self, context)
         self.add_input(NodeSocketLogicDictionary, "Dictionary")
         self.add_input(NodeSocketLogicString, "Key", {'value': 'key'})
         self.add_input(NodeSocketLogicValueOptional, "Default Value")
         self.add_output(NodeSocketLogicParameter, "Property Value")
+        LogicNodeParameterType.init(self, context)
 
-    def get_netlogic_class_name(self):
-        return "ULDictValue"
+    nl_class = "ULDictValue"
 
     def get_input_names(self):
         return ["dict", "key", 'default_value']
