@@ -13,7 +13,6 @@ from bpy.props import EnumProperty
 class NodeSocketLogicMatrix(NodeSocket, NodeSocketLogic):
     bl_idname = "NodeSocketLogicMatrix"
     bl_label = "Matrix"
-    type: StringProperty(default='VECTOR')
 
     dimensions: EnumProperty(items=_enum_matrix_dimensions)
 

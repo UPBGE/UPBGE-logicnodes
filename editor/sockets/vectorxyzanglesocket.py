@@ -12,7 +12,6 @@ class NodeSocketLogicVectorXYZAngle(NodeSocket, NodeSocketLogic):
     bl_idname = "NLVec3RotationSocket"
     bl_label = "Float Value"
 
-    type: StringProperty(default='VECTOR')
     value_x: FloatProperty(
         default=0,
         unit='ROTATION',

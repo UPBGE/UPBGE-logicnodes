@@ -10,7 +10,6 @@ from bpy.types import NodeSocket
 class NodeSocketLogicUI(NodeSocket, NodeSocketLogic):
     bl_idname = "NLUISocket"
     bl_label = "Parameter"
-    type: StringProperty(default='GEOMETRY')
     color = PARAM_MESH_SOCKET_COLOR
 
     def draw(self, context, layout, node, text):

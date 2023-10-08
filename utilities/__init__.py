@@ -525,11 +525,6 @@ def invokeTranslation():
     bpy.ops.node.translate_attach("INVOKE_DEFAULT")
 
 
-def iterLogicNodeClasses():
-    from bge_netlogic.basicnodes import NLNode
-    yield from iterSubclassesWithAttribute(NLNode, "bl_idname")
-
-
 def iterSubclassesWithAttribute(cls, attribute):
     for subcls in cls.__subclasses__():
         if hasattr(subcls, attribute):

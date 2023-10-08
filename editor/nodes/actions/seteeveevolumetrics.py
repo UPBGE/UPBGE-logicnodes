@@ -1,0 +1,27 @@
+from ..node import node_type
+from ..node import LogicNodeActionType
+from ...sockets import NodeSocketLogicCondition
+from ...sockets import NodeSocketLogicBoolean
+
+
+@node_type
+class LogicNodeSetEeveeVolumetrics(LogicNodeActionType):
+    bl_idname = "NLSetEeveeVolumetrics"
+    bl_label = "Set Volumetric Light"
+    nl_module = 'actions'
+    nl_class = "ULSetEeveeVolumetrics"
+
+    def init(self, context):
+        self.add_input(NodeSocketLogicCondition, 'Condition')
+        self.add_input(NodeSocketLogicBoolean, 'Volumetrics')
+        self.add_output(NodeSocketLogicCondition, 'Done')
+        LogicNodeActionType.init(self, context)
+
+    def get_output_names(self):
+        return ["OUT"]
+
+    def get_input_names(self):
+        return [
+            "condition",
+            "value"
+        ]

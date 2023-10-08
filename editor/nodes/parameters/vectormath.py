@@ -24,7 +24,7 @@ class LogicNodeVectorMath(LogicNodeParameterType):
         v3 = self.inputs[4]
         ior = self.inputs[5]
 
-        v2.enabled = vtype in ['dot', 'cross', 'project', 'distance', 'faceforward', 'divide', 'multiply', 'subtract', 'reflect', 'add', 'lerp', 'slerp', 'multadd', 'angle', 'angle_signed']
+        v2.enabled = vtype in ['dot', 'cross', 'project', 'distance', 'faceforward', 'divide', 'multiply', 'subtract', 'reflect', 'add', 'lerp', 'slerp', 'multadd', 'angle', 'angle_signed', 'matmul']
         fac.enabled = vtype in ['lerp', 'slerp']
         sca.enabled = vtype in ['scale']
         v3.enabled = vtype in ['faceforward', 'multadd', 'slerp', 'angle_signed']

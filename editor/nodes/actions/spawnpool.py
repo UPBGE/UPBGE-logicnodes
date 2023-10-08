@@ -6,7 +6,7 @@ from ...sockets import NodeSocketLogicObjectName
 from ...sockets import NodeSocketLogicIntegerPositive
 from ...sockets import NodeSocketLogicFloatPositive
 from ...sockets import NodeSocketLogicBoolean
-from ...sockets import NodeSocketLogicCollisionLayers
+from ...sockets import NodeSocketLogicBitMask
 from ...sockets import NodeSocketLogicVectorXYZ
 from ...enum_types import _enum_spawn_types
 from bpy.props import BoolProperty
@@ -57,7 +57,7 @@ class LogicNodeSpawnPool(LogicNodeActionType):
         self.add_input(NodeSocketLogicIntegerPositive, "Amount", {'value': 10})
         self.add_input(NodeSocketLogicIntegerPositive, "Life", {'value': 3})
         self.add_input(NodeSocketLogicFloatPositive, "Speed", {'value': 75.0})
-        self.add_input(NodeSocketLogicCollisionLayers, "Bitmask")
+        self.add_input(NodeSocketLogicBitMask, "Bitmask")
         self.add_input(NodeSocketLogicBoolean, "Visualize")
         self.add_output(NodeSocketLogicCondition, "Pool Created")
         self.add_output(NodeSocketLogicCondition, "Spawned")

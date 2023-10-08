@@ -18,7 +18,6 @@ class NodeSocketLogicIntegerPositiveCent(NodeSocket, NodeSocketLogic):
         default=0,
         update=update_draw
     )
-    type: StringProperty(default='INT')
     color = PARAM_INT_SOCKET_COLOR
 
     def draw(self, context, layout, node, text):

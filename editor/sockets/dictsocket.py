@@ -10,7 +10,6 @@ from bpy.props import StringProperty
 class NodeSocketLogicDictionary(NodeSocket, NodeSocketLogic):
     bl_idname = "NLDictSocket"
     bl_label = "Parameter"
-    type: StringProperty(default='INT')
 
     color = PARAM_INT_SOCKET_COLOR
 

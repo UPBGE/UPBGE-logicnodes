@@ -2,9 +2,9 @@ from ...utilities import warn
 from ...utilities import Color
 from ...utilities import WARNING_MESSAGES
 from bpy.props import FloatVectorProperty
+from bpy.props import StringProperty
 from bpy.types import NodeLink
 from bpy.types import NodeSocket
-from bpy.types import NodeReroute
 
 
 CONDITION_SOCKET_COLOR = Color.RGBA(0.8, 0.2, 0.2, 1.0)
@@ -43,9 +43,34 @@ SOCKET_TYPE_FLOAT_POSITIVE = 6
 SOCKET_TYPE_STRING = 7
 SOCKET_TYPE_BOOL = 8
 SOCKET_TYPE_VECTOR = 9
-SOCKET_TYPE_COLOR = 10
-SOCKET_TYPE_OBJECT = 11
-SOCKET_TYPE_DATA = 12
+SOCKET_TYPE_MATRIX = 10
+SOCKET_TYPE_COLOR = 11
+SOCKET_TYPE_OBJECT = 12
+SOCKET_TYPE_DATA = 13
+SOCKET_TYPE_DATABLOCK = 14
+SOCKET_TYPE_UI = 15
+SOCKET_TYPE_COLLECTION = 16
+
+
+BL_SOCKET_TYPES = [
+    'VALUE',  # 0
+    'MATERIAL',  # 1
+    'VALUE',  # 2
+    'INT',  # 3
+    'INT',  # 4
+    'VALUE',  # 5
+    'VALUE',  # 6
+    'STRING',  # 7
+    'BOOLEAN',  # 8
+    'VECTOR',  # 9
+    'VECTOR',  # 10
+    'RGBA',  # 11
+    'OBJECT',  # 12
+    'INT',  # 13
+    'TEXTURE',  # 14
+    'GEOMETRY',  # 15
+    'COLLECTION'  # 16
+]
 
 
 _sockets = []
@@ -56,16 +81,33 @@ def socket_type(obj):
     return obj
 
 def update_draw(self, context=None):
-    print('Hello')
     if hasattr(context, 'node'):
         context.node.update_draw(context)
 
 class NodeSocketLogic:
+    """Possible Types:
+    - CUSTOM
+    - VALUE
+    - INT
+    - BOOLEAN
+    - VECTOR
+    - ROTATION
+    - STRING
+    - RGBA
+    - SHADER
+    - OBJECT
+    - IMAGE
+    - GEOMETRY
+    - COLLECTION
+    - TEXTURE
+    - MATERIAL
+    """
     bl_idname = ''
     valid_sockets: list = []
     deprecated = False
     color = None
     nl_type = SOCKET_TYPE_GENERIC
+    type: StringProperty(default='VALUE')
     nl_color: FloatVectorProperty(
         subtype='COLOR_GAMMA',
         min=0.0,
@@ -87,6 +129,7 @@ class NodeSocketLogic:
     def __init__(self):
         if self.color:
             self.nl_color = self.color
+        self.type = BL_SOCKET_TYPES[self.nl_type]
 
     def check(self, tree):
         if self.deprecated:

@@ -15,7 +15,6 @@ class NodeSocketLogicVectorXY(NodeSocket, NodeSocketLogic):
     value_x: FloatProperty(default=0, update=update_draw)
     value_y: FloatProperty(default=0, update=update_draw)
     title: StringProperty(default='')
-    type: StringProperty(default='VECTOR')
 
     color = PARAM_VECTOR_SOCKET_COLOR
 

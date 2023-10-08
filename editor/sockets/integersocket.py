@@ -16,7 +16,6 @@ class NodeSocketLogicInteger(NodeSocket, NodeSocketLogic):
     color = PARAM_INT_SOCKET_COLOR
 
     value: IntProperty(update=update_draw)
-    type: StringProperty(default='INT')
 
     def get_unlinked_value(self):
         return '{}'.format(self.value)

@@ -126,20 +126,20 @@
             "x": 880,
             "y": -80,
             "label": "Calc Speed",
-            "node_type": "NLArithmeticOpParameterNode",
-            "links": [[7, 0, 0], [8, 0, 1]],
+            "node_type": "NLVectorMath",
+            "links": [[7, 1, 0], [8, 0, 3]],
             "values": [
                 {
                     "index": "operator",
-                    "value": "MUL"
+                    "value": "scale"
                 }
             ]
         }, {
             "x": 1100,
             "y": -60,
             "label": "Move Object",
-            "node_type": "NLActionApplyLocation",
-            "links": [[9, 0, 0], [10, 0, 2]],
+            "node_type": "LogicNodeApplyTransform",
+            "links": [[9, 0, 0], [10, 1, 2]],
             "values": [
                 {
                     "index": "local",

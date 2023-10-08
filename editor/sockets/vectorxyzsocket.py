@@ -1,6 +1,7 @@
 from .socket import NodeSocketLogic
 from .socket import PARAM_VECTOR_SOCKET_COLOR
 from .socket import SOCKET_TYPE_VECTOR
+from .socket import SOCKET_TYPE_MATRIX
 from .socket import SOCKET_TYPE_COLOR
 from .socket import socket_type
 from .socket import update_draw
@@ -14,14 +15,13 @@ class NodeSocketLogicVectorXYZ(NodeSocket, NodeSocketLogic):
     bl_idname = "NLVec3FieldSocket"
     bl_label = "Float Value"
 
-    type: StringProperty(default='VECTOR')
     value_x: FloatProperty(default=0, update=update_draw)
     value_y: FloatProperty(default=0, update=update_draw)
     value_z: FloatProperty(default=0, update=update_draw)
 
     color = PARAM_VECTOR_SOCKET_COLOR
     nl_type = SOCKET_TYPE_VECTOR
-    valid_sockets = [SOCKET_TYPE_VECTOR, SOCKET_TYPE_COLOR]
+    valid_sockets = [SOCKET_TYPE_VECTOR, SOCKET_TYPE_COLOR, SOCKET_TYPE_MATRIX]
 
     def get_unlinked_value(self):
         return "mathutils.Vector(({}, {}, {}))".format(

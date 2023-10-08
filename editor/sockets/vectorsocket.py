@@ -10,7 +10,6 @@ from bpy.props import StringProperty
 class NodeSocketLogicVector(NodeSocket, NodeSocketLogic):
     bl_idname = "NLVectorSocket"
     bl_label = "Parameter"
-    type: StringProperty(default='VECTOR')
 
     color = PARAM_VECTOR_SOCKET_COLOR
 

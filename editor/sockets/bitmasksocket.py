@@ -6,7 +6,7 @@ from bpy.types import NodeSocket
 
 
 @socket_type
-class NodeSocketLogicCollisionLayers(NodeSocket, NodeSocketLogic):
+class NodeSocketLogicBitMask(NodeSocket, NodeSocketLogic):
     bl_idname = "NLCollisionMaskSocket"
     bl_label = "Parameter"
     slot_0: BoolProperty(default=True)

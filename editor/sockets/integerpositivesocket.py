@@ -13,7 +13,6 @@ class NodeSocketLogicIntegerPositive(NodeSocket, NodeSocketLogic):
     bl_label = "Integer"
 
     value: IntProperty(min=0, default=0, update=update_draw)
-    type: StringProperty(default='INT')
     color = PARAM_INT_SOCKET_COLOR
 
     def draw(self, context, layout, node, text):

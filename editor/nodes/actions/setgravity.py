@@ -1,0 +1,26 @@
+from ..node import node_type
+from ..node import LogicNodeActionType
+from ...sockets import NodeSocketLogicCondition
+from ...sockets import NodeSocketLogicVectorXYZVelocity
+
+
+@node_type
+class LogicNodeSetGravity(LogicNodeActionType):
+    bl_idname = "NLActionSetGravity"
+    bl_label = "Set Gravity"
+    nl_category = "Scene"
+    nl_module = 'actions'
+
+    def init(self, context):
+        self.add_input(NodeSocketLogicCondition, "Condition")
+        self.add_input(NodeSocketLogicVectorXYZVelocity, "Gravity", {'value_z': -9.8})
+        self.add_output(NodeSocketLogicCondition, 'Done')
+        LogicNodeActionType.init(self, context)
+
+    def get_output_names(self):
+        return ["OUT"]
+
+    nl_class = "ULSetGravity"
+
+    def get_input_names(self):
+        return ["condition", "gravity"]

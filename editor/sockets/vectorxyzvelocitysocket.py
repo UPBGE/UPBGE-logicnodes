@@ -12,7 +12,6 @@ class NodeSocketLogicVectorXYZVelocity(NodeSocket, NodeSocketLogic):
     bl_idname = "NLVelocitySocket"
     bl_label = "Float Value"
 
-    type: StringProperty(default='VECTOR')
     value_x: FloatProperty(
         default=0,
         unit='VELOCITY',

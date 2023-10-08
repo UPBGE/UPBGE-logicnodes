@@ -542,7 +542,7 @@ class LogicNodesAddonPreferences(bpy.types.AddonPreferences):
         contrib_row.label(text='Contributors: VUAIEO, Simon, L_P, p45510n')
 
 
-basicnodes = _abs_import("basicnodes", _abs_path("basicnodes", "__init__.py"))
+# basicnodes = _abs_import("basicnodes", _abs_path("basicnodes", "__init__.py"))
 _registered_classes = [
     LogicNodeTree,
     ops.NLInstallUplogicModuleOperator,
@@ -594,7 +594,7 @@ _registered_classes = [
 _registered_classes.extend(_sockets)
 _registered_classes.extend(_nodes)
 
-_registered_classes.extend(basicnodes._nodes)
+# _registered_classes.extend(basicnodes._nodes)
 
 
 _registered_classes.extend(node_menu._items)

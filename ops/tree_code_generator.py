@@ -3,7 +3,6 @@ import bpy
 import shutil
 import bge_netlogic
 import bge_netlogic.utilities as utils
-from bge_netlogic.basicnodes import NLAbstractNode
 from bge_netlogic.ops.file_text_buffer import FileTextBuffer
 from bge_netlogic.ops.abstract_text_buffer import AbstractTextBuffer
 from bge_netlogic.ops.uid_map import UIDMap

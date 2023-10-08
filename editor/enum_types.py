@@ -53,6 +53,7 @@ _enum_vector_math_options = [
     ("multiply", "Multiply", "Entry-wise multiply"),
     ("subtract", "Subtract", "A - B"),
     ("add", "Add", "A + B"),
+    ("matmul", "Matrix Multiply", "Transform A by B"),
     ("", "Operation", ""),
     None,
     ("normalize", "Normalize", "Rescale all values to 0 - 1"),
@@ -399,8 +400,7 @@ _enum_math_operations = [
     ("MUL", "Multiply", "Multiply A by B"),
     ("POW", "Power", "A to the power of B"),
     ("MOD", "Modulo", "Modulo of A by B"),
-    ("FDIV", "Floor Divide", "Floor Divide A by B"),
-    ("MATMUL", "Matrix Multiply", "Transform A by B")
+    ("FDIV", "Floor Divide", "Floor Divide A by B")
 ]
 
 
@@ -653,14 +653,29 @@ _logic_gates = [
 
 
 _logic_gates_list = [
-    ("0", "And", "True if A and B are True"),
-    ("1", "Or", "True if A or B or both are True")
+    ("0", "And", ""),
+    ("1", "Or", "")
 ]
 
 
 _random_value_types = [
-    ("0", "Float", "True if A or B or both are True"),
-    ("1", "Integer", "True if A and B are True"),
-    ("2", "Vector", "True if A or B or both are True"),
-    ("3", "Boolean", "True if A or B or both are True")
+    ("0", "Float", ""),
+    ("1", "Integer", ""),
+    ("2", "Vector", ""),
+    ("3", "Boolean", "")
+]
+
+
+_transform_types = [
+    ("0", "Movement", ""),
+    ("1", "Rotation", ""),
+    ("2", "Force", ""),
+    ("3", "Torque", ""),
+    ("4", "Impulse", "")
+]
+
+
+_collision_bitmask_types = [
+    ("0", "Group", ""),
+    ("1", "Mask", "")
 ]

@@ -20,7 +20,6 @@ class NodeSocketLogicColorRGBA(NodeSocket, NodeSocketLogic):
         default=(1.0, 1.0, 1.0, 1.0),
         update=update_draw
     )
-    type: StringProperty(default='RGBA')
     color = PARAM_COLOR_SOCKET_COLOR
 
     def get_unlinked_value(self):

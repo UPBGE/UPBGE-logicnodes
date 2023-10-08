@@ -5,7 +5,7 @@ from .socket import socket_type
 from .socket import update_draw
 from bpy.types import NodeSocket
 from bpy.props import BoolProperty
-from bpy.props import BoolProperty
+from bpy.props import StringProperty
 import bpy
 
 

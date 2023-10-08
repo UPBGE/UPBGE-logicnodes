@@ -20,7 +20,6 @@ class NodeSocketLogicCondition(NodeSocket, NodeSocketLogic):
         default="None"
     )
 
-    type: StringProperty(default='MATERIAL')
     color = CONDITION_SOCKET_COLOR
 
     def shape_setup(self):

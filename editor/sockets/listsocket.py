@@ -10,7 +10,6 @@ from bpy.props import StringProperty
 class NodeSocketLogicList(NodeSocket, NodeSocketLogic):
     bl_idname = "NLListSocket"
     bl_label = "Parameter"
-    type: StringProperty(default='RGBA')
     color = PARAM_INT_SOCKET_COLOR
 
     def draw(self, context, layout, node, text):

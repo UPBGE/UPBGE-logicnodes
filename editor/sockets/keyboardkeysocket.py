@@ -15,7 +15,6 @@ class NodeSocketLogicKeyboardKey(NodeSocket, NodeSocketLogic):
     bl_label = "Key"
 
     value: StringProperty(update=update_draw)
-    type: StringProperty(default='INT')
     color = PARAM_INT_SOCKET_COLOR
 
     valid_sockets = [SOCKET_TYPE_INT]

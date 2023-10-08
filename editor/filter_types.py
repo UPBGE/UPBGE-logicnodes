@@ -1,5 +1,5 @@
 import bpy
-import bge_netlogic
+from ..ui import LogicNodeTree
 
 
 def filter_materials(self, item):
@@ -69,7 +69,7 @@ def filter_curves(self, item):
 
 def filter_logic_trees(self, item):
     if (
-        isinstance(item, bge_netlogic.ui.LogicNodeTree)
+        isinstance(item, LogicNodeTree)
     ):
         return True
     return False
