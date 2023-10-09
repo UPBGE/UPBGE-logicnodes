@@ -1,5 +1,6 @@
 from ..editor.nodes.node import LogicNode
 from bpy.props import EnumProperty
+from .operator import operator
 import itertools
 import bpy
 
@@ -47,7 +48,8 @@ class NodeItem:
 _node_items = {}
 
 
-class LOGICNODES_OT_node_search(bpy.types.Operator):
+@operator
+class LOGIC_NODES_OT_node_search(bpy.types.Operator):
     bl_idname = "bge_netlogic.node_search"
     bl_label = "Node Search"
     bl_options = {"REGISTER"}

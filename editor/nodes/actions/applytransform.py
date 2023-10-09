@@ -30,10 +30,9 @@ class LogicNodeApplyTransform(LogicNodeActionType):
         self.nl_label = self.search_tags[int(self.mode)][0]
         if self.mode == '4':
             self.inputs[3].enabled = True
-            self.inputs[2].label = 'Point'
+            # XXX: Set vec1 socket label?
         else:
             self.inputs[3].enabled = False
-            self.inputs[2].label = 'Vector'
 
     local: BoolProperty(default=True, name='Local')
     mode: EnumProperty(items=_transform_types, name='Mode', update=update_draw)

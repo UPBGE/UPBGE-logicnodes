@@ -1,4 +1,4 @@
-from bge_netlogic.ops.abstract_text_buffer import AbstractTextBuffer
+from .abstract_text_buffer import AbstractTextBuffer
 
 class BLTextBuffer(AbstractTextBuffer):
     def __init__(self, blender_text_data):

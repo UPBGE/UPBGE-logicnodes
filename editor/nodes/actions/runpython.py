@@ -41,7 +41,7 @@ class LogicNodeRunPython(LogicNodeActionType):
     def draw_buttons(self, context, layout):
         layout.prop(self, 'mode', text='')
         if int(self.mode) > 0:
-            layout.operator('logic_nodes.add_list_item_socket', text='Add Argument') 
+            layout.operator('logic_nodes.add_socket', text='Add Argument') 
 
     def setup(
         self,

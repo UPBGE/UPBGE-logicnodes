@@ -29,4 +29,4 @@ class NodeSocketLogicKeyboardKey(NodeSocket, NodeSocketLogic):
             label = self.value
             if not label:
                 label = "Press & Choose"
-            layout.box().operator("logic_nodes.wait_for_key", text=label, emboss=False, icon='MOUSE_LMB')
+            layout.box().operator("logic_nodes.key_selector", text=label, emboss=False, icon='MOUSE_LMB')

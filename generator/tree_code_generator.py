@@ -2,10 +2,10 @@ import os
 import bpy
 import shutil
 import bge_netlogic
-import bge_netlogic.utilities as utils
-from bge_netlogic.ops.file_text_buffer import FileTextBuffer
-from bge_netlogic.ops.abstract_text_buffer import AbstractTextBuffer
-from bge_netlogic.ops.uid_map import UIDMap
+from .. import utilities as utils
+from .file_text_buffer import FileTextBuffer
+from .abstract_text_buffer import AbstractTextBuffer
+from .uid_map import UIDMap
 # from ..editor.sockets.socket import NLSocket
 from time import time
 
@@ -134,7 +134,7 @@ class TreeCodeGenerator(object):
         return FileTextBuffer(os.path.join(path, name))
 
     def write_code_for_tree(self, tree):
-        if getattr(bpy.context.scene.logic_node_settings, 'use_node_debug', False):
+        if getattr(bpy.context.scene.logic_nodes_settings, 'use_node_debug', False):
             utils.notify("Generating code for tree {}".format(tree.name))
         tree_name = utils.make_valid_name(tree.name)
         line_writer = BLTextWrapper(f'nl_{tree_name.lower()}.py')

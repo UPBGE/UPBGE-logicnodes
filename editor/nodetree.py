@@ -30,9 +30,9 @@ class LogicNodeTree(NodeTree):
             self.name = self.old_name
             return
         if update:
-            bpy.ops.bge_netlogic.generate_logicnetwork_all()
+            bpy.ops.logic_nodes.generate_code()
         for obj in bpy.context.scene.objects:
-            for ref in obj.bgelogic_treelist:
+            for ref in obj.logic_trees:
                 if ref.tree is self:
                     ref.tree_name = self.name
                     new_comp_name = f'nl_{clsname.lower()}.{clsname}'

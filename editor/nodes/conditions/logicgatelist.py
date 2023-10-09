@@ -35,7 +35,7 @@ class LogicNodeLogicGateList(LogicNodeConditionType):
         print(list(self.inputs[-1].nl_color))
 
     def draw_buttons(self, context, layout) -> None:
-        layout.operator('logic_nodes.add_list_item_socket')
+        layout.operator('logic_nodes.add_socket')
         layout.prop(self, 'gate', text='')
 
     def get_output_names(self):

@@ -1,7 +1,6 @@
 import bpy
 import bge_netlogic
-import bge_netlogic.utilities as utils
-# from utilities import make_valid_name
+from .. import utilities as utils
 from bpy.types import NodeReroute
 from time import time
 
@@ -41,11 +40,6 @@ class BGEPropFilter(bpy.types.PropertyGroup):
         default=True,
         description='Compress Logic Tree Properties to an immutable form (recommended)'
     )
-
-
-class BGEGroupName(bpy.types.PropertyGroup):
-    name: bpy.props.StringProperty(default='NewTree')
-    enabled: bpy.props.BoolProperty()
 
 
 def check_double_prop(self, context):
@@ -149,12 +143,12 @@ class BGE_PT_GlobalValuePanel(bpy.types.Panel):
             )
             opts = row.column(align=True)
             opts.operator(
-                bge_netlogic.ops.NLAddGlobalCatOperator.bl_idname,
+                'logic_nodes.add_global_category',
                 text='',
                 icon='PLUS'
             )
             opts.operator(
-                bge_netlogic.ops.NLRemoveGlobalCatOperator.bl_idname,
+                'logic_nodes.remove_global_category',
                 text='',
                 icon='REMOVE'
             )
@@ -173,12 +167,12 @@ class BGE_PT_GlobalValuePanel(bpy.types.Panel):
             opts = row.column()
             adders = opts.column(align=True)
             adders.operator(
-                bge_netlogic.ops.NLAddGlobalOperator.bl_idname,
+                'logic_nodes.add_global_property',
                 text='',
                 icon='PLUS'
             )
             adders.operator(
-                bge_netlogic.ops.NLRemoveGlobalOperator.bl_idname,
+                'logic_nodes.remove_global_property',
                 text='',
                 icon='REMOVE'
             )
@@ -188,7 +182,7 @@ class BGE_PT_GlobalValuePanel(bpy.types.Panel):
                 row2.prop(value, 'value_type', text='Type')
         else:
             layout.operator(
-                bge_netlogic.ops.NLAddGlobalCatOperator.bl_idname,
+                'logic_nodes.add_global_category',
                 text='Add Global Category',
                 icon='PLUS'
             )
@@ -216,7 +210,7 @@ class BGE_PT_GamePropertyPanel(bpy.types.Panel):
         if show_movers:
             self.add_movers(index, opts_row)
         opts_row.operator(
-                bge_netlogic.ops.NLRemoveTreeByNameOperator.bl_idname,
+                'logic_nodes.unapply_logic_tree',
                 text="",
                 icon="X"
         ).tree_name = name
@@ -224,13 +218,13 @@ class BGE_PT_GamePropertyPanel(bpy.types.Panel):
     def add_movers(self, index, layout):
         movers = layout.row(align=True)
         move_up = movers.operator(
-            bge_netlogic.ops.NLMovePropertyOperator.bl_idname,
+            'logic_nodes.move_game_property',
             text='',
             icon='TRIA_UP'
         )
         move_up.direction = 'UP'
         move_down = movers.operator(
-            bge_netlogic.ops.NLMovePropertyOperator.bl_idname,
+            'logic_nodes.move_game_property',
             text='',
             icon='TRIA_DOWN'
         )
@@ -242,7 +236,7 @@ class BGE_PT_GamePropertyPanel(bpy.types.Panel):
         column = layout.column()
         obj = bpy.context.object
         column.operator(
-            bge_netlogic.ops.NLAddPropertyOperator.bl_idname,
+            'logic_nodes.add_game_property',
             text="Add Game Property",
             icon='PLUS'
         )
@@ -325,7 +319,7 @@ class BGE_PT_GamePropertyPanel(bpy.types.Panel):
             if show_movers:
                 self.add_movers(index, row_title)
             remove = row_title.operator(
-                bge_netlogic.ops.NLRemovePropertyOperator.bl_idname,
+                'logic_nodes.remove_game_property',
                 text='',
                 icon='X'
             )
@@ -417,7 +411,7 @@ class BGE_PT_LogicNodeSettingsObject(bpy.types.Panel):
             block = reverb_settings.row(align=True)
             block.prop(context.active_object, 'empty_display_size', text='Radius')
             block.operator(
-                bge_netlogic.ops.NLResetEmptySize.bl_idname,
+                'logic_nodes.reset_empty_scale',
                 text="",
                 icon='FULLSCREEN_EXIT'
             )
@@ -448,13 +442,13 @@ class BGE_PT_LogicNodeSettingsScene(bpy.types.Panel):
 
         use_mainloop = context.scene.get('__main__', '') != ''
         layout.operator(
-            bge_netlogic.ops.NLMakeCustomMainLoop.bl_idname,
+            'logic_nodes.custom_mainloop',
             text='Remove Custom Mainloop' if use_mainloop else 'Use Custom Mainloop',
             icon='CANCEL' if use_mainloop else 'PLAY'
         )
         layout.separator()
         layout.operator(
-            bge_netlogic.ops.NLStartAudioSystem.bl_idname,
+            'logic_nodes.audio_system',
             icon='PLAY'
         )
 
@@ -473,11 +467,10 @@ class BGE_PT_LogicTreeGroups(bpy.types.Panel):
 
     def draw(self, context):
         layout = self.layout
-        layout.prop(bpy.context.scene.nl_group_name, 'name', text='Name')
         pack_new = layout.column()
         pack_new.scale_y = 1.4
         pack_new.operator(
-            bge_netlogic.ops.NLMakeGroupOperator.bl_idname,
+            'logic_nodes.pack_new_tree',
             icon='IMPORT'
         )
 
@@ -487,10 +480,11 @@ class BGE_PT_LogicTreeGroups(bpy.types.Panel):
         title.label(text='Node Templates:')
         template_col = prefabs.column()
         template_col.scale_y = 1.4
-        template_col.operator(
-            bge_netlogic.ops.NLAdd4KeyTemplateOperator.bl_idname,
+        op = template_col.operator(
+            'logic_nodes.add_template',
             icon='LAYER_ACTIVE'
         )
+        op.nl_template_name = '4keymovement'
 
 
 class BGE_PT_LogicTreeOptions(bpy.types.Panel):
@@ -503,16 +497,6 @@ class BGE_PT_LogicTreeOptions(bpy.types.Panel):
     @classmethod
     def poll(cls, context):
         enabled = (context.space_data.tree_type == LogicNodeTree.bl_idname)
-        # if getattr(context.space_data, 'edit_tree', None) is not None:
-        #     bge_netlogic._consume_update_tree_code_queue()
-        #     bpy.ops.bge_netlogic.generate_logicnetwork_all()
-            # if not bge_netlogic._tree_code_writer_started:
-            #     try:
-            #         bge_netlogic._tree_code_writer_started = True
-            #         bpy.ops.bgenetlogic.treecodewriter_operator()
-            #         utils.success('Code Generator started.')
-            #     except Exception:
-                    # utils.warn('Could not start Code Generator; Context Invalid.')
         return enabled
 
     def draw(self, context):
@@ -521,30 +505,20 @@ class BGE_PT_LogicTreeOptions(bpy.types.Panel):
         apply_col = apply.column()
         apply_col.scale_y = 1.4
         apply_col.operator(
-            bge_netlogic.ops.NLApplyLogicOperator.bl_idname,
+            'logic_nodes.apply_logic_tree',
             text="Apply To Selected",
             icon='PREFERENCES'
         ).owner = "BGE_PT_LogicPanel"
-        # tree = context.space_data.edit_tree
-        # if tree:
-        #     r = apply.row()
-        #     r.label(text='Apply As:')
-        #     r.prop(tree, 'mode', toggle=True, text='Component' if tree.mode else 'Bricks')
         code = layout.box()
-        # code.operator(
-        #     bge_netlogic.ops.NLGenerateLogicNetworkOperator.bl_idname,
-        #     text=context.scene.logic_node_settings.tree_compiled,
-        #     icon=utils.STATUS_ICONS.get(context.scene.logic_node_settings.tree_compiled)
-        # )
         code.operator(
-            bge_netlogic.ops.NLGenerateLogicNetworkOperatorAll.bl_idname,
+            'logic_nodes.generate_code',
             text="Compile",
             icon='FILE_SCRIPT'
         )
         cmtree = context.scene.custom_mainloop_tree
         is_scene_tree = cmtree is context.space_data.edit_tree
         code.operator(
-            bge_netlogic.ops.NLMakeCustomLoopTree.bl_idname,
+            'logic_nodes.custom_mainloop_tree',
             text='Unset Scene Logic' if is_scene_tree else 'Set as Scene Logic',
             icon='REMOVE' if is_scene_tree else 'PLAY'
         )
@@ -574,14 +548,14 @@ class BGE_PT_LogicTreeInfoPanel(bpy.types.Panel):
         row = row.row(align=True)
         row.alignment = 'RIGHT'
         op = row.operator(
-            bge_netlogic.ops.NLSelectAppliedObject.bl_idname,
+            'logic_nodes.get_owner',
             text="",
             icon="RESTRICT_SELECT_OFF"
         )
         op.applied_object = obj.name
 
         op = row.operator(
-            bge_netlogic.ops.NLRemoveTreeByNameOperator.bl_idname,
+            'logic_nodes.unapply_logic_tree',
             text="",
             icon="X"
         )
@@ -639,7 +613,7 @@ class BGE_PT_ObjectTreeInfoPanel(bpy.types.Panel):
             box_over = layout.box()
             title = box_over.row()
         for ob in selected_objects:
-            for e in ob.bgelogic_treelist:
+            for e in ob.logic_trees:
                 data = active_tree_items.get(e.tree_name)
                 if data is None:
                     data = []
@@ -662,47 +636,18 @@ class BGE_PT_ObjectTreeInfoPanel(bpy.types.Panel):
                 status_icon = "CHECKBOX_HLT"
             col = box.column()
             row = col.row(align=False)
-            row.label(text='Node Tree: {}'.format(name))
+            row.label(text=name)
             row.operator(
-                bge_netlogic.ops.NLRemoveTreeByNameOperator.bl_idname,
+                'logic_nodes.unapply_logic_tree',
                 text="",
                 icon="X"
             ).tree_name = name
             data = col.row(align=False)
             data.operator(
-                bge_netlogic.ops.NLSelectTreeByNameOperator.bl_idname,
+                'logic_nodes.find_logic_tree',
                 text="Edit",
                 icon="NODETREE"
             ).tree_name = name
-
-
-class BGE_PT_LogicPanel(bpy.types.Panel):
-    bl_label = "Custom Nodes"
-    bl_space_type = "NODE_EDITOR"
-    bl_region_type = "UI"
-    bl_category = "Custom Nodes"
-    _current_tree = None
-
-    @classmethod
-    def poll(cls, context):
-        enabled = (context.space_data.tree_type == LogicNodeTree.bl_idname)
-        return enabled
-
-    def draw(self, context):
-        layout = self.layout
-        layout.scale_y = 1.4
-        layout.operator(
-            bge_netlogic.ops.NLPopupTemplatesOperator.bl_idname,
-            text="Custom Nodes Templates..."
-        )
-        layout.operator(
-            bge_netlogic.ops.NLImportProjectNodes.bl_idname,
-            text="Import Custom Nodes"
-        )
-        layout.operator(
-            bge_netlogic.ops.NLLoadProjectNodes.bl_idname,
-            text="Refresh Imported Nodes"
-        )
 
 
 class BGE_PT_HelpPanel(bpy.types.Panel):
@@ -719,16 +664,29 @@ class BGE_PT_HelpPanel(bpy.types.Panel):
 
     def draw(self, context):
         layout = self.layout
-        layout.scale_y = 1.4
-        layout.operator(
-            bge_netlogic.ops.NLBGEDocsButton.bl_idname,
+        layout.scale_y = 1.3
+        
+        box = layout.box()
+        box.operator(
+            "logic_nodes.open_upbge_docs",
             text="Engine API",
             icon='FILE_BLEND'
         )
-        layout.operator(
-            bge_netlogic.ops.NLUPBGEDocsButton.bl_idname,
+        box.operator(
+            "logic_nodes.open_upbge_manual",
             text="Manual",
             icon='BLENDER'
+        )
+        box = layout.box()
+        box.operator(
+            "logic_nodes.open_github",
+            text="Github Sources",
+            icon='MODIFIER_ON'
+        )
+        box.operator(
+            "logic_nodes.open_donate",
+            text="Support Logic Nodes",
+            icon='FUND'
         )
 
 
@@ -789,14 +747,12 @@ class BGE_PT_GameComponentHelperPanel(bpy.types.Panel):
 
     def draw(self, context):
         layout = self.layout
-
-        ob = context.active_object
-        layout.operator('bge_netlogic.reload_components', text='Reload Components', icon='RECOVER_LAST')
+        layout.operator('logic_nodes.reload_components', text='Reload Components', icon='RECOVER_LAST')
         row = layout.row()
         row.label(text=f'Add Component To {context.active_object.name}:')
         row = layout.row(align=True)
         row.prop(context.scene, 'nl_componenthelper', text='')
-        row.operator("bge_netlogic.add_component", text='Select Component', icon="PLUS")
+        row.operator("logic_nodes.add_component", text='Select Component', icon="PLUS")
 
 
 class LogicNodeTree(bpy.types.NodeTree):
@@ -827,9 +783,9 @@ class LogicNodeTree(bpy.types.NodeTree):
             self.name = self.old_name
             return
         if update:
-            bpy.ops.bge_netlogic.generate_logicnetwork_all()
+            bpy.ops.logic_nodes.generate_code()
         for obj in bpy.context.scene.objects:
-            for ref in obj.bgelogic_treelist:
+            for ref in obj.logic_trees:
                 if ref.tree is self:
                     ref.tree_name = self.name
                     new_comp_name = f'nl_{clsname.lower()}.{clsname}'

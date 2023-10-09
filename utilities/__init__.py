@@ -28,13 +28,13 @@ WARNING_MESSAGES = []
 
 def set_compile_status(status):
     try:
-        bpy.context.scene.logic_node_settings.tree_compiled = status
+        bpy.context.scene.logic_nodes_settings.tree_compiled = status
     except:
         pass
 
 
 def is_compile_status(status):
-    return bpy.context.scene.logic_node_settings.tree_compiled == status
+    return bpy.context.scene.logic_nodes_settings.tree_compiled == status
 
 
 def start_vr_session():
@@ -214,11 +214,11 @@ class Color(object):
 
 
 def debug(message):
-    if not hasattr(bpy.types.Scene, 'logic_node_settings'):
+    if not hasattr(bpy.types.Scene, 'logic_nodes_settings'):
         return
     if not bpy.context or not bpy.context.scene:
         return
-    if not bpy.context.scene.logic_node_settings.use_node_debug:
+    if not bpy.context.scene.logic_nodes_settings.use_node_debug:
         return
     else:
         os.system('color')
@@ -226,11 +226,11 @@ def debug(message):
 
 
 def notify(message):
-    if not hasattr(bpy.types.Scene, 'logic_node_settings'):
+    if not hasattr(bpy.types.Scene, 'logic_nodes_settings'):
         return
     if not bpy.context or not bpy.context.scene:
         return
-    if not bpy.context.scene.logic_node_settings.use_node_notify:
+    if not bpy.context.scene.logic_nodes_settings.use_node_notify:
         return
     else:
         os.system('color')
@@ -243,11 +243,11 @@ def error(message):
 
 
 def warn(message):
-    if not hasattr(bpy.types.Scene, 'logic_node_settings'):
+    if not hasattr(bpy.types.Scene, 'logic_nodes_settings'):
         return
     if not bpy.context or not bpy.context.scene:
         return
-    if not bpy.context.scene.logic_node_settings.use_node_debug:
+    if not bpy.context.scene.logic_nodes_settings.use_node_debug:
         return
     else:
         os.system('color')
@@ -255,11 +255,11 @@ def warn(message):
 
 
 def deprecate(node, tree):
-    if not hasattr(bpy.types.Scene, 'logic_node_settings'):
+    if not hasattr(bpy.types.Scene, 'logic_nodes_settings'):
         return
     if not bpy.context or not bpy.context.scene:
         return
-    if not bpy.context.scene.logic_node_settings.use_node_debug:
+    if not bpy.context.scene.logic_nodes_settings.use_node_debug:
         return
     else:
         os.system('color')
@@ -267,11 +267,11 @@ def deprecate(node, tree):
 
 
 def success(message):
-    if not hasattr(bpy.types.Scene, 'logic_node_settings'):
+    if not hasattr(bpy.types.Scene, 'logic_nodes_settings'):
         return
     if not bpy.context or not bpy.context.scene:
         return
-    if not bpy.context.scene.logic_node_settings.use_node_debug:
+    if not bpy.context.scene.logic_nodes_settings.use_node_debug:
         return
     else:
         os.system('color')
@@ -453,7 +453,7 @@ def set_network_initial_status_key(ob, tree_name, initial_status_value, update_o
         game_property.value = initial_status_value
     if update_object_tree_item:
         # print("also updating the tree_item...", ob)
-        for tree_item in ob.bgelogic_treelist:
+        for tree_item in ob.logic_trees:
             # print("looking at", tree_item.tree_name, "vs", tree_name)
             if tree_item.tree_name == tree_name:
                 # print("set initial status", ob.name, tree_name, initial_status_value)
@@ -490,18 +490,18 @@ def remove_network_initial_status_key(ob, tree_name):
 
 def remove_tree_item_from_object(ob, tree_name):
     index = -1
-    for item in ob.bgelogic_treelist:
+    for item in ob.logic_trees:
         index += 1
         if item.tree_name == tree_name:
             break
     if index >= 0:
-        ob.bgelogic_treelist.remove(index)
+        ob.logic_trees.remove(index)
     else:
         debug("WARNING 18763 cannot remove item {} from object {} because no such item exists in that object".format(tree_name, ob.name))
 
 
 def object_has_treeitem_for_treename(ob, treename):
-    for item in ob.bgelogic_treelist:
+    for item in ob.logic_trees:
         if item.tree_name == treename:
             return True
     return False

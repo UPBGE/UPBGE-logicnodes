@@ -13,7 +13,7 @@ class NodeSocketLogicListItem(NodeSocket, NodeSocketLogic):
     def draw(self, context, layout, node, text):
         row = layout.row(align=True)
         row.label(text=text)
-        row.operator('logic_nodes.remove_list_item_socket', icon='X', text='')
+        row.operator('logic_nodes.remove_socket', icon='X', text='')
 
     def get_unlinked_value(self):
         return None
