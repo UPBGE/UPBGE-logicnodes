@@ -526,7 +526,8 @@ class LogicNodesAddonPreferences(bpy.types.AddonPreferences):
             text='Logic Nodes require the uplogic module, please install if missing.',
             icon='CHECKMARK' if 'uplogic' in sys.modules else 'ERROR'
         )
-        col.operator('bge_netlogic.install_uplogic_module', icon='IMPORT')
+        row = col.row(align=True)
+        row.operator('bge_netlogic.install_uplogic_module', icon='IMPORT')
         # col.operator('bge_netlogic.install_fake_bge_module', icon='IMPORT')
         main_row = layout.row()
         col = layout.column()
