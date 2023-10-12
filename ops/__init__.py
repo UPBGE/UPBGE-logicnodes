@@ -57,8 +57,9 @@ class NLInstallUplogicModuleOperator(bpy.types.Operator):
     def execute(self, context):
         utils.notify('Installing uplogic module...')
         try:
+            prefs = bpy.context.preferences.addons['bge_netlogic'].preferences
             os.system(f'"{sys.executable}" -m ensurepip')
-            os.system(f'"{sys.executable}" -m pip install uplogic --upgrade')
+            os.system(f'"{sys.executable}" -m pip install uplogic=={prefs.uplogic_version}')
             bge_netlogic.UPLOGIC_INSTALLED = True
             utils.success('Installed.')
         except Exception as e:

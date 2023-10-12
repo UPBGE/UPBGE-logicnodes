@@ -515,8 +515,14 @@ class NodeSearch(bpy.types.Operator):
         return {"FINISHED"}
 
 
+_uplogic_versions = [
+    ('1.9.5', '1.9.5', 'Suitable for Logic Nodes 2.3 or lower')
+]
+
+
 class LogicNodesAddonPreferences(bpy.types.AddonPreferences):
     bl_idname = __name__
+    uplogic_version: bpy.props.EnumProperty(items=_uplogic_versions)
 
     def draw(self, context):
         layout = self.layout
@@ -528,6 +534,7 @@ class LogicNodesAddonPreferences(bpy.types.AddonPreferences):
         )
         row = col.row(align=True)
         row.operator('bge_netlogic.install_uplogic_module', icon='IMPORT')
+        row.prop(self, 'uplogic_version', text='')
         # col.operator('bge_netlogic.install_fake_bge_module', icon='IMPORT')
         main_row = layout.row()
         col = layout.column()
@@ -679,8 +686,9 @@ _registered_classes = sorted(_registered_classes, key=_get_key_for_class)
 
 def update_uplogic_module():
     try:
+        prefs = bpy.context.preferences.addons['bge_netlogic'].preferences
         os.system(f'"{sys.executable}" -m ensurepip')
-        os.system(f'"{sys.executable}" -m pip install uplogic --upgrade')
+        os.system(f'"{sys.executable}" -m pip install uplogic=={prefs.uplogic_version}')
         global UPLOGIC_INSTALLED
         UPLOGIC_INSTALLED = True
     except Exception:
@@ -690,7 +698,7 @@ def update_uplogic_module():
 def get_uplogic_module():
     try:
         os.system(f'"{sys.executable}" -m ensurepip')
-        os.system(f'"{sys.executable}" -m pip install uplogic')
+        os.system(f'"{sys.executable}" -m pip install uplogic==1.9.5')
         global UPLOGIC_INSTALLED
         UPLOGIC_INSTALLED = True
     except Exception:
