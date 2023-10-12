@@ -11,7 +11,7 @@ import bpy
 class LogicNodeRunActuator(LogicNodeActionType):
     bl_idname = "NLRunActuatorNode"
     bl_label = "Run Actuator"
-    nl_module = 'actions'
+    nl_module = 'uplogic.nodes.actions'
     deprecated = True
     deprecation_message = 'Node will be removed in future update.'
 

@@ -9,7 +9,7 @@ from ...sockets import NodeSocketLogicMaterialNode
 class LogicNodeGetMatNode(LogicNodeParameterType):
     bl_idname = "NLGetMaterialNode"
     bl_label = "Get Node"
-    nl_module = 'parameters'
+    nl_module = 'uplogic.nodes.parameters'
 
     def init(self, context):
         self.add_input(NodeSocketLogicMaterial, 'Material')

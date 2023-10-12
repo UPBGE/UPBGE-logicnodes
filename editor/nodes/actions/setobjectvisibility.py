@@ -9,7 +9,7 @@ from ...sockets import NodeSocketLogicBoolean
 class LogicNodeSetObjectVisibility(LogicNodeActionType):
     bl_idname = "NLActionSetGameObjectVisibility"
     bl_label = "Set Visibility"
-    nl_module = 'actions'
+    nl_module = 'uplogic.nodes.actions'
     nl_class = "ULSetVisibility"
 
     def init(self, context):

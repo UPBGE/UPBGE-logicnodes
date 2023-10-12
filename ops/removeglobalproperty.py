@@ -1,4 +1,4 @@
-from ..utilities import get_global_category
+from ..props.property import get_global_category
 from .operator import operator
 from bpy.types import Operator
 

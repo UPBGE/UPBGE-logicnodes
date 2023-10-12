@@ -42,4 +42,4 @@ class NodeSocketLogicNodeGroup(NodeSocket, NodeSocketLogic):
 
     def get_unlinked_value(self):
         if isinstance(self.value, NodeTree):
-            return '"{}"'.format(self.value.name)
+            return f'bpy.data.node_groups["{self.value.name}"]'

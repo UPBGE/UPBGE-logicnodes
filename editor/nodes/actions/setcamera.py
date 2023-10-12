@@ -8,7 +8,7 @@ from ...sockets import NodeSocketLogicObject
 class LogicNodeSetCamera(LogicNodeActionType):
     bl_idname = "NLActionSetActiveCamera"
     bl_label = "Set Camera"
-    nl_module = 'actions'
+    nl_module = 'uplogic.nodes.actions'
     nl_class = "ULSetCamera"
 
     def init(self, context):

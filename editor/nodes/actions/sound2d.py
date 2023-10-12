@@ -13,7 +13,7 @@ from ...sockets import NodeSocketLogicPython
 class LogicNodeSound2D(LogicNodeActionType):
     bl_idname = "NLActionStartSound"
     bl_label = "2D Sound"
-    nl_module = 'actions'
+    nl_module = 'uplogic.nodes.actions'
     nl_class = "ULStartSound"
 
     def init(self, context):

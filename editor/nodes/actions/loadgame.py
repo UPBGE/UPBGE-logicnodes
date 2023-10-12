@@ -10,7 +10,7 @@ from bpy.props import StringProperty
 class LogicNodeLoadGame(LogicNodeActionType):
     bl_idname = "NLActionLoadGame"
     bl_label = "Load Game"
-    nl_module = 'actions'
+    nl_module = 'uplogic.nodes.actions'
     nl_class = "ULLoadGame"
 
     custom_path: BoolProperty(name='Custom Path')

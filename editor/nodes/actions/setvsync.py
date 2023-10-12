@@ -9,10 +9,10 @@ from bpy.props import EnumProperty
 class LogicNodeSetVSync(LogicNodeActionType):
     bl_idname = "NLActionSetVSync"
     bl_label = "Set VSync"
-    nl_category = 'Render'
-    nl_module = 'actions'
-    vsync_mode: EnumProperty(items=_enum_vsync_modes)
+    nl_module = 'uplogic.nodes.actions'
     nl_class = "ULSetVSync"
+
+    vsync_mode: EnumProperty(items=_enum_vsync_modes)
 
     def init(self, context):
         self.add_input(NodeSocketLogicCondition, 'Condition')

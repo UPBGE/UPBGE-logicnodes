@@ -8,8 +8,7 @@ from ...sockets import NodeSocketLogicBoolean
 class LogicNodeSetFullscreen(LogicNodeActionType):
     bl_idname = "NLActionSetFullscreen"
     bl_label = "Set Fullscreen"
-    nl_category = 'Render'
-    nl_module = 'actions'
+    nl_module = 'uplogic.nodes.actions'
     nl_class = "ULSetFullscreen"
 
     def init(self, context):

@@ -9,8 +9,8 @@ from bpy.props import EnumProperty
 class LogicNodeSerializeData(LogicNodeParameterType):
     bl_idname = "LogicNodeSerializeData"
     bl_label = "Serialize Data"
-    bl_icon = 'ALIGN_FLUSH'
-    nl_module = 'parameters'
+    nl_module = 'uplogic.nodes.parameters'
+    nl_class = "ULSerializeData"
 
     serialize_as: EnumProperty(
         items=_serialize_types,
@@ -25,8 +25,6 @@ class LogicNodeSerializeData(LogicNodeParameterType):
 
     def draw_buttons(self, context, layout) -> None:
         layout.prop(self, 'serialize_as', text='')
-
-    nl_class = "ULSerializeData"
 
     def get_attributes(self):
         return [("serialize_as", f'"{self.serialize_as}"')]

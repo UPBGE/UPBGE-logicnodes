@@ -11,7 +11,7 @@ from bpy.props import EnumProperty
 class LogicNodeLogicGateList(LogicNodeConditionType):
     bl_idname = "LogicNodeLogicGateList"
     bl_label = "Gate List"
-    nl_module = 'conditions'
+    nl_module = 'uplogic.nodes.conditions'
 
     gate: EnumProperty(items=_logic_gates_list, name='Gate Type')
 
@@ -32,7 +32,6 @@ class LogicNodeLogicGateList(LogicNodeConditionType):
     def set_new_input_name(self):
         self.inputs[-1].name = 'Condition'
         self.inputs[-1].nl_color = CONDITION_SOCKET_COLOR
-        print(list(self.inputs[-1].nl_color))
 
     def draw_buttons(self, context, layout) -> None:
         layout.operator('logic_nodes.add_socket')

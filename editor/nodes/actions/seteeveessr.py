@@ -8,7 +8,7 @@ from ...sockets import NodeSocketLogicBoolean
 class LogicNodeSetEeveeSSR(LogicNodeActionType):
     bl_idname = "NLSetEeveeSSR"
     bl_label = "Set SSR"
-    nl_module = 'actions'
+    nl_module = 'uplogic.nodes.actions'
     nl_class = "ULSetEeveeSSR"
 
     def init(self, context):

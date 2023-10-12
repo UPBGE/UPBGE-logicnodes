@@ -9,8 +9,8 @@ from bpy.props import EnumProperty
 class LogicNodeRebuildData(LogicNodeParameterType):
     bl_idname = "LogicNodeRebuildData"
     bl_label = "Rebuild Data"
-    bl_icon = 'OBJECT_HIDDEN'
-    nl_module = 'parameters'
+    nl_module = 'uplogic.nodes.parameters'
+    nl_class = "ULRebuildData"
 
     read_as: EnumProperty(
         items=_serialize_types,
@@ -25,8 +25,6 @@ class LogicNodeRebuildData(LogicNodeParameterType):
 
     def draw_buttons(self, context, layout):
         layout.prop(self, 'read_as', text='')
-
-    nl_class = "ULRebuildData"
 
     def get_attributes(self):
         return [("read_as", f'"{self.read_as}"')]

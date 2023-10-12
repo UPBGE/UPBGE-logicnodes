@@ -19,7 +19,7 @@ from bpy.props import EnumProperty
 class LogicNodeCreateUILabel(LogicNodeActionType):
     bl_idname = "LogicNodeCreateUILabel"
     bl_label = "Create Label"
-    nl_module = 'actions'
+    nl_module = 'uplogic.nodes.actions'
     halign_type: EnumProperty(items=_ui_halign_types, name='X')
     valign_type: EnumProperty(items=_ui_valign_types, name='Y')
 

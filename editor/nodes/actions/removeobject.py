@@ -8,7 +8,7 @@ from ...sockets import NodeSocketLogicObject
 class LogicNodeRemoveObject(LogicNodeActionType):
     bl_idname = "NLActionEndObjectNode"
     bl_label = "Remove Object"
-    nl_module = 'actions'
+    nl_module = 'uplogic.nodes.actions'
     nl_class = "ULEndObject"
 
     def init(self, context):

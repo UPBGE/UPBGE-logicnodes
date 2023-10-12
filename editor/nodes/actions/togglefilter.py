@@ -8,7 +8,7 @@ from ...sockets import NodeSocketLogicIntegerPositiveCent
 class LogicNodeToggleFilter(LogicNodeActionType):
     bl_idname = "NLToggleFilter"
     bl_label = "Toggle Filter"
-    nl_module = 'actions'
+    nl_module = 'uplogic.nodes.actions'
 
     def init(self, context):
         self.add_input(NodeSocketLogicCondition, 'Condition')

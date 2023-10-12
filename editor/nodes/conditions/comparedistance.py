@@ -12,8 +12,9 @@ from bpy.props import EnumProperty
 class LogicNodeCompareDistance(LogicNodeConditionType):
     bl_idname = "NLConditionDistanceCheck"
     bl_label = "Compare Distance"
-    nl_category = "Math"
-    nl_module = 'conditions'
+    nl_module = 'uplogic.nodes.conditions'
+    nl_class = "ULCheckDistance"
+
     operation: EnumProperty(items=_enum_logic_operators)
     deprecated = True
 
@@ -31,8 +32,6 @@ class LogicNodeCompareDistance(LogicNodeConditionType):
 
     def get_output_names(self):
         return ['OUT', 'DIST']
-
-    nl_class = "ULCheckDistance"
 
     def get_input_names(self):
         return ["param_a", "param_b", "dist", '_old_hyst']

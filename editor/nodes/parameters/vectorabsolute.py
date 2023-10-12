@@ -7,7 +7,7 @@ from ...sockets import NodeSocketLogicVectorXYZ
 class LogicNodeVectorAbsolute(LogicNodeParameterType):
     bl_idname = "NLParameterAbsVector3Node"
     bl_label = "Absolute Vector"
-    nl_module = 'parameters'
+    nl_module = 'uplogic.nodes.parameters'
 
     def init(self, context):
         self.add_input(NodeSocketLogicVectorXYZ, 'Vector')

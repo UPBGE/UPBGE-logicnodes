@@ -16,7 +16,7 @@ from math import radians
 class LogicNodeMouseLook(LogicNodeActionType):
     bl_idname = "NLActionMouseLookNode"
     bl_label = "Mouse Look"
-    nl_module = 'actions'
+    nl_module = 'uplogic.nodes.actions'
     nl_class = "ULMouseLook"
 
     def update_draw(self, context=None):
@@ -42,7 +42,7 @@ class LogicNodeMouseLook(LogicNodeActionType):
         self.add_input(NodeSocketLogicCondition, "Condition")
         self.add_input(NodeSocketLogicObject, "Main Object")
         self.add_input(NodeSocketLogicObject, "Head (Optional)")
-        self.add_input(NodeSocketLogicInvertXY, "")
+        self.add_input(NodeSocketLogicInvertXY, "", {'y': True})
         self.add_input(NodeSocketLogicFloat, "Sensitivity", {'value': 1.0})
         self.add_input(NodeSocketLogicBoolean, "Cap Left / Right")
         self.add_input(NodeSocketLogicVectorXYAngle, "")

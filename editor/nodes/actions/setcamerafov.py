@@ -9,7 +9,7 @@ from ...sockets import NodeSocketLogicFloat
 class LogicNodeSetCameraFOV(LogicNodeActionType):
     bl_idname = "NLActionSetCameraFov"
     bl_label = "Set FOV"
-    nl_module = 'actions'
+    nl_module = 'uplogic.nodes.actions'
     nl_class = "ULSetCameraFOV"
 
     def init(self, context):

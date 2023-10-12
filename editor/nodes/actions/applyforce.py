@@ -10,7 +10,7 @@ from bpy.props import BoolProperty
 class LogicNodeApplyForce(LogicNodeActionType):
     bl_idname = "NLActionApplyForce"
     bl_label = "Apply Force"
-    nl_module = 'actions'
+    nl_module = 'uplogic.nodes.actions'
     nl_class = "ULApplyForce"
 
     deprecated = True

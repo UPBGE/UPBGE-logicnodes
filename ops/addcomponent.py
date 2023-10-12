@@ -1,4 +1,4 @@
-from ..utilities import notify
+from ..utilities import notify, preferences
 from .operator import operator
 from .operator import _enum_components
 from .operator import reload_texts
@@ -34,7 +34,7 @@ class LOGIC_NODES_OT_add_component(Operator):
 
     def execute(self, context):
         comp_name = self.component
-        select_text = context.scene.nl_componenthelper
+        select_text = preferences().nl_componenthelper
         mod_name = select_text.name[:len(select_text.name) - 3]
         body = select_text.as_string()
         cargs = ''

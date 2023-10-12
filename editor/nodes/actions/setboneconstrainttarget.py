@@ -11,7 +11,7 @@ from ...sockets import NodeSocketLogicObject
 class LogicNodeSetBoneConstraintTarget(LogicNodeActionType):
     bl_idname = "NLSetBoneConstraintTarget"
     bl_label = "Set Target"
-    nl_module = 'actions'
+    nl_module = 'uplogic.nodes.actions'
     nl_class = "ULSetBoneConstraintTarget"
 
     search_tags = [

@@ -10,7 +10,7 @@ from bpy.props import BoolProperty
 class LogicNodeApplyMovement(LogicNodeActionType):
     bl_idname = "NLActionApplyLocation"
     bl_label = "Apply Movement"
-    nl_module = 'actions'
+    nl_module = 'uplogic.nodes.actions'
     nl_class = "ULApplyMovement"
 
     deprecated = True

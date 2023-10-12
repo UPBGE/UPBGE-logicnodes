@@ -7,15 +7,13 @@ from ...sockets import NodeSocketLogicObject
 class LogicNodeGetParent(LogicNodeParameterType):
     bl_idname = "NLParameterGameObjectParent"
     bl_label = "Get Parent"
-    bl_icon = 'COMMUNITY'
-    nl_module = 'parameters'
+    nl_module = 'uplogic.nodes.parameters'
+    nl_class = "ULGetParent"
 
     def init(self, context):
         self.add_input(NodeSocketLogicObject, "Child Object")
         self.add_output(NodeSocketLogicObject, "Parent Object")
         LogicNodeParameterType.init(self, context)
-
-    nl_class = "ULGetParent"
 
     def get_input_names(self):
         return ["game_object"]

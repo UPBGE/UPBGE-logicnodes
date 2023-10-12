@@ -10,8 +10,8 @@ from ...sockets import NodeSocketLogicString
 class LogicNodeGroupNodeAttr(LogicNodeParameterType):
     bl_idname = "NLGetNodeTreeNodeAttribute"
     bl_label = "Get Node Value"
-    bl_icon = 'DRIVER_TRANSFORM'
-    nl_module = 'parameters'
+    nl_module = 'uplogic.nodes.parameters'
+    nl_class = "ULGetNodeAttribute"
 
     def init(self, context):
         self.add_input(NodeSocketLogicNodeGroup, 'Tree')
@@ -30,8 +30,6 @@ class LogicNodeGroupNodeAttr(LogicNodeParameterType):
             itl.enabled = att.enabled = True
         else:
             itl.enabled = att.enabled = False
-
-    nl_class = "ULGetNodeAttribute"
 
     def get_input_names(self):
         return ["tree_name", 'node_name', "internal", 'attribute']

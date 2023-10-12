@@ -1,5 +1,6 @@
 import bpy
 import os
+from ..preferences import LogicNodesAddonPreferences
 
 
 TREE_COMPILED = 'Compiled'
@@ -24,17 +25,6 @@ OUTCELL = "__standard_logic_cell_value__"
 
 ERROR_MESSAGES = []
 WARNING_MESSAGES = []
-
-
-def set_compile_status(status):
-    try:
-        bpy.context.scene.logic_nodes_settings.tree_compiled = status
-    except:
-        pass
-
-
-def is_compile_status(status):
-    return bpy.context.scene.logic_nodes_settings.tree_compiled == status
 
 
 def start_vr_session():
@@ -214,11 +204,7 @@ class Color(object):
 
 
 def debug(message):
-    if not hasattr(bpy.types.Scene, 'logic_nodes_settings'):
-        return
-    if not bpy.context or not bpy.context.scene:
-        return
-    if not bpy.context.scene.logic_nodes_settings.use_node_debug:
+    if not preferences().use_node_debug:
         return
     else:
         os.system('color')
@@ -226,11 +212,7 @@ def debug(message):
 
 
 def notify(message):
-    if not hasattr(bpy.types.Scene, 'logic_nodes_settings'):
-        return
-    if not bpy.context or not bpy.context.scene:
-        return
-    if not bpy.context.scene.logic_nodes_settings.use_node_notify:
+    if not preferences().use_node_notify:
         return
     else:
         os.system('color')
@@ -243,42 +225,24 @@ def error(message):
 
 
 def warn(message):
-    if not hasattr(bpy.types.Scene, 'logic_nodes_settings'):
-        return
-    if not bpy.context or not bpy.context.scene:
-        return
-    if not bpy.context.scene.logic_nodes_settings.use_node_debug:
-        return
-    else:
-        os.system('color')
-        print(f'[Logic Nodes][{ansicol.YELLOW}WARNING{ansicol.END}] ' + message)
+    os.system('color')
+    print(f'[Logic Nodes][{ansicol.YELLOW}WARNING{ansicol.END}] ' + message)
 
 
 def deprecate(node, tree):
-    if not hasattr(bpy.types.Scene, 'logic_nodes_settings'):
-        return
-    if not bpy.context or not bpy.context.scene:
-        return
-    if not bpy.context.scene.logic_nodes_settings.use_node_debug:
-        return
-    else:
-        os.system('color')
-        print(f"[Logic Nodes][{ansicol.YELLOW}WARNING{ansicol.END}] Node '{node.name}' in tree '{tree.name}' is deprecated and will be removed in a future release!")
+    os.system('color')
+    print(f"[Logic Nodes][{ansicol.YELLOW}WARNING{ansicol.END}] Node '{node.name}' in tree '{tree.name}' is deprecated and will be removed in a future release!")
 
 
 def success(message):
-    if not hasattr(bpy.types.Scene, 'logic_nodes_settings'):
-        return
-    if not bpy.context or not bpy.context.scene:
-        return
-    if not bpy.context.scene.logic_nodes_settings.use_node_debug:
+    if not preferences().use_node_debug:
         return
     else:
         os.system('color')
         print(f'[Logic Nodes][{ansicol.GREEN}SUCCESS{ansicol.END}] ' + message)
 
 
-def make_valid_name(name):
+def make_valid_name(name) -> str:
     valid_characters = (
         "_abcdefghijklmnopqrstuvwxyz1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ"
     )
@@ -287,30 +251,6 @@ def make_valid_name(name):
         [c for c in clsname if c in valid_characters]
     )
     return stripped_name
-
-
-def get_global_category():
-    scene = bpy.context.scene
-    return (
-        scene.nl_global_categories[0]
-        if
-        scene.nl_global_cat_selected > len(scene.nl_global_categories) - 1
-        else
-        scene.nl_global_categories[scene.nl_global_cat_selected]
-    )
-
-
-def get_global_value():
-    cat = get_global_category()
-    if len(cat.content) < 1:
-        return None
-    return (
-        cat.content[0]
-        if
-        cat.selected > len(cat.content) - 1
-        else
-        cat.content[cat.selected]
-    )
 
 
 def register_inputs(node, *data):
@@ -600,3 +540,7 @@ def key_event(ks):
     x = "{}KEY".format(ks.replace("_", ""))
 
     return "bge.events.{}".format(x)
+
+
+def preferences() -> LogicNodesAddonPreferences:
+    return bpy.context.preferences.addons['bge_netlogic'].preferences

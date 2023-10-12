@@ -11,7 +11,7 @@ from bpy.props import EnumProperty
 class LogicNodeLimitRange(LogicNodeParameterType):
     bl_idname = "NLLimitRange"
     bl_label = "Limit Range"
-    nl_module = 'parameters'
+    nl_module = 'uplogic.nodes.parameters'
 
     operator: EnumProperty(
         items=_enum_in_or_out

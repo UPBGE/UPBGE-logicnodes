@@ -12,7 +12,7 @@ class LogicNodeValueSwitchCompare(LogicNodeParameterType):
     bl_label = "Value Switch List Compare"
     bl_width_min = 100
     bl_width_default = 172
-    nl_module = 'parameters'
+    nl_module = 'uplogic.nodes.parameters'
 
     def update_draw(self, context=None):
         if not self.ready:

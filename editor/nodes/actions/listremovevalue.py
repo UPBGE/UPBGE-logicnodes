@@ -9,7 +9,7 @@ from ...sockets import NodeSocketLogicValue
 class LogicNodeListRemoveValue(LogicNodeActionType):
     bl_idname = "NLRemoveListValue"
     bl_label = "Remove Value"
-    nl_module = 'actions'
+    nl_module = 'uplogic.nodes.actions'
     nl_class = "ULRemoveListValue"
 
     search_tags = [

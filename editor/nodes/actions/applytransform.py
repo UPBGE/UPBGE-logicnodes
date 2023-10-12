@@ -13,7 +13,7 @@ from bpy.props import EnumProperty
 class LogicNodeApplyTransform(LogicNodeActionType):
     bl_idname = "LogicNodeApplyTransform"
     bl_label = "Apply Transform"
-    nl_module = 'actions'
+    nl_module = 'uplogic.nodes.actions'
     nl_class = "ULApplyTransform"
 
     search_tags = [
@@ -34,7 +34,7 @@ class LogicNodeApplyTransform(LogicNodeActionType):
         else:
             self.inputs[3].enabled = False
 
-    local: BoolProperty(default=True, name='Local')
+    local: BoolProperty(default=False, name='Local')
     mode: EnumProperty(items=_transform_types, name='Mode', update=update_draw)
 
     def init(self, context):

@@ -10,7 +10,7 @@ from bpy.props import BoolProperty
 class LogicNodeCharacterSetWalkDir(LogicNodeActionType):
     bl_idname = "NLActionSetCharacterWalkDir"
     bl_label = "Walk"
-    nl_module = 'actions'
+    nl_module = 'uplogic.nodes.actions'
 
     local: BoolProperty(default=True, name='Local')
 

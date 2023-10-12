@@ -12,7 +12,7 @@ from ...sockets import NodeSocketLogicValue
 class LogicNodeSetBoneConstraintAttr(LogicNodeActionType):
     bl_idname = "NLSetBoneConstraintAttribute"
     bl_label = "Set Attribute"
-    nl_module = 'actions'
+    nl_module = 'uplogic.nodes.actions'
     nl_class = "ULSetBoneConstraintAttribute"
 
     search_tags = [

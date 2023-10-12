@@ -8,7 +8,7 @@ from ...sockets import NodeSocketLogicInteger
 class LogicNodeSetSMAAQuality(LogicNodeActionType):
     bl_idname = "NLSetEeveeSMAAQuality"
     bl_label = "Set SMAA Quality"
-    nl_module = 'actions'
+    nl_module = 'uplogic.nodes.actions'
     deprecated = True
     deprecation_message = 'Node will be removed in future update.'
 

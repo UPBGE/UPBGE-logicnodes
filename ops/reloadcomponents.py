@@ -19,18 +19,28 @@ class LOGIC_NODES_OT_reload_components(Operator):
         return context.active_object is not None
 
     def execute(self, context):
+        bpy.ops.logic_nodes.generate_code()
         reload_texts()
-        obj = context.active_object
-        for i, c in enumerate(obj.game.components):
-            text = bpy.data.texts[f'{c.module}.py']
-            for line in text.lines:
-                if (
-                    'uplogic' in line.body
-                    or line.body.startswith('from bge ')
-                    or 'bgui' in line.body
-                    or line.body.startswith('@')
-                ):
-                    line.body = '# ' + line.body
-            bpy.ops.logic.python_component_reload(index=i)
-        reload_texts()
+        # obj = context.active_object
+        active_object = context.object
+        for obj in bpy.data.objects:
+            if obj.name in bpy.context.view_layer.objects:
+                bpy.context.view_layer.objects.active = obj
+            for i, c in enumerate(obj.game.components):
+                text = bpy.data.texts[f'{c.module}.py']
+                ogtext = text.as_string()
+                for line in text.lines:
+                    if (
+                        'uplogic' in line.body
+                        or line.body.startswith('from bge ')
+                        or 'bgui' in line.body
+                        or line.body.startswith('@')
+                    ):
+                        line.body = '# ' + line.body
+                bpy.ops.logic.python_component_reload(index=i)
+                text.from_string(ogtext)
+            reload_texts()
+        
+        if obj.name in bpy.context.view_layer.objects:
+            bpy.context.view_layer.objects.active = active_object
         return {'FINISHED'}

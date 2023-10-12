@@ -11,8 +11,8 @@ from ...sockets import NodeSocketLogicValue
 class LogicNodeSetMaterialNodeProperty(LogicNodeActionType):
     bl_idname = "NLSetMaterialNodeAttribute"
     bl_label = "Set Node Value"
-    nl_module = 'actions'
-    deprecated = True
+    nl_module = 'uplogic.nodes.actions'
+    # deprecated = True
 
     search_tags = [
         ['Set Material Node Property', {}]

@@ -11,7 +11,7 @@ from bpy.props import BoolProperty
 class LogicNodeCharacterInfo(LogicNodeParameterType):
     bl_idname = "NLActionGetCharacterInfo"
     bl_label = "Get Physics Info"
-    nl_module = 'parameters'
+    nl_module = 'uplogic.nodes.parameters'
 
     local: BoolProperty(default=True)
 

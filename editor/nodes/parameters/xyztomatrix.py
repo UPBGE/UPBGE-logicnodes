@@ -8,7 +8,7 @@ from ...sockets import NodeSocketLogicMatrix
 class LogicNodeXYZtoMatrix(LogicNodeParameterType):
     bl_idname = "NLParameterEulerToMatrixNode"
     bl_label = "XYZ To Matrix"
-    nl_module = 'parameters'
+    nl_module = 'uplogic.nodes.parameters'
 
     def init(self, context):
         self.add_input(NodeSocketLogicVectorXYZ, 'XYZ')

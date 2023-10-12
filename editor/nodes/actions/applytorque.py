@@ -10,7 +10,7 @@ from bpy.props import BoolProperty
 class LogicNodeApplyTorque(LogicNodeActionType):
     bl_idname = "NLActionApplyTorque"
     bl_label = "Apply Torque"
-    nl_module = 'actions'
+    nl_module = 'uplogic.nodes.actions'
     nl_class = "ULApplyTorque"
 
     deprecated = True

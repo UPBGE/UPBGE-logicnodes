@@ -12,7 +12,7 @@ from ...sockets import NodeSocketLogicList
 class LogicNodeVehicleCreate(LogicNodeActionType):
     bl_idname = "NLCreateVehicleFromParent"
     bl_label = "Create New Vehicle"
-    nl_module = 'actions'
+    nl_module = 'uplogic.nodes.actions'
     nl_class = "ULCreateVehicle"
 
     def init(self, context):

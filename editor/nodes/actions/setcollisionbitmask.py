@@ -12,13 +12,12 @@ from bpy.props import EnumProperty
 class LogicNodeSetCollisionBitMask(LogicNodeActionType):
     bl_idname = "NLSetCollisionGroup"
     bl_label = "Set Collision Group"
-    nl_category = "Physics"
-    nl_module = 'actions'
+    nl_module = 'uplogic.nodes.actions'
     nl_class = "ULSetCollisionGroup"
 
     search_tags = [
-        ['Set Collision Group', {}],
-        ['Set Collision Mask', {'mode': '1'}],
+        ['Set Collision Group', {'nl_label': 'Set Collision Group'}],
+        ['Set Collision Mask', {'nl_label': 'Set Collision Mask', 'mode': '1'}],
     ]
 
     mode: EnumProperty(items=_collision_bitmask_types, name='Mode')
@@ -31,7 +30,7 @@ class LogicNodeSetCollisionBitMask(LogicNodeActionType):
         LogicNodeActionType.init(self, context)
 
     def draw_buttons(self, context: Context, layout: UILayout) -> None:
-        layout.prop(self, 'mode')
+        layout.prop(self, 'mode', text='')
 
     def get_attributes(self):
         return [('mode', self.mode)]

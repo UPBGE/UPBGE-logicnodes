@@ -1,10 +1,12 @@
 from .socket import NodeSocketLogic
+from .objectsocket import NodeSocketLogicObject
 from .socket import PARAMETER_SOCKET_COLOR
 from .socket import socket_type
 from .socket import update_draw
 from ...utilities import LOGIC_NODE_IDENTIFIER
 from ...utilities import make_valid_name
 from bpy.types import NodeSocket
+from bpy.types import Object
 from bpy.props import StringProperty
 from bpy.props import BoolProperty
 from bpy.props import IntProperty
@@ -17,12 +19,11 @@ class NodeSocketLogicGameProperty(NodeSocket, NodeSocketLogic):
     bl_label = "Property"
 
     value: StringProperty(
-        # update=update_tree_code
+        update=update_draw
     )
     ref_index: IntProperty(default=0)
     use_custom: BoolProperty(
         name='Free Edit'
-        # update=update_tree_code
     )
 
     color = PARAMETER_SOCKET_COLOR
@@ -38,28 +39,30 @@ class NodeSocketLogicGameProperty(NodeSocket, NodeSocketLogic):
             tree = getattr(context.space_data, 'edit_tree', None)
             if not tree:
                 return
-            game_object = None
-            game_obj_socket = self.node.inputs[self.ref_index]
-            if not game_obj_socket.use_owner:
-                game_object = game_obj_socket.value
-            else:
+            data_block = None
+            data_block_socket = self.node.inputs[self.ref_index]
+            if not getattr(data_block_socket, 'use_owner', False):
+                data_block = data_block_socket.value
+            elif isinstance(data_block_socket, NodeSocketLogicObject):
                 prop_name = f'{LOGIC_NODE_IDENTIFIER}{make_valid_name(tree.name)}'
                 for obj in bpy.data.objects:
                     if prop_name in obj.game.properties:
-                        game_object = obj
+                        data_block = obj
                         break
             if self.name:
                 row = col.row()
                 row.label(text=self.name)
-                if not game_obj_socket.is_linked and game_object and not mode:
+                if not data_block_socket.is_linked and data_block and not mode:
                     row.prop(self, 'use_custom', text='', icon='GREASEPENCIL')
-            if game_object or game_obj_socket.is_linked:
-                if not game_obj_socket.is_linked and not self.use_custom and mode == '0':
-                    game = game_object.game
+            if data_block or data_block_socket.is_linked:
+                if not data_block_socket.is_linked and not self.use_custom and mode == '0':
+
+                    if isinstance(data_block, Object):
+                        data_block = data_block.game
                     col.prop_search(
                         self,
                         'value',
-                        game,
+                        data_block,
                         'properties',
                         icon='NONE',
                         text=''

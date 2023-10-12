@@ -19,7 +19,7 @@ from bpy.props import EnumProperty
 class LogicNodeCreateUILayout(LogicNodeActionType):
     bl_idname = "LogicNodeCreateUILayout"
     bl_label = "Create Layout"
-    nl_module = 'actions'
+    nl_module = 'uplogic.nodes.actions'
 
     def update_draw(self, context=None):
         if not self.ready:

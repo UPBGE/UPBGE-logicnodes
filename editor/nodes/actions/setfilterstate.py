@@ -9,7 +9,7 @@ from ...sockets import NodeSocketLogicBoolean
 class LogicNodeSetFilterState(LogicNodeActionType):
     bl_idname = "NLSetFilterState"
     bl_label = "Set Filter State"
-    nl_module = 'actions'
+    nl_module = 'uplogic.nodes.actions'
 
     def init(self, context):
         self.add_input(NodeSocketLogicCondition, 'Condition')

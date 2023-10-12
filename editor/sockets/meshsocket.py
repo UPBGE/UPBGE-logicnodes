@@ -40,4 +40,4 @@ class NodeSocketLogicMesh(NodeSocket, NodeSocketLogic):
 
     def get_unlinked_value(self):
         if isinstance(self.value, Mesh):
-            return '"{}"'.format(self.value.name)
+            return f'bpy.data.meshes.get("{self.value.name}")'

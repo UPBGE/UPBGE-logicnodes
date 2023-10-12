@@ -8,7 +8,7 @@ from ...sockets import NodeSocketLogicFloatPositive
 class LogicNodeSetExposure(LogicNodeActionType):
     bl_idname = "NLSetExposureAction"
     bl_label = "Set Exposure"
-    nl_module = 'actions'
+    nl_module = 'uplogic.nodes.actions'
     nl_class = "ULSetExposure"
 
     def init(self, context):

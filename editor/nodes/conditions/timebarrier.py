@@ -9,7 +9,7 @@ class LogicNodeTimeBarrier(LogicNodeConditionType):
     """If the condition stays true for N seconds, do something, then stay true"""
     bl_idname = 'NLActionTimeBarrier'
     bl_label = 'Barrier'
-    nl_module = 'conditions'
+    nl_module = 'uplogic.nodes.conditions'
 
     search_tags = [
         ['Time Barrier', {}]

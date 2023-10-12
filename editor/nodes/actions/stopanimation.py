@@ -9,8 +9,7 @@ from ...sockets import NodeSocketLogicIntegerPositive
 class LogicNodeStopAnimation(LogicNodeActionType):
     bl_idname = "NLActionStopAnimation"
     bl_label = "Stop Animation"
-    nl_category = "Animation"
-    nl_module = 'actions'
+    nl_module = 'uplogic.nodes.actions'
     nl_class = "ULStopAction"
 
     def init(self, context):

@@ -10,7 +10,7 @@ from ...sockets import NodeSocketLogicBoolCondition
 class LogicNodeDrawLine(LogicNodeActionType):
     bl_idname = "NLDrawLine"
     bl_label = "Draw Line"
-    nl_module = 'actions'
+    nl_module = 'uplogic.nodes.actions'
 
     def init(self, context):
         self.add_input(NodeSocketLogicBoolCondition, 'Condition')

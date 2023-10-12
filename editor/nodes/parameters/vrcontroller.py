@@ -11,7 +11,7 @@ from bpy.props import EnumProperty
 class LogicNodeVRController(LogicNodeParameterType):
     bl_idname = "NLGetVRControllerValues"
     bl_label = "VR Controller"
-    nl_module = 'parameters'
+    nl_module = 'uplogic.nodes.parameters'
 
     index: EnumProperty(
         name='Controller',

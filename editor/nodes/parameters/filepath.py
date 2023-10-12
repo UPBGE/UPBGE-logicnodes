@@ -7,7 +7,7 @@ from ...sockets import NodeSocketLogicFilePath
 class LogicNodeFilePath(LogicNodeParameterType):
     bl_idname = "NLParameterFileValue"
     bl_label = "File Path"
-    nl_module = 'parameters'
+    nl_module = 'uplogic.nodes.parameters'
 
     def init(self, context):
         self.add_input(NodeSocketLogicFilePath, "")

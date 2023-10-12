@@ -12,7 +12,7 @@ from ...sockets import NodeSocketLogicPython
 class LogicNodePlaySpeaker(LogicNodeActionType):
     bl_idname = "NLPlaySpeaker"
     bl_label = "Start Speaker"
-    nl_module = 'actions'
+    nl_module = 'uplogic.nodes.actions'
     nl_class = "ULStartSpeaker"
 
     def init(self, context):

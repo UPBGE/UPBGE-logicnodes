@@ -36,4 +36,4 @@ class NodeSocketLogicFont(NodeSocket, NodeSocketLogic):
     def get_unlinked_value(self):
         if self.value is None:
             return '""'
-        return '"{}"'.format(str(self.value.name))
+        return f'bpy.data.fonts.get("{self.value.name}")'

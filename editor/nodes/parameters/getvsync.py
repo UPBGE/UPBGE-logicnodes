@@ -7,7 +7,7 @@ from ...sockets import NodeSocketLogicParameter
 class LogicNodeGetVsync(LogicNodeParameterType):
     bl_idname = "NLGetVsyncNode"
     bl_label = "Get VSync"
-    nl_module = 'parameters'
+    nl_module = 'uplogic.nodes.parameters'
 
     def init(self, context):
         self.add_output(NodeSocketLogicParameter, "Mode")

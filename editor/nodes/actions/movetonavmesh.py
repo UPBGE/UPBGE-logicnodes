@@ -16,7 +16,7 @@ from ...sockets import NodeSocketLogicList
 class LogicNodeMoveToNavmesh(LogicNodeActionType):
     bl_idname = "NLActionNavigate"
     bl_label = "Move To with Navmesh"
-    nl_module = 'actions'
+    nl_module = 'uplogic.nodes.actions'
     nl_class = "ULMoveToWithNavmesh"
 
     def init(self, context):

@@ -10,7 +10,7 @@ from bpy.props import BoolProperty
 class LogicNodeStoreValue(LogicNodeParameterType):
     bl_idname = "NLStoreValue"
     bl_label = "Store Value"
-    nl_module = 'parameters'
+    nl_module = 'uplogic.nodes.parameters'
 
     initialize: BoolProperty(
         name='Initialize',

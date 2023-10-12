@@ -14,7 +14,7 @@ from bpy.props import BoolProperty
 class LogicNodeModifyProperty(LogicNodeActionType):
     bl_idname = "NLAddToGameObjectGamePropertyActionNode"
     bl_label = "Modify Property"
-    nl_module = 'actions'
+    nl_module = 'uplogic.nodes.actions'
     nl_class = "ULModifyProperty"
 
     mode: EnumProperty(

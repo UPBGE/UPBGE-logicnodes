@@ -9,7 +9,7 @@ from ....utilities import OUTCELL
 class LogicNodeGamepadActive(LogicNodeConditionType):
     bl_idname = "NLGamepadActive"
     bl_label = "Gamepad Active"
-    nl_module = 'conditions'
+    nl_module = 'uplogic.nodes.conditions'
 
     def init(self, context):
         self.add_input(NodeSocketLogicIntegerPositiveCent, 'Index')

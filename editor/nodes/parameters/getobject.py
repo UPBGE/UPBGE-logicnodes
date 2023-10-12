@@ -7,15 +7,13 @@ from ...sockets import NodeSocketLogicObject
 class LogicNodeGetObject(LogicNodeParameterType):
     bl_idname = "NLActionFindObjectNode"
     bl_label = "Get Object"
-    bl_icon = 'OBJECT_DATA'
-    nl_module = 'parameters'
+    nl_module = 'uplogic.nodes.parameters'
+    nl_class = "ULGetObject"
 
     def init(self, context):
         self.add_input(NodeSocketLogicObject, "Object")
         self.add_output(NodeSocketLogicObject, "Object")
         LogicNodeParameterType.init(self, context)
-
-    nl_class = "ULGetObject"
 
     def get_input_names(self):
         return ["game_object"]

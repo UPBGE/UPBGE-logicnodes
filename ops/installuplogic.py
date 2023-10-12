@@ -1,4 +1,5 @@
 from ..utilities import notify
+from ..utilities import preferences
 from ..utilities import error
 from ..utilities import success
 from .operator import operator
@@ -21,7 +22,7 @@ class LOGIC_NODES_OT_install_uplogic(Operator):
         notify('Installing uplogic module...')
         try:
             os.system(f'"{sys.executable}" -m ensurepip')
-            os.system(f'"{sys.executable}" -m pip install uplogic --upgrade')
+            os.system(f'"{sys.executable}" -m pip install uplogic=={preferences().uplogic_version}')
             success('Installed.')
         except Exception as e:
             error('Install failed. Error:')

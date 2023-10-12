@@ -9,7 +9,7 @@ from ...sockets import NodeSocketLogicParameter
 class LogicNodePythonInstanceAttr(LogicNodeParameterType):
     bl_idname = "NLParameterGetAttribute"
     bl_label = "Get Instance Attribute"
-    nl_module = 'parameters'
+    nl_module = 'uplogic.nodes.parameters'
 
     def init(self, context):
         self.add_input(NodeSocketLogicPython, 'Parent')

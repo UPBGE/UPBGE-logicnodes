@@ -1,5 +1,4 @@
 from .socket import NodeSocketLogic
-from .socket import PARAMETER_SOCKET_COLOR
 from .socket import socket_type
 from .socket import update_draw
 from ..enum_types import _enum_field_value_types
@@ -62,8 +61,6 @@ class NodeSocketLogicValueOptional(NodeSocket, NodeSocketLogic):
         update=store_path_value,
         subtype='FILE_PATH'
     )
-
-    color = PARAMETER_SOCKET_COLOR
 
     def get_unlinked_value(self):
         return parse_value_type(self.value_type, self.value) if self.use_value or self.is_linked else "utils.STATUS_INVALID"

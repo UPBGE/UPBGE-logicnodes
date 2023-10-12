@@ -9,7 +9,7 @@ from ...sockets import NodeSocketLogicBitMask
 class LogicNodeSetCollisionMask(LogicNodeActionType):
     bl_idname = "NLSetCollisionMask"
     bl_label = "Set Collision Mask"
-    nl_module = 'actions'
+    nl_module = 'uplogic.nodes.actions'
     nl_class = "ULSetCollisionMask"
     deprecated = True
     deprecation_message = 'Replaced by "Set Collision" Node'

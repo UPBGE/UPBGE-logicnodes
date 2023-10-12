@@ -8,15 +8,13 @@ from ...sockets import NodeSocketLogicList
 class LogicNodeGetCurvePoints(LogicNodeParameterType):
     bl_idname = "NLGetCurvePoints"
     bl_label = "Get Curve Points"
-    bl_icon = 'OUTLINER_DATA_CURVE'
-    nl_module = 'parameters'
+    nl_module = 'uplogic.nodes.parameters'
+    nl_class = "ULGetCurvePoints"
 
     def init(self, context):
         self.add_input(NodeSocketLogicCurve, "Curve")
         self.add_output(NodeSocketLogicList, "Points")
         LogicNodeParameterType.init(self, context)
-
-    nl_class = "ULGetCurvePoints"
 
     def get_input_names(self):
         return ["curve"]

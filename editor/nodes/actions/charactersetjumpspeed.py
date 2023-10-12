@@ -9,7 +9,7 @@ from ...sockets import NodeSocketLogicFloatPositive
 class LogicNodeCharacterSetJumpSpeed(LogicNodeActionType):
     bl_idname = "NLSetCharacterJumpSpeed"
     bl_label = "Set Jump Force"
-    nl_module = 'actions'
+    nl_module = 'uplogic.nodes.actions'
     nl_class = "ULSetCharacterJumpSpeed"
 
     def init(self, context):

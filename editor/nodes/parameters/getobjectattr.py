@@ -12,9 +12,9 @@ from bpy.props import EnumProperty
 @node_type
 class LogicNodeGetObjectAttr(LogicNodeParameterType):
     bl_idname = "NLObjectAttributeParameterNode"
-    bl_label = "Get Position / Rotation / Scale etc."
-    bl_icon = 'VIEW3D'
-    nl_module = 'parameters'
+    bl_label = "Get Attribute"
+    nl_module = 'uplogic.nodes.parameters'
+    nl_class = "ULObjectAttribute"
 
     def update_draw(self, context=None):
         if not self.ready:
@@ -49,19 +49,19 @@ class LogicNodeGetObjectAttr(LogicNodeParameterType):
             self.outputs[2].enabled = False
 
     search_tags = [
-        ['Get World Position', {'attr_name': 'worldPosition'}],
-        ['Get World Rotation', {'attr_name': 'worldOrientation'}],
-        ['Get World Linear Velocity', {'attr_name': 'worldLinearVelocity'}],
-        ['Get World Angular Velocity', {'attr_name': 'worldAngularVelocity'}],
-        ['Get World Transform', {'attr_name': 'worldTransform'}],
-        ['Get Local Position', {'attr_name': 'localPosition'}],
-        ['Get Local Rotation', {'attr_name': 'localOrientation'}],
-        ['Get Local Linear Velocity', {'attr_name': 'localLinearVelocity'}],
-        ['Get Local Angular Velocity', {'attr_name': 'localAngularVelocity'}],
-        ['Get Local Transform', {'attr_name': 'localTransform'}],
-        ['Get Scale', {'attr_name': 'worldScale'}],
-        ['Get Color', {'attr_name': 'color'}],
-        ['Get Name', {'attr_name': 'name'}]
+        ['Get World Position', {'nl_label': 'Get World Position', 'attr_name': 'worldPosition'}],
+        ['Get World Rotation', {'nl_label': 'Get World Rotation', 'attr_name': 'worldOrientation'}],
+        ['Get World Linear Velocity', {'nl_label': 'Get World Linear Velocity', 'attr_name': 'worldLinearVelocity'}],
+        ['Get World Angular Velocity', {'nl_label': 'Get World Angular Velocity', 'attr_name': 'worldAngularVelocity'}],
+        ['Get World Transform', {'nl_label': 'Get World Transform', 'attr_name': 'worldTransform'}],
+        ['Get Local Position', {'nl_label': 'Get Local Position', 'attr_name': 'localPosition'}],
+        ['Get Local Rotation', {'nl_label': 'Get Local Rotation', 'attr_name': 'localOrientation'}],
+        ['Get Local Linear Velocity', {'nl_label': 'Get Local Linear Velocity', 'attr_name': 'localLinearVelocity'}],
+        ['Get Local Angular Velocity', {'nl_label': 'Get Local Angular Velocity', 'attr_name': 'localAngularVelocity'}],
+        ['Get Local Transform', {'nl_label': 'Get Local Transform', 'attr_name': 'localTransform'}],
+        ['Get Scale', {'nl_label': 'Get Scale', 'attr_name': 'worldScale'}],
+        ['Get Color', {'nl_label': 'Get Color', 'attr_name': 'color'}],
+        ['Get Name', {'nl_label': 'Get Name', 'attr_name': 'name'}]
     ]
 
     attr_name: EnumProperty(items=_enum_readable_member_names, name="", default="worldPosition", update=update_draw)
@@ -80,8 +80,6 @@ class LogicNodeGetObjectAttr(LogicNodeParameterType):
 
     def get_attributes(self):
         return [("attribute_name", f'"{self.attr_name}"')]
-
-    nl_class = "ULObjectAttribute"
 
     def get_input_names(self):
         return ["game_object", "_attr_name"]

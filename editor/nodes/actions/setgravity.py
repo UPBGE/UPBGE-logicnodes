@@ -8,8 +8,8 @@ from ...sockets import NodeSocketLogicVectorXYZVelocity
 class LogicNodeSetGravity(LogicNodeActionType):
     bl_idname = "NLActionSetGravity"
     bl_label = "Set Gravity"
-    nl_category = "Scene"
-    nl_module = 'actions'
+    nl_module = 'uplogic.nodes.actions'
+    nl_class = "ULSetGravity"
 
     def init(self, context):
         self.add_input(NodeSocketLogicCondition, "Condition")
@@ -19,8 +19,6 @@ class LogicNodeSetGravity(LogicNodeActionType):
 
     def get_output_names(self):
         return ["OUT"]
-
-    nl_class = "ULSetGravity"
 
     def get_input_names(self):
         return ["condition", "gravity"]

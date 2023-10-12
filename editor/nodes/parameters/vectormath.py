@@ -12,7 +12,7 @@ from bpy.props import EnumProperty
 class LogicNodeVectorMath(LogicNodeParameterType):
     bl_idname = "NLVectorMath"
     bl_label = "Vector Math"
-    nl_module = 'parameters'
+    nl_module = 'uplogic.nodes.parameters'
 
     def update_draw(self, context=None):
         if not self.ready:
@@ -39,7 +39,8 @@ class LogicNodeVectorMath(LogicNodeParameterType):
     operator: EnumProperty(
         name='Operation',
         items=_enum_vector_math_options,
-        update=update_draw
+        update=update_draw,
+        default='add'
     )
 
     def init(self, context):

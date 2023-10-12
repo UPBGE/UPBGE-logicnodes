@@ -8,7 +8,7 @@ from ...sockets import NodeSocketLogicBoolean
 class LogicNodeSetCursorVisibility(LogicNodeActionType):
     bl_idname = "NLActionSetMouseCursorVisibility"
     bl_label = "Cursor Visibility"
-    nl_module = 'actions'
+    nl_module = 'uplogic.nodes.actions'
     nl_class = "ULSetCursorVisibility"
 
     def init(self, context):

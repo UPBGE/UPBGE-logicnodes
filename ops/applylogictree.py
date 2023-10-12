@@ -7,7 +7,7 @@ from ..generator.tree_code_generator import TreeCodeGenerator
 from .operator import operator
 from bpy.types import Operator
 from bpy.props import StringProperty
-from ..ui import LogicNodeTree
+from ..editor.nodetree import LogicNodeTree
 import bpy
 
 

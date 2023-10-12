@@ -9,7 +9,7 @@ from ...sockets import NodeSocketLogicColorRGB
 class LogicNodeSetLightColor(LogicNodeActionType):
     bl_idname = "NLSetLightColorAction"
     bl_label = "Set Light Color"
-    nl_module = 'actions'
+    nl_module = 'uplogic.nodes.actions'
     nl_class = "ULSetLightColor"
 
     def init(self, context):

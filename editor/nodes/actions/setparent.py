@@ -9,7 +9,7 @@ from ...sockets import NodeSocketLogicBoolean
 class LogicNodeSetParent(LogicNodeActionType):
     bl_idname = "NLActionSetParentNode"
     bl_label = "Set Parent"
-    nl_module = 'actions'
+    nl_module = 'uplogic.nodes.actions'
     nl_class = "ULSetParent"
 
     def init(self, context):

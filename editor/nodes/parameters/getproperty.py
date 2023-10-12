@@ -11,8 +11,9 @@ from bpy.props import EnumProperty
 class LogicNodeGetProperty(LogicNodeParameterType):
     bl_idname = "NLGameObjectPropertyParameterNode"
     bl_label = "Get Property"
-    bl_icon = 'EXPORT'
-    nl_module = 'parameters'
+    nl_module = 'uplogic.nodes.parameters'
+    nl_class = "ULGetProperty"
+
     mode: EnumProperty(
         name='Mode',
         items=_enum_object_property_types,
@@ -27,8 +28,6 @@ class LogicNodeGetProperty(LogicNodeParameterType):
         self.add_input(NodeSocketLogicGameProperty, "Property")
         self.add_output(NodeSocketLogicParameter, "Property Value")
         LogicNodeParameterType.init(self, context)
-
-    nl_class = "ULGetProperty"
 
     def get_input_names(self):
         return ["game_object", "property_name"]

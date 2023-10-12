@@ -10,7 +10,7 @@ from ...sockets import NodeSocketLogicDictionary
 class LogicNodeListGlobalValues(LogicNodeActionType):
     bl_idname = "NLActionListGlobalValues"
     bl_label = "List Global Category"
-    nl_module = 'actions'
+    nl_module = 'uplogic.nodes.actions'
     nl_class = "ULListGlobalValues"
 
     def init(self, context):

@@ -9,7 +9,7 @@ from ...sockets import NodeSocketLogicBoolean
 class LogicNodeSetPhysics(LogicNodeActionType):
     bl_idname = "NLActionSetPhysicsNode"
     bl_label = "Set Physics"
-    nl_module = 'actions'
+    nl_module = 'uplogic.nodes.actions'
     nl_class = "ULSetPhysics"
 
     def init(self, context):

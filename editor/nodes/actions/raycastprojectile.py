@@ -8,15 +8,14 @@ from ...sockets import NodeSocketLogicBoolean
 from ...sockets import NodeSocketLogicFloatPositive
 from ...sockets import NodeSocketLogicString
 from ...sockets import NodeSocketLogicList
-from ....utilities import OUTCELL
+from ...sockets import NodeSocketLogicBitMask
 
 
 @node_type
 class LogicNodeRaycastProjectile(LogicNodeActionType):
     bl_idname = "NLProjectileRayCast"
     bl_label = "Projectile Ray"
-    nl_category = "Ray Casts"
-    nl_module = 'actions'
+    nl_module = 'uplogic.nodes.actions'
     nl_class = "ULProjectileRayCast"
 
     def init(self, context):
@@ -29,6 +28,7 @@ class LogicNodeRaycastProjectile(LogicNodeActionType):
         self.add_input(NodeSocketLogicFloatFactor, "Resolution", {'value': 0.9})
         self.add_input(NodeSocketLogicString, "Property")
         self.add_input(NodeSocketLogicBoolean, 'X-Ray')
+        self.add_input(NodeSocketLogicBitMask, "Mask")
         self.add_input(NodeSocketLogicBoolean, 'Visualize')
         self.add_output(NodeSocketLogicCondition, "Has Result")
         self.add_output(NodeSocketLogicObject, "Picked Object")
@@ -48,8 +48,9 @@ class LogicNodeRaycastProjectile(LogicNodeActionType):
             "resolution",
             "property_name",
             'xray',
+            'mask',
             "visualize"
         ]
 
     def get_output_names(self):
-        return [OUTCELL, "PICKED_OBJECT", "POINT", "NORMAL", 'PARABOLA']
+        return ['RESULT', "PICKED_OBJECT", "POINT", "NORMAL", 'PARABOLA']

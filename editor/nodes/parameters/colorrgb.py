@@ -7,7 +7,7 @@ from ...sockets import NodeSocketLogicColorRGB
 class LogicNodeColorRGB(LogicNodeParameterType):
     bl_idname = "NLParameterRGBNode"
     bl_label = "Color RGB"
-    nl_module = 'parameters'
+    nl_module = 'uplogic.nodes.parameters'
 
     def init(self, context):
         self.add_input(NodeSocketLogicColorRGB, 'Color')

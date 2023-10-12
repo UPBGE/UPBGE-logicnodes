@@ -10,7 +10,7 @@ from ...sockets import NodeSocketLogicUI
 class LogicNodeSetCustomCursor(LogicNodeActionType):
     bl_idname = "LogicNodeSetCustomCursor"
     bl_label = "Set Custom Cursor"
-    nl_module = 'actions'
+    nl_module = 'uplogic.nodes.actions'
 
     def init(self, context):
         self.add_input(NodeSocketLogicCondition, "Condition")

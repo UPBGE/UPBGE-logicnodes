@@ -8,7 +8,7 @@ from ...sockets import NodeSocketLogicFloat
 class LogicNodeDistance(LogicNodeParameterType):
     bl_idname = "NLParameterDistance"
     bl_label = "Distance"
-    nl_module = 'parameters'
+    nl_module = 'uplogic.nodes.parameters'
     deprecated = True
     deprecation_message = 'Replaced by "Vector Math" Node.'
 

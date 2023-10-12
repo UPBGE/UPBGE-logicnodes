@@ -17,7 +17,7 @@ from bpy.props import BoolProperty
 class LogicNodeSound3D(LogicNodeActionType):
     bl_idname = "NLActionStart3DSoundAdv"
     bl_label = "3D Sound"
-    nl_module = 'actions'
+    nl_module = 'uplogic.nodes.actions'
     nl_class = "ULStartSound3D"
 
     def update_draw(self, context=None):

@@ -10,7 +10,7 @@ from ...sockets import NodeSocketLogicBoolean
 class LogicNodeReplaceMesh(LogicNodeActionType):
     bl_idname = "NLActionReplaceMesh"
     bl_label = "Replace Mesh"
-    nl_module = 'actions'
+    nl_module = 'uplogic.nodes.actions'
     nl_class = "ULReplaceMesh"
 
     def init(self, context):

@@ -39,4 +39,4 @@ class NodeSocketLogicScene(NodeSocket, NodeSocketLogic):
 
     def get_unlinked_value(self):
         if isinstance(self.value, Scene):
-            return '"{}"'.format(self.value.name)
+            return f'bpy.data.scenes.get("{self.value.name}")'

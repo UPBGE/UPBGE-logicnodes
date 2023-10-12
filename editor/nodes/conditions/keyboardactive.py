@@ -8,7 +8,7 @@ from ....utilities import OUTCELL
 class LogicNodeKeyboardActive(LogicNodeConditionType):
     bl_idname = "NLKeyboardActive"
     bl_label = "Keyboard Active"
-    nl_module = 'conditions'
+    nl_module = 'uplogic.nodes.conditions'
 
     def init(self, context):
         self.add_output(NodeSocketLogicCondition, 'Active')

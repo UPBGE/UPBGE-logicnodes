@@ -13,7 +13,7 @@ from bpy.props import StringProperty
 class LogicNodeListVariables(LogicNodeActionType):
     bl_idname = "NLActionListVariables"
     bl_label = "List Saved Variables"
-    nl_module = 'actions'
+    nl_module = 'uplogic.nodes.actions'
     nl_class = "ULListVariables"
 
     custom_path: BoolProperty(name='Custom Path')

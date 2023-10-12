@@ -7,7 +7,7 @@ from ...sockets import NodeSocketLogicDictionary
 class LogicNodeDictEmpty(LogicNodeParameterType):
     bl_idname = "NLInitEmptyDict"
     bl_label = "New Dictionary"
-    nl_module = 'parameters'
+    nl_module = 'uplogic.nodes.parameters'
 
     def init(self, context):
         self.add_output(NodeSocketLogicDictionary, 'Dictionary')

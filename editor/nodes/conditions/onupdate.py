@@ -7,7 +7,7 @@ from ...sockets import NodeSocketLogicCondition
 class LogicNodeOnUpdate(LogicNodeConditionType):
     bl_idname = "NLOnUpdateConditionNode"
     bl_label = "On Update"
-    nl_module = 'conditions'
+    nl_module = 'uplogic.nodes.conditions'
 
     def init(self, context):
         self.add_output(NodeSocketLogicCondition, "Out")

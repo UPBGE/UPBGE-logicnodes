@@ -7,7 +7,7 @@ from ...sockets import NodeSocketLogicFloat
 class LogicNodeTimeData(LogicNodeParameterType):
     bl_idname = "NLParameterTimeNode"
     bl_label = "Time Data"
-    nl_module = 'parameters'
+    nl_module = 'uplogic.nodes.parameters'
 
     search_tags = [
         ['Time', {'disable_out': [1, 2]}],

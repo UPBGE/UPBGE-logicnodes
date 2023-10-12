@@ -10,7 +10,7 @@ from ...sockets import NodeSocketLogicParameter
 class LogicNodeSensorValue(LogicNodeParameterType):
     bl_idname = "NLSensorValueNode"
     bl_label = "Get Sensor Value"
-    nl_module = 'parameters'
+    nl_module = 'uplogic.nodes.parameters'
 
     def init(self, context):
         self.add_input(NodeSocketLogicObject, 'Object')

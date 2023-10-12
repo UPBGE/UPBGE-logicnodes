@@ -11,9 +11,8 @@ from bpy.props import StringProperty
 class LogicNodeSaveVariable(LogicNodeActionType):
     bl_idname = "NLActionSaveVariable"
     bl_label = "Save Variable"
-    nl_category = "Data"
-    nl_subcat = "Variables"
-    nl_module = 'actions'
+    nl_module = 'uplogic.nodes.actions'
+    nl_class = "ULSaveVariable"
 
     custom_path: BoolProperty(name='Custom Path')
     path: StringProperty(
@@ -44,8 +43,6 @@ class LogicNodeSaveVariable(LogicNodeActionType):
         )
         if self.custom_path:
             layout.prop(self, "path", text='')
-
-    nl_class = "ULSaveVariable"
 
     def get_input_names(self):
         return ["condition", 'file_name', 'name', 'val']

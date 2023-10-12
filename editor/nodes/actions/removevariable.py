@@ -10,9 +10,8 @@ from bpy.props import StringProperty
 class LogicNodeRemoveVariable(LogicNodeActionType):
     bl_idname = "NLActionRemoveVariable"
     bl_label = "Remove Variable"
-    nl_category = "Data"
-    nl_subcat = "Variables"
-    nl_module = 'actions'
+    nl_module = 'uplogic.nodes.actions'
+    nl_class = "ULRemoveVariable"
 
     custom_path: BoolProperty(name='Custom Path')
     path: StringProperty(
@@ -41,8 +40,6 @@ class LogicNodeRemoveVariable(LogicNodeActionType):
         )
         if self.custom_path:
             layout.prop(self, "path", text='')
-
-    nl_class = "ULRemoveVariable"
 
     def get_input_names(self):
         return ["condition", 'file_name', 'name']

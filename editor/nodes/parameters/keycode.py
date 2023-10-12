@@ -9,7 +9,7 @@ from bpy.props import StringProperty
 class LogicNodeKeyCode(LogicNodeParameterType):
     bl_idname = "NLParameterKeyboardKeyCode"
     bl_label = "Key Code"
-    nl_module = 'parameters'
+    nl_module = 'uplogic.nodes.parameters'
 
     value: StringProperty()
 

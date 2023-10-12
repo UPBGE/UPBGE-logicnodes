@@ -9,7 +9,7 @@ from ...sockets import NodeSocketLogicFloat
 class LogicNodeSetCameraOrthoScale(LogicNodeActionType):
     bl_idname = "NLActionSetCameraOrthoScale"
     bl_label = "Set Orthographic Scale"
-    nl_module = 'actions'
+    nl_module = 'uplogic.nodes.actions'
     nl_class = "ULSetCameraOrthoScale"
 
     def init(self, context):

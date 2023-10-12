@@ -14,7 +14,7 @@ from bpy.props import BoolProperty
 class LogicNodeCollision(LogicNodeConditionType):
     bl_idname = "NLConditionCollisionNode"
     bl_label = "Collision"
-    nl_module = 'conditions'
+    nl_module = 'uplogic.nodes.conditions'
 
     def update_draw(self, context=None):
         if not self.ready:

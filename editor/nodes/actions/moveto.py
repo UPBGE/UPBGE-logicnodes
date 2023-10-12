@@ -12,7 +12,7 @@ from ...sockets import NodeSocketLogicFloat
 class LogicNodeMoveTo(LogicNodeActionType):
     bl_idname = "NLActionMoveTo"
     bl_label = "Move To"
-    nl_module = 'actions'
+    nl_module = 'uplogic.nodes.actions'
     nl_class = "ULMoveTo"
 
     def init(self, context):

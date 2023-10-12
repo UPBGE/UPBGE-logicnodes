@@ -42,4 +42,4 @@ class NodeSocketLogicMaterial(NodeSocket, NodeSocketLogic):
 
     def get_unlinked_value(self):
         if isinstance(self.value, bpy.types.Material):
-            return '"{}"'.format(self.value.name)
+            return f'bpy.data.materials.get("{self.value.name}")'

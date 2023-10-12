@@ -12,10 +12,8 @@ from bpy.props import EnumProperty
 class LogicNodeSetProperty(LogicNodeActionType):
     bl_idname = "NLSetGameObjectGamePropertyActionNode"
     bl_label = "Set Property"
-    bl_icon = 'IMPORT'
-    nl_category = "Objects"
-    nl_subcat = 'Properties'
-    nl_module = 'actions'
+    nl_module = 'uplogic.nodes.actions'
+    nl_class = "ULSetProperty"
 
     mode: EnumProperty(
         name='Mode',
@@ -33,8 +31,6 @@ class LogicNodeSetProperty(LogicNodeActionType):
         self.add_input(NodeSocketLogicValue, "")
         self.add_output(NodeSocketLogicCondition, "Done")
         LogicNodeActionType.init(self, context)
-
-    nl_class = "ULSetProperty"
 
     def get_input_names(self):
         return [

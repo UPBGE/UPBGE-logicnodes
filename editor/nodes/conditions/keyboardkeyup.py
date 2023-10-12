@@ -9,7 +9,7 @@ from bpy.props import BoolProperty
 class LogicNodeKeyboardKeyUp(LogicNodeConditionType):
     bl_idname = "NLKeyReleasedCondition"
     bl_label = "Key Up"
-    nl_module = 'conditions'
+    nl_module = 'uplogic.nodes.conditions'
     deprecated = True
     deprecation_message = 'Replaced by "Key" Node.'
 

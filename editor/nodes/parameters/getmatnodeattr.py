@@ -10,8 +10,8 @@ from ...sockets import NodeSocketLogicString
 class LogicNodeGetMaterialNodeAttr(LogicNodeParameterType):
     bl_idname = "NLGetMaterialNodeAttribute"
     bl_label = "Get Node Value"
-    bl_icon = 'DRIVER_TRANSFORM'
-    nl_module = 'parameters'
+    nl_module = 'uplogic.nodes.parameters'
+    nl_class = "ULGetMaterialAttribute"
 
     def init(self, context):
         self.add_input(NodeSocketLogicMaterial, 'Material')
@@ -32,8 +32,6 @@ class LogicNodeGetMaterialNodeAttr(LogicNodeParameterType):
             itl.enabled = att.enabled = True
         else:
             itl.enabled = att.enabled = False
-
-    nl_class = "ULGetMaterialAttribute"
 
     def get_input_names(self):
         return ["mat_name", 'node_name', "internal", 'attribute']

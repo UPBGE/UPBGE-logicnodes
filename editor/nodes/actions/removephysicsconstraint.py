@@ -9,7 +9,7 @@ from ...sockets import NodeSocketLogicObject
 class LogicNodeRemovePhysicsConstraint(LogicNodeActionType):
     bl_idname = "NLActionRemovePhysicsConstraint"
     bl_label = "Remove Constraint"
-    nl_module = 'actions'
+    nl_module = 'uplogic.nodes.actions'
     nl_class = "ULRemovePhysicsConstraint"
 
     def init(self, context):

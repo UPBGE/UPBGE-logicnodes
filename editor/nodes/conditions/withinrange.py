@@ -11,7 +11,7 @@ from bpy.props import EnumProperty
 class LogicNodeWithinRange(LogicNodeConditionType):
     bl_idname = "NLWithinRangeNode"
     bl_label = "Within Range"
-    nl_module = 'parameters'
+    nl_module = 'uplogic.nodes.parameters'
 
     operator: EnumProperty(
         name='Mode',

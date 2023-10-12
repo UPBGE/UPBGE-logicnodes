@@ -8,7 +8,7 @@ from ...sockets import NodeSocketLogicVectorXY
 class LogicNodeCombineXY(LogicNodeParameterType):
     bl_idname = "NLParameterVector2SimpleNode"
     bl_label = "Combine XY"
-    nl_module = 'parameters'
+    nl_module = 'uplogic.nodes.parameters'
 
     search_tags = [
         ['Combine XY', {}],

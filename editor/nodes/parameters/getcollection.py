@@ -7,8 +7,8 @@ from ...sockets import NodeSocketLogicCollection
 class LogicNodeGetGetCollection(LogicNodeParameterType):
     bl_idname = "NLGetCollectionNode"
     bl_label = "Get Collection"
-    bl_icon = 'OUTLINER_COLLECTION'
-    nl_module = 'parameters'
+    nl_module = 'uplogic.nodes.parameters'
+    nl_class = "ULGetCollection"
 
     def init(self, context):
         self.add_input(NodeSocketLogicCollection, '')
@@ -17,8 +17,6 @@ class LogicNodeGetGetCollection(LogicNodeParameterType):
 
     def get_input_names(self):
         return ['collection']
-
-    nl_class = "ULGetCollection"
 
     def get_output_names(self):
         return ["OUT"]

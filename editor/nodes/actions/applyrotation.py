@@ -10,7 +10,7 @@ from bpy.props import BoolProperty
 class LogicNodeApplyRotation(LogicNodeActionType):
     bl_idname = "NLActionApplyRotation"
     bl_label = "Apply Rotation"
-    nl_module = 'actions'
+    nl_module = 'uplogic.nodes.actions'
     nl_class = "ULApplyRotation"
 
     deprecated = True

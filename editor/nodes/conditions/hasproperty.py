@@ -11,8 +11,8 @@ from bpy.props import EnumProperty
 class LogicNodeHasProperty(LogicNodeConditionType):
     bl_idname = "NLGameObjectHasPropertyParameterNode"
     bl_label = "Has Property"
-    bl_icon = 'QUESTION'
-    nl_module = 'conditions'
+    nl_module = 'uplogic.nodes.conditions'
+    nl_class = "ULHasProperty"
 
     mode: EnumProperty(
         name='Mode',
@@ -28,8 +28,6 @@ class LogicNodeHasProperty(LogicNodeConditionType):
         self.add_input(NodeSocketLogicString, "Name", {'value': 'prop'})
         self.add_output(NodeSocketLogicCondition, "If True")
         LogicNodeConditionType.init(self, context)
-
-    nl_class = "ULHasProperty"
 
     def get_input_names(self):
         return ["game_object", "property_name"]

@@ -35,6 +35,7 @@ _enum_mouse_wheel_direction = [
 
 
 _enum_vector_math_options = [
+    ("", "Operation", ""),
     ("scale", "Scale", "A multiplied by Scale"),
     ("length", "Length", "Length of A"),
     ("distance", "Distance", "Distance between A and B"),
@@ -54,7 +55,6 @@ _enum_vector_math_options = [
     ("subtract", "Subtract", "A - B"),
     ("add", "Add", "A + B"),
     ("matmul", "Matrix Multiply", "Transform A by B"),
-    ("", "Operation", ""),
     None,
     ("normalize", "Normalize", "Rescale all values to 0 - 1"),
     ("lerp", "Lerp", "Linear Interpolation between the two vectors"),
@@ -678,4 +678,11 @@ _transform_types = [
 _collision_bitmask_types = [
     ("0", "Group", ""),
     ("1", "Mask", "")
+]
+
+
+_rotate_by_types = [
+    ("0", "2D", ""),
+    ("1", "3D", ""),
+    ("2", "Arbitrary Axis", "")
 ]

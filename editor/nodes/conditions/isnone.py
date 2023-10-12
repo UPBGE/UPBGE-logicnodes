@@ -10,7 +10,7 @@ class LogicNodeIsNone(LogicNodeConditionType):
     bl_label = "Is None"
     bl_width_min = 60
     bl_width_default = 80
-    nl_module = 'conditions'
+    nl_module = 'uplogic.nodes.conditions'
 
     def init(self, context):
         self.add_input(NodeSocketLogicParameter, "Value")

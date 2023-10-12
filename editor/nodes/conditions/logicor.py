@@ -9,8 +9,9 @@ class LogicNodeLogicOr(LogicNodeConditionType):
     bl_label = "Or"
     bl_width_min = 60
     bl_width_default = 80
-    nl_category = "Logic"
-    nl_module = 'conditions'
+    nl_module = 'uplogic.nodes.conditions'
+    nl_class = "ULOr"
+
     deprecated = True
     deprecation_message = 'Replaced by "Gate" Node.'
 
@@ -20,8 +21,6 @@ class LogicNodeLogicOr(LogicNodeConditionType):
         self.add_output(NodeSocketLogicCondition, 'A or B')
         LogicNodeConditionType.init(self, context)
         self.hide = True
-
-    nl_class = "ULOr"
 
     def get_input_names(self):
         return ["ca", "cb"]

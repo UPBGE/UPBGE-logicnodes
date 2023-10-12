@@ -9,7 +9,7 @@ class LogicNodeLogicBranch(LogicNodeConditionType):
     bl_label = "Branch"
     bl_width_min = 60
     bl_width_default = 100
-    nl_module = 'conditions'
+    nl_module = 'uplogic.nodes.conditions'
 
     search_tags = [
         ['Logic Branch', {}],

@@ -12,7 +12,7 @@ from bpy.props import EnumProperty
 class LogicNodeAddFilter(LogicNodeActionType):
     bl_idname = "NLAddFilter"
     bl_label = "Add Filter"
-    nl_module = 'actions'
+    nl_module = 'uplogic.nodes.actions'
 
     def update_draw(self, context=None):
         if not self.ready:

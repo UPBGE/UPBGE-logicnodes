@@ -9,7 +9,7 @@ class LogicNodeLogicNot(LogicNodeConditionType):
     bl_label = "Not"
     bl_width_min = 60
     bl_width_default = 80
-    nl_module = 'conditions'
+    nl_module = 'uplogic.nodes.conditions'
     deprecated = True
 
     def init(self, context):

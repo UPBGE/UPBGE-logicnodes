@@ -7,7 +7,7 @@ from ...sockets import NodeSocketLogicCondition
 class LogicNodeStopAllSounds(LogicNodeActionType):
     bl_idname = "NLActionStopAllSounds"
     bl_label = "Stop All Sounds"
-    nl_module = 'actions'
+    nl_module = 'uplogic.nodes.actions'
     nl_class = "ULStopAllSounds"
 
     def init(self, context):

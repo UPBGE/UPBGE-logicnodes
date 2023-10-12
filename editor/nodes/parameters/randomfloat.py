@@ -7,7 +7,7 @@ from ...sockets import NodeSocketLogicFloat
 class LogicNodeRandomFloat(LogicNodeParameterType):
     bl_idname = "NLActionRandomFloat"
     bl_label = "Random Float"
-    nl_module = 'parameters'
+    nl_module = 'uplogic.nodes.parameters'
     deprecated = True
     deprecation_message = 'Replaced by "Random Value" Node.'
 

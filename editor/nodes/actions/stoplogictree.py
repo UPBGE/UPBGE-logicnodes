@@ -9,7 +9,7 @@ from ...sockets import NodeSocketLogicTree
 class LogicNodeStopLogicTree(LogicNodeActionType):
     bl_idname = "NLStopLogicNetworkActionNode"
     bl_label = "Stop Logic Tree"
-    nl_module = 'actions'
+    nl_module = 'uplogic.nodes.actions'
     nl_class = "ULStopSubNetwork"
 
     def init(self, context):

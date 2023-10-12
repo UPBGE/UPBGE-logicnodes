@@ -12,7 +12,7 @@ from bpy.props import EnumProperty
 class LogicNodeThreshold(LogicNodeParameterType):
     bl_idname = "NLThresholdNode"
     bl_label = "Threshold"
-    nl_module = 'parameters'
+    nl_module = 'uplogic.nodes.parameters'
 
     operator: EnumProperty(
         name='Operation',

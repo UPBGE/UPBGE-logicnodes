@@ -8,16 +8,14 @@ from ...sockets import NodeSocketLogicScene
 class LogicNodeSetScene(LogicNodeActionType):
     bl_idname = "NLSetScene"
     bl_label = "Set Scene"
-    nl_category = "Scene"
-    nl_module = 'actions'
+    nl_module = 'uplogic.nodes.actions'
+    nl_class = "ULSetScene"
 
     def init(self, context):
         self.add_input(NodeSocketLogicCondition, 'Condition')
         self.add_input(NodeSocketLogicScene, "Scene")
         self.add_output(NodeSocketLogicCondition, 'Done')
         LogicNodeActionType.init(self, context)
-
-    nl_class = "ULSetScene"
 
     def get_input_names(self):
         return ['condition', 'scene']

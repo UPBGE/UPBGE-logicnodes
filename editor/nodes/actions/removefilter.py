@@ -8,7 +8,7 @@ from ...sockets import NodeSocketLogicIntegerPositiveCent
 class LogicNodeRemoveFilter(LogicNodeActionType):
     bl_idname = "NLRemoveFilter"
     bl_label = "Remove Filter"
-    nl_module = 'actions'
+    nl_module = 'uplogic.nodes.actions'
 
     def init(self, context):
         self.add_input(NodeSocketLogicCondition, 'Condition')

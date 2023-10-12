@@ -42,4 +42,4 @@ class NodeSocketLogicObjectName(NodeSocket, NodeSocketLogic):
 
     def get_unlinked_value(self):
         if isinstance(self.value, Object):
-            return '"{}"'.format(self.value.name)
+            return repr(self.value.name)

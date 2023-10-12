@@ -8,7 +8,7 @@ from ...sockets import NodeSocketLogicLight
 class LogicNodeLightMakeUnique(LogicNodeActionType):
     bl_idname = "NLMakeUniqueLight"
     bl_label = "Make Unique"
-    nl_module = 'actions'
+    nl_module = 'uplogic.nodes.actions'
 
     def init(self, context):
         self.add_input(NodeSocketLogicCondition, 'Condition')

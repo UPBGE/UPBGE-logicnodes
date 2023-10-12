@@ -12,9 +12,9 @@ from bpy.props import EnumProperty
 class LogicNodeCompareVectors(LogicNodeConditionType):
     bl_idname = "NLConditionCompareVecs"
     bl_label = "Compare Vectors"
-    nl_category = "Math"
-    nl_subcat = 'Vector Math'
-    nl_module = 'conditions'
+    nl_module = 'uplogic.nodes.conditions'
+    nl_class = "ULCompareVectors"
+
     deprecated = True
 
     operator: EnumProperty(name='Operator', items=_enum_logic_operators)
@@ -29,8 +29,6 @@ class LogicNodeCompareVectors(LogicNodeConditionType):
         self.add_input(NodeSocketLogicVectorXYZ, "Vector B")
         self.add_output(NodeSocketLogicCondition, "If True")
         LogicNodeConditionType.init(self, context)
-
-    nl_class = "ULCompareVectors"
 
     def get_input_names(self):
         return ['all', 'threshold', "param_a", "param_b"]

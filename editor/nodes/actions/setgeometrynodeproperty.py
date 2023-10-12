@@ -11,7 +11,7 @@ from ...sockets import NodeSocketLogicValue
 class LogicNodeSetGeometryNodeProperty(LogicNodeActionType):
     bl_idname = "NLSetGeometryNodeAttribute"
     bl_label = "Set Node Property"
-    nl_module = 'actions'
+    nl_module = 'uplogic.nodes.actions'
     deprecated = True
 
     search_tags = [

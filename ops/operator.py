@@ -1,5 +1,5 @@
 from bpy.types import Operator
-from ..utilities import error
+from ..utilities import error, preferences
 import time
 import bpy
 import os
@@ -39,20 +39,8 @@ def update_current_tree_code(*ignored):
     _update_queue.append(now)
 
 
-def _update_all_logic_tree_code():
-    now = time.time()
-    _update_queue.append(now)
-    now = time.time()
-    last_event = _update_queue[-1]
-    # utils.set_compile_status(utils.TREE_MODIFIED)
-    try:
-        bpy.ops.logic_nodes.generate_code()
-    except Exception:
-        error("Unknown Error, abort generating Network code")
-
-
 def _enum_components(self, context):
-    select_text = context.scene.nl_componenthelper
+    select_text = preferences().nl_componenthelper
     items = []
     for line in select_text.lines:
         if 'class ' in line.body:

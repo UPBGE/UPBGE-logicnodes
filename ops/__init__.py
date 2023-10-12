@@ -32,3 +32,5 @@ from .webbuttons import LOGIC_NODES_OT_open_donate
 from .webbuttons import LOGIC_NODES_OT_open_upbge_docs
 from .webbuttons import LOGIC_NODES_OT_open_upbge_manual
 from .webbuttons import LOGIC_NODES_OT_open_github
+from .addlogictreeproperty import LOGIC_NODES_OT_add_logic_tree_property
+from .removelogictreeproperty import LOGIC_NODES_OT_remove_logic_tree_property

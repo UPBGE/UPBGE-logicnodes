@@ -13,7 +13,7 @@ from bpy.props import EnumProperty
 class LogicNodeAddPhysicsConstraint(LogicNodeActionType):
     bl_idname = "NLActionAddPhysicsConstraint"
     bl_label = "Add Constraint"
-    nl_module = 'actions'
+    nl_module = 'uplogic.nodes.actions'
     nl_class = "ULAddPhysicsConstraint"
 
     def update_draw(self, context=None):

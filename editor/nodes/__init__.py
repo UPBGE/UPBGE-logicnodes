@@ -155,6 +155,7 @@ from .actions.movetonavmesh import LogicNodeMoveToNavmesh
 from .actions.followpath import LogicNodeFollowPath
 from .actions.sendevent import LogicNodeSendEvent
 from .actions.clearvariables import LogicNodeClearVariables
+from .actions.setlogictreeproperty import LogicNodeSetLogicTreeProperty
 
 from .conditions.checkangle import LogicNodeCheckAngle
 from .conditions.collision import LogicNodeCollision
@@ -308,3 +309,7 @@ from .parameters.vrheadset import LogicNodeVRHeadset
 from .parameters.worldposition import LogicNodeWorldPosition
 from .parameters.xyztomatrix import LogicNodeXYZtoMatrix
 from .parameters.listextend import LogicNodeListExtend
+from .parameters.rotatebypoint import LogicNodeRotateByPoint
+from .parameters.getlogictreeproperty import LogicNodeGetLogicTreeProperty
+
+from .groupnode import NodeGroupInputLogic

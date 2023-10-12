@@ -10,9 +10,8 @@ from ...sockets import NodeSocketLogicMaterial
 class LogicNodeSetMaterial(LogicNodeActionType):
     bl_idname = "NLSetMaterial"
     bl_label = "Set Material"
-    nl_category = 'Nodes'
-    nl_subcat = 'Materials'
-    nl_module = 'actions'
+    nl_module = 'uplogic.nodes.actions'
+    nl_class = "ULSetMaterial"
 
     def init(self, context):
         self.add_input(NodeSocketLogicCondition, "Condition")
@@ -21,8 +20,6 @@ class LogicNodeSetMaterial(LogicNodeActionType):
         self.add_input(NodeSocketLogicMaterial, "Material")
         self.add_output(NodeSocketLogicCondition, "Done")
         LogicNodeActionType.init(self, context)
-
-    nl_class = "ULSetMaterial"
 
     def update_draw(self, context=None):
         if not self.ready:

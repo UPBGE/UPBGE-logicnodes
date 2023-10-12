@@ -11,8 +11,8 @@ import bpy
 class LogicNodeGetGroupSocket(LogicNodeParameterType):
     bl_idname = "NLGetNodeGroupNodeValue"
     bl_label = "Get Socket Value"
-    bl_icon = 'TRIA_RIGHT'
-    nl_module = 'parameters'
+    nl_module = 'uplogic.nodes.parameters'
+    nl_class = "ULGetNodeSocket"
 
     def init(self, context):
         self.add_input(NodeSocketLogicNodeGroup, 'Tree')
@@ -45,8 +45,6 @@ class LogicNodeGetGroupSocket(LogicNodeParameterType):
                 ipt.value = limit
             name = target.inputs[ipt.value].name
             ipt.name = name
-
-    nl_class = "ULGetNodeSocket"
 
     def get_input_names(self):
         return ["tree_name", 'node_name', "input_slot"]

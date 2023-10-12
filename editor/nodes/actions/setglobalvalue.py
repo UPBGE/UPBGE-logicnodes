@@ -12,7 +12,7 @@ from ...sockets import NodeSocketLogicBoolean
 class LogicNodeSetGlobalValue(LogicNodeActionType):
     bl_idname = "NLActionSetGlobalValue"
     bl_label = "Set Global Value"
-    nl_module = 'actions'
+    nl_module = 'uplogic.nodes.actions'
     nl_class = "ULSetGlobalValue"
 
     def init(self, context):

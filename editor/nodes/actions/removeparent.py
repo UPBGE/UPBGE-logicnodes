@@ -8,7 +8,7 @@ from ...sockets import NodeSocketLogicObject
 class LogicNodeRemoveParent(LogicNodeActionType):
     bl_idname = "NLActionRemoveParentNode"
     bl_label = "Remove Parent"
-    nl_module = 'actions'
+    nl_module = 'uplogic.nodes.actions'
     nl_class = "ULRemoveParent"
 
     def init(self, context):

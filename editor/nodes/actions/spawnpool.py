@@ -2,7 +2,6 @@ from ..node import node_type
 from ..node import LogicNodeActionType
 from ...sockets import NodeSocketLogicCondition
 from ...sockets import NodeSocketLogicObject
-from ...sockets import NodeSocketLogicObjectName
 from ...sockets import NodeSocketLogicIntegerPositive
 from ...sockets import NodeSocketLogicFloatPositive
 from ...sockets import NodeSocketLogicBoolean
@@ -17,7 +16,7 @@ from bpy.props import EnumProperty
 class LogicNodeSpawnPool(LogicNodeActionType):
     bl_idname = "LogicNodeSpawnPool"
     bl_label = "Spawn Pool"
-    nl_module = 'actions'
+    nl_module = 'uplogic.nodes.actions'
 
     def update_draw(self, context=None):
         if not self.ready:
@@ -53,7 +52,7 @@ class LogicNodeSpawnPool(LogicNodeActionType):
         self.add_input(NodeSocketLogicCondition, "Create Pool")
         self.add_input(NodeSocketLogicCondition, "Spawn")
         self.add_input(NodeSocketLogicObject, "Spawner")
-        self.add_input(NodeSocketLogicObjectName, "Object Instance")
+        self.add_input(NodeSocketLogicObject, "Object Instance", {'allow_owner': False})
         self.add_input(NodeSocketLogicIntegerPositive, "Amount", {'value': 10})
         self.add_input(NodeSocketLogicIntegerPositive, "Life", {'value': 3})
         self.add_input(NodeSocketLogicFloatPositive, "Speed", {'value': 75.0})

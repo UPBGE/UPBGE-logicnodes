@@ -1,5 +1,5 @@
 import bpy
-from ..ui import LogicNodeTree
+from .nodetree import LogicNodeTree
 
 
 def filter_materials(self, item):

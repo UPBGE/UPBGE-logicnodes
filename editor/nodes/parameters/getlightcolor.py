@@ -8,7 +8,7 @@ from ...sockets import NodeSocketLogicColorRGB
 class LogicNodeGetLightColor(LogicNodeParameterType):
     bl_idname = "NLGetLightColorAction"
     bl_label = "Get Light Color"
-    nl_module = 'parameters'
+    nl_module = 'uplogic.nodes.parameters'
 
     def init(self, context):
         self.add_input(NodeSocketLogicLight, "Light Object")

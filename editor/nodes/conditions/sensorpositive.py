@@ -9,7 +9,7 @@ from ...sockets import NodeSocketLogicCondition
 class LogicNodeSensorPositive(LogicNodeConditionType):
     bl_idname = "NLGetSensorNode"
     bl_label = "Sensor Positive"
-    nl_module = 'conditions'
+    nl_module = 'uplogic.nodes.conditions'
 
     def init(self, context):
         self.add_input(NodeSocketLogicObject, 'Object')

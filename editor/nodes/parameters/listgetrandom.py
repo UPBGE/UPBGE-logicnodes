@@ -8,7 +8,7 @@ from ...sockets import NodeSocketLogicParameter
 class LogicNodeListGetRandom(LogicNodeParameterType):
     bl_idname = "NLGetRandomListIndex"
     bl_label = "Get Random List Item"
-    nl_module = 'parameters'
+    nl_module = 'uplogic.nodes.parameters'
 
     def init(self, context):
         self.add_input(NodeSocketLogicList, "List")

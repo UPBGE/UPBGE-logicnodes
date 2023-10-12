@@ -9,8 +9,8 @@ from ...sockets import NodeSocketLogicInteger
 class LogicNodeMouseData(LogicNodeParameterType):
     bl_idname = "NLMouseDataParameter"
     bl_label = "Mouse Status"
-    bl_icon = 'OPTIONS'
-    nl_module = 'parameters'
+    nl_module = 'uplogic.nodes.parameters'
+    nl_class = "ULMouseData"
 
     search_tags = [
         ['Mouse Position', {'nl_label': 'Mouse Position', 'disable_out': [1, 4, 5, 6]}],
@@ -28,8 +28,6 @@ class LogicNodeMouseData(LogicNodeParameterType):
         self.add_output(NodeSocketLogicParameter, "Y Movement")
         self.add_output(NodeSocketLogicInteger, "Wheel Difference")
         LogicNodeParameterType.init(self, context)
-
-    nl_class = "ULMouseData"
 
     def get_output_names(self):
         return ["MXY0", "MDXY0", "MX", "MY", "MDX", "MDY", "MDWHEEL"]

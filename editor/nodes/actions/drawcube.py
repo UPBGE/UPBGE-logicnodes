@@ -12,7 +12,7 @@ from bpy.props import BoolProperty
 class LogicNodeDrawCube(LogicNodeActionType):
     bl_idname = "NLDrawCube"
     bl_label = "Draw Cube"
-    nl_module = 'actions'
+    nl_module = 'uplogic.nodes.actions'
 
     use_volume_origin: BoolProperty(
         name='Use Volume Origin',

@@ -7,7 +7,7 @@ from ...sockets import NodeSocketLogicCondition
 class LogicNodeRestartGame(LogicNodeActionType):
     bl_idname = "NLActionRestartGame"
     bl_label = "Restart Game"
-    nl_module = 'actions'
+    nl_module = 'uplogic.nodes.actions'
     nl_class = "ULRestartGame"
 
     def init(self, context):

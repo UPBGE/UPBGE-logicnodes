@@ -14,7 +14,7 @@ from bpy.props import EnumProperty
 class LogicNodeModifyPropertyClamped(LogicNodeActionType):
     bl_idname = "NLClampedModifyProperty"
     bl_label = "Clamped Modify Property"
-    nl_module = 'actions'
+    nl_module = 'uplogic.nodes.actions'
     deprecated = True
     deprecation_message = 'Replaced by "Modify Property" Node.'
     nl_class = "ULClampedModifyProperty"

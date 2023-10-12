@@ -1,6 +1,6 @@
 from .operator import operator
 from bpy.types import Operator
-from ..ui import LogicNodeTree
+from ..editor.nodetree import LogicNodeTree
 import bpy
 
 

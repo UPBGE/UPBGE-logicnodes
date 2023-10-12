@@ -9,6 +9,11 @@ from bpy.props import BoolProperty
 import bpy
 
 
+# @socket_type
+# class NodeSocketLogicArmature(NodeSocketInterfaceLogic):
+#     bl_socket_idname = 'NLArmatureObjectSocket'
+
+
 @socket_type
 class NodeSocketLogicArmature(NodeSocket, NodeSocketLogic):
     bl_idname = "NLArmatureObjectSocket"

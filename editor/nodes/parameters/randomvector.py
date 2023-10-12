@@ -8,7 +8,7 @@ from ...sockets import NodeSocketLogicVectorXYZ
 class LogicNodeRandomVector(LogicNodeParameterType):
     bl_idname = "NLRandomVect"
     bl_label = "Random Vector"
-    nl_module = 'parameters'
+    nl_module = 'uplogic.nodes.parameters'
     deprecated = True
     deprecation_message = 'Replaced by "Random Value" Node.'
 

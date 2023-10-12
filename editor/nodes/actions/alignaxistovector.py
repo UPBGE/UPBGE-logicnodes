@@ -12,10 +12,10 @@ from bpy.props import BoolProperty
 class LogicNodeAlignAxisToVector(LogicNodeActionType):
     bl_idname = "NLActionAlignAxisToVector"
     bl_label = "Align Axis to Vector"
-    nl_module = 'actions'
+    nl_module = 'uplogic.nodes.actions'
     nl_class = "ULAlignAxisToVector"
 
-    local: BoolProperty(default=True, name='Local')
+    local: BoolProperty(default=False, name='Local')
 
     def init(self, context):
         self.add_input(NodeSocketLogicCondition, "Condition")

@@ -10,7 +10,7 @@ from ...sockets import NodeSocketLogicBoolean
 class LogicNodeAddLogicTree(LogicNodeActionType):
     bl_idname = "NLActionInstallSubNetwork"
     bl_label = "Add Logic Tree to Object"
-    nl_module = 'actions'
+    nl_module = 'uplogic.nodes.actions'
     nl_class = "ULInstallSubNetwork"
 
     def init(self, context):

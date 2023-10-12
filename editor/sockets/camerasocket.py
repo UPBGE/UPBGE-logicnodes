@@ -1,4 +1,4 @@
-from .socket import NodeSocketLogic
+from .socket import SOCKET_TYPE_OBJECT, NodeSocketLogic
 from .socket import PARAM_OBJ_SOCKET_COLOR
 from .socket import socket_type
 from ..filter_types import filter_camera
@@ -26,6 +26,8 @@ class NodeSocketLogicCamera(NodeSocket, NodeSocketLogic):
     )
 
     color = PARAM_OBJ_SOCKET_COLOR
+    nl_type = SOCKET_TYPE_OBJECT
+    valid_sockets = [SOCKET_TYPE_OBJECT]
 
     def draw(self, context, layout, node, text):
         if self.is_output:
@@ -56,4 +58,4 @@ class NodeSocketLogicCamera(NodeSocket, NodeSocketLogic):
         if self.use_active:
             return 'self.owner.scene.active_camera'
         if isinstance(self.value, Object):
-            return '"NLO:{}"'.format(self.value.name)
+            return f'scene.objects["{self.value.name}"]'

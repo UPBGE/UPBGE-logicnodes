@@ -7,7 +7,7 @@ from ...sockets import NodeSocketLogicVectorXYZ
 class LogicNodeGetGravity(LogicNodeParameterType):
     bl_idname = "NLGetGravityNode"
     bl_label = "Get Gravity"
-    nl_module = 'parameters'
+    nl_module = 'uplogic.nodes.parameters'
 
     def init(self, context):
         self.add_output(NodeSocketLogicVectorXYZ, "Gravity")

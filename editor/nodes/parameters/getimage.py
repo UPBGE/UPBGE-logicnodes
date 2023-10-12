@@ -7,15 +7,13 @@ from ...sockets import NodeSocketLogicImage
 class LogicNodeGetImage(LogicNodeParameterType):
     bl_idname = "NLGetImage"
     bl_label = "Get Image"
-    bl_icon = 'IMAGE_DATA'
-    nl_module = 'parameters'
+    nl_module = 'uplogic.nodes.parameters'
+    nl_class = "ULGetImage"
 
     def init(self, context):
         self.add_input(NodeSocketLogicImage, "Image")
         self.add_output(NodeSocketLogicImage, 'Image')
         LogicNodeParameterType.init(self, context)
-
-    nl_class = "ULGetImage"
 
     def get_input_names(self):
         return ["image"]

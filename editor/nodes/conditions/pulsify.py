@@ -9,7 +9,7 @@ class LogicNodePulsify(LogicNodeConditionType):
     """Convert a constant True condition into an interval signal"""
     bl_idname = "NLActionTimeFilter"
     bl_label = "Pulsify"
-    nl_module = 'conditions'
+    nl_module = 'uplogic.nodes.conditions'
 
     def init(self, context):
         self.add_input(NodeSocketLogicCondition, "Condition")

@@ -4,7 +4,7 @@ from ..utilities import success
 from .operator import operator
 from bpy.types import Operator
 from bpy.props import StringProperty
-from ..ui import LogicNodeTree
+from ..editor.nodetree import LogicNodeTree
 import os
 import bpy
 import json

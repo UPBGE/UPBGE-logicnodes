@@ -13,7 +13,7 @@ from socket import gethostbyname, gethostname
 class LogicNodeLocalServer(LogicNodeActionType):
     bl_idname = "LogicNodeLocalServer"
     bl_label = "LAN Server"
-    nl_module = 'actions'
+    nl_module = 'uplogic.nodes.actions'
 
     on_init: BoolProperty(
         name='Startup',

@@ -8,7 +8,7 @@ from ...sockets import NodeSocketLogicVectorXY
 class LogicNodeGetResolution(LogicNodeParameterType):
     bl_idname = "NLGetResolution"
     bl_label = "Get Resolution"
-    nl_module = 'parameters'
+    nl_module = 'uplogic.nodes.parameters'
 
     def init(self, context):
         self.add_output(NodeSocketLogicParameter, "Width")

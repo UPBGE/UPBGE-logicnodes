@@ -1,9 +1,16 @@
-from bpy.types import NodeTree
+from bpy.types import Context, NodeTree
 from bpy.types import NodeReroute
+from bpy.types import NodeInputs
+from bpy.types import NodeOutputs
+from bpy.types import NodeSocket
 from bpy.props import StringProperty
+from bpy.props import CollectionProperty
+from bpy.props import BoolProperty
+from bpy.props import IntProperty
 from ..utilities import make_valid_name
 from ..utilities import error
 from ..utilities import success
+from ..props.logictreeproperty import LogicNodesLogicTreeProperty
 import bpy
 from time import time
 
@@ -13,8 +20,20 @@ class LogicNodeTree(NodeTree):
     bl_label = "Logic Node Editor"
     bl_icon = "OUTLINER"
     bl_category = "Scripting"
+
+    def group_update(self, context: Context) -> None:
+        for n in self.nodes:
+            n.group_update(self)
+
+    changes_staged: BoolProperty(default=False)
+
+    type: StringProperty(default='LOGIC')
     old_name: StringProperty()
     old_links = []
+    properties: CollectionProperty(type=LogicNodesLogicTreeProperty, name='Properties')
+
+    old_inputs: IntProperty(default=0, update=group_update)
+    old_outputs: IntProperty(default=0, update=group_update)
 
     @classmethod
     def poll(cls, context):
@@ -59,11 +78,29 @@ class LogicNodeTree(NodeTree):
         '''Mark invalid links, must be called from a timer'''
         for link in self.links:
             if hasattr(link.to_socket, 'validate'):
-                link.to_socket.validate(link, link.from_socket)
+                link.to_socket.validate(link, link.from_socket, self)
+
+    def interface_update(self, context: Context) -> None:
+        self.group_update(context)
+        return super().interface_update(context)
+
+    def update_draw(self, context):
+        for n in self.nodes:
+            if hasattr(n, 'update_draw'):
+                n.update_draw(context)
 
     def update(self):
         bpy.app.timers.register(self.mark_invalid_links)
         start = time()
+        self.changes_staged = True
+
+        new_inputs = len(self.inputs)
+        new_outputs = len(self.outputs)
+        if self.old_inputs != new_inputs:
+            self.old_inputs = new_inputs
+        elif self.old_outputs != new_outputs:
+            self.old_outputs = new_outputs
+
         for n in self.nodes:
             if isinstance(n, NodeReroute):
                 osock = n.inputs[0]

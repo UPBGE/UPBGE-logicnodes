@@ -9,7 +9,7 @@ from bpy.props import BoolProperty
 class LogicNodeMouseButtonUp(LogicNodeConditionType):
     bl_idname = "NLMouseReleasedCondition"
     bl_label = "Button Up"
-    nl_module = 'conditions'
+    nl_module = 'uplogic.nodes.conditions'
     deprecated = True
     deprecation_message = 'Replaced by "Mouse Button" Node.'
 

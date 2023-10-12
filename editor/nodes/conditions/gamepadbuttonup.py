@@ -11,7 +11,7 @@ from bpy.props import BoolProperty
 class LogicNodeGamepadButtonUp(LogicNodeConditionType):
     bl_idname = "NLGamepadButtonUpCondition"
     bl_label = "Button Up"
-    nl_module = 'conditions'
+    nl_module = 'uplogic.nodes.conditions'
     deprecated = True
 
     button: EnumProperty(

@@ -12,7 +12,7 @@ from bpy.props import EnumProperty
 class LogicNodeVehicleAccelerate(LogicNodeActionType):
     bl_idname = "NLVehicleApplyEngineForce"
     bl_label = "Accelerate"
-    nl_module = 'actions'
+    nl_module = 'uplogic.nodes.actions'
     nl_class = "ULVehicleApplyForce"
 
     search_tags = [

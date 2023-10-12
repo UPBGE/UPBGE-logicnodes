@@ -1,4 +1,3 @@
-from .actionsocket import NodeSocketLogicAction
 from .animationsocket import NodeSocketLogicAnimation
 from .armaturesocket import NodeSocketLogicArmature
 from .axissignedsocket import NodeSocketLogicAxisSigned
@@ -46,7 +45,7 @@ from .mousebuttonsocket import NodeSocketLogicMouseButton
 from .navmeshsocket import NodeSocketLogicNavMesh
 from .nodegroupnodesocket import NodeSocketLogicNodeGroupNode
 from .nodegroupsocket import NodeSocketLogicNodeGroup
-from .objectnamesocket import NodeSocketLogicObjectName
+from .objectnamesocket import NodeSocketLogicObjectName  # deprecated
 from .objectsocket import NodeSocketLogicObject
 from .parametersocket import NodeSocketLogicParameter
 from .playmodesocket import NodeSocketLogicPlayMode
@@ -67,6 +66,8 @@ from .vectorxyzanglesocket import NodeSocketLogicVectorXYZAngle
 from .vectorxyzsocket import NodeSocketLogicVectorXYZ
 from .vectorxyzvelocitysocket import NodeSocketLogicVectorXYZVelocity
 from .xyzsocket import NodeSocketLogicXYZ
+from .socket import NodeSocketLogicVirtual
+from .logictreepropertysocket import NodeSocketLogicTreeProperty
 
 from .deprecated import *
 

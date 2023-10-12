@@ -10,7 +10,7 @@ from ...sockets import NodeSocketLogicParameter
 class LogicNodeDictionaryRemoveKey(LogicNodeActionType):
     bl_idname = "NLSetDictDelKey"
     bl_label = "Remove Key"
-    nl_module = 'actions'
+    nl_module = 'uplogic.nodes.actions'
     nl_class = "ULPopDictKey"
 
     search_tags = [

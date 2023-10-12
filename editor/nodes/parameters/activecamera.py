@@ -7,7 +7,7 @@ from ...sockets import NodeSocketLogicObject
 class LogicNodeActiveCamera(LogicNodeParameterType):
     bl_idname = "NLActiveCameraParameterNode"
     bl_label = "Active Camera"
-    nl_module = 'parameters'
+    nl_module = 'uplogic.nodes.parameters'
 
     def init(self, context):
         self.add_output(NodeSocketLogicObject, "Camera")

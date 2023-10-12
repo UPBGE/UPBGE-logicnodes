@@ -12,7 +12,7 @@ from ....utilities import OUTCELL
 class LogicNodeAnimationStatus(LogicNodeParameterType):
     bl_idname = "NLParameterActionStatus"
     bl_label = "Animation Status"
-    nl_module = 'parameters'
+    nl_module = 'uplogic.nodes.parameters'
 
     def init(self, context):
         self.add_input(NodeSocketLogicObject, "Object")

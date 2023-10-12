@@ -10,7 +10,7 @@ from bpy.props import EnumProperty
 class LogicNodeMouseButton(LogicNodeConditionType):
     bl_idname = "NLMousePressedCondition"
     bl_label = "Button"
-    nl_module = 'conditions'
+    nl_module = 'uplogic.nodes.conditions'
 
     input_type: EnumProperty(
         name='Input Type',

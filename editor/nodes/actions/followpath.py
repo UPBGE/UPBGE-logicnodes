@@ -15,7 +15,7 @@ from ...sockets import NodeSocketLogicAxisSigned
 class LogicNodeFollowPath(LogicNodeActionType):
     bl_idname = "NLActionFollowPath"
     bl_label = "Follow Path"
-    nl_module = 'actions'
+    nl_module = 'uplogic.nodes.actions'
     nl_class = "ULFollowPath"
 
     def init(self, context):

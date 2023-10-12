@@ -10,7 +10,7 @@ from bpy.props import EnumProperty
 class LogicNodeMath(LogicNodeParameterType):
     bl_idname = "NLArithmeticOpParameterNode"
     bl_label = "Math"
-    nl_module = 'parameters'
+    nl_module = 'uplogic.nodes.parameters'
 
     operator: EnumProperty(
         name='Operation',

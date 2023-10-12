@@ -39,4 +39,5 @@ class NodeSocketLogicImage(NodeSocket, NodeSocketLogic):
     def get_unlinked_value(self):
         if self.value is None:
             return '"None"'
-        return '"{}"'.format(str(self.value.name))
+        return f'bpy.data.images.get("{self.value.name}")'
+        # return '"{}"'.format(str(self.value.name))

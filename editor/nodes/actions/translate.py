@@ -11,7 +11,7 @@ from ...sockets import NodeSocketLogicFloat
 class LogicNodeTranslate(LogicNodeActionType):
     bl_idname = "NLActionTranslate"
     bl_label = "Translate"
-    nl_module = 'actions'
+    nl_module = 'uplogic.nodes.actions'
     nl_class = "ULTranslate"
 
     def init(self, context):

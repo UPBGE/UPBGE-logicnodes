@@ -8,7 +8,7 @@ from ...sockets import NodeSocketLogicCollection
 class LogicNodeRemoveOverlayCollection(LogicNodeActionType):
     bl_idname = "NLRemoveOverlayCollection"
     bl_label = "Remove Overlay Collection"
-    nl_module = 'actions'
+    nl_module = 'uplogic.nodes.actions'
 
     def init(self, context):
         self.add_input(NodeSocketLogicCondition, 'Condition')

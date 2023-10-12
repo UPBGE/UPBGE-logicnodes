@@ -8,7 +8,7 @@ from ...sockets import NodeSocketLogicVectorXY
 class LogicNodeSeparateXY(LogicNodeParameterType):
     bl_idname = "NLParameterVector2SplitNode"
     bl_label = "Separate XY"
-    nl_module = 'parameters'
+    nl_module = 'uplogic.nodes.parameters'
 
     def init(self, context):
         self.add_input(NodeSocketLogicVectorXY, 'Vector')

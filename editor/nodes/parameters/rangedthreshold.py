@@ -11,7 +11,7 @@ from bpy.props import EnumProperty
 class LogicNodeRangedThreshold(LogicNodeParameterType):
     bl_idname = "NLRangedThresholdNode"
     bl_label = "Ranged Threshold"
-    nl_module = 'parameters'
+    nl_module = 'uplogic.nodes.parameters'
 
     operator: EnumProperty(
         items=_enum_in_or_out

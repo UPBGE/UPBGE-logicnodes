@@ -11,10 +11,8 @@ from ...sockets import NodeSocketLogicValue
 class LogicNodeSetNodeGroupNodeProperty(LogicNodeActionType):
     bl_idname = "NLSetNodeTreeNodeAttribute"
     bl_label = "Set Node Value"
-    bl_icon = 'DRIVER_TRANSFORM'
-    nl_category = 'Nodes'
-    nl_subcat = 'Groups'
-    nl_module = 'actions'
+    nl_module = 'uplogic.nodes.actions'
+    nl_class = "ULSetNodeValue"
     deprecated = True
 
     search_tags = [
@@ -43,8 +41,6 @@ class LogicNodeSetNodeGroupNodeProperty(LogicNodeActionType):
             att.enabled = val.enabled = itl.enabled = True
         else:
             att.enabled = val.enabled = itl.enabled = False
-
-    nl_class = "ULSetNodeValue"
 
     def get_input_names(self):
         return [

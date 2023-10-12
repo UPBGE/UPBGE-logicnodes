@@ -13,7 +13,7 @@ from bpy.props import EnumProperty
 class LogicNodeGamepadSticks(LogicNodeParameterType):
     bl_idname = "NLGamepadSticksCondition"
     bl_label = "Gamepad Sticks"
-    nl_module = 'parameters'
+    nl_module = 'uplogic.nodes.parameters'
 
     axis: EnumProperty(
         name='Axis',
@@ -25,7 +25,7 @@ class LogicNodeGamepadSticks(LogicNodeParameterType):
         self.add_input(NodeSocketLogicBoolean, 'Inverted')
         self.add_input(NodeSocketLogicIntegerPositiveCent, 'Index')
         self.add_input(NodeSocketLogicFloatPositive, 'Sensitivity', {'value': 1.0})
-        self.add_input(NodeSocketLogicFloatPositive, 'Threshold', {'value': 0.05})
+        self.add_input(NodeSocketLogicFloatPositive, 'Threshold', {'value': 0.1})
         self.add_output(NodeSocketLogicFloat, "X", {'enabled': False})
         self.add_output(NodeSocketLogicFloat, "Y", {'enabled': False})
         self.add_output(NodeSocketLogicVectorXYZ, "Vector")

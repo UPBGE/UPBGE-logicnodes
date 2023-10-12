@@ -7,7 +7,7 @@ from ...sockets import NodeSocketLogicString
 class LogicNodeFormattedString(LogicNodeParameterType):
     bl_idname = "NLParameterFormattedString"
     bl_label = "Formatted String"
-    nl_module = 'parameters'
+    nl_module = 'uplogic.nodes.parameters'
 
     def init(self, context):
         self.add_input(NodeSocketLogicString, "Format String", {'formatted': True, 'value': 'A is {} and B is {}'})

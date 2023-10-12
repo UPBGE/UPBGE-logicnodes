@@ -9,6 +9,7 @@ from ...sockets import NodeSocketLogicMaterial
 from ...sockets import NodeSocketLogicParameter
 from ...sockets import NodeSocketLogicVectorXY
 from ...sockets import NodeSocketLogicFloatPositive
+from ...sockets import NodeSocketLogicBitMask
 from bpy.props import BoolProperty
 
 
@@ -17,7 +18,7 @@ class LogicNodeRaycast(LogicNodeActionType):
     bl_idname = "NLActionRayCastNode"
     bl_label = "Raycast"
     nl_class = "ULRaycast"
-    nl_module = 'actions'
+    nl_module = 'uplogic.nodes.actions'
 
     def update_draw(self, context=None):
         if not self.ready:
@@ -27,15 +28,12 @@ class LogicNodeRaycast(LogicNodeActionType):
         adv = [
             ipts[5],
             ipts[6],
-            ipts[8],
-            opts[3],
-            opts[4],
             opts[5],
             opts[6]
         ]
         for i in adv:
             i.enabled = self.advanced
-        self.inputs[9].enabled = self.inputs[8].value and self.advanced
+        self.inputs[9].enabled = self.inputs[8].value
 
     advanced: BoolProperty(
         name='Advanced',
@@ -54,6 +52,7 @@ class LogicNodeRaycast(LogicNodeActionType):
         self.add_input(NodeSocketLogicBoolean, 'X-Ray')
         self.add_input(NodeSocketLogicBoolean, "Custom Distance")
         self.add_input(NodeSocketLogicFloatPositive, "Distance", {'value': 100.0})
+        self.add_input(NodeSocketLogicBitMask, "Mask", {'value': 100.0})
         self.add_input(NodeSocketLogicBoolean, 'Visualize')
         self.add_output(NodeSocketLogicCondition, "Has Result")
         self.add_output(NodeSocketLogicObject, "Picked Object")
@@ -82,6 +81,7 @@ class LogicNodeRaycast(LogicNodeActionType):
             'xray',
             'custom_dist',
             "distance",
+            'mask',
             "visualize"
         ]
 

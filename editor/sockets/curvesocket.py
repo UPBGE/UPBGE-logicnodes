@@ -57,5 +57,5 @@ class NodeSocketLogicCurve(NodeSocket, NodeSocketLogic):
         if self.value is None:
             return "None"
         if self.use_owner:
-            return '"NLO:U_O"'
-        return '"NLO:{}"'.format(self.value.name)
+            return 'game_object'
+        return f'scene.objects["{self.value.name}"]'

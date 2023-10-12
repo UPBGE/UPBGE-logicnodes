@@ -10,7 +10,7 @@ from ...sockets import NodeSocketLogicString
 class LogicNodeGetProfile(LogicNodeActionType):
     bl_idname = "NLActionGetPerformanceProfileNode"
     bl_label = "Get Profile"
-    nl_module = 'actions'
+    nl_module = 'uplogic.nodes.actions'
     nl_class = "ULGetPerformanceProfile"
     deprecated = True
 

@@ -8,7 +8,7 @@ from ...sockets import NodeSocketLogicBoolean
 class LogicNodeSetEeveeVolumetrics(LogicNodeActionType):
     bl_idname = "NLSetEeveeVolumetrics"
     bl_label = "Set Volumetric Light"
-    nl_module = 'actions'
+    nl_module = 'uplogic.nodes.actions'
     nl_class = "ULSetEeveeVolumetrics"
 
     def init(self, context):

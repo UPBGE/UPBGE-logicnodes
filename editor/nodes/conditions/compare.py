@@ -10,9 +10,9 @@ from bpy.props import EnumProperty
 @node_type
 class LogicNodeCompare(LogicNodeConditionType):
     bl_idname = "NLConditionLogicOperation"
-    bl_label = "Compare"
-    nl_category = "Math"
-    nl_module = "conditions"
+    bl_label = 'Compare'
+    nl_module = 'uplogic.nodes.conditions'
+    nl_class = 'ULCompare'
 
     def update_draw(self, context=None):
         if not self.ready:
@@ -34,8 +34,6 @@ class LogicNodeCompare(LogicNodeConditionType):
         self.add_input(NodeSocketLogicFloatPositive, "Threshold", {'enabled': False})
         self.add_output(NodeSocketLogicCondition, "Result")
         LogicNodeConditionType.init(self, context)
-
-    nl_class = "ULCompare"
 
     def get_input_names(self):
         return ["param_a", "param_b", 'threshold']

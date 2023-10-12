@@ -12,7 +12,7 @@ from bpy.props import EnumProperty
 class LogicNodeRunPython(LogicNodeActionType):
     bl_idname = "NLParameterPythonModuleFunction"
     bl_label = "Run Python Code"
-    nl_module = 'actions'
+    nl_module = 'uplogic.nodes.actions'
 
     def update_draw(self, context=None):
         if not self.ready:

@@ -9,7 +9,7 @@ from ...sockets import NodeSocketLogicCollection
 class LogicNodeSetOverlayCollection(LogicNodeActionType):
     bl_idname = "NLSetOverlayCollection"
     bl_label = "Set Overlay Collection"
-    nl_module = 'actions'
+    nl_module = 'uplogic.nodes.actions'
 
     def init(self, context):
         self.add_input(NodeSocketLogicCondition, 'Condition')

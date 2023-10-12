@@ -50,11 +50,5 @@ class NodeSocketLogicSoundFile(NodeSocket, NodeSocketLogic):
             )
 
     def get_unlinked_value(self):
-        if not self.use_path and self.sound_value is None:
-            return '"None"'
-        path = str(self.filepath_value) if self.use_path else str(
-            self.sound_value.filepath)
-        path = path.replace('\\', '/')
-        if path.endswith('\\'):
-            path = path[:-1]
-        return '"{}"'.format(path)
+        if isinstance(self.sound_value, Sound):
+            return f'bpy.data.sounds.get("{self.sound_value.name}")'

@@ -9,7 +9,7 @@ from ...sockets import NodeSocketLogicBoolean
 class LogicNodeSetDynamics(LogicNodeActionType):
     bl_idname = "NLActionSetDynamicsNode"
     bl_label = "Set Dynamics"
-    nl_module = 'actions'
+    nl_module = 'uplogic.nodes.actions'
     nl_class = "ULSetDynamics"
 
     def init(self, context):

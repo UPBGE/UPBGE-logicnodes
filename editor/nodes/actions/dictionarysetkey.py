@@ -10,7 +10,7 @@ from ...sockets import NodeSocketLogicValue
 class LogicNodeDictionarySetKey(LogicNodeActionType):
     bl_idname = "NLSetDictKeyValue"
     bl_label = "Set Key"
-    nl_module = 'actions'
+    nl_module = 'uplogic.nodes.actions'
     nl_class = "ULSetDictKey"
 
     search_tags = [

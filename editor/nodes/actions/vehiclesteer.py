@@ -12,9 +12,7 @@ from bpy.props import EnumProperty
 class LogicNodeVehicleSteer(LogicNodeActionType):
     bl_idname = "NLVehicleApplySteering"
     bl_label = "Steer"
-    nl_category = "Physics"
-    nl_subcat = 'Vehicle'
-    nl_module = 'actions'
+    nl_module = 'uplogic.nodes.actions'
     nl_class = "ULVehicleApplySteering"
 
     search_tags = [

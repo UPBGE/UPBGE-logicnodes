@@ -7,7 +7,7 @@ from ...sockets import NodeSocketLogicFloat
 class LogicNodeFloat(LogicNodeParameterType):
     bl_idname = "NLParameterFloatValue"
     bl_label = "Float"
-    nl_module = 'parameters'
+    nl_module = 'uplogic.nodes.parameters'
 
     def init(self, context):
         self.add_input(NodeSocketLogicFloat, "")

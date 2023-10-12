@@ -9,7 +9,7 @@ from ...sockets import NodeSocketLogicBoolean
 class LogicNodeSetLightShadow(LogicNodeActionType):
     bl_idname = "NLSetLightShadowAction"
     bl_label = "Set Light Shadow"
-    nl_module = 'actions'
+    nl_module = 'uplogic.nodes.actions'
     nl_class = "ULSetLightShadow"
 
     def init(self, context):

@@ -5,6 +5,9 @@ from bpy.props import FloatVectorProperty
 from bpy.props import StringProperty
 from bpy.types import NodeLink
 from bpy.types import NodeSocket
+from bpy.types import NodeSocketInterface
+from bpy.types import NodeSocketVirtual
+import bpy
 
 
 CONDITION_SOCKET_COLOR = Color.RGBA(0.8, 0.2, 0.2, 1.0)
@@ -50,6 +53,13 @@ SOCKET_TYPE_DATA = 13
 SOCKET_TYPE_DATABLOCK = 14
 SOCKET_TYPE_UI = 15
 SOCKET_TYPE_COLLECTION = 16
+SOCKET_TYPE_VALUE = 17
+SOCKET_TYPE_TEXT = 17
+SOCKET_TYPE_SOUND = 17
+SOCKET_TYPE_IMAGE = 17
+SOCKET_TYPE_FONT = 17
+SOCKET_TYPE_LIST = 17
+SOCKET_TYPE_DICTIONARY = 17
 
 
 BL_SOCKET_TYPES = [
@@ -69,7 +79,8 @@ BL_SOCKET_TYPES = [
     'INT',  # 13
     'TEXTURE',  # 14
     'GEOMETRY',  # 15
-    'COLLECTION'  # 16
+    'COLLECTION',  # 16
+    'VALUE'  # 17
 ]
 
 
@@ -77,12 +88,36 @@ _sockets = []
 
 
 def socket_type(obj):
+
+    class Interface(NodeSocketInterface):
+        bl_socket_idname = obj.bl_idname
+        nl_socket = obj
+        hide_value = True
+        type: StringProperty(default='VALUE')
+
+        @classmethod
+        def poll(self, context):
+            return False
+
+        def draw(self, context, layout):
+            pass
+
+        def draw_color(self, context):
+            return self.nl_socket.color if self.nl_socket.color else PARAMETER_SOCKET_COLOR
+
     _sockets.append(obj)
+    _sockets.append(Interface)
     return obj
 
+
 def update_draw(self, context=None):
+    tree = getattr(context.space_data, 'edit_tree')
+    if tree:
+        tree.changes_staged = True
     if hasattr(context, 'node'):
         context.node.update_draw(context)
+
+
 
 class NodeSocketLogic:
     """Possible Types:
@@ -106,7 +141,7 @@ class NodeSocketLogic:
     valid_sockets: list = []
     deprecated = False
     color = None
-    nl_type = SOCKET_TYPE_GENERIC
+    nl_type = SOCKET_TYPE_VALUE
     type: StringProperty(default='VALUE')
     nl_color: FloatVectorProperty(
         subtype='COLOR_GAMMA',
@@ -122,9 +157,6 @@ class NodeSocketLogic:
     @classmethod
     def get_id(cls):
         return cls.bl_idname
-
-    def update_draw(self, context=None):
-        pass
 
     def __init__(self):
         if self.color:
@@ -143,7 +175,11 @@ class NodeSocketLogic:
     def draw_color(self, context, node):
         return self.nl_color
 
-    def validate(self, link: NodeLink, from_socket: NodeSocket):
+    def on_validate(self, link, nodetree):
+        """Called when an outgoing link is validated by `to_socket`"""
+        pass
+
+    def validate(self, link: NodeLink, from_socket: NodeSocket, nodetree):
         # while isinstance(from_socket.node, NodeReroute):
         #     links = from_socket.node.inputs[0].links
         #     if len(links) > 0:
@@ -151,11 +187,41 @@ class NodeSocketLogic:
         #     else:
         #         link.is_valid = False
         #         return
-        if len(self.valid_sockets) < 1 or not hasattr(from_socket, 'nl_type'):
+        if not hasattr(from_socket, 'nl_type'):
+            link.is_valid = True
+            return
+        if self.nl_type is SOCKET_TYPE_GENERIC:
+            self.nl_color = from_socket.nl_color
+            link.is_valid = True
+            from_socket.on_validate(link, nodetree)
+            return
+        if from_socket.nl_type is SOCKET_TYPE_GENERIC:
+            from_socket.nl_color = self.nl_color
+            link.is_valid = True
+            from_socket.on_validate(link, nodetree)
+            return
+        if len(self.valid_sockets) < 1:
             link.is_valid = True
             return
         link.is_valid = from_socket.nl_type in self.valid_sockets
-
+        from_socket.on_validate(link, nodetree)
 
     def get_unlinked_value(self):
         raise NotImplementedError()
+
+
+@socket_type
+class NodeSocketLogicVirtual(NodeSocketVirtual, NodeSocketLogic):
+    bl_idname = 'NodeSocketLogicVirtual'
+    nl_type = SOCKET_TYPE_GENERIC
+    color = (.188, .188, .188, 1)
+
+    def draw(self, context, a, b, c):
+        pass
+
+    def on_validate(self, link, nodetree):
+        nodetree.inputs.new(link.to_socket.bl_idname, link.to_socket.name)
+        socket = self.node.outputs.new(link.to_socket.bl_idname, link.to_socket.name)
+        self.node.outputs.new(self.bl_idname, '')
+        nodetree.links.new(socket, link.to_socket)
+        self.node.outputs.remove(self)

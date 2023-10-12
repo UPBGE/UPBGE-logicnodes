@@ -8,10 +8,8 @@ from bpy.props import BoolProperty
 class LogicNodeMouseMoved(LogicNodeConditionType):
     bl_idname = "NLMouseMovedCondition"
     bl_label = "Moved"
-    bl_icon = 'MOUSE_MOVE'
-    nl_category = "Input"
-    nl_subcat = 'Mouse'
-    nl_module = 'conditions'
+    nl_module = 'uplogic.nodes.conditions'
+    nl_class = "ULMouseMoved"
 
     search_tags = [
         ['Mouse Moved', {}]
@@ -25,8 +23,6 @@ class LogicNodeMouseMoved(LogicNodeConditionType):
 
     def draw_buttons(self, context, layout):
         layout.prop(self, "pulse", text="Each Frame")
-
-    nl_class = "ULMouseMoved"
 
     def get_input_names(self):
         return ["mouse_button_code"]

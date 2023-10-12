@@ -9,7 +9,7 @@ from ...sockets import NodeSocketLogicString
 class LogicNodeSendNetworkMessage(LogicNodeActionType):
     bl_idname = "LogicNodeSendNetworkMessage"
     bl_label = "Send Data"
-    nl_module = 'actions'
+    nl_module = 'uplogic.nodes.actions'
 
     def init(self, context):
         self.add_input(NodeSocketLogicCondition, "Condition")

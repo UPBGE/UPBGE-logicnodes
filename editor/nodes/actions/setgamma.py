@@ -8,7 +8,7 @@ from ...sockets import NodeSocketLogicFloatPositive
 class LogicNodeSetGamma(LogicNodeActionType):
     bl_idname = "NLSetGammaAction"
     bl_label = "Set Gamma"
-    nl_module = 'actions'
+    nl_module = 'uplogic.nodes.actions'
     nl_class = "ULSetGamma"
 
     def init(self, context):

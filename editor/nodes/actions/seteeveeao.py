@@ -8,7 +8,7 @@ from ...sockets import NodeSocketLogicBoolean
 class LogicNodeSetEeveeAO(LogicNodeActionType):
     bl_idname = "NLSetEeveeAO"
     bl_label = "Set Ambient Occlusion"
-    nl_module = 'actions'
+    nl_module = 'uplogic.nodes.actions'
     nl_class = "ULSetEeveeAO"
 
     def init(self, context):

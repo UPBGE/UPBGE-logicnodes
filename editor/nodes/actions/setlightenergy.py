@@ -9,7 +9,7 @@ from ...sockets import NodeSocketLogicFloat
 class LogicNodeSetLightEnergy(LogicNodeActionType):
     bl_idname = "NLSetLightEnergyAction"
     bl_label = "Set Light Energy"
-    nl_module = 'actions'
+    nl_module = 'uplogic.nodes.actions'
     nl_class = "ULSetLightEnergy"
 
     def init(self, context):

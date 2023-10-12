@@ -7,7 +7,7 @@ from ...sockets import NodeSocketLogicFloat
 class LogicNodeValueInvert(LogicNodeParameterType):
     bl_idname = "NLInvertValueNode"
     bl_label = "Invert"
-    nl_module = 'parameters'
+    nl_module = 'uplogic.nodes.parameters'
 
     def init(self, context):
         self.add_input(NodeSocketLogicFloat, "Value")

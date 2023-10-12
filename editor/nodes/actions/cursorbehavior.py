@@ -10,7 +10,7 @@ from ...sockets import NodeSocketLogicCondition
 class LogicNodeCursorBehavior(LogicNodeActionType):
     bl_idname = "NLCursorBehavior"
     bl_label = "Cursor Behaviour"
-    nl_module = 'actions'
+    nl_module = 'uplogic.nodes.actions'
     deprecated = True
     deprecation_message = 'Node will be removed in future update.'
 

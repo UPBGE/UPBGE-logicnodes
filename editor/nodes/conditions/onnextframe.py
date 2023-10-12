@@ -8,7 +8,7 @@ from ..node import node_type
 class LogicNodeOnNextFrame(LogicNodeConditionType):
     bl_idname = "NLConditionNextFrameNode"
     bl_label = "On Next Frame"
-    nl_module = 'conditions'
+    nl_module = 'uplogic.nodes.conditions'
 
     def init(self, context):
         self.add_input(NodeSocketLogicBoolCondition, "Condition")

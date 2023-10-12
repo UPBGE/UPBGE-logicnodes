@@ -11,8 +11,8 @@ import bpy
 class LogicNodeGetMaterialSocket(LogicNodeParameterType):
     bl_idname = "NLGetMaterialNodeValue"
     bl_label = "Get Socket Value"
-    bl_icon = 'TRIA_RIGHT'
-    nl_module = 'parameters'
+    nl_module = 'uplogic.nodes.parameters'
+    nl_class = "ULGetMaterialSocket"
 
     def init(self, context):
         self.add_input(NodeSocketLogicMaterial, 'Material')
@@ -45,8 +45,6 @@ class LogicNodeGetMaterialSocket(LogicNodeParameterType):
                 ipt.value = limit
             name = target.inputs[ipt.value].name
             ipt.name = name
-
-    nl_class = "ULGetMaterialSocket"
 
     def get_input_names(self):
         return ["mat_name", 'node_name', "input_slot"]

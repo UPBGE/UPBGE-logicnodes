@@ -9,7 +9,7 @@ from ..node import node_type
 class LogicNodeMouseButtonOver(LogicNodeConditionType):
     bl_idname = "NLConditionMousePressedOn"
     bl_label = "Button Over"
-    nl_module = 'conditions'
+    nl_module = 'uplogic.nodes.conditions'
     deprecated = True
 
     def init(self, context):

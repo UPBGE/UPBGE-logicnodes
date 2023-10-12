@@ -15,9 +15,8 @@ import bpy
 class LogicNodePlaySequence(LogicNodeActionType):
     bl_idname = "NLPlayMaterialSequence"
     bl_label = "Play Sequence"
-    nl_category = 'Nodes'
-    nl_subcat = 'Materials'
-    nl_module = 'actions'
+    nl_module = 'uplogic.nodes.actions'
+    nl_class = "ULPaySequence"
 
     def init(self, context):
         self.add_input(NodeSocketLogicCondition, "Condition")
@@ -61,8 +60,6 @@ class LogicNodePlaySequence(LogicNodeActionType):
         else:
             for ipt in subs:
                 ipt.enabled = False
-
-    nl_class = "ULPaySequence"
 
     def get_input_names(self):
         return [

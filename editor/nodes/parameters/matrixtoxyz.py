@@ -12,7 +12,7 @@ class LogicNodeMatrixToXYZ(LogicNodeParameterType):
     bl_idname = "NLParameterMatrixToEulerNode"
     bl_label = "Matrix To XYZ"
     bl_width_default = 200
-    nl_module = 'parameters'
+    nl_module = 'uplogic.nodes.parameters'
 
     def update_draw(self, context=None):
         if not self.ready:

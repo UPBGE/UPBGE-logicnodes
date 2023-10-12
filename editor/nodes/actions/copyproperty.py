@@ -11,10 +11,9 @@ from bpy.props import EnumProperty
 class LogicNodeCopyProperty(LogicNodeActionType):
     bl_idname = "NLCopyPropertyFromObject"
     bl_label = "Copy From Object"
-    bl_icon = 'PASTEDOWN'
-    nl_category = "Objects"
-    nl_subcat = 'Properties'
-    nl_module = 'actions'
+    nl_module = 'uplogic.nodes.actions'
+    nl_class = "ULCopyProperty"
+
     mode: EnumProperty(
         name='Mode',
         items=_enum_object_property_types,
@@ -31,8 +30,6 @@ class LogicNodeCopyProperty(LogicNodeActionType):
         self.add_input(NodeSocketLogicGameProperty, "Property", {'ref_index': 1})
         self.add_output(NodeSocketLogicCondition, "Done")
         LogicNodeActionType.init(self, context)
-
-    nl_class = "ULCopyProperty"
 
     def get_input_names(self):
         return [

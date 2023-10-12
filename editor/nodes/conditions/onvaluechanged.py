@@ -9,9 +9,8 @@ from bpy.props import BoolProperty
 class LogicNodeOnValueChanged(LogicNodeConditionType):
     bl_idname = "NLConditionValueChanged"
     bl_label = "On Value Changed"
-    bl_icon = 'DRIVER_TRANSFORM'
-    nl_category = "Events"
-    nl_module = 'conditions'
+    nl_module = 'uplogic.nodes.conditions'
+    nl_class = "ULOnValueChanged"
 
     initialize: BoolProperty(
         description=(
@@ -27,8 +26,6 @@ class LogicNodeOnValueChanged(LogicNodeConditionType):
 
     def draw_buttons(self, context, layout):
         layout.prop(self, "initialize", text="Initialize")
-
-    nl_class = "ULOnValueChanged"
 
     def get_input_names(self):
         return ["current_value"]

@@ -11,7 +11,7 @@ from bpy.props import EnumProperty
 class LogicNodeCheckAngle(LogicNodeConditionType):
     bl_idname = "NLVectorAngleCheck"
     bl_label = "Check Angle"
-    nl_module = 'conditions'
+    nl_module = 'uplogic.nodes.conditions'
 
     operator: EnumProperty(name='Operation', items=_enum_logic_operators)
 

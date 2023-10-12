@@ -9,7 +9,7 @@ from ...sockets import NodeSocketLogicString
 class LogicNodeLoadFileContent(LogicNodeActionType):
     bl_idname = "NLLoadFileContent"
     bl_label = "Load File Content"
-    nl_module = 'actions'
+    nl_module = 'uplogic.nodes.actions'
     nl_class = "ULLoadFileContent"
 
     def init(self, context):

@@ -11,7 +11,7 @@ from ...sockets import NodeSocketLogicTime
 class LogicNodeGamepadVibration(LogicNodeActionType):
     bl_idname = "NLGamepadVibration"
     bl_label = "Vibration"
-    nl_module = 'actions'
+    nl_module = 'uplogic.nodes.actions'
 
     def init(self, context):
         self.add_input(NodeSocketLogicCondition, 'Condition')

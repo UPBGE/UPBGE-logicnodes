@@ -7,7 +7,7 @@ from ...sockets import NodeSocketLogicParameter
 class LogicNodeGetTimescale(LogicNodeParameterType):
     bl_idname = "NLParameterGetTimeScale"
     bl_label = "Get Timescale"
-    nl_module = 'parameters'
+    nl_module = 'uplogic.nodes.parameters'
 
     def init(self, context):
         self.add_output(NodeSocketLogicParameter, 'Timescale')

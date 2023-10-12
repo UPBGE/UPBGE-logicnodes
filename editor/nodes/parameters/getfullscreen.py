@@ -7,7 +7,7 @@ from ...sockets import NodeSocketLogicParameter
 class LogicNodeGetFullscreen(LogicNodeParameterType):
     bl_idname = "NLGetFullscreen"
     bl_label = "Get Fullscreen"
-    nl_module = 'parameters'
+    nl_module = 'uplogic.nodes.parameters'
 
     def init(self, context):
         self.add_output(NodeSocketLogicParameter, "Fullscreen")

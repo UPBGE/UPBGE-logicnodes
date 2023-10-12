@@ -9,13 +9,13 @@ from ...sockets import NodeSocketLogicFloat
 class LogicNodeClamp(LogicNodeParameterType):
     bl_idname = "NLClampValueNode"
     bl_label = "Clamp"
-    nl_module = 'parameters'
+    nl_module = 'uplogic.nodes.parameters'
 
     def init(self, context):
         self.add_input(NodeSocketLogicFloat, "Value")
         self.add_input(NodeSocketLogicVectorXY, "", {'enabled': False})
         self.add_input(NodeSocketLogicFloat, "Min")
-        self.add_input(NodeSocketLogicFloat, "Max")
+        self.add_input(NodeSocketLogicFloat, "Max", {'value': 1.0})
         self.add_output(NodeSocketLogicFloat, "Value")
         LogicNodeParameterType.init(self, context)
 

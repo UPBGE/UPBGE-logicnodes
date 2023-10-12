@@ -10,7 +10,7 @@ from ...sockets import NodeSocketLogicBrick
 class LogicNodeGetActuatorValue(LogicNodeParameterType):
     bl_idname = "NLGetActuatorValue"
     bl_label = "Get Actuator Value"
-    nl_module = 'parameters'
+    nl_module = 'uplogic.nodes.parameters'
 
     def init(self, context):
         self.add_input(NodeSocketLogicObject, "Object")

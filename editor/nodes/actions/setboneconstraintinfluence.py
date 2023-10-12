@@ -11,7 +11,7 @@ from ...sockets import NodeSocketLogicFloatFactor
 class LogicNodeSetBoneConstraintInfluence(LogicNodeActionType):
     bl_idname = "NLSetBoneConstraintInfluence"
     bl_label = "Set Influence"
-    nl_module = 'actions'
+    nl_module = 'uplogic.nodes.actions'
     nl_class = "ULSetBoneConstraintInfluence"
 
     search_tags = [

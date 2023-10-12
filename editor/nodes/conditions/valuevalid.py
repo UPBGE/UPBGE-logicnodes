@@ -8,7 +8,7 @@ from ..node import node_type
 class LogicNodeValueValid(LogicNodeConditionType):
     bl_idname = "NLConditionValueValidNode"
     bl_label = "Value Valid"
-    nl_module = 'conditions'
+    nl_module = 'uplogic.nodes.conditions'
     deprecated = True
 
     def init(self, context):

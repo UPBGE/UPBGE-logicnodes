@@ -8,7 +8,7 @@ from ...sockets import NodeSocketLogicFloat
 class LogicNodeVectorLength(LogicNodeParameterType):
     bl_idname = "NLVectorLength"
     bl_label = "Vector Length"
-    nl_module = 'parameters'
+    nl_module = 'uplogic.nodes.parameters'
     deprecated = True
     deprecation_message = 'Replaced by "Random Value" Node.'
 

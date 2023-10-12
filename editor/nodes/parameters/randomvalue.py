@@ -14,7 +14,7 @@ from bpy.props import EnumProperty
 class LogicNodeRandomValue(LogicNodeParameterType):
     bl_idname = "LogicNodeRandomValue"
     bl_label = "Random Value"
-    nl_module = 'parameters'
+    nl_module = 'uplogic.nodes.parameters'
 
     def update_draw(self, context=None):
         if not self.ready:

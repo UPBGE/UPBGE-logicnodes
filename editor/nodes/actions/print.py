@@ -11,7 +11,7 @@ from bpy.props import EnumProperty
 class LogicNodePrint(LogicNodeActionType):
     bl_idname = "NLActionPrint"
     bl_label = "Print"
-    nl_module = 'actions'
+    nl_module = 'uplogic.nodes.actions'
     nl_class = "ULPrintValue"
 
     msg_type: EnumProperty(

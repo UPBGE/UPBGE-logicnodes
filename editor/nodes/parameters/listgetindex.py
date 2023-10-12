@@ -9,7 +9,7 @@ from ...sockets import NodeSocketLogicParameter
 class LogicNodeListGetIndex(LogicNodeParameterType):
     bl_idname = "NLGetListIndexNode"
     bl_label = "Get List Index"
-    nl_module = 'parameters'
+    nl_module = 'uplogic.nodes.parameters'
 
     def init(self, context):
         self.add_input(NodeSocketLogicList, "List")

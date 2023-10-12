@@ -11,7 +11,7 @@ from ...sockets import NodeSocketLogicValue
 class LogicNodeSetActuatorValue(LogicNodeActionType):
     bl_idname = "NLSetActuatorValueNode"
     bl_label = "Set Actuator Value"
-    nl_module = 'actions'
+    nl_module = 'uplogic.nodes.actions'
 
     def init(self, context):
         self.add_input(NodeSocketLogicCondition, "Condition")

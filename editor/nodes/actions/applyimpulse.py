@@ -10,9 +10,8 @@ from bpy.props import BoolProperty
 class LogicNodeApplyImpulse(LogicNodeActionType):
     bl_idname = "NLActionApplyImpulse"
     bl_label = "Apply Impulse"
-    nl_category = "Objects"
-    nl_subcat = 'Transformation'
-    nl_module = 'actions'
+    nl_module = 'uplogic.nodes.actions'
+    nl_class = "ULApplyImpulse"
 
     deprecated = True
     deprecation_message = 'Replaced by "Apply Transform" Node.'
@@ -31,8 +30,6 @@ class LogicNodeApplyImpulse(LogicNodeActionType):
 
     def draw_buttons(self, context, layout):
         layout.prop(self, "local")
-
-    nl_class = "ULApplyImpulse"
 
     def get_input_names(self):
         return ["condition", "game_object", "point", 'impulse']

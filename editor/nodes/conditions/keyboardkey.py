@@ -10,7 +10,7 @@ from bpy.props import EnumProperty
 class LogicNodeKeyboardKey(LogicNodeConditionType):
     bl_idname = "NLKeyPressedCondition"
     bl_label = "Key"
-    nl_module = 'conditions'
+    nl_module = 'uplogic.nodes.conditions'
 
     input_type: EnumProperty(
         name='Input Type',

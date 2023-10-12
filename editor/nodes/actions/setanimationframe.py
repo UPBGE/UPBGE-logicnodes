@@ -13,8 +13,7 @@ from ...sockets import NodeSocketLogicBoolean
 class LogicNodeSetAnimationFrame(LogicNodeActionType):
     bl_idname = "NLActionSetAnimationFrame"
     bl_label = "Set Animation Frame"
-    nl_category = "Animation"
-    nl_module = 'actions'
+    nl_module = 'uplogic.nodes.actions'
     nl_class = "ULSetActionFrame"
 
     def init(self, context):

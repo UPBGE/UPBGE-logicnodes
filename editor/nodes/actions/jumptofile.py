@@ -8,8 +8,7 @@ from ...sockets import NodeSocketLogicFilePath
 class LogicNodeJumpToFile(LogicNodeActionType):
     bl_idname = "NLActionStartGame"
     bl_label = "Jump To File"
-    nl_category = "Game"
-    nl_module = 'actions'
+    nl_module = 'uplogic.nodes.actions'
     nl_class = "ULLoadBlendFile"
 
     search_tags = [

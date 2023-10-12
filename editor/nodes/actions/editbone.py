@@ -10,7 +10,7 @@ from ...sockets import NodeSocketLogicVectorXYZ
 class LogicNodeEditBone(LogicNodeActionType):
     bl_idname = "NLActionEditBoneNode"
     bl_label = "Edit Bone"
-    nl_module = 'actions'
+    nl_module = 'uplogic.nodes.actions'
     nl_class = "ULEditBone"
     deprecated = True
 

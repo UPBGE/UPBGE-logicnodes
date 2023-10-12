@@ -8,7 +8,7 @@ from ...sockets import NodeSocketLogicUI
 class LogicNodeCreateUICanvas(LogicNodeActionType):
     bl_idname = "LogicNodeCreateUICanvas"
     bl_label = "Create Canvas"
-    nl_module = 'actions'
+    nl_module = 'uplogic.nodes.actions'
 
     def init(self, context):
         self.add_input(NodeSocketLogicCondition, "Condition")

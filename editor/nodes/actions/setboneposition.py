@@ -10,7 +10,7 @@ from ...sockets import NodeSocketLogicVectorXYZ
 class LogicNodeSetBonePosition(LogicNodeActionType):
     bl_idname = "NLActionSetBonePos"
     bl_label = "Set Bone Position"
-    nl_module = 'actions'
+    nl_module = 'uplogic.nodes.actions'
     nl_class = "ULSetBonePosition"
 
     def init(self, context):

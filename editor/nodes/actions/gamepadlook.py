@@ -16,9 +16,7 @@ from math import radians
 class LogicNodeGamepadLook(LogicNodeActionType):
     bl_idname = "NLGamepadLook"
     bl_label = "Gamepad Look"
-    nl_category = "Input"
-    nl_subcat = 'Gamepad'
-    nl_module = 'actions'
+    nl_module = 'uplogic.nodes.actions'
     nl_class = "ULGamepadLook"
 
     def update_draw(self, context=None):
@@ -32,7 +30,8 @@ class LogicNodeGamepadLook(LogicNodeActionType):
         name='Axis',
         items=_enum_controller_stick_operators,
         description="Gamepad Sticks",
-        update=update_draw
+        update=update_draw,
+        default='1'
     )
 
     def init(self, context):
@@ -46,7 +45,7 @@ class LogicNodeGamepadLook(LogicNodeActionType):
         self.add_input(NodeSocketLogicBoolean, 'Cap Left / Right')
         self.add_input(NodeSocketLogicVectorXYAngle, '')
         self.add_input(NodeSocketLogicBoolean, 'Cap Up / Down')
-        self.add_input(NodeSocketLogicVectorXYAngle, '', {'value_x': radians(89), 'value_y': -radians(89)})
+        self.add_input(NodeSocketLogicVectorXYAngle, '', {'value_x': -radians(89), 'value_y': radians(89)})
         self.add_input(NodeSocketLogicFloatPositive, 'Threshold', {'value': .1})
         self.add_output(NodeSocketLogicCondition, "Done")
         LogicNodeActionType.init(self, context)

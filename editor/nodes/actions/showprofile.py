@@ -8,8 +8,7 @@ from ...sockets import NodeSocketLogicBoolean
 class LogicNodeShowProfile(LogicNodeActionType):
     bl_idname = "NLSetProfile"
     bl_label = "Show Profile"
-    nl_category = 'Render'
-    nl_module = 'actions'
+    nl_module = 'uplogic.nodes.actions'
     nl_class = "ULSetProfile"
 
     def init(self, context):

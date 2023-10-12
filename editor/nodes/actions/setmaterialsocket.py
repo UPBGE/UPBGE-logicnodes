@@ -12,8 +12,8 @@ import bpy
 class LogicNodeSetMaterialSocket(LogicNodeActionType):
     bl_idname = "NLSetMaterialNodeValue"
     bl_label = "Set Socket"
-    nl_module = 'actions'
-    deprecated = True
+    nl_module = 'uplogic.nodes.actions'
+    # deprecated = True
 
     search_tags = [
         ['Set Material Socket', {}]

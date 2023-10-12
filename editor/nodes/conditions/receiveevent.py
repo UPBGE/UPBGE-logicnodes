@@ -9,7 +9,8 @@ from ..node import node_type
 class LogicNodeReceiveEvent(LogicNodeConditionType):
     bl_idname = "NLParameterReceiveMessage"
     bl_label = "Receive"
-    nl_module = 'conditions'
+    nl_module = 'uplogic.nodes.conditions'
+    nl_class = "ULHandleEvent"
 
     search_tags = [
         ['Receive Event', {}]
@@ -28,4 +29,3 @@ class LogicNodeReceiveEvent(LogicNodeConditionType):
     def get_output_names(self):
         return ["OUT", 'BODY', 'TARGET']
 
-    nl_class = "ULHandleEvent"

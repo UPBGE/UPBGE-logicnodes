@@ -8,8 +8,7 @@ from ...sockets import NodeSocketLogicBoolean
 class LogicNodeShowFramerate(LogicNodeActionType):
     bl_idname = "NLShowFramerate"
     bl_label = "Show Framerate"
-    nl_category = 'Render'
-    nl_module = 'actions'
+    nl_module = 'uplogic.nodes.actions'
     nl_class = "ULShowFramerate"
 
     def init(self, context):

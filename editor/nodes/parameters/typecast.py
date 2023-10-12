@@ -13,7 +13,7 @@ from bpy.props import EnumProperty
 class LogicNodeTypecast(LogicNodeParameterType):
     bl_idname = "NLParameterTypeCast"
     bl_label = "Typecast Value"
-    nl_module = 'parameters'
+    nl_module = 'uplogic.nodes.parameters'
 
     def update_draw(self, context=None):
         if not self.ready:

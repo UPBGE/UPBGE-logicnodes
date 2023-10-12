@@ -55,6 +55,6 @@ class NodeSocketLogicNavMesh(NodeSocket, NodeSocketLogic):
 
     def get_unlinked_value(self):
         if self.use_owner:
-            return '"NLO:U_O"'
+            return 'game_object'
         if isinstance(self.value, Object):
-            return '"NLO:{}"'.format(self.value.name)
+            return f'scene.objects[{self.value.name}]'

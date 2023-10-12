@@ -9,7 +9,7 @@ from ..node import node_type
 class LogicNodeLogicTreeStatus(LogicNodeConditionType):
     bl_idname = "NLConditionLogitNetworkStatusNode"
     bl_label = "Logic Tree Status"
-    nl_module = 'conditions'
+    nl_module = 'uplogic.nodes.conditions'
 
     def init(self, context):
         self.add_input(NodeSocketLogicObject, "Object")

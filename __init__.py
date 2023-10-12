@@ -8,6 +8,15 @@ import time
 from .editor.sockets.socket import _sockets
 from .editor.nodes.node import _nodes
 from .ops.operator import _operators
+from .props.property import _properties
+from .ui.interface import _panels
+from .ui.interface import _lists
+from .ui.interface import _menu_items
+from .ui import node_menu
+from .props.propertyfilter import LogicNodesPropertyFilter
+from .props.globalcategory import LogicNodesGlobalCategory
+from .preferences import LogicNodesAddonPreferences
+from .utilities import preferences as prefs
 from .editor.nodetree import LogicNodeTree
 # from . import basicnodes
 from . import utilities as utils
@@ -46,11 +55,7 @@ def debug(*message):
 
 @persistent
 def _reload_texts(self, context):
-    if not hasattr(bpy.types.Scene, 'logic_nodes_settings'):
-        return
-    if not bpy.context or not bpy.context.scene:
-        return
-    if not bpy.context.scene.logic_nodes_settings.use_reload_text:
+    if not prefs().use_reload_text:
         return
     else:
         for t in bpy.data.texts:
@@ -68,22 +73,25 @@ def _reload_texts(self, context):
 @persistent
 def _generate_on_game_start(self, context):
     utils.notify('Building Logic Trees on Startup...')
+    for tree in bpy.data.node_groups:
+        if isinstance(tree, LogicNodeTree):
+            tree.changes_staged = True
     bpy.ops.logic_nodes.generate_code()
 
 
 @persistent
 def _jump_in_game_cam(self, context):
-    if bpy.context.scene.jump_in_game_cam:
+    if prefs().jump_in_game_cam:
         bpy.ops.view3d.view_camera()
 
 
 @persistent
 def _set_vr_mode(self, context):
-    if bpy.context.scene.use_vr_audio_space and not bpy.context.window_manager.xr_session_state:
+    if prefs().use_vr_audio_space and not bpy.context.window_manager.xr_session_state:
         bpy.context.scene.game_settings.use_viewport_render = True
         utils.notify('Starting in VR mode...')
         utils.start_vr_session()
-    elif bpy.context.window_manager.xr_session_state and not bpy.context.scene.use_vr_audio_space:
+    elif bpy.context.window_manager.xr_session_state and not prefs().use_vr_audio_space:
         utils.notify('Shutting down VR mode...')
         utils.stop_vr_session()
 
@@ -223,7 +231,6 @@ def _abs_path(*relative_path_components):
 from . import ops
 # ui = _abs_import("ui", _abs_path("ui", "__init__.py"))
 from . import ui
-node_menu = _abs_import("node_menu", _abs_path("ui", "node_menu.py"))
 # ops.abstract_text_buffer = _abs_import("abstract_text_buffer", _abs_path("ops", "abstract_text_buffer.py"))
 # ops.bl_text_buffer = _abs_import("bl_text_buffer", _abs_path("ops","bl_text_buffer.py"))
 # ops.file_text_buffer = _abs_import("file_text_buffer", _abs_path("ops","file_text_buffer.py"))
@@ -261,25 +268,6 @@ RENAMING = False
 
 
 @persistent
-def request_tree_code_writer_start(dummy):
-    global _tree_code_writer_started
-    _tree_code_writer_started = False
-    # generator = bpy.ops.tree_code_generator.TreeCodeGenerator()
-    if getattr(bpy.context.scene.logic_nodes_settings, 'use_generate_on_open', False):
-        utils.debug('Writing trees on file open...')
-        bpy.ops.logic_nodes.generate_code()
-        utils.debug('FINISHED')
-
-    global RENAMING
-    RENAMING = True
-    for tree in bpy.data.node_groups:
-        if isinstance(tree, LogicNodeTree):
-            if tree.name != tree.old_name:
-                tree.update_name(False)
-    RENAMING = False
-
-
-@persistent
 def _watch_tree_names(self, context):
     global RENAMING
     if RENAMING:
@@ -294,21 +282,11 @@ def _watch_tree_names(self, context):
 
 
 for f in [
-    refresh_custom_nodes,
-    # request_tree_code_writer_start,
+    refresh_custom_nodes
 ]:
     if f in bpy.app.handlers.load_post:
         bpy.app.handlers.load_post.remove(f)
     bpy.app.handlers.load_post.append(f)
-
-
-def update_node_colors(self, context):
-    for tree in bpy.data.node_groups:
-        if isinstance(tree, LogicNodeTree):
-            for node in tree.nodes:
-                if isinstance(node, bpy.types.NodeFrame):
-                    continue
-                node.use_custom_color = getattr(bpy.context.scene.logic_nodes_settings, 'use_custom_node_color', False)
 
 
 class NLNodeTreeReference(bpy.types.PropertyGroup):
@@ -323,88 +301,17 @@ class LogicNodeTreeReference(bpy.types.PropertyGroup):
     tree_initial_status: bpy.props.BoolProperty()
 
 
-class NLAddonSettings(bpy.types.PropertyGroup):
-    use_custom_node_color: bpy.props.BoolProperty(
-        update=update_node_colors
-    )
-    use_node_debug: bpy.props.BoolProperty(default=True)
-    use_node_notify: bpy.props.BoolProperty(default=True)
-    use_reload_text: bpy.props.BoolProperty(default=True)
-
-
-class LogicNodesAddonPreferences(bpy.types.AddonPreferences):
-    bl_idname = __name__
-
-    def draw(self, context):
-        layout = self.layout
-        box = layout.box()
-        col = box.column()
-        col.label(
-            text='Logic Nodes require the uplogic module, please install if missing.',
-            icon='CHECKMARK' if 'uplogic' in sys.modules else 'ERROR'
-        )
-        col.operator('logic_nodes.install_uplogic', icon='IMPORT')
-        main_row = layout.row()
-        col = main_row.column()
-        col.prop(
-            context.scene.logic_nodes_settings,
-            'use_reload_text',
-            text="Reload Scripts on Game Start"
-        )
-        col.prop(
-            context.scene.logic_nodes_settings,
-            'use_node_notify',
-            text="Notifications"
-        )
-        col.prop(
-            context.scene.logic_nodes_settings,
-            'use_node_debug',
-            text="Debug Mode (Print Errors to Console)"
-        )
-        col.separator()
-        link_row = col.row(align=True)
-        link_row.operator("logic_nodes.open_github", icon="URL")
-        link_row.operator("logic_nodes.open_donate", icon="FUND")
-        contrib_row = col.row()
-        contrib_row.label(text='Contributors: VUAIEO, Simon, L_P, p45510n')
-
-
-_registered_classes = [
-    LogicNodeTree,
-    NLNodeTreeReference,
-    LogicNodeTreeReference
-]
+_registered_classes = []
 
 
 _registered_classes.extend(_sockets)
 _registered_classes.extend(_nodes)
 _registered_classes.extend(_operators)
-
-
-
-_registered_classes.extend(node_menu._items)
-
-
-_registered_classes.extend([
-    NLAddonSettings,
-    LogicNodesAddonPreferences,
-    ui.BGEPropFilter,
-    ui.BGEGlobalValue,
-    ui.BGEGlobalValueCategory,
-    ui.BGE_PT_HelpPanel,
-    ui.BGE_PT_GameComponentHelperPanel,
-    ui.NL_UL_glcategory,
-    ui.NL_UL_glvalue,
-    ui.BGE_PT_LogicTreeInfoPanel,
-    ui.BGE_PT_ObjectTreeInfoPanel,
-    ui.BGE_PT_GlobalValuePanel,
-    ui.BGE_PT_LogicNodeSettingsScene,
-    ui.BGE_PT_LogicNodeSettingsObject,
-    ui.BGE_PT_LogicTreeOptions,
-    ui.BGE_PT_GamePropertyPanel3DView,
-    ui.BGE_PT_LogicTreeGroups
-])
-
+_registered_classes.extend(_properties)
+_registered_classes.extend(_panels)
+_registered_classes.extend(_lists)
+_registered_classes.extend(_menu_items)
+# _registered_classes.append(LogicNodeTree)
 
 def _get_key_for_class(c):
     if hasattr(c, "bl_label"):
@@ -435,11 +342,6 @@ def get_uplogic_module():
         pass
 
 
-def filter_components(self, item=bpy.types.Text):
-    if not item.name.startswith('nl_'):
-        return True
-    return False
-
 
 @persistent
 def _update_properties(file):
@@ -463,10 +365,14 @@ def register():
     bpy.app.handlers.game_pre.append(_set_vr_mode)
     bpy.app.handlers.game_pre.append(_reload_texts)
     bpy.app.handlers.load_post.append(_update_properties)
+
     bpy.app.handlers.depsgraph_update_post.append(_watch_tree_names)
     for cls in _registered_classes:
         bpy.utils.register_class(cls)
 
+    bpy.utils.register_class(LogicNodeTree)
+    bpy.utils.register_class(LogicNodeTreeReference)
+    bpy.utils.register_class(LogicNodesAddonPreferences)
     bpy.types.Object.sound_occluder = bpy.props.BoolProperty(
         default=True,
         name='Sound Occluder',
@@ -492,44 +398,30 @@ def register():
         description='Samples used by this reverb volume. More samples mean a longer reverberation'
     )
 
+    # XXX: Remove bgelogic_treelist attr in the future
     bpy.types.Object.bgelogic_treelist = bpy.props.CollectionProperty(
-        type=NLNodeTreeReference
+        type=LogicNodeTreeReference
     )
+
     bpy.types.Object.logic_trees = bpy.props.CollectionProperty(
         type=LogicNodeTreeReference
     )
-    bpy.types.Scene.prop_filter = bpy.props.PointerProperty(
-        type=ui.BGEPropFilter
+
+    def filter_components(self, item=bpy.types.Text):
+        if not item.name.startswith('nl_'):
+            return True
+
+    bpy.types.Scene.componenthelper = bpy.props.PointerProperty(
+        type=bpy.types.Text,
+        poll=filter_components,
+        name='Component',
+        description='Add a component defined in this file'
     )
-    bpy.types.Scene.logic_nodes_settings = bpy.props.PointerProperty(
-        type=NLAddonSettings
-    )
-    bpy.types.Scene.nl_global_categories = bpy.props.CollectionProperty(
-        type=ui.BGEGlobalValueCategory
-    )
-    bpy.types.Scene.nl_componenthelper = bpy.props.PointerProperty(
-        type=bpy.types.Text, poll=filter_components, name='Component', description='Add the first component defined in this file'
-    )
-    bpy.types.Scene.nl_global_cat_selected = bpy.props.IntProperty(
-        name='Category'
-    )
-    bpy.types.Scene.use_vr_audio_space = bpy.props.BoolProperty(
-        name='Use VR Audio Space'
-    )
-    bpy.types.Scene.jump_in_game_cam = bpy.props.BoolProperty(
-        name='Use Game Camera On Start'
-    )
+    bpy.types.Scene.nl_global_categories = bpy.props.CollectionProperty(type=LogicNodesGlobalCategory)
+    bpy.types.Scene.nl_global_cat_selected = bpy.props.IntProperty(name='Category')
     bpy.types.Scene.custom_mainloop_tree = bpy.props.PointerProperty(
         name='Custom Mainloop Tree',
         type=bpy.types.NodeTree
-    )
-    bpy.types.Scene.use_screen_console = bpy.props.BoolProperty(
-        name='Screen Console',
-        description='Print messages to an on-screen console.\nNeeds at least one uplogic import or Logic Node Tree.\nNote: Errors are not printed to this console'
-    )
-    bpy.types.Scene.screen_console_open = bpy.props.BoolProperty(
-        name='Open',
-        description='Start the game with the on-screen console already open'
     )
     # get_uplogic_module()
 

@@ -9,7 +9,7 @@ from ...sockets import NodeSocketLogicValue
 class LogicNodeListAppend(LogicNodeActionType):
     bl_idname = "NLAppendListItem"
     bl_label = "Append"
-    nl_module = 'actions'
+    nl_module = 'uplogic.nodes.actions'
     nl_class = "ULAppendListItem"
 
     search_tags = [

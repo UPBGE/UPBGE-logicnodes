@@ -10,7 +10,7 @@ from bpy.props import EnumProperty
 class LogicNodeEuler(LogicNodeParameterType):
     bl_idname = "NLParameterEulerSimpleNode"
     bl_label = "Euler"
-    nl_module = 'parameters'
+    nl_module = 'uplogic.nodes.parameters'
 
     euler_order: EnumProperty(items=_enum_euler_orders)
 

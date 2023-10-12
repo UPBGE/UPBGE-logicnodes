@@ -9,7 +9,7 @@ from ..node import node_type
 class LogicNodeMouseOver(LogicNodeConditionType):
     bl_idname = "NLConditionMouseTargetingNode"
     bl_label = "Over"
-    nl_module = 'conditions'
+    nl_module = 'uplogic.nodes.conditions'
 
     search_tags = [
         ['Mouse Over', {}]

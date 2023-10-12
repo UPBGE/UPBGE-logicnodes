@@ -19,7 +19,7 @@ from bpy.props import EnumProperty
 class LogicNodeCreateUIButton(LogicNodeActionType):
     bl_idname = "LogicNodeCreateUIButton"
     bl_label = "Create Button"
-    nl_module = 'actions'
+    nl_module = 'uplogic.nodes.actions'
     halign_type: EnumProperty(items=_ui_halign_types, name='X')
     valign_type: EnumProperty(items=_ui_valign_types, name='Y')
     text_halign_type: EnumProperty(items=_ui_halign_types, name='Text X', default='center')

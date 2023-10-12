@@ -11,7 +11,7 @@ from bpy.props import StringProperty
 class LogicNodeVariableLoad(LogicNodeParameterType):
     bl_idname = "NLActionLoadVariable"
     bl_label = "Load Variable"
-    nl_module = 'parameters'
+    nl_module = 'uplogic.nodes.parameters'
 
     custom_path: BoolProperty()
     path: StringProperty(

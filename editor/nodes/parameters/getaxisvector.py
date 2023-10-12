@@ -10,8 +10,8 @@ from bpy.props import EnumProperty
 class LogicNodeGetAxisVector(LogicNodeParameterType):
     bl_idname = "NLParameterAxisVector"
     bl_label = "Get Axis Vector"
-    bl_icon = 'EMPTY_ARROWS'
-    nl_module = 'parameters'
+    nl_module = 'uplogic.nodes.parameters'
+    nl_class = "ULAxisVector"
 
     axis: EnumProperty(
         name='Axis',
@@ -25,8 +25,6 @@ class LogicNodeGetAxisVector(LogicNodeParameterType):
 
     def draw_buttons(self, context, layout):
         layout.prop(self, 'axis', text='')
-
-    nl_class = "ULAxisVector"
 
     def get_input_names(self):
         return ["game_object"]

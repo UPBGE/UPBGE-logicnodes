@@ -11,7 +11,7 @@ from bpy.props import StringProperty
 class LogicNodeFormula(LogicNodeParameterType):
     bl_idname = "NLParameterMathFun"
     bl_label = "Formula"
-    nl_module = 'parameters'
+    nl_module = 'uplogic.nodes.parameters'
 
     value: StringProperty(default='a + b')
 

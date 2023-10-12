@@ -8,7 +8,7 @@ from ...sockets import NodeSocketLogicObject
 class LogicNodeCharacterJump(LogicNodeActionType):
     bl_idname = "NLActionCharacterJump"
     bl_label = "Jump"
-    nl_module = 'actions'
+    nl_module = 'uplogic.nodes.actions'
     nl_class = "ULCharacterJump"
 
     def init(self, context):

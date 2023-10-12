@@ -14,7 +14,7 @@ from bpy.props import EnumProperty
 class LogicNodeEvaluateProperty(LogicNodeConditionType):
     bl_idname = "NLObjectPropertyOperator"
     bl_label = "Evaluate Property"
-    nl_module = 'conditions'
+    nl_module = 'uplogic.nodes.conditions'
 
     mode: EnumProperty(
         name='Mode',

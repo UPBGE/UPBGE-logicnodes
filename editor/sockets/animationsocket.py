@@ -15,7 +15,6 @@ class NodeSocketLogicAnimation(NodeSocket, NodeSocketLogic):
         name='Action',
         type=Action,
         description='Select an Action'
-        # update=update_tree_code
     )
     color = PARAMETER_SOCKET_COLOR
 
@@ -37,4 +36,4 @@ class NodeSocketLogicAnimation(NodeSocket, NodeSocketLogic):
 
     def get_unlinked_value(self):
         if isinstance(self.value, Action):
-            return '"{}"'.format(self.value.name)
+            return f'bpy.data.actions.get("{self.value.name}", None)'

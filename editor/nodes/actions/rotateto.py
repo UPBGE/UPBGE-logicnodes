@@ -12,7 +12,7 @@ from ...sockets import NodeSocketLogicAxisSigned
 class LogicNodeRotateTo(LogicNodeActionType):
     bl_idname = "NLActionRotateTo"
     bl_label = "Rotate To"
-    nl_module = 'actions'
+    nl_module = 'uplogic.nodes.actions'
     nl_class = "ULActionRotateTo"
 
     def init(self, context):
@@ -22,7 +22,7 @@ class LogicNodeRotateTo(LogicNodeActionType):
         self.add_input(NodeSocketLogicFloatFactor, "Factor", {'value': 1.0})
         self.add_input(NodeSocketLogicAxis, "Rot Axis", {'value': '2'})
         self.add_input(NodeSocketLogicAxisSigned, "Front", {'value': '1'})
-        self.add_output(NodeSocketLogicCondition, "When Done")
+        self.add_output(NodeSocketLogicCondition, "Done")
         LogicNodeActionType.init(self, context)
 
     def get_output_names(self):

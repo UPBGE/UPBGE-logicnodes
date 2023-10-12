@@ -8,7 +8,7 @@ from ...sockets import NodeSocketLogicFloat
 class LogicNodeVectorAngle(LogicNodeParameterType):
     bl_idname = "NLVectorAngle"
     bl_label = "Angle"
-    nl_module = 'parameters'
+    nl_module = 'uplogic.nodes.parameters'
     deprecated = True
     deprecation_message = 'Replaced by "Vector Math" Node.'
 

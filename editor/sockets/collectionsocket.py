@@ -42,4 +42,4 @@ class NodeSocketLogicCollection(NodeSocket, NodeSocketLogic):
 
     def get_unlinked_value(self):
         if isinstance(self.value, Collection):
-            return '"{}"'.format(self.value.name)
+            return f'bpy.data.collections.get("{self.value.name}")'

@@ -11,7 +11,7 @@ from bpy.props import BoolProperty
 class LogicNodeSendEvent(LogicNodeActionType):
     bl_idname = "NLActionCreateMessage"
     bl_label = "Send Event"
-    nl_module = 'actions'
+    nl_module = 'uplogic.nodes.actions'
     nl_class = "ULDispatchEvent"
 
     search_tags = [

@@ -1,4 +1,4 @@
-from .socket import NodeSocketLogic
+from .socket import SOCKET_TYPE_GENERIC, NodeSocketLogic
 from .socket import PARAMETER_SOCKET_COLOR
 from .socket import socket_type
 from .socket import update_draw
@@ -16,6 +16,8 @@ from bpy.props import IntProperty
 class NodeSocketLogicValue(NodeSocket, NodeSocketLogic):
     bl_idname = "NLValueFieldSocket"
     bl_label = "Value"
+    nl_type = SOCKET_TYPE_GENERIC
+    # color = PARAMETER_SOCKET_COLOR
 
     value: StringProperty(update=update_draw)
 
@@ -60,8 +62,6 @@ class NodeSocketLogicValue(NodeSocket, NodeSocketLogic):
         update=store_path_value,
         subtype='FILE_PATH'
     )
-
-    color = PARAMETER_SOCKET_COLOR
 
     def get_unlinked_value(self):
         return parse_value_type(self.value_type, self.value)

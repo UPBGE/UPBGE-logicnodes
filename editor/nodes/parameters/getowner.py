@@ -11,11 +11,9 @@ class LogicNodeGetOwner(LogicNodeParameterType):
     """
     bl_idname = "NLOwnerGameObjectParameterNode"
     bl_label = "Get Owner"
-    bl_icon = 'USER'
-    nl_module = 'parameters'
+    nl_module = 'uplogic.nodes.parameters'
+    nl_class = "ULGetOwner"
 
     def init(self, context):
         self.add_output(NodeSocketLogicObject, "Owner Object")
         LogicNodeParameterType.init(self, context)
-
-    nl_class = "ULGetOwner"

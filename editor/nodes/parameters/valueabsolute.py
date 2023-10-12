@@ -7,7 +7,7 @@ from ...sockets import NodeSocketLogicFloat
 class LogicNodeValueAbsolute(LogicNodeParameterType):
     bl_idname = "NLAbsoluteValue"
     bl_label = "Absolute"
-    nl_module = 'parameters'
+    nl_module = 'uplogic.nodes.parameters'
 
     def init(self, context):
         self.add_input(NodeSocketLogicFloat, "Value")

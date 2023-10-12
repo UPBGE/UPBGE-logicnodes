@@ -13,9 +13,7 @@ from bpy.props import StringProperty
 class LogicNodeClearVariables(LogicNodeActionType):
     bl_idname = "NLActionClearVariables"
     bl_label = "Clear Variables"
-    nl_category = "Data"
-    nl_subcat = "Variables"
-    nl_module = 'actions'
+    nl_module = 'uplogic.nodes.actions'
     nl_class = "ULClearVariables"
 
     custom_path: BoolProperty(name='Custom Path')

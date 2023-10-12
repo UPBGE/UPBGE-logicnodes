@@ -9,7 +9,7 @@ from ...sockets import NodeSocketLogicIntegerPositive
 class LogicNodeCharacterSetMaxJumps(LogicNodeActionType):
     bl_idname = "NLSetActionCharacterJump"
     bl_label = "Set Max Jumps"
-    nl_module = 'actions'
+    nl_module = 'uplogic.nodes.actions'
 
     def init(self, context):
         self.add_input(NodeSocketLogicCondition, "Condition")

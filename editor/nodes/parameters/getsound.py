@@ -7,15 +7,13 @@ from ...sockets import NodeSocketLogicSoundFile
 class LogicNodeGetSound(LogicNodeParameterType):
     bl_idname = "NLGetSound"
     bl_label = "Get Sound"
-    bl_icon = 'FILE_SOUND'
-    nl_module = 'parameters'
+    nl_module = 'uplogic.nodes.parameters'
+    nl_class = "ULGetSound"
 
     def init(self, context):
         self.add_input(NodeSocketLogicSoundFile, "Sound File")
         self.add_output(NodeSocketLogicSoundFile, 'Sound File')
         LogicNodeParameterType.init(self, context)
-
-    nl_class = "ULGetSound"
 
     def get_input_names(self):
         return ["sound"]

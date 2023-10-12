@@ -9,7 +9,7 @@ from ...sockets import NodeSocketLogicCurve
 class LogicNodeSetCurvePoints(LogicNodeActionType):
     bl_idname = "NLSetCurvePoints"
     bl_label = "Set Curve Points"
-    nl_module = 'actions'
+    nl_module = 'uplogic.nodes.actions'
     nl_class = "ULSetCurvePoints"
 
     def init(self, context):

@@ -10,7 +10,7 @@ class LogicNodeOnValueChangedTo(LogicNodeConditionType):
     """True if input is equal to given value after changing"""
     bl_idname = "NLConditionValueTriggerNode"
     bl_label = "On Value Changed To"
-    nl_module = 'conditions'
+    nl_module = 'uplogic.nodes.conditions'
 
     def init(self, context):
         self.add_input(NodeSocketLogicParameter, "Value")

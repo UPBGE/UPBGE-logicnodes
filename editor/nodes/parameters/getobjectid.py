@@ -8,7 +8,7 @@ from ...sockets import NodeSocketLogicString
 class LogicNodeGetObjectID(LogicNodeParameterType):
     bl_idname = "NLGetObjectDataName"
     bl_label = "Get Object ID"
-    nl_module = 'parameters'
+    nl_module = 'uplogic.nodes.parameters'
 
     def init(self, context):
         self.add_input(NodeSocketLogicObject, "Object")

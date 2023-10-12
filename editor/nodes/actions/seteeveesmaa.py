@@ -8,7 +8,7 @@ from ...sockets import NodeSocketLogicBoolean
 class LogicNodeSetEeveeSMAA(LogicNodeActionType):
     bl_idname = "NLSetEeveeSMAA"
     bl_label = "Set SMAA"
-    nl_module = 'actions'
+    nl_module = 'uplogic.nodes.actions'
     nl_class = "ULSetEeveeSMAA"
     deprecated = True
 

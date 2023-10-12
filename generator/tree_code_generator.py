@@ -6,8 +6,10 @@ from .. import utilities as utils
 from .file_text_buffer import FileTextBuffer
 from .abstract_text_buffer import AbstractTextBuffer
 from .uid_map import UIDMap
+from ..utilities import make_valid_name, preferences
 # from ..editor.sockets.socket import NLSocket
 from time import time
+from mathutils import Vector
 
 
 class BLTextWrapper(AbstractTextBuffer):
@@ -47,18 +49,21 @@ import bge, bpy, sys
 import mathutils
 import math
 from collections import OrderedDict
+from mathutils import Vector
 
 
 class {}Wrapper():
 
-    def __init__(self, game_object, exec_cond="", startup=False):
+    def __init__(self, game_object, component=None, exec_cond="", startup=False):
         from uplogic import nodes, utils
         from uplogic.nodes.logictree import ULLogicTree
         from uplogic.utils import OPERATORS, LOGIC_OPERATORS
 {}
         self.condition = exec_cond
         owner = self.owner = game_object
+        scene = self.scene = bge.logic.getCurrentScene()
         network = self.network = ULLogicTree()
+        network.component = component
 {}
         owner["IGNLTree_{}"] = network
         network._owner = owner
@@ -83,15 +88,17 @@ class {}Wrapper():
 class {}(bge.types.KX_PythonComponent):
     args = OrderedDict([
         ("Only Run At Startup", False),
-        ("Execution Condition", "")
+        ("Execution Condition", ""){}
     ])
 
     def start(self, args):
         self.logictree = {}Wrapper(
             self.object,
+            component=self,
             exec_cond=args["Execution Condition"],
             startup=args["Only Run At Startup"]
         )
+{}
         self.logictree.evaluate()
 
     def update(self):
@@ -109,37 +116,13 @@ def get_tree(obj):
 
 class TreeCodeGenerator(object):
 
-    def get_netlogic_module_for_node(self, node):
-        try:
-            netlogic_class = node.nl_class
-            lastdot = netlogic_class.rfind(".")
-            if lastdot < 0:
-                return None  # assuming basicnodes
-            return netlogic_class[0:lastdot]
-        except AttributeError:
-            return None
-
-    def list_user_modules_needed_by_tree(self, tree):
-        result = set()
-        for node in tree.nodes:
-            module_name = self.get_netlogic_module_for_node(node)
-            if module_name is not None:  # if none assume is one in bgelogic.py
-                if module_name != "bgelogic":
-                    result.add(module_name)
-        return result
-
-    def create_text_file(self, name, path=None):
-        if not path:
-            path = bpy.path.abspath('//bgelogic/')
-        return FileTextBuffer(os.path.join(path, name))
-
     def write_code_for_tree(self, tree):
-        if getattr(bpy.context.scene.logic_nodes_settings, 'use_node_debug', False):
+        if preferences().use_node_debug:
             utils.notify("Generating code for tree {}".format(tree.name))
         tree_name = utils.make_valid_name(tree.name)
         line_writer = BLTextWrapper(f'nl_{tree_name.lower()}.py')
         imports = self.write_imports(tree)
-        # text += self._write_tree(tree)
+        properties = self.get_properties(tree)
         text = self.add_nodes(tree)
         line_writer.clear()
         text = MODULE_TEMPLATE.format(
@@ -149,43 +132,12 @@ class TreeCodeGenerator(object):
             tree_name,
             tree_name,
             tree_name,
+            properties,
             tree_name,
+            self.get_property_defs(tree),
             tree_name
         )
         line_writer.write_line(text)
-
-        # if tree.mode:
-        #     writer = self.write_to_text(tree)
-        # else:
-        #     writer = self.write_to_file(tree)
-        # self.write_init_content(tree, writer)
-        # indent = self.write_pulse_line(tree, writer)
-        # self.write_pulse_content(tree, writer, indent)
-        # if tree.mode:
-        #     self.write_component_part(tree, writer, 0)
-
-    def write_unloader(self, writer):
-        writer.write_line("def unload_pyd(a, b):")
-        writer.set_indent_level(1)
-        writer.write_line("for m in sorted(sys.modules.keys()):")
-        writer.set_indent_level(2)
-        writer.write_line("if 'bge' in m:")
-        writer.set_indent_level(3)
-        writer.write_line("print(m)")
-        writer.set_indent_level(1)
-        writer.write_line("filter(lambda a: a.__name__ == 'unload_pyd', bpy.app.handlers.game_post)")
-        writer.write_line("remove_f = []")
-        writer.write_line("for f in bpy.app.handlers.game_post:")
-        writer.set_indent_level(2)
-        writer.write_line("if f.__name__ == 'unload_pyd':")
-        writer.set_indent_level(3)
-        writer.write_line("remove_f.append(f)")
-        writer.set_indent_level(1)
-        writer.write_line("for f in remove_f:")
-        writer.set_indent_level(2)
-        writer.write_line("bpy.app.handlers.game_post.remove(f)")
-        writer.write_line('')
-        writer.set_indent_level(0)
 
     def write_imports(self, tree):
         text = ''
@@ -197,59 +149,43 @@ class TreeCodeGenerator(object):
                 if clsname not in imp and mod:
                     imp.append(clsname)
                     # writer.write_line(f'from uplogic.nodes.{mod} import {clsname}')
-                    text += f'        from uplogic.nodes.{mod} import {clsname}\n'
+                    text += f'        from {mod} import {clsname}\n'
             except Exception:
                 continue
         return text
 
-    def write_to_text(self, tree):
-        tree_name = utils.make_valid_name(tree.name)
-        line_writer = BLTextWrapper(f'nl_{tree_name.lower()}.py')
-        line_writer.clear()
-        line_writer.write_line("# MACHINE GENERATED")
-        line_writer.write_line("import bge, bpy, sys")
-        line_writer.write_line("import mathutils")
-        line_writer.write_line("import math")
-        line_writer.write_line("from collections import OrderedDict")
-        # user_modules = self.list_user_modules_needed_by_tree(tree)
-        # for module in user_modules:
-        #     line_writer.write_line('{} = bgelogic.load_user_logic("{}")', module, module)
-        line_writer.write_line('')
-        line_writer.write_line('')
-        line_writer.write_line(f'class {tree_name}Wrapper():')
-        line_writer.write_line('')
-        line_writer.set_indent_level(1)
-        line_writer.write_line('def __init__(self, game_object, exec_cond="", startup=False):')
-        line_writer.set_indent_level(2)
-        line_writer.write_line("from uplogic import nodes, utils")
-        line_writer.write_line("from uplogic.nodes.logictree import ULLogicTree")
-        line_writer.write_line("from uplogic.utils import OPERATORS, LOGIC_OPERATORS")
-        self.write_imports(tree, line_writer)
-        line_writer.write_line("self.condition = exec_cond")
-        line_writer.write_line("owner = self.owner = game_object")
-        return line_writer
+    def get_properties(self, tree):
+        text = ''
+        options = [
+            0.0,
+            '""',
+            0,
+            False,
+            'mathutils.Vector((0., 0., 0.))',
+            'mathutils.Color((.5, .5, .5))',
+            'mathutils.Vector((.5, .5, .5, 1.0))',
+            'bpy.types.Object',
+            'bpy.types.Collection',
+            'bpy.types.Material',
+            'bpy.types.Mesh',
+            'bpy.types.NodeTree',
+            'bpy.types.Action',
+            'bpy.types.Text',
+            'bpy.types.Sound',
+            'bpy.types.Image',
+            'bpy.types.VectorFont'
+        ]
+        for prop in tree.properties:
+            val = options[int(prop.value_type)]
+            text += f',\n        ("{prop.name}", {val})'
+        return text
 
-    def write_to_file(self, tree):
-        buffer_name = utils.py_module_filename_for_tree(tree)
-        line_writer = self.create_text_file(buffer_name)
-        line_writer.write_line("# MACHINE GENERATED")
-        line_writer.write_line("import bge, bpy, sys, importlib")
-        line_writer.write_line("import mathutils")
-        line_writer.write_line("from uplogic import nodes, utils")
-        line_writer.write_line("from uplogic.nodes.logictree import ULLogicTree")
-        self.write_imports(tree, line_writer)
-        line_writer.write_line("import math")
-        # user_modules = self.list_user_modules_needed_by_tree(tree)
-        # for module in user_modules:
-        #     if module == 'bgelogic.game':
-        #         continue
-        #     line_writer.write_line('{} = game.load_user_logic("{}")', module, module)
-        line_writer.write_line("")
-        # self.write_unloader(line_writer)
-        # line_writer.write_line("bpy.app.handlers.game_post.append(unload_pyd)")
-        line_writer.write_line("def _initialize(owner):")
-        line_writer.set_indent_level(1)
-        return line_writer
+    def get_property_defs(self, tree):
+        text = ''
+        for prop in tree.properties:
+            getter = f'Vector(args["{prop.name}"])' if int(prop.value_type) in [4, 5, 6] else f'args["{prop.name}"]'
+            text += f'        self.{make_valid_name(prop.name).lower()} = {getter}\n'
+        return text
 
     def add_nodes(self, tree):
         cell_var_names, uid_map, text = self._write_tree(tree)
@@ -257,91 +193,6 @@ class TreeCodeGenerator(object):
             if not uid_map.is_removed(varname):
                 text += f"        network.add_cell({varname})\n"
         return text
-
-    def write_init_content(self, tree, line_writer):
-        line_writer.write_line("network = self.network = ULLogicTree()")
-        tree_name = utils.make_valid_name(tree.name)
-        line_writer.write_line('owner["IGNLTree_{}"] = network', tree_name)
-        line_writer.write_line("network._owner = owner")
-        line_writer.write_line("network.setup()")
-        line_writer.write_line("network.stopped = not owner.get('{}')", utils.get_key_network_initial_status_for_tree(tree))
-        line_writer.write_line("self.consumed = startup")
-
-    def write_pulse_line(self, tree, line_writer):
-        line_writer.set_indent_level(line_writer._indent_level - 1)
-        line_writer.write_line("")
-        if isinstance(line_writer, BLTextWrapper):
-            line_writer.write_line('def evaluate(self):')
-            line_writer.set_indent_level(2)
-            line_writer.write_line("if self.consumed:")
-            line_writer.set_indent_level(3)
-            line_writer.write_line("return")
-            line_writer.set_indent_level(2)
-            line_writer.write_line("owner = self.owner")
-            line_writer.write_line("if self.condition:")
-            line_writer.set_indent_level(3)
-            line_writer.write_line("cond = owner[self.condition]")
-            line_writer.write_line("if not cond: return")
-            line_writer.set_indent_level(2)
-        else:
-            line_writer.write_line('def pulse_network(controller):')
-            line_writer.set_indent_level(1)
-            line_writer.write_line("owner = controller.owner")
-        return line_writer._indent_level
-
-    def write_pulse_content(self, tree, line_writer, indent):
-        # line_writer.write_line('network = owner.get("IGNLTree_{}")', tree.name)
-        line_writer.write_line('network = self.network')
-        if not isinstance(line_writer, BLTextWrapper):
-            line_writer.write_line("if network is None:")
-            line_writer.set_indent_level(indent + 1)
-            line_writer.write_line("network = _initialize(owner)")
-        line_writer.set_indent_level(indent)
-        line_writer.write_line("if network.stopped: return")
-        line_writer.write_line("shutdown = network.evaluate()")
-        line_writer.write_line("if shutdown is True:")
-        line_writer.set_indent_level(indent + 1)
-        if not isinstance(line_writer, BLTextWrapper):
-            line_writer.write_line("controller.sensors[0].repeat = False")
-        else:
-            line_writer.write_line("self.consumed = True")
-
-    def write_component_part(self, tree, line_writer, indent=0):
-        line_writer.set_indent_level(0)
-        line_writer.write_line('')
-        line_writer.write_line('')
-        tree_name = utils.make_valid_name(tree.name)
-        line_writer.write_line(f'class {tree_name}(bge.types.KX_PythonComponent):')
-        line_writer.set_indent_level(1)
-        line_writer.write_line('args = OrderedDict([')
-        line_writer.set_indent_level(2)
-        line_writer.write_line('("Only Run At Startup", False),')
-        line_writer.write_line('("Execution Condition", "")')
-        line_writer.set_indent_level(1)
-        line_writer.write_line('])')
-        line_writer.write_line('def start(self, args):')
-        line_writer.set_indent_level(2)
-        line_writer.write_line(f'self.logictree = {tree_name}Wrapper(')
-        line_writer.set_indent_level(3)
-        line_writer.write_line('self.object,')
-        line_writer.write_line('exec_cond=args["Execution Condition"],')
-        line_writer.write_line('startup=args["Only Run At Startup"]')
-        line_writer.set_indent_level(2)
-        line_writer.write_line(')')
-        line_writer.write_line('self.logictree.evaluate()')
-        line_writer.set_indent_level(1)
-        line_writer.write_line('def update(self):')
-        line_writer.set_indent_level(2)
-        line_writer.write_line('if not self.logictree.consumed:')
-        line_writer.set_indent_level(3)
-        line_writer.write_line('self.logictree.evaluate()')
-        line_writer.set_indent_level(0)
-        line_writer.write_line('')
-        line_writer.write_line('')
-        # self.write_unloader(line_writer)
-        line_writer.write_line('def get_tree(obj):')
-        line_writer.set_indent_level(1)
-        line_writer.write_line(f'return {tree_name}Wrapper(obj)')
 
     def _write_tree(self, tree):
         text = ''
@@ -355,18 +206,12 @@ class TreeCodeGenerator(object):
                 continue
             if hasattr(node, 'nl_module'):
                 node.check(tree)
-                prefix = node.nl_module
-            # if isinstance(node, bge_netlogic.basicnodes.NLActionNode):
-            #     prefix = "ACT"
-            # elif isinstance(node, bge_netlogic.basicnodes.NLConditionNode):
-            #     prefix = "CON"
-            # elif isinstance(node, bge_netlogic.basicnodes.NLParameterNode):
-            #     prefix = "PAR"
+                prefix = node.nl_class
             else:
                 raise ValueError(
                         "netlogic node {} must extend one of NLActionNode, NLConditionNode or NLParameterNode".format(
                                 node.__class__.__name__))
-            varname = "{0}{1:04d}".format(prefix, cell_uid)
+            varname = "{0}{1:03d}".format(prefix, cell_uid)
             uid_map._register(varname, cell_uid, node)
 
             # XXX: use attribute on node instead of function?

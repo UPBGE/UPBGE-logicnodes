@@ -12,8 +12,8 @@ import bpy
 class LogicNodeSetNodeGroupSocket(LogicNodeActionType):
     bl_idname = "NLSetNodeTreeNodeValue"
     bl_label = "Set Socket"
-    nl_module = 'actions'
-    deprecated = True
+    nl_module = 'uplogic.nodes.actions'
+    # deprecated = True
 
     search_tags = [
         ['Set Node Group Socket', {}]

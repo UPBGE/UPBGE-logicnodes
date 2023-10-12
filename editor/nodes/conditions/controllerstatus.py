@@ -10,7 +10,7 @@ from ...sockets import NodeSocketLogicDictionary
 class LogicNodeControllerStatus(LogicNodeConditionType):
     bl_idname = "NLControllerStatus"
     bl_label = "Controller Status"
-    nl_module = 'conditions'
+    nl_module = 'uplogic.nodes.conditions'
 
     def init(self, context):
         self.add_input(NodeSocketLogicObject, 'Object')

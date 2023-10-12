@@ -9,7 +9,7 @@ from ...sockets import NodeSocketLogicBoolean
 class LogicNodeSetRigidBody(LogicNodeActionType):
     bl_idname = "NLSetRigidBody"
     bl_label = "Set Rigid Body"
-    nl_module = 'actions'
+    nl_module = 'uplogic.nodes.actions'
     nl_class = "ULSetRigidBody"
 
     def init(self, context):

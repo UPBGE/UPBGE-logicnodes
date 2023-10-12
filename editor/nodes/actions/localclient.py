@@ -12,7 +12,7 @@ from bpy.props import BoolProperty
 class LogicNodeLocalClient(LogicNodeActionType):
     bl_idname = "LogicNodeLocalClient"
     bl_label = "LAN Client"
-    nl_module = 'actions'
+    nl_module = 'uplogic.nodes.actions'
 
     on_init: BoolProperty(
         name='Startup',

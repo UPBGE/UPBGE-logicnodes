@@ -10,9 +10,7 @@ from ...sockets import NodeSocketLogicTree
 class LogicNodeRunLogicTree(LogicNodeActionType):
     bl_idname = "NLActionExecuteNetwork"
     bl_label = "Run Logic Tree"
-    nl_category = "Logic"
-    nl_subcat = 'Trees'
-    nl_module = 'actions'
+    nl_module = 'uplogic.nodes.actions'
     nl_class = "ULExecuteSubNetwork"
 
     def init(self, context):

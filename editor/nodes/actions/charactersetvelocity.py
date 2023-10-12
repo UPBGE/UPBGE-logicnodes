@@ -11,7 +11,7 @@ from bpy.props import BoolProperty
 class LogicNodeCharacterSetVelocity(LogicNodeActionType):
     bl_idname = "NLActionSetCharacterVelocity"
     bl_label = "Set Velocity"
-    nl_module = 'actions'
+    nl_module = 'uplogic.nodes.actions'
     nl_class = "ULSetCharacterVelocity"
 
     local: BoolProperty(default=True, name='Local')

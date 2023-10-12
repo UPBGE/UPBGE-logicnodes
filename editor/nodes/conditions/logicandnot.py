@@ -9,7 +9,7 @@ class LogicNodeLogicAndNot(LogicNodeConditionType):
     bl_label = "And Not"
     bl_width_min = 60
     bl_width_default = 100
-    nl_module = 'conditions'
+    nl_module = 'uplogic.nodes.conditions'
     deprecated = True
     deprecation_message = 'Replaced by "Gate" Node.'
 

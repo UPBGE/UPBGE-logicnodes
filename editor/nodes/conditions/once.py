@@ -10,7 +10,7 @@ from bpy.props import BoolProperty
 class LogicNodeOnce(LogicNodeConditionType):
     bl_idname = "NLConditionOnceNode"
     bl_label = "Once"
-    nl_module = 'conditions'
+    nl_module = 'uplogic.nodes.conditions'
 
     def update_draw(self, context=None):
         if not self.ready:

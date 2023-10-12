@@ -10,9 +10,7 @@ from ...sockets import NodeSocketLogicValue
 class LogicNodeListSetIndex(LogicNodeActionType):
     bl_idname = "NLSetListIndex"
     bl_label = "Set Index"
-    nl_category = "Data"
-    nl_subcat = 'List'
-    nl_module = 'actions'
+    nl_module = 'uplogic.nodes.actions'
     nl_class = "ULSetListIndex"
 
     search_tags = [

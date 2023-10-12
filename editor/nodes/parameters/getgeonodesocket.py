@@ -11,8 +11,8 @@ import bpy
 class LogicNodeGetGeoNodeSocket(LogicNodeParameterType):
     bl_idname = "NLGetGeometryNodeValue"
     bl_label = "Get Socket Value"
-    bl_icon = 'TRIA_RIGHT'
-    nl_module = 'parameters'
+    nl_module = 'uplogic.nodes.parameters'
+    nl_class = "ULGetNodeSocket"
 
     def init(self, context):
         self.add_input(NodeSocketLogicGeometryNodeTree, 'Tree')
@@ -45,8 +45,6 @@ class LogicNodeGetGeoNodeSocket(LogicNodeParameterType):
                 ipt.value = limit
             name = target.inputs[ipt.value].name
             ipt.name = name
-
-    nl_class = "ULGetNodeSocket"
 
     def get_input_names(self):
         return ["tree_name", 'node_name', "input_slot"]

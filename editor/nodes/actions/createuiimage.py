@@ -15,8 +15,9 @@ from bpy.props import EnumProperty
 class LogicNodeCreateUIImage(LogicNodeActionType):
     bl_idname = "LogicNodeCreateUIImage"
     bl_label = "Create Image"
-    nl_subcat = 'Widgets'
-    nl_module = 'actions'
+    nl_module = 'uplogic.nodes.actions'
+    nl_class = "ULCreateUIImage"
+
     halign_type: EnumProperty(items=_ui_halign_types, name='X')
     valign_type: EnumProperty(items=_ui_valign_types, name='Y')
 
@@ -26,7 +27,7 @@ class LogicNodeCreateUIImage(LogicNodeActionType):
         self.add_input(NodeSocketLogicBoolean, "Relative Position")
         self.add_input(NodeSocketLogicVectorXY, "")
         self.add_input(NodeSocketLogicBoolean, "Relative Size")
-        self.add_input(NodeSocketLogicVectorXY, "")
+        self.add_input(NodeSocketLogicVectorXY, "", {'value_x': 100, 'value_y': 100})
         self.add_input(NodeSocketLogicFloatAngle, "Angle")
         self.add_input(NodeSocketLogicImage, "")
         self.add_output(NodeSocketLogicCondition, "Done")
@@ -36,8 +37,6 @@ class LogicNodeCreateUIImage(LogicNodeActionType):
     def draw_buttons(self, context, layout) -> None:
         layout.prop(self, 'halign_type', text='X')
         layout.prop(self, 'valign_type', text='Y')
-
-    nl_class = "ULCreateUIImage"
 
     def get_output_names(self):
         return ["OUT", 'WIDGET']

@@ -1,6 +1,7 @@
 from .socket import NodeSocketLogic
 from .socket import PARAM_LIST_SOCKET_COLOR
 from .socket import socket_type
+from .socket import update_draw
 from bpy.props import BoolProperty
 from bpy.types import NodeSocket
 
@@ -9,22 +10,22 @@ from bpy.types import NodeSocket
 class NodeSocketLogicBitMask(NodeSocket, NodeSocketLogic):
     bl_idname = "NLCollisionMaskSocket"
     bl_label = "Parameter"
-    slot_0: BoolProperty(default=True)
-    slot_1: BoolProperty(default=True)
-    slot_2: BoolProperty(default=True)
-    slot_3: BoolProperty(default=True)
-    slot_4: BoolProperty(default=True)
-    slot_5: BoolProperty(default=True)
-    slot_6: BoolProperty(default=True)
-    slot_7: BoolProperty(default=True)
-    slot_8: BoolProperty(default=True)
-    slot_9: BoolProperty(default=True)
-    slot_10: BoolProperty(default=True)
-    slot_11: BoolProperty(default=True)
-    slot_12: BoolProperty(default=True)
-    slot_13: BoolProperty(default=True)
-    slot_14: BoolProperty(default=True)
-    slot_15: BoolProperty(default=True)
+    slot_0: BoolProperty(default=True, update=update_draw)
+    slot_1: BoolProperty(default=True, update=update_draw)
+    slot_2: BoolProperty(default=True, update=update_draw)
+    slot_3: BoolProperty(default=True, update=update_draw)
+    slot_4: BoolProperty(default=True, update=update_draw)
+    slot_5: BoolProperty(default=True, update=update_draw)
+    slot_6: BoolProperty(default=True, update=update_draw)
+    slot_7: BoolProperty(default=True, update=update_draw)
+    slot_8: BoolProperty(default=True, update=update_draw)
+    slot_9: BoolProperty(default=True, update=update_draw)
+    slot_10: BoolProperty(default=True, update=update_draw)
+    slot_11: BoolProperty(default=True, update=update_draw)
+    slot_12: BoolProperty(default=True, update=update_draw)
+    slot_13: BoolProperty(default=True, update=update_draw)
+    slot_14: BoolProperty(default=True, update=update_draw)
+    slot_15: BoolProperty(default=True, update=update_draw)
 
     color = PARAM_LIST_SOCKET_COLOR
 
@@ -47,5 +48,10 @@ class NodeSocketLogicBitMask(NodeSocket, NodeSocketLogic):
                 idx += 1
 
     def get_unlinked_value(self):
-        slots = [self.get(f'slot_{idx}', 1) * (2**idx) for idx in range(16)]
-        return sum(slots)
+        mask = 0
+        for slot in range(16):
+            if self.get(f'slot_{slot}', 1):
+                mask += 1 << slot
+        return mask
+        # slots = [self.get(f'slot_{idx}', 1) * (2**idx) for idx in range(16)]
+        # return sum(slots)

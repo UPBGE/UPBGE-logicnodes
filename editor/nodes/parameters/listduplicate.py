@@ -7,8 +7,8 @@ from ...sockets import NodeSocketLogicList
 class LogicNodeListDuplicate(LogicNodeParameterType):
     bl_idname = "NLDuplicateList"
     bl_label = "Duplicate"
-    bl_icon = 'CON_TRANSLIKE'
-    nl_module = 'parameters'
+    nl_module = 'uplogic.nodes.parameters'
+    nl_class = "ULListDuplicate"
 
     search_tags = [
         ['Duplicate List', {}]
@@ -18,8 +18,6 @@ class LogicNodeListDuplicate(LogicNodeParameterType):
         self.add_input(NodeSocketLogicList, "List")
         self.add_output(NodeSocketLogicList, "List")
         LogicNodeParameterType.init(self, context)
-
-    nl_class = "ULListDuplicate"
 
     def get_input_names(self):
         return ["items"]

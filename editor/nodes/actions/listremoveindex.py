@@ -9,7 +9,7 @@ from ...sockets import NodeSocketLogicInteger
 class LogicNodeListRemoveIndex(LogicNodeActionType):
     bl_idname = "NLRemoveListIndex"
     bl_label = "Remove Index"
-    nl_module = 'actions'
+    nl_module = 'uplogic.nodes.actions'
     nl_class = "ULRemoveListIndex"
 
     def init(self, context):

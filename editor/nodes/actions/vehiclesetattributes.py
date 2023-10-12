@@ -13,9 +13,7 @@ from bpy.props import EnumProperty
 class LoigcNodeVehicleSetAttributes(LogicNodeActionType):
     bl_idname = "NLVehicleSetAttributes"
     bl_label = "Set Attributes"
-    nl_category = "Physics"
-    nl_subcat = 'Vehicle'
-    nl_module = 'actions'
+    nl_module = 'uplogic.nodes.actions'
     nl_class = "ULVehicleSetAttributes"
 
     search_tags = [

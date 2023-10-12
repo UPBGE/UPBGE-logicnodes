@@ -7,7 +7,7 @@ from ...sockets import NodeSocketLogicFloat
 class LogicNodeTimeDeltaFactor(LogicNodeParameterType):
     bl_idname = "LogicNodeTimeFactor"
     bl_label = "Delta Factor"
-    nl_module = 'parameters'
+    nl_module = 'uplogic.nodes.parameters'
 
     def init(self, context):
         self.add_output(NodeSocketLogicFloat, "Factor")

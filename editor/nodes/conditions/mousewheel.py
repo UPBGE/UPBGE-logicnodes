@@ -11,7 +11,7 @@ from bpy.props import EnumProperty
 class LogicNodeMouseWheel(LogicNodeConditionType):
     bl_idname = "NLConditionMouseWheelMoved"
     bl_label = "Wheel"
-    nl_module = 'conditions'
+    nl_module = 'uplogic.nodes.conditions'
     deprecated = True
 
     wheel_direction: EnumProperty(items=_enum_mouse_wheel_direction, default='3')

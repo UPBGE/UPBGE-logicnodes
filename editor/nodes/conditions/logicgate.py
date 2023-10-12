@@ -11,7 +11,7 @@ class LogicNodeLogicGate(LogicNodeConditionType):
     bl_idname = "LogicNodeLogicGate"
     bl_label = "Gate"
     bl_width_min = 60
-    nl_module = 'conditions'
+    nl_module = 'uplogic.nodes.conditions'
 
     def update_draw(self, context=None):
         if not self.ready:

@@ -8,7 +8,7 @@ from ...sockets import NodeSocketLogicParameter
 class LogicNodeMapRange(LogicNodeParameterType):
     bl_idname = "NLMapRangeNode"
     bl_label = "Map Range"
-    nl_module = 'parameters'
+    nl_module = 'uplogic.nodes.parameters'
 
     def init(self, context):
         self.add_input(NodeSocketLogicFloat, "Value")

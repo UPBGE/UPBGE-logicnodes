@@ -10,8 +10,7 @@ from ...sockets import NodeSocketLogicPython
 class LogicNodeSetPythonInstanceAttr(LogicNodeActionType):
     bl_idname = "NLParameterSetAttribute"
     bl_label = "Set Object Attribute"
-    nl_category = "Python"
-    nl_module = 'actions'
+    nl_module = 'uplogic.nodes.actions'
     nl_class = "ULSetPyInstanceAttr"
 
     def init(self, context):

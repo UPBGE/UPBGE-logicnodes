@@ -4,16 +4,13 @@ from ...sockets import NodeSocketLogicCondition
 from ...sockets import NodeSocketLogicScene
 from ...sockets import NodeSocketLogicFloat
 from ...sockets import NodeSocketLogicString
-from ...enum_types import _enum_writable_member_names
-from bpy.props import EnumProperty
 
 
 @node_type
 class LogicNodeLoadScene(LogicNodeActionType):
     bl_idname = "NLLoadScene"
     bl_label = "Load Scene"
-    nl_category = "Scene"
-    nl_module = 'actions'
+    nl_module = 'uplogic.nodes.actions'
 
     def init(self, context):
         self.add_input(NodeSocketLogicCondition, 'Condition')

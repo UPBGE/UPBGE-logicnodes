@@ -7,7 +7,7 @@ from ...sockets import NodeSocketLogicScene
 class LogicNodeGetScene(LogicNodeParameterType):
     bl_idname = "NLGetScene"
     bl_label = "Get Scene"
-    nl_module = 'parameters'
+    nl_module = 'uplogic.nodes.parameters'
 
     def init(self, context):
         self.add_output(NodeSocketLogicScene, 'Scene')

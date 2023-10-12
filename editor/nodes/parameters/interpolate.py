@@ -9,7 +9,7 @@ from ...sockets import NodeSocketLogicParameter
 class LogicNodeInterpolate(LogicNodeParameterType):
     bl_idname = "NLInterpolateValueNode"
     bl_label = "Interpolate"
-    nl_module = 'parameters'
+    nl_module = 'uplogic.nodes.parameters'
 
     def init(self, context):
         self.add_input(NodeSocketLogicFloat, "From")

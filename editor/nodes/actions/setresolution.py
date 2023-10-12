@@ -8,7 +8,7 @@ from ...sockets import NodeSocketLogicInteger
 class LogicNodeSetResolution(LogicNodeActionType):
     bl_idname = "NLActionSetResolution"
     bl_label = "Set Resolution"
-    nl_module = 'actions'
+    nl_module = 'uplogic.nodes.actions'
     nl_class = "ULSetResolution"
 
     def init(self, context):

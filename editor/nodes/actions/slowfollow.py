@@ -11,10 +11,7 @@ from bpy.props import EnumProperty
 class LogicNodeSlowFollow(LogicNodeActionType):
     bl_idname = "NLSlowFollow"
     bl_label = "Slow Follow"
-    bl_icon = 'VIEW3D'
-    nl_category = "Objects"
-    nl_subcat = 'Transformation'
-    nl_module = 'actions'
+    nl_module = 'uplogic.nodes.actions'
     nl_class = "ULSlowFollow"
 
     value_type: EnumProperty(

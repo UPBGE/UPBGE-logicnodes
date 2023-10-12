@@ -9,7 +9,7 @@ from ....utilities import WARNING_MESSAGES
 class LogicNodeGamepadTrigger(LogicNodeParameterType):
     bl_idname = "NLGamepadTriggerCondition"
     bl_label = "Gamepad Trigger"
-    nl_module = 'parameters'
+    nl_module = 'uplogic.nodes.parameters'
 
     def init(self, context):
         self.add_input(NodeSocketLogicIntegerPositiveCent, 'Index')

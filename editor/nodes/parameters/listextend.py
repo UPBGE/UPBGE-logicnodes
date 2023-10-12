@@ -8,7 +8,7 @@ from ...sockets import NodeSocketLogicList
 class LogicNodeListExtend(LogicNodeParameterType):
     bl_idname = "NLExtendList"
     bl_label = "Extend"
-    nl_module = 'parameters'
+    nl_module = 'uplogic.nodes.parameters'
     nl_class = "ULListExtend"
 
     search_tags = [

@@ -7,7 +7,7 @@ from ...sockets import NodeSocketLogicCondition
 class LogicNodeQuitGame(LogicNodeActionType):
     bl_idname = "NLActionEndGame"
     bl_label = "Quit Game"
-    nl_module = 'actions'
+    nl_module = 'uplogic.nodes.actions'
     nl_class = "ULEndGame"
 
     def init(self, context):
