@@ -1,6 +1,6 @@
 
-from .socket import NodeSocketLogic
-from .socket import PARAM_PYTHON_SOCKET_COLOR
+from .socket import SOCKET_TYPE_PYTHON, NodeSocketLogic
+from .socket import SOCKET_COLOR_PYTHON
 from .socket import socket_type
 from .socket import update_draw
 from bpy.types import NodeSocket
@@ -11,7 +11,8 @@ class NodeSocketLogicPython(NodeSocket, NodeSocketLogic):
     bl_idname = "NLPythonSocket"
     bl_label = "Python"
 
-    color = PARAM_PYTHON_SOCKET_COLOR
+    color = SOCKET_COLOR_PYTHON
+    nl_type = SOCKET_TYPE_PYTHON
 
     def draw(self, context, layout, node, text):
         layout.label(text=text)

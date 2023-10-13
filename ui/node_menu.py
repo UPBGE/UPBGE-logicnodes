@@ -326,7 +326,6 @@ class MatNodesMenu(bpy.types.Menu):
 
     def draw(self, context):
         layout = self.layout
-        insertNode(layout, "NLSetMaterial", "Set Material")
         insertNode(layout, "NLGetMaterialNode", "Get Node")
         insertNode(layout, "NLPlayMaterialSequence", "Play Sequence")
         layout.separator()
@@ -391,6 +390,7 @@ class ObjectsMenu(bpy.types.Menu):
         insertNode(layout, "NLParameterGameObjectParent", "Get Parent")
         insertNode(layout, "NLActionSetParentNode", "Set Parent")
         insertNode(layout, "NLActionRemoveParentNode", "Remove Parent")
+        insertNode(layout, "NLSetMaterial", "Set Material")
         layout.separator()
         insertNode(layout, "NLActionSendMessage", "Send Message")
         insertNode(layout, "LogicNodeSpawnPool", "Spawn Pool")

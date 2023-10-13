@@ -1,5 +1,5 @@
 from .socket import NodeSocketLogic
-from .socket import PARAMETER_SOCKET_COLOR
+from .socket import SOCKET_COLOR_STRING
 from .socket import SOCKET_TYPE_STRING
 from .socket import socket_type
 from bpy.types import Object
@@ -18,9 +18,8 @@ class NodeSocketLogicObjectName(NodeSocket, NodeSocketLogic):
     )
     deprecated = True
 
-    color = PARAMETER_SOCKET_COLOR
+    color = SOCKET_COLOR_STRING
     nl_type = SOCKET_TYPE_STRING
-    valid_sockets = [SOCKET_TYPE_STRING]
 
     def draw(self, context, layout, node, text):
         if self.is_output:

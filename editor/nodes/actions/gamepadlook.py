@@ -38,7 +38,7 @@ class LogicNodeGamepadLook(LogicNodeActionType):
         self.add_input(NodeSocketLogicCondition, 'Condition')
         self.add_input(NodeSocketLogicObject, 'Main Object')
         self.add_input(NodeSocketLogicObject, 'Head Object (Optional)')
-        self.add_input(NodeSocketLogicInvertXY, 'Inverted', {'x': True})
+        self.add_input(NodeSocketLogicInvertXY, 'Inverted')
         self.add_input(NodeSocketLogicIntegerPositiveCent, 'Index')
         self.add_input(NodeSocketLogicFloatPositive, 'Sensitivity', {'value': .25})
         self.add_input(NodeSocketLogicFloatPositive, 'Exponent', {'value': 2.3})

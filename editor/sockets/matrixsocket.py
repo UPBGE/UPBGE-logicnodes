@@ -1,5 +1,5 @@
-from .socket import NodeSocketLogic
-from .socket import PARAM_VECTOR_SOCKET_COLOR
+from .socket import SOCKET_TYPE_MATRIX, NodeSocketLogic
+from .socket import SOCKET_COLOR_VECTOR
 from .socket import socket_type
 from .socket import update_draw
 from ..enum_types import _enum_matrix_dimensions
@@ -36,7 +36,8 @@ class NodeSocketLogicMatrix(NodeSocket, NodeSocketLogic):
     value_wz: FloatProperty(default=0)
     value_ww: FloatProperty(default=0)
 
-    color = PARAM_VECTOR_SOCKET_COLOR
+    color = SOCKET_COLOR_VECTOR
+    nl_type = SOCKET_TYPE_MATRIX
 
     def get_unlinked_value(self):
         return "mathutils.Matrix(([{}, {}, {}, {}], [{}, {}, {}, {}], [{}, {}, {}, {}], [{}, {}, {}, {}]))".format(

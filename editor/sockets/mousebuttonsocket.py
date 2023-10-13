@@ -1,5 +1,5 @@
-from .socket import NodeSocketLogic
-from .socket import PARAM_INT_SOCKET_COLOR
+from .socket import SOCKET_TYPE_INT, NodeSocketLogic
+from .socket import SOCKET_COLOR_INTEGER
 from .socket import socket_type
 from .socket import update_draw
 from ..enum_types import _enum_mouse_buttons
@@ -18,7 +18,8 @@ class NodeSocketLogicMouseButton(NodeSocket, NodeSocketLogic):
         items=_enum_mouse_buttons, default="bge.events.LEFTMOUSE",
         update=update_draw
     )
-    color = PARAM_INT_SOCKET_COLOR
+    color = SOCKET_COLOR_INTEGER
+    nl_type = SOCKET_TYPE_INT
 
     def get_unlinked_value(self):
         return self.value

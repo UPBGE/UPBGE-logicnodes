@@ -1,5 +1,5 @@
-from .socket import NodeSocketLogic
-from .socket import PARAMETER_SOCKET_COLOR
+from .socket import SOCKET_TYPE_STRING, NodeSocketLogic
+from .socket import SOCKET_COLOR_STRING
 from .socket import socket_type
 from ...utilities import LOGIC_NODE_IDENTIFIER
 from ...utilities import make_valid_name
@@ -16,7 +16,8 @@ class NodeSocketLogicBoneConstraint(NodeSocket, NodeSocketLogic):
     value: StringProperty()
     ref_index: IntProperty(default=0)
 
-    color = PARAMETER_SOCKET_COLOR
+    color = SOCKET_COLOR_STRING
+    nl_type = SOCKET_TYPE_STRING
 
     def draw(self, context, layout, node, text):
         if self.is_output:

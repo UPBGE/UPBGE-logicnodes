@@ -5,6 +5,7 @@ from ...sockets import NodeSocketLogicFloatFactor
 from ...sockets import NodeSocketLogicFloat
 from ...sockets import NodeSocketLogicParameter
 from ...enum_types import _enum_vector_math_options
+from ....utilities import WARNING_MESSAGES
 from bpy.props import EnumProperty
 
 
@@ -43,6 +44,14 @@ class LogicNodeVectorMath(LogicNodeParameterType):
         default='add'
     )
 
+    def check(self, tree):
+        super().check(tree)
+        if len(self.outputs) < 2:
+            global WARNING_MESSAGES
+            WARNING_MESSAGES.append(f"Node '{self.name}' in tree '{tree.name}' changed outputs. Re-Add to avoid issues.")
+            self.use_custom_color = True
+            self.color = (.8, .6, 0)
+
     def init(self, context):
         self.add_input(NodeSocketLogicVectorXYZ, "Vector 1")
         self.add_input(NodeSocketLogicVectorXYZ, "Vector 2")
@@ -56,7 +65,6 @@ class LogicNodeVectorMath(LogicNodeParameterType):
 
     nl_class = "ULVectorMath"
 
-
     def get_input_names(self):
         return ["vector", 'vector_2', 'factor', 'scale', 'vector_3', 'ior']
 
@@ -67,6 +75,4 @@ class LogicNodeVectorMath(LogicNodeParameterType):
         layout.prop(self, 'operator', text='')
 
     def get_attributes(self):
-        return [
-            ("op", f'"{self.operator}"'),
-        ]
+        return [("op", f'"{self.operator}"')]

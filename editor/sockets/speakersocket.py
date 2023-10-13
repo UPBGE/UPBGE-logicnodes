@@ -1,5 +1,5 @@
-from .socket import NodeSocketLogic
-from .socket import PARAM_OBJ_SOCKET_COLOR
+from .socket import SOCKET_TYPE_OBJECT, NodeSocketLogic
+from .socket import SOCKET_COLOR_OBJECT
 from .socket import socket_type
 from .socket import update_draw
 from ..filter_types import filter_speaker
@@ -20,7 +20,8 @@ class NodeSocketLogicSpeaker(NodeSocket, NodeSocketLogic):
         # update=update_tree_code
     )
 
-    color = PARAM_OBJ_SOCKET_COLOR
+    color = SOCKET_COLOR_OBJECT
+    nl_type = SOCKET_TYPE_OBJECT
 
     def draw(self, context, layout, node, text):
         if self.is_output:
@@ -43,4 +44,4 @@ class NodeSocketLogicSpeaker(NodeSocket, NodeSocketLogic):
 
     def get_unlinked_value(self):
         if isinstance(self.value, Object):
-            return '"NLO:{}"'.format(self.value.name)
+            return f'scene.objects.get("{self.value.name}", "{self.value.name}")'

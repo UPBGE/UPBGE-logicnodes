@@ -1,5 +1,5 @@
-from .socket import NodeSocketLogic
-from .socket import PARAM_INT_SOCKET_COLOR
+from .socket import SOCKET_TYPE_INT, NodeSocketLogic
+from .socket import SOCKET_COLOR_INTEGER
 from .socket import socket_type
 from .socket import update_draw
 from bpy.types import NodeSocket
@@ -18,7 +18,8 @@ class NodeSocketLogicIntegerPositiveCent(NodeSocket, NodeSocketLogic):
         default=0,
         update=update_draw
     )
-    color = PARAM_INT_SOCKET_COLOR
+    color = SOCKET_COLOR_INTEGER
+    nl_type = SOCKET_TYPE_INT
 
     def draw(self, context, layout, node, text):
         if self.is_linked or self.is_output:

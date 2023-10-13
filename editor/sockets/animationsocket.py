@@ -1,5 +1,6 @@
 from .socket import NodeSocketLogic
-from .socket import PARAMETER_SOCKET_COLOR
+from .socket import SOCKET_COLOR_GENERIC
+from .socket import SOCKET_TYPE_ACTION
 from .socket import socket_type
 from bpy.types import Action
 from bpy.types import NodeSocket
@@ -16,7 +17,8 @@ class NodeSocketLogicAnimation(NodeSocket, NodeSocketLogic):
         type=Action,
         description='Select an Action'
     )
-    color = PARAMETER_SOCKET_COLOR
+    color = SOCKET_COLOR_GENERIC
+    nl_type = SOCKET_TYPE_ACTION
 
     def draw(self, context, layout, node, text):
         if self.is_linked or self.is_output:

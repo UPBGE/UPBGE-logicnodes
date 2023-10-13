@@ -1,5 +1,5 @@
 from .socket import NodeSocketLogic
-from .socket import PARAM_INT_SOCKET_COLOR
+from .socket import SOCKET_COLOR_INTEGER
 from .socket import SOCKET_TYPE_INT
 from .socket import socket_type
 from .socket import update_draw
@@ -13,7 +13,7 @@ class NodeSocketLogicInteger(NodeSocket, NodeSocketLogic):
     bl_idname = "NLIntegerFieldSocket"
     bl_label = "Integer"
     nl_type = SOCKET_TYPE_INT
-    color = PARAM_INT_SOCKET_COLOR
+    color = SOCKET_COLOR_INTEGER
 
     value: IntProperty(update=update_draw)
 

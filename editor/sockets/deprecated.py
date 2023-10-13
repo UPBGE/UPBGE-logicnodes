@@ -1,7 +1,6 @@
 # from .parametersocket import NodeSocketLogicParameter
 # from .floatpositivesocket import NodeSocketLogicFloatPositive
 from .socket import socket_type
-from .socket import update_draw
 from .socket import NodeSocketLogic
 from bpy.types import NodeSocket
 

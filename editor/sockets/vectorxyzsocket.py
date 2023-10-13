@@ -1,5 +1,5 @@
 from .socket import NodeSocketLogic
-from .socket import PARAM_VECTOR_SOCKET_COLOR
+from .socket import SOCKET_COLOR_VECTOR
 from .socket import SOCKET_TYPE_VECTOR
 from .socket import SOCKET_TYPE_MATRIX
 from .socket import SOCKET_TYPE_COLOR
@@ -19,7 +19,7 @@ class NodeSocketLogicVectorXYZ(NodeSocket, NodeSocketLogic):
     value_y: FloatProperty(default=0, update=update_draw)
     value_z: FloatProperty(default=0, update=update_draw)
 
-    color = PARAM_VECTOR_SOCKET_COLOR
+    color = SOCKET_COLOR_VECTOR
     nl_type = SOCKET_TYPE_VECTOR
     valid_sockets = [SOCKET_TYPE_VECTOR, SOCKET_TYPE_COLOR, SOCKET_TYPE_MATRIX]
 

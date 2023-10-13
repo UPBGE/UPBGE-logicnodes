@@ -1,5 +1,5 @@
 from .socket import SOCKET_TYPE_STRING, NodeSocketLogic
-from .socket import PARAMETER_SOCKET_COLOR
+from .socket import SOCKET_COLOR_STRING
 from .socket import socket_type
 from .socket import update_draw
 from ...utilities import make_valid_name
@@ -44,23 +44,12 @@ class NodeSocketLogicTreeProperty(NodeSocket, NodeSocketLogic):
         if prop:
             col = self.color_solid
             prop.value = col
-            # self.color_alpha = [
-            #     col[0],
-            #     col[1],
-            #     col[2],
-            #     1.0
-            # ]
 
     def update_color_alpha(self, context=None):
         prop = self._get_active_prop(context)
         if prop:
             col = self.color_alpha
             prop.value = col
-            # self.color_solid = [
-            #     col[0],
-            #     col[1],
-            #     col[2]
-            # ]
 
     color_solid: FloatVectorProperty(
         min=0.0,
@@ -81,9 +70,8 @@ class NodeSocketLogicTreeProperty(NodeSocket, NodeSocketLogic):
         update=update_color_alpha
     )
 
-    color = PARAMETER_SOCKET_COLOR
+    color = SOCKET_COLOR_STRING
     nl_type = SOCKET_TYPE_STRING
-    valid_sockets = [SOCKET_TYPE_STRING]
 
     def draw(self, context, layout, node, text):
         if self.is_output:

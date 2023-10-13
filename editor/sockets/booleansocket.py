@@ -1,5 +1,5 @@
-from .socket import NodeSocketLogic
-from .socket import PARAM_BOOL_SOCKET_COLOR
+from .socket import SOCKET_TYPE_CONDITION, NodeSocketLogic
+from .socket import SOCKET_COLOR_BOOLEAN
 from .socket import SOCKET_TYPE_BOOL
 from .socket import socket_type
 from .socket import update_draw
@@ -17,8 +17,8 @@ class NodeSocketLogicBoolean(NodeSocket, NodeSocketLogic):
     value: BoolProperty(update=update_draw)
     use_toggle: BoolProperty(default=False)
     nl_type = SOCKET_TYPE_BOOL
-
-    color = PARAM_BOOL_SOCKET_COLOR
+    valid_sockets = [SOCKET_TYPE_BOOL, SOCKET_TYPE_CONDITION]
+    color = SOCKET_COLOR_BOOLEAN
 
     def draw(self, context, layout, node, text):
         if self.is_linked or self.is_output:

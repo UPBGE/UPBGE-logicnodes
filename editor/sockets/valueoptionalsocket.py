@@ -1,4 +1,4 @@
-from .socket import NodeSocketLogic
+from .socket import SOCKET_TYPE_GENERIC, SOCKET_TYPE_VALUE, NodeSocketLogic
 from .socket import socket_type
 from .socket import update_draw
 from ..enum_types import _enum_field_value_types
@@ -15,6 +15,7 @@ from bpy.props import IntProperty
 class NodeSocketLogicValueOptional(NodeSocket, NodeSocketLogic):
     bl_idname = "NLOptionalValueFieldSocket"
     bl_label = "Value"
+    nl_type = SOCKET_TYPE_GENERIC
 
     value: StringProperty(update=update_draw)
 

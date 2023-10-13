@@ -501,7 +501,8 @@ _enum_spawn_types = [
     ("0", "Simple", "Spawn an instance without behavior"),
     ("1", "Simple Bullet", "Spawn a bullet that travels linearly along its local +Y axis"),
     ("2", "Physical Bullet", "Spawn a bullet that travels along a trajectory aimed at its local +Y axis"),
-    ("3", "Instance", "Spawn an instance of an object with its logic, physics and children"),
+    None,
+    ("3", "Instance", "Spawn an instance of an object with its logic, physics and children")
 ]
 
 

@@ -1,7 +1,6 @@
 from .socket import NodeSocketLogic
-from .socket import PARAM_OBJ_SOCKET_COLOR
+from .socket import SOCKET_COLOR_OBJECT
 from .socket import SOCKET_TYPE_OBJECT
-from .socket import SOCKET_TYPE_STRING
 from .socket import socket_type
 from bpy.types import NodeSocket
 from bpy.types import Object
@@ -15,8 +14,7 @@ class NodeSocketLogicObject(NodeSocket, NodeSocketLogic):
     bl_idname = "NLGameObjectSocket"
     bl_label = "Object"
     nl_type = SOCKET_TYPE_OBJECT
-    valid_sockets = [SOCKET_TYPE_OBJECT]
-    color = PARAM_OBJ_SOCKET_COLOR
+    color = SOCKET_COLOR_OBJECT
 
     value: PointerProperty(name='Object', type=Object)
     use_owner: BoolProperty(

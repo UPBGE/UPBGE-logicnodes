@@ -1,5 +1,4 @@
-from .socket import NodeSocketLogic
-from .socket import PARAMETER_SOCKET_COLOR
+from .socket import SOCKET_COLOR_STRING, SOCKET_TYPE_VALUE, NodeSocketLogic
 from .socket import socket_type
 from .socket import update_draw
 from bpy.types import NodeSocket
@@ -12,7 +11,8 @@ class Base(NodeSocket, NodeSocketLogic):
     value: StringProperty(update=update_draw)
     formatted: BoolProperty(update=update_draw)
 
-    color = PARAMETER_SOCKET_COLOR
+    color = SOCKET_COLOR_STRING
+    nl_type = SOCKET_TYPE_VALUE
 
     def draw(self, context, layout, node, text):
         if self.is_linked or self.is_output:

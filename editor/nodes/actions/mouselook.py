@@ -42,7 +42,7 @@ class LogicNodeMouseLook(LogicNodeActionType):
         self.add_input(NodeSocketLogicCondition, "Condition")
         self.add_input(NodeSocketLogicObject, "Main Object")
         self.add_input(NodeSocketLogicObject, "Head (Optional)")
-        self.add_input(NodeSocketLogicInvertXY, "", {'y': True})
+        self.add_input(NodeSocketLogicInvertXY, "")
         self.add_input(NodeSocketLogicFloat, "Sensitivity", {'value': 1.0})
         self.add_input(NodeSocketLogicBoolean, "Cap Left / Right")
         self.add_input(NodeSocketLogicVectorXYAngle, "")

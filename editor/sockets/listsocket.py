@@ -1,16 +1,15 @@
-from .socket import NodeSocketLogic
-from .socket import PARAM_INT_SOCKET_COLOR
+from .socket import SOCKET_TYPE_LIST, NodeSocketLogic
+from .socket import SOCKET_COLOR_INTEGER
 from .socket import socket_type
-from .socket import update_draw
 from bpy.types import NodeSocket
-from bpy.props import StringProperty
 
 
 @socket_type
 class NodeSocketLogicList(NodeSocket, NodeSocketLogic):
     bl_idname = "NLListSocket"
     bl_label = "Parameter"
-    color = PARAM_INT_SOCKET_COLOR
+    color = SOCKET_COLOR_INTEGER
+    nl_type = SOCKET_TYPE_LIST
 
     def draw(self, context, layout, node, text):
         layout.label(text=text)

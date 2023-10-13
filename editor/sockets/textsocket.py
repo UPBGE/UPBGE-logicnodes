@@ -1,5 +1,5 @@
-from .socket import NodeSocketLogic
-from .socket import PARAM_TEXT_SOCKET_COLOR
+from .socket import SOCKET_TYPE_TEXT, NodeSocketLogic
+from .socket import SOCKET_COLOR_TEXT
 from .socket import socket_type
 from .socket import update_draw
 from ..filter_types import filter_texts
@@ -20,7 +20,8 @@ class NodeSocketLogicText(NodeSocket, NodeSocketLogic):
         # update=update_tree_code
     )
 
-    color = PARAM_TEXT_SOCKET_COLOR
+    color = SOCKET_COLOR_TEXT
+    nl_type = SOCKET_TYPE_TEXT
 
     def draw(self, context, layout, node, text):
         if self.is_output:
@@ -42,4 +43,4 @@ class NodeSocketLogicText(NodeSocket, NodeSocketLogic):
 
     def get_unlinked_value(self):
         if isinstance(self.value, Text):
-            return '"{}"'.format(self.value.name)
+            return f'bpy.data.texts["{self.value.name}"]'

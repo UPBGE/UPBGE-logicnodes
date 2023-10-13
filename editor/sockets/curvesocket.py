@@ -1,7 +1,6 @@
-from .socket import NodeSocketLogic
-from .socket import PARAM_OBJ_SOCKET_COLOR
+from .socket import SOCKET_TYPE_OBJECT, NodeSocketLogic
+from .socket import SOCKET_COLOR_OBJECT
 from .socket import socket_type
-from .socket import update_draw
 from ..filter_types import filter_curves
 from bpy.types import NodeSocket
 from bpy.types import Curve
@@ -15,18 +14,17 @@ class NodeSocketLogicCurve(NodeSocket, NodeSocketLogic):
     bl_idname = "NLCurveObjectSocket"
     bl_label = "Curve"
     value: PointerProperty(
-        name='Armature',
+        name='Curve',
         type=Curve,
         poll=filter_curves
-        # update=update_tree_code
     )
     use_owner: BoolProperty(
         name='Use Owner',
-        # update=update_tree_code,
         description='Use the owner of this tree'
     )
 
-    color = PARAM_OBJ_SOCKET_COLOR
+    color = SOCKET_COLOR_OBJECT
+    nl_type = SOCKET_TYPE_OBJECT
 
     def draw(self, context, layout, node, text):
         if self.is_output:
@@ -58,4 +56,4 @@ class NodeSocketLogicCurve(NodeSocket, NodeSocketLogic):
             return "None"
         if self.use_owner:
             return 'game_object'
-        return f'scene.objects["{self.value.name}"]'
+        return f'scene.objects.get("{self.value.name}", "{self.value.name}")]'

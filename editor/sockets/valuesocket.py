@@ -1,5 +1,5 @@
 from .socket import SOCKET_TYPE_GENERIC, NodeSocketLogic
-from .socket import PARAMETER_SOCKET_COLOR
+from .socket import SOCKET_COLOR_GENERIC
 from .socket import socket_type
 from .socket import update_draw
 from ..enum_types import _enum_field_value_types
@@ -17,7 +17,7 @@ class NodeSocketLogicValue(NodeSocket, NodeSocketLogic):
     bl_idname = "NLValueFieldSocket"
     bl_label = "Value"
     nl_type = SOCKET_TYPE_GENERIC
-    # color = PARAMETER_SOCKET_COLOR
+    # color = SOCKET_COLOR_GENERIC
 
     value: StringProperty(update=update_draw)
 

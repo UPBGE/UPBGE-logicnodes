@@ -1,5 +1,5 @@
-from .socket import NodeSocketLogic
-from .socket import PARAM_COLOR_SOCKET_COLOR
+from .socket import SOCKET_TYPE_COLOR, NodeSocketLogic
+from .socket import SOCKET_COLOR_COLOR
 from .socket import socket_type
 from .socket import update_draw
 from bpy.types import NodeSocket
@@ -20,7 +20,8 @@ class NodeSocketLogicColorRGBA(NodeSocket, NodeSocketLogic):
         default=(1.0, 1.0, 1.0, 1.0),
         update=update_draw
     )
-    color = PARAM_COLOR_SOCKET_COLOR
+    color = SOCKET_COLOR_COLOR
+    nl_type = SOCKET_TYPE_COLOR
 
     def get_unlinked_value(self):
         return "mathutils.Vector(({}, {}, {}, {}))".format(

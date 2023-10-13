@@ -1,5 +1,6 @@
 from .socket import NodeSocketLogic
-from .socket import PARAM_OBJ_SOCKET_COLOR
+from .socket import SOCKET_COLOR_OBJECT
+from .socket import SOCKET_TYPE_ARMATURE
 from .socket import socket_type
 from ..filter_types import filter_armatures
 from bpy.types import NodeSocket
@@ -28,7 +29,8 @@ class NodeSocketLogicArmature(NodeSocket, NodeSocketLogic):
         description='Use the owner of this tree'
     )
 
-    color = PARAM_OBJ_SOCKET_COLOR
+    color = SOCKET_COLOR_OBJECT
+    nl_type = SOCKET_TYPE_ARMATURE
 
     def draw(self, context, layout, node, text):
         if self.is_output:
@@ -57,6 +59,6 @@ class NodeSocketLogicArmature(NodeSocket, NodeSocketLogic):
 
     def get_unlinked_value(self):
         if self.use_owner:
-            return '"NLO:U_O"'
+            return 'game_object'
         if self.value is not None and isinstance(self.value.data, Armature):
-            return '"NLO:{}"'.format(self.value.name)
+            return f'scene.objects.get("{self.value.data.name}", "{self.value.data.name}")'

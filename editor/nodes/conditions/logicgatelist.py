@@ -1,7 +1,7 @@
 from ...sockets import NodeSocketLogicCondition
 from ..node import LogicNodeConditionType
 from ..node import node_type
-from ...sockets.socket import CONDITION_SOCKET_COLOR
+from ...sockets.socket import SOCKET_COLOR_CONDITION
 from ...enum_types import _logic_gates_list
 from bpy.props import EnumProperty
 
@@ -31,7 +31,7 @@ class LogicNodeLogicGateList(LogicNodeConditionType):
 
     def set_new_input_name(self):
         self.inputs[-1].name = 'Condition'
-        self.inputs[-1].nl_color = CONDITION_SOCKET_COLOR
+        self.inputs[-1].nl_color = SOCKET_COLOR_CONDITION
 
     def draw_buttons(self, context, layout) -> None:
         layout.operator('logic_nodes.add_socket')

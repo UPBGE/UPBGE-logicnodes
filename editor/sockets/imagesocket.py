@@ -1,5 +1,5 @@
-from .socket import NodeSocketLogic
-from .socket import PARAM_IMAGE_SOCKET_COLOR
+from .socket import SOCKET_TYPE_IMAGE, NodeSocketLogic
+from .socket import SOCKET_COLOR_IMAGE
 from .socket import socket_type
 from .socket import update_draw
 from bpy.types import Image
@@ -18,7 +18,8 @@ class NodeSocketLogicImage(NodeSocket, NodeSocketLogic):
         # update=update_tree_code
     )
 
-    color = PARAM_IMAGE_SOCKET_COLOR
+    color = SOCKET_COLOR_IMAGE
+    nl_type = SOCKET_TYPE_IMAGE
 
     def draw(self, context, layout, node, text):
         if self.is_linked or self.is_output:

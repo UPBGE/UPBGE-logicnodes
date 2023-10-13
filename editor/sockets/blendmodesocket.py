@@ -1,5 +1,4 @@
-from .socket import NodeSocketLogic
-from .socket import PARAMETER_SOCKET_COLOR
+from .socket import SOCKET_COLOR_INTEGER, SOCKET_TYPE_INT, NodeSocketLogic
 from .socket import socket_type
 from .socket import update_draw
 from ..enum_types import _enum_blend_mode_values
@@ -22,7 +21,8 @@ class NodeSocketLogicBlendMode(NodeSocket, NodeSocketLogic):
     def get_unlinked_value(self):
         return self.value
 
-    color = PARAMETER_SOCKET_COLOR
+    color = SOCKET_COLOR_INTEGER
+    nl_type = SOCKET_TYPE_INT
 
     def draw(self, context, layout, node, text):
         if self.is_linked or self.is_output:

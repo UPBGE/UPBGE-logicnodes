@@ -1,5 +1,5 @@
-from .socket import NodeSocketLogic
-from .socket import PARAM_MESH_SOCKET_COLOR
+from .socket import SOCKET_TYPE_MESH, NodeSocketLogic
+from .socket import SOCKET_COLOR_MESH
 from .socket import socket_type
 from .socket import update_draw
 from bpy.types import Mesh
@@ -18,7 +18,8 @@ class NodeSocketLogicMesh(NodeSocket, NodeSocketLogic):
         # update=update_tree_code
     )
 
-    color = PARAM_MESH_SOCKET_COLOR
+    color = SOCKET_COLOR_MESH
+    nl_type = SOCKET_TYPE_MESH
 
     def draw(self, context, layout, node, text):
         if self.is_output:

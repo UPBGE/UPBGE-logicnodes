@@ -1,5 +1,5 @@
-from .socket import NodeSocketLogic
-from .socket import PARAM_MAT_SOCKET_COLOR
+from .socket import SOCKET_TYPE_MATERIAL, NodeSocketLogic
+from .socket import SOCKET_COLOR_MATERIAL
 from .socket import socket_type
 from .socket import update_draw
 from bpy.types import Material
@@ -20,7 +20,8 @@ class NodeSocketLogicMaterial(NodeSocket, NodeSocketLogic):
         # update=update_tree_code
     )
 
-    color = PARAM_MAT_SOCKET_COLOR
+    color = SOCKET_COLOR_MATERIAL
+    nl_type = SOCKET_TYPE_MATERIAL
 
     def draw(self, context, layout, node, text):
         if self.is_output:

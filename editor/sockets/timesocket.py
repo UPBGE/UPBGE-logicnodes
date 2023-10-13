@@ -1,5 +1,5 @@
-from .socket import NodeSocketLogic
-from .socket import PARAMETER_SOCKET_COLOR
+from .socket import SOCKET_TYPE_FLOAT, NodeSocketLogic
+from .socket import SOCKET_COLOR_GENERIC
 from .socket import socket_type
 from .socket import update_draw
 from bpy.types import NodeSocket
@@ -19,7 +19,8 @@ class NodeSocketLogicTime(NodeSocket, NodeSocketLogic):
         update=update_draw
     )
 
-    color = PARAMETER_SOCKET_COLOR
+    color = SOCKET_COLOR_GENERIC
+    nl_type = SOCKET_TYPE_FLOAT
 
     def get_unlinked_value(self):
         return "{}".format(self.value)

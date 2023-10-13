@@ -1,5 +1,5 @@
-from .socket import SOCKET_TYPE_INT_POSITIVE, NodeSocketLogic
-from .socket import PARAM_INT_SOCKET_COLOR
+from .socket import NodeSocketLogic
+from .socket import SOCKET_COLOR_INTEGER
 from .socket import SOCKET_TYPE_INT
 from .socket import socket_type
 from .socket import update_draw
@@ -13,8 +13,8 @@ class NodeSocketLogicPlayMode(NodeSocket, NodeSocketLogic):
     bl_idname = "NLPlayActionModeSocket"
     bl_label = "Play Mode"
 
-    color = PARAM_INT_SOCKET_COLOR
-    valid_sockets = [SOCKET_TYPE_INT, SOCKET_TYPE_INT_POSITIVE]
+    color = SOCKET_COLOR_INTEGER
+    nl_type = SOCKET_TYPE_INT
 
     value: EnumProperty(
         name='Mode',

@@ -1,5 +1,5 @@
 from .socket import NodeSocketLogic
-from .socket import CONDITION_SOCKET_COLOR
+from .socket import SOCKET_COLOR_CONDITION
 from .socket import SOCKET_TYPE_BOOL
 from .socket import SOCKET_TYPE_CONDITION
 from .socket import socket_type
@@ -20,7 +20,7 @@ class NodeSocketLogicCondition(NodeSocket, NodeSocketLogic):
         default="None"
     )
 
-    color = CONDITION_SOCKET_COLOR
+    color = SOCKET_COLOR_CONDITION
 
     def shape_setup(self):
         self.display_shape = self.shape

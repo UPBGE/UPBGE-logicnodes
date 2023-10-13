@@ -17,11 +17,12 @@ class LogicNodeSpawnPool(LogicNodeActionType):
     bl_idname = "LogicNodeSpawnPool"
     bl_label = "Spawn Pool"
     nl_module = 'uplogic.nodes.actions'
+    nl_class = "ULSpawnPool"
 
     def update_draw(self, context=None):
         if not self.ready:
             return
-        simple = self.spawn_type in ['Simple', 'Instance']
+        simple = self.spawn_type in ['0', '3']
         self.inputs[0].enabled = not self.create_on_init
         self.inputs[6].enabled = not simple
         self.inputs[7].enabled = not simple
@@ -70,8 +71,6 @@ class LogicNodeSpawnPool(LogicNodeActionType):
     def draw_buttons(self, context, layout) -> None:
         layout.prop(self, 'create_on_init', text='On Startup')
         layout.prop(self, 'spawn_type', text='')
-
-    nl_class = "ULSpawnPool"
 
     def get_input_names(self):
         return [

@@ -1,5 +1,5 @@
-from .socket import NodeSocketLogic
-from .socket import PARAM_COLL_SOCKET_COLOR
+from .socket import SOCKET_TYPE_COLLECTION, NodeSocketLogic
+from .socket import SOCKET_COLOR_COLLECTION
 from .socket import socket_type
 from bpy.types import Collection
 from bpy.types import NodeSocket
@@ -21,7 +21,8 @@ class NodeSocketLogicCollection(NodeSocket, NodeSocketLogic):
         # update=update_tree_code
     )
 
-    color = PARAM_COLL_SOCKET_COLOR
+    color = SOCKET_COLOR_COLLECTION
+    nl_type = SOCKET_TYPE_COLLECTION
 
     def draw(self, context, layout, node, text):
         if self.is_output:

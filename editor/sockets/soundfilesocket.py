@@ -1,5 +1,5 @@
-from .socket import NodeSocketLogic
-from .socket import PARAM_TEXT_SOCKET_COLOR
+from .socket import SOCKET_TYPE_SOUND, NodeSocketLogic
+from .socket import SOCKET_COLOR_TEXT
 from .socket import socket_type
 from .socket import update_draw
 from bpy.types import Sound
@@ -28,7 +28,8 @@ class NodeSocketLogicSoundFile(NodeSocket, NodeSocketLogic):
         # update=update_tree_code
     )
 
-    color = PARAM_TEXT_SOCKET_COLOR
+    color = SOCKET_COLOR_TEXT
+    nl_type = SOCKET_TYPE_SOUND
 
     def draw(self, context, layout, node, text):
         if self.is_linked or self.is_output:
