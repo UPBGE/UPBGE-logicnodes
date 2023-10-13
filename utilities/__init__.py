@@ -20,7 +20,6 @@ STATUS_ICONS = {
 
 NLPREFIX = 'NL__'
 LOGIC_NODE_IDENTIFIER = 'NL__'
-OUTCELL = "__standard_logic_cell_value__"
 
 
 ERROR_MESSAGES = []

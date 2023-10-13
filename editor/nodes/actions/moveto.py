@@ -22,7 +22,7 @@ class LogicNodeMoveTo(LogicNodeActionType):
         self.add_input(NodeSocketLogicBoolean, "Move as Dynamic")
         self.add_input(NodeSocketLogicFloatPositive, "Speed", {'value': 1.0})
         self.add_input(NodeSocketLogicFloat, "Stop At Distance", {'value': 0.5})
-        self.add_output(NodeSocketLogicCondition, "When Done")
+        self.add_output(NodeSocketLogicCondition, "Done")
         LogicNodeActionType.init(self, context)
 
     def get_input_names(self):

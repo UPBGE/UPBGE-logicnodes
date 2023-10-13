@@ -13,6 +13,7 @@ class LogicNodeTranslate(LogicNodeActionType):
     bl_label = "Translate"
     nl_module = 'uplogic.nodes.actions'
     nl_class = "ULTranslate"
+    deprecated = True
 
     def init(self, context):
         self.add_input(NodeSocketLogicCondition, "Condition")

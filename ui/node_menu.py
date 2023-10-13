@@ -86,7 +86,7 @@ class GameMenu(bpy.types.Menu):
 
     def draw(self, context):
         layout = self.layout
-        insertNode(layout, "NLActionStartGame", "Load File")
+        insertNode(layout, "NLActionStartGame", "Jump To File")
         insertNode(layout, "NLActionLoadGame", "Load Game")
         insertNode(layout, "NLActionEndGame", "Quit Game")
         insertNode(layout, "NLActionRestartGame", "Restart Game")
@@ -385,7 +385,7 @@ class ObjectsMenu(bpy.types.Menu):
         insertNode(layout, "NLActionSetGameObjectVisibility", "Set Visibility")
         layout.separator()
         insertNode(layout, "NLActionFindObjectNode", "Get Object")
-        insertNode(layout, "NLOwnerGameObjectParameterNode", "Get Owner")
+        # insertNode(layout, "NLOwnerGameObjectParameterNode", "Get Owner")
         insertNode(layout, "NLParameterFindChildByIndexNode", "Get Child By Index")
         insertNode(layout, "NLParameterFindChildByNameNode", "Get Child By Name")
         insertNode(layout, "NLParameterGameObjectParent", "Get Parent")
@@ -415,7 +415,7 @@ class TransformMenu(bpy.types.Menu):
         insertNode(layout, "NLActionNavigate", "Move To with Navmesh")
         insertNode(layout, "NLActionRotateTo", "Rotate To")
         insertNode(layout, "NLSlowFollow", "Slow Follow")
-        insertNode(layout, "NLActionTranslate", "Translate")
+        # insertNode(layout, "NLActionTranslate", "Translate")
 
 
 @menu_item
@@ -523,7 +523,6 @@ class SceneMenu(bpy.types.Menu):
         layout.separator()
         insertNode(layout, "NLGetScene", "Get Scene")
         insertNode(layout, "NLSetScene", "Set Scene")
-        insertNode(layout, "NLLoadScene", "Load Scene")
         layout.separator()
         insertNode(layout, "NLGetGravityNode", "Get Gravity")
         insertNode(layout, "NLActionSetGravity", "Set Gravity")
@@ -797,8 +796,6 @@ class FileMenu(bpy.types.Menu):
         insertNode(layout, "LogicNodeGetFont", "Get Font")
         insertNode(layout, "NLGetImage", "Get Image")
         insertNode(layout, "NLGetSound", "Get Sound")
-        layout.separator()
-        insertNode(layout, "NLLoadFileContent", "Load File Content")
 
 
 @menu_item
@@ -826,6 +823,9 @@ class DataMenu(bpy.types.Menu):
         layout.menu("LN_MT_list_menu", text="List", icon="RIGHTARROW_THIN")
         layout.menu("LN_MT_dict_menu", text="Dict", icon="RIGHTARROW_THIN")
         layout.menu("LN_MT_variable_menu", text="Variables", icon="RIGHTARROW_THIN")
+        layout.separator()
+        insertNode(layout, "NLLoadScene", "Load Scene")
+        insertNode(layout, "NLLoadFileContent", "Load File")
 
 
 @menu_item

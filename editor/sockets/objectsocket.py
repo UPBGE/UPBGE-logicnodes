@@ -64,5 +64,6 @@ class NodeSocketLogicObject(NodeSocket, NodeSocketLogic):
         if self.use_owner and not self.is_scene_logic():
             return 'game_object'  # '"NLO:U_O"'
         if isinstance(self.value, bpy.types.Object):
-            return f'scene.objects["{self.value.name}"]'
+            return f'scene.objects.get("{self.value.name}", "{self.value.name}")'
+            # return f'scene.objects.get("{self.value.name}", bpy.data.objects.get("{self.value.name}", None))'
             # return '"NLO:{}"'.format(self.value.name)

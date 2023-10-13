@@ -1,7 +1,6 @@
 from ..node import node_type
 from ..node import LogicNodeConditionType
 from ...sockets import NodeSocketLogicCondition
-from ....utilities import OUTCELL
 
 
 @node_type
@@ -18,6 +17,3 @@ class LogicNodeKeyboardActive(LogicNodeConditionType):
 
     def get_input_names(self):
         return ["index"]
-
-    def get_output_names(self):
-        return [OUTCELL]

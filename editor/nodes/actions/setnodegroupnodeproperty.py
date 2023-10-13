@@ -13,7 +13,7 @@ class LogicNodeSetNodeGroupNodeProperty(LogicNodeActionType):
     bl_label = "Set Node Value"
     nl_module = 'uplogic.nodes.actions'
     nl_class = "ULSetNodeValue"
-    deprecated = True
+    # deprecated = True
 
     search_tags = [
         ['Set Node Group Node Property', {}]

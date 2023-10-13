@@ -37,10 +37,14 @@ class LogicNodePlaySequence(LogicNodeActionType):
         if mat:
             nde = self.inputs[2].value
             target = mat.node_tree.nodes.get(nde)
-            if not isinstance(target, bpy.types.ShaderNodeTexImage):
+            if not (
+                isinstance(target, bpy.types.ShaderNodeTexImage)
+                or
+                isinstance(target, bpy.types.ShaderNodeSpritesAnimation)
+            ):
                 col = layout.column()
                 col.label(text='Selected Node', icon='ERROR')
-                col.label(text='not Image Texture!')
+                col.label(text='not playable!')
 
     def update_draw(self, context=None):
         if not self.ready:
@@ -52,7 +56,11 @@ class LogicNodePlaySequence(LogicNodeActionType):
         fps = self.inputs[6]
         subs = [mod, fra, fps]
         target = mat.value.node_tree.nodes.get(nde.value) if mat.value else None
-        valid = isinstance(target, bpy.types.ShaderNodeTexImage)
+        valid = (
+            isinstance(target, bpy.types.ShaderNodeTexImage)
+            or
+            isinstance(target, bpy.types.ShaderNodeSpritesAnimation)
+        )
         self.inputs[4].enabled = '3' in mod.value
         if (mat.value or mat.is_linked) and (nde.value or nde.is_linked) and valid:
             for ipt in subs:

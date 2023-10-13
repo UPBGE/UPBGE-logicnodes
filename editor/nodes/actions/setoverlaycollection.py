@@ -10,6 +10,7 @@ class LogicNodeSetOverlayCollection(LogicNodeActionType):
     bl_idname = "NLSetOverlayCollection"
     bl_label = "Set Overlay Collection"
     nl_module = 'uplogic.nodes.actions'
+    nl_class = "ULSetOverlayCollection"
 
     def init(self, context):
         self.add_input(NodeSocketLogicCondition, 'Condition')
@@ -21,4 +22,5 @@ class LogicNodeSetOverlayCollection(LogicNodeActionType):
     def get_input_names(self):
         return ['condition', 'camera', 'collection']
 
-    nl_class = "ULSetOverlayCollection"
+    def get_output_names(self):
+        return ['OUT']

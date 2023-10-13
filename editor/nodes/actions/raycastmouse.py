@@ -8,7 +8,6 @@ from ...sockets import NodeSocketLogicBoolean
 from ...sockets import NodeSocketLogicFloat
 from ...sockets import NodeSocketLogicVector
 from ...sockets import NodeSocketLogicBitMask
-from ....utilities import OUTCELL
 
 
 @node_type

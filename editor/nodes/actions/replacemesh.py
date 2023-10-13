@@ -17,7 +17,7 @@ class LogicNodeReplaceMesh(LogicNodeActionType):
         self.add_input(NodeSocketLogicCondition, "Condition")
         self.add_input(NodeSocketLogicObject, "Object")
         self.add_input(NodeSocketLogicMesh, "New Mesh Name")
-        self.add_input(NodeSocketLogicBoolean, "Use Display")
+        self.add_input(NodeSocketLogicBoolean, "Use Display", {'value': True})
         self.add_input(NodeSocketLogicBoolean, "Use Physics")
         self.add_output(NodeSocketLogicCondition, 'Done')
         LogicNodeActionType.init(self, context)

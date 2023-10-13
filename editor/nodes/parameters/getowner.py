@@ -13,7 +13,11 @@ class LogicNodeGetOwner(LogicNodeParameterType):
     bl_label = "Get Owner"
     nl_module = 'uplogic.nodes.parameters'
     nl_class = "ULGetOwner"
+    deprecated = True
 
     def init(self, context):
         self.add_output(NodeSocketLogicObject, "Owner Object")
         LogicNodeParameterType.init(self, context)
+
+    def get_attributes(self):
+        return [('owner', 'game_object')]

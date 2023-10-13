@@ -1,8 +1,6 @@
 from ...utilities import error
 from ...utilities import debug
-from ...utilities import warn
 from ...utilities import deprecate
-from ...utilities import OUTCELL
 from ...utilities import ERROR_MESSAGES
 from ...utilities import WARNING_MESSAGES
 from ..nodetree import LogicNodeTree
@@ -242,15 +240,12 @@ class LogicNode:
 
         if output_map:
             varname = output_map[output_socket_index]
-            if varname is OUTCELL:
-                return output_node_varname
-            else:
-                return '{}.{}'.format(output_node_varname, varname)
+            return '{}.{}'.format(output_node_varname, varname)
         else:
             return output_node_varname
 
     def get_output_names(self):
-        return None
+        return ['OUT']
 
     def update(self):
         pass

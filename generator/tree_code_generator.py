@@ -66,7 +66,7 @@ class {}Wrapper():
         network.component = component
 {}
         owner["IGNLTree_{}"] = network
-        network._owner = owner
+        network._owner = game_object
         network.setup()
         network.stopped = not owner.get('NL__{}')
         self.consumed = startup

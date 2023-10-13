@@ -2,7 +2,6 @@ from ..node import node_type
 from ..node import LogicNodeConditionType
 from ...sockets import NodeSocketLogicIntegerPositiveCent
 from ...sockets import NodeSocketLogicCondition
-from ....utilities import OUTCELL
 
 
 @node_type
@@ -22,4 +21,4 @@ class LogicNodeGamepadActive(LogicNodeConditionType):
         return ["index"]
 
     def get_output_names(self):
-        return [OUTCELL]
+        return ['OUT']

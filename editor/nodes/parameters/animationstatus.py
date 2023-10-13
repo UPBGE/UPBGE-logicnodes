@@ -5,7 +5,6 @@ from ...sockets import NodeSocketLogicCondition
 from ...sockets import NodeSocketLogicString
 from ...sockets import NodeSocketLogicFloat
 from ...sockets import NodeSocketLogicIntegerPositive
-from ....utilities import OUTCELL
 
 
 @node_type
@@ -28,4 +27,4 @@ class LogicNodeAnimationStatus(LogicNodeParameterType):
         return ["game_object", "action_layer"]
 
     def get_output_names(self):
-        return [OUTCELL, "ACTION_NAME", "ACTION_FRAME"]
+        return ['OUT', "ACTION_NAME", "ACTION_FRAME"]

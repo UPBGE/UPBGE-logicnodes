@@ -13,6 +13,7 @@ class LogicNodeDrawCube(LogicNodeActionType):
     bl_idname = "NLDrawCube"
     bl_label = "Draw Cube"
     nl_module = 'uplogic.nodes.actions'
+    nl_class = 'ULDrawCube'
 
     use_volume_origin: BoolProperty(
         name='Use Volume Origin',
@@ -32,9 +33,10 @@ class LogicNodeDrawCube(LogicNodeActionType):
         LogicNodeActionType.init(self, context)
 
     def get_attributes(self):
-        return [("use_volume_origin", f'{self.use_volume_origin}')]
+        return [("use_volume_origin", self.use_volume_origin)]
 
     def get_input_names(self):
         return ['condition', 'color', 'origin', 'width']
 
-    nl_class = "ULDrawCube"
+    def get_output_names(self):
+        return ['OUT']

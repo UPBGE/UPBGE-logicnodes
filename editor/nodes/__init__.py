@@ -149,7 +149,7 @@ from .actions.jumptofile import LogicNodeJumpToFile
 from .actions.listglobalvalues import LogicNodeListGlobalValues
 from .actions.setglobalvalue import LogicNodeSetGlobalValue
 from .actions.moveto import LogicNodeMoveTo
-from .actions.translate import LogicNodeTranslate
+from .actions.translate import LogicNodeTranslate  # deprecated
 from .actions.rotateto import LogicNodeRotateTo
 from .actions.movetonavmesh import LogicNodeMoveToNavmesh
 from .actions.followpath import LogicNodeFollowPath

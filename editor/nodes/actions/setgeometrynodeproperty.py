@@ -12,7 +12,7 @@ class LogicNodeSetGeometryNodeProperty(LogicNodeActionType):
     bl_idname = "NLSetGeometryNodeAttribute"
     bl_label = "Set Node Property"
     nl_module = 'uplogic.nodes.actions'
-    deprecated = True
+    # deprecated = True
 
     search_tags = [
         ['Set Geometry Node Property', {}]

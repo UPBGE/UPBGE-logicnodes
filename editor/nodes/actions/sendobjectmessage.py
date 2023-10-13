@@ -3,7 +3,6 @@ from ..node import LogicNodeActionType
 from ...sockets import NodeSocketLogicCondition
 from ...sockets import NodeSocketLogicObject
 from ...sockets import NodeSocketLogicString
-from ....utilities import OUTCELL
 
 
 @node_type
@@ -27,4 +26,4 @@ class LogicNodeSendObjectMessage(LogicNodeActionType):
         return ['condition', 'from_obj', 'to_obj', 'subject', 'body']
 
     def get_output_names(self):
-        return [OUTCELL]
+        return ['OUT']

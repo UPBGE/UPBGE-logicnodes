@@ -56,4 +56,4 @@ class NodeSocketLogicLight(NodeSocket, NodeSocketLogic):
         if self.use_owner:
             return 'game_object'
         if isinstance(self.value, Light):
-            return f'scene.objects[{self.value.name}]'
+            return f'scene.objects["{self.value.name}"]'
