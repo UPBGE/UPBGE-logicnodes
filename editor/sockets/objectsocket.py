@@ -14,7 +14,7 @@ class NodeSocketLogicObject(NodeSocket, NodeSocketLogic):
     bl_idname = "NLGameObjectSocket"
     bl_label = "Object"
     nl_type = SOCKET_TYPE_OBJECT
-    color = SOCKET_COLOR_OBJECT
+    nl_color = SOCKET_COLOR_OBJECT
 
     value: PointerProperty(name='Object', type=Object)
     use_owner: BoolProperty(

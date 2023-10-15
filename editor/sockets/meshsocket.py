@@ -18,7 +18,7 @@ class NodeSocketLogicMesh(NodeSocket, NodeSocketLogic):
         # update=update_tree_code
     )
 
-    color = SOCKET_COLOR_MESH
+    nl_color = SOCKET_COLOR_MESH
     nl_type = SOCKET_TYPE_MESH
 
     def draw(self, context, layout, node, text):

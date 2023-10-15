@@ -13,7 +13,7 @@ class NodeSocketLogicFloat(NodeSocket, NodeSocketLogic):
 
     value: FloatProperty(default=0, update=update_draw)
 
-    color = SOCKET_COLOR_GENERIC
+    nl_color = SOCKET_COLOR_GENERIC
     nl_type = SOCKET_TYPE_FLOAT
     valid_sockets = [
         SOCKET_TYPE_FLOAT,

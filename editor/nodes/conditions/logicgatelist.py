@@ -31,10 +31,10 @@ class LogicNodeLogicGateList(LogicNodeConditionType):
 
     def set_new_input_name(self):
         self.inputs[-1].name = 'Condition'
-        self.inputs[-1].nl_color = SOCKET_COLOR_CONDITION
 
     def draw_buttons(self, context, layout) -> None:
-        layout.operator('logic_nodes.add_socket')
+        op = layout.operator('logic_nodes.add_socket')
+        op.socket_type = 'NodeSocketLogicConditionItem'
         layout.prop(self, 'gate', text='')
 
     def get_output_names(self):

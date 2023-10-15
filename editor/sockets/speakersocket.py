@@ -12,7 +12,7 @@ import bpy
 @socket_type
 class NodeSocketLogicSpeaker(NodeSocket, NodeSocketLogic):
     bl_idname = "NLSpeakerSocket"
-    bl_label = "Camera"
+    bl_label = "Speaker"
     value: PointerProperty(
         name='Object',
         type=Object,
@@ -20,7 +20,7 @@ class NodeSocketLogicSpeaker(NodeSocket, NodeSocketLogic):
         # update=update_tree_code
     )
 
-    color = SOCKET_COLOR_OBJECT
+    nl_color = SOCKET_COLOR_OBJECT
     nl_type = SOCKET_TYPE_OBJECT
 
     def draw(self, context, layout, node, text):

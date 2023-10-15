@@ -18,7 +18,7 @@ class NodeSocketLogicGeometryNodeTree(NodeSocket, NodeSocketLogic):
         poll=filter_geometry_nodes
     )
 
-    color = SOCKET_COLOR_GEOTREE
+    nl_color = SOCKET_COLOR_GEOTREE
     nl_type = SOCKET_TYPE_NODETREE
 
     def draw(self, context, layout, node, text):

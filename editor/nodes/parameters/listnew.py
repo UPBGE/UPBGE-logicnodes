@@ -17,7 +17,8 @@ class LogicNodeListNew(LogicNodeParameterType):
         LogicNodeParameterType.init(self, context)
 
     def draw_buttons(self, context, layout):
-        layout.operator('logic_nodes.add_socket')
+        op = layout.operator('logic_nodes.add_socket')
+        op.socket_type = 'NLListItemSocket'
 
     def set_new_input_name(self):
         self.inputs[-1].name = 'Item'

@@ -11,7 +11,7 @@ class Base(NodeSocket, NodeSocketLogic):
     value: StringProperty(update=update_draw)
     formatted: BoolProperty(update=update_draw)
 
-    color = SOCKET_COLOR_STRING
+    nl_color = SOCKET_COLOR_STRING
     nl_type = SOCKET_TYPE_VALUE
 
     def draw(self, context, layout, node, text):

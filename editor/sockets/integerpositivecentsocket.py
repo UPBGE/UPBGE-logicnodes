@@ -10,7 +10,7 @@ from bpy.props import StringProperty
 @socket_type
 class NodeSocketLogicIntegerPositiveCent(NodeSocket, NodeSocketLogic):
     bl_idname = "NLPositiveIntCentSocket"
-    bl_label = "Integer"
+    bl_label = "Positive Integer Cent"
 
     value: IntProperty(
         min=0,
@@ -18,7 +18,7 @@ class NodeSocketLogicIntegerPositiveCent(NodeSocket, NodeSocketLogic):
         default=0,
         update=update_draw
     )
-    color = SOCKET_COLOR_INTEGER
+    nl_color = SOCKET_COLOR_INTEGER
     nl_type = SOCKET_TYPE_INT
 
     def draw(self, context, layout, node, text):

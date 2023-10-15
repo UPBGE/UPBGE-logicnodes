@@ -1,6 +1,7 @@
 import bpy
 from .interface import ui_panel
 from ..editor.nodetree import LogicNodeTree
+from ..utilities import preferences
 
 
 @ui_panel
@@ -42,3 +43,7 @@ class LOGIC_NODES_PT_help(bpy.types.Panel):
             text="Support Logic Nodes",
             icon='FUND'
         )
+        box = layout.box()
+        col = box.column(align=True)
+        col.operator('logic_nodes.install_uplogic', icon='IMPORT', text='Get Uplogic')
+        col.prop(preferences(), 'uplogic_version', text='')

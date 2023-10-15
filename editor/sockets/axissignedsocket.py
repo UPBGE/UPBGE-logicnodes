@@ -11,7 +11,7 @@ from bpy.props import EnumProperty
 @socket_type
 class NodeSocketLogicAxisSigned(NodeSocket, NodeSocketLogic):
     bl_idname = "NLSocketOrientedLocalAxis"
-    bl_label = "Local Axis"
+    bl_label = "Signed Axis"
 
     value: EnumProperty(
         name='Axis',
@@ -19,7 +19,7 @@ class NodeSocketLogicAxisSigned(NodeSocket, NodeSocketLogic):
         update=update_draw
     )
 
-    color = SOCKET_COLOR_INTEGER
+    nl_color = SOCKET_COLOR_INTEGER
     nl_type = SOCKET_TYPE_INT
 
     def draw(self, context, layout, node, text):

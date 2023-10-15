@@ -9,7 +9,7 @@ from bpy.props import FloatProperty
 @socket_type
 class NodeSocketLogicTime(NodeSocket, NodeSocketLogic):
     bl_idname = "NLTimeSocket"
-    bl_label = "Float Value"
+    bl_label = "Time"
 
     value: FloatProperty(
         min=0,
@@ -19,7 +19,7 @@ class NodeSocketLogicTime(NodeSocket, NodeSocketLogic):
         update=update_draw
     )
 
-    color = SOCKET_COLOR_GENERIC
+    nl_color = SOCKET_COLOR_GENERIC
     nl_type = SOCKET_TYPE_FLOAT
 
     def get_unlinked_value(self):

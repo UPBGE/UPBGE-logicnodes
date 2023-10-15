@@ -20,7 +20,7 @@ class NodeSocketLogicMaterial(NodeSocket, NodeSocketLogic):
         # update=update_tree_code
     )
 
-    color = SOCKET_COLOR_MATERIAL
+    nl_color = SOCKET_COLOR_MATERIAL
     nl_type = SOCKET_TYPE_MATERIAL
 
     def draw(self, context, layout, node, text):

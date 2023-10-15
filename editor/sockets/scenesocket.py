@@ -17,7 +17,7 @@ class NodeSocketLogicScene(NodeSocket, NodeSocketLogic):
         type=Scene
     )
 
-    color = SOCKET_COLOR_MATERIAL
+    nl_color = SOCKET_COLOR_MATERIAL
     nl_type = SOCKET_TYPE_SCENE
 
     def draw(self, context, layout, node, text):

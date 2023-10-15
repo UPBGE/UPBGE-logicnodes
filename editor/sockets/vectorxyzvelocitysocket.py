@@ -10,7 +10,7 @@ from bpy.props import StringProperty
 @socket_type
 class NodeSocketLogicVectorXYZVelocity(NodeSocket, NodeSocketLogic):
     bl_idname = "NLVelocitySocket"
-    bl_label = "Float Value"
+    bl_label = "Velocity"
 
     value_x: FloatProperty(
         default=0,
@@ -28,7 +28,7 @@ class NodeSocketLogicVectorXYZVelocity(NodeSocket, NodeSocketLogic):
         update=update_draw
     )
 
-    color = SOCKET_COLOR_VECTOR
+    nl_color = SOCKET_COLOR_VECTOR
     nl_type = SOCKET_TYPE_VECTOR
     valid_sockets = [SOCKET_TYPE_VECTOR, SOCKET_TYPE_COLOR]
 

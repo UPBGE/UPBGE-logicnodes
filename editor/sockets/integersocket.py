@@ -13,7 +13,7 @@ class NodeSocketLogicInteger(NodeSocket, NodeSocketLogic):
     bl_idname = "NLIntegerFieldSocket"
     bl_label = "Integer"
     nl_type = SOCKET_TYPE_INT
-    color = SOCKET_COLOR_INTEGER
+    nl_color = SOCKET_COLOR_INTEGER
 
     value: IntProperty(update=update_draw)
 

@@ -18,7 +18,7 @@ class NodeSocketLogicFont(NodeSocket, NodeSocketLogic):
         # update=update_tree_code
     )
 
-    color = SOCKET_COLOR_IMAGE
+    nl_color = SOCKET_COLOR_IMAGE
     nl_type = SOCKET_TYPE_FONT
 
     def draw(self, context, layout, node, text):

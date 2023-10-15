@@ -4,13 +4,12 @@ from .socket import socket_type
 from .socket import update_draw
 from bpy.types import NodeSocket
 from bpy.props import FloatProperty
-from bpy.props import StringProperty
 
 
 @socket_type
 class NodeSocketLogicVectorXYZAngle(NodeSocket, NodeSocketLogic):
     bl_idname = "NLVec3RotationSocket"
-    bl_label = "Float Value"
+    bl_label = "Vector XYZ Angle"
 
     value_x: FloatProperty(
         default=0,
@@ -28,7 +27,7 @@ class NodeSocketLogicVectorXYZAngle(NodeSocket, NodeSocketLogic):
         update=update_draw
     )
 
-    color = SOCKET_COLOR_VECTOR
+    nl_color = SOCKET_COLOR_VECTOR
     nl_type = SOCKET_TYPE_VECTOR
     valid_sockets = [SOCKET_TYPE_VECTOR, SOCKET_TYPE_COLOR]
 

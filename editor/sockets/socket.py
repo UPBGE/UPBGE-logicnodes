@@ -5,7 +5,7 @@ from bpy.props import FloatVectorProperty
 from bpy.props import StringProperty
 from bpy.types import NodeLink
 from bpy.types import NodeSocket
-from bpy.types import NodeSocketInterface
+from bpy.types import NodeTreeInterfaceSocket
 from bpy.types import NodeSocketVirtual
 from bpy.types import NodeReroute
 import bpy
@@ -111,7 +111,7 @@ _sockets = []
 
 def socket_type(obj):
 
-    class Interface(NodeSocketInterface):
+    class Interface(NodeTreeInterfaceSocket, obj):
         bl_socket_idname = obj.bl_idname
         nl_socket = obj
         hide_value = True
@@ -122,10 +122,10 @@ def socket_type(obj):
             return False
 
         def draw(self, context, layout):
-            pass
+            layout.prop(self, 'value')
 
-        def draw_color(self, context):
-            return self.nl_socket.color if self.nl_socket.color else SOCKET_COLOR_GENERIC
+        # def draw_color(self, context):
+        #     return self.nl_socket.nl_color if self.nl_socket.nl_color else SOCKET_COLOR_GENERIC
 
     _sockets.append(obj)
     _sockets.append(Interface)
@@ -161,17 +161,11 @@ class NodeSocketLogic:
     """
     bl_idname = ''
     deprecated = False
-    color = None
+    nl_color = SOCKET_COLOR_GENERIC
     nl_type = SOCKET_TYPE_VALUE
     valid_sockets: list = None
     type: StringProperty(default='VALUE')
-    nl_color: FloatVectorProperty(
-        subtype='COLOR_GAMMA',
-        min=0.0,
-        max=1.0,
-        size=4,
-        default=SOCKET_COLOR_GENERIC
-    )
+    nl_color = SOCKET_COLOR_GENERIC
 
     def update_draw(self, context=None):
         pass
@@ -181,8 +175,6 @@ class NodeSocketLogic:
         return cls.bl_idname
 
     def __init__(self):
-        if self.color:
-            self.nl_color = self.color
         self.type = BL_SOCKET_TYPES[self.nl_type]
 
     def check(self, tree):
@@ -194,8 +186,13 @@ class NodeSocketLogic:
                 self.node.use_custom_color = True
                 self.node.color = (.8, .6, 0)
 
-    def draw_color(self, context, node):
-        return self.nl_color
+    @classmethod
+    def draw_color_simple(cls):
+        return cls.nl_color
+
+    @classmethod
+    def draw_interface(cls, context, layout):
+        pass
 
     def on_validate(self, link, nodetree):
         """Called when an outgoing link is validated by `to_socket`"""
@@ -211,12 +208,12 @@ class NodeSocketLogic:
             link.is_valid = True
             return
         if self.nl_type is SOCKET_TYPE_GENERIC:
-            self.nl_color = from_socket.nl_color
+            # self.__class__.nl_color = from_socket.nl_color
             link.is_valid = True
             from_socket.on_validate(link, nodetree)
             return
         if from_socket.nl_type is SOCKET_TYPE_GENERIC:
-            from_socket.nl_color = self.nl_color
+            # from_socket.__class__.nl_color = self.nl_color
             link.is_valid = True
             from_socket.on_validate(link, nodetree)
             return

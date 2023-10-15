@@ -41,7 +41,8 @@ class LogicNodeRunPython(LogicNodeActionType):
     def draw_buttons(self, context, layout):
         layout.prop(self, 'mode', text='')
         if int(self.mode) > 0:
-            layout.operator('logic_nodes.add_socket', text='Add Argument') 
+            op = layout.operator('logic_nodes.add_socket', text='Add Argument')
+            op.socket_type = 'NLListItemSocket'
 
     def setup(
         self,

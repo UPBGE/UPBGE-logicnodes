@@ -10,13 +10,13 @@ import bpy
 @socket_type
 class NodeSocketLogicXYZ(NodeSocket, NodeSocketLogic):
     bl_idname = "NLXYZSocket"
-    bl_label = "Boolean"
+    bl_label = "XYZ"
 
     x: BoolProperty(update=update_draw, default=True)
     y: BoolProperty(update=update_draw, default=True)
     z: BoolProperty(update=update_draw, default=True)
 
-    color = SOCKET_COLOR_GENERIC
+    nl_color = SOCKET_COLOR_GENERIC
     nl_type = SOCKET_TYPE_DICTIONARY
 
     def draw(self, context, layout, node, text):

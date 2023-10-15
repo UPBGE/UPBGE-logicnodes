@@ -36,7 +36,7 @@ class NodeSocketLogicMatrix(NodeSocket, NodeSocketLogic):
     value_wz: FloatProperty(default=0)
     value_ww: FloatProperty(default=0)
 
-    color = SOCKET_COLOR_VECTOR
+    nl_color = SOCKET_COLOR_VECTOR
     nl_type = SOCKET_TYPE_MATRIX
 
     def get_unlinked_value(self):

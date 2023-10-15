@@ -18,7 +18,7 @@ class NodeSocketLogicObjectName(NodeSocket, NodeSocketLogic):
     )
     deprecated = True
 
-    color = SOCKET_COLOR_STRING
+    nl_color = SOCKET_COLOR_STRING
     nl_type = SOCKET_TYPE_STRING
 
     def draw(self, context, layout, node, text):

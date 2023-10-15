@@ -10,7 +10,7 @@ from bpy.props import StringProperty
 @socket_type
 class NodeSocketLogicVectorXYAngle(NodeSocket, NodeSocketLogic):
     bl_idname = "NLAngleLimitSocket"
-    bl_label = "Float Value"
+    bl_label = "Vector XY Angle"
 
     value_x: FloatProperty(
         default=0,
@@ -24,7 +24,7 @@ class NodeSocketLogicVectorXYAngle(NodeSocket, NodeSocketLogic):
     )
     title: StringProperty(default='')
 
-    color = SOCKET_COLOR_VECTOR
+    nl_color = SOCKET_COLOR_VECTOR
     nl_type = SOCKET_TYPE_VECTOR
     valid_sockets = [SOCKET_TYPE_VECTOR, SOCKET_TYPE_COLOR]
 

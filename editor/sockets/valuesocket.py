@@ -17,7 +17,7 @@ class NodeSocketLogicValue(NodeSocket, NodeSocketLogic):
     bl_idname = "NLValueFieldSocket"
     bl_label = "Value"
     nl_type = SOCKET_TYPE_GENERIC
-    # color = SOCKET_COLOR_GENERIC
+    nl_color = SOCKET_COLOR_GENERIC
 
     value: StringProperty(update=update_draw)
 

@@ -9,7 +9,7 @@ from bpy.props import EnumProperty
 @socket_type
 class NodeSocketLogicAxis(NodeSocket, NodeSocketLogic):
     bl_idname = "NLSocketLocalAxis"
-    bl_label = "Local Axis"
+    bl_label = "Unsigned Axis"
 
     value: EnumProperty(
         name='Axis',
@@ -17,8 +17,8 @@ class NodeSocketLogicAxis(NodeSocket, NodeSocketLogic):
         update=update_draw
     )
 
-    color = SOCKET_COLOR_INTEGER
-    nl_color = SOCKET_TYPE_INT
+    nl_color = SOCKET_COLOR_INTEGER
+    nl_type = SOCKET_TYPE_INT
 
     def draw(self, context, layout, node, text):
         if self.is_linked:

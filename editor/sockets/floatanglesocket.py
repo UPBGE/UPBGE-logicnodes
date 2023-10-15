@@ -9,14 +9,14 @@ from bpy.props import FloatProperty
 @socket_type
 class NodeSocketLogicFloatAngle(NodeSocket, NodeSocketLogic):
     bl_idname = "NLFloatAngleSocket"
-    bl_label = "Float Value"
+    bl_label = "Float Angle"
 
     value: FloatProperty(
         default=0,
         update=update_draw,
         unit='ROTATION'
     )
-    color = SOCKET_COLOR_GENERIC
+    nl_color = SOCKET_COLOR_GENERIC
 
     nl_type = SOCKET_TYPE_FLOAT
     valid_sockets = [

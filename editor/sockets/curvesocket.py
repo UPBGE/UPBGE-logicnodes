@@ -23,7 +23,7 @@ class NodeSocketLogicCurve(NodeSocket, NodeSocketLogic):
         description='Use the owner of this tree'
     )
 
-    color = SOCKET_COLOR_OBJECT
+    nl_color = SOCKET_COLOR_OBJECT
     nl_type = SOCKET_TYPE_OBJECT
 
     def draw(self, context, layout, node, text):

@@ -8,7 +8,7 @@ from bpy.types import NodeSocket
 @socket_type
 class NodeSocketLogicBitMask(NodeSocket, NodeSocketLogic):
     bl_idname = "NLCollisionMaskSocket"
-    bl_label = "Parameter"
+    bl_label = "Bitmask"
     slot_0: BoolProperty(default=True, update=update_draw)
     slot_1: BoolProperty(default=True, update=update_draw)
     slot_2: BoolProperty(default=True, update=update_draw)
@@ -26,7 +26,7 @@ class NodeSocketLogicBitMask(NodeSocket, NodeSocketLogic):
     slot_14: BoolProperty(default=True, update=update_draw)
     slot_15: BoolProperty(default=True, update=update_draw)
 
-    color = SOCKET_COLOR_INTEGER
+    nl_color = SOCKET_COLOR_INTEGER
     nl_type = SOCKET_TYPE_INT
 
     def draw(self, context, layout, node, text):

@@ -10,13 +10,13 @@ import bpy
 @socket_type
 class NodeSocketLogicGlobalCategory(NodeSocket, NodeSocketLogic):
     bl_idname = "NLGlobalCatSocket"
-    bl_label = "Category"
+    bl_label = "Global Category"
 
     value: StringProperty(
         update=update_draw
     )
 
-    color = SOCKET_COLOR_STRING
+    nl_color = SOCKET_COLOR_STRING
     nl_type = SOCKET_TYPE_STRING
 
     def draw(self, context, layout, node, text):

@@ -18,7 +18,7 @@ class NodeSocketLogicMouseButton(NodeSocket, NodeSocketLogic):
         items=_enum_mouse_buttons, default="bge.events.LEFTMOUSE",
         update=update_draw
     )
-    color = SOCKET_COLOR_INTEGER
+    nl_color = SOCKET_COLOR_INTEGER
     nl_type = SOCKET_TYPE_INT
 
     def get_unlinked_value(self):

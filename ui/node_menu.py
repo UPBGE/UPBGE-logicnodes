@@ -8,8 +8,8 @@ def draw_add_menu(self, context):
     layout = self.layout
     layout.operator_context = "INVOKE_DEFAULT"
 
-    layout.operator('bge_netlogic.node_search', text="Search", icon="VIEWZOOM")
-    layout.separator()
+    # layout.operator('bge_netlogic.node_search', text="Search", icon="VIEWZOOM")
+    # layout.separator()
     layout.menu("LN_MT_events_menu", text="Events", icon="RIGHTARROW_THIN")
     layout.menu("LN_MT_game_menu", text="Game", icon="RIGHTARROW_THIN")
     layout.menu("LN_MT_input_menu", text="Input", icon="RIGHTARROW_THIN")

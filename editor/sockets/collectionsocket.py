@@ -21,7 +21,7 @@ class NodeSocketLogicCollection(NodeSocket, NodeSocketLogic):
         # update=update_tree_code
     )
 
-    color = SOCKET_COLOR_COLLECTION
+    nl_color = SOCKET_COLOR_COLLECTION
     nl_type = SOCKET_TYPE_COLLECTION
 
     def draw(self, context, layout, node, text):

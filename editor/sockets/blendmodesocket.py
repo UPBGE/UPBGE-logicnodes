@@ -21,7 +21,7 @@ class NodeSocketLogicBlendMode(NodeSocket, NodeSocketLogic):
     def get_unlinked_value(self):
         return self.value
 
-    color = SOCKET_COLOR_INTEGER
+    nl_color = SOCKET_COLOR_INTEGER
     nl_type = SOCKET_TYPE_INT
 
     def draw(self, context, layout, node, text):

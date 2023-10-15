@@ -39,7 +39,7 @@ class NodeSocketLogicLoopCount(NodeSocket, NodeSocketLogic):
         )
     )
 
-    color = SOCKET_COLOR_INTEGER
+    nl_color = SOCKET_COLOR_INTEGER
     nl_type = SOCKET_TYPE_INT
 
     def draw(self, context, layout, node, text):

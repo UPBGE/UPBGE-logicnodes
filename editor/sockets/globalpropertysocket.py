@@ -11,7 +11,7 @@ import bpy
 @socket_type
 class NodeSocketLogicGlobalProperty(NodeSocket, NodeSocketLogic):
     bl_idname = "NLGlobalPropSocket"
-    bl_label = "Category"
+    bl_label = "Global Property"
 
     value: StringProperty(
         update=update_draw
@@ -20,8 +20,8 @@ class NodeSocketLogicGlobalProperty(NodeSocket, NodeSocketLogic):
         update=update_draw
     )
 
-    color = SOCKET_COLOR_STRING
-    nl_color = SOCKET_TYPE_STRING
+    nl_color = SOCKET_COLOR_STRING
+    nl_type = SOCKET_TYPE_STRING
 
     def draw(self, context, layout, node, text):
         if self.is_linked or self.is_output:

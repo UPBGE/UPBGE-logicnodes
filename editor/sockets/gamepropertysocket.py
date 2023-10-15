@@ -16,7 +16,7 @@ import bpy
 @socket_type
 class NodeSocketLogicGameProperty(NodeSocket, NodeSocketLogic):
     bl_idname = "NLGamePropertySocket"
-    bl_label = "Property"
+    bl_label = "Object Property"
 
     value: StringProperty(
         update=update_draw
@@ -26,7 +26,7 @@ class NodeSocketLogicGameProperty(NodeSocket, NodeSocketLogic):
         name='Free Edit'
     )
 
-    color = SOCKET_COLOR_STRING
+    nl_color = SOCKET_COLOR_STRING
     nl_type = SOCKET_TYPE_STRING
 
     def draw(self, context, layout, node, text):

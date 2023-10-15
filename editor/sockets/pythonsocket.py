@@ -11,7 +11,7 @@ class NodeSocketLogicPython(NodeSocket, NodeSocketLogic):
     bl_idname = "NLPythonSocket"
     bl_label = "Python"
 
-    color = SOCKET_COLOR_PYTHON
+    nl_color = SOCKET_COLOR_PYTHON
     nl_type = SOCKET_TYPE_PYTHON
 
     def draw(self, context, layout, node, text):

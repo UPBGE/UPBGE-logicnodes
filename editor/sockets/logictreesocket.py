@@ -23,7 +23,7 @@ class NodeSocketLogicTree(NodeSocket, NodeSocketLogic):
         # update=update_tree_code
     )
 
-    color = SOCKET_COLOR_GENERIC
+    nl_color = SOCKET_COLOR_GENERIC
     nl_type = SOCKET_TYPE_NODETREE
 
     def draw(self, context, layout, node, text):

@@ -18,7 +18,7 @@ class NodeSocketLogicBoolean(NodeSocket, NodeSocketLogic):
     use_toggle: BoolProperty(default=False)
     nl_type = SOCKET_TYPE_BOOL
     valid_sockets = [SOCKET_TYPE_BOOL, SOCKET_TYPE_CONDITION]
-    color = SOCKET_COLOR_BOOLEAN
+    nl_color = SOCKET_COLOR_BOOLEAN
 
     def draw(self, context, layout, node, text):
         if self.is_linked or self.is_output:

@@ -312,4 +312,4 @@ from .parameters.listextend import LogicNodeListExtend
 from .parameters.rotatebypoint import LogicNodeRotateByPoint
 from .parameters.getlogictreeproperty import LogicNodeGetLogicTreeProperty
 
-from .groupnode import NodeGroupInputLogic
+# from .groupnode import NodeGroupInputLogic

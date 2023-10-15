@@ -21,7 +21,7 @@ class NodeSocketLogicBoolCondition(NodeSocket, NodeSocketLogic):
             'perform with each frame, when False, never perform'
         ))
 
-    color = SOCKET_COLOR_CONDITION
+    nl_color = SOCKET_COLOR_CONDITION
 
     def draw(self, context, layout, node, text):
         if self.is_linked or self.is_output:

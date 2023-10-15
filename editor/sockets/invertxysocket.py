@@ -10,12 +10,12 @@ import bpy
 @socket_type
 class NodeSocketLogicInvertXY(NodeSocket, NodeSocketLogic):
     bl_idname = "NLInvertedXYSocket"
-    bl_label = "Boolean"
+    bl_label = "Invert XY"
 
     x: BoolProperty(update=update_draw)
     y: BoolProperty(update=update_draw)
 
-    color = SOCKET_COLOR_GENERIC
+    nl_color = SOCKET_COLOR_GENERIC
     nl_type = SOCKET_TYPE_DICTIONARY
 
     def draw(self, context, layout, node, text):

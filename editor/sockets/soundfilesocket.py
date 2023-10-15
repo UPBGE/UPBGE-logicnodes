@@ -13,7 +13,7 @@ import bpy
 @socket_type
 class NodeSocketLogicSoundFile(NodeSocket, NodeSocketLogic):
     bl_idname = "NLSoundFileSocket"
-    bl_label = "String"
+    bl_label = "Sound"
     filepath_value: StringProperty(
         subtype='FILE_PATH'
         # update=update_tree_code
@@ -28,7 +28,7 @@ class NodeSocketLogicSoundFile(NodeSocket, NodeSocketLogic):
         # update=update_tree_code
     )
 
-    color = SOCKET_COLOR_TEXT
+    nl_color = SOCKET_COLOR_TEXT
     nl_type = SOCKET_TYPE_SOUND
 
     def draw(self, context, layout, node, text):

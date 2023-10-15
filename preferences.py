@@ -2,8 +2,10 @@ import bpy
 import sys
 from .props.propertyfilter import LogicNodesPropertyFilter
 
+
 _uplogic_versions = [
-    ('1.9.5', '1.9.5', 'Suitable for Logic Nodes 2.4')
+    ('1.9.5', '1.9.5', 'Suitable for Logic Nodes 2.4'),
+    ('2.0', '2.0', 'Suitable for Logic Nodes 3.0')
 ]
 
 
@@ -11,7 +13,7 @@ class LogicNodesAddonPreferences(bpy.types.AddonPreferences):
     bl_idname = 'bge_netlogic'
 
     use_reload_text: bpy.props.BoolProperty(default=True)
-    uplogic_version: bpy.props.EnumProperty(items=_uplogic_versions)
+    uplogic_version: bpy.props.EnumProperty(items=_uplogic_versions, default='2.0', name='Uplogic Version')
     use_node_debug: bpy.props.BoolProperty(default=True)
     use_node_notify: bpy.props.BoolProperty(default=True)
     prop_filter: bpy.props.PointerProperty(type=LogicNodesPropertyFilter)

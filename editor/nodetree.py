@@ -32,8 +32,8 @@ class LogicNodeTree(NodeTree):
     old_links = []
     properties: CollectionProperty(type=LogicNodesLogicTreeProperty, name='Properties')
 
-    old_inputs: IntProperty(default=0, update=group_update)
-    old_outputs: IntProperty(default=0, update=group_update)
+    # old_inputs: IntProperty(default=0, update=group_update)
+    # old_outputs: IntProperty(default=0, update=group_update)
 
     @classmethod
     def poll(cls, context):
@@ -94,12 +94,12 @@ class LogicNodeTree(NodeTree):
         start = time()
         self.changes_staged = True
 
-        new_inputs = len(self.inputs)
-        new_outputs = len(self.outputs)
-        if self.old_inputs != new_inputs:
-            self.old_inputs = new_inputs
-        elif self.old_outputs != new_outputs:
-            self.old_outputs = new_outputs
+        # new_inputs = len(self.inputs)
+        # new_outputs = len(self.outputs)
+        # if self.old_inputs != new_inputs:
+        #     self.old_inputs = new_inputs
+        # elif self.old_outputs != new_outputs:
+        #     self.old_outputs = new_outputs
 
         for n in self.nodes:
             if isinstance(n, NodeReroute):

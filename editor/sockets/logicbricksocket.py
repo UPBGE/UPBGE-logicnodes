@@ -12,7 +12,7 @@ import bpy
 @socket_type
 class NodeSocketLogicBrick(NodeSocket, NodeSocketLogic):
     bl_idname = "NLLogicBrickSocket"
-    bl_label = "Property"
+    bl_label = "Logic Brick"
     value: StringProperty(
         # update=update_tree_code
     )
@@ -23,7 +23,7 @@ class NodeSocketLogicBrick(NodeSocket, NodeSocketLogic):
     )
     brick_type: StringProperty(default='controllers')
 
-    color = SOCKET_COLOR_STRING
+    nl_color = SOCKET_COLOR_STRING
     nl_type = SOCKET_TYPE_STRING
 
     def draw(self, context, layout, node, text):

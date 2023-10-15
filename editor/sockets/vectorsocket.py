@@ -9,11 +9,10 @@ from bpy.props import StringProperty
 @socket_type
 class NodeSocketLogicVector(NodeSocket, NodeSocketLogic):
     bl_idname = "NLVectorSocket"
-    bl_label = "Parameter"
+    bl_label = "Vector"
     nl_type = SOCKET_TYPE_VECTOR
-    color = SOCKET_COLOR_VECTOR
+    nl_color = SOCKET_COLOR_VECTOR
     valid_sockets = [SOCKET_TYPE_VECTOR, SOCKET_TYPE_COLOR]
-
 
     def draw(self, context, layout, node, text):
         layout.label(text=text)

@@ -14,7 +14,7 @@ import bpy
 @socket_type
 class NodeSocketLogicTreeProperty(NodeSocket, NodeSocketLogic):
     bl_idname = "NodeSocketLogicTreeProperty"
-    bl_label = "Property"
+    bl_label = "Logic Tree Property"
 
     value: StringProperty(
         update=update_draw,
@@ -70,7 +70,7 @@ class NodeSocketLogicTreeProperty(NodeSocket, NodeSocketLogic):
         update=update_color_alpha
     )
 
-    color = SOCKET_COLOR_STRING
+    nl_color = SOCKET_COLOR_STRING
     nl_type = SOCKET_TYPE_STRING
 
     def draw(self, context, layout, node, text):

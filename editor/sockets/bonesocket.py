@@ -12,11 +12,11 @@ import bpy
 @socket_type
 class NodeSocketLogicBone(NodeSocket, NodeSocketLogic):
     bl_idname = "NLArmatureBoneSocket"
-    bl_label = "Property"
+    bl_label = "Bone"
     value: StringProperty()
     ref_index: IntProperty(default=0)
 
-    color = SOCKET_COLOR_STRING
+    nl_color = SOCKET_COLOR_STRING
     nl_type = SOCKET_TYPE_STRING
 
     def draw(self, context, layout, node, text):

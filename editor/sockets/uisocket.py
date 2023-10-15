@@ -8,8 +8,8 @@ from bpy.types import NodeSocket
 @socket_type
 class NodeSocketLogicUI(NodeSocket, NodeSocketLogic):
     bl_idname = "NLUISocket"
-    bl_label = "Parameter"
-    color = SOCKET_COLOR_MESH
+    bl_label = "UI Element"
+    nl_color = SOCKET_COLOR_MESH
     nl_type = SOCKET_TYPE_UI
 
     def draw(self, context, layout, node, text):

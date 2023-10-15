@@ -13,7 +13,7 @@ class NodeSocketLogicPlayMode(NodeSocket, NodeSocketLogic):
     bl_idname = "NLPlayActionModeSocket"
     bl_label = "Play Mode"
 
-    color = SOCKET_COLOR_INTEGER
+    nl_color = SOCKET_COLOR_INTEGER
     nl_type = SOCKET_TYPE_INT
 
     value: EnumProperty(

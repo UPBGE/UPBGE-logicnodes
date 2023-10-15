@@ -13,7 +13,7 @@ import bpy
 @socket_type
 class NodeSocketLogicNavMesh(NodeSocket, NodeSocketLogic):
     bl_idname = "NLNavMeshSocket"
-    bl_label = "Object"
+    bl_label = "Navmesh"
     value: PointerProperty(
         name='Object',
         type=Object,
@@ -26,7 +26,7 @@ class NodeSocketLogicNavMesh(NodeSocket, NodeSocketLogic):
         description='Use the owner of this tree'
     )
 
-    color = SOCKET_COLOR_OBJECT
+    nl_color = SOCKET_COLOR_OBJECT
     nl_type = SOCKET_TYPE_OBJECT
 
     def draw(self, context, layout, node, text):

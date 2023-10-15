@@ -20,7 +20,7 @@ class NodeSocketLogicText(NodeSocket, NodeSocketLogic):
         # update=update_tree_code
     )
 
-    color = SOCKET_COLOR_TEXT
+    nl_color = SOCKET_COLOR_TEXT
     nl_type = SOCKET_TYPE_TEXT
 
     def draw(self, context, layout, node, text):

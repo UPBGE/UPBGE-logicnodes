@@ -10,7 +10,7 @@ from bpy.props import StringProperty
 @socket_type
 class NodeSocketLogicColorRGB(NodeSocket, NodeSocketLogic):
     bl_idname = "NLColorSocket"
-    bl_label = "Float Value"
+    bl_label = "Color RGB"
 
     value: FloatVectorProperty(
         subtype='COLOR_GAMMA',
@@ -20,8 +20,7 @@ class NodeSocketLogicColorRGB(NodeSocket, NodeSocketLogic):
         default=(1.0, 1.0, 1.0),
         update=update_draw
     )
-    color = SOCKET_COLOR_COLOR
-    nl_color = SOCKET_TYPE_COLOR
+    nl_color = SOCKET_COLOR_COLOR
 
     def get_unlinked_value(self):
         return "mathutils.Vector(({}, {}, {}))".format(

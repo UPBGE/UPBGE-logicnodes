@@ -10,13 +10,13 @@ from bpy.props import StringProperty
 @socket_type
 class NodeSocketLogicVectorXY(NodeSocket, NodeSocketLogic):
     bl_idname = "NLVec2FieldSocket"
-    bl_label = "Float Value"
+    bl_label = "Vector XY"
 
     value_x: FloatProperty(default=0, update=update_draw)
     value_y: FloatProperty(default=0, update=update_draw)
     title: StringProperty(default='')
 
-    color = SOCKET_COLOR_VECTOR
+    nl_color = SOCKET_COLOR_VECTOR
     nl_type = SOCKET_TYPE_VECTOR
     valid_sockets = [SOCKET_TYPE_VECTOR, SOCKET_TYPE_COLOR]
 

@@ -9,14 +9,14 @@ from bpy.props import StringProperty
 @socket_type
 class NodeSocketLogicFilePath(NodeSocket, NodeSocketLogic):
     bl_idname = "NLFilePathSocket"
-    bl_label = "String"
+    bl_label = "Filepath"
 
     value: StringProperty(
         subtype='FILE_PATH',
         update=update_draw
     )
 
-    color = SOCKET_COLOR_STRING
+    nl_color = SOCKET_COLOR_STRING
     nl_type = SOCKET_TYPE_STRING
 
     def draw(self, context, layout, node, text):

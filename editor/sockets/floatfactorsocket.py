@@ -19,7 +19,7 @@ class NodeSocketLogicFloatFactor(NodeSocket, NodeSocketLogic):
         update=update_draw
     )
 
-    color = SOCKET_COLOR_GENERIC
+    nl_color = SOCKET_COLOR_GENERIC
     nl_type = SOCKET_TYPE_FLOAT
     valid_sockets = [
         SOCKET_TYPE_FLOAT,

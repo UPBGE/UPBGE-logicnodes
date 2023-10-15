@@ -4,16 +4,15 @@ from .socket import socket_type
 from .socket import update_draw
 from bpy.types import NodeSocket
 from bpy.props import IntProperty
-from bpy.props import StringProperty
 
 
 @socket_type
 class NodeSocketLogicIntegerPositive(NodeSocket, NodeSocketLogic):
     bl_idname = "NLPositiveIntegerFieldSocket"
-    bl_label = "Integer"
+    bl_label = "Positive Integer"
 
     value: IntProperty(min=0, default=0, update=update_draw)
-    color = SOCKET_COLOR_INTEGER
+    nl_color = SOCKET_COLOR_INTEGER
     nl_type = SOCKET_TYPE_INT
 
     def draw(self, context, layout, node, text):
