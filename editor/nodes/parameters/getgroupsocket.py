@@ -29,21 +29,21 @@ class LogicNodeGetGroupSocket(LogicNodeParameterType):
         ipt = self.inputs[2]
         if tree.is_linked or nde.is_linked:
             ipt.name = 'Input'
-        if (tree.value or tree.is_linked) and (nde.value or nde.is_linked):
+        if (tree.default_value or tree.is_linked) and (nde.default_value or nde.is_linked):
             ipt.enabled = True
         else:
             ipt.enabled = False
-        if not tree.is_linked and not nde.is_linked and tree.value:
-            tree_name = tree.value.name
-            node_name = nde.value
+        if not tree.is_linked and not nde.is_linked and tree.default_value:
+            tree_name = tree.default_value.name
+            node_name = nde.default_value
             target = bpy.data.node_groups[tree_name].nodes.get(node_name)
             if not target or len(target.inputs) < 1:
                 ipt.enabled = False
                 return
             limit = len(target.inputs) - 1
-            if int(ipt.value) > limit:
-                ipt.value = limit
-            name = target.inputs[ipt.value].name
+            if int(ipt.default_value) > limit:
+                ipt.default_value = limit
+            name = target.inputs[ipt.default_value].name
             ipt.name = name
 
     def get_input_names(self):

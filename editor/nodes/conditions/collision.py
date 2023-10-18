@@ -19,8 +19,8 @@ class LogicNodeCollision(LogicNodeConditionType):
     def update_draw(self, context=None):
         if not self.ready:
             return
-        self.inputs[2].enabled = not self.inputs[1].value
-        self.inputs[3].enabled = self.inputs[1].value
+        self.inputs[2].enabled = not self.inputs[1].default_value
+        self.inputs[3].enabled = self.inputs[1].default_value
 
     pulse: BoolProperty(name='Continuous', update=update_draw)
 

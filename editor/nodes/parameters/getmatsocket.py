@@ -29,21 +29,21 @@ class LogicNodeGetMaterialSocket(LogicNodeParameterType):
         ipt = self.inputs[2]
         if mat.is_linked or nde.is_linked:
             ipt.name = 'Input'
-        if (mat.value or mat.is_linked) and (nde.value or nde.is_linked):
+        if (mat.default_value or mat.is_linked) and (nde.default_value or nde.is_linked):
             ipt.enabled = True
         else:
             ipt.enabled = False
-        if not mat.is_linked and not nde.is_linked and mat.value:
-            mat_name = mat.value.name
-            node_name = nde.value
+        if not mat.is_linked and not nde.is_linked and mat.default_value:
+            mat_name = mat.default_value.name
+            node_name = nde.default_value
             target = bpy.data.materials[mat_name].node_tree.nodes.get(node_name)
             if not target or len(target.inputs) < 1:
                 ipt.enabled = False
                 return
             limit = len(target.inputs) - 1
-            if int(ipt.value) > limit:
-                ipt.value = limit
-            name = target.inputs[ipt.value].name
+            if int(ipt.default_value) > limit:
+                ipt.default_value = limit
+            name = target.inputs[ipt.default_value].name
             ipt.name = name
 
     def get_input_names(self):

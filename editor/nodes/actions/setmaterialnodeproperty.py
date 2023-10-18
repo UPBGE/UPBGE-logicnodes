@@ -36,7 +36,7 @@ class LogicNodeSetMaterialNodeProperty(LogicNodeActionType):
         att = self.inputs[3]
         itl = self.inputs[4]
         val = self.inputs[5]
-        if (mat.value or mat.is_linked) and (nde.value or nde.is_linked):
+        if (mat.default_value or mat.is_linked) and (nde.default_value or nde.is_linked):
             att.enabled = val.enabled = itl.enabled = True
         else:
             att.enabled = val.enabled = itl.enabled = False

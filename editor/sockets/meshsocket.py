@@ -12,6 +12,12 @@ import bpy
 class NodeSocketLogicMesh(NodeSocket, NodeSocketLogic):
     bl_idname = "NLMeshSocket"
     bl_label = "Mesh"
+    default_value: PointerProperty(
+        name='Mesh',
+        type=Mesh
+        # update=update_tree_code
+    )
+    # XXX: Remove value property
     value: PointerProperty(
         name='Mesh',
         type=Mesh
@@ -32,7 +38,7 @@ class NodeSocketLogicMesh(NodeSocket, NodeSocketLogic):
                 col.label(text=self.name)
             col.prop_search(
                 self,
-                'value',
+                'default_value',
                 bpy.data,
                 'meshes',
                 icon='NONE',
@@ -40,5 +46,5 @@ class NodeSocketLogicMesh(NodeSocket, NodeSocketLogic):
             )
 
     def get_unlinked_value(self):
-        if isinstance(self.value, Mesh):
-            return f'bpy.data.meshes.get("{self.value.name}")'
+        if isinstance(self.default_value, Mesh):
+            return f'bpy.data.meshes.get("{self.default_value.name}")'

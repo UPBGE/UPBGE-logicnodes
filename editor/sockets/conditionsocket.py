@@ -17,6 +17,10 @@ class NodeSocketLogicCondition(NodeSocket, NodeSocketLogic):
     default_value: BoolProperty(
         name='Condition'
     )
+    # XXX: Remove value property
+    value: BoolProperty(
+        name='Condition'
+    )
     show_prop: BoolProperty()
 
     nl_color = SOCKET_COLOR_CONDITION

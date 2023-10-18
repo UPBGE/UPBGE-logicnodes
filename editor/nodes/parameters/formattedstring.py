@@ -10,16 +10,16 @@ class LogicNodeFormattedString(LogicNodeParameterType):
     nl_module = 'uplogic.nodes.parameters'
 
     def init(self, context):
-        self.add_input(NodeSocketLogicString, "Format String", {'formatted': True, 'value': 'A is {} and B is {}'})
-        self.add_input(NodeSocketLogicString, "A", {'value': 'Hello'})
-        self.add_input(NodeSocketLogicString, "B", {'value': 'World'})
+        self.add_input(NodeSocketLogicString, "Format String", {'formatted': True, 'default_value': 'A is {} and B is {}'})
+        self.add_input(NodeSocketLogicString, "A", {'default_value': 'Hello'})
+        self.add_input(NodeSocketLogicString, "B", {'default_value': 'World'})
         self.add_input(NodeSocketLogicString, "C")
         self.add_input(NodeSocketLogicString, "D")
         self.add_output(NodeSocketLogicString, "String")
         LogicNodeParameterType.init(self, context)
 
     def update_draw(self, context=None):
-        string = self.inputs[0].value
+        string = self.inputs[0].default_value
         count = string.count('{}')
         ipts = [1, 2, 3, 4]
         for ipt in ipts:

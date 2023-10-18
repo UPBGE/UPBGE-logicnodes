@@ -11,7 +11,7 @@ class NodeSocketLogicTime(NodeSocket, NodeSocketLogic):
     bl_idname = "NLTimeSocket"
     bl_label = "Time"
 
-    value: FloatProperty(
+    default_value: FloatProperty(
         min=0,
         default=0,
         subtype='TIME',
@@ -23,10 +23,10 @@ class NodeSocketLogicTime(NodeSocket, NodeSocketLogic):
     nl_type = SOCKET_TYPE_FLOAT
 
     def get_unlinked_value(self):
-        return "{}".format(self.value)
+        return "{}".format(self.default_value)
 
     def draw(self, context, layout, node, text):
         if self.is_linked or self.is_output:
             layout.label(text=text)
         else:
-            layout.prop(self, "value", text=text)
+            layout.prop(self, "default_value", text=text)

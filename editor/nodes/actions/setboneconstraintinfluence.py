@@ -27,18 +27,6 @@ class LogicNodeSetBoneConstraintInfluence(LogicNodeActionType):
         self.add_output(NodeSocketLogicCondition, 'Done')
         LogicNodeActionType.init(self, context)
 
-    # def update_draw(self, context=None):
-    #     self.inputs[2].enabled = (
-    #         self.inputs[1].value is not None or
-    #         self.inputs[1].is_linked or
-    #         self.inputs[1].use_owner
-    #     )
-    #     self.inputs[3].enabled = (
-    #         self.inputs[2].enabled and
-    #         (self.inputs[2].value != '' or
-    #          self.inputs[2].is_linked)
-    #     )
-
     def get_output_names(self):
         return ["OUT"]
 

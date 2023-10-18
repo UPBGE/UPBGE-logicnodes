@@ -13,6 +13,13 @@ import bpy
 class NodeSocketLogicMaterial(NodeSocket, NodeSocketLogic):
     bl_idname = "NLMaterialSocket"
     bl_label = "Material"
+    default_value: PointerProperty(
+        name='Material',
+        type=Material,
+        poll=filter_materials
+        # update=update_tree_code
+    )
+    # XXX: Remove value property
     value: PointerProperty(
         name='Material',
         type=Material,
@@ -34,7 +41,7 @@ class NodeSocketLogicMaterial(NodeSocket, NodeSocketLogic):
                 col.label(text=self.name)
             col.prop_search(
                 self,
-                'value',
+                'default_value',
                 bpy.data,
                 'materials',
                 icon='NONE',
@@ -42,5 +49,5 @@ class NodeSocketLogicMaterial(NodeSocket, NodeSocketLogic):
             )
 
     def get_unlinked_value(self):
-        if isinstance(self.value, bpy.types.Material):
-            return f'bpy.data.materials.get("{self.value.name}")'
+        if isinstance(self.default_value, bpy.types.Material):
+            return f'bpy.data.materials.get("{self.default_value.name}")'

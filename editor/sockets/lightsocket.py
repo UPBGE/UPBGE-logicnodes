@@ -19,6 +19,12 @@ class NodeSocketLogicLight(NodeSocket, NodeSocketLogic):
         type=Light,
         poll=filter_lights
     )
+    # XXX: Remove value property
+    value: PointerProperty(
+        name='Light',
+        type=Light,
+        poll=filter_lights
+    )
     use_owner: BoolProperty(
         name='Use Owner',
         # update=update_tree_code,

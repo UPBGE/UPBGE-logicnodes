@@ -18,15 +18,17 @@ class NodeSocketLogicValueOptional(NodeSocket, NodeSocketLogic):
     nl_type = SOCKET_TYPE_GENERIC
     nl_color = SOCKET_COLOR_GENERIC
 
+    default_value: StringProperty(update=update_draw)
+    # XXX: Remove value property
     value: StringProperty(update=update_draw)
 
     def on_type_changed(self, context):
         if self.value_type == "BOOLEAN":
-            self.value = str(self.bool_editor)
+            self.default_value = str(self.bool_editor)
         if self.value_type == "STRING":
-            self.value = str(self.string_editor)
+            self.default_value = str(self.string_editor)
         if self.value_type == "FILE_PATH":
-            self.value = str(self.path_editor)
+            self.default_value = str(self.path_editor)
 
     value_type: EnumProperty(
         name='Type',
@@ -37,27 +39,27 @@ class NodeSocketLogicValueOptional(NodeSocket, NodeSocketLogic):
     use_value: BoolProperty()
 
     def store_boolean_value(self, context):
-        self.value = str(self.bool_editor)
+        self.default_value = str(self.bool_editor)
 
     bool_editor: BoolProperty(update=store_boolean_value)
 
     def store_int_value(self, context):
-        self.value = str(self.int_editor)
+        self.default_value = str(self.int_editor)
 
     int_editor: IntProperty(update=store_int_value)
 
     def store_float_value(self, context):
-        self.value = str(self.float_editor)
+        self.default_value = str(self.float_editor)
 
     float_editor: FloatProperty(update=store_float_value)
 
     def store_string_value(self, context):
-        self.value = self.string_editor
+        self.default_value = self.string_editor
 
     string_editor: StringProperty(update=store_string_value)
 
     def store_path_value(self, context):
-        self.value = self.path_editor
+        self.default_value = self.path_editor
 
     path_editor: StringProperty(
         update=store_path_value,
@@ -65,7 +67,7 @@ class NodeSocketLogicValueOptional(NodeSocket, NodeSocketLogic):
     )
 
     def get_unlinked_value(self):
-        return parse_value_type(self.value_type, self.value) if self.use_value or self.is_linked else "utils.STATUS_INVALID"
+        return parse_value_type(self.value_type, self.default_value) if self.use_value or self.is_linked else None
 
     def draw(self, context, layout, node, text):
         if self.is_linked or self.is_output:

@@ -47,7 +47,7 @@ class LOGIC_NODES_OT_pack_new_tree(Operator):
     bl_label = "Pack Into New Tree"
     bl_description = "Convert selected Nodes to a new tree. Will be applied to selected object.\nWARNING: All Nodes connected to selection must be selected too"
     bl_options = {'REGISTER', 'UNDO'}
-    new_tree_name: StringProperty(default='NewTree')
+    new_tree_name: StringProperty(default='NewTree', name='New Tree Name')
 
     @classmethod
     def poll(cls, context):
@@ -114,15 +114,15 @@ class LOGIC_NODES_OT_pack_new_tree(Operator):
         for old_node in new_nodes:
             parent_tree.nodes.remove(old_node)
         redir = parent_tree.nodes.new('NLActionExecuteNetwork')
-        redir.inputs[0].value = True
+        redir.inputs[0].default_value = True
 
         try:
-            redir.inputs[1].value = bpy.context.object
+            redir.inputs[1].default_value = bpy.context.object
         except Exception:
             msg = 'No Object was selected; Set Object in tree {} manually!'.format(parent_tree.name)
             self.report({"WARNING"}, msg)
             warn(msg)
-        redir.inputs[2].value = bpy.data.node_groups[group_name]
+        redir.inputs[2].default_value = bpy.data.node_groups[group_name]
         redir.location = self.avg_location(locs)
         node_tree.use_fake_user = True
         success(f'Created Node Tree {group_name}.')

@@ -17,6 +17,13 @@ class NodeSocketLogicFont(NodeSocket, NodeSocketLogic):
         description='Select a Font',
         update=update_draw
     )
+    # XXX: Remove value property
+    value: PointerProperty(
+        name='Font',
+        type=VectorFont,
+        description='Select a Font',
+        update=update_draw
+    )
 
     nl_color = SOCKET_COLOR_IMAGE
     nl_type = SOCKET_TYPE_FONT

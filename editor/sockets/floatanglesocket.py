@@ -16,6 +16,12 @@ class NodeSocketLogicFloatAngle(NodeSocket, NodeSocketLogic):
         update=update_draw,
         unit='ROTATION'
     )
+    # XXX: Remove value property
+    value: FloatProperty(
+        default=0,
+        update=update_draw,
+        unit='ROTATION'
+    )
     nl_color = SOCKET_COLOR_GENERIC
 
     nl_type = SOCKET_TYPE_FLOAT

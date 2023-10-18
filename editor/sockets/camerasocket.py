@@ -20,6 +20,13 @@ class NodeSocketLogicCamera(NodeSocket, NodeSocketLogic):
         poll=filter_camera,
         update=update_draw
     )
+    # XXX: Remove value property
+    value: PointerProperty(
+        name='Object',
+        type=Object,
+        poll=filter_camera,
+        update=update_draw
+    )
     use_active: BoolProperty(
         name='Use Active',
         description='Use current active camera',

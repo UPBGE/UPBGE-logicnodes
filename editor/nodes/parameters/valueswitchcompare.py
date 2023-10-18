@@ -18,7 +18,7 @@ class LogicNodeValueSwitchCompare(LogicNodeParameterType):
         if not self.ready:
             return
         for x in range(2, 12):
-            if self.inputs[x].is_linked or self.inputs[x].value != "_None_":
+            if self.inputs[x].is_linked or self.inputs[x].default_value != "_None_":
                 self.inputs[x].enabled = True
                 self.inputs[x+1].enabled = True
                 self.inputs[x+2].enabled = True

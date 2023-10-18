@@ -36,7 +36,7 @@ class LogicNodeSetGeometryNodeProperty(LogicNodeActionType):
         att = self.inputs[3]
         itl = self.inputs[4]
         val = self.inputs[5]
-        if (tree.value or tree.is_linked) and (nde.value or nde.is_linked):
+        if (tree.default_value or tree.is_linked) and (nde.default_value or nde.is_linked):
             att.enabled = val.enabled = itl.enabled = True
         else:
             att.enabled = val.enabled = itl.enabled = False

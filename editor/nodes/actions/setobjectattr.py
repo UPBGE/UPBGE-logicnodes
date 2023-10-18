@@ -45,7 +45,7 @@ class LogicNodeSetObjectAttr(LogicNodeActionType):
 
     def init(self, context):
         self.add_input(NodeSocketLogicCondition, "Condition")
-        self.add_input(NodeSocketLogicXYZ, "")
+        self.add_input(NodeSocketLogicXYZ, "", {'default_value': (True, True, True)})
         self.add_input(NodeSocketLogicObject, "Object")
         self.add_input(NodeSocketLogicVectorXYZ, "Value")
         self.add_input(NodeSocketLogicColorRGBA, "Color")

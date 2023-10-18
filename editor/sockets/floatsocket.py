@@ -12,6 +12,8 @@ class NodeSocketLogicFloat(NodeSocket, NodeSocketLogic):
     bl_label = "Float Value"
 
     default_value: FloatProperty(default=0, update=update_draw)
+    # XXX: Remove value property
+    value: FloatProperty(default=0, update=update_draw)
 
     nl_color = SOCKET_COLOR_GENERIC
     nl_type = SOCKET_TYPE_FLOAT

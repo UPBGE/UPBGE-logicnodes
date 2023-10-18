@@ -23,7 +23,7 @@ class LogicNodeSound3D(LogicNodeActionType):
     def update_draw(self, context=None):
         if not self.ready:
             return
-        self.inputs[4].enabled = self.inputs[5].enabled = self.inputs[3].value
+        self.inputs[4].enabled = self.inputs[5].enabled = self.inputs[3].default_value
         state = self.advanced
         for i in [9, 10, 11, 12, 13, 14]:
             ipt = self.inputs[i]

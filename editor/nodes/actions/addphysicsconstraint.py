@@ -25,7 +25,7 @@ class LogicNodeAddPhysicsConstraint(LogicNodeActionType):
             return
         else:
             self.inputs[6].enabled = True
-        if not self.inputs[6].value:
+        if not self.inputs[6].default_value:
             self.inputs[7].enabled = False
         else:
             self.inputs[7].enabled = True

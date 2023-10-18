@@ -15,6 +15,11 @@ class NodeSocketLogicFilePath(NodeSocket, NodeSocketLogic):
         subtype='FILE_PATH',
         update=update_draw
     )
+    # XXX: Remove value property
+    value: StringProperty(
+        subtype='FILE_PATH',
+        update=update_draw
+    )
 
     nl_color = SOCKET_COLOR_STRING
     nl_type = SOCKET_TYPE_STRING

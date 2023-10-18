@@ -42,9 +42,11 @@ class LOGIC_NODES_OT_add_template(Operator):
         # value looks like this: [input_index or attribute, value_type, value]
         for value in values:
             index = value['index']
-            val_type = value.get('type', 'value')
+            val_type = value.get('type', 'default_value')
             val = value['value']
             if isinstance(index, int):
+                node.inputs[index].use_default_value = True
+                print(val, node.inputs[index])
                 setattr(node.inputs[index], val_type, val)
             else:
                 setattr(node, index, val)

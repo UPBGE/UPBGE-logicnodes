@@ -19,6 +19,8 @@ class NodeSocketLogicBoolCondition(NodeSocket, NodeSocketLogic):
     valid_sockets = [SOCKET_TYPE_BOOL, SOCKET_TYPE_CONDITION]
 
     default_value: BoolProperty(name='Condition', update=update_draw)
+    # XXX: Remove value property
+    value: BoolProperty(name='Condition', update=update_draw)
 
 
     def draw(self, context, layout, node, text):

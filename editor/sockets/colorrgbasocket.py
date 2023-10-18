@@ -1,4 +1,4 @@
-from .socket import SOCKET_TYPE_COLOR, NodeSocketLogic
+from .socket import SOCKET_TYPE_COLOR, SOCKET_TYPE_VECTOR, NodeSocketLogic
 from .socket import SOCKET_COLOR_COLOR
 from .socket import socket_type
 from .socket import update_draw
@@ -19,8 +19,18 @@ class NodeSocketLogicColorRGBA(NodeSocket, NodeSocketLogic):
         default=(1.0, 1.0, 1.0, 1.0),
         update=update_draw
     )
+    # XXX: Remove value property
+    value: FloatVectorProperty(
+        subtype='COLOR_GAMMA',
+        min=0.0,
+        max=1.0,
+        size=4,
+        default=(1.0, 1.0, 1.0, 1.0),
+        update=update_draw
+    )
     nl_color = SOCKET_COLOR_COLOR
     nl_type = SOCKET_TYPE_COLOR
+    valid_sockets = [SOCKET_TYPE_COLOR, SOCKET_TYPE_VECTOR]
 
     def get_unlinked_value(self):
         v = self.default_value

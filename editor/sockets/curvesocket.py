@@ -20,6 +20,13 @@ class NodeSocketLogicCurve(NodeSocket, NodeSocketLogic):
         poll=filter_curves,
         update=update_draw
     )
+    # XXX: Remove value property
+    value: PointerProperty(
+        name='Curve',
+        type=Curve,
+        poll=filter_curves,
+        update=update_draw
+    )
     use_owner: BoolProperty(
         name='Use Owner',
         description='Use the owner of this tree',

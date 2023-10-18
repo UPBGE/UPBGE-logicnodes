@@ -111,8 +111,8 @@
             "links": [],
             "values": [
                 {
-                    "value": 0.1,
-                    "index": 0
+                    "index": 0,
+                    "value": 0.1
                 }
             ]
         }, {

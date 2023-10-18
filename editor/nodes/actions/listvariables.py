@@ -28,7 +28,7 @@ class LogicNodeListVariables(LogicNodeActionType):
 
     def init(self, context):
         self.add_input(NodeSocketLogicCondition, 'Condition', {'show_prop': True})
-        self.add_input(NodeSocketLogicString, 'Filename', {'value': 'variables'})
+        self.add_input(NodeSocketLogicString, 'Filename', {'default_value': 'variables'})
         self.add_input(NodeSocketLogicBoolean, 'Print')
         self.add_output(NodeSocketLogicCondition, 'Done')
         self.add_output(NodeSocketLogicList, 'List')

@@ -13,6 +13,12 @@ class NodeSocketLogicMouseButton(NodeSocket, NodeSocketLogic):
     bl_idname = "NLMouseButtonSocket"
     bl_label = "Mouse Button"
 
+    default_value: EnumProperty(
+        name='Button',
+        items=_enum_mouse_buttons, default="bge.events.LEFTMOUSE",
+        update=update_draw
+    )
+    # XXX: Remove value property
     value: EnumProperty(
         name='Button',
         items=_enum_mouse_buttons, default="bge.events.LEFTMOUSE",
@@ -22,10 +28,10 @@ class NodeSocketLogicMouseButton(NodeSocket, NodeSocketLogic):
     nl_type = SOCKET_TYPE_INT
 
     def get_unlinked_value(self):
-        return self.value
+        return self.default_value
 
     def draw(self, context, layout, node, text):
         if self.is_linked or self.is_output:
             layout.label(text=text)
         else:
-            layout.prop(self, "value", text="")
+            layout.prop(self, "default_value", text="")

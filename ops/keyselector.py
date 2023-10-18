@@ -25,8 +25,8 @@ class LOGIC_NODES_OT_key_selector(Operator):
         return {'FINISHED'}
 
     def cleanup(self, context):
-        if self.socket.value == "Press a key...":
-            self.socket.value = ""
+        if self.socket.default_value == "Press a key...":
+            self.socket.default_value = ""
         self.socket = None
         self.node = None
         try:
@@ -41,11 +41,11 @@ class LOGIC_NODES_OT_key_selector(Operator):
                 event.type == "MIDDLEMOUSE" or
                 event.type == "RIGHTMOUSE"
             ):
-                self.socket.value = self._old_val
+                self.socket.default_value = self._old_val
                 return {'CANCELLED'}
             else:
                 value = event.type
-                self.socket.value = value
+                self.socket.default_value = value
                 self.cleanup(context)
                 return {'FINISHED'}
         return {'PASS_THROUGH'}
@@ -58,8 +58,8 @@ class LOGIC_NODES_OT_key_selector(Operator):
             error("No socket or Node")
             return {'FINISHED'}
 
-        self._old_val = self.socket.value
-        self.socket.value = "Press a key..."
+        self._old_val = self.socket.default_value
+        self.socket.default_value = "Press a key..."
         try:
             context.region.tag_redraw()
         except Exception:

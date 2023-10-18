@@ -18,6 +18,14 @@ class NodeSocketLogicFloatFactor(NodeSocket, NodeSocketLogic):
         max=1.0,
         update=update_draw
     )
+    # XXX: Remove value property
+    value: FloatProperty(
+        name='Factor',
+        description='Value range from 0 - 1',
+        min=0.0,
+        max=1.0,
+        update=update_draw
+    )
 
     nl_color = SOCKET_COLOR_GENERIC
     nl_type = SOCKET_TYPE_FLOAT

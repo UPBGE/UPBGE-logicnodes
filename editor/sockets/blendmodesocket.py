@@ -18,6 +18,14 @@ class NodeSocketLogicBlendMode(NodeSocket, NodeSocketLogic):
         update=update_draw
     )
 
+    # XXX: Remove value property
+    value: EnumProperty(
+        name='Blend Mode',
+        items=_enum_blend_mode_values,
+        description="The blend mode of the action",
+        update=update_draw
+    )
+
     def get_unlinked_value(self):
         return self.default_value
 

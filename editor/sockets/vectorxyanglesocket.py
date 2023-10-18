@@ -1,9 +1,11 @@
+from ...utilities import DEPRECATED
 from .socket import SOCKET_TYPE_COLOR, SOCKET_TYPE_VECTOR, NodeSocketLogic
 from .socket import SOCKET_COLOR_VECTOR
 from .socket import socket_type
 from .socket import update_draw
 from bpy.types import NodeSocket
 from bpy.props import FloatVectorProperty
+from bpy.props import FloatProperty
 from bpy.props import StringProperty
 
 
@@ -13,11 +15,23 @@ class NodeSocketLogicVectorXYAngle(NodeSocket, NodeSocketLogic):
     bl_label = "Vector XY Angle"
 
     default_value: FloatVectorProperty(name='Vector', size=2, unit='ROTATION', update=update_draw)
+    # XXX: Remove value property
+    value_x: FloatProperty()
+    value_y: FloatProperty()
     title: StringProperty(default='')
 
     nl_color = SOCKET_COLOR_VECTOR
     nl_type = SOCKET_TYPE_VECTOR
     valid_sockets = [SOCKET_TYPE_VECTOR, SOCKET_TYPE_COLOR]
+
+    def _update_prop_name(self):
+        # XXX: Remove value override
+        value_x = getattr(self, 'value_x', DEPRECATED)
+        value_y = getattr(self, 'value_y', DEPRECATED)
+        if value_x is not DEPRECATED:
+            self.default_value[0] = value_x
+        if value_y is not DEPRECATED:
+            self.default_value[1] = value_y
 
     def get_unlinked_value(self):
         v = self.default_value

@@ -16,6 +16,8 @@ class NodeSocketLogicLoopCount(NodeSocket, NodeSocketLogic):
     nl_type = SOCKET_TYPE_INT
 
     default_value: IntProperty(update=update_draw)
+    # XXX: Remove value property
+    value: IntProperty(update=update_draw)
 
     def update_value(self, context):
         current_type = self.value_type

@@ -29,7 +29,7 @@ class LogicNodePlaySpeaker(LogicNodeActionType):
         LogicNodeActionType.init(self, context)
 
     def update_draw(self, context=None):
-        self.inputs[3].enabled = self.inputs[4].enabled = self.inputs[2].value
+        self.inputs[3].enabled = self.inputs[4].enabled = self.inputs[2].default_value
 
     def get_output_names(self):
         return ["DONE", 'ON_FINISH', "HANDLE"]

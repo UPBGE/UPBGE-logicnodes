@@ -15,6 +15,8 @@ class NodeSocketLogicBoneConstraint(NodeSocket, NodeSocketLogic):
     bl_idname = "NLBoneConstraintSocket"
     bl_label = "Bone Constraint"
     default_value: StringProperty(name='Bone Constraint', update=update_draw)
+    # XXX: Remove value property
+    value: StringProperty(name='Bone Constraint', update=update_draw)
     ref_index: IntProperty(default=0)
 
     nl_color = SOCKET_COLOR_STRING
@@ -44,8 +46,6 @@ class NodeSocketLogicBoneConstraint(NodeSocket, NodeSocketLogic):
                         armature = obj
                         bone = armature.pose.bones.get(bone_socket.default_value)
                         break
-            # if not armature_socket.is_linked and bone_socket.value and armature:
-            #     armature = armature_socket.value
             if self.name:
                 row = col.row()
                 row.label(text=self.name)

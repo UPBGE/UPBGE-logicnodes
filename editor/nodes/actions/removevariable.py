@@ -25,8 +25,8 @@ class LogicNodeRemoveVariable(LogicNodeActionType):
 
     def init(self, context):
         self.add_input(NodeSocketLogicCondition, 'Condition')
-        self.add_input(NodeSocketLogicString, 'Filename', {'value': 'variables'})
-        self.add_input(NodeSocketLogicString, 'Name', {'value': 'var'})
+        self.add_input(NodeSocketLogicString, 'Filename', {'default_value': 'variables'})
+        self.add_input(NodeSocketLogicString, 'Name', {'default_value': 'var'})
         self.add_output(NodeSocketLogicCondition, 'Done')
         LogicNodeActionType.init(self, context)
 

@@ -13,6 +13,11 @@ class NodeSocketLogicNodeGroupNode(NodeSocket, NodeSocketLogic):
     bl_idname = "NLNodeGroupNodeSocket"
     bl_label = "Tree Node"
 
+    default_value: StringProperty(
+        name='Tree Node',
+        update=update_draw
+    )
+    # XXX: Remove value property
     value: StringProperty(
         name='Tree Node',
         update=update_draw
@@ -27,21 +32,21 @@ class NodeSocketLogicNodeGroupNode(NodeSocket, NodeSocketLogic):
             layout.label(text=text)
         else:
             tree_socket = self.node.inputs[self.ref_index]
-            tree = tree_socket.value
+            tree = tree_socket.default_value
             col = layout.column(align=False)
             if tree and not tree_socket.is_linked:
                 col.prop_search(
                     self,
-                    "value",
+                    "default_value",
                     bpy.data.node_groups[tree.name],
                     'nodes',
                     text=''
                 )
             elif tree_socket.is_linked:
                 col.label(text=text)
-                col.prop(self, 'value', text='')
+                col.prop(self, 'default_value', text='')
             else:
                 col.label(text=self.name)
 
     def get_unlinked_value(self):
-        return '"{}"'.format(self.value)
+        return '"{}"'.format(self.default_value)

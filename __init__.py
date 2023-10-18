@@ -225,19 +225,6 @@ def _abs_path(*relative_path_components):
     return abs_path
 
 
-#import modules and definitions
-# utilities = _abs_import("utilities", _abs_path("utilities", "__init__.py"))
-# ops = _abs_import("ops", _abs_path("ops", "__init__.py"))
-from . import ops
-# ui = _abs_import("ui", _abs_path("ui", "__init__.py"))
-from . import ui
-# ops.abstract_text_buffer = _abs_import("abstract_text_buffer", _abs_path("ops", "abstract_text_buffer.py"))
-# ops.bl_text_buffer = _abs_import("bl_text_buffer", _abs_path("ops","bl_text_buffer.py"))
-# ops.file_text_buffer = _abs_import("file_text_buffer", _abs_path("ops","file_text_buffer.py"))
-# ops.uid_map = _abs_import("uid_map", _abs_path("ops", "uid_map.py"))
-# ops.tree_code_generator = _abs_import("tree_code_generator", _abs_path("ops","tree_code_generator.py"))
-
-
 def load_nodes_from(abs_dir):
     print("loading project nodes and cells from {}".format(abs_dir))
     dir_file_names = os.listdir(abs_dir)
@@ -328,6 +315,7 @@ _registered_classes = sorted(_registered_classes, key=_get_key_for_class)
 
 def update_uplogic_module():
     try:
+        prefs = bpy.context.preferences.addons['bge_netlogic'].preferences
         os.system(f'"{sys.executable}" -m ensurepip')
         os.system(f'"{sys.executable}" -m pip install uplogic --upgrade')
     except Exception:
@@ -423,6 +411,7 @@ def register():
         name='Custom Mainloop Tree',
         type=bpy.types.NodeTree
     )
+    # get_uplogic_module()
 
 
 # blender add-on unregistration callback

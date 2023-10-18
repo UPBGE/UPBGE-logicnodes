@@ -17,6 +17,12 @@ class NodeSocketLogicCollection(NodeSocket, NodeSocketLogic):
         type=Collection,
         update=update_draw
     )
+    # XXX: Remove value property
+    value: PointerProperty(
+        name='Collection',
+        type=Collection,
+        update=update_draw
+    )
 
     nl_color = SOCKET_COLOR_COLLECTION
     nl_type = SOCKET_TYPE_COLLECTION

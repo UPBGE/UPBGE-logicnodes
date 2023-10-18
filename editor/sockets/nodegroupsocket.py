@@ -13,6 +13,13 @@ import bpy
 class NodeSocketLogicNodeGroup(NodeSocket, NodeSocketLogic):
     bl_idname = "NLNodeGroupSocket"
     bl_label = "Node Tree"
+    default_value: PointerProperty(
+        name='Node Tree',
+        type=NodeTree,
+        poll=filter_node_groups
+        # update=update_tree_code
+    )
+    # XXX: Remove value property
     value: PointerProperty(
         name='Node Tree',
         type=NodeTree,
@@ -34,7 +41,7 @@ class NodeSocketLogicNodeGroup(NodeSocket, NodeSocketLogic):
                 col.label(text=self.name)
             col.prop_search(
                 self,
-                'value',
+                'default_value',
                 bpy.data,
                 'node_groups',
                 icon='NONE',
@@ -42,5 +49,5 @@ class NodeSocketLogicNodeGroup(NodeSocket, NodeSocketLogic):
             )
 
     def get_unlinked_value(self):
-        if isinstance(self.value, NodeTree):
-            return f'bpy.data.node_groups["{self.value.name}"]'
+        if isinstance(self.default_value, NodeTree):
+            return f'bpy.data.node_groups["{self.default_value.name}"]'

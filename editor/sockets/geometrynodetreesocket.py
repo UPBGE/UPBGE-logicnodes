@@ -17,6 +17,12 @@ class NodeSocketLogicGeometryNodeTree(NodeSocket, NodeSocketLogic):
         type=GeometryNodeTree,
         poll=filter_geometry_nodes
     )
+    # XXX: Remove value property
+    value: PointerProperty(
+        name='Geometry Node Tree',
+        type=GeometryNodeTree,
+        poll=filter_geometry_nodes
+    )
 
     nl_color = SOCKET_COLOR_GEOTREE
     nl_type = SOCKET_TYPE_NODETREE

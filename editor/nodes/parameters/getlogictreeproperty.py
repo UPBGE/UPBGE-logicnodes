@@ -34,7 +34,7 @@ class LogicNodeGetLogicTreeProperty(LogicNodeParameterType):
         tree = getattr(context.space_data, 'edit_tree')
         if not tree:
             return
-        prop = self.inputs[0].value
+        prop = self.inputs[0].default_value
         if not (tree and prop):
             return
         vtype = tree.properties[prop].value_type
@@ -48,7 +48,7 @@ class LogicNodeGetLogicTreeProperty(LogicNodeParameterType):
         tree = getattr(context.space_data, 'edit_tree')
         if not tree:
             return
-        prop = self.inputs[0].value
+        prop = self.inputs[0].default_value
         if not (tree and prop):
             return
         prop = tree.properties.get(prop, '')

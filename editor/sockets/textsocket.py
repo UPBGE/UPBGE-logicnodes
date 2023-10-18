@@ -13,6 +13,13 @@ import bpy
 class NodeSocketLogicText(NodeSocket, NodeSocketLogic):
     bl_idname = "NLTextIDSocket"
     bl_label = "Text"
+    default_value: PointerProperty(
+        name='Text',
+        type=Text,
+        poll=filter_texts
+        # update=update_tree_code
+    )
+    # XXX: Remove value property
     value: PointerProperty(
         name='Text',
         type=Text,
@@ -34,7 +41,7 @@ class NodeSocketLogicText(NodeSocket, NodeSocketLogic):
                 col.label(text=self.name)
             col.prop_search(
                 self,
-                'value',
+                'default_value',
                 bpy.data,
                 'texts',
                 icon='NONE',
@@ -42,5 +49,5 @@ class NodeSocketLogicText(NodeSocket, NodeSocketLogic):
             )
 
     def get_unlinked_value(self):
-        if isinstance(self.value, Text):
-            return f'bpy.data.texts["{self.value.name}"]'
+        if isinstance(self.default_value, Text):
+            return f'bpy.data.texts["{self.default_value.name}"]'

@@ -14,7 +14,7 @@ class LogicNodeDictGetKey(LogicNodeParameterType):
 
     def init(self, context):
         self.add_input(NodeSocketLogicDictionary, "Dictionary")
-        self.add_input(NodeSocketLogicString, "Key", {'value': 'key'})
+        self.add_input(NodeSocketLogicString, "Key", {'default_value': 'key'})
         self.add_input(NodeSocketLogicValueOptional, "Default Value")
         self.add_output(NodeSocketLogicParameter, "Property Value")
         LogicNodeParameterType.init(self, context)

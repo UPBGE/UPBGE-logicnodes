@@ -23,10 +23,10 @@ class LoigcNodeVehicleSetAttributes(LogicNodeActionType):
     def update_draw(self, context=None):
         self.inputs[2].enabled = self.value_type != 'ALL'
         ipts = self.inputs
-        ipts[4].enabled = ipts[3].value
-        ipts[6].enabled = ipts[5].value
-        ipts[8].enabled = ipts[7].value
-        ipts[10].enabled = ipts[9].value
+        ipts[4].enabled = ipts[3].default_value
+        ipts[6].enabled = ipts[5].default_value
+        ipts[8].enabled = ipts[7].default_value
+        ipts[10].enabled = ipts[9].default_value
 
     value_type: EnumProperty(
         name='Axis',

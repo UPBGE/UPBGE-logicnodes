@@ -12,6 +12,11 @@ import bpy
 class NodeSocketLogicObjectName(NodeSocket, NodeSocketLogic):
     bl_idname = "NLGameObjectNameSocket"
     bl_label = "Object"
+    default_value: PointerProperty(
+        name='Object',
+        type=Object
+    )
+    # XXX: Remove value property
     value: PointerProperty(
         name='Object',
         type=Object
@@ -32,7 +37,7 @@ class NodeSocketLogicObjectName(NodeSocket, NodeSocketLogic):
                 col.label(text=self.name)
             col.prop_search(
                 self,
-                'value',
+                'default_value',
                 bpy.context.scene,
                 'objects',
                 icon='NONE',
@@ -40,5 +45,5 @@ class NodeSocketLogicObjectName(NodeSocket, NodeSocketLogic):
             )
 
     def get_unlinked_value(self):
-        if isinstance(self.value, Object):
-            return repr(self.value.name)
+        if isinstance(self.default_value, Object):
+            return repr(self.default_value.name)

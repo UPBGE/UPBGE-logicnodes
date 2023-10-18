@@ -23,7 +23,7 @@ class LogicNodeCompareVectors(LogicNodeConditionType):
         layout.prop(self, "operator", text='')
 
     def init(self, context):
-        self.add_input(NodeSocketLogicXYZ, "")
+        self.add_input(NodeSocketLogicXYZ, "", {'default_value': (True, True, True)})
         self.add_input(NodeSocketLogicFloatPositive, "Threshold")
         self.add_input(NodeSocketLogicVectorXYZ, "Vector A")
         self.add_input(NodeSocketLogicVectorXYZ, "Vector B")

@@ -15,6 +15,8 @@ class NodeSocketLogicBone(NodeSocket, NodeSocketLogic):
     bl_idname = "NLArmatureBoneSocket"
     bl_label = "Bone"
     default_value: StringProperty(name='Bone', update=update_draw)
+    # XXX: Remove value property
+    value: StringProperty(name='Bone', update=update_draw)
     ref_index: IntProperty(default=0)
 
     nl_color = SOCKET_COLOR_STRING

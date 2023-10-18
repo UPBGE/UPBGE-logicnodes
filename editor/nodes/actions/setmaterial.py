@@ -25,10 +25,10 @@ class LogicNodeSetMaterial(LogicNodeActionType):
         if not self.ready:
             return
         obj_socket = self.inputs[1]
-        if obj_socket.use_owner or not obj_socket.value:
+        if obj_socket.use_owner or not obj_socket.default_value:
             return
-        if self.inputs[2].value > len(obj_socket.value.material_slots):
-            self.inputs[2].value = len(obj_socket.value.material_slots)
+        if self.inputs[2].default_value > len(obj_socket.default_value.material_slots):
+            self.inputs[2].default_value = len(obj_socket.default_value.material_slots)
 
     def get_input_names(self):
         return [

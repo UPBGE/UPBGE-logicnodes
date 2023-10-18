@@ -32,7 +32,7 @@ class LogicNodeValueSwitchList(LogicNodeParameterType):
 
     def update_draw(self, context=None):
         for x in range(0, 10, 2):
-            if self.inputs[x].is_linked or self.inputs[x].value == True:
+            if self.inputs[x].is_linked or self.inputs[x].default_value == True:
                 self.inputs[x].enabled = True
                 self.inputs[x+1].enabled = True
                 self.inputs[x+2].enabled = True

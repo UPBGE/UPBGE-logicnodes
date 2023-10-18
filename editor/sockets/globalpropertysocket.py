@@ -16,6 +16,10 @@ class NodeSocketLogicGlobalProperty(NodeSocket, NodeSocketLogic):
     default_value: StringProperty(
         update=update_draw
     )
+    # XXX: Remove value property
+    value: StringProperty(
+        update=update_draw
+    )
     ref_index: IntProperty(
         update=update_draw
     )

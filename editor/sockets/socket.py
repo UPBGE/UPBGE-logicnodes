@@ -1,7 +1,7 @@
-from ...utilities import warn
+from ...utilities import DEPRECATED, warn
 from ...utilities import Color
 from ...utilities import WARNING_MESSAGES
-from bpy.props import FloatVectorProperty
+from bpy.props import BoolProperty
 from bpy.props import StringProperty
 from bpy.types import NodeLink
 from bpy.types import NodeSocket
@@ -97,7 +97,7 @@ BL_SOCKET_TYPES = [
     'TEXTURE',  # 22
     'TEXTURE',  # 23
     'INT',  # 24
-    'INT',  # 25
+    'BOOLEAN',  # 25
     'TEXTURE',  # 26
     'TEXTURE',  # 27
     'GEOMETRY',  # 28
@@ -165,6 +165,7 @@ class NodeSocketLogic:
     nl_type = SOCKET_TYPE_VALUE
     valid_sockets: list = None
     type: StringProperty(default='VALUE')
+    use_default_value: BoolProperty(default=False)
     nl_color = SOCKET_COLOR_GENERIC
 
     def update_draw(self, context=None):
@@ -176,6 +177,15 @@ class NodeSocketLogic:
 
     def __init__(self):
         self.type = BL_SOCKET_TYPES[self.nl_type]
+        if not self.use_default_value:
+            self._update_prop_name()
+            self.use_default_value = True
+
+    def _update_prop_name(self):
+        value = getattr(self, 'value', DEPRECATED)
+        if value is not DEPRECATED:
+            self.default_value = value
+            # bpy.props.RemoveProperty(cls=self.__class__, attr='value')
 
     def check(self, tree):
         if self.deprecated:

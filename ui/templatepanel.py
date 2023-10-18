@@ -33,6 +33,7 @@ class LOGIC_NODES_PT_templates(bpy.types.Panel):
         template_col.scale_y = 1.4
         op = template_col.operator(
             'logic_nodes.add_template',
-            icon='LAYER_ACTIVE'
+            icon='LAYER_ACTIVE',
+            text='4-Key Template'
         )
         op.nl_template_name = '4keymovement'

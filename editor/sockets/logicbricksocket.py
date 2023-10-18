@@ -13,9 +13,9 @@ import bpy
 class NodeSocketLogicBrick(NodeSocket, NodeSocketLogic):
     bl_idname = "NLLogicBrickSocket"
     bl_label = "Logic Brick"
-    default_value: StringProperty(
-        # update=update_tree_code
-    )
+    default_value: StringProperty(name='Logic Brick')
+    # XXX: Remove value property
+    value: StringProperty(name='Logic Brick')
     ref_index: IntProperty(default=0)
     use_custom: BoolProperty(
         name='Free Edit',

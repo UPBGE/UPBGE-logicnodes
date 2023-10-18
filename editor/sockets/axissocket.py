@@ -16,6 +16,12 @@ class NodeSocketLogicAxis(NodeSocket, NodeSocketLogic):
         items=_enum_local_axis,
         update=update_draw
     )
+    # XXX: Remove value property
+    value: EnumProperty(
+        name='Axis',
+        items=_enum_local_axis,
+        update=update_draw
+    )
 
     nl_color = SOCKET_COLOR_INTEGER
     nl_type = SOCKET_TYPE_INT

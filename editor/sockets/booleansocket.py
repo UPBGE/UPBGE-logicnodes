@@ -14,6 +14,8 @@ class NodeSocketLogicBoolean(NodeSocket, NodeSocketLogic):
     bl_label = "Boolean"
 
     default_value: BoolProperty(name='Boolean', update=update_draw)
+    # XXX: Remove value property
+    value: BoolProperty(name='Boolean', update=update_draw)
     use_toggle: BoolProperty(default=False)
 
     nl_type = SOCKET_TYPE_BOOL

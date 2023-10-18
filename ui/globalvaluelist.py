@@ -14,6 +14,5 @@ class LOGIC_NODES_UL_global_value(bpy.types.UIList):
         }
         row = layout.split()
         row.prop(item, "name", text="", emboss=False)
-        # row.prop(item, 'value_type', text='', emboss=False)
         emboss = item.value_type == 'BOOLEAN' or item.value_type == 'STRING'
         row.prop(item, dat.get(item.value_type, 'FLOAT'), text='', emboss=emboss)

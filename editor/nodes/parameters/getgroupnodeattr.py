@@ -26,7 +26,7 @@ class LogicNodeGroupNodeAttr(LogicNodeParameterType):
         nde = self.inputs[1]
         itl = self.inputs[2]
         att = self.inputs[3]
-        if (tree.value or tree.is_linked) and (nde.value or nde.is_linked):
+        if (tree.default_value or tree.is_linked) and (nde.default_value or nde.is_linked):
             itl.enabled = att.enabled = True
         else:
             itl.enabled = att.enabled = False

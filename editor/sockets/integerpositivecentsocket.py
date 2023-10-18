@@ -16,6 +16,13 @@ class NodeSocketLogicIntegerPositiveCent(NodeSocket, NodeSocketLogic):
         default=0,
         update=update_draw
     )
+    # XXX: Remove value property
+    value: IntProperty(
+        min=0,
+        max=100,
+        default=0,
+        update=update_draw
+    )
     nl_color = SOCKET_COLOR_INTEGER
     nl_type = SOCKET_TYPE_INT
 

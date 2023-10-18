@@ -33,9 +33,9 @@ class LogicNodePlaySequence(LogicNodeActionType):
         LogicNodeActionType.init(self, context)
 
     def draw_buttons(self, context, layout):
-        mat = self.inputs[1].value
+        mat = self.inputs[1].default_value
         if mat:
-            nde = self.inputs[2].value
+            nde = self.inputs[2].default_value
             target = mat.node_tree.nodes.get(nde)
             if not (
                 isinstance(target, bpy.types.ShaderNodeTexImage)
@@ -55,14 +55,14 @@ class LogicNodePlaySequence(LogicNodeActionType):
         fra = self.inputs[5]
         fps = self.inputs[6]
         subs = [mod, fra, fps]
-        target = mat.value.node_tree.nodes.get(nde.value) if mat.value else None
+        target = mat.default_value.node_tree.nodes.get(nde.default_value) if mat.default_value else None
         valid = (
             isinstance(target, bpy.types.ShaderNodeTexImage)
             or
             isinstance(target, bpy.types.ShaderNodeSpritesAnimation)
         )
-        self.inputs[4].enabled = '3' in mod.value
-        if (mat.value or mat.is_linked) and (nde.value or nde.is_linked) and valid:
+        self.inputs[4].enabled = '3' in mod.default_value
+        if (mat.default_value or mat.is_linked) and (nde.default_value or nde.is_linked) and valid:
             for ipt in subs:
                 ipt.enabled = True
         else:

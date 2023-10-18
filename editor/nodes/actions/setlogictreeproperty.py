@@ -35,7 +35,7 @@ class LogicNodeSetLogicTreeProperty(LogicNodeActionType):
         tree = getattr(context.space_data, 'edit_tree')
         if not tree:
             return
-        prop = self.inputs[1].value
+        prop = self.inputs[1].default_value
         if not (tree and prop):
             return
         vtype = tree.properties[prop].value_type

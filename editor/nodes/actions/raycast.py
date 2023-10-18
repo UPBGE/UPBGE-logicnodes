@@ -23,20 +23,12 @@ class LogicNodeRaycast(LogicNodeActionType):
     def update_draw(self, context=None):
         if not self.ready:
             return
-        ipts = self.inputs
-        opts = self.outputs
-        adv = [
-            ipts[5],
-            ipts[6],
-            opts[5],
-            opts[6]
-        ]
-        for i in adv:
-            i.enabled = self.advanced
-        self.inputs[9].enabled = self.inputs[8].value
+        self.outputs[5].enabled = self.face_data
+        self.outputs[6].enabled = self.face_data
+        self.inputs[9].enabled = self.inputs[8].default_value
 
-    advanced: BoolProperty(
-        name='Advanced',
+    face_data: BoolProperty(
+        name='Get Face Data',
         description='Show advanced options for this node. Hidden sockets will not be reset',
         update=update_draw
     )
@@ -52,7 +44,7 @@ class LogicNodeRaycast(LogicNodeActionType):
         self.add_input(NodeSocketLogicBoolean, 'X-Ray')
         self.add_input(NodeSocketLogicBoolean, "Custom Distance")
         self.add_input(NodeSocketLogicFloatPositive, "Distance", {'default_value': 100.0})
-        self.add_input(NodeSocketLogicBitMask, "Mask", {'value': 100.0})
+        self.add_input(NodeSocketLogicBitMask, "Mask")
         self.add_input(NodeSocketLogicBoolean, 'Visualize')
         self.add_output(NodeSocketLogicCondition, "Has Result")
         self.add_output(NodeSocketLogicObject, "Picked Object")
@@ -64,10 +56,10 @@ class LogicNodeRaycast(LogicNodeActionType):
         LogicNodeActionType.init(self, context)
 
     def draw_buttons(self, context, layout):
-        layout.prop(self, 'advanced', text='Advanced', icon='SETTINGS')
+        layout.prop(self, 'face_data', text='Face Data')
 
     def get_attributes(self):
-        return [("advanced", "True" if self.advanced else "False")]
+        return [("face_data", self.face_data)]
 
     def get_input_names(self):
         return [

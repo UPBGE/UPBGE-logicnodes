@@ -53,14 +53,14 @@ class LogicNodeCreateUIButton(LogicNodeActionType):
     def update_draw(self, context=None):
         if len(self.inputs) < 17:
             return
-        has_text = True if self.inputs[11].value else False
+        has_text = True if self.inputs[11].default_value else False
         for ipt in [12, 13, 14, 15, 16]:
             self.inputs[ipt].enabled = has_text
 
     def draw_buttons(self, context, layout) -> None:
         layout.prop(self, 'halign_type', text='X')
         layout.prop(self, 'valign_type', text='Y')
-        if self.inputs[11].value:
+        if self.inputs[11].default_value:
             layout.prop(self, 'text_halign_type', text='Text X')
             layout.prop(self, 'text_valign_type', text='Text Y')
 

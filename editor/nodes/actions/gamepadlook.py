@@ -23,8 +23,8 @@ class LogicNodeGamepadLook(LogicNodeActionType):
         if not self.ready:
             return
         ipts = self.inputs
-        ipts[8].enabled = ipts[7].value
-        ipts[10].enabled = ipts[9].value
+        ipts[8].enabled = ipts[7].default_value
+        ipts[10].enabled = ipts[9].default_value
 
     axis: EnumProperty(
         name='Axis',

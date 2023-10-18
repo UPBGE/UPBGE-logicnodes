@@ -13,6 +13,13 @@ import bpy
 class NodeSocketLogicSpeaker(NodeSocket, NodeSocketLogic):
     bl_idname = "NLSpeakerSocket"
     bl_label = "Speaker"
+    default_value: PointerProperty(
+        name='Object',
+        type=Object,
+        poll=filter_speaker
+        # update=update_tree_code
+    )
+    # XXX: Remove value property
     value: PointerProperty(
         name='Object',
         type=Object,
@@ -35,7 +42,7 @@ class NodeSocketLogicSpeaker(NodeSocket, NodeSocketLogic):
                 row.label(text=self.name)
             col.prop_search(
                 self,
-                'value',
+                'default_value',
                 bpy.context.scene,
                 'objects',
                 icon='NONE',
@@ -43,5 +50,5 @@ class NodeSocketLogicSpeaker(NodeSocket, NodeSocketLogic):
             )
 
     def get_unlinked_value(self):
-        if isinstance(self.value, Object):
-            return f'scene.objects.get("{self.value.name}", "{self.value.name}")'
+        if isinstance(self.default_value, Object):
+            return f'scene.objects.get("{self.default_value.name}", "{self.default_value.name}")'

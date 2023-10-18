@@ -13,7 +13,7 @@ class LogicNodeRandomVector(LogicNodeParameterType):
     deprecation_message = 'Replaced by "Random Value" Node.'
 
     def init(self, context):
-        self.add_input(NodeSocketLogicXYZ, "")
+        self.add_input(NodeSocketLogicXYZ, "", {'default_value': (True, True, True)})
         self.add_output(NodeSocketLogicVectorXYZ, "Vector")
         LogicNodeParameterType.init(self, context)
 

@@ -21,6 +21,10 @@ class NodeSocketLogicGameProperty(NodeSocket, NodeSocketLogic):
     default_value: StringProperty(
         update=update_draw
     )
+    # XXX: Remove value property
+    value: StringProperty(
+        update=update_draw
+    )
     ref_index: IntProperty(default=0)
     use_custom: BoolProperty(
         name='Free Edit'

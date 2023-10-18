@@ -22,7 +22,7 @@ class LogicNodeVariablesLoad(LogicNodeParameterType):
     )
 
     def init(self, context):
-        self.add_input(NodeSocketLogicString, 'Filename', {'value': 'variables'})
+        self.add_input(NodeSocketLogicString, 'Filename', {'default_value': 'variables'})
         self.add_output(NodeSocketLogicDictionary, 'Variables')
         LogicNodeParameterType.init(self, context)
 

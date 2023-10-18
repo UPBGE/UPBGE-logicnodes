@@ -20,6 +20,13 @@ class NodeSocketLogicAnimation(NodeSocket, NodeSocketLogic):
         description='Select an Action',
         update=update_draw
     )
+    # XXX: Remove value property
+    value: PointerProperty(
+        name='Action',
+        type=Action,
+        description='Select an Action',
+        update=update_draw
+    )
 
     nl_color = SOCKET_COLOR_GENERIC
     nl_type = SOCKET_TYPE_ACTION

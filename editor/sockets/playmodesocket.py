@@ -16,6 +16,13 @@ class NodeSocketLogicPlayMode(NodeSocket, NodeSocketLogic):
     nl_color = SOCKET_COLOR_INTEGER
     nl_type = SOCKET_TYPE_INT
 
+    default_value: EnumProperty(
+        name='Mode',
+        items=_enum_play_mode_values,
+        description="The play mode of the action",
+        update=update_draw
+    )
+    # XXX: Remove value property
     value: EnumProperty(
         name='Mode',
         items=_enum_play_mode_values,
@@ -24,10 +31,10 @@ class NodeSocketLogicPlayMode(NodeSocket, NodeSocketLogic):
     )
 
     def get_unlinked_value(self):
-        return self.value
+        return self.default_value
 
     def draw(self, context, layout, node, text):
         if self.is_linked or self.is_output:
             layout.label(text=text)
         else:
-            layout.prop(self, "value", text="")
+            layout.prop(self, "default_value", text="")

@@ -21,6 +21,12 @@ class NodeSocketLogicTreeProperty(NodeSocket, NodeSocketLogic):
         description="Look for Tree Properties and display if this tree is applied to the selected object",
         name='Property'
     )
+    # XXX: Remove value property
+    value: StringProperty(
+        update=update_draw,
+        description="Look for Tree Properties and display if this tree is applied to the selected object",
+        name='Property'
+    )
     ref_index: IntProperty(default=0)
     use_custom: BoolProperty(
         name='Free Edit'
@@ -102,7 +108,7 @@ class NodeSocketLogicTreeProperty(NodeSocket, NodeSocketLogic):
             elif vtype == '6':
                 col.prop(self, 'color_alpha', text='')
             else:
-                col.prop(prop, 'default_value', text='')
+                col.prop(prop, 'value', text='')
 
     def get_unlinked_value(self):
         return '"{}"'.format(self.default_value)

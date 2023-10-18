@@ -44,7 +44,7 @@ class LogicNodeCreateUILabel(LogicNodeActionType):
     def update_draw(self, context=None):
         if len(self.inputs) < 13:
             return
-        shadow = self.inputs[10].value
+        shadow = self.inputs[10].default_value
         self.inputs[11].enabled = shadow
         self.inputs[12].enabled = shadow
 

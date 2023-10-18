@@ -23,7 +23,7 @@ class LogicNodeRandomValue(LogicNodeParameterType):
         self.inputs[2].enabled = self.inputs[3].enabled = self.outputs[1].enabled = self.data_type == '1'
         self.inputs[4].enabled = self.inputs[5].enabled = self.outputs[2].enabled = self.data_type == '2'
         self.inputs[6].enabled = self.outputs[3].enabled = self.data_type == '3'
-        self.nl_label = self.search_tags[int(self.data_type)][0]
+        self.nl_label = self.search_tags[int(self.data_type) + 1][0]
 
     data_type: EnumProperty(items=_random_value_types, name='Data Type', update=update_draw)
 

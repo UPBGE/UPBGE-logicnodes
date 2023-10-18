@@ -12,6 +12,11 @@ import bpy
 class NodeSocketLogicScene(NodeSocket, NodeSocketLogic):
     bl_idname = "NLSceneSocket"
     bl_label = "Scene"
+    default_value: PointerProperty(
+        name='Scene',
+        type=Scene
+    )
+    # XXX: Remove value property
     value: PointerProperty(
         name='Scene',
         type=Scene
@@ -31,7 +36,7 @@ class NodeSocketLogicScene(NodeSocket, NodeSocketLogic):
                 col.label(text=self.name)
             col.prop_search(
                 self,
-                'value',
+                'default_value',
                 bpy.data,
                 'scenes',
                 icon='NONE',
@@ -39,5 +44,5 @@ class NodeSocketLogicScene(NodeSocket, NodeSocketLogic):
             )
 
     def get_unlinked_value(self):
-        if isinstance(self.value, Scene):
-            return f'bpy.data.scenes.get("{self.value.name}")'
+        if isinstance(self.default_value, Scene):
+            return f'bpy.data.scenes.get("{self.default_value.name}")'

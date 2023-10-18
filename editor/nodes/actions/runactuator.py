@@ -26,12 +26,12 @@ class LogicNodeRunActuator(LogicNodeActionType):
     def get_controller(self):
         tree = getattr(bpy.context.space_data, 'edit_tree', None)
         obj_socket = self.inputs[1]
-        cont_name = self.inputs[2].value
+        cont_name = self.inputs[2].default_value
         if not cont_name:
             return False
-        if not obj_socket.use_owner and obj_socket.value:
-            if cont_name in obj_socket.value.game.controllers:
-                cont = obj_socket.value.game.controllers[cont_name]
+        if not obj_socket.use_owner and obj_socket.default_value:
+            if cont_name in obj_socket.default_value.game.controllers:
+                cont = obj_socket.default_value.game.controllers[cont_name]
                 return isinstance(cont, bpy.types.PythonController)
         else:
             for sc_ob in bpy.data.objects:

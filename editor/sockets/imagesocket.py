@@ -17,6 +17,13 @@ class NodeSocketLogicImage(NodeSocket, NodeSocketLogic):
         description='Select an Image'
         # update=update_tree_code
     )
+    # XXX: Remove value property
+    value: PointerProperty(
+        name='Image',
+        type=Image,
+        description='Select an Image'
+        # update=update_tree_code
+    )
 
     nl_color = SOCKET_COLOR_IMAGE
     nl_type = SOCKET_TYPE_IMAGE
@@ -41,4 +48,3 @@ class NodeSocketLogicImage(NodeSocket, NodeSocketLogic):
         if self.default_value is None:
             return '"None"'
         return f'bpy.data.images.get("{self.default_value.name}")'
-        # return '"{}"'.format(str(self.value.name))

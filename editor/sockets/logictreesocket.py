@@ -25,6 +25,16 @@ class NodeSocketLogicTree(NodeSocket, NodeSocketLogic):
         poll=filter_logic_trees,
         update=update_draw
     )
+    # XXX: Remove value property
+    value: PointerProperty(
+        name='Logic Tree',
+        type=NodeTree,
+        description=(
+            'Select a Logic Tree'
+        ),
+        poll=filter_logic_trees,
+        update=update_draw
+    )
 
     def draw(self, context, layout, node, text):
         icon = 'OUTLINER'

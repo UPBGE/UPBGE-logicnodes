@@ -14,7 +14,7 @@ class LogicNodeOnValueChangedTo(LogicNodeConditionType):
 
     def init(self, context):
         self.add_input(NodeSocketLogicParameter, "Value")
-        self.add_input(NodeSocketLogicValue, "", {'value_type': 'BOOLEAN', 'value': 'True'})
+        self.add_input(NodeSocketLogicValue, "", {'value_type': 'BOOLEAN', 'default_value': 'True'})
         self.add_output(NodeSocketLogicCondition, "Result")
         LogicNodeConditionType.init(self, context)
 

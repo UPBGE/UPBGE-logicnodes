@@ -28,7 +28,7 @@ class LogicNodeClearVariables(LogicNodeActionType):
 
     def init(self, context):
         self.add_input(NodeSocketLogicCondition, 'Condition')
-        self.add_input(NodeSocketLogicString, 'Filename', {'value': 'variables'})
+        self.add_input(NodeSocketLogicString, 'Filename', {'default_value': 'variables'})
         self.add_output(NodeSocketLogicCondition, 'Done')
         LogicNodeActionType.init(self, context)
 

@@ -27,6 +27,13 @@ class NodeSocketLogicArmature(NodeSocket, NodeSocketLogic):
         update=update_draw,
         poll=filter_armatures
     )
+    # XXX: Remove value property
+    value: PointerProperty(
+        name='Armature',
+        type=Armature,
+        update=update_draw,
+        poll=filter_armatures
+    )
     use_owner: BoolProperty(
         name='Use Owner',
         description='Use the owner of this tree'

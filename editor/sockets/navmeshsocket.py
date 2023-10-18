@@ -14,6 +14,13 @@ import bpy
 class NodeSocketLogicNavMesh(NodeSocket, NodeSocketLogic):
     bl_idname = "NLNavMeshSocket"
     bl_label = "Navmesh"
+    default_value: PointerProperty(
+        name='Object',
+        type=Object,
+        poll=filter_navmesh
+        # update=update_tree_code
+    )
+    # XXX: Remove value property
     value: PointerProperty(
         name='Object',
         type=Object,
@@ -43,7 +50,7 @@ class NodeSocketLogicNavMesh(NodeSocket, NodeSocketLogic):
                 row.prop(self, 'use_owner', icon='USER', text='')
                 col.prop_search(
                     self,
-                    'value',
+                    'default_value',
                     bpy.context.scene,
                     'objects',
                     icon='NONE',
@@ -57,5 +64,5 @@ class NodeSocketLogicNavMesh(NodeSocket, NodeSocketLogic):
     def get_unlinked_value(self):
         if self.use_owner:
             return 'game_object'
-        if isinstance(self.value, Object):
-            return f'scene.objects[{self.value.name}]'
+        if isinstance(self.default_value, Object):
+            return f'scene.objects[{self.default_value.name}]'

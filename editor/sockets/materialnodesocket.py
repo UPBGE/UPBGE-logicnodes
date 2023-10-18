@@ -13,6 +13,11 @@ class NodeSocketLogicMaterialNode(NodeSocket, NodeSocketLogic):
     bl_idname = "NLTreeNodeSocket"
     bl_label = "Material Node"
 
+    default_value: StringProperty(
+        name='Material Node',
+        update=update_draw
+    )
+    # XXX: Remove value property
     value: StringProperty(
         name='Material Node',
         update=update_draw
@@ -27,21 +32,21 @@ class NodeSocketLogicMaterialNode(NodeSocket, NodeSocketLogic):
             layout.label(text=text)
         else:
             mat_socket = self.node.inputs[self.ref_index]
-            mat = mat_socket.value
+            mat = mat_socket.default_value
             col = layout.column(align=False)
             if mat and not mat_socket.is_linked:
                 col.prop_search(
                     self,
-                    "value",
+                    "default_value",
                     bpy.data.materials[mat.name].node_tree,
                     'nodes',
                     text=''
                 )
             elif mat_socket.is_linked:
                 col.label(text=text)
-                col.prop(self, 'value', text='')
+                col.prop(self, 'default_value', text='')
             else:
                 col.label(text=self.name)
 
     def get_unlinked_value(self):
-        return '"{}"'.format(self.value)
+        return '"{}"'.format(self.default_value)
