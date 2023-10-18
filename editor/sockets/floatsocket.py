@@ -11,7 +11,7 @@ class NodeSocketLogicFloat(NodeSocket, NodeSocketLogic):
     bl_idname = "NLFloatFieldSocket"
     bl_label = "Float Value"
 
-    value: FloatProperty(default=0, update=update_draw)
+    default_value: FloatProperty(default=0, update=update_draw)
 
     nl_color = SOCKET_COLOR_GENERIC
     nl_type = SOCKET_TYPE_FLOAT
@@ -23,10 +23,10 @@ class NodeSocketLogicFloat(NodeSocket, NodeSocketLogic):
     ]
 
     def get_unlinked_value(self):
-        return "{}".format(self.value)
+        return "{}".format(self.default_value)
 
     def draw(self, context, layout, node, text):
         if self.is_linked or self.is_output:
             layout.label(text=text)
         else:
-            layout.prop(self, "value", text=text)
+            layout.prop(self, "default_value", text=text)

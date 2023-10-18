@@ -11,7 +11,7 @@ from bpy.props import PointerProperty
 class NodeSocketLogicImage(NodeSocket, NodeSocketLogic):
     bl_idname = "NLImageSocket"
     bl_label = "Image"
-    value: PointerProperty(
+    default_value: PointerProperty(
         name='Image',
         type=Image,
         description='Select an Image'
@@ -30,7 +30,7 @@ class NodeSocketLogicImage(NodeSocket, NodeSocketLogic):
                 row = col.row(align=True)
                 row.label(text=text)
             row2 = col.row(align=True)
-            row2.prop(self, "value", text='')
+            row2.prop(self, "default_value", text='')
             row2.operator(
                 'logic_nodes.load_image',
                 icon='FILEBROWSER',
@@ -38,7 +38,7 @@ class NodeSocketLogicImage(NodeSocket, NodeSocketLogic):
             )
 
     def get_unlinked_value(self):
-        if self.value is None:
+        if self.default_value is None:
             return '"None"'
-        return f'bpy.data.images.get("{self.value.name}")'
+        return f'bpy.data.images.get("{self.default_value.name}")'
         # return '"{}"'.format(str(self.value.name))

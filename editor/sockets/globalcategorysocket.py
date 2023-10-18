@@ -12,7 +12,7 @@ class NodeSocketLogicGlobalCategory(NodeSocket, NodeSocketLogic):
     bl_idname = "NLGlobalCatSocket"
     bl_label = "Global Category"
 
-    value: StringProperty(
+    default_value: StringProperty(
         update=update_draw
     )
 
@@ -26,7 +26,7 @@ class NodeSocketLogicGlobalCategory(NodeSocket, NodeSocketLogic):
             col = layout.column()
             col.prop_search(
                 self,
-                "value",
+                "default_value",
                 context.scene,
                 'nl_global_categories',
                 icon='OUTLINER_COLLECTION',
@@ -34,4 +34,4 @@ class NodeSocketLogicGlobalCategory(NodeSocket, NodeSocketLogic):
             )
 
     def get_unlinked_value(self):
-        return '"{}"'.format(self.value)
+        return '"{}"'.format(self.default_value)

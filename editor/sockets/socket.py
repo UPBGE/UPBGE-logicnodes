@@ -100,8 +100,8 @@ BL_SOCKET_TYPES = [
     'INT',  # 25
     'TEXTURE',  # 26
     'TEXTURE',  # 27
-    'MESH',  # 28
-    'MESH',  # 29
+    'GEOMETRY',  # 28
+    'GEOMETRY',  # 29
     'MATERIAL'  # 30
 ]
 

@@ -11,6 +11,7 @@ class LogicNodeKeyboardKey(LogicNodeConditionType):
     bl_idname = "NLKeyPressedCondition"
     bl_label = "Key"
     nl_module = 'uplogic.nodes.conditions'
+    nl_class = "ULKeyPressed"
 
     input_type: EnumProperty(
         name='Input Type',
@@ -26,7 +27,6 @@ class LogicNodeKeyboardKey(LogicNodeConditionType):
     def draw_buttons(self, context, layout):
         layout.prop(self, 'input_type', text='')
 
-    nl_class = "ULKeyPressed"
 
     def get_input_names(self):
         return ["key_code"]

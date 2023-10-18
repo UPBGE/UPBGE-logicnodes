@@ -1,6 +1,7 @@
 from .socket import SOCKET_TYPE_COLLECTION, NodeSocketLogic
 from .socket import SOCKET_COLOR_COLLECTION
 from .socket import socket_type
+from .socket import update_draw
 from bpy.types import Collection
 from bpy.types import NodeSocket
 from bpy.props import PointerProperty
@@ -11,14 +12,10 @@ import bpy
 class NodeSocketLogicCollection(NodeSocket, NodeSocketLogic):
     bl_idname = "NLCollectionSocket"
     bl_label = "Collection"
-    value: PointerProperty(
+    default_value: PointerProperty(
         name='Collection',
         type=Collection,
-        description=(
-            'Select a Collection. '
-            'Objects in that collection will be used for the node'
-        )
-        # update=update_tree_code
+        update=update_draw
     )
 
     nl_color = SOCKET_COLOR_COLLECTION
@@ -35,12 +32,12 @@ class NodeSocketLogicCollection(NodeSocket, NodeSocketLogic):
                 col.label(text=text)
             col.prop_search(
                 self,
-                'value',
+                'default_value',
                 bpy.data,
                 'collections',
                 text=''
             )
 
     def get_unlinked_value(self):
-        if isinstance(self.value, Collection):
-            return f'bpy.data.collections.get("{self.value.name}")'
+        if isinstance(self.default_value, Collection):
+            return f'bpy.data.collections.get("{self.default_value.name}")'

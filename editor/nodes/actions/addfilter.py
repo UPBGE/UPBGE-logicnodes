@@ -32,12 +32,12 @@ class LogicNodeAddFilter(LogicNodeActionType):
     )
 
     def init(self, context):
-        self.add_input(NodeSocketLogicCondition, 'Condition')
+        self.add_input(NodeSocketLogicCondition, 'Condition', {'show_prop': True})
         self.add_input(NodeSocketLogicIntegerPositiveCent, 'Pass Index')
-        self.add_input(NodeSocketLogicFloat, 'Brightness', {'value': 1.0})
-        self.add_input(NodeSocketLogicFloat, 'Start', {'value': .1})
-        self.add_input(NodeSocketLogicFloat, 'Density', {'value': .5})
-        self.add_input(NodeSocketLogicFloat, 'Power', {'value': 1.0})
+        self.add_input(NodeSocketLogicFloat, 'Brightness', {'default_value': 1.0})
+        self.add_input(NodeSocketLogicFloat, 'Start', {'default_value': .1})
+        self.add_input(NodeSocketLogicFloat, 'Density', {'default_value': .5})
+        self.add_input(NodeSocketLogicFloat, 'Power', {'default_value': 1.0})
         self.add_input(NodeSocketLogicColorRGB, 'Color')
         self.add_output(NodeSocketLogicCondition, 'Done')
         LogicNodeActionType.init(self, context)

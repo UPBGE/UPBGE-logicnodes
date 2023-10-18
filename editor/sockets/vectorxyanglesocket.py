@@ -3,7 +3,7 @@ from .socket import SOCKET_COLOR_VECTOR
 from .socket import socket_type
 from .socket import update_draw
 from bpy.types import NodeSocket
-from bpy.props import FloatProperty
+from bpy.props import FloatVectorProperty
 from bpy.props import StringProperty
 
 
@@ -12,16 +12,7 @@ class NodeSocketLogicVectorXYAngle(NodeSocket, NodeSocketLogic):
     bl_idname = "NLAngleLimitSocket"
     bl_label = "Vector XY Angle"
 
-    value_x: FloatProperty(
-        default=0,
-        unit='ROTATION',
-        update=update_draw
-    )
-    value_y: FloatProperty(
-        default=0,
-        unit='ROTATION',
-        update=update_draw
-    )
+    default_value: FloatVectorProperty(name='Vector', size=2, unit='ROTATION', update=update_draw)
     title: StringProperty(default='')
 
     nl_color = SOCKET_COLOR_VECTOR
@@ -29,7 +20,8 @@ class NodeSocketLogicVectorXYAngle(NodeSocket, NodeSocketLogic):
     valid_sockets = [SOCKET_TYPE_VECTOR, SOCKET_TYPE_COLOR]
 
     def get_unlinked_value(self):
-        return "mathutils.Vector(({}, {}))".format(self.value_x, self.value_y)
+        v = self.default_value
+        return f"mathutils.Vector(({v[0]}, {v[1]}))"
 
     def draw(self, context, layout, node, text):
         if self.is_linked or self.is_output:
@@ -39,5 +31,4 @@ class NodeSocketLogicVectorXYAngle(NodeSocket, NodeSocketLogic):
             if text != '':
                 column.label(text=text)
             row = column.row(align=True)
-            row.prop(self, "value_x", text='')
-            row.prop(self, "value_y", text='')
+            row.prop(self, "default_value", text='')

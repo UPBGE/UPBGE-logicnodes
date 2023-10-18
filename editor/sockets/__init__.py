@@ -6,7 +6,7 @@ from .bitmasksocket import NodeSocketLogicBitMask
 from .blendmodesocket import NodeSocketLogicBlendMode
 from .boneconstraintsocket import NodeSocketLogicBoneConstraint
 from .bonesocket import NodeSocketLogicBone
-from .boolcondition import NodeSocketLogicBoolCondition
+from .boolcondition import NodeSocketLogicBoolCondition  # deprecated
 from .booleansocket import NodeSocketLogicBoolean
 from .camerasocket import NodeSocketLogicCamera
 from .collectionsocket import NodeSocketLogicCollection

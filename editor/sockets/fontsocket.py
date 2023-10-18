@@ -11,11 +11,11 @@ from bpy.props import PointerProperty
 class NodeSocketLogicFont(NodeSocket, NodeSocketLogic):
     bl_idname = "NLFontSocket"
     bl_label = "Font"
-    value: PointerProperty(
+    default_value: PointerProperty(
         name='Font',
         type=VectorFont,
-        description='Select a Font'
-        # update=update_tree_code
+        description='Select a Font',
+        update=update_draw
     )
 
     nl_color = SOCKET_COLOR_IMAGE
@@ -30,11 +30,11 @@ class NodeSocketLogicFont(NodeSocket, NodeSocketLogic):
                 row = col.row(align=True)
                 row.label(text=text)
             row2 = col.row(align=True)
-            row2.prop(self, "value", text='')
+            row2.prop(self, "default_value", text='')
             row2.operator(
                 'logic_nodes.load_font', icon='FILEBROWSER', text='')
 
     def get_unlinked_value(self):
-        if self.value is None:
+        if self.default_value is None:
             return '""'
-        return f'bpy.data.fonts.get("{self.value.name}")'
+        return f'bpy.data.fonts.get("{self.default_value.name}")'

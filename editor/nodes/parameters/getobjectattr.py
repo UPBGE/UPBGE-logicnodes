@@ -1,9 +1,11 @@
 from ..node import node_type
 from ..node import LogicNodeParameterType
 from ...sockets import NodeSocketLogicObject
-from ...sockets import NodeSocketLogicParameter
+from ...sockets import NodeSocketLogicString
 from ...sockets import NodeSocketLogicBoolean
 from ...sockets import NodeSocketLogicVectorXYZ
+from ...sockets import NodeSocketLogicMatrix
+from ...sockets import NodeSocketLogicColorRGBA
 from ...enum_types import _enum_readable_member_names
 from ...name_maps import _object_attrs
 from bpy.props import EnumProperty
@@ -31,22 +33,40 @@ class LogicNodeGetObjectAttr(LogicNodeParameterType):
             'localLinearVelocity',
             'worldAngularVelocity',
             'localAngularVelocity',
-            'color',
-            'worldOrientation',
-            'localOrientation'
         ]:
             self.outputs[0].enabled = False
             self.outputs[1].enabled = True
             self.outputs[1].name = _object_attrs[self.attr_name]
             self.outputs[2].enabled = False
+            self.outputs[3].enabled = False
+            self.outputs[4].enabled = False
+        elif self.attr_name in [
+            'localOrientation',
+            'worldOrientation'
+        ]:
+            self.outputs[0].enabled = False
+            self.outputs[1].enabled = False
+            self.outputs[2].enabled = False
+            self.outputs[3].enabled = True
+            self.outputs[4].enabled = False
+        elif self.attr_name == 'color':
+            self.outputs[0].enabled = False
+            self.outputs[1].enabled = False
+            self.outputs[2].enabled = False
+            self.outputs[3].enabled = False
+            self.outputs[4].enabled = True
         elif self.attr_name == 'visible':
             self.outputs[0].enabled = False
             self.outputs[1].enabled = False
             self.outputs[2].enabled = True
+            self.outputs[3].enabled = False
+            self.outputs[4].enabled = False
         else:
             self.outputs[0].enabled = True
             self.outputs[1].enabled = False
             self.outputs[2].enabled = False
+            self.outputs[3].enabled = False
+            self.outputs[4].enabled = False
 
     search_tags = [
         ['Get World Position', {'nl_label': 'Get World Position', 'attr_name': 'worldPosition'}],
@@ -61,7 +81,8 @@ class LogicNodeGetObjectAttr(LogicNodeParameterType):
         ['Get Local Transform', {'nl_label': 'Get Local Transform', 'attr_name': 'localTransform'}],
         ['Get Scale', {'nl_label': 'Get Scale', 'attr_name': 'worldScale'}],
         ['Get Color', {'nl_label': 'Get Color', 'attr_name': 'color'}],
-        ['Get Name', {'nl_label': 'Get Name', 'attr_name': 'name'}]
+        ['Get Name', {'nl_label': 'Get Name', 'attr_name': 'name'}],
+        ['Get Visibility', {'nl_label': 'Get Visibility', 'attr_name': 'visibility'}]
     ]
 
     attr_name: EnumProperty(items=_enum_readable_member_names, name="", default="worldPosition", update=update_draw)
@@ -69,10 +90,11 @@ class LogicNodeGetObjectAttr(LogicNodeParameterType):
 
     def init(self, context):
         self.add_input(NodeSocketLogicObject, "Object")
-        self.add_input(NodeSocketLogicParameter, "Value", {'enabled': False})
-        self.add_output(NodeSocketLogicParameter, "Value")
+        self.add_output(NodeSocketLogicString, "Value")
         self.add_output(NodeSocketLogicVectorXYZ, "Vector", {'enabled': False})
         self.add_output(NodeSocketLogicBoolean, "Visible", {'enabled': False})
+        self.add_output(NodeSocketLogicMatrix, "Orientation", {'enabled': False})
+        self.add_output(NodeSocketLogicColorRGBA, "Color", {'enabled': False})
         LogicNodeParameterType.init(self, context)
 
     def draw_buttons(self, context, layout) -> None:
@@ -85,4 +107,4 @@ class LogicNodeGetObjectAttr(LogicNodeParameterType):
         return ["game_object", "_attr_name"]
 
     def get_output_names(self):
-        return ["VAL", "VEC", "BOOL"]
+        return ["OUT", "OUT", "OUT", "OUT"]

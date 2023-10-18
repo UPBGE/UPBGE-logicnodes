@@ -3,7 +3,7 @@ from ..node import LogicNodeActionType
 from ...sockets import NodeSocketLogicCondition
 from ...sockets import NodeSocketLogicColorRGB
 from ...sockets import NodeSocketLogicVectorXYZ
-from ...sockets import NodeSocketLogicBoolCondition
+from ...sockets import NodeSocketLogicCondition
 
 
 @node_type
@@ -13,7 +13,7 @@ class LogicNodeDrawLine(LogicNodeActionType):
     nl_module = 'uplogic.nodes.actions'
 
     def init(self, context):
-        self.add_input(NodeSocketLogicBoolCondition, 'Condition')
+        self.add_input(NodeSocketLogicCondition, 'Condition', {'show_prop': True})
         self.add_input(NodeSocketLogicColorRGB, 'Color')
         self.add_input(NodeSocketLogicVectorXYZ, 'From')
         self.add_input(NodeSocketLogicVectorXYZ, 'To')

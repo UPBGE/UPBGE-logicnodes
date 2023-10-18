@@ -1,7 +1,6 @@
 from ..node import node_type
 from ..node import LogicNodeActionType
 from ...sockets import NodeSocketLogicCondition
-from ...sockets import NodeSocketLogicBoolCondition
 from ...sockets import NodeSocketLogicGlobalCategory
 from ...sockets import NodeSocketLogicGlobalProperty
 from ...sockets import NodeSocketLogicValue
@@ -16,7 +15,7 @@ class LogicNodeSetGlobalValue(LogicNodeActionType):
     nl_class = "ULSetGlobalValue"
 
     def init(self, context):
-        self.add_input(NodeSocketLogicBoolCondition, "Condition")
+        self.add_input(NodeSocketLogicCondition, "Condition", {'show_prop': True})
         self.add_input(NodeSocketLogicGlobalCategory, "Category")
         self.add_input(NodeSocketLogicGlobalProperty, "Property", {'ref_index': 1})
         self.add_input(NodeSocketLogicValue, "")

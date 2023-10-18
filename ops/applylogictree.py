@@ -43,7 +43,6 @@ class LOGIC_NODES_OT_apply_logic_tree(Operator):
             error('Missing active object, aborting...')
             return {'FINISHED'}
         tree.use_fake_user = True
-        # py_module_name = bge_netlogic.utilities.py_module_name_for_tree(tree)
         selected_objects = [
             ob for ob in current_scene.objects if ob.select_get()
         ]

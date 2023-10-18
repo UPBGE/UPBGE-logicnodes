@@ -42,7 +42,7 @@ class LogicNodeRandomValue(LogicNodeParameterType):
         self.add_input(NodeSocketLogicInteger, "Max")
         self.add_input(NodeSocketLogicVectorXYZ, "Min")
         self.add_input(NodeSocketLogicVectorXYZ, "Max")
-        self.add_input(NodeSocketLogicFloatFactor, "Probability", {'value': .5})
+        self.add_input(NodeSocketLogicFloatFactor, "Probability", {'default_value': .5})
         self.add_input(NodeSocketLogicInteger, "Seed", {'enabled': False})
         self.add_output(NodeSocketLogicFloat, "Result")
         self.add_output(NodeSocketLogicInteger, "Result")

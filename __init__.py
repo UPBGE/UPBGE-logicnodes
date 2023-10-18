@@ -423,7 +423,6 @@ def register():
         name='Custom Mainloop Tree',
         type=bpy.types.NodeTree
     )
-    # get_uplogic_module()
 
 
 # blender add-on unregistration callback

@@ -14,20 +14,20 @@ class NodeSocketLogicKeyboardKey(NodeSocket, NodeSocketLogic):
     bl_idname = "NLKeyboardKeySocket"
     bl_label = "Key"
 
-    value: StringProperty(update=update_draw)
+    default_value: StringProperty(update=update_draw)
     nl_color = SOCKET_COLOR_INTEGER
 
     nl_type = SOCKET_TYPE_INT
     valid_sockets = [SOCKET_TYPE_INT]
 
     def get_unlinked_value(self):
-        return key_event(self.value)
+        return key_event(self.default_value)
 
     def draw(self, context, layout, node, text):
         if self.is_linked or self.is_output:
             layout.label(text=text)
         else:
-            label = self.value
+            label = self.default_value
             if not label:
                 label = "Press & Choose"
             layout.box().operator("logic_nodes.key_selector", text=label, emboss=False, icon='MOUSE_LMB')

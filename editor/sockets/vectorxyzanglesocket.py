@@ -3,7 +3,7 @@ from .socket import SOCKET_COLOR_VECTOR
 from .socket import socket_type
 from .socket import update_draw
 from bpy.types import NodeSocket
-from bpy.props import FloatProperty
+from bpy.props import FloatVectorProperty
 
 
 @socket_type
@@ -11,32 +11,15 @@ class NodeSocketLogicVectorXYZAngle(NodeSocket, NodeSocketLogic):
     bl_idname = "NLVec3RotationSocket"
     bl_label = "Vector XYZ Angle"
 
-    value_x: FloatProperty(
-        default=0,
-        unit='ROTATION',
-        update=update_draw
-    )
-    value_y: FloatProperty(
-        default=0,
-        unit='ROTATION',
-        update=update_draw
-    )
-    value_z: FloatProperty(
-        default=0,
-        unit='ROTATION',
-        update=update_draw
-    )
+    default_value: FloatVectorProperty(name='Vector', unit='ROTATION', update=update_draw)
 
     nl_color = SOCKET_COLOR_VECTOR
     nl_type = SOCKET_TYPE_VECTOR
     valid_sockets = [SOCKET_TYPE_VECTOR, SOCKET_TYPE_COLOR]
 
     def get_unlinked_value(self):
-        return "mathutils.Vector(({}, {}, {}))".format(
-            self.value_x,
-            self.value_y,
-            self.value_z
-        )
+        v = self.default_value
+        return f"mathutils.Vector(({v[0]}, {v[1]}, {v[2]}))"
 
     def draw(self, context, layout, node, text):
         if self.is_linked or self.is_output:
@@ -47,6 +30,4 @@ class NodeSocketLogicVectorXYZAngle(NodeSocket, NodeSocketLogic):
                 cont.label(text=text)
             if self.node.width >= 200:
                 cont = cont.row(align=True)
-            cont.prop(self, "value_x", text='X')
-            cont.prop(self, "value_y", text='Y')
-            cont.prop(self, "value_z", text='Z')
+            cont.prop(self, "default_value", text='')

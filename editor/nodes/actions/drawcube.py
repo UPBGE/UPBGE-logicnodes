@@ -3,7 +3,7 @@ from ..node import LogicNodeActionType
 from ...sockets import NodeSocketLogicCondition
 from ...sockets import NodeSocketLogicColorRGB
 from ...sockets import NodeSocketLogicVectorXYZ
-from ...sockets import NodeSocketLogicBoolCondition
+from ...sockets import NodeSocketLogicCondition
 from ...sockets import NodeSocketLogicFloatPositive
 from bpy.props import BoolProperty
 
@@ -25,10 +25,10 @@ class LogicNodeDrawCube(LogicNodeActionType):
         layout.prop(self, "use_volume_origin")
 
     def init(self, context):
-        self.add_input(NodeSocketLogicBoolCondition, 'Condition')
+        self.add_input(NodeSocketLogicCondition, 'Condition', {'show_prop': True})
         self.add_input(NodeSocketLogicColorRGB, 'Color')
         self.add_input(NodeSocketLogicVectorXYZ, 'Origin')
-        self.add_input(NodeSocketLogicFloatPositive, 'Width', {'value': 1.0})
+        self.add_input(NodeSocketLogicFloatPositive, 'Width', {'default_value': 1.0})
         self.add_output(NodeSocketLogicCondition, "Done")
         LogicNodeActionType.init(self, context)
 

@@ -1,6 +1,7 @@
 from .socket import SOCKET_TYPE_STRING, NodeSocketLogic
 from .socket import SOCKET_COLOR_STRING
 from .socket import socket_type
+from .socket import update_draw
 from ...utilities import LOGIC_NODE_IDENTIFIER
 from ...utilities import make_valid_name
 from bpy.types import NodeSocket
@@ -13,7 +14,7 @@ import bpy
 class NodeSocketLogicBone(NodeSocket, NodeSocketLogic):
     bl_idname = "NLArmatureBoneSocket"
     bl_label = "Bone"
-    value: StringProperty()
+    default_value: StringProperty(name='Bone', update=update_draw)
     ref_index: IntProperty(default=0)
 
     nl_color = SOCKET_COLOR_STRING
@@ -32,7 +33,7 @@ class NodeSocketLogicBone(NodeSocket, NodeSocketLogic):
             game_object = None
             game_obj_socket = self.node.inputs[self.ref_index]
             if not game_obj_socket.use_owner:
-                game_object = game_obj_socket.value
+                game_object = game_obj_socket.default_value
             else:
                 for obj in bpy.data.objects:
                     if f'{LOGIC_NODE_IDENTIFIER}{make_valid_name(tree.name)}' in obj.game.properties:
@@ -45,7 +46,7 @@ class NodeSocketLogicBone(NodeSocket, NodeSocketLogic):
                 if not game_obj_socket.is_linked:
                     col.prop_search(
                         self,
-                        'value',
+                        'default_value',
                         game_object.pose,
                         'bones',
                         icon='NONE',
@@ -58,4 +59,4 @@ class NodeSocketLogicBone(NodeSocket, NodeSocketLogic):
                 col.label(text='No Armature!', icon='ERROR')
 
     def get_unlinked_value(self):
-        return '"{}"'.format(self.value)
+        return repr(self.default_value)

@@ -19,9 +19,9 @@ class LogicNodeRotateTo(LogicNodeActionType):
         self.add_input(NodeSocketLogicCondition, "Condition")
         self.add_input(NodeSocketLogicObject, "Object")
         self.add_input(NodeSocketLogicVectorXYZ, "Target")
-        self.add_input(NodeSocketLogicFloatFactor, "Factor", {'value': 1.0})
-        self.add_input(NodeSocketLogicAxis, "Rot Axis", {'value': '2'})
-        self.add_input(NodeSocketLogicAxisSigned, "Front", {'value': '1'})
+        self.add_input(NodeSocketLogicFloatFactor, "Factor", {'default_value': 1.0})
+        self.add_input(NodeSocketLogicAxis, "Rot Axis", {'default_value': '2'})
+        self.add_input(NodeSocketLogicAxisSigned, "Front", {'default_value': '1'})
         self.add_output(NodeSocketLogicCondition, "Done")
         LogicNodeActionType.init(self, context)
 

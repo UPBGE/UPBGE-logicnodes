@@ -13,7 +13,7 @@ import bpy
 class NodeSocketLogicBrick(NodeSocket, NodeSocketLogic):
     bl_idname = "NLLogicBrickSocket"
     bl_label = "Logic Brick"
-    value: StringProperty(
+    default_value: StringProperty(
         # update=update_tree_code
     )
     ref_index: IntProperty(default=0)
@@ -39,7 +39,7 @@ class NodeSocketLogicBrick(NodeSocket, NodeSocketLogic):
             game_object = None
             game_obj_socket = self.node.inputs[self.ref_index]
             if not game_obj_socket.use_owner:
-                game_object = game_obj_socket.value
+                game_object = game_obj_socket.default_value
             else:
                 for obj in bpy.data.objects:
                     if f'{LOGIC_NODE_IDENTIFIER}{tree.name}' in obj.game.properties:
@@ -55,16 +55,16 @@ class NodeSocketLogicBrick(NodeSocket, NodeSocketLogic):
                     game = game_object.game
                     col.prop_search(
                         self,
-                        'value',
+                        'default_value',
                         game,
                         self.brick_type,
                         icon='NONE',
                         text=''
                     )
                 else:
-                    col.prop(self, 'value', text='')
+                    col.prop(self, 'default_value', text='')
             else:
-                col.prop(self, 'value', text='')
+                col.prop(self, 'default_value', text='')
 
     def get_unlinked_value(self):
-        return '"{}"'.format(self.value)
+        return '"{}"'.format(self.default_value)

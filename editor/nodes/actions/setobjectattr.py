@@ -2,6 +2,7 @@ from ..node import node_type
 from ..node import LogicNodeActionType
 from ...sockets import NodeSocketLogicCondition
 from ...sockets import NodeSocketLogicVectorXYZ
+from ...sockets import NodeSocketLogicColorRGBA
 from ...sockets import NodeSocketLogicXYZ
 from ...sockets import NodeSocketLogicObject
 from ...enum_types import _enum_writable_member_names
@@ -15,11 +16,18 @@ class LogicNodeSetObjectAttr(LogicNodeActionType):
     nl_module = 'uplogic.nodes.actions'
     nl_class = "ULSetGameObjectAttribue"
 
+    def update_draw(self, context=None):
+        color = self.value_type == 'color'
+        self.inputs[3].enabled = not color
+        self.inputs[4].enabled = color
+
     value_type: EnumProperty(
         name='Attribute',
         items=_enum_writable_member_names,
-        default='worldPosition'
+        default='worldPosition',
+        update=update_draw
     )
+
     search_tags = [
         ['Set World Position', {'nl_label': 'Set World Position', 'value_type': 'worldPosition'}],
         ['Set World Rotation', {'nl_label': 'Set World Rotation', 'value_type': 'worldOrientation'}],
@@ -40,6 +48,7 @@ class LogicNodeSetObjectAttr(LogicNodeActionType):
         self.add_input(NodeSocketLogicXYZ, "")
         self.add_input(NodeSocketLogicObject, "Object")
         self.add_input(NodeSocketLogicVectorXYZ, "Value")
+        self.add_input(NodeSocketLogicColorRGBA, "Color")
         self.add_output(NodeSocketLogicCondition, 'Done')
         LogicNodeActionType.init(self, context)
 
@@ -50,9 +59,9 @@ class LogicNodeSetObjectAttr(LogicNodeActionType):
         layout.prop(self, "value_type", text='')
 
     def get_input_names(self):
-        return ["condition", "xyz", "game_object", "attribute_value"]
+        return ["condition", "xyz", "game_object", "attribute_value", "attribute_value"]
 
     def get_attributes(self):
         return [
-            ("value_type", f'"{self.value_type}"'),
+            ("value_type", repr(self.value_type)),
         ]

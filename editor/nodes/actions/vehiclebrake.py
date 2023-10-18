@@ -31,8 +31,8 @@ class LogicNodeVehicleBrake(LogicNodeActionType):
     def init(self, context):
         self.add_input(NodeSocketLogicCondition, "Condition")
         self.add_input(NodeSocketLogicObject, "Vehicle")
-        self.add_input(NodeSocketLogicIntegerPositive, "Wheels", {'value': 2})
-        self.add_input(NodeSocketLogicFloatPositive, "Power", {'value': 1})
+        self.add_input(NodeSocketLogicIntegerPositive, "Wheels", {'default_value': 2})
+        self.add_input(NodeSocketLogicFloatPositive, "Power", {'default_value': 1})
         self.add_output(NodeSocketLogicCondition, 'Done')
         LogicNodeActionType.init(self, context)
 

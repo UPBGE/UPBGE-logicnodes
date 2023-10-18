@@ -22,11 +22,11 @@ class LogicNodeMouseLook(LogicNodeActionType):
     def update_draw(self, context=None):
         if len(self.inputs) < 10:
             return
-        if self.inputs[5].value:
+        if self.inputs[5].default_value:
             self.inputs[6].enabled = True
         else:
             self.inputs[6].enabled = False
-        if self.inputs[7].value:
+        if self.inputs[7].default_value:
             self.inputs[8].enabled = True
         else:
             self.inputs[8].enabled = False
@@ -40,14 +40,14 @@ class LogicNodeMouseLook(LogicNodeActionType):
 
     def init(self, context):
         self.add_input(NodeSocketLogicCondition, "Condition")
-        self.add_input(NodeSocketLogicObject, "Main Object")
-        self.add_input(NodeSocketLogicObject, "Head (Optional)")
+        self.add_input(NodeSocketLogicObject, "Body")
+        self.add_input(NodeSocketLogicObject, "Head")
         self.add_input(NodeSocketLogicInvertXY, "")
-        self.add_input(NodeSocketLogicFloat, "Sensitivity", {'value': 1.0})
+        self.add_input(NodeSocketLogicFloat, "Sensitivity", {'default_value': 1.0})
         self.add_input(NodeSocketLogicBoolean, "Cap Left / Right")
         self.add_input(NodeSocketLogicVectorXYAngle, "")
         self.add_input(NodeSocketLogicBoolean, "Cap Up / Down")
-        self.add_input(NodeSocketLogicVectorXYAngle, "", {'value_x': radians(-89), 'value_y': radians(89)})
+        self.add_input(NodeSocketLogicVectorXYAngle, "", {'default_value': (radians(-89), radians(89))})
         self.add_input(NodeSocketLogicFloatFactor, "Smoothing")
         self.add_output(NodeSocketLogicCondition, 'Done')
         LogicNodeActionType.init(self, context)

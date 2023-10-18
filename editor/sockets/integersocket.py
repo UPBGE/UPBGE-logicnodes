@@ -5,7 +5,6 @@ from .socket import socket_type
 from .socket import update_draw
 from bpy.types import NodeSocket
 from bpy.props import IntProperty
-from bpy.props import StringProperty
 
 
 @socket_type
@@ -15,13 +14,13 @@ class NodeSocketLogicInteger(NodeSocket, NodeSocketLogic):
     nl_type = SOCKET_TYPE_INT
     nl_color = SOCKET_COLOR_INTEGER
 
-    value: IntProperty(update=update_draw)
+    default_value: IntProperty(update=update_draw)
 
     def get_unlinked_value(self):
-        return '{}'.format(self.value)
+        return '{}'.format(self.default_value)
 
     def draw(self, context, layout, node, text):
         if self.is_linked or self.is_output:
             layout.label(text=text)
         else:
-            layout.prop(self, "value", text=text)
+            layout.prop(self, "default_value", text=text)

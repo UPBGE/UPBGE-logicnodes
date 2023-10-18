@@ -11,8 +11,8 @@ class NodeSocketLogicFloatFactor(NodeSocket, NodeSocketLogic):
     bl_idname = "NLSocketAlphaFloat"
     bl_label = "Factor"
 
-    value: FloatProperty(
-        name='Alpha Value',
+    default_value: FloatProperty(
+        name='Factor',
         description='Value range from 0 - 1',
         min=0.0,
         max=1.0,
@@ -32,8 +32,8 @@ class NodeSocketLogicFloatFactor(NodeSocket, NodeSocketLogic):
         if self.is_linked or self.is_output:
             layout.label(text=text)
         else:
-            layout.prop(self, "value", slider=True, text=text)
+            layout.prop(self, "default_value", slider=True, text=text)
         pass
 
     def get_unlinked_value(self):
-        return "{}".format(self.value)
+        return "{}".format(self.default_value)

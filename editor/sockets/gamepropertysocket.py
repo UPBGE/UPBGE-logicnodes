@@ -18,7 +18,7 @@ class NodeSocketLogicGameProperty(NodeSocket, NodeSocketLogic):
     bl_idname = "NLGamePropertySocket"
     bl_label = "Object Property"
 
-    value: StringProperty(
+    default_value: StringProperty(
         update=update_draw
     )
     ref_index: IntProperty(default=0)
@@ -43,7 +43,7 @@ class NodeSocketLogicGameProperty(NodeSocket, NodeSocketLogic):
             data_block = None
             data_block_socket = self.node.inputs[self.ref_index]
             if not getattr(data_block_socket, 'use_owner', False):
-                data_block = data_block_socket.value
+                data_block = data_block_socket.default_value
             elif isinstance(data_block_socket, NodeSocketLogicObject):
                 prop_name = f'{LOGIC_NODE_IDENTIFIER}{make_valid_name(tree.name)}'
                 for obj in bpy.data.objects:
@@ -62,16 +62,16 @@ class NodeSocketLogicGameProperty(NodeSocket, NodeSocketLogic):
                         data_block = data_block.game
                     col.prop_search(
                         self,
-                        'value',
+                        'default_value',
                         data_block,
                         'properties',
                         icon='NONE',
                         text=''
                     )
                 else:
-                    col.prop(self, 'value', text='')
+                    col.prop(self, 'default_value', text='')
             else:
-                col.prop(self, 'value', text='')
+                col.prop(self, 'default_value', text='')
 
     def get_unlinked_value(self):
-        return '"{}"'.format(self.value)
+        return '"{}"'.format(self.default_value)

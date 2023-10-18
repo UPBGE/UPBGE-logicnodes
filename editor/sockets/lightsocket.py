@@ -14,7 +14,7 @@ import bpy
 class NodeSocketLogicLight(NodeSocket, NodeSocketLogic):
     bl_idname = "NLLightObjectSocket"
     bl_label = "Light"
-    value: PointerProperty(
+    default_value: PointerProperty(
         name='Light',
         type=Light,
         poll=filter_lights
@@ -42,7 +42,7 @@ class NodeSocketLogicLight(NodeSocket, NodeSocketLogic):
                 row.prop(self, 'use_owner', icon='USER', text='')
                 col.prop_search(
                     self,
-                    'value',
+                    'default_value',
                     bpy.context.scene,
                     'objects',
                     icon='NONE',
@@ -56,5 +56,5 @@ class NodeSocketLogicLight(NodeSocket, NodeSocketLogic):
     def get_unlinked_value(self):
         if self.use_owner:
             return 'game_object'
-        if isinstance(self.value, Light):
-            return f'scene.objects["{self.value.name}"]'
+        if isinstance(self.default_value, Light):
+            return f'scene.objects["{self.default_value.name}"]'

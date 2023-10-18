@@ -36,6 +36,13 @@ _enum_mouse_wheel_direction = [
 
 _enum_vector_math_options = [
     ("", "Operation", ""),
+    ("add", "Add", "A + B"),
+    ("subtract", "Subtract", "A - B"),
+    ("multiply", "Multiply", "Entry-wise multiply"),
+    ("divide", "Divide", "Entry-wise divide"),
+    ("multadd", "Multiply Add", "A * B + C"),
+    ("matmul", "Matrix Multiply", "Transform A by B"),
+    None,
     ("scale", "Scale", "A multiplied by Scale"),
     ("length", "Length", "Length of A"),
     ("distance", "Distance", "Distance between A and B"),
@@ -48,13 +55,6 @@ _enum_vector_math_options = [
     ("reflect", "Reflect", "Reflect A around the normal B. B doesn't need to be normalized"),
     ("project", "Project", "Project this vector onto another"),
     ("cross", "Cross Product", "Project A onto B"),
-    None,
-    ("multadd", "Multiply Add", "A * B + C"),
-    ("divide", "Divide", "Entry-wise divide"),
-    ("multiply", "Multiply", "Entry-wise multiply"),
-    ("subtract", "Subtract", "A - B"),
-    ("add", "Add", "A + B"),
-    ("matmul", "Matrix Multiply", "Transform A by B"),
     None,
     ("normalize", "Normalize", "Rescale all values to 0 - 1"),
     ("lerp", "Lerp", "Linear Interpolation between the two vectors"),
@@ -298,7 +298,8 @@ _enum_writable_member_names = [
             'object'
         )
     ),
-    ("worldScale", "World Scale", "The global scale of the object")
+    ("worldScale", "World Scale", "The global scale of the object"),
+    ('color', 'Color', 'Color')
 ]
 
 

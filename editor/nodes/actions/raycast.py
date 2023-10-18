@@ -51,7 +51,7 @@ class LogicNodeRaycast(LogicNodeActionType):
         self.add_input(NodeSocketLogicBoolean, "Exclude")
         self.add_input(NodeSocketLogicBoolean, 'X-Ray')
         self.add_input(NodeSocketLogicBoolean, "Custom Distance")
-        self.add_input(NodeSocketLogicFloatPositive, "Distance", {'value': 100.0})
+        self.add_input(NodeSocketLogicFloatPositive, "Distance", {'default_value': 100.0})
         self.add_input(NodeSocketLogicBitMask, "Mask", {'value': 100.0})
         self.add_input(NodeSocketLogicBoolean, 'Visualize')
         self.add_output(NodeSocketLogicCondition, "Has Result")

@@ -1,6 +1,7 @@
 from .socket import SOCKET_TYPE_OBJECT, NodeSocketLogic
 from .socket import SOCKET_COLOR_OBJECT
 from .socket import socket_type
+from .socket import update_draw
 from ..filter_types import filter_curves
 from bpy.types import NodeSocket
 from bpy.types import Curve
@@ -13,14 +14,16 @@ import bpy
 class NodeSocketLogicCurve(NodeSocket, NodeSocketLogic):
     bl_idname = "NLCurveObjectSocket"
     bl_label = "Curve"
-    value: PointerProperty(
+    default_value: PointerProperty(
         name='Curve',
         type=Curve,
-        poll=filter_curves
+        poll=filter_curves,
+        update=update_draw
     )
     use_owner: BoolProperty(
         name='Use Owner',
-        description='Use the owner of this tree'
+        description='Use the owner of this tree',
+        update=update_draw
     )
 
     nl_color = SOCKET_COLOR_OBJECT
@@ -40,7 +43,7 @@ class NodeSocketLogicCurve(NodeSocket, NodeSocketLogic):
                 row.prop(self, 'use_owner', icon='USER', text='')
                 col.prop_search(
                     self,
-                    'value',
+                    'default_value',
                     bpy.context.scene,
                     'objects',
                     icon='NONE',
@@ -52,8 +55,8 @@ class NodeSocketLogicCurve(NodeSocket, NodeSocketLogic):
                 row.prop(self, 'use_owner', icon='USER', text='')
 
     def get_unlinked_value(self):
-        if self.value is None:
+        if self.default_value is None:
             return "None"
         if self.use_owner:
             return 'game_object'
-        return f'scene.objects.get("{self.value.name}", "{self.value.name}")]'
+        return f'scene.objects.get("{self.default_value.name}", "{self.default_value.name}")]'

@@ -21,10 +21,10 @@ class LogicNodeRaycastCamera(LogicNodeActionType):
     def init(self, context):
         self.add_input(NodeSocketLogicCondition, "Condition")
         self.add_input(NodeSocketLogicCamera, "Camera", {'use_active': True, 'enabled': False})
-        self.add_input(NodeSocketLogicVectorXY, "Aim", {'value_x': .5, 'value_y': .5})
+        self.add_input(NodeSocketLogicVectorXY, "Aim", {'default_value': (.5, .5)})
         self.add_input(NodeSocketLogicString, "Property")
         self.add_input(NodeSocketLogicBoolean, 'X-Ray')
-        self.add_input(NodeSocketLogicFloat, "Distance", {'value': 100})
+        self.add_input(NodeSocketLogicFloat, "Distance", {'default_value': 100})
         self.add_input(NodeSocketLogicBitMask, "Mask")
         self.add_output(NodeSocketLogicCondition, "Has Result")
         self.add_output(NodeSocketLogicObject, "Picked Object")

@@ -121,8 +121,8 @@ class LogicNode:
                 ERROR_MESSAGES.append(f'{self.name}: Index Error. FIX: Delete and re-add node; issue might be a linked input node as well.')
                 self.use_custom_color = True
                 self.color = (1, 0, 0)
-            except AttributeError:
-                ERROR_MESSAGES.append(f'{self.name}: Attribute Error. Select a valid entity for this node.')
+            except AttributeError as e:
+                ERROR_MESSAGES.append(f'{self.name}: Attribute Error. Select a valid entity for this node: {e}')
             except Exception as e:
                 error(
                     f'Error occured when writing sockets for {self.__class__} Node: {e}\n'
@@ -152,15 +152,15 @@ class LogicNode:
         else:
             field_name = self.get_field_name_for_socket(socket)
         field_value = None
-        if socket.is_linked:
+        if not socket.is_linked or socket.links[0].from_node.mute:
+            field_value = socket.get_unlinked_value()
+        else:
             field_value = self.get_linked_socket_field_value(
                 socket,
                 cell_varname,
                 field_name,
                 uids
             )
-        else:
-            field_value = socket.get_unlinked_value()
 
         text += f'        {cell_varname}.{field_name} = {field_value}\n'
         return text

@@ -5,7 +5,8 @@ from .props.propertyfilter import LogicNodesPropertyFilter
 
 _uplogic_versions = [
     ('1.9.5', '1.9.5', 'Suitable for Logic Nodes 2.4'),
-    ('2.0', '2.0', 'Suitable for Logic Nodes 3.0')
+    ('2.0', '2.0', 'Suitable for Logic Nodes 3.0'),
+    ('latest', 'Latest', 'Download the latest version')
 ]
 
 

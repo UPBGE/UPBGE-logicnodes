@@ -16,7 +16,7 @@ class NodeSocketLogicTreeProperty(NodeSocket, NodeSocketLogic):
     bl_idname = "NodeSocketLogicTreeProperty"
     bl_label = "Logic Tree Property"
 
-    value: StringProperty(
+    default_value: StringProperty(
         update=update_draw,
         description="Look for Tree Properties and display if this tree is applied to the selected object",
         name='Property'
@@ -35,9 +35,9 @@ class NodeSocketLogicTreeProperty(NodeSocket, NodeSocketLogic):
         obj = bpy.context.view_layer.objects.active
         if obj:
             comp = obj.game.components.get(make_valid_name(tree.name))
-            if not (comp and self.value):
+            if not (comp and self.default_value):
                 return None
-            return comp.properties.get(self.value, None)
+            return comp.properties.get(self.default_value, None)
 
     def update_color(self, context=None):
         prop = self._get_active_prop(context)
@@ -85,7 +85,7 @@ class NodeSocketLogicTreeProperty(NodeSocket, NodeSocketLogic):
                 return
             col.prop_search(
                 self,
-                'value',
+                'default_value',
                 tree,
                 'properties',
                 icon='NONE',
@@ -96,13 +96,13 @@ class NodeSocketLogicTreeProperty(NodeSocket, NodeSocketLogic):
             prop = self._get_active_prop(context)
             if prop is None:
                 return
-            vtype = tree.properties.get(self.value).value_type
+            vtype = tree.properties.get(self.default_value).value_type
             if vtype == '5':
                 col.prop(self, 'color_solid', text='')
             elif vtype == '6':
                 col.prop(self, 'color_alpha', text='')
             else:
-                col.prop(prop, 'value', text='')
+                col.prop(prop, 'default_value', text='')
 
     def get_unlinked_value(self):
-        return '"{}"'.format(self.value)
+        return '"{}"'.format(self.default_value)

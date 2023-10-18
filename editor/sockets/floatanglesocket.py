@@ -11,7 +11,7 @@ class NodeSocketLogicFloatAngle(NodeSocket, NodeSocketLogic):
     bl_idname = "NLFloatAngleSocket"
     bl_label = "Float Angle"
 
-    value: FloatProperty(
+    default_value: FloatProperty(
         default=0,
         update=update_draw,
         unit='ROTATION'
@@ -27,10 +27,10 @@ class NodeSocketLogicFloatAngle(NodeSocket, NodeSocketLogic):
     ]
 
     def get_unlinked_value(self):
-        return "{}".format(self.value)
+        return "{}".format(self.default_value)
 
     def draw(self, context, layout, node, text):
         if self.is_linked or self.is_output:
             layout.label(text=text)
         else:
-            layout.prop(self, "value", text=text)
+            layout.prop(self, "default_value", text=text)

@@ -12,7 +12,7 @@ import bpy
 class NodeSocketLogicGeometryNodeTree(NodeSocket, NodeSocketLogic):
     bl_idname = "NLGeomNodeTreeSocket"
     bl_label = "Geometry Node Tree"
-    value: PointerProperty(
+    default_value: PointerProperty(
         name='Geometry Node Tree',
         type=GeometryNodeTree,
         poll=filter_geometry_nodes
@@ -32,7 +32,7 @@ class NodeSocketLogicGeometryNodeTree(NodeSocket, NodeSocketLogic):
                 col.label(text=self.name)
             col.prop_search(
                 self,
-                'value',
+                'default_value',
                 bpy.data,
                 'node_groups',
                 icon='NONE',
@@ -40,6 +40,6 @@ class NodeSocketLogicGeometryNodeTree(NodeSocket, NodeSocketLogic):
             )
 
     def get_unlinked_value(self):
-        if isinstance(self.value, GeometryNodeTree):
-            return f'bpy.data.node_groups["{self.value.name}"]'
+        if isinstance(self.default_value, GeometryNodeTree):
+            return f'bpy.data.node_groups["{self.default_value.name}"]'
         return None

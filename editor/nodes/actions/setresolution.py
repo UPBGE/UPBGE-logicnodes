@@ -13,8 +13,8 @@ class LogicNodeSetResolution(LogicNodeActionType):
 
     def init(self, context):
         self.add_input(NodeSocketLogicCondition, 'Condition')
-        self.add_input(NodeSocketLogicInteger, 'X', {'value': 1920})
-        self.add_input(NodeSocketLogicInteger, 'Y', {'value': 1080})
+        self.add_input(NodeSocketLogicInteger, 'X', {'default_value': 1920})
+        self.add_input(NodeSocketLogicInteger, 'Y', {'default_value': 1080})
         self.add_output(NodeSocketLogicCondition, 'Done')
         LogicNodeActionType.init(self, context)
 

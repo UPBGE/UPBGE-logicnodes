@@ -14,7 +14,7 @@ class LogicNodeInStream(LogicNodeParameterType):
     nl_class = "ULKeyLogger"
 
     def init(self, context):
-        self.add_input(NodeSocketLogicBoolean, 'Only Characters', {'value': True})
+        self.add_input(NodeSocketLogicBoolean, 'Only Characters', {'default_value': True})
         self.add_output(NodeSocketLogicCondition, "Pressed")
         self.add_output(NodeSocketLogicString, "Character")
         self.add_output(NodeSocketLogicString, "Keycode")

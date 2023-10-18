@@ -11,7 +11,7 @@ class NodeSocketLogicAxis(NodeSocket, NodeSocketLogic):
     bl_idname = "NLSocketLocalAxis"
     bl_label = "Unsigned Axis"
 
-    value: EnumProperty(
+    default_value: EnumProperty(
         name='Axis',
         items=_enum_local_axis,
         update=update_draw
@@ -20,13 +20,16 @@ class NodeSocketLogicAxis(NodeSocket, NodeSocketLogic):
     nl_color = SOCKET_COLOR_INTEGER
     nl_type = SOCKET_TYPE_INT
 
+    def __init__(self):
+        NodeSocketLogic.__init__(self)
+
     def draw(self, context, layout, node, text):
         if self.is_linked:
             layout.label(text=text)
         else:
             parts = layout.split()
             parts.label(text=text)
-            parts.prop(self, "value", text='')
+            parts.prop(self, "default_value", text='')
 
     def get_unlinked_value(self):
-        return self.value
+        return self.default_value

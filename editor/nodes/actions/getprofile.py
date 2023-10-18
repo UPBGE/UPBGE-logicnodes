@@ -1,7 +1,7 @@
 from ..node import node_type
 from ..node import LogicNodeActionType
 from ...sockets import NodeSocketLogicCondition
-from ...sockets import NodeSocketLogicBoolCondition
+from ...sockets import NodeSocketLogicCondition
 from ...sockets import NodeSocketLogicBoolean
 from ...sockets import NodeSocketLogicString
 
@@ -15,7 +15,7 @@ class LogicNodeGetProfile(LogicNodeActionType):
     deprecated = True
 
     def init(self, context):
-        self.add_input(NodeSocketLogicBoolCondition, "Condition")
+        self.add_input(NodeSocketLogicCondition, "Condition", {'show_prop': True})
         self.add_input(NodeSocketLogicBoolean, "Print Profile")
         self.add_input(NodeSocketLogicBoolean, "Evaluated Nodes")
         self.add_input(NodeSocketLogicBoolean, "Nodes per Second")

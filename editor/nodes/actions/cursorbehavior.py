@@ -1,6 +1,6 @@
 from ..node import node_type
 from ..node import LogicNodeActionType
-from ...sockets import NodeSocketLogicBoolCondition
+from ...sockets import NodeSocketLogicCondition
 from ...sockets import NodeSocketLogicObject
 from ...sockets import NodeSocketLogicFloat
 from ...sockets import NodeSocketLogicCondition
@@ -15,7 +15,7 @@ class LogicNodeCursorBehavior(LogicNodeActionType):
     deprecation_message = 'Node will be removed in future update.'
 
     def init(self, context):
-        self.add_input(NodeSocketLogicBoolCondition, "Condition")
+        self.add_input(NodeSocketLogicCondition, "Condition", {'show_prop': True})
         self.add_input(NodeSocketLogicObject, "Cursor")
         self.add_input(NodeSocketLogicFloat, "Distance")
         self.add_output(NodeSocketLogicCondition, "Done")

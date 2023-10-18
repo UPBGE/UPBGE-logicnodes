@@ -22,7 +22,7 @@ class LogicNodeRaycastMouse(LogicNodeActionType):
         self.add_input(NodeSocketLogicCamera, "Camera", {'enabled': False})
         self.add_input(NodeSocketLogicString, "Property")
         self.add_input(NodeSocketLogicBoolean, 'X-Ray')
-        self.add_input(NodeSocketLogicFloat, "Distance", {'value': 100})
+        self.add_input(NodeSocketLogicFloat, "Distance", {'default_value': 100})
         self.add_input(NodeSocketLogicBitMask, "Mask", {'value': 100})
         self.add_output(NodeSocketLogicCondition, "Has Result")
         self.add_output(NodeSocketLogicObject, "Picked Object")

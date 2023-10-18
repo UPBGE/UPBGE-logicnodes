@@ -13,7 +13,7 @@ class NodeSocketLogicGlobalProperty(NodeSocket, NodeSocketLogic):
     bl_idname = "NLGlobalPropSocket"
     bl_label = "Global Property"
 
-    value: StringProperty(
+    default_value: StringProperty(
         update=update_draw
     )
     ref_index: IntProperty(
@@ -30,13 +30,13 @@ class NodeSocketLogicGlobalProperty(NodeSocket, NodeSocketLogic):
             col = layout.column()
             ref_socket = self.node.inputs[self.ref_index]
             if ref_socket.is_linked:
-                col.prop(self, 'value', text='')
+                col.prop(self, 'default_value', text='')
             else:
-                cat = context.scene.nl_global_categories.get(ref_socket.value)
+                cat = context.scene.nl_global_categories.get(ref_socket.default_value)
                 if cat:
                     col.prop_search(
                         self,
-                        "value",
+                        "default_value",
                         cat,
                         'content',
                         icon='DOT',
@@ -46,4 +46,4 @@ class NodeSocketLogicGlobalProperty(NodeSocket, NodeSocketLogic):
                     layout.label(text=text)
 
     def get_unlinked_value(self):
-        return '"{}"'.format(self.value)
+        return '"{}"'.format(self.default_value)

@@ -27,7 +27,7 @@ class LogicNodeCreateUIImage(LogicNodeActionType):
         self.add_input(NodeSocketLogicBoolean, "Relative Position")
         self.add_input(NodeSocketLogicVectorXY, "")
         self.add_input(NodeSocketLogicBoolean, "Relative Size")
-        self.add_input(NodeSocketLogicVectorXY, "", {'value_x': 100, 'value_y': 100})
+        self.add_input(NodeSocketLogicVectorXY, "", {'default_value': (100., 100.)})
         self.add_input(NodeSocketLogicFloatAngle, "Angle")
         self.add_input(NodeSocketLogicImage, "")
         self.add_output(NodeSocketLogicCondition, "Done")

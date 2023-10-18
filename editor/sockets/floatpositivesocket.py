@@ -12,7 +12,7 @@ class NodeSocketLogicFloatPositive(NodeSocket, NodeSocketLogic):
     bl_idname = "NLPositiveFloatSocket"
     bl_label = "Positive Float"
 
-    value: FloatProperty(min=0.0, update=update_draw)
+    default_value: FloatProperty(min=0.0, update=update_draw)
 
     nl_color = SOCKET_COLOR_GENERIC
     nl_type = SOCKET_TYPE_FLOAT
@@ -27,7 +27,7 @@ class NodeSocketLogicFloatPositive(NodeSocket, NodeSocketLogic):
         if self.is_linked or self.is_output:
             layout.label(text=text)
         else:
-            layout.prop(self, "value", text=text)
+            layout.prop(self, "default_value", text=text)
 
     def get_unlinked_value(self):
-        return '{}'.format(self.value)
+        return '{}'.format(self.default_value)

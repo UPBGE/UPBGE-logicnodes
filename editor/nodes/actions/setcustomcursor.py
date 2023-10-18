@@ -15,7 +15,7 @@ class LogicNodeSetCustomCursor(LogicNodeActionType):
     def init(self, context):
         self.add_input(NodeSocketLogicCondition, "Condition")
         self.add_input(NodeSocketLogicImage, "Texture")
-        self.add_input(NodeSocketLogicVectorXY, "Size", {'value_x': 30, 'value_y': 30})
+        self.add_input(NodeSocketLogicVectorXY, "Size", {'default_value': (30., 30.)})
         self.add_output(NodeSocketLogicCondition, "Done")
         self.add_output(NodeSocketLogicUI, "Cursor")
         LogicNodeActionType.init(self, context)

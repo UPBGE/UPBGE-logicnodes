@@ -1,9 +1,8 @@
 from .socket import SOCKET_TYPE_COLOR, SOCKET_TYPE_VECTOR, NodeSocketLogic
 from .socket import SOCKET_COLOR_VECTOR
 from .socket import socket_type
-from .socket import update_draw
 from bpy.types import NodeSocket
-from bpy.props import FloatProperty
+from bpy.props import FloatVectorProperty
 from bpy.props import StringProperty
 
 
@@ -12,8 +11,7 @@ class NodeSocketLogicVectorXY(NodeSocket, NodeSocketLogic):
     bl_idname = "NLVec2FieldSocket"
     bl_label = "Vector XY"
 
-    value_x: FloatProperty(default=0, update=update_draw)
-    value_y: FloatProperty(default=0, update=update_draw)
+    default_value: FloatVectorProperty(name='Vector', size=2)
     title: StringProperty(default='')
 
     nl_color = SOCKET_COLOR_VECTOR
@@ -21,7 +19,8 @@ class NodeSocketLogicVectorXY(NodeSocket, NodeSocketLogic):
     valid_sockets = [SOCKET_TYPE_VECTOR, SOCKET_TYPE_COLOR]
 
     def get_unlinked_value(self):
-        return "mathutils.Vector(({}, {}))".format(self.value_x, self.value_y)
+        v = self.default_value
+        return f"mathutils.Vector(({v[0]}, {v[1]}))"
 
     def draw(self, context, layout, node, text):
         if self.is_linked or self.is_output:
@@ -31,5 +30,4 @@ class NodeSocketLogicVectorXY(NodeSocket, NodeSocketLogic):
             if text != '':
                 column.label(text=text)
             row = column.row(align=True)
-            row.prop(self, "value_x", text='')
-            row.prop(self, "value_y", text='')
+            row.prop(self, 'default_value', text='')

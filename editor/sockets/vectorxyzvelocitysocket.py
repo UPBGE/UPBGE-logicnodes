@@ -3,8 +3,7 @@ from .socket import SOCKET_COLOR_VECTOR
 from .socket import socket_type
 from .socket import update_draw
 from bpy.types import NodeSocket
-from bpy.props import FloatProperty
-from bpy.props import StringProperty
+from bpy.props import FloatVectorProperty
 
 
 @socket_type
@@ -12,18 +11,7 @@ class NodeSocketLogicVectorXYZVelocity(NodeSocket, NodeSocketLogic):
     bl_idname = "NLVelocitySocket"
     bl_label = "Velocity"
 
-    value_x: FloatProperty(
-        default=0,
-        unit='VELOCITY',
-        update=update_draw
-    )
-    value_y: FloatProperty(
-        default=0,
-        unit='VELOCITY',
-        update=update_draw
-    )
-    value_z: FloatProperty(
-        default=0,
+    default_value: FloatVectorProperty(
         unit='VELOCITY',
         update=update_draw
     )
@@ -33,11 +21,8 @@ class NodeSocketLogicVectorXYZVelocity(NodeSocket, NodeSocketLogic):
     valid_sockets = [SOCKET_TYPE_VECTOR, SOCKET_TYPE_COLOR]
 
     def get_unlinked_value(self):
-        return "mathutils.Vector(({}, {}, {}))".format(
-            self.value_x,
-            self.value_y,
-            self.value_z
-        )
+        v = self.default_value
+        return f"mathutils.Vector(({v[0]}, {v[1]}, {v[2]}))"
 
     def draw(self, context, layout, node, text):
         if self.is_linked or self.is_output:
@@ -48,6 +33,4 @@ class NodeSocketLogicVectorXYZVelocity(NodeSocket, NodeSocketLogic):
                 cont.label(text=text)
             if self.node.width >= 200:
                 cont = cont.row(align=True)
-            cont.prop(self, "value_x", text='X')
-            cont.prop(self, "value_y", text='Y')
-            cont.prop(self, "value_z", text='Z')
+            cont.prop(self, "default_value", text='')

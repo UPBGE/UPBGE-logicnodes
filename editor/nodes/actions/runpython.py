@@ -1,6 +1,6 @@
 from ..node import node_type
 from ..node import LogicNodeActionType
-from ...sockets import NodeSocketLogicBoolCondition
+from ...sockets import NodeSocketLogicCondition
 from ...sockets import NodeSocketLogicText
 from ...sockets import NodeSocketLogicString
 from ...sockets import NodeSocketLogicParameter
@@ -26,10 +26,10 @@ class LogicNodeRunPython(LogicNodeActionType):
     mode: EnumProperty(items=_enum_python_types, update=update_draw)
 
     def init(self, context):
-        self.add_input(NodeSocketLogicBoolCondition, "Condition")
+        self.add_input(NodeSocketLogicCondition, "Condition", {'default_value': True, 'show_prop': True})
         self.add_input(NodeSocketLogicText, "Module Name")
         self.add_input(NodeSocketLogicString, "Function")
-        self.add_output(NodeSocketLogicBoolCondition, "Done")
+        self.add_output(NodeSocketLogicCondition, "Done")
         self.add_output(NodeSocketLogicParameter, "Returned Value")
         LogicNodeActionType.init(self, context)
 
@@ -42,7 +42,7 @@ class LogicNodeRunPython(LogicNodeActionType):
         layout.prop(self, 'mode', text='')
         if int(self.mode) > 0:
             op = layout.operator('logic_nodes.add_socket', text='Add Argument')
-            op.socket_type = 'NLListItemSocket'
+            op.socket_type = 'NodeSocketLogicArgumentItem'
 
     def setup(
         self,

@@ -12,7 +12,7 @@ class NodeSocketLogicColorRGB(NodeSocket, NodeSocketLogic):
     bl_idname = "NLColorSocket"
     bl_label = "Color RGB"
 
-    value: FloatVectorProperty(
+    default_value: FloatVectorProperty(
         subtype='COLOR_GAMMA',
         min=0.0,
         max=1.0,
@@ -23,11 +23,8 @@ class NodeSocketLogicColorRGB(NodeSocket, NodeSocketLogic):
     nl_color = SOCKET_COLOR_COLOR
 
     def get_unlinked_value(self):
-        return "mathutils.Vector(({}, {}, {}))".format(
-            self.value[0],
-            self.value[1],
-            self.value[2]
-        )
+        v = self.default_value
+        return f"mathutils.Vector(({v[0]}, {v[1]}, {v[2]}))"
 
     def draw(self, context, layout, node, text):
         if self.is_linked or self.is_output:
@@ -35,4 +32,4 @@ class NodeSocketLogicColorRGB(NodeSocket, NodeSocketLogic):
         else:
             row = layout.row()
             row.label(text=text if text else 'Color')
-            row.prop(self, "value", text='')
+            row.prop(self, "default_value", text='')

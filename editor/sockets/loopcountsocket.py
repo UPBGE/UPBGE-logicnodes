@@ -12,18 +12,20 @@ from bpy.props import IntProperty
 class NodeSocketLogicLoopCount(NodeSocket, NodeSocketLogic):
     bl_idname = "NLSocketLoopCount"
     bl_label = "Loop Count"
+    nl_color = SOCKET_COLOR_INTEGER
+    nl_type = SOCKET_TYPE_INT
 
-    value: StringProperty(
-        update=update_draw)
+    default_value: IntProperty(update=update_draw)
 
     def update_value(self, context):
         current_type = self.value_type
         if current_type == "INFINITE":
-            self.value = "-1"
+            self.default_value = "-1"
         elif current_type == "ONCE":
-            self.value = "1"
+            self.default_value = "1"
         elif current_type == "CUSTOM":
-            self.value = '{}'.format(int(self.integer_editor) - 1)
+            self.default_value = self.integer_editor - 1
+
     value_type: EnumProperty(
         name='Loop Count',
         items=_enum_loop_count_values,
@@ -38,9 +40,6 @@ class NodeSocketLogicLoopCount(NodeSocket, NodeSocketLogic):
             'be repeated when the condition is TRUE'
         )
     )
-
-    nl_color = SOCKET_COLOR_INTEGER
-    nl_type = SOCKET_TYPE_INT
 
     def draw(self, context, layout, node, text):
         if self.is_linked or self.is_output:
@@ -57,7 +56,7 @@ class NodeSocketLogicLoopCount(NodeSocket, NodeSocketLogic):
     def get_unlinked_value(self):
         current_type = self.value_type
         if current_type == "INFINITE":
-            return "-1"
+            return -1
         if current_type == "ONCE":
-            return "0"
-        return '{}'.format(self.value)
+            return 0
+        return self.default_value

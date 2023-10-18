@@ -27,9 +27,6 @@ NODE_ATTRS = [
     'float_field',
     'expression_field',
     'input_type',
-    'value_x',
-    'value_y',
-    'value_z',
     'title',
     'local',
     'operator',
@@ -39,6 +36,7 @@ NODE_ATTRS = [
     'label',
     'ref_index',
     'use_owner',
+    'use_active',
     'advanced'
 ]
 

@@ -1,15 +1,9 @@
-import os
 import bpy
-import shutil
-import bge_netlogic
 from .. import utilities as utils
-from .file_text_buffer import FileTextBuffer
 from .abstract_text_buffer import AbstractTextBuffer
 from .uid_map import UIDMap
 from ..utilities import make_valid_name, preferences
-# from ..editor.sockets.socket import NLSocket
 from time import time
-from mathutils import Vector
 
 
 class BLTextWrapper(AbstractTextBuffer):
@@ -252,6 +246,8 @@ class TreeCodeGenerator(object):
             if input.is_linked:
                 # XXX: MAYBE THIS IS THE CAUSE OF ACCESS VIOLATION
                 linked_node = input.links[0].from_socket.node
+                if linked_node.mute:
+                    return 'GOOD'
                 while isinstance(linked_node, bpy.types.NodeReroute):
                     if not linked_node.inputs[0].links:
                         return 'FAULTY'

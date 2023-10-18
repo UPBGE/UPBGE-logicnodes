@@ -1,6 +1,7 @@
 from .socket import SOCKET_TYPE_STRING, NodeSocketLogic
 from .socket import SOCKET_COLOR_STRING
 from .socket import socket_type
+from .socket import update_draw
 from ...utilities import LOGIC_NODE_IDENTIFIER
 from ...utilities import make_valid_name
 from bpy.types import NodeSocket
@@ -13,7 +14,7 @@ import bpy
 class NodeSocketLogicBoneConstraint(NodeSocket, NodeSocketLogic):
     bl_idname = "NLBoneConstraintSocket"
     bl_label = "Bone Constraint"
-    value: StringProperty()
+    default_value: StringProperty(name='Bone Constraint', update=update_draw)
     ref_index: IntProperty(default=0)
 
     nl_color = SOCKET_COLOR_STRING
@@ -34,14 +35,14 @@ class NodeSocketLogicBoneConstraint(NodeSocket, NodeSocketLogic):
             armature_socket = self.node.inputs[bone_socket.ref_index]
             armature = None
             if not armature_socket.use_owner:
-                armature = armature_socket.value
-                if bone_socket.value and armature:
-                    bone = armature.pose.bones.get(bone_socket.value)
-            elif bone_socket.value:
+                armature = armature_socket.default_value
+                if bone_socket.default_value and armature:
+                    bone = armature.pose.bones.get(bone_socket.default_value)
+            elif bone_socket.default_value:
                 for obj in bpy.data.objects:
                     if f'{LOGIC_NODE_IDENTIFIER}{make_valid_name(tree.name)}' in obj.game.properties:
                         armature = obj
-                        bone = armature.pose.bones.get(bone_socket.value)
+                        bone = armature.pose.bones.get(bone_socket.default_value)
                         break
             # if not armature_socket.is_linked and bone_socket.value and armature:
             #     armature = armature_socket.value
@@ -52,16 +53,16 @@ class NodeSocketLogicBoneConstraint(NodeSocket, NodeSocketLogic):
                 if not bone_socket.is_linked and not armature_socket.is_linked:
                     col.prop_search(
                         self,
-                        'value',
+                        'default_value',
                         bone,
                         'constraints',
                         text=''
                     )
                     return
             if (bone or bone_socket.is_linked) and (armature or armature_socket.is_linked):
-                col.prop(self, 'value', text='')
+                col.prop(self, 'default_value', text='')
             else:
                 col.label(text='No Bone!', icon='ERROR')
 
     def get_unlinked_value(self):
-        return '"{}"'.format(self.value)
+        return repr(self.default_value)

@@ -11,7 +11,7 @@ class NodeSocketLogicBlendMode(NodeSocket, NodeSocketLogic):
     bl_idname = "NLBlendActionMode"
     bl_label = "Blend Mode"
 
-    value: EnumProperty(
+    default_value: EnumProperty(
         name='Blend Mode',
         items=_enum_blend_mode_values,
         description="The blend mode of the action",
@@ -19,7 +19,7 @@ class NodeSocketLogicBlendMode(NodeSocket, NodeSocketLogic):
     )
 
     def get_unlinked_value(self):
-        return self.value
+        return self.default_value
 
     nl_color = SOCKET_COLOR_INTEGER
     nl_type = SOCKET_TYPE_INT
@@ -28,4 +28,4 @@ class NodeSocketLogicBlendMode(NodeSocket, NodeSocketLogic):
         if self.is_linked or self.is_output:
             layout.label(text=text)
         else:
-            layout.prop(self, "value", text=text)
+            layout.prop(self, "default_value", text=text)

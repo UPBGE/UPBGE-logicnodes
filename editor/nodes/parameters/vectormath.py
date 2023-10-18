@@ -55,7 +55,7 @@ class LogicNodeVectorMath(LogicNodeParameterType):
     def init(self, context):
         self.add_input(NodeSocketLogicVectorXYZ, "Vector 1")
         self.add_input(NodeSocketLogicVectorXYZ, "Vector 2")
-        self.add_input(NodeSocketLogicFloatFactor, "Factor", {'value': 1.0})
+        self.add_input(NodeSocketLogicFloatFactor, "Factor", {'default_value': 1.0})
         self.add_input(NodeSocketLogicFloat, "Scale")
         self.add_input(NodeSocketLogicVectorXYZ, "Vector 3")
         self.add_input(NodeSocketLogicFloat, "IOR")

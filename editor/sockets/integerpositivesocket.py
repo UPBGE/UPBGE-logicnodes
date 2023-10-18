@@ -11,7 +11,7 @@ class NodeSocketLogicIntegerPositive(NodeSocket, NodeSocketLogic):
     bl_idname = "NLPositiveIntegerFieldSocket"
     bl_label = "Positive Integer"
 
-    value: IntProperty(min=0, default=0, update=update_draw)
+    default_value: IntProperty(min=0, default=0, update=update_draw)
     nl_color = SOCKET_COLOR_INTEGER
     nl_type = SOCKET_TYPE_INT
 
@@ -19,7 +19,7 @@ class NodeSocketLogicIntegerPositive(NodeSocket, NodeSocketLogic):
         if self.is_linked or self.is_output:
             layout.label(text=text)
         else:
-            layout.prop(self, "value", text=text)
+            layout.prop(self, "default_value", text=text)
 
     def get_unlinked_value(self):
-        return '{}'.format(self.value)
+        return '{}'.format(self.default_value)

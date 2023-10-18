@@ -16,7 +16,7 @@ class NodeSocketLogicObject(NodeSocket, NodeSocketLogic):
     nl_type = SOCKET_TYPE_OBJECT
     nl_color = SOCKET_COLOR_OBJECT
 
-    value: PointerProperty(name='Object', type=Object)
+    default_value: PointerProperty(name='Object', type=Object)
     use_owner: BoolProperty(
         name='Use Owner',
         description='Use the owner of this tree'
@@ -46,7 +46,7 @@ class NodeSocketLogicObject(NodeSocket, NodeSocketLogic):
                     row.prop(self, 'use_owner', icon='USER', text='')
                 col.prop_search(
                     self,
-                    'value',
+                    'default_value',
                     bpy.context.scene,
                     'objects',
                     icon='NONE',
@@ -61,7 +61,7 @@ class NodeSocketLogicObject(NodeSocket, NodeSocketLogic):
     def get_unlinked_value(self):
         if self.use_owner and not self.is_scene_logic():
             return 'game_object'  # '"NLO:U_O"'
-        if isinstance(self.value, bpy.types.Object):
-            return f'scene.objects.get("{self.value.name}", "{self.value.name}")'
+        if isinstance(self.default_value, bpy.types.Object):
+            return f'scene.objects.get("{self.default_value.name}", "{self.default_value.name}")'
             # return f'scene.objects.get("{self.value.name}", bpy.data.objects.get("{self.value.name}", None))'
             # return '"NLO:{}"'.format(self.value.name)

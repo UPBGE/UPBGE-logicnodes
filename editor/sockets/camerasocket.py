@@ -1,6 +1,7 @@
 from .socket import SOCKET_TYPE_OBJECT, NodeSocketLogic
 from .socket import SOCKET_COLOR_OBJECT
 from .socket import socket_type
+from .socket import update_draw
 from ..filter_types import filter_camera
 from bpy.types import NodeSocket
 from bpy.types import Object
@@ -13,16 +14,16 @@ import bpy
 class NodeSocketLogicCamera(NodeSocket, NodeSocketLogic):
     bl_idname = "NLCameraSocket"
     bl_label = "Camera"
-    value: PointerProperty(
+    default_value: PointerProperty(
         name='Object',
         type=Object,
-        poll=filter_camera
-        # update=update_tree_code
+        poll=filter_camera,
+        update=update_draw
     )
     use_active: BoolProperty(
         name='Use Active',
-        # update=update_tree_code,
-        description='Use current active camera'
+        description='Use current active camera',
+        update=update_draw
     )
 
     nl_color = SOCKET_COLOR_OBJECT
@@ -42,7 +43,7 @@ class NodeSocketLogicCamera(NodeSocket, NodeSocketLogic):
                 row.prop(self, 'use_active', icon='CAMERA_DATA', text='')
                 col.prop_search(
                     self,
-                    'value',
+                    'default_value',
                     bpy.context.scene,
                     'objects',
                     icon='NONE',
@@ -56,5 +57,5 @@ class NodeSocketLogicCamera(NodeSocket, NodeSocketLogic):
     def get_unlinked_value(self):
         if self.use_active:
             return 'self.owner.scene.active_camera'
-        if isinstance(self.value, Object):
-            return f'scene.objects["{self.value.name}"]'
+        if isinstance(self.default_value, Object):
+            return f'scene.objects["{self.default_value.name}"]'

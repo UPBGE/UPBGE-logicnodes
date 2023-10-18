@@ -11,7 +11,7 @@ class NodeSocketLogicFilePath(NodeSocket, NodeSocketLogic):
     bl_idname = "NLFilePathSocket"
     bl_label = "Filepath"
 
-    value: StringProperty(
+    default_value: StringProperty(
         subtype='FILE_PATH',
         update=update_draw
     )
@@ -26,11 +26,7 @@ class NodeSocketLogicFilePath(NodeSocket, NodeSocketLogic):
             col = layout.column()
             if text:
                 col.label(text=text)
-            col.prop(self, "value", text='')
+            col.prop(self, "default_value", text='')
 
     def get_unlinked_value(self):
-        path = str(self.value)
-        path = path.replace('\\', '/')
-        if path.endswith('\\'):
-            path = path[:-1]
-        return '"{}"'.format(path)
+        return repr(self.default_value)

@@ -13,18 +13,18 @@ import bpy
 class NodeSocketLogicTree(NodeSocket, NodeSocketLogic):
     bl_idname = "NLSocketLogicTree"
     bl_label = "Logic Tree"
-    value: PointerProperty(
+    nl_color = SOCKET_COLOR_GENERIC
+    nl_type = SOCKET_TYPE_NODETREE
+
+    default_value: PointerProperty(
         name='Logic Tree',
         type=NodeTree,
         description=(
             'Select a Logic Tree'
         ),
-        poll=filter_logic_trees
-        # update=update_tree_code
+        poll=filter_logic_trees,
+        update=update_draw
     )
-
-    nl_color = SOCKET_COLOR_GENERIC
-    nl_type = SOCKET_TYPE_NODETREE
 
     def draw(self, context, layout, node, text):
         icon = 'OUTLINER'
@@ -36,7 +36,7 @@ class NodeSocketLogicTree(NodeSocket, NodeSocketLogic):
                 col.label(text=text)
             col.prop_search(
                 self,
-                "value",
+                "default_value",
                 bpy.data,
                 'node_groups',
                 icon=icon,
@@ -44,5 +44,5 @@ class NodeSocketLogicTree(NodeSocket, NodeSocketLogic):
             )
 
     def get_unlinked_value(self):
-        if isinstance(self.value, NodeTree):
-            return '"{}"'.format(self.value.name)
+        if isinstance(self.default_value, NodeTree):
+            return '"{}"'.format(self.default_value.name)

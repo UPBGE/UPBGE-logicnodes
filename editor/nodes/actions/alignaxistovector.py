@@ -22,7 +22,7 @@ class LogicNodeAlignAxisToVector(LogicNodeActionType):
         self.add_input(NodeSocketLogicObject, "Object")
         self.add_input(NodeSocketLogicVectorXYZ, "Vector")
         self.add_input(NodeSocketLogicAxisSigned, "Axis")
-        self.add_input(NodeSocketLogicFloatFactor, "Factor", {'value': 1.0})
+        self.add_input(NodeSocketLogicFloatFactor, "Factor", {'default_value': 1.0})
         self.add_output(NodeSocketLogicCondition, 'Done')
         LogicNodeActionType.init(self, context)
 

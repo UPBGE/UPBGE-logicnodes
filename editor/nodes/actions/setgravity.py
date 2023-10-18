@@ -13,7 +13,7 @@ class LogicNodeSetGravity(LogicNodeActionType):
 
     def init(self, context):
         self.add_input(NodeSocketLogicCondition, "Condition")
-        self.add_input(NodeSocketLogicVectorXYZVelocity, "Gravity", {'value_z': -9.8})
+        self.add_input(NodeSocketLogicVectorXYZVelocity, "Gravity", {'default_value': (0., 0., -9.8)})
         self.add_output(NodeSocketLogicCondition, 'Done')
         LogicNodeActionType.init(self, context)
 

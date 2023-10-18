@@ -25,7 +25,7 @@ class LogicNodePlaySequence(LogicNodeActionType):
         self.add_input(NodeSocketLogicPlayMode, "Mode", {'enabled': False})
         self.add_input(NodeSocketLogicBoolean, 'Continue', {'enabled': False})
         self.add_input(NodeSocketLogicVectorXY, "Frames", {'enabled': False})
-        self.add_input(NodeSocketLogicFloatPositive, "FPS", {'enabled': False, 'value': 60})
+        self.add_input(NodeSocketLogicFloatPositive, "FPS", {'enabled': False, 'default_value': 60})
         self.add_output(NodeSocketLogicCondition, "On Start")
         self.add_output(NodeSocketLogicCondition, "Running")
         self.add_output(NodeSocketLogicCondition, "On Finish")

@@ -15,7 +15,7 @@ class LogicNodeClamp(LogicNodeParameterType):
         self.add_input(NodeSocketLogicFloat, "Value")
         self.add_input(NodeSocketLogicVectorXY, "", {'enabled': False})
         self.add_input(NodeSocketLogicFloat, "Min")
-        self.add_input(NodeSocketLogicFloat, "Max", {'value': 1.0})
+        self.add_input(NodeSocketLogicFloat, "Max", {'default_value': 1.0})
         self.add_output(NodeSocketLogicFloat, "Value")
         LogicNodeParameterType.init(self, context)
 

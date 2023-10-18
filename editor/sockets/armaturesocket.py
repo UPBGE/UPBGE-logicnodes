@@ -2,6 +2,7 @@ from .socket import NodeSocketLogic
 from .socket import SOCKET_COLOR_OBJECT
 from .socket import SOCKET_TYPE_ARMATURE
 from .socket import socket_type
+from .socket import update_draw
 from ..filter_types import filter_armatures
 from bpy.types import NodeSocket
 from bpy.types import Armature
@@ -19,9 +20,11 @@ import bpy
 class NodeSocketLogicArmature(NodeSocket, NodeSocketLogic):
     bl_idname = "NLArmatureObjectSocket"
     bl_label = "Armature"
-    value: PointerProperty(
+
+    default_value: PointerProperty(
         name='Armature',
         type=Armature,
+        update=update_draw,
         poll=filter_armatures
     )
     use_owner: BoolProperty(
@@ -46,7 +49,7 @@ class NodeSocketLogicArmature(NodeSocket, NodeSocketLogic):
                 row.prop(self, 'use_owner', icon='USER', text='')
                 col.prop_search(
                     self,
-                    'value',
+                    'default_value',
                     bpy.context.scene,
                     'objects',
                     icon='NONE',
@@ -60,5 +63,5 @@ class NodeSocketLogicArmature(NodeSocket, NodeSocketLogic):
     def get_unlinked_value(self):
         if self.use_owner:
             return 'game_object'
-        if self.value is not None and isinstance(self.value.data, Armature):
-            return f'scene.objects.get("{self.value.data.name}", "{self.value.data.name}")'
+        if self.default_value is not None and isinstance(self.default_value.data, Armature):
+            return f'scene.objects.get("{self.default_value.name}", "{self.default_value.name}")'

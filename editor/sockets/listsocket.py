@@ -15,4 +15,4 @@ class NodeSocketLogicList(NodeSocket, NodeSocketLogic):
         layout.label(text=text)
 
     def get_unlinked_value(self):
-        return "None"
+        return None

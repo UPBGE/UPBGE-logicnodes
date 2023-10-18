@@ -45,7 +45,7 @@ class LogicNodeAddPhysicsConstraint(LogicNodeActionType):
         self.add_input(NodeSocketLogicVectorXYZ, 'Pivot')
         self.add_input(NodeSocketLogicBoolean, 'Limit Axis')
         self.add_input(NodeSocketLogicVectorXYZ, 'Axis Limits')
-        self.add_input(NodeSocketLogicBoolean, 'Linked Collision', {'value': True})
+        self.add_input(NodeSocketLogicBoolean, 'Linked Collision', {'default_value': True})
         self.add_output(NodeSocketLogicCondition, 'Done')
         LogicNodeActionType.init(self, context)
 

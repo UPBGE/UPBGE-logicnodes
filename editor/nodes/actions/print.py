@@ -2,7 +2,6 @@ from ..node import node_type
 from ..node import LogicNodeActionType
 from ...sockets import NodeSocketLogicCondition
 from ...sockets import NodeSocketLogicString
-from ...sockets import NodeSocketLogicBoolCondition
 from ...enum_types import _enum_msg_types
 from bpy.props import EnumProperty
 
@@ -24,7 +23,7 @@ class LogicNodePrint(LogicNodeActionType):
     )
 
     def init(self, context):
-        self.add_input(NodeSocketLogicBoolCondition, "Condition")
+        self.add_input(NodeSocketLogicCondition, "Condition", {'default_value': True, 'show_prop': True})
         self.add_input(NodeSocketLogicString, "Value")
         self.add_output(NodeSocketLogicCondition, 'Done')
         LogicNodeActionType.init(self, context)

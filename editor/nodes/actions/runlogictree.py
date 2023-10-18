@@ -2,7 +2,7 @@ from ..node import node_type
 from ..node import LogicNodeActionType
 from ...sockets import NodeSocketLogicCondition
 from ...sockets import NodeSocketLogicObject
-from ...sockets import NodeSocketLogicBoolCondition
+from ...sockets import NodeSocketLogicCondition
 from ...sockets import NodeSocketLogicTree
 
 
@@ -14,7 +14,7 @@ class LogicNodeRunLogicTree(LogicNodeActionType):
     nl_class = "ULExecuteSubNetwork"
 
     def init(self, context):
-        self.add_input(NodeSocketLogicBoolCondition, "Condition")
+        self.add_input(NodeSocketLogicCondition, "Condition", {'default_value': True, 'show_prop': True})
         self.add_input(NodeSocketLogicObject, "Target Object")
         self.add_input(NodeSocketLogicTree, "Tree Name")
         self.add_output(NodeSocketLogicCondition, 'Done')

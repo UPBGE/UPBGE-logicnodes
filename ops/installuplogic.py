@@ -22,7 +22,11 @@ class LOGIC_NODES_OT_install_uplogic(Operator):
         notify('Installing uplogic module...')
         try:
             os.system(f'"{sys.executable}" -m ensurepip')
-            os.system(f'"{sys.executable}" -m pip install uplogic=={preferences().uplogic_version}')
+            version = preferences().uplogic_version
+            if version == 'latest':
+                os.system(f'"{sys.executable}" -m pip install uplogic --upgrade')
+            else:
+                os.system(f'"{sys.executable}" -m pip install uplogic=={preferences().uplogic_version}')
             success('Installed.')
         except Exception as e:
             error('Install failed. Error:')
