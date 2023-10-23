@@ -176,10 +176,10 @@ class ValuesMenu(bpy.types.Menu):
     def draw(self, context):
         layout = self.layout
         # layout.menu("LN_MT_simple_values_menu", text="Simple", icon="RIGHTARROW_THIN")
-        insertNode(layout, "NLParameterBooleanValue", "Boolean")
-        insertNode(layout, "NLParameterFloatValue", "Float")
-        insertNode(layout, "NLParameterIntValue", "Integer")
-        insertNode(layout, "NLParameterStringValue", "String")
+        insertNode(layout, "LogicNodeSimpleValue", "Boolean", settings={'value_type': repr('2')})
+        insertNode(layout, "LogicNodeSimpleValue", "Float", settings={'value_type': repr('0')})
+        insertNode(layout, "LogicNodeSimpleValue", "Integer", settings={'value_type': repr('1')})
+        insertNode(layout, "LogicNodeSimpleValue", "String", settings={'value_type': repr('3')})
         layout.separator()
         # layout.menu("LN_MT_global_values_menu", text="Global", icon="RIGHTARROW_THIN")
         layout.menu("LN_MT_vector_values_menu", text="Vector", icon="RIGHTARROW_THIN")

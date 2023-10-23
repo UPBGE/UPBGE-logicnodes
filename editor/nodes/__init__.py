@@ -311,5 +311,6 @@ from .parameters.xyztomatrix import LogicNodeXYZtoMatrix
 from .parameters.listextend import LogicNodeListExtend
 from .parameters.rotatebypoint import LogicNodeRotateByPoint
 from .parameters.getlogictreeproperty import LogicNodeGetLogicTreeProperty
+from .parameters.simplevalue import LogicNodeSimpleValue
 
 # from .groupnode import NodeGroupInputLogic

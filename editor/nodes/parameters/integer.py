@@ -8,6 +8,7 @@ class LogicNodeInteger(LogicNodeParameterType):
     bl_idname = "NLParameterIntValue"
     bl_label = "Integer"
     nl_module = 'uplogic.nodes.parameters'
+    deprecated = True
 
     def init(self, context):
         self.add_input(NodeSocketLogicInteger, "")

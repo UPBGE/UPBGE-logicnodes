@@ -8,6 +8,7 @@ class LogicNodeFloat(LogicNodeParameterType):
     bl_idname = "NLParameterFloatValue"
     bl_label = "Float"
     nl_module = 'uplogic.nodes.parameters'
+    deprecated = True
 
     def init(self, context):
         self.add_input(NodeSocketLogicFloat, "")

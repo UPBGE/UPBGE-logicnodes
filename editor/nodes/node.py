@@ -52,16 +52,6 @@ class LogicNode:
 
     def group_update(self, nodetree):
         pass
-    # def insert_link(self, link):
-    #     to_socket = link.to_socket
-    #     from_socket = link.from_socket
-    #     try:
-    #         to_socket.validate(link, from_socket)
-    #     except Exception as e:
-    #         warn(e)
-    #         debug(
-    #             'Receiving Node not a Logic Node Type, skipping validation.'
-    #         )
 
     def set_ready(self):
         self.ready = True
@@ -69,12 +59,16 @@ class LogicNode:
 
     def add_input(self, cls, name, settings={}):
         ipt = self.inputs.new(cls.bl_idname, name)
+        if settings:
+            ipt.use_default_value = True
         for key, val in settings.items():
             setattr(ipt, key, val)
         return ipt
 
     def add_output(self, cls, name, settings={}):
         otp = self.outputs.new(cls.bl_idname, name)
+        if settings:
+            otp.use_default_value = True
         for key, val in settings.items():
             setattr(otp, key, val)
         return otp

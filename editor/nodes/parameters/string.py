@@ -9,6 +9,7 @@ class LogicNodeString(LogicNodeParameterType):
     bl_label = "String"
     nl_module = 'uplogic.nodes.parameters'
     nl_class = "ULSimpleValue"
+    deprecated = True
 
     def init(self, context):
         self.add_input(NodeSocketLogicString, "")

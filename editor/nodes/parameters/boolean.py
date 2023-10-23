@@ -9,6 +9,7 @@ class LogicNodeBoolean(LogicNodeParameterType):
     bl_label = "Boolean"
     nl_module = 'uplogic.nodes.parameters'
     nl_class = "ULSimpleValue"
+    deprecated = True
 
     def init(self, context):
         self.add_input(NodeSocketLogicBoolean, "Bool")
