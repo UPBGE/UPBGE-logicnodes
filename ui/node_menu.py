@@ -1,7 +1,5 @@
 import bpy
-
-
-_items = []
+from .interface import menu_item
 
 
 def draw_add_menu(self, context):
@@ -10,8 +8,8 @@ def draw_add_menu(self, context):
     layout = self.layout
     layout.operator_context = "INVOKE_DEFAULT"
 
-    layout.operator('bge_netlogic.node_search', text="Search", icon="VIEWZOOM")
-    layout.separator()
+    # layout.operator('bge_netlogic.node_search', text="Search", icon="VIEWZOOM")
+    # layout.separator()
     layout.menu("LN_MT_events_menu", text="Events", icon="RIGHTARROW_THIN")
     layout.menu("LN_MT_game_menu", text="Game", icon="RIGHTARROW_THIN")
     layout.menu("LN_MT_input_menu", text="Input", icon="RIGHTARROW_THIN")
@@ -27,13 +25,13 @@ def draw_add_menu(self, context):
     layout.menu("LN_MT_logic_menu", text="Logic", icon="RIGHTARROW_THIN")
     layout.menu("LN_MT_math_menu", text="Math", icon="RIGHTARROW_THIN")
     layout.menu("LN_MT_physics_menu", text="Physics", icon="RIGHTARROW_THIN")
+    layout.menu("LN_MT_python_menu", text="Python", icon="RIGHTARROW_THIN")
     layout.menu("LN_MT_raycast_menu", text="Ray Casts", icon="RIGHTARROW_THIN")
     layout.menu("LN_MT_time_menu", text="Time", icon="RIGHTARROW_THIN")
-    layout.menu("LN_MT_python_menu", text="Python", icon="RIGHTARROW_THIN")
     layout.separator()
+    layout.menu("LN_MT_data_menu", text="Data", icon="RIGHTARROW_THIN")
     layout.menu("LN_MT_file_menu", text="File", icon="RIGHTARROW_THIN")
     layout.menu("LN_MT_network_menu", text="Network", icon="RIGHTARROW_THIN")
-    layout.menu("LN_MT_data_menu", text="Data", icon="RIGHTARROW_THIN")
     layout.separator()
     layout.menu("LN_MT_render_menu", text="Render", icon="RIGHTARROW_THIN")
     layout.menu("LN_MT_ui_menu", text="UI", icon="RIGHTARROW_THIN")
@@ -53,6 +51,7 @@ def insertNode(layout, type, text, icon="NONE", settings={}):
     return operator
 
 
+@menu_item
 class CustomEventsMenu(bpy.types.Menu):
     bl_idname = "LN_MT_custom_events_menu"
     bl_label = "Custom Events Menu"
@@ -63,9 +62,7 @@ class CustomEventsMenu(bpy.types.Menu):
         insertNode(layout, "NLParameterReceiveMessage", "Receive")
 
 
-_items.append(CustomEventsMenu)
-
-
+@menu_item
 class EventsMenu(bpy.types.Menu):
     bl_idname = "LN_MT_events_menu"
     bl_label = "Events Menu"
@@ -82,25 +79,21 @@ class EventsMenu(bpy.types.Menu):
         layout.menu("LN_MT_custom_events_menu", text="Custom", icon="RIGHTARROW_THIN")
 
 
-_items.append(EventsMenu)
-
-
+@menu_item
 class GameMenu(bpy.types.Menu):
     bl_idname = "LN_MT_game_menu"
     bl_label = "Game Menu"
 
     def draw(self, context):
         layout = self.layout
-        insertNode(layout, "NLActionStartGame", "Load File")
+        insertNode(layout, "NLActionStartGame", "Jump To File")
         insertNode(layout, "NLActionLoadGame", "Load Game")
         insertNode(layout, "NLActionEndGame", "Quit Game")
         insertNode(layout, "NLActionRestartGame", "Restart Game")
         insertNode(layout, "NLActionSaveGame", "Save Game")
 
 
-_items.append(GameMenu)
-
-
+@menu_item
 class InputMenu(bpy.types.Menu):
     bl_idname = "LN_MT_input_menu"
     bl_label = "Input Menu"
@@ -113,64 +106,58 @@ class InputMenu(bpy.types.Menu):
         layout.menu("LN_MT_vr_menu", text="VR", icon="RIGHTARROW_THIN")
 
 
-_items.append(InputMenu)
-
-
+@menu_item
 class MouseMenu(bpy.types.Menu):
     bl_idname = "LN_MT_mouse_menu"
     bl_label = "Mouse Menu"
 
     def draw(self, context):
         layout = self.layout
-        insertNode(layout, "NLMousePressedCondition", "Button Down")
-        insertNode(layout, "NLMouseReleasedCondition", "Button Up")
-        insertNode(layout, "NLConditionMousePressedOn", "Button Over")
-        insertNode(layout, "NLActionSetMouseCursorVisibility", "Cursor Visibility")
-        insertNode(layout, "NLActionMouseLookNode", "Mouse Look")
-        insertNode(layout, "NLMouseDataParameter", "Mouse Status")
+        insertNode(layout, "NLMousePressedCondition", "Button")
         insertNode(layout, "NLMouseMovedCondition", "Moved")
         insertNode(layout, "NLConditionMouseTargetingNode", "Over")
+        insertNode(layout, "NLMouseDataParameter", "Mouse Status")
+        layout.separator()
+        insertNode(layout, "NLActionSetMouseCursorVisibility", "Cursor Visibility")
         insertNode(layout, "NLActionSetMousePosition", "Set Position")
-        insertNode(layout, "NLConditionMouseWheelMoved", "Wheel")
+        # insertNode(layout, "NLConditionMouseWheelMoved", "Wheel")
+        layout.separator()
+        insertNode(layout, "NLActionMouseLookNode", "Mouse Look")
 
 
-_items.append(MouseMenu)
-
-
+@menu_item
 class KeyboardMenu(bpy.types.Menu):
     bl_idname = "LN_MT_keyboard_menu"
     bl_label = "Keyboard Menu"
 
     def draw(self, context):
         layout = self.layout
+        insertNode(layout, "NLKeyPressedCondition", "Key")
+        # insertNode(layout, "NLKeyReleasedCondition", "Key Up")
         insertNode(layout, "NLKeyboardActive", "Keyboard Active")
-        insertNode(layout, "NLKeyPressedCondition", "Key Down")
-        insertNode(layout, "NLKeyReleasedCondition", "Key Up")
+        layout.separator()
         insertNode(layout, "NLParameterKeyboardKeyCode", "Key Code")
         insertNode(layout, "NLKeyLoggerAction", "Logger")
 
 
-_items.append(KeyboardMenu)
-
-
+@menu_item
 class GamepadMenu(bpy.types.Menu):
     bl_idname = "LN_MT_gamepad_menu"
     bl_label = "Gamepad Menu"
 
     def draw(self, context):
         layout = self.layout
-        insertNode(layout, "NLGamepadActive", "Gamepad Active")
-        insertNode(layout, "NLGamepadButtonsCondition", "Button Down")
-        insertNode(layout, "NLGamepadButtonUpCondition", "Button Up")
-        insertNode(layout, "NLGamepadLook", "Gamepad Look")
+        # insertNode(layout, "NLGamepadButtonUpCondition", "Button Up")
+        insertNode(layout, "NLGamepadButtonsCondition", "Button")
         insertNode(layout, "NLGamepadSticksCondition", "Sticks")
         insertNode(layout, "NLGamepadTriggerCondition", "Trigger")
+        insertNode(layout, "NLGamepadActive", "Gamepad Active")
+        layout.separator()
         insertNode(layout, "NLGamepadVibration", "Vibration")
+        insertNode(layout, "NLGamepadLook", "Gamepad Look")
 
 
-_items.append(GamepadMenu)
-
-
+@menu_item
 class VRMenu(bpy.types.Menu):
     bl_idname = "LN_MT_vr_menu"
     bl_label = "VR Menu"
@@ -181,33 +168,37 @@ class VRMenu(bpy.types.Menu):
         insertNode(layout, "NLGetVRControllerValues", "VR Controller")
 
 
-_items.append(VRMenu)
-
-
+@menu_item
 class ValuesMenu(bpy.types.Menu):
     bl_idname = "LN_MT_values_menu"
     bl_label = "Values Menu"
 
     def draw(self, context):
         layout = self.layout
-        layout.menu("LN_MT_simple_values_menu", text="Simple", icon="RIGHTARROW_THIN")
-        layout.menu("LN_MT_global_values_menu", text="Global", icon="RIGHTARROW_THIN")
-        layout.menu("LN_MT_vector_values_menu", text="Vector", icon="RIGHTARROW_THIN")
-        layout.menu("LN_MT_random_values_menu", text="Random", icon="RIGHTARROW_THIN")
+        # layout.menu("LN_MT_simple_values_menu", text="Simple", icon="RIGHTARROW_THIN")
+        insertNode(layout, "LogicNodeSimpleValue", "Boolean", settings={'value_type': repr('2')})
+        insertNode(layout, "LogicNodeSimpleValue", "Float", settings={'value_type': repr('0')})
+        insertNode(layout, "LogicNodeSimpleValue", "Integer", settings={'value_type': repr('1')})
+        insertNode(layout, "LogicNodeSimpleValue", "String", settings={'value_type': repr('3')})
         layout.separator()
-        insertNode(layout, "NLParameterFileValue", "File Path")
-        insertNode(layout, "NLParameterFormattedString", "Formatted String")
+        # layout.menu("LN_MT_global_values_menu", text="Global", icon="RIGHTARROW_THIN")
+        layout.menu("LN_MT_vector_values_menu", text="Vector", icon="RIGHTARROW_THIN")
+        layout.menu("LN_MT_property_menu", text="Properties", icon="RIGHTARROW_THIN")
+        # layout.menu("LN_MT_random_values_menu", text="Random", icon="RIGHTARROW_THIN")
+        layout.separator()
+        insertNode(layout, "LogicNodeRandomValue", "Random Value")
         insertNode(layout, "NLInvertValueNode", "Invert")
+        insertNode(layout, "NLParameterFormattedString", "Formatted String")
+        insertNode(layout, "NLParameterFileValue", "File Path")
+        layout.separator()
         insertNode(layout, "NLStoreValue", "Store Value")
         insertNode(layout, "NLValueSwitch", "Value Switch")
         insertNode(layout, "NLValueSwitchList", "Value Switch List")
         insertNode(layout, "NLValueSwitchListCompare", "Value Switch List Compare")
-        insertNode(layout, "NLConditionValueValidNode", "Value Valid")
+        # insertNode(layout, "NLConditionValueValidNode", "Value Valid")
 
 
-_items.append(ValuesMenu)
-
-
+@menu_item
 class SimpleValuesMenu(bpy.types.Menu):
     bl_idname = "LN_MT_simple_values_menu"
     bl_label = "Simple Values Menu"
@@ -220,9 +211,7 @@ class SimpleValuesMenu(bpy.types.Menu):
         insertNode(layout, "NLParameterStringValue", "String")
 
 
-_items.append(SimpleValuesMenu)
-
-
+@menu_item
 class GlobalValuesMenu(bpy.types.Menu):
     bl_idname = "LN_MT_global_values_menu"
     bl_label = "Global Values Menu"
@@ -234,9 +223,7 @@ class GlobalValuesMenu(bpy.types.Menu):
         insertNode(layout, "NLActionListGlobalValues", "List Global Category")
 
 
-_items.append(GlobalValuesMenu)
-
-
+@menu_item
 class VectorValuesMenu(bpy.types.Menu):
     bl_idname = "LN_MT_vector_values_menu"
     bl_label = "Vector Values Menu"
@@ -253,23 +240,19 @@ class VectorValuesMenu(bpy.types.Menu):
         insertNode(layout, "NLParameterEulerSimpleNode", "Euler")
 
 
-_items.append(VectorValuesMenu)
-
-
+@menu_item
 class RandomValuesMenu(bpy.types.Menu):
     bl_idname = "LN_MT_random_values_menu"
     bl_label = "Random Values Menu"
 
     def draw(self, context):
         layout = self.layout
-        insertNode(layout, "NLActionRandomFloat", "Random Float")
-        insertNode(layout, "NLActionRandomInteger", "Random Integer")
-        insertNode(layout, "NLRandomVect", "Random Vector")
+        # insertNode(layout, "NLActionRandomFloat", "Random Float")
+        # insertNode(layout, "NLActionRandomInteger", "Random Integer")
+        # insertNode(layout, "NLRandomVect", "Random Vector")
 
 
-_items.append(RandomValuesMenu)
-
-
+@menu_item
 class AnimationMenu(bpy.types.Menu):
     bl_idname = "LN_MT_animation_menu"
     bl_label = "Animation Menu"
@@ -285,9 +268,7 @@ class AnimationMenu(bpy.types.Menu):
         layout.menu("LN_MT_boneconstraints_menu", text="Bone Constraints", icon="RIGHTARROW_THIN")
 
 
-_items.append(AnimationMenu)
-
-
+@menu_item
 class ArmatureRigMenu(bpy.types.Menu):
     bl_idname = "LN_MT_armature_rig_menu"
     bl_label = "Armature / Rig Menu"
@@ -295,13 +276,11 @@ class ArmatureRigMenu(bpy.types.Menu):
     def draw(self, context):
         layout = self.layout
         insertNode(layout, "NLParameterBoneStatus", "Bone Status")
-        insertNode(layout, "NLActionEditBoneNode", "Edit Bone")
+        # insertNode(layout, "NLActionEditBoneNode", "Edit Bone")
         insertNode(layout, "NLActionSetBonePos", "Set Bone Position")
 
 
-_items.append(ArmatureRigMenu)
-
-
+@menu_item
 class BoneConstraintsMenu(bpy.types.Menu):
     bl_idname = "LN_MT_boneconstraints_menu"
     bl_label = "Bone Constraints Menu"
@@ -313,9 +292,7 @@ class BoneConstraintsMenu(bpy.types.Menu):
         insertNode(layout, "NLSetBoneConstraintTarget", "Set Target")
 
 
-_items.append(BoneConstraintsMenu)
-
-
+@menu_item
 class LightsMenu(bpy.types.Menu):
     bl_idname = "LN_MT_lights_menu"
     bl_label = "Lights Menu"
@@ -330,9 +307,7 @@ class LightsMenu(bpy.types.Menu):
         insertNode(layout, "NLMakeUniqueLight", "Make Unique")
 
 
-_items.append(LightsMenu)
-
-
+@menu_item
 class NodesMenu(bpy.types.Menu):
     bl_idname = "LN_MT_nodes_menu"
     bl_label = "Nodes Menu"
@@ -344,16 +319,13 @@ class NodesMenu(bpy.types.Menu):
         layout.menu("LN_MT_groupnodes_menu", text="Groups", icon="RIGHTARROW_THIN")
 
 
-_items.append(NodesMenu)
-
-
+@menu_item
 class MatNodesMenu(bpy.types.Menu):
     bl_idname = "LN_MT_matnodes_menu"
     bl_label = "Material Nodes Menu"
 
     def draw(self, context):
         layout = self.layout
-        insertNode(layout, "NLSetMaterial", "Set Material")
         insertNode(layout, "NLGetMaterialNode", "Get Node")
         insertNode(layout, "NLPlayMaterialSequence", "Play Sequence")
         layout.separator()
@@ -364,9 +336,7 @@ class MatNodesMenu(bpy.types.Menu):
         insertNode(layout, "NLSetMaterialNodeAttribute", "Set Node Value")
 
 
-_items.append(MatNodesMenu)
-
-
+@menu_item
 class GeoNodesMenu(bpy.types.Menu):
     bl_idname = "LN_MT_geonodes_menu"
     bl_label = "Geometry Nodes Menu"
@@ -380,9 +350,7 @@ class GeoNodesMenu(bpy.types.Menu):
         insertNode(layout, "NLSetGeometryNodeAttribute", "Set Node Value")
 
 
-_items.append(GeoNodesMenu)
-
-
+@menu_item
 class GroupNodesMenu(bpy.types.Menu):
     bl_idname = "LN_MT_groupnodes_menu"
     bl_label = "Node Groups Menu"
@@ -396,9 +364,7 @@ class GroupNodesMenu(bpy.types.Menu):
         insertNode(layout, "NLSetNodeTreeNodeAttribute", "Set Node Value")
 
 
-_items.append(GroupNodesMenu)
-
-
+@menu_item
 class ObjectsMenu(bpy.types.Menu):
     bl_idname = "LN_MT_objects_menu"
     bl_label = "Objects Menu"
@@ -410,7 +376,6 @@ class ObjectsMenu(bpy.types.Menu):
         layout.menu("LN_MT_setattributes_menu", text="Set Attribute", icon="RIGHTARROW_THIN")
         layout.separator()
         layout.menu("LN_MT_transform_menu", text="Transformation", icon="RIGHTARROW_THIN")
-        layout.menu("LN_MT_property_menu", text="Properties", icon="RIGHTARROW_THIN")
         layout.menu("LN_MT_object_data_menu", text="Object Data", icon="RIGHTARROW_THIN")
         layout.menu("LN_MT_curve_menu", text="Curves", icon="RIGHTARROW_THIN")
         layout.separator()
@@ -419,31 +384,30 @@ class ObjectsMenu(bpy.types.Menu):
         insertNode(layout, "NLActionSetGameObjectVisibility", "Set Visibility")
         layout.separator()
         insertNode(layout, "NLActionFindObjectNode", "Get Object")
-        insertNode(layout, "NLOwnerGameObjectParameterNode", "Get Owner")
+        # insertNode(layout, "NLOwnerGameObjectParameterNode", "Get Owner")
         insertNode(layout, "NLParameterFindChildByIndexNode", "Get Child By Index")
         insertNode(layout, "NLParameterFindChildByNameNode", "Get Child By Name")
         insertNode(layout, "NLParameterGameObjectParent", "Get Parent")
         insertNode(layout, "NLActionSetParentNode", "Set Parent")
         insertNode(layout, "NLActionRemoveParentNode", "Remove Parent")
+        insertNode(layout, "NLSetMaterial", "Set Material")
         layout.separator()
         insertNode(layout, "NLActionSendMessage", "Send Message")
         insertNode(layout, "LogicNodeSpawnPool", "Spawn Pool")
 
 
-_items.append(ObjectsMenu)
-
-
+@menu_item
 class TransformMenu(bpy.types.Menu):
     bl_idname = "LN_MT_transform_menu"
     bl_label = "Transformation Menu"
 
     def draw(self, context):
         layout = self.layout
-        insertNode(layout, "NLActionApplyLocation", "Apply Movement")
-        insertNode(layout, "NLActionApplyRotation", "Apply Rotation")
-        insertNode(layout, "NLActionApplyForce", "Apply Force")
-        insertNode(layout, "NLActionApplyTorque", "Apply Torque")
-        insertNode(layout, "NLActionApplyImpulse", "Apply Impulse")
+        insertNode(layout, "LogicNodeApplyTransform", "Apply Movement")
+        insertNode(layout, "LogicNodeApplyTransform", "Apply Rotation", settings={'mode': repr('1')})
+        insertNode(layout, "LogicNodeApplyTransform", "Apply Force", settings={'mode': repr('2')})
+        insertNode(layout, "LogicNodeApplyTransform", "Apply Torque", settings={'mode': repr('3')})
+        insertNode(layout, "LogicNodeApplyTransform", "Apply Impulse", settings={'mode': repr('4')})
         layout.separator()
         insertNode(layout, "NLActionAlignAxisToVector", "Align Axis to Vector")
         insertNode(layout, "NLActionFollowPath", "Follow Path")
@@ -451,31 +415,29 @@ class TransformMenu(bpy.types.Menu):
         insertNode(layout, "NLActionNavigate", "Move To with Navmesh")
         insertNode(layout, "NLActionRotateTo", "Rotate To")
         insertNode(layout, "NLSlowFollow", "Slow Follow")
-        insertNode(layout, "NLActionTranslate", "Translate")
+        # insertNode(layout, "NLActionTranslate", "Translate")
 
 
-_items.append(TransformMenu)
-
-
+@menu_item
 class PropertyMenu(bpy.types.Menu):
     bl_idname = "LN_MT_property_menu"
     bl_label = "Properties Menu"
 
     def draw(self, context):
         layout = self.layout
-        insertNode(layout, "NLGameObjectPropertyParameterNode", "Get Property")
-        insertNode(layout, "NLSetGameObjectGamePropertyActionNode", "Set Property")
-        insertNode(layout, "NLGameObjectHasPropertyParameterNode", "Has Property")
-        insertNode(layout, "NLToggleGameObjectGamePropertyActionNode", "Toggle Property")
-        insertNode(layout, "NLAddToGameObjectGamePropertyActionNode", "Modify Property")
-        insertNode(layout, "NLClampedModifyProperty", "Clamped Modify Property")
-        insertNode(layout, "NLObjectPropertyOperator", "Evaluate Property")
+        insertNode(layout, "LogicNodeGetLogicTreeProperty", "Get Tree Property")
+        insertNode(layout, "LogicNodeSetLogicTreeProperty", "Set Tree Property")
+        layout.separator()
+        insertNode(layout, "NLGameObjectPropertyParameterNode", "Get Object Property")
+        insertNode(layout, "NLSetGameObjectGamePropertyActionNode", "Set Object Property")
+        insertNode(layout, "NLGameObjectHasPropertyParameterNode", "Object Has Property")
+        insertNode(layout, "NLToggleGameObjectGamePropertyActionNode", "Toggle Object Property")
+        insertNode(layout, "NLAddToGameObjectGamePropertyActionNode", "Modify Object Property")
+        insertNode(layout, "NLObjectPropertyOperator", "Evaluate Object Property")
         insertNode(layout, "NLCopyPropertyFromObject", "Copy From Object")
 
 
-_items.append(PropertyMenu)
-
-
+@menu_item
 class ObjectDataMenu(bpy.types.Menu):
     bl_idname = "LN_MT_object_data_menu"
     bl_label = "Object Data Menu"
@@ -490,60 +452,54 @@ class ObjectDataMenu(bpy.types.Menu):
         # insertNode(layout, "NLSetObjectAttributeActionNode", "Set Position / Rotation / Scale etc.")
 
 
-_items.append(ObjectDataMenu)
-
-
+@menu_item
 class GetAttributesMenu(bpy.types.Menu):
     bl_idname = "LN_MT_getattributes_menu"
     bl_label = "Get Attributes Menu"
 
     def draw(self, context):
         layout = self.layout
-        insertNode(layout, "NLObjectAttributeParameterNode", "Get World Position", settings={'attr_name': repr('worldPosition'), 'label': repr('Get Position')})
-        insertNode(layout, "NLObjectAttributeParameterNode", "Get World Rotation", settings={'attr_name': repr('worldOrientation'), 'label': repr('Get Rotation')})
-        insertNode(layout, "NLObjectAttributeParameterNode", "Get World Linear Velocity", settings={'attr_name': repr('worldLinearVelocity'), 'label': repr('Get Linear Velocity')})
-        insertNode(layout, "NLObjectAttributeParameterNode", "Get World Angular Velocity", settings={'attr_name': repr('worldAngularVelocity'), 'label': repr('Get Angular Velocity')})
-        insertNode(layout, "NLObjectAttributeParameterNode", "Get World Transform", settings={'attr_name': repr('worldTransform'), 'label': repr('Get Transform')})
+        insertNode(layout, "NLObjectAttributeParameterNode", "Get World Position", settings={'attr_name': repr('worldPosition'), 'nl_label': repr('Get Position')})
+        insertNode(layout, "NLObjectAttributeParameterNode", "Get World Orientation", settings={'attr_name': repr('worldOrientation'), 'nl_label': repr('Get Rotation')})
+        insertNode(layout, "NLObjectAttributeParameterNode", "Get World Linear Velocity", settings={'attr_name': repr('worldLinearVelocity'), 'nl_label': repr('Get Linear Velocity')})
+        insertNode(layout, "NLObjectAttributeParameterNode", "Get World Angular Velocity", settings={'attr_name': repr('worldAngularVelocity'), 'nl_label': repr('Get Angular Velocity')})
+        insertNode(layout, "NLObjectAttributeParameterNode", "Get World Transform", settings={'attr_name': repr('worldTransform'), 'nl_label': repr('Get Transform')})
         layout.separator()
-        insertNode(layout, "NLObjectAttributeParameterNode", "Get Local Position", settings={'attr_name': repr('localPosition'), 'label': repr('Get Position')})
-        insertNode(layout, "NLObjectAttributeParameterNode", "Get Local Rotation", settings={'attr_name': repr('localOrientation'), 'label': repr('Get Rotation')})
-        insertNode(layout, "NLObjectAttributeParameterNode", "Get Local Linear Velocity", settings={'attr_name': repr('localLinearVelocity'), 'label': repr('Get Linear Velocity')})
-        insertNode(layout, "NLObjectAttributeParameterNode", "Get Local Angular Velocity", settings={'attr_name': repr('localAngularVelocity'), 'label': repr('Get Angular Velocity')})
-        insertNode(layout, "NLObjectAttributeParameterNode", "Get Local Transform", settings={'attr_name': repr('localTransform'), 'label': repr('Get Transform')})
+        insertNode(layout, "NLObjectAttributeParameterNode", "Get Local Position", settings={'attr_name': repr('localPosition'), 'nl_label': repr('Get Position')})
+        insertNode(layout, "NLObjectAttributeParameterNode", "Get Local Orientation", settings={'attr_name': repr('localOrientation'), 'nl_label': repr('Get Rotation')})
+        insertNode(layout, "NLObjectAttributeParameterNode", "Get Local Linear Velocity", settings={'attr_name': repr('localLinearVelocity'), 'nl_label': repr('Get Linear Velocity')})
+        insertNode(layout, "NLObjectAttributeParameterNode", "Get Local Angular Velocity", settings={'attr_name': repr('localAngularVelocity'), 'nl_label': repr('Get Angular Velocity')})
+        insertNode(layout, "NLObjectAttributeParameterNode", "Get Local Transform", settings={'attr_name': repr('localTransform'), 'nl_label': repr('Get Transform')})
         layout.separator()
-        insertNode(layout, "NLObjectAttributeParameterNode", "Get Name", settings={'attr_name': repr('name'), 'label': repr('Get Name')})
-        insertNode(layout, "NLObjectAttributeParameterNode", "Get Scale", settings={'attr_name': repr('worldScale'), 'label': repr('Get Scale')})
-        insertNode(layout, "NLObjectAttributeParameterNode", "Get Color", settings={'attr_name': repr('color'), 'label': repr('Get Color')})
+        insertNode(layout, "NLObjectAttributeParameterNode", "Get Name", settings={'attr_name': repr('name'), 'nl_label': repr('Get Name')})
+        insertNode(layout, "NLObjectAttributeParameterNode", "Get Scale", settings={'attr_name': repr('worldScale'), 'nl_label': repr('Get Scale')})
+        insertNode(layout, "NLObjectAttributeParameterNode", "Get Color", settings={'attr_name': repr('color'), 'nl_label': repr('Get Color')})
 
 
-_items.append(GetAttributesMenu)
-
-
+@menu_item
 class SetAttributesMenu(bpy.types.Menu):
     bl_idname = "LN_MT_setattributes_menu"
     bl_label = "Get Attributes Menu"
 
     def draw(self, context):
         layout = self.layout
-        insertNode(layout, "NLSetObjectAttributeActionNode", "Set World Position", settings={'value_type': repr('worldPosition'), 'label': repr('Set Position')})
-        insertNode(layout, "NLSetObjectAttributeActionNode", "Set World Rotation", settings={'value_type': repr('worldOrientation'), 'label': repr('Set Rotation')})
-        insertNode(layout, "NLSetObjectAttributeActionNode", "Set World Linear Velocity", settings={'value_type': repr('worldLinearVelocity'), 'label': repr('Set Linear Velocity')})
-        insertNode(layout, "NLSetObjectAttributeActionNode", "Set World Angular Velocity", settings={'value_type': repr('worldAngularVelocity'), 'label': repr('Set Angular Velocity')})
-        insertNode(layout, "NLSetObjectAttributeActionNode", "Set World Transform", settings={'value_type': repr('worldTransform'), 'label': repr('Set Transform')})
+        insertNode(layout, "NLSetObjectAttributeActionNode", "Set World Position", settings={'value_type': repr('worldPosition'), 'nl_label': repr('Set Position')})
+        insertNode(layout, "NLSetObjectAttributeActionNode", "Set World Orientation", settings={'value_type': repr('worldOrientation'), 'nl_label': repr('Set Rotation')})
+        insertNode(layout, "NLSetObjectAttributeActionNode", "Set World Linear Velocity", settings={'value_type': repr('worldLinearVelocity'), 'nl_label': repr('Set Linear Velocity')})
+        insertNode(layout, "NLSetObjectAttributeActionNode", "Set World Angular Velocity", settings={'value_type': repr('worldAngularVelocity'), 'nl_label': repr('Set Angular Velocity')})
+        insertNode(layout, "NLSetObjectAttributeActionNode", "Set World Transform", settings={'value_type': repr('worldTransform'), 'nl_label': repr('Set Transform')})
         layout.separator()
-        insertNode(layout, "NLSetObjectAttributeActionNode", "Set Local Position", settings={'value_type': repr('localPosition'), 'label': repr('Set Position')})
-        insertNode(layout, "NLSetObjectAttributeActionNode", "Set Local Rotation", settings={'value_type': repr('localOrientation'), 'label': repr('Set Rotation')})
-        insertNode(layout, "NLSetObjectAttributeActionNode", "Set Local Linear Velocity", settings={'value_type': repr('localLinearVelocity'), 'label': repr('Set Linear Velocity')})
-        insertNode(layout, "NLSetObjectAttributeActionNode", "Set Local Angular Velocity", settings={'value_type': repr('localAngularVelocity'), 'label': repr('Set Angular Velocity')})
-        insertNode(layout, "NLSetObjectAttributeActionNode", "Set Local Transform", settings={'value_type': repr('localTransform'), 'label': repr('Set Transform')})
+        insertNode(layout, "NLSetObjectAttributeActionNode", "Set Local Position", settings={'value_type': repr('localPosition'), 'nl_label': repr('Set Position')})
+        insertNode(layout, "NLSetObjectAttributeActionNode", "Set Local Orientation", settings={'value_type': repr('localOrientation'), 'nl_label': repr('Set Rotation')})
+        insertNode(layout, "NLSetObjectAttributeActionNode", "Set Local Linear Velocity", settings={'value_type': repr('localLinearVelocity'), 'nl_label': repr('Set Linear Velocity')})
+        insertNode(layout, "NLSetObjectAttributeActionNode", "Set Local Angular Velocity", settings={'value_type': repr('localAngularVelocity'), 'nl_label': repr('Set Angular Velocity')})
+        insertNode(layout, "NLSetObjectAttributeActionNode", "Set Local Transform", settings={'value_type': repr('localTransform'), 'nl_label': repr('Set Transform')})
         layout.separator()
-        insertNode(layout, "NLSetObjectAttributeActionNode", "Set Scale", settings={'value_type': repr('worldScale'), 'label': repr('Set Scale')})
-        insertNode(layout, "NLSetObjectAttributeActionNode", "Set Color", settings={'value_type': repr('color'), 'label': repr('Set Color')})
+        insertNode(layout, "NLSetObjectAttributeActionNode", "Set Scale", settings={'value_type': repr('worldScale'), 'nl_label': repr('Set Scale')})
+        insertNode(layout, "NLSetObjectAttributeActionNode", "Set Color", settings={'value_type': repr('color'), 'nl_label': repr('Set Color')})
 
 
-_items.append(SetAttributesMenu)
-
-
+@menu_item
 class CurveMenu(bpy.types.Menu):
     bl_idname = "LN_MT_curve_menu"
     bl_label = "Curves Menu"
@@ -554,9 +510,7 @@ class CurveMenu(bpy.types.Menu):
         insertNode(layout, "NLSetCurvePoints", "Set Curve Points")
 
 
-_items.append(CurveMenu)
-
-
+@menu_item
 class SceneMenu(bpy.types.Menu):
     bl_idname = "LN_MT_scene_menu"
     bl_label = "Scene Menu"
@@ -569,7 +523,6 @@ class SceneMenu(bpy.types.Menu):
         layout.separator()
         insertNode(layout, "NLGetScene", "Get Scene")
         insertNode(layout, "NLSetScene", "Set Scene")
-        insertNode(layout, "NLLoadScene", "Load Scene")
         layout.separator()
         insertNode(layout, "NLGetGravityNode", "Get Gravity")
         insertNode(layout, "NLActionSetGravity", "Set Gravity")
@@ -578,9 +531,7 @@ class SceneMenu(bpy.types.Menu):
         # insertNode(layout, "NLSetCurvePoints", "Cursor Behaviour")
 
 
-_items.append(SceneMenu)
-
-
+@menu_item
 class CameraMenu(bpy.types.Menu):
     bl_idname = "LN_MT_camera_menu"
     bl_label = "Camera Menu"
@@ -595,9 +546,7 @@ class CameraMenu(bpy.types.Menu):
         insertNode(layout, "NLParameterWorldPosition", "Screen To World")
 
 
-_items.append(CameraMenu)
-
-
+@menu_item
 class PostFXMenu(bpy.types.Menu):
     bl_idname = "LN_MT_post_fx_menu"
     bl_label = "Post FX Menu"
@@ -610,9 +559,7 @@ class PostFXMenu(bpy.types.Menu):
         insertNode(layout, "NLToggleFilter", "Toggle Filter")
 
 
-_items.append(PostFXMenu)
-
-
+@menu_item
 class CollectionsMenu(bpy.types.Menu):
     bl_idname = "LN_MT_collections_menu"
     bl_label = "Collection Menu"
@@ -628,9 +575,7 @@ class CollectionsMenu(bpy.types.Menu):
         insertNode(layout, "NLRemoveOverlayCollection", "Remove Overlay Collections")
 
 
-_items.append(CollectionsMenu)
-
-
+@menu_item
 class SoundMenu(bpy.types.Menu):
     bl_idname = "LN_MT_sound_menu"
     bl_label = "Sound Menu"
@@ -639,16 +584,15 @@ class SoundMenu(bpy.types.Menu):
         layout = self.layout
         insertNode(layout, "NLActionStartSound", "2D Sound")
         insertNode(layout, "NLActionStart3DSoundAdv", "3D Sound")
+        insertNode(layout, "NLPlaySpeaker", "Start Speaker")
+        layout.separator()
         insertNode(layout, "NLActionPauseSound", "Pause Sound")
         insertNode(layout, "NLActionResumeSound", "Resume Sound")
-        insertNode(layout, "NLPlaySpeaker", "Start Speaker")
         insertNode(layout, "NLActionStopAllSounds", "Stop All Sounds")
         insertNode(layout, "NLActionStopSound", "Stop Sound")
 
 
-_items.append(SoundMenu)
-
-
+@menu_item
 class LogicMenu(bpy.types.Menu):
     bl_idname = "LN_MT_logic_menu"
     bl_label = "Logic Menu"
@@ -658,20 +602,21 @@ class LogicMenu(bpy.types.Menu):
         layout.menu("LN_MT_logic_tree_menu", text="Trees", icon="RIGHTARROW_THIN")
         layout.menu("LN_MT_logic_brick_menu", text="Bricks", icon="RIGHTARROW_THIN")
         layout.separator()
-        insertNode(layout, "NLConditionAndNode", "And")
-        insertNode(layout, "NLConditionAndList", "And List")
-        insertNode(layout, "NLConditionAndNotNode", "And Not")
+        # insertNode(layout, "NLConditionAndNode", "And")
+        # insertNode(layout, "NLConditionAndList", "And List")
+        # insertNode(layout, "NLConditionAndNotNode", "And Not")
+        # insertNode(layout, "NLConditionNotNode", "Not")
+        # insertNode(layout, "NLConditionOrNode", "Or")
+        # insertNode(layout, "NLConditionOrList", "Or List")
+        insertNode(layout, "LogicNodeLogicGate", "Gate")
+        insertNode(layout, "NLParameterSwitchValue", "Branch")
+        layout.separator()
+        insertNode(layout, "LogicNodeLogicGateList", "Gate List")
         insertNode(layout, "NLConditionNone", "None")
-        insertNode(layout, "NLConditionNotNode", "Not")
         insertNode(layout, "NLConditionNotNoneNode", "Not None")
-        insertNode(layout, "NLConditionOrNode", "Or")
-        insertNode(layout, "NLConditionOrList", "Or List")
-        insertNode(layout, "NLParameterSwitchValue", "True / False")
 
 
-_items.append(LogicMenu)
-
-
+@menu_item
 class LogicTreeMenu(bpy.types.Menu):
     bl_idname = "LN_MT_logic_tree_menu"
     bl_label = "Logic Tree Menu"
@@ -683,12 +628,10 @@ class LogicTreeMenu(bpy.types.Menu):
         insertNode(layout, "NLStopLogicNetworkActionNode", "Stop Logic Tree")
         layout.separator()
         insertNode(layout, "NLActionInstallSubNetwork", "Add Logic Tree to Object")
-        insertNode(layout, "NLConditionLogitNetworkStatusNode", "Logic Network Status")
+        insertNode(layout, "NLConditionLogitNetworkStatusNode", "Logic Tree Status")
 
 
-_items.append(LogicTreeMenu)
-
-
+@menu_item
 class LogicBrickMenu(bpy.types.Menu):
     bl_idname = "LN_MT_logic_brick_menu"
     bl_label = "Logic Brick Menu"
@@ -701,13 +644,11 @@ class LogicBrickMenu(bpy.types.Menu):
         insertNode(layout, "NLSetActuatorValueNode", "Set Actuator Value")
         layout.separator()
         insertNode(layout, "NLControllerStatus", "Controller Status")
-        insertNode(layout, "NLRunActuatorNode", "Run Actuator")
+        # insertNode(layout, "NLRunActuatorNode", "Run Actuator")
         insertNode(layout, "NLGetSensorNode", "Sensor Positive")
 
 
-_items.append(LogicBrickMenu)
-
-
+@menu_item
 class MathMenu(bpy.types.Menu):
     bl_idname = "LN_MT_math_menu"
     bl_label = "Math Menu"
@@ -731,28 +672,24 @@ class MathMenu(bpy.types.Menu):
         insertNode(layout, "NLWithinRangeNode", "Within Range")
 
 
-_items.append(MathMenu)
-
-
+@menu_item
 class VectorMathMenu(bpy.types.Menu):
     bl_idname = "LN_MT_vector_math_menu"
     bl_label = "Vector Math Menu"
 
     def draw(self, context):
         layout = self.layout
-        insertNode(layout, "NLVectorAngle", "Angle")
+        # insertNode(layout, "NLVectorAngle", "Angle")
         insertNode(layout, "NLVectorAngleCheck", "Check Angle")
-        insertNode(layout, "NLConditionDistanceCheck", "Check Distance")
+        # insertNode(layout, "NLConditionDistanceCheck", "Compare Distance")
         insertNode(layout, "NLParameterAbsVector3Node", "Absolute Vector")
-        insertNode(layout, "NLConditionCompareVecs", "Compare Vectors")
+        # insertNode(layout, "NLConditionCompareVecs", "Compare Vectors")
         insertNode(layout, "NLParameterEulerToMatrixNode", "XYZ to Matrix")
         insertNode(layout, "NLParameterMatrixToEulerNode", "Matrix to XYZ")
         # insertNode(layout, "NLVectorLength", "Vector Length")
 
 
-_items.append(VectorMathMenu)
-
-
+@menu_item
 class PhysicsMenu(bpy.types.Menu):
     bl_idname = "LN_MT_physics_menu"
     bl_label = "Physics Menu"
@@ -764,7 +701,7 @@ class PhysicsMenu(bpy.types.Menu):
         layout.separator()
         insertNode(layout, "NLConditionCollisionNode", "Collision")
         insertNode(layout, "NLSetCollisionGroup", "Set Collision Group")
-        insertNode(layout, "NLSetCollisionMask", "Set Collision Mask")
+        insertNode(layout, "NLSetCollisionMask", "Set Collision Mask", settings={'mode': '1'})
         layout.separator()
         insertNode(layout, "NLActionAddPhysicsConstraint", "Add Constraint")
         insertNode(layout, "NLActionRemovePhysicsConstraint", "Remove Constraint")
@@ -775,9 +712,7 @@ class PhysicsMenu(bpy.types.Menu):
         insertNode(layout, "NLSetRigidBody", "Set Rigid Body")
 
 
-_items.append(PhysicsMenu)
-
-
+@menu_item
 class VehicleMenu(bpy.types.Menu):
     bl_idname = "LN_MT_vehicle_menu"
     bl_label = "Vehicle Menu"
@@ -792,9 +727,7 @@ class VehicleMenu(bpy.types.Menu):
         insertNode(layout, "NLVehicleApplySteering", "Steer")
 
 
-_items.append(VehicleMenu)
-
-
+@menu_item
 class CharacterMenu(bpy.types.Menu):
     bl_idname = "LN_MT_character_menu"
     bl_label = "Character Menu"
@@ -810,9 +743,7 @@ class CharacterMenu(bpy.types.Menu):
         insertNode(layout, "NLActionSetCharacterVelocity", "Set Velocity")
 
 
-_items.append(CharacterMenu)
-
-
+@menu_item
 class PythonMenu(bpy.types.Menu):
     bl_idname = "LN_MT_python_menu"
     bl_label = "Python Menu"
@@ -820,14 +751,13 @@ class PythonMenu(bpy.types.Menu):
     def draw(self, context):
         layout = self.layout
         insertNode(layout, "NLParameterPythonModuleFunction", "Run Python Code")
+        layout.separator()
         insertNode(layout, "NLParameterGetAttribute", "Get Object Attribute")
         insertNode(layout, "NLParameterSetAttribute", "Set Object Attribute")
         insertNode(layout, "NLParameterTypeCast", "Typecast")
 
 
-_items.append(PythonMenu)
-
-
+@menu_item
 class RaycastMenu(bpy.types.Menu):
     bl_idname = "LN_MT_raycast_menu"
     bl_label = "Raycast Menu"
@@ -840,26 +770,23 @@ class RaycastMenu(bpy.types.Menu):
         insertNode(layout, "NLProjectileRayCast", "Projectile Ray")
 
 
-_items.append(RaycastMenu)
-
-
+@menu_item
 class TimeMenu(bpy.types.Menu):
     bl_idname = "LN_MT_time_menu"
     bl_label = "Time Menu"
 
     def draw(self, context):
         layout = self.layout
-        insertNode(layout, "NLActionTimeFilter", "Pulsify")
-        insertNode(layout, "NLActionTimeDelay", "Delay")
         insertNode(layout, "NLParameterTimeNode", "Time Data")
         insertNode(layout, "LogicNodeTimeFactor", "Delta Factor")
-        insertNode(layout, "NLActionTimeBarrier", "Barrier")
+        layout.separator()
+        insertNode(layout, "NLActionTimeDelay", "Delay")
         insertNode(layout, "NLConditionTimeElapsed", "Timer")
+        insertNode(layout, "NLActionTimeFilter", "Pulsify")
+        insertNode(layout, "NLActionTimeBarrier", "Barrier")
 
 
-_items.append(TimeMenu)
-
-
+@menu_item
 class FileMenu(bpy.types.Menu):
     bl_idname = "LN_MT_file_menu"
     bl_label = "File Menu"
@@ -869,13 +796,9 @@ class FileMenu(bpy.types.Menu):
         insertNode(layout, "LogicNodeGetFont", "Get Font")
         insertNode(layout, "NLGetImage", "Get Image")
         insertNode(layout, "NLGetSound", "Get Sound")
-        layout.separator()
-        insertNode(layout, "NLLoadFileContent", "Load File Content")
 
 
-_items.append(FileMenu)
-
-
+@menu_item
 class NetworkMenu(bpy.types.Menu):
     bl_idname = "LN_MT_network_menu"
     bl_label = "File Menu"
@@ -890,9 +813,7 @@ class NetworkMenu(bpy.types.Menu):
         insertNode(layout, "LogicNodeSerializeData", "Serialize Data")
 
 
-_items.append(NetworkMenu)
-
-
+@menu_item
 class DataMenu(bpy.types.Menu):
     bl_idname = "LN_MT_data_menu"
     bl_label = "Data Menu"
@@ -902,11 +823,12 @@ class DataMenu(bpy.types.Menu):
         layout.menu("LN_MT_list_menu", text="List", icon="RIGHTARROW_THIN")
         layout.menu("LN_MT_dict_menu", text="Dict", icon="RIGHTARROW_THIN")
         layout.menu("LN_MT_variable_menu", text="Variables", icon="RIGHTARROW_THIN")
+        layout.separator()
+        insertNode(layout, "NLLoadScene", "Load Scene")
+        insertNode(layout, "NLLoadFileContent", "Load File")
 
 
-_items.append(DataMenu)
-
-
+@menu_item
 class ListMenu(bpy.types.Menu):
     bl_idname = "LN_MT_list_menu"
     bl_label = "List Menu"
@@ -927,9 +849,7 @@ class ListMenu(bpy.types.Menu):
         insertNode(layout, "NLDuplicateList", "Duplicate")
 
 
-_items.append(ListMenu)
-
-
+@menu_item
 class DictMenu(bpy.types.Menu):
     bl_idname = "LN_MT_dict_menu"
     bl_label = "Dictionary Menu"
@@ -944,9 +864,7 @@ class DictMenu(bpy.types.Menu):
         insertNode(layout, "NLSetDictDelKey", "Remove Key")
 
 
-_items.append(DictMenu)
-
-
+@menu_item
 class VariableMenu(bpy.types.Menu):
     bl_idname = "LN_MT_variable_menu"
     bl_label = "Variable Menu"
@@ -964,9 +882,7 @@ class VariableMenu(bpy.types.Menu):
         insertNode(layout, "NLActionListVariables", "List Saved Variables")
 
 
-_items.append(VariableMenu)
-
-
+@menu_item
 class LayoutMenu(bpy.types.Menu):
     bl_idname = "LN_MT_layout_menu"
     bl_label = "Layout Menu"
@@ -977,16 +893,14 @@ class LayoutMenu(bpy.types.Menu):
         insertNode(layout, "NodeFrame", "Frame")
 
 
-_items.append(LayoutMenu)
-
-
+@menu_item
 class RenderMenu(bpy.types.Menu):
     bl_idname = "LN_MT_render_menu"
     bl_label = "Render Menu"
 
     def draw(self, context):
         layout = self.layout
-        layout.menu("LN_MT_draw_menu", text="Draw", icon="RIGHTARROW_THIN")
+        # layout.menu("LN_MT_draw_menu", text="Draw", icon="RIGHTARROW_THIN")
         layout.menu("LN_MT_eevee_menu", text="EEVEE", icon="RIGHTARROW_THIN")
         layout.separator()
         insertNode(layout, "NLGetFullscreen", "Get Fullscreen")
@@ -999,9 +913,7 @@ class RenderMenu(bpy.types.Menu):
         insertNode(layout, "NLSetProfile", "Show Profile")
 
 
-_items.append(RenderMenu)
-
-
+@menu_item
 class DrawMenu(bpy.types.Menu):
     bl_idname = "LN_MT_draw_menu"
     bl_label = "Draw Menu"
@@ -1013,9 +925,7 @@ class DrawMenu(bpy.types.Menu):
         insertNode(layout, "NLDrawBox", "Box")
 
 
-_items.append(DrawMenu)
-
-
+@menu_item
 class EeveeMenu(bpy.types.Menu):
     bl_idname = "LN_MT_eevee_menu"
     bl_label = "EEVEE Menu"
@@ -1032,9 +942,7 @@ class EeveeMenu(bpy.types.Menu):
         insertNode(layout, "NLSetEeveeVolumetrics", "Set Volumetric Light")
 
 
-_items.append(EeveeMenu)
-
-
+@menu_item
 class UIMenu(bpy.types.Menu):
     bl_idname = "LN_MT_ui_menu"
     bl_label = "UI Menu"
@@ -1050,9 +958,7 @@ class UIMenu(bpy.types.Menu):
         insertNode(layout, "LogicNodeSetCustomCursor", "Set Custom Cursor")
 
 
-_items.append(UIMenu)
-
-
+@menu_item
 class WidgetMenu(bpy.types.Menu):
     bl_idname = "LN_MT_widget_menu"
     bl_label = "Widget Menu"
@@ -1068,17 +974,16 @@ class WidgetMenu(bpy.types.Menu):
         insertNode(layout, "LogicNodeCreateUISlider", "Create Slider")
 
 
-_items.append(WidgetMenu)
-
-
+@menu_item
 class UtilityMenu(bpy.types.Menu):
     bl_idname = "LN_MT_utility_menu"
     bl_label = "Utility Menu"
 
     def draw(self, context):
         layout = self.layout
-        insertNode(layout, "NLActionGetPerformanceProfileNode", "Get Profile")
+        # insertNode(layout, "NLActionGetPerformanceProfileNode", "Get Profile")
         insertNode(layout, "NLActionPrint", "Print")
-
-
-_items.append(UtilityMenu)
+        layout.separator()
+        insertNode(layout, "NLDrawLine", "Draw Line")
+        insertNode(layout, "NLDrawCube", "Draw Cube")
+        insertNode(layout, "NLDrawBox", "Draw Box")

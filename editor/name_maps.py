@@ -1,0 +1,51 @@
+_ui_widget_attributes = {
+    "show": "Visibility",
+    "bg_color": "Color",
+    "opacity": "Opacity",
+    "pos": "Position",
+    "size": "Size",
+    "angle": "Angle",
+    "width": "Width",
+    "height": "Height",
+    "use_clipping": "Clipping",
+    "halign": "X Align",
+    "valign": "Y Align",
+    "border_width": "Border Width",
+    "border_color": "Border Color",
+    "orientation": "Orientation",
+    "spacing": "Spacing",
+    "hover_color": "Hover Color",
+    "text": "Text",
+    "font": "Font",
+    "font_color": "Font Color",
+    "font_size": "Font Size",
+    "font_opacity": "Font Opacity",
+    "line_height": "Line Height",
+    "text_halign": "Text X Align",
+    "text_valign": "Text Y Align",
+    "wrap": "Word Wrap",
+    "shadow": "Use Shadow",
+    "shadow_offset": "Shadow Offset",
+    "shadow_color": "Shadow Color",
+    "texture": "Image",
+    "icon": "Icon",
+    "rows": "Rows",
+    "cols": "Columns"
+}
+
+
+_object_attrs = {
+    'worldPosition': 'World Position',
+    'localPosition': 'Local Position',
+    'worldScale': 'World Scale',
+    'localScale': 'Local Scale',
+    'worldLinearVelocity': 'World Linear Velocity',
+    'localLinearVelocity': 'Local Linear Velocity',
+    'worldAngularVelocity': 'World Angular Velocity',
+    'localAngularVelocity': 'Local Angular Velocity',
+    'color': 'Color',
+    'name': 'Name',
+    'worldOrientation': 'World Orientation',
+    'localOrientation': 'Local Orientation'
+}
+    

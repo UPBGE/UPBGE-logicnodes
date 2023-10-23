@@ -1,5 +1,6 @@
 import bpy
 import os
+from ..preferences import LogicNodesAddonPreferences
 
 
 TREE_COMPILED = 'Compiled'
@@ -18,17 +19,14 @@ STATUS_ICONS = {
 }
 
 NLPREFIX = 'NL__'
+LOGIC_NODE_IDENTIFIER = 'NL__'
 
 
-def set_compile_status(status):
-    try:
-        bpy.context.scene.logic_node_settings.tree_compiled = status
-    except:
-        pass
+DEPRECATED = 'DEPRECATED'
 
 
-def is_compile_status(status):
-    return bpy.context.scene.logic_node_settings.tree_compiled == status
+ERROR_MESSAGES = []
+WARNING_MESSAGES = []
 
 
 def start_vr_session():
@@ -208,11 +206,7 @@ class Color(object):
 
 
 def debug(message):
-    if not hasattr(bpy.types.Scene, 'logic_node_settings'):
-        return
-    if not bpy.context or not bpy.context.scene:
-        return
-    if not bpy.context.scene.logic_node_settings.use_node_debug:
+    if not preferences().use_node_debug:
         return
     else:
         os.system('color')
@@ -220,11 +214,7 @@ def debug(message):
 
 
 def notify(message):
-    if not hasattr(bpy.types.Scene, 'logic_node_settings'):
-        return
-    if not bpy.context or not bpy.context.scene:
-        return
-    if not bpy.context.scene.logic_node_settings.use_node_notify:
+    if not preferences().use_node_notify:
         return
     else:
         os.system('color')
@@ -237,30 +227,24 @@ def error(message):
 
 
 def warn(message):
-    if not hasattr(bpy.types.Scene, 'logic_node_settings'):
-        return
-    if not bpy.context or not bpy.context.scene:
-        return
-    if not bpy.context.scene.logic_node_settings.use_node_debug:
-        return
-    else:
-        os.system('color')
-        print(f'[Logic Nodes][{ansicol.YELLOW}WARNING{ansicol.END}] ' + message)
+    os.system('color')
+    print(f'[Logic Nodes][{ansicol.YELLOW}WARNING{ansicol.END}] ' + message)
+
+
+def deprecate(node, tree):
+    os.system('color')
+    print(f"[Logic Nodes][{ansicol.YELLOW}WARNING{ansicol.END}] Node '{node.name}' in tree '{tree.name}' is deprecated and will be removed in a future release!")
 
 
 def success(message):
-    if not hasattr(bpy.types.Scene, 'logic_node_settings'):
-        return
-    if not bpy.context or not bpy.context.scene:
-        return
-    if not bpy.context.scene.logic_node_settings.use_node_debug:
+    if not preferences().use_node_debug:
         return
     else:
         os.system('color')
         print(f'[Logic Nodes][{ansicol.GREEN}SUCCESS{ansicol.END}] ' + message)
 
 
-def make_valid_name(name):
+def make_valid_name(name) -> str:
     valid_characters = (
         "_abcdefghijklmnopqrstuvwxyz1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ"
     )
@@ -269,30 +253,6 @@ def make_valid_name(name):
         [c for c in clsname if c in valid_characters]
     )
     return stripped_name
-
-
-def get_global_category():
-    scene = bpy.context.scene
-    return (
-        scene.nl_global_categories[0]
-        if
-        scene.nl_global_cat_selected > len(scene.nl_global_categories) - 1
-        else
-        scene.nl_global_categories[scene.nl_global_cat_selected]
-    )
-
-
-def get_global_value():
-    cat = get_global_category()
-    if len(cat.content) < 1:
-        return None
-    return (
-        cat.content[0]
-        if
-        cat.selected > len(cat.content) - 1
-        else
-        cat.content[cat.selected]
-    )
 
 
 def register_inputs(node, *data):
@@ -435,7 +395,7 @@ def set_network_initial_status_key(ob, tree_name, initial_status_value, update_o
         game_property.value = initial_status_value
     if update_object_tree_item:
         # print("also updating the tree_item...", ob)
-        for tree_item in ob.bgelogic_treelist:
+        for tree_item in ob.logic_trees:
             # print("looking at", tree_item.tree_name, "vs", tree_name)
             if tree_item.tree_name == tree_name:
                 # print("set initial status", ob.name, tree_name, initial_status_value)
@@ -472,18 +432,18 @@ def remove_network_initial_status_key(ob, tree_name):
 
 def remove_tree_item_from_object(ob, tree_name):
     index = -1
-    for item in ob.bgelogic_treelist:
+    for item in ob.logic_trees:
         index += 1
         if item.tree_name == tree_name:
             break
     if index >= 0:
-        ob.bgelogic_treelist.remove(index)
+        ob.logic_trees.remove(index)
     else:
         debug("WARNING 18763 cannot remove item {} from object {} because no such item exists in that object".format(tree_name, ob.name))
 
 
 def object_has_treeitem_for_treename(ob, treename):
-    for item in ob.bgelogic_treelist:
+    for item in ob.logic_trees:
         if item.tree_name == treename:
             return True
     return False
@@ -507,14 +467,82 @@ def invokeTranslation():
     bpy.ops.node.translate_attach("INVOKE_DEFAULT")
 
 
-def iterLogicNodeClasses():
-    from bge_netlogic.basicnodes import NLNode
-    yield from iterSubclassesWithAttribute(NLNode, "bl_idname")
-
-
 def iterSubclassesWithAttribute(cls, attribute):
     for subcls in cls.__subclasses__():
         if hasattr(subcls, attribute):
             yield subcls
         else:
             yield from iterSubclassesWithAttribute(subcls, attribute)
+
+
+def update_draw(self, context=None):
+    return
+    # from bge_netlogic.basicnodes import NLNode
+    if not hasattr(context.space_data, 'edit_tree'):
+        return
+    tree = context.space_data.edit_tree
+    for node in tree.nodes:
+        if hasattr(node, 'update_draw'):
+            try:
+                node.update_draw(context)
+            except Exception as e:
+                error(f'Failed node {node}, {e}')
+                pass
+
+def parse_value_type(value_type, value):
+    t = value_type
+    v = value
+
+    if t == "NONE":
+        return "None"
+
+    if t == "INTEGER":
+        try:
+            return int(v)
+        except ValueError:
+            return "0.0"
+
+    if t == "FLOAT":
+        try:
+            return float(v)
+        except ValueError:
+            return "0.0"
+
+    if t == "STRING":
+        return '"{}"'.format(v)
+
+    if t == "FILE_PATH":
+        return '"{}"'.format(v)
+
+    if t == "BOOLEAN":
+        return v
+
+    raise ValueError(
+        "Cannot parse enum {} type for NLValueFieldSocket".format(t)
+    )
+
+
+def key_event(ks):
+    ks = ks.replace("ASTERIX", "ASTER")
+
+    if ks == "NONE":
+        return "None"
+
+    if ks == "RET":
+        ks = "ENTER"
+
+    if ks.startswith("NUMPAD_"):
+        ks = ks.replace("NUMPAD_", "PAD")
+        if("SLASH" in ks or "ASTER" in ks or "PLUS" in ks):
+            ks = ks.replace("SLASH", "SLASHKEY")
+            ks = ks.replace("ASTER", "ASTERKEY")
+            ks = ks.replace("PLUS", "PLUSKEY")
+        return "bge.events.{}".format(ks)
+
+    x = "{}KEY".format(ks.replace("_", ""))
+
+    return "bge.events.{}".format(x)
+
+
+def preferences() -> LogicNodesAddonPreferences:
+    return bpy.context.preferences.addons['bge_netlogic'].preferences
