@@ -107,7 +107,7 @@
             "x": 660,
             "y": -100,
             "label": "Speed",
-            "node_type": "NLParameterFloatValue",
+            "node_type": "LogicNodeSimpleValue",
             "links": [],
             "values": [
                 {

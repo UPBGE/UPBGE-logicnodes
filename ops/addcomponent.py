@@ -34,7 +34,7 @@ class LOGIC_NODES_OT_add_component(Operator):
 
     def execute(self, context):
         comp_name = self.component
-        select_text = preferences().nl_componenthelper
+        select_text = context.scene.componenthelper
         mod_name = select_text.name[:len(select_text.name) - 3]
         body = select_text.as_string()
         cargs = ''

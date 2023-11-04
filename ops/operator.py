@@ -40,7 +40,7 @@ def update_current_tree_code(*ignored):
 
 
 def _enum_components(self, context):
-    select_text = preferences().nl_componenthelper
+    select_text = context.scene.componenthelper
     items = []
     for line in select_text.lines:
         if 'class ' in line.body:
