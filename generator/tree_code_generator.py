@@ -194,21 +194,19 @@ class TreeCodeGenerator(object):
         cell_uid = 0
         # node_cellvar_list = []
         for node in tree.nodes:
-            prefix = None
             if not hasattr(node, 'nl_module') or node.mute:
                 # utils.debug("Skipping TreeNode of type {} because it is not an instance of NLNode".format(node.__class__.__name__))
                 continue
             if hasattr(node, 'nl_module'):
                 node.check(tree)
-                prefix = node.nl_class
+                name = node.bl_idname.replace('.', '')
+                name = name.replace(' ', '')
             else:
                 raise ValueError(
                         "netlogic node {} must extend one of NLActionNode, NLConditionNode or NLParameterNode".format(
                                 node.__class__.__name__))
-            varname = "{0}{1:03d}".format(prefix, cell_uid)
+            varname = "{0}{1:03d}".format(name, cell_uid)
             uid_map._register(varname, cell_uid, node)
-
-            # XXX: use attribute on node instead of function?
             text += f'        {varname} = {node.nl_class}()\n'
             cell_uid += 1
         for uid in range(0, cell_uid):
