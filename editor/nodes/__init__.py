@@ -156,6 +156,7 @@ from .actions.followpath import LogicNodeFollowPath
 from .actions.sendevent import LogicNodeSendEvent
 from .actions.clearvariables import LogicNodeClearVariables
 from .actions.setlogictreeproperty import LogicNodeSetLogicTreeProperty
+from .actions.startsound import LogicNodeStartSound
 
 from .conditions.checkangle import LogicNodeCheckAngle
 from .conditions.collision import LogicNodeCollision

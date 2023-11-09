@@ -35,6 +35,7 @@ class LOGIC_NODES_OT_reload_components(Operator):
                         or line.body.startswith('from bge ')
                         or 'bgui' in line.body
                         or line.body.startswith('@')
+                        or line.body.startswith('from .')
                     ):
                         line.body = '# ' + line.body
                 bpy.ops.logic.python_component_reload(index=i)

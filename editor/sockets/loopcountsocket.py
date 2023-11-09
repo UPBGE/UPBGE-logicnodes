@@ -1,12 +1,29 @@
 from .socket import SOCKET_COLOR_INTEGER, SOCKET_TYPE_INT, NodeSocketLogic
 from .socket import socket_type
 from .socket import update_draw
-from ..enum_types import _enum_loop_count_values
 from bpy.types import NodeSocket
-from bpy.props import StringProperty
 from bpy.props import EnumProperty
 from bpy.props import IntProperty
 
+
+_loops = [
+    (
+        "0",
+        "Play",
+        (
+            'Play once when condition is TRUE, then wait for '
+            'the condition to become TRUE again to play it again.'
+        )
+    ), (
+        "-1",
+        "Loop",
+        "When condition is TRUE, start repeating the sound until stopped."
+    ), (
+        "1",
+        "Times",
+        "When the condition it TRUE, play the sound N times"
+    )
+]
 
 @socket_type
 class NodeSocketLogicLoopCount(NodeSocket, NodeSocketLogic):
@@ -20,17 +37,11 @@ class NodeSocketLogicLoopCount(NodeSocket, NodeSocketLogic):
     value: IntProperty(update=update_draw)
 
     def update_value(self, context):
-        current_type = self.value_type
-        if current_type == "INFINITE":
-            self.default_value = "-1"
-        elif current_type == "ONCE":
-            self.default_value = "1"
-        elif current_type == "CUSTOM":
-            self.default_value = self.integer_editor - 1
+        self.default_value = int(self.value_type) if int(self.value_type) != 1 else self.integer_editor - 1
 
     value_type: EnumProperty(
         name='Loop Count',
-        items=_enum_loop_count_values,
+        items=_loops,
         update=update_value
     )
     integer_editor: IntProperty(
@@ -48,12 +59,9 @@ class NodeSocketLogicLoopCount(NodeSocket, NodeSocketLogic):
             layout.label(text=text)
         else:
             current_type = self.value_type
-            if (current_type == "INFINITE") or (current_type == "ONCE"):
-                layout.label(text=text)
-                layout.prop(self, "value_type", text="")
-            else:
+            layout.prop(self, "value_type", text="")
+            if current_type == "1":
                 layout.prop(self, "integer_editor", text="")
-                layout.prop(self, "value_type", text="")
 
     def get_unlinked_value(self):
         current_type = self.value_type

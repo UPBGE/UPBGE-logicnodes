@@ -9,6 +9,7 @@ class LogicNodeLightMakeUnique(LogicNodeActionType):
     bl_idname = "NLMakeUniqueLight"
     bl_label = "Make Unique"
     nl_module = 'uplogic.nodes.actions'
+    nl_class = "ULMakeUniqueLight"
 
     def init(self, context):
         self.add_input(NodeSocketLogicCondition, 'Condition')
@@ -19,8 +20,6 @@ class LogicNodeLightMakeUnique(LogicNodeActionType):
 
     def get_output_names(self):
         return ["OUT", 'LIGHT']
-
-    nl_class = "ULMakeUniqueLight"
 
     def get_input_names(self):
         return [

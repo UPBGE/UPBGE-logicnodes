@@ -182,26 +182,6 @@ _enum_vehicle_axis = [
 ]
 
 
-_enum_loop_count_values = [
-    (
-        "ONCE",
-        "Play",
-        (
-            'Play once when condition is TRUE, then wait for '
-            'the condition to become TRUE again to play it again.'
-        )
-    ), (
-        "INFINITE",
-        "Loop",
-        "When condition is TRUE, start repeating the sound until stopped."
-    ), (
-        "CUSTOM",
-        "Times",
-        "When the condition it TRUE, play the sound N times"
-    )
-]
-
-
 _enum_readable_member_names = [
     ("worldPosition", "World Position", "The World Position of the object"),
     ("localPosition", "Local Position", "The local position of the object"),

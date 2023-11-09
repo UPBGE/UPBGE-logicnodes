@@ -29,7 +29,7 @@ class NodeSocketLogicCondition(NodeSocket, NodeSocketLogic):
         self.display_shape = self.shape
 
     def draw(self, context, layout, node, text):
-        if self.show_prop and not self.is_output:
+        if self.show_prop and not self.is_output and not self.is_linked:
             row = layout.row()
             row.prop(self, 'default_value')
         else:

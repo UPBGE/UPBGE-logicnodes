@@ -17,19 +17,17 @@ class LogicNodeModifyProperty(LogicNodeActionType):
     nl_module = 'uplogic.nodes.actions'
     nl_class = "ULModifyProperty"
 
+    def update_draw(self, context=None):
+        if not self.ready:
+            return
+        self.inputs[4].enabled = self.inputs[5].enabled = self.clamp
+    clamp: BoolProperty(name='Clamp', update=update_draw)
+
     mode: EnumProperty(
         name='Mode',
         items=_enum_object_property_types,
         default=0
     )
-
-    def update_draw(self, context=None):
-        if not self.ready:
-            return
-        self.inputs[4].enabled = self.inputs[5].enabled = self.clamp
-
-    clamp: BoolProperty(name='Clamp', update=update_draw)
-
     operator: EnumProperty(
         name='Operation',
         items=_enum_math_operations
@@ -41,7 +39,7 @@ class LogicNodeModifyProperty(LogicNodeActionType):
         self.add_input(NodeSocketLogicGameProperty, "Property", {'ref_index': 1})
         self.add_input(NodeSocketLogicFloat, "Value")
         self.add_input(NodeSocketLogicFloat, "Min")
-        self.add_input(NodeSocketLogicFloat, "Max")
+        self.add_input(NodeSocketLogicFloat, "Max", {'default_value': 1.0})
         self.add_output(NodeSocketLogicCondition, "Done")
         LogicNodeActionType.init(self, context)
 
@@ -53,7 +51,8 @@ class LogicNodeModifyProperty(LogicNodeActionType):
 
     def get_attributes(self):
         return [
-            ("mode", self.mode),
+            ('mode', self.mode),
+            ('clamp', self.clamp),
             ("operator", f'OPERATORS.get("{self.operator}")')
         ]
 

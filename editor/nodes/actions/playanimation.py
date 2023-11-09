@@ -42,7 +42,7 @@ class LogicNodePlayAnimation(LogicNodeActionType):
 
 
     def get_input_names(self):
-        # XXX: Legacy Check
+        # XXX: Legacy Re-Enable Check
         for i in self.inputs:
             i.enabled = True
         return [

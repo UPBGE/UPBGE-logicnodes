@@ -14,6 +14,7 @@ class LogicNodeLocalServer(LogicNodeActionType):
     bl_idname = "LogicNodeLocalServer"
     bl_label = "LAN Server"
     nl_module = 'uplogic.nodes.actions'
+    nl_class = "ULLocalServer"
 
     on_init: BoolProperty(
         name='Startup',
@@ -36,8 +37,6 @@ class LogicNodeLocalServer(LogicNodeActionType):
 
     def draw_buttons(self, context, layout) -> None:
         layout.prop(self, 'on_init', text='On Startup')
-
-    nl_class = "ULLocalServer"
 
     def get_input_names(self):
         return [

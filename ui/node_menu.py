@@ -582,14 +582,15 @@ class SoundMenu(bpy.types.Menu):
 
     def draw(self, context):
         layout = self.layout
-        insertNode(layout, "NLActionStartSound", "2D Sound")
-        insertNode(layout, "NLActionStart3DSoundAdv", "3D Sound")
+        # insertNode(layout, "NLActionStartSound", "2D Sound")
+        # insertNode(layout, "NLActionStart3DSoundAdv", "3D Sound")
+        insertNode(layout, "LogicNodeStartSound", "Start Sound")
         insertNode(layout, "NLPlaySpeaker", "Start Speaker")
         layout.separator()
         insertNode(layout, "NLActionPauseSound", "Pause Sound")
         insertNode(layout, "NLActionResumeSound", "Resume Sound")
-        insertNode(layout, "NLActionStopAllSounds", "Stop All Sounds")
         insertNode(layout, "NLActionStopSound", "Stop Sound")
+        insertNode(layout, "NLActionStopAllSounds", "Stop All Sounds")
 
 
 @menu_item
