@@ -28,13 +28,13 @@ class NodeSocketLogicMaterialNode(NodeSocket, NodeSocketLogic):
     nl_type = SOCKET_TYPE_STRING
 
     def draw(self, context, layout, node, text):
-        if self.is_linked or self.is_output:
+        if self.linked_valid or self.is_output:
             layout.label(text=text)
         else:
             mat_socket = self.node.inputs[self.ref_index]
             mat = mat_socket.default_value
             col = layout.column(align=False)
-            if mat and not mat_socket.is_linked:
+            if mat and not mat_socket.linked_valid:
                 col.prop_search(
                     self,
                     "default_value",
@@ -42,7 +42,7 @@ class NodeSocketLogicMaterialNode(NodeSocket, NodeSocketLogic):
                     'nodes',
                     text=''
                 )
-            elif mat_socket.is_linked:
+            elif mat_socket.linked_valid:
                 col.label(text=text)
                 col.prop(self, 'default_value', text='')
             else:

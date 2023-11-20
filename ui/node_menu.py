@@ -150,7 +150,7 @@ class GamepadMenu(bpy.types.Menu):
         # insertNode(layout, "NLGamepadButtonUpCondition", "Button Up")
         insertNode(layout, "NLGamepadButtonsCondition", "Button")
         insertNode(layout, "NLGamepadSticksCondition", "Sticks")
-        insertNode(layout, "NLGamepadTriggerCondition", "Trigger")
+        # insertNode(layout, "NLGamepadTriggerCondition", "Trigger")
         insertNode(layout, "NLGamepadActive", "Gamepad Active")
         layout.separator()
         insertNode(layout, "NLGamepadVibration", "Vibration")

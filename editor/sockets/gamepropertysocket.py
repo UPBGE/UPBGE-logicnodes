@@ -37,7 +37,7 @@ class NodeSocketLogicGameProperty(NodeSocket, NodeSocketLogic):
         mode = getattr(self.node, 'mode', '0')
         if self.is_output:
             layout.label(text=self.name)
-        elif self.is_linked:
+        elif self.linked_valid:
             layout.label(text=self.name)
         else:
             col = layout.column(align=False)
@@ -57,10 +57,10 @@ class NodeSocketLogicGameProperty(NodeSocket, NodeSocketLogic):
             if self.name:
                 row = col.row()
                 row.label(text=self.name)
-                if not data_block_socket.is_linked and data_block and not mode:
+                if not data_block_socket.linked_valid and data_block and not mode:
                     row.prop(self, 'use_custom', text='', icon='GREASEPENCIL')
-            if data_block or data_block_socket.is_linked:
-                if not data_block_socket.is_linked and not self.use_custom and mode == '0':
+            if data_block or data_block_socket.linked_valid:
+                if not data_block_socket.linked_valid and not self.use_custom and mode == '0':
 
                     if isinstance(data_block, Object):
                         data_block = data_block.game

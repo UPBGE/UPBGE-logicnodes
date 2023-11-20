@@ -38,11 +38,11 @@ class NodeSocketLogicTree(NodeSocket, NodeSocketLogic):
 
     def draw(self, context, layout, node, text):
         icon = 'OUTLINER'
-        if self.is_linked or self.is_output:
+        if self.linked_valid or self.is_output:
             layout.label(text=text)
         else:
             col = layout.column(align=False)
-            if text and self.is_linked:
+            if text and self.linked_valid:
                 col.label(text=text)
             col.prop_search(
                 self,

@@ -67,7 +67,7 @@ class LogicNodeRunPython(LogicNodeActionType):
         items = ''
         while socket < len(self.inputs):
             field_value = None
-            if self.inputs[socket].is_linked:
+            if self.inputs[socket].linked_valid:
                 field_value = self.get_linked_socket_field_value(
                     self.inputs[socket],
                     cell_varname,

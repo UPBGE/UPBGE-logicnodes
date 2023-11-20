@@ -25,7 +25,7 @@ class NodeSocketLogicBoneConstraint(NodeSocket, NodeSocketLogic):
     def draw(self, context, layout, node, text):
         if self.is_output:
             layout.label(text=self.name)
-        elif self.is_linked:
+        elif self.linked_valid:
             layout.label(text='Constraint Name')
         else:
             col = layout.column(align=False)
@@ -50,7 +50,7 @@ class NodeSocketLogicBoneConstraint(NodeSocket, NodeSocketLogic):
                 row = col.row()
                 row.label(text=self.name)
             if bone:
-                if not bone_socket.is_linked and not armature_socket.is_linked:
+                if not bone_socket.linked_valid and not armature_socket.linked_valid:
                     col.prop_search(
                         self,
                         'default_value',
@@ -59,7 +59,7 @@ class NodeSocketLogicBoneConstraint(NodeSocket, NodeSocketLogic):
                         text=''
                     )
                     return
-            if (bone or bone_socket.is_linked) and (armature or armature_socket.is_linked):
+            if (bone or bone_socket.linked_valid) and (armature or armature_socket.linked_valid):
                 col.prop(self, 'default_value', text='')
             else:
                 col.label(text='No Bone!', icon='ERROR')

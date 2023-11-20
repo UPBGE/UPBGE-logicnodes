@@ -419,27 +419,26 @@ _enum_controller_trigger_operators = [
 ]
 
 
-_enum_vrcontroller_trigger_operators = [
-    ("0", "Left", "Left Controller Values"),
-    ("1", "Right", "Right Controller Values")
-]
-
-
 _enum_controller_buttons_operators = [
     ("0", "A / Cross", "A / Cross Button"),
     ("1", "B / Circle", "B / Circle Button"),
     ("2", "X / Square", "X / Square Button"),
     ("3", "Y / Triangle", "Y / Triangle Button"),
-    ("4", "Select / Share", "Select / Share Button"),
-    ("6", "Start / Options", "Start / Options Button"),
-    ("7", "L3", "Left Stick Button"),
-    ("8", "R3", "Right Stick Button"),
+    (None),
     ("9", "LB / L1", "Left Bumper / L1 Button"),
     ("10", "RB / R1", "Right Bumper / R1 Button"),
+    ("15", "LT / L2", "Left Trigger Button"),
+    ("16", "RT / R2", "Right Trigger Button"),
+    ("7", "L3", "Left Stick Button"),
+    ("8", "R3", "Right Stick Button"),
+    (None),
     ("11", "D-Pad Up", "D-Pad Up Button"),
     ("12", "D-Pad Down", "D-Pad Down Button"),
     ("13", "D-Pad Left", "D-Pad Left Button"),
-    ("14", "D-Pad Right", "D-Pad Right Button")
+    ("14", "D-Pad Right", "D-Pad Right Button"),
+    (None),
+    ("4", "Select / Share", "Select / Share Button"),
+    ("6", "Start / Options", "Start / Options Button")
 ]
 
 

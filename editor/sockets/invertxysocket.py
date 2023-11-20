@@ -11,6 +11,9 @@ from bpy.props import BoolProperty
 class NodeSocketLogicInvertXY(NodeSocket, NodeSocketLogic):
     bl_idname = "NLInvertedXYSocket"
     bl_label = "Invert XY"
+    nl_color = SOCKET_COLOR_DICTIONARY
+    nl_type = SOCKET_TYPE_DICTIONARY
+
     default_value: BoolVectorProperty(name='XY', size=2)
     # XXX: Remove value property
     value: BoolVectorProperty(name='XY', size=2)
@@ -27,11 +30,8 @@ class NodeSocketLogicInvertXY(NodeSocket, NodeSocketLogic):
         if y is not DEPRECATED:
             self.default_value[1] = y
 
-    nl_color = SOCKET_COLOR_DICTIONARY
-    nl_type = SOCKET_TYPE_DICTIONARY
-
     def draw(self, context, layout, node, text):
-        if self.is_linked or self.is_output:
+        if self.linked_valid or self.is_output:
             layout.label(text=text)
         else:
             row = layout.row(align=True)
@@ -39,4 +39,4 @@ class NodeSocketLogicInvertXY(NodeSocket, NodeSocketLogic):
             row.prop(self, 'default_value', text='')
 
     def get_unlinked_value(self):
-        return f"dict(x={self.default_value[0]}, y={self.default_value[1]})"
+        return f"[{self.default_value[0]}, {self.default_value[1]}]"

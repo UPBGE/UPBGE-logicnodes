@@ -28,13 +28,13 @@ class NodeSocketLogicNodeGroupNode(NodeSocket, NodeSocketLogic):
     nl_type = SOCKET_TYPE_STRING
 
     def draw(self, context, layout, node, text):
-        if self.is_linked or self.is_output:
+        if self.linked_valid or self.is_output:
             layout.label(text=text)
         else:
             tree_socket = self.node.inputs[self.ref_index]
             tree = tree_socket.default_value
             col = layout.column(align=False)
-            if tree and not tree_socket.is_linked:
+            if tree and not tree_socket.linked_valid:
                 col.prop_search(
                     self,
                     "default_value",
@@ -42,7 +42,7 @@ class NodeSocketLogicNodeGroupNode(NodeSocket, NodeSocketLogic):
                     'nodes',
                     text=''
                 )
-            elif tree_socket.is_linked:
+            elif tree_socket.linked_valid:
                 col.label(text=text)
                 col.prop(self, 'default_value', text='')
             else:

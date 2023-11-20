@@ -25,7 +25,7 @@ class NodeSocketLogicFilePath(NodeSocket, NodeSocketLogic):
     nl_type = SOCKET_TYPE_STRING
 
     def draw(self, context, layout, node, text):
-        if self.is_linked or self.is_output:
+        if self.linked_valid or self.is_output:
             layout.label(text=text)
         else:
             col = layout.column()

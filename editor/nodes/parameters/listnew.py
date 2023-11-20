@@ -31,7 +31,7 @@ class LogicNodeListNew(LogicNodeParameterType):
         items = ''
         for socket in self.inputs:
             field_value = None
-            if socket.is_linked:
+            if socket.linked_valid:
                 field_value = self.get_linked_socket_field_value(
                     socket,
                     cell_varname,

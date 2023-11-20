@@ -18,7 +18,7 @@ class NodeSocketLogicIntegerPositive(NodeSocket, NodeSocketLogic):
     nl_type = SOCKET_TYPE_INT
 
     def draw(self, context, layout, node, text):
-        if self.is_linked or self.is_output:
+        if self.linked_valid or self.is_output:
             layout.label(text=text)
         else:
             layout.prop(self, "default_value", text=text)

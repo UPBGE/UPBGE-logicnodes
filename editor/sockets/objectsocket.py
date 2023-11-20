@@ -38,7 +38,7 @@ class NodeSocketLogicObject(NodeSocket, NodeSocketLogic):
         scene_logic = self.is_scene_logic()
         if self.is_output:
             layout.label(text=self.name)
-        elif self.is_linked:
+        elif self.linked_valid:
             layout.label(text=self.name)
         else:
             if not self.use_owner or scene_logic:

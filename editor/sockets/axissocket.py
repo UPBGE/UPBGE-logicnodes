@@ -30,7 +30,7 @@ class NodeSocketLogicAxis(NodeSocket, NodeSocketLogic):
         NodeSocketLogic.__init__(self)
 
     def draw(self, context, layout, node, text):
-        if self.is_linked:
+        if self.linked_valid:
             layout.label(text=text)
         else:
             parts = layout.split()

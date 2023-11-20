@@ -37,8 +37,11 @@ class LOGIC_NODES_PT_logic_tree_properties(bpy.types.Panel):
                 if not comp:
                     continue
                 cprop = comp.properties[prop.name]
-                row.prop(cprop, 'value', text='')
                 vtype = int(prop.value_type)
+                if vtype in [5, 6]:
+                    row.template_color_picker(cprop, 'value')
+                else:
+                    row.prop(cprop, 'value', text='')
                 # if vtype = 13:
                 #     row.operator('logic_nodes.load_text')
                 if vtype == 14:

@@ -39,7 +39,7 @@ class NodeSocketLogicCurve(NodeSocket, NodeSocketLogic):
     def draw(self, context, layout, node, text):
         if self.is_output:
             layout.label(text=self.name)
-        elif self.is_linked:
+        elif self.linked_valid:
             layout.label(text=self.name)
         else:
             if not self.use_owner:

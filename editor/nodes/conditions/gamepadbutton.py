@@ -2,6 +2,7 @@ from ..node import node_type
 from ..node import LogicNodeConditionType
 from ...sockets import NodeSocketLogicIntegerPositiveCent
 from ...sockets import NodeSocketLogicCondition
+from ...sockets import NodeSocketLogicFloat
 from ...enum_types import _enum_controller_buttons_operators
 from ...enum_types import _enum_input_types
 from bpy.props import EnumProperty
@@ -14,10 +15,14 @@ class LogicNodeGamepadButton(LogicNodeConditionType):
     nl_module = 'uplogic.nodes.conditions'
     nl_class = "ULGamepadButton"
 
+    def update_draw(self, context=None):
+        self.outputs[1].enabled = int(self.button) > 14
+
     button: EnumProperty(
         name='Button',
         items=_enum_controller_buttons_operators,
         description="Controller Buttons",
+        update=update_draw
     )
 
     input_type: EnumProperty(
@@ -33,6 +38,7 @@ class LogicNodeGamepadButton(LogicNodeConditionType):
     def init(self, context):
         self.add_input(NodeSocketLogicIntegerPositiveCent, 'Index')
         self.add_output(NodeSocketLogicCondition, "Pressed")
+        self.add_output(NodeSocketLogicFloat, "Strength")
         LogicNodeConditionType.init(self, context)
 
     def draw_buttons(self, context, layout):
@@ -43,7 +49,7 @@ class LogicNodeGamepadButton(LogicNodeConditionType):
         return ["index"]
 
     def get_output_names(self):
-        return ["BUTTON"]
+        return ["BUTTON", 'BUTTON']
 
     def get_attributes(self):
         return [

@@ -29,7 +29,7 @@ class NodeSocketLogicBrick(NodeSocket, NodeSocketLogic):
     def draw(self, context, layout, node, text):
         if self.is_output:
             layout.label(text=self.name)
-        elif self.is_linked:
+        elif self.linked_valid:
             layout.label(text=self.name)
         else:
             col = layout.column(align=False)
@@ -48,10 +48,10 @@ class NodeSocketLogicBrick(NodeSocket, NodeSocketLogic):
             if self.name:
                 row = col.row()
                 row.label(text=self.name)
-                if not game_obj_socket.is_linked and game_object:
+                if not game_obj_socket.linked_valid and game_object:
                     row.prop(self, 'use_custom', text='', icon='GREASEPENCIL')
-            if game_object or game_obj_socket.is_linked:
-                if not game_obj_socket.is_linked and not self.use_custom:
+            if game_object or game_obj_socket.linked_valid:
+                if not game_obj_socket.linked_valid and not self.use_custom:
                     game = game_object.game
                     col.prop_search(
                         self,

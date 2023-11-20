@@ -73,7 +73,7 @@ class NodeSocketLogicMatrix(NodeSocket, NodeSocketLogic):
 
     def draw(self, context, layout, node, text):
         dim = int(self.dimensions) > 1
-        if self.is_linked or self.is_output:
+        if self.linked_valid or self.is_output:
             layout.label(text=text)
         else:
             col = layout.column()

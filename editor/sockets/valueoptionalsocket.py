@@ -67,10 +67,10 @@ class NodeSocketLogicValueOptional(NodeSocket, NodeSocketLogic):
     )
 
     def get_unlinked_value(self):
-        return parse_value_type(self.value_type, self.default_value) if self.use_value or self.is_linked else None
+        return parse_value_type(self.value_type, self.default_value) if self.use_value or self.linked_valid else None
 
     def draw(self, context, layout, node, text):
-        if self.is_linked or self.is_output:
+        if self.linked_valid or self.is_output:
             layout.label(text=text)
         else:
             col = layout.column()

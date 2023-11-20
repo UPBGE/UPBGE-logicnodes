@@ -3,8 +3,14 @@ from ..node import LogicNodeParameterType
 from ...sockets import NodeSocketLogicVectorXYZ
 from ...sockets import NodeSocketLogicFloat
 from ...sockets import NodeSocketLogicVectorXY
-from ...enum_types import _enum_vrcontroller_trigger_operators
 from bpy.props import EnumProperty
+
+
+
+_controllers = [
+    ("0", "Left", "Left Controller Values"),
+    ("1", "Right", "Right Controller Values")
+]
 
 
 @node_type
@@ -15,7 +21,7 @@ class LogicNodeVRController(LogicNodeParameterType):
 
     index: EnumProperty(
         name='Controller',
-        items=_enum_vrcontroller_trigger_operators,
+        items=_controllers,
         default='0'
     )
 
@@ -27,8 +33,8 @@ class LogicNodeVRController(LogicNodeParameterType):
         self.add_output(NodeSocketLogicVectorXYZ, "Orientation")
         self.add_output(NodeSocketLogicVectorXYZ, "Aim Position")
         self.add_output(NodeSocketLogicVectorXYZ, "Aim Orientation")
-        self.add_output(NodeSocketLogicVectorXY, "Aim Orientation")
-        self.add_output(NodeSocketLogicFloat, "Aim Orientation")
+        self.add_output(NodeSocketLogicVectorXY, "Stick")
+        self.add_output(NodeSocketLogicFloat, "Trigger")
         LogicNodeParameterType.init(self, context)
 
     nl_class = "ULGetVRControllerValues"

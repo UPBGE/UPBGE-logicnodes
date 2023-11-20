@@ -9,9 +9,9 @@ import bpy
 
 
 NODE_ATTRS = [
+    'default_value',
     'value',
     'game_object',
-    'default_value',
     'use_toggle',
     'use_value',
     'true_label',
@@ -116,12 +116,13 @@ class LOGIC_NODES_OT_pack_new_tree(Operator):
         redir = parent_tree.nodes.new('NLActionExecuteNetwork')
         redir.inputs[0].default_value = True
 
-        try:
-            redir.inputs[1].default_value = bpy.context.object
-        except Exception:
-            msg = 'No Object was selected; Set Object in tree {} manually!'.format(parent_tree.name)
-            self.report({"WARNING"}, msg)
-            warn(msg)
+        # try:
+        redir.inputs[1].use_owner = True
+        # except Exception:
+        #     msg = 'No Object was selected; Set Object in tree {} manually!'.format(parent_tree.name)
+        #     self.report({"WARNING"}, msg)
+        #     warn(msg)
+        redir.inputs[2].value = bpy.data.node_groups[group_name]  # XXX: Legacy
         redir.inputs[2].default_value = bpy.data.node_groups[group_name]
         redir.location = self.avg_location(locs)
         node_tree.use_fake_user = True

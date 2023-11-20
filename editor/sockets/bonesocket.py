@@ -25,7 +25,7 @@ class NodeSocketLogicBone(NodeSocket, NodeSocketLogic):
     def draw(self, context, layout, node, text):
         if self.is_output:
             layout.label(text=self.name)
-        elif self.is_linked:
+        elif self.linked_valid:
             layout.label(text='Bone Name')
         else:
             col = layout.column(align=False)
@@ -45,7 +45,7 @@ class NodeSocketLogicBone(NodeSocket, NodeSocketLogic):
                 row = col.row()
                 row.label(text=self.name)
             if game_object and isinstance(game_object.data, bpy.types.Armature):
-                if not game_obj_socket.is_linked:
+                if not game_obj_socket.linked_valid:
                     col.prop_search(
                         self,
                         'default_value',
@@ -55,7 +55,7 @@ class NodeSocketLogicBone(NodeSocket, NodeSocketLogic):
                         text=''
                     )
                     return
-            if game_obj_socket.is_linked:
+            if game_obj_socket.linked_valid:
                 col.prop(self, 'value', text='')
             else:
                 col.label(text='No Armature!', icon='ERROR')

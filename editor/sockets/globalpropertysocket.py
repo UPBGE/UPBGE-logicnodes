@@ -28,12 +28,12 @@ class NodeSocketLogicGlobalProperty(NodeSocket, NodeSocketLogic):
     nl_type = SOCKET_TYPE_STRING
 
     def draw(self, context, layout, node, text):
-        if self.is_linked or self.is_output:
+        if self.linked_valid or self.is_output:
             layout.label(text=text)
         else:
             col = layout.column()
             ref_socket = self.node.inputs[self.ref_index]
-            if ref_socket.is_linked:
+            if ref_socket.linked_valid:
                 col.prop(self, 'default_value', text='')
             else:
                 cat = context.scene.nl_global_categories.get(ref_socket.default_value)

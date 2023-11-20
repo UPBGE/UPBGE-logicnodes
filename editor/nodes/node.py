@@ -11,6 +11,7 @@ import bpy
 
 
 _nodes = []
+_node_manual_map = []
 
 
 def node_type(obj):
@@ -18,6 +19,7 @@ def node_type(obj):
         error(f'{obj.bl_label}: Uplogic Module not defined! Node not registered.')
         return
     _nodes.append(obj)
+    _node_manual_map.append((f"bpy.types.{obj.bl_idname}", "page_one"),)
     return obj
 
 
@@ -146,7 +148,7 @@ class LogicNode:
         else:
             field_name = self.get_field_name_for_socket(socket)
         field_value = None
-        if not socket.is_linked or socket.links[0].from_node.mute:
+        if not socket.linked_valid:
             field_value = socket.get_unlinked_value()
         else:
             field_value = self.get_linked_socket_field_value(

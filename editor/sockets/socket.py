@@ -171,6 +171,15 @@ class NodeSocketLogic:
     def update_draw(self, context=None):
         pass
 
+    @property
+    def linked_valid(self):
+        return (
+            self.is_linked and
+            len(self.links) > 0 and
+            self.links[0].from_socket.enabled and not
+            self.links[0].from_node.mute
+        )
+
     @classmethod
     def get_id(cls):
         return cls.bl_idname

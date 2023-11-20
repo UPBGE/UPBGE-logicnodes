@@ -33,11 +33,11 @@ class NodeSocketLogicText(NodeSocket, NodeSocketLogic):
     def draw(self, context, layout, node, text):
         if self.is_output:
             layout.label(text=self.name)
-        elif self.is_linked:
+        elif self.linked_valid:
             layout.label(text=self.name)
         else:
             col = layout.column(align=False)
-            if text and self.is_linked:
+            if text and self.linked_valid:
                 col.label(text=self.name)
             col.prop_search(
                 self,

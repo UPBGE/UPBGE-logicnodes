@@ -30,7 +30,7 @@ class NodeSocketLogicAxisSigned(NodeSocket, NodeSocketLogic):
     nl_type = SOCKET_TYPE_INT
 
     def draw(self, context, layout, node, text):
-        if self.is_linked:
+        if self.linked_valid:
             layout.label(text=text)
         else:
             parts = layout.split()

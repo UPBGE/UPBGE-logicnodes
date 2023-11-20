@@ -54,6 +54,7 @@ class LOGIC_NODES_OT_generate_code(Operator):
 
         logic_trees = [tree for tree in bpy.data.node_groups if tree.bl_idname == LogicNodeTree.bl_idname]
         for tree in logic_trees:
+            tree.mark_invalid_links()
             if tree.changes_staged:
                 TreeCodeGenerator().write_code_for_tree(tree)
         # try:

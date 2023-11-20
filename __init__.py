@@ -7,6 +7,7 @@ import sys
 import time
 from .editor.sockets.socket import _sockets
 from .editor.nodes.node import _nodes
+from .editor.nodes.node import _node_manual_map
 from .ops.operator import _operators
 from .props.property import _properties
 from .ui.interface import _panels
@@ -32,7 +33,9 @@ bl_info = {
     "version": (3, 0),
     "blender": (4, 1, 0),
     "location": "View Menu",
-    "category": "Game Engine"
+    "category": "Game Engine",
+    "wiki_url": "https://upbge.org/#/documentation/docs/latest/manual/manual/logic_nodes/index.html",
+    "tracker_url": "https://github.com/UPBGE/UPBGE-logicnodes/issues"
 }
 
 _loaded_nodes = []
@@ -344,9 +347,17 @@ def _update_properties(file):
                 # XXX: del obj['bgelogic_treelist']
 
 
+def node_manual():
+    prefix = "https://myaddon.org/manual/"
+    ret = (prefix, _node_manual_map)
+    return ret
+
+
+
 # blender add-on registration callback
 def register():
     print('Registering Logic Nodes...')
+    bpy.utils.register_manual_map(node_manual)
     bpy.types.NODE_MT_add.append(node_menu.draw_add_menu)
     bpy.app.handlers.game_pre.append(_generate_on_game_start)
     bpy.app.handlers.game_pre.append(_jump_in_game_cam)
@@ -417,6 +428,7 @@ def register():
 # blender add-on unregistration callback
 def unregister():
     print('Unregistering Logic Nodes...')
+    bpy.utils.unregister_manual_map(node_manual)
     bpy.types.NODE_MT_add.remove(node_menu.draw_add_menu)
     utils.debug('Removing Game Start Compile handler...')
     remove_f = []

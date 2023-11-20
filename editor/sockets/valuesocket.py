@@ -69,7 +69,7 @@ class NodeSocketLogicValue(NodeSocket, NodeSocketLogic):
         return parse_value_type(self.value_type, self.default_value)
 
     def draw(self, context, layout, node, text):
-        if self.is_linked or self.is_output:
+        if self.linked_valid or self.is_output:
             layout.label(text=text)
         else:
             col = layout.column()
