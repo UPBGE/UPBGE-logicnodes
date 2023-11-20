@@ -45,9 +45,9 @@ class LogicNodeStartSound(LogicNodeActionType):
         self.inputs[3].enabled = self.inputs[4].enabled = int(self.mode) in [1, 3]
         self.inputs[5].enabled = int(self.mode) > 1
         self.inputs[6].enabled = self.inputs[7].enabled = self.inputs[5].default_value and self.inputs[2].enabled
-        self.inputs[11].enabled = int(self.mode) < 2
+        self.inputs[12].enabled = int(self.mode) < 2
         state = self.advanced and int(self.mode) > 1
-        for i in [13, 14, 15, 16]:
+        for i in [14, 15, 16, 17]:
             ipt = self.inputs[i]
             if ipt.is_linked:
                 ipt.enabled = True
@@ -85,6 +85,7 @@ class LogicNodeStartSound(LogicNodeActionType):
         self.add_input(NodeSocketLogicFloatFactor, 'Lowpass', {'default_value': .1})
         self.add_input(NodeSocketLogicLoopCount, "Mode")
         self.add_input(NodeSocketLogicFloatPositive, "Pitch", {'default_value': 1.0})
+        self.add_input(NodeSocketLogicFloatPositive, "Speed", {'default_value': 1.0, 'enabled': False})
         self.add_input(NodeSocketLogicFloatPositive, "Volume", {'default_value': 1.0})
         self.add_input(NodeSocketLogicFloatFactor, 'Lowpass', {'default_value': 1.0})
         self.add_input(NodeSocketLogicBoolean, "Enable Reverb", {'enabled': False})
@@ -126,6 +127,7 @@ class LogicNodeStartSound(LogicNodeActionType):
             'cutoff',
             "loop_count",
             "pitch",
+            "speed",
             "volume",
             'lowpass',
             'reverb',
