@@ -9,6 +9,7 @@ from ...sockets import NodeSocketLogicVectorXYAngle
 from ...sockets import NodeSocketLogicFloatFactor
 from ...enum_types import _enum_look_axis
 from bpy.props import EnumProperty
+from bpy.props import BoolProperty
 from math import radians
 
 
@@ -38,6 +39,11 @@ class LogicNodeMouseLook(LogicNodeActionType):
         default="1"
     )
 
+    center_mouse: BoolProperty(
+        name='Center Mouse',
+        default=True
+    )
+
     def init(self, context):
         self.add_input(NodeSocketLogicCondition, "Condition")
         self.add_input(NodeSocketLogicObject, "Body")
@@ -56,12 +62,16 @@ class LogicNodeMouseLook(LogicNodeActionType):
         r = layout.row(align=True)
         r.label(text="Front:")
         r.prop(self, "axis", text="")
+        layout.prop(self, "center_mouse")
 
     def get_output_names(self):
         return ["OUT"]
 
     def get_attributes(self):
-        return [("axis", self.axis)]
+        return [
+            ("axis", self.axis),
+            ("center_mouse", self.center_mouse)
+        ]
 
     def get_input_names(self):
         return [
