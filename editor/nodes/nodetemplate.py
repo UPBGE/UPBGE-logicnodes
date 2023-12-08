@@ -1,4 +1,4 @@
-from ...editor.nodes.node import node_type
+from bge_netlogic import node_type
 from ...editor.nodes.node import LogicNodeParameterType
 from ...editor.sockets import NodeSocketLogicObject
 from ...editor.sockets import NodeSocketLogicString
