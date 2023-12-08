@@ -1,6 +1,7 @@
 import bpy
 import sys
 from .props.propertyfilter import LogicNodesPropertyFilter
+from .props.customnode import CustomNodeReference
 
 
 _uplogic_versions = [
@@ -22,6 +23,10 @@ class LogicNodesAddonPreferences(bpy.types.AddonPreferences):
     jump_in_game_cam: bpy.props.BoolProperty(name='Use Game Camera On Start', default=False)
     use_screen_console: bpy.props.BoolProperty(name='Screen Console', description='Print messages to an on-screen console.\nNeeds at least one uplogic import or Logic Node Tree.\nNote: Errors are not printed to this console')
     screen_console_open: bpy.props.BoolProperty(name='Open', description='Start the game with the on-screen console already open')
+
+    custom_logic_nodes: bpy.props.CollectionProperty(
+        type=CustomNodeReference
+    )
 
     def draw(self, context):
         layout = self.layout

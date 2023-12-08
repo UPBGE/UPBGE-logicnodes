@@ -10,7 +10,6 @@ from ...sockets import NodeSocketLogicBoolean
 from ...sockets import NodeSocketLogicFloatPositive
 from ...sockets import NodeSocketLogicBlendMode
 from ...sockets import NodeSocketLogicFloatFactor
-from bpy.props import BoolProperty
 
 
 @node_type
@@ -20,6 +19,9 @@ class LogicNodePlayAnimation(LogicNodeActionType):
     nl_module = 'uplogic.nodes.actions'
     nl_class = "ULPlayAction"
 
+    def update_draw(self, context=None):
+        self.inputs[8].enabled = self.inputs[7].default_value == 0
+
     def init(self, context):
         self.add_input(NodeSocketLogicCondition, "Condition")
         self.add_input(NodeSocketLogicObject, "Object / Armature")
@@ -27,7 +29,7 @@ class LogicNodePlayAnimation(LogicNodeActionType):
         self.add_input(NodeSocketLogicFloat, "Start")
         self.add_input(NodeSocketLogicFloat, "End")
         self.add_input(NodeSocketLogicIntegerPositive, "Layer")
-        self.add_input(NodeSocketLogicIntegerPositive, "Priority")
+        self.add_input(NodeSocketLogicIntegerPositive, "Priority", {'enabled': False})
         self.add_input(NodeSocketLogicPlayMode, "Play Mode")
         self.add_input(NodeSocketLogicBoolean, "Stop When Done", {'default_value': True})
         self.add_input(NodeSocketLogicFloatFactor, "Layer Weight", {'default_value': 1.0})
@@ -40,11 +42,10 @@ class LogicNodePlayAnimation(LogicNodeActionType):
         self.add_output(NodeSocketLogicFloat, "Current Frame")
         LogicNodeActionType.init(self, context)
 
-
     def get_input_names(self):
         # XXX: Legacy Re-Enable Check
         for i in self.inputs:
-            i.enabled = True
+            i.enabled = i != 6
         return [
             "condition",
             "game_object",

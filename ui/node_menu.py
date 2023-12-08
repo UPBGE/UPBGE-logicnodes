@@ -1,5 +1,6 @@
 import bpy
 from .interface import menu_item
+from ..utilities import preferences
 
 
 def draw_add_menu(self, context):
@@ -10,6 +11,9 @@ def draw_add_menu(self, context):
 
     # layout.operator('bge_netlogic.node_search', text="Search", icon="VIEWZOOM")
     # layout.separator()
+    if len(preferences().custom_logic_nodes) > 0:
+        layout.menu("LN_MT_custom_menu", text="Custom Nodes", icon="RIGHTARROW_THIN")
+        layout.separator()
     layout.menu("LN_MT_events_menu", text="Events", icon="RIGHTARROW_THIN")
     layout.menu("LN_MT_game_menu", text="Game", icon="RIGHTARROW_THIN")
     layout.menu("LN_MT_input_menu", text="Input", icon="RIGHTARROW_THIN")
@@ -682,6 +686,7 @@ class VectorMathMenu(bpy.types.Menu):
         layout = self.layout
         # insertNode(layout, "NLVectorAngle", "Angle")
         insertNode(layout, "NLVectorAngleCheck", "Check Angle")
+        insertNode(layout, "LogicNodeRotateByPoint", "Vector Rotate")
         # insertNode(layout, "NLConditionDistanceCheck", "Compare Distance")
         insertNode(layout, "NLParameterAbsVector3Node", "Absolute Vector")
         # insertNode(layout, "NLConditionCompareVecs", "Compare Vectors")
@@ -988,3 +993,15 @@ class UtilityMenu(bpy.types.Menu):
         insertNode(layout, "NLDrawLine", "Draw Line")
         insertNode(layout, "NLDrawCube", "Draw Cube")
         insertNode(layout, "NLDrawBox", "Draw Box")
+
+
+@menu_item
+class CustomMenu(bpy.types.Menu):
+    bl_idname = "LN_MT_custom_menu"
+    bl_label = "Custom Menu"
+
+    def draw(self, context):
+        layout = self.layout
+        # insertNode(layout, "NLActionGetPerformanceProfileNode", "Get Profile")
+        for node in preferences().custom_logic_nodes:
+            insertNode(layout, node.idname, node.label)

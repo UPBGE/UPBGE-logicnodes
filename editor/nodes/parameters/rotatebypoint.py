@@ -12,7 +12,7 @@ from bpy.props import EnumProperty
 @node_type
 class LogicNodeRotateByPoint(LogicNodeParameterType):
     bl_idname = "LogicNodeRotateByPoint"
-    bl_label = "Rotate By Point"
+    bl_label = "Vector Rotate"
     nl_module = 'uplogic.nodes.parameters'
     nl_class = "ULRotateByPoint"
 

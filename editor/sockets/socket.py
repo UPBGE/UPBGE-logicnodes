@@ -163,6 +163,7 @@ class NodeSocketLogic:
     deprecated = False
     nl_color = SOCKET_COLOR_GENERIC
     nl_type = SOCKET_TYPE_VALUE
+    nl_shape = 'CIRCLE'
     valid_sockets: list = None
     type: StringProperty(default='VALUE')
     use_default_value: BoolProperty(default=False)

@@ -7,6 +7,7 @@ from bpy.types import NodeSocket
 class NodeSocketLogicDictionary(NodeSocket, NodeSocketLogic):
     bl_idname = "NLDictSocket"
     bl_label = "Dictionary"
+    nl_shape = 'DIAMOND'
 
     nl_color = SOCKET_COLOR_DICTIONARY
     nl_type = SOCKET_TYPE_DICTIONARY

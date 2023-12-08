@@ -665,5 +665,5 @@ _collision_bitmask_types = [
 _rotate_by_types = [
     ("0", "2D", ""),
     ("1", "3D", ""),
-    ("2", "Arbitrary Axis", "")
+    ("2", "Axis", "")
 ]

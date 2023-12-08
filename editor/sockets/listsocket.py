@@ -8,6 +8,7 @@ from bpy.types import NodeSocket
 class NodeSocketLogicList(NodeSocket, NodeSocketLogic):
     bl_idname = "NLListSocket"
     bl_label = "List"
+    nl_shape = 'SQUARE'
     nl_color = SOCKET_COLOR_INTEGER
     nl_type = SOCKET_TYPE_LIST
 

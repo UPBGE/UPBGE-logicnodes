@@ -61,6 +61,7 @@ class LogicNode:
 
     def add_input(self, cls, name, settings={}):
         ipt = self.inputs.new(cls.bl_idname, name)
+        ipt.display_shape = cls.nl_shape
         if settings:
             ipt.use_default_value = True
         for key, val in settings.items():
@@ -69,6 +70,7 @@ class LogicNode:
 
     def add_output(self, cls, name, settings={}):
         otp = self.outputs.new(cls.bl_idname, name)
+        otp.display_shape = cls.nl_shape
         if settings:
             otp.use_default_value = True
         for key, val in settings.items():
@@ -266,3 +268,7 @@ class LogicNodeActionType(bpy.types.Node, LogicNode):
 
     def init(self, context):
         self.set_ready()
+
+
+class LogicNodeCustomType(bpy.types.Node, LogicNode):
+    nl_nodetype = 'CUS'

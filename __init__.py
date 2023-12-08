@@ -23,6 +23,9 @@ from .editor.nodetree import LogicNodeTree
 from . import utilities as utils
 from . import audio
 
+from .props.customnode import custom_node
+from .props.customnode import CustomNodeReference
+
 
 bl_info = {
     "name": "Logic Nodes+",
@@ -353,7 +356,6 @@ def node_manual():
     return ret
 
 
-
 # blender add-on registration callback
 def register():
     print('Registering Logic Nodes...')
@@ -371,7 +373,11 @@ def register():
 
     bpy.utils.register_class(LogicNodeTree)
     bpy.utils.register_class(LogicNodeTreeReference)
+    bpy.utils.register_class(CustomNodeReference)
     bpy.utils.register_class(LogicNodesAddonPreferences)
+
+    for node in prefs().custom_logic_nodes:
+        exec(node.ui_code)
     bpy.types.Object.sound_occluder = bpy.props.BoolProperty(
         default=True,
         name='Sound Occluder',
@@ -441,8 +447,13 @@ def unregister():
             remove_f.append(f)
     for f in remove_f:
         bpy.app.handlers.game_pre.remove(f)
+
     for cls in reversed(_registered_classes):
         bpy.utils.unregister_class(cls)
+
+    for cls in reversed(ui.node_menu._registered_custom_classes):
+        bpy.utils.unregister_class(cls)
+
     user_node_categories = set()
     for pair in _loaded_nodes:
         cat = pair[0]
@@ -454,6 +465,7 @@ def unregister():
                 bpy.utils.unregister_class(getattr(bpy.types, node_id))
         except RuntimeError as ex:
             print("Custom node {} not unloaded [{}]".format(cls.__name__, ex))
+
     for pair in _loaded_sockets:
         cat = pair[0]
         cls = pair[1]
