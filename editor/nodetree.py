@@ -77,7 +77,7 @@ class LogicNodeTree(NodeTree):
     def mark_invalid_links(self):
         '''Mark invalid links, must be called from a timer'''
         for link in self.links:
-            if hasattr(link.to_socket, 'validate'):
+            if hasattr(link.to_socket, 'validate') and not link.to_socket.skip_validation:
                 link.to_socket.validate(link, link.from_socket, self)
 
     def interface_update(self, context: Context) -> None:
@@ -121,8 +121,8 @@ class LogicNodeTree(NodeTree):
                         if osock.type != 'VALUE':
                             osock.type = 'VALUE'
                             n.outputs[0].type = 'VALUE'
-                            osock.display_shape = 'CIRCLE'
-                            n.outputs[0].display_shape = 'CIRCLE'
+                            # osock.display_shape = 'CIRCLE'
+                            # n.outputs[0].display_shape = osock.nl_shape
                         break
                     socket = socket.node.inputs[0].links[0].from_socket
                 if osock.type != socket.type:

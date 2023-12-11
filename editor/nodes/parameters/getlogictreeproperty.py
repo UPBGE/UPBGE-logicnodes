@@ -52,8 +52,8 @@ class LogicNodeGetLogicTreeProperty(LogicNodeParameterType):
         if not (tree and prop):
             return
         prop = tree.properties.get(prop, '')
-        if prop:
-            layout.prop(prop, 'value_type', text='')
+        # if prop and self.inputs[0].show_prop:
+        #     layout.prop(prop, 'value_type', text='')
 
     def init(self, context):
         self.add_input(NodeSocketLogicTreeProperty, "Property")

@@ -35,3 +35,7 @@ from .webbuttons import LOGIC_NODES_OT_open_github
 from .addlogictreeproperty import LOGIC_NODES_OT_add_logic_tree_property
 from .removelogictreeproperty import LOGIC_NODES_OT_remove_logic_tree_property
 from .removecustomnode import LOGIC_NODES_OT_remove_custom_node
+from .customnodetemplates import LOGIC_NODES_OT_custom_node_templates
+from .registercustomnode import LOGIC_NODES_OT_register_custom_node
+from .editcustomnode import LOGIC_NODES_OT_edit_custom_node
+from .savecustomnode import LOGIC_NODES_OT_save_custom_node

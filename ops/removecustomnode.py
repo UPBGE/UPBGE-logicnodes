@@ -9,14 +9,14 @@ import bpy
 @operator
 class LOGIC_NODES_OT_remove_custom_node(Operator):
     bl_idname = "logic_nodes.remove_custom_node"
-    bl_label = "Reload Scripts"
+    bl_label = "Remove Custom Logic Node"
     bl_options = {'REGISTER', 'UNDO'}
-    bl_description = "Reload all externally saved scripts"
+    bl_description = "Remove Custom Logic Node"
     index: IntProperty()
 
     @classmethod
     def poll(cls, context):
-        return context.active_object is not None
+        return True
 
     def execute(self, context):
         node = preferences().custom_logic_nodes[self.index]
@@ -25,4 +25,5 @@ class LOGIC_NODES_OT_remove_custom_node(Operator):
                 bpy.utils.unregister_class(c)
                 _registered_custom_classes.remove(c)
         preferences().custom_logic_nodes.remove(self.index)
+        bpy.ops.wm.save_userpref()
         return {'FINISHED'}

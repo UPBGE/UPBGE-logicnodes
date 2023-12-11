@@ -1,8 +1,10 @@
 from ..utilities import warn
 from ..utilities import error
+from ..utilities import preferences
 from .operator import operator
 from bpy.types import Operator
 from bpy.props import StringProperty
+from bpy.props import BoolProperty
 
 
 @operator
@@ -12,6 +14,7 @@ class LOGIC_NODES_OT_key_selector(Operator):
     bl_options = {'REGISTER', 'UNDO'}
 
     keycode: StringProperty()
+    is_socket: BoolProperty(default=True)
 
     def __init__(self):
         self.socket = None
@@ -51,10 +54,10 @@ class LOGIC_NODES_OT_key_selector(Operator):
         return {'PASS_THROUGH'}
 
     def invoke(self, context, event):
-        self.socket = context.socket
-        self.node = context.node
+        self.socket = getattr(context, 'socket', None)
+        self.node = getattr(context, 'node', None)
 
-        if (not self.socket) and (not self.node):
+        if self.socket is None or self.node is None:
             error("No socket or Node")
             return {'FINISHED'}
 

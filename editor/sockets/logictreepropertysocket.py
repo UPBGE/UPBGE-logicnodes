@@ -32,7 +32,11 @@ class NodeSocketLogicTreeProperty(NodeSocket, NodeSocketLogic):
         name='Free Edit'
     )
 
-    show_prop: BoolProperty(default=True)
+    show_prop: BoolProperty(
+        default=False,
+        name='Show Default',
+        description='Show the default value for this property'
+    )
 
     def _get_active_prop(self, context):
         tree = getattr(context.space_data, 'edit_tree', None)
@@ -41,7 +45,7 @@ class NodeSocketLogicTreeProperty(NodeSocket, NodeSocketLogic):
         obj = bpy.context.view_layer.objects.active
         if obj:
             comp = obj.game.components.get(make_valid_name(tree.name))
-            if not (comp and self.default_value):
+            if not (comp is not None and self.default_value is not None):
                 return None
             return comp.properties.get(self.default_value, None)
 
@@ -85,11 +89,17 @@ class NodeSocketLogicTreeProperty(NodeSocket, NodeSocketLogic):
         elif self.linked_valid:
             layout.label(text=self.name)
         else:
-            col = layout.column(align=False)
             tree = getattr(context.space_data, 'edit_tree', None)
+            prop = self._get_active_prop(context)
+            tprop = tree.properties.get(self.default_value)
+            col = layout.column(align=False)
+            r = col.row(align=True)
             if not tree:
                 return
-            col.prop_search(
+            if tprop and self.show_prop and not self.is_output:
+                col2 = col.column(align=True)
+                col2.prop(tprop, 'value_type', text='')
+            r.prop_search(
                 self,
                 'default_value',
                 tree,
@@ -97,18 +107,19 @@ class NodeSocketLogicTreeProperty(NodeSocket, NodeSocketLogic):
                 icon='NONE',
                 text=''
             )
+            r.prop(self, 'show_prop', text='', icon='HIDE_OFF' if self.show_prop else 'HIDE_ON')
             if not self.show_prop:
                 return
-            prop = self._get_active_prop(context)
             if prop is None:
+                col.label(text='Tree not applied!', icon='ERROR')
                 return
             vtype = tree.properties.get(self.default_value).value_type
             if vtype == '5':
-                col.prop(self, 'color_solid', text='')
+                col2.prop(self, 'color_solid', text='')
             elif vtype == '6':
-                col.prop(self, 'color_alpha', text='')
+                col2.prop(self, 'color_alpha', text='')
             else:
-                col.prop(prop, 'value', text='')
+                col2.prop(prop, 'value', text='')
 
     def get_unlinked_value(self):
         return '"{}"'.format(self.default_value)

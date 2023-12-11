@@ -1,4 +1,4 @@
-from .socket import SOCKET_COLOR_STRING, SOCKET_TYPE_VALUE, NodeSocketLogic
+from .socket import SOCKET_COLOR_STRING, SOCKET_TYPE_VALUE, SOCKET_TYPE_STRING, NodeSocketLogic
 from .socket import socket_type
 from .socket import update_draw
 from bpy.types import NodeSocket
@@ -14,7 +14,12 @@ class Base(NodeSocket, NodeSocketLogic):
     formatted: BoolProperty(update=update_draw)
 
     nl_color = SOCKET_COLOR_STRING
-    nl_type = SOCKET_TYPE_VALUE
+    nl_type = SOCKET_TYPE_STRING
+
+    valid_sockets = [
+        SOCKET_TYPE_VALUE,
+        SOCKET_TYPE_STRING
+    ]
 
     def draw(self, context, layout, node, text):
         if self.linked_valid or self.is_output:

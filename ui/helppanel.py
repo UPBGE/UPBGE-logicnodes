@@ -47,8 +47,3 @@ class LOGIC_NODES_PT_help(bpy.types.Panel):
         col = box.column(align=True)
         col.operator('logic_nodes.install_uplogic', icon='IMPORT', text='Get Uplogic')
         col.prop(preferences(), 'uplogic_version', text='')
-
-        for cn in preferences().custom_logic_nodes:
-            row = layout.row()
-            row.label(text=cn.label)
-            row.operator('logic_nodes.remove_custom_node', text='', icon='X')

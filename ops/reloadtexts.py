@@ -12,7 +12,7 @@ class LOGIC_NODES_OT_reload_texts(Operator):
 
     @classmethod
     def poll(cls, context):
-        return context.active_object is not None
+        return True
 
     def execute(self, context):
         reload_texts()

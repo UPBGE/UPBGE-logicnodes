@@ -11,3 +11,4 @@ from .objectinfopanel import LOGIC_NODES_PT_object_info_panel
 from .helppanel import LOGIC_NODES_PT_help
 from .componenthelperpanel import LOGIC_NODES_PT_component_helper
 from .logictreepropertypanel import LOGIC_NODES_PT_logic_tree_properties
+from .customnodespanel import LOGIC_NODES_PT_custom_nodes

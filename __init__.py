@@ -16,6 +16,7 @@ from .ui.interface import _menu_items
 from .ui import node_menu
 from .props.propertyfilter import LogicNodesPropertyFilter
 from .props.globalcategory import LogicNodesGlobalCategory
+from .props.customnode import _registered_custom_classes
 from .preferences import LogicNodesAddonPreferences
 from .utilities import preferences as prefs
 from .editor.nodetree import LogicNodeTree
@@ -377,7 +378,7 @@ def register():
     bpy.utils.register_class(LogicNodesAddonPreferences)
 
     for node in prefs().custom_logic_nodes:
-        exec(node.ui_code)
+        exec(node.ui_code, {"bge_netlogic": _get_this_module()})
     bpy.types.Object.sound_occluder = bpy.props.BoolProperty(
         default=True,
         name='Sound Occluder',
@@ -451,7 +452,7 @@ def unregister():
     for cls in reversed(_registered_classes):
         bpy.utils.unregister_class(cls)
 
-    for cls in reversed(ui.node_menu._registered_custom_classes):
+    for cls in reversed(_registered_custom_classes):
         bpy.utils.unregister_class(cls)
 
     user_node_categories = set()

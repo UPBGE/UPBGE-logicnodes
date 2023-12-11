@@ -44,7 +44,7 @@ class LogicNodeSetLogicTreeProperty(LogicNodeActionType):
 
     def init(self, context):
         self.add_input(NodeSocketLogicCondition, "Condition")
-        self.add_input(NodeSocketLogicTreeProperty, "Property", {'show_prop': False})
+        self.add_input(NodeSocketLogicTreeProperty, "Property")
         self.add_input(NodeSocketLogicFloat, "Value", {'enabled': False})
         self.add_input(NodeSocketLogicString, "Value", {'enabled': False})
         self.add_input(NodeSocketLogicInteger, "Value", {'enabled': False})

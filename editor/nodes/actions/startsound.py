@@ -9,6 +9,7 @@ from ...sockets import NodeSocketLogicLoopCount
 from ...sockets import NodeSocketLogicFloatPositive
 from ...sockets import NodeSocketLogicFloat
 from ...sockets import NodeSocketLogicVectorXY
+from ...sockets import NodeSocketLogicVectorXYZ
 from ...sockets import NodeSocketLogicPython
 from bpy.props import EnumProperty
 from bpy.props import BoolProperty
@@ -41,13 +42,14 @@ class LogicNodeStartSound(LogicNodeActionType):
             '3D Sample'
         ]
         self.nl_label = names[int(self.mode)]
-        self.inputs[1].enabled = int(self.mode) > 1
-        self.inputs[3].enabled = self.inputs[4].enabled = int(self.mode) in [1, 3]
-        self.inputs[5].enabled = int(self.mode) > 1
-        self.inputs[6].enabled = self.inputs[7].enabled = self.inputs[5].default_value and self.inputs[2].enabled
-        self.inputs[12].enabled = int(self.mode) < 2
+        self.inputs[1].enabled = int(self.mode) > 1 and self.use_speaker
+        self.inputs[2].enabled = int(self.mode) > 1 and not self.use_speaker
+        self.inputs[4].enabled = self.inputs[5].enabled = int(self.mode) in [1, 3]
+        self.inputs[6].enabled = int(self.mode) > 1
+        self.inputs[7].enabled = self.inputs[8].enabled = self.inputs[6].default_value and self.inputs[3].enabled
+        self.inputs[13].enabled = int(self.mode) < 2
         state = self.advanced and int(self.mode) > 1
-        for i in [14, 15, 16, 17]:
+        for i in [15, 16, 17, 18]:
             ipt = self.inputs[i]
             if ipt.is_linked:
                 ipt.enabled = True
@@ -66,6 +68,12 @@ class LogicNodeStartSound(LogicNodeActionType):
         update=update_draw
     )
 
+    use_speaker: BoolProperty(
+        name='Use Speaker',
+        description="Use an object as a transformation reference for this sound",
+        update=update_draw
+    )
+
     mode: EnumProperty(
         items=_sound_types,
         name='Sound Type',
@@ -77,6 +85,7 @@ class LogicNodeStartSound(LogicNodeActionType):
     def init(self, context):
         self.add_input(NodeSocketLogicCondition, "Condition")
         self.add_input(NodeSocketLogicObject, "Speaker")
+        self.add_input(NodeSocketLogicVectorXYZ, "Position")
         self.add_input(NodeSocketLogicSoundFile, "Sound File")
         self.add_input(NodeSocketLogicFloatPositive, "Start Time")
         self.add_input(NodeSocketLogicFloatPositive, "End Time")
@@ -103,6 +112,7 @@ class LogicNodeStartSound(LogicNodeActionType):
         if int(self.mode) > 1:
             layout.prop(self, 'advanced', text='Show Advanced Options')
         layout.prop(self, 'update_running', text='Update Running')
+        layout.prop(self, 'use_speaker', text='Use Speaker')
         layout.prop(self, 'mode', text='')
         layout.separator()
 
@@ -119,6 +129,7 @@ class LogicNodeStartSound(LogicNodeActionType):
         return [
             "condition",
             "speaker",
+            'speaker',
             "sound",
             "start_time",
             "end_time",

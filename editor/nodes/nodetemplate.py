@@ -1,14 +1,13 @@
 from bge_netlogic import node_type
-from ...editor.nodes.node import LogicNodeParameterType
-from ...editor.sockets import NodeSocketLogicObject
-from ...editor.sockets import NodeSocketLogicString
+from bge_netlogic.editor.nodes.node import LogicNodeCustomType
+from bge_netlogic.editor.sockets import *
 
 
 # the @node_type decorator automatically registers this node-type
 # once it has been imported in another file, this is normally
 # done in .editor.nodes.__init__.py
 @node_type
-class LogicNodeCustomNode(LogicNodeParameterType):
+class LogicNodeCustomNode(LogicNodeCustomType):
     # `bl_idname` has to stay the same through later versions. Nodes
     # are registered under this ID, so if it changes blender
     # can't find nodes added by older versions

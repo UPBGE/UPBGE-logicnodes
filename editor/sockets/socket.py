@@ -140,7 +140,6 @@ def update_draw(self, context=None):
         context.node.update_draw(context)
 
 
-
 class NodeSocketLogic:
     """Possible Types:
     - CUSTOM
@@ -167,7 +166,7 @@ class NodeSocketLogic:
     valid_sockets: list = None
     type: StringProperty(default='VALUE')
     use_default_value: BoolProperty(default=False)
-    nl_color = SOCKET_COLOR_GENERIC
+    skip_validation: BoolProperty()
 
     def update_draw(self, context=None):
         pass

@@ -9,7 +9,7 @@ from ...sockets import NodeSocketLogicParameter
 @node_type
 class LogicNodeGetGlobalValue(LogicNodeParameterType):
     bl_idname = "NLParameterGetGlobalValue"
-    bl_label = "Get Global Value"
+    bl_label = "Get Global Property"
     nl_module = 'uplogic.nodes.parameters'
 
     def init(self, context):

@@ -3,6 +3,7 @@ import bpy
 from ..utilities import make_valid_name
 from .interface import ui_panel
 from ..editor.nodetree import LogicNodeTree
+from bpy.props import BoolProperty
 
 
 @ui_panel
@@ -28,13 +29,17 @@ class LOGIC_NODES_PT_logic_tree_properties(bpy.types.Panel):
             row = box.row(align=True)
             row.prop(prop, 'name', text='')
             row.prop(prop, 'value_type', text='')
+            row.prop(prop, 'show_prop', text='', icon='HIDE_OFF' if prop.show_prop else 'HIDE_ON')
             rem = row.operator("logic_nodes.remove_logic_tree_property", text='', icon='X')
             rem.prop_index = i
             obj = bpy.context.view_layer.objects.active
             if obj:
-                row = box.row(align=True)
                 comp = obj.game.components.get(make_valid_name(tree.name))
+                if not prop.show_prop:
+                    continue
+                row = box.row(align=True)
                 if not comp:
+                    box.label(text='Tree not applied!', icon='ERROR')
                     continue
                 cprop = comp.properties[prop.name]
                 vtype = int(prop.value_type)

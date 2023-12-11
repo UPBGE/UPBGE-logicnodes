@@ -1,6 +1,7 @@
 from ...utilities import error
 from ...utilities import debug
 from ...utilities import deprecate
+from ...utilities import preferences
 from ...utilities import ERROR_MESSAGES
 from ...utilities import WARNING_MESSAGES
 from ..nodetree import LogicNodeTree
@@ -272,3 +273,19 @@ class LogicNodeActionType(bpy.types.Node, LogicNode):
 
 class LogicNodeCustomType(bpy.types.Node, LogicNode):
     nl_nodetype = 'CUS'
+    nl_code = ''
+
+    @classmethod
+    def get_ref(cls):
+        for n in preferences().custom_logic_nodes:
+            if n.idname == cls.bl_idname:
+                return n
+
+    def init(self, context):
+        self.set_ready()
+        modname = self.nl_module[1:] + '.py'
+        text = bpy.data.texts.get(modname, None)
+        if text is None:
+            text = bpy.data.texts.new(modname)
+            text.clear()
+            text.write(self.__class__.get_ref().logic_code)

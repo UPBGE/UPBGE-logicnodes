@@ -29,6 +29,8 @@ class NodeSocketLogicObject(NodeSocket, NodeSocketLogic):
     allow_owner: BoolProperty(default=True)
 
     def is_scene_logic(self):
+        if not hasattr(self.node, 'tree'):
+            return False
         return self.node.tree is bpy.context.scene.get(
             'custom_mainloop_tree',
             None

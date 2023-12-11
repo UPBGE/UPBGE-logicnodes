@@ -1,4 +1,6 @@
 import bpy
+import inspect
+import os
 
 
 _registered_custom_classes = []
@@ -13,22 +15,30 @@ def custom_node(cls):
             for i, e in enumerate(prefs.custom_logic_nodes):
                 if e.idname == cls.bl_idname:
                     prefs.custom_logic_nodes.remove(i)
-    bpy.utils.register_class(cls)
-    _registered_custom_classes.append(cls)
     modname = cls.nl_module[1:] + '.py'
     if cls.bl_idname not in [n.idname for n in prefs.custom_logic_nodes]:
+        logic_code = bpy.data.texts.get(modname, None)
+        if logic_code is None:
+            def error_log(self, context):
+                self.layout.label(text=f'Text Block "{modname}" not found!', icon='CONSOLE')
+
+            bpy.context.window_manager.popup_menu(error_log, title=f'Custom Logic Node could not register!', icon='INFO')
+
+            print(f'Custom Logic Node could not register! Text Block "{modname}" not found!')
+            return
         noderef = prefs.custom_logic_nodes.add()
         noderef.idname = cls.bl_idname
         noderef.label = cls.bl_label
-        noderef.ui_code = bpy.context.space_data.text.as_string()
+        ui_code = getattr(bpy.context.space_data, 'text', None)
+        if ui_code is None:
+            ui_code = bpy.data.texts['__customnodetemp__']
+        noderef.ui_code = ui_code.as_string()
+
         noderef.modname = modname
-        noderef.logic_code = bpy.data.texts[modname].as_string()
+        noderef.logic_code = logic_code.as_string()
         bpy.ops.wm.save_userpref()
-    # else:
-    #     text = bpy.data.texts.get(node.modname, None)
-    #     if text is None:
-    #         t = bpy.data.texts.new(node.modname)
-    #         t.write(node.logic_code)
+    bpy.utils.register_class(cls)
+    _registered_custom_classes.append(cls)
     return cls
 
 

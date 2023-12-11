@@ -1,4 +1,5 @@
 from bpy.props import StringProperty
+from bpy.props import BoolProperty
 from bpy.props import EnumProperty
 
 from .property import propgroup
@@ -59,3 +60,8 @@ def update_tree(self, context):
 class LogicNodesLogicTreeProperty(PropertyGroup):
     value_type: EnumProperty(items=_value_types, name='Value Types', update=update_tree)
     name: StringProperty(default='Property', update=check_double_prop)
+    show_prop: BoolProperty(
+        default=True,
+        name='Show Default',
+        description='Show the default value for this property'
+    )

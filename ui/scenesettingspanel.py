@@ -24,6 +24,8 @@ class LOGIC_NODES_PT_scene_settings(bpy.types.Panel):
         row.prop(prefs, 'use_screen_console')
         part = row.row()
         part.prop(prefs, 'screen_console_open')
+        # op = layout.operator("logic_nodes.key_selector", text=prefs.screen_console_key)
+        op.is_socket = False
         part.enabled = getattr(prefs, 'use_screen_console', False)
 
         use_mainloop = context.scene.get('__main__', '') != ''

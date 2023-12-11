@@ -439,6 +439,9 @@ class PropertyMenu(bpy.types.Menu):
         insertNode(layout, "NLAddToGameObjectGamePropertyActionNode", "Modify Object Property")
         insertNode(layout, "NLObjectPropertyOperator", "Evaluate Object Property")
         insertNode(layout, "NLCopyPropertyFromObject", "Copy From Object")
+        layout.separator()
+        insertNode(layout, "NLParameterGetGlobalValue", "Get Global Property")
+        insertNode(layout, "NLActionSetGlobalValue", "Set Global Property")
 
 
 @menu_item
@@ -588,6 +591,9 @@ class SoundMenu(bpy.types.Menu):
         layout = self.layout
         # insertNode(layout, "NLActionStartSound", "2D Sound")
         # insertNode(layout, "NLActionStart3DSoundAdv", "3D Sound")
+        if preferences().use_fmod_nodes:
+            layout.menu("LN_MT_fmod_sound_menu", text="FMOD", icon="RIGHTARROW_THIN")
+            layout.separator()
         insertNode(layout, "LogicNodeStartSound", "Start Sound")
         insertNode(layout, "NLPlaySpeaker", "Start Speaker")
         layout.separator()
@@ -595,6 +601,24 @@ class SoundMenu(bpy.types.Menu):
         insertNode(layout, "NLActionResumeSound", "Resume Sound")
         insertNode(layout, "NLActionStopSound", "Stop Sound")
         insertNode(layout, "NLActionStopAllSounds", "Stop All Sounds")
+
+
+@menu_item
+class FMODSoundMenu(bpy.types.Menu):
+    bl_idname = "LN_MT_fmod_sound_menu"
+    bl_label = "FMOD"
+
+    def draw(self, context):
+        layout = self.layout
+        # insertNode(layout, "NLActionStartSound", "2D Sound")
+        # insertNode(layout, "NLActionStart3DSoundAdv", "3D Sound")
+        # insertNode(layout, "LogicNodeStartSound", "Start Sound")
+        # insertNode(layout, "NLPlaySpeaker", "Start Speaker")
+        # layout.separator()
+        # insertNode(layout, "NLActionPauseSound", "Pause Sound")
+        # insertNode(layout, "NLActionResumeSound", "Resume Sound")
+        # insertNode(layout, "NLActionStopSound", "Stop Sound")
+        # insertNode(layout, "NLActionStopAllSounds", "Stop All Sounds")
 
 
 @menu_item
@@ -990,9 +1014,10 @@ class UtilityMenu(bpy.types.Menu):
         # insertNode(layout, "NLActionGetPerformanceProfileNode", "Get Profile")
         insertNode(layout, "NLActionPrint", "Print")
         layout.separator()
-        insertNode(layout, "NLDrawLine", "Draw Line")
-        insertNode(layout, "NLDrawCube", "Draw Cube")
-        insertNode(layout, "NLDrawBox", "Draw Box")
+        # insertNode(layout, "NLDrawLine", "Draw Line")
+        # insertNode(layout, "NLDrawCube", "Draw Cube")
+        # insertNode(layout, "NLDrawBox", "Draw Box")
+        insertNode(layout, "LogicNodeDraw", "Draw")
 
 
 @menu_item
