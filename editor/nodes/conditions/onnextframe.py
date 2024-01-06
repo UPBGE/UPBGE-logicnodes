@@ -10,7 +10,7 @@ class LogicNodeOnNextFrame(LogicNodeConditionType):
     nl_module = 'uplogic.nodes.conditions'
 
     def init(self, context):
-        self.add_input(NodeSocketLogicCondition, "Condition", {'show_prop': True})
+        self.add_input(NodeSocketLogicCondition, "Condition", None, {'show_prop': True})
         self.add_output(NodeSocketLogicCondition, "Out")
         LogicNodeConditionType.init(self, context)
 

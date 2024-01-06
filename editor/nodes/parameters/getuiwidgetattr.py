@@ -46,14 +46,14 @@ class LogicNodeGetUIWidgetAttr(LogicNodeParameterType):
     def init(self, context):
         self.add_input(NodeSocketLogicUI, "Widget")
         self.add_output(NodeSocketLogicBoolean, "Visibility")
-        self.add_output(NodeSocketLogicColorRGBA, "", {'enabled': False})
-        self.add_output(NodeSocketLogicFloatFactor, "", {'enabled': False})
-        self.add_output(NodeSocketLogicVectorXY, "", {'enabled': False})
-        self.add_output(NodeSocketLogicString, "", {'enabled': False})
-        self.add_output(NodeSocketLogicInteger, "", {'enabled': False})
-        self.add_output(NodeSocketLogicFloat, "", {'enabled': False})
-        self.add_output(NodeSocketLogicFont, "", {'enabled': False})
-        self.add_output(NodeSocketLogicImage, "", {'enabled': False})
+        self.add_output(NodeSocketLogicColorRGBA, "", None, {'enabled': False})
+        self.add_output(NodeSocketLogicFloatFactor, "", None, {'enabled': False})
+        self.add_output(NodeSocketLogicVectorXY, "", None, {'enabled': False})
+        self.add_output(NodeSocketLogicString, "", None, {'enabled': False})
+        self.add_output(NodeSocketLogicInteger, "", None, {'enabled': False})
+        self.add_output(NodeSocketLogicFloat, "", None, {'enabled': False})
+        self.add_output(NodeSocketLogicFont, "", None, {'enabled': False})
+        self.add_output(NodeSocketLogicImage, "", None, {'enabled': False})
         LogicNodeParameterType.init(self, context)
 
     def get_attributes(self):

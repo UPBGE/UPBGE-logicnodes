@@ -13,8 +13,8 @@ class LogicNodeSetMousePosition(LogicNodeActionType):
 
     def init(self, context):
         self.add_input(NodeSocketLogicCondition, "Condition")
-        self.add_input(NodeSocketLogicFloat, "Screen X", {'default_value': 0.5})
-        self.add_input(NodeSocketLogicFloat, "Screen Y", {'default_value': 0.5})
+        self.add_input(NodeSocketLogicFloat, "Screen X", None, {'default_value': 0.5})
+        self.add_input(NodeSocketLogicFloat, "Screen Y", None, {'default_value': 0.5})
         self.add_output(NodeSocketLogicCondition, 'Done')
         LogicNodeActionType.init(self, context)
 

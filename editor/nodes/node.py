@@ -60,7 +60,7 @@ class LogicNode:
         self.ready = True
         self.update_draw(bpy.context)
 
-    def add_input(self, cls, name, settings={}):
+    def add_input(self, cls, name, attr_name=None, settings={}):
         ipt = self.inputs.new(cls.bl_idname, name)
         ipt.display_shape = cls.nl_shape
         if settings:
@@ -69,7 +69,7 @@ class LogicNode:
             setattr(ipt, key, val)
         return ipt
 
-    def add_output(self, cls, name, settings={}):
+    def add_output(self, cls, name, attr_name=None, settings={}):
         otp = self.outputs.new(cls.bl_idname, name)
         otp.display_shape = cls.nl_shape
         if settings:

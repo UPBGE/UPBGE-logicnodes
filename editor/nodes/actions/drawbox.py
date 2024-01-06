@@ -24,12 +24,12 @@ class LogicNodeDrawBox(LogicNodeActionType):
         layout.prop(self, "use_volume_origin")
 
     def init(self, context):
-        self.add_input(NodeSocketLogicCondition, 'Condition', {'show_prop': True})
+        self.add_input(NodeSocketLogicCondition, 'Condition', None, {'show_prop': True})
         self.add_input(NodeSocketLogicColorRGB, 'Color')
         self.add_input(NodeSocketLogicVectorXYZ, 'Origin')
-        self.add_input(NodeSocketLogicFloatPositive, 'Width (X)', {'default_value': 1.0})
-        self.add_input(NodeSocketLogicFloatPositive, 'Length (Y)', {'default_value': 1.0})
-        self.add_input(NodeSocketLogicFloatPositive, 'Height (Z)', {'default_value': 1.0})
+        self.add_input(NodeSocketLogicFloatPositive, 'Width (X)', None, {'default_value': 1.0})
+        self.add_input(NodeSocketLogicFloatPositive, 'Length (Y)', None, {'default_value': 1.0})
+        self.add_input(NodeSocketLogicFloatPositive, 'Height (Z)', None, {'default_value': 1.0})
         self.add_output(NodeSocketLogicCondition, "Done")
         LogicNodeActionType.init(self, context)
 

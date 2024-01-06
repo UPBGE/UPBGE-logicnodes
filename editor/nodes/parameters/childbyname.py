@@ -12,7 +12,7 @@ class LogicNodeChildByName(LogicNodeParameterType):
 
     def init(self, context):
         self.add_input(NodeSocketLogicObject, 'Parent')
-        self.add_input(NodeSocketLogicObject, 'Child', {'allow_owner': False})
+        self.add_input(NodeSocketLogicObject, 'Child', None, {'allow_owner': False})
         self.add_output(NodeSocketLogicObject, 'Child')
         LogicNodeParameterType.init(self, context)
 

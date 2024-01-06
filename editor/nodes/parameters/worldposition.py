@@ -12,7 +12,7 @@ class LogicNodeWorldPosition(LogicNodeParameterType):
     nl_module = 'uplogic.nodes.parameters'
 
     def init(self, context):
-        self.add_input(NodeSocketLogicCamera, "Camera", {'use_active': True})
+        self.add_input(NodeSocketLogicCamera, "Camera", None, {'use_active': True})
         self.add_input(NodeSocketLogicFloat, "Screen X")
         self.add_input(NodeSocketLogicFloat, "Screen Y")
         self.add_input(NodeSocketLogicFloat, "Depth")

@@ -314,5 +314,6 @@ from .parameters.listextend import LogicNodeListExtend
 from .parameters.rotatebypoint import LogicNodeRotateByPoint
 from .parameters.getlogictreeproperty import LogicNodeGetLogicTreeProperty
 from .parameters.simplevalue import LogicNodeSimpleValue
+from .parameters.resizevector import LogicNodeResizeVector
 
 # from .groupnode import NodeGroupInputLogic

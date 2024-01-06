@@ -15,7 +15,7 @@ class LogicNodeSetRigidBody(LogicNodeActionType):
     def init(self, context):
         self.add_input(NodeSocketLogicCondition, "Condition")
         self.add_input(NodeSocketLogicObject, "Object")
-        self.add_input(NodeSocketLogicBoolean, "Enabled", {'default_value': True})
+        self.add_input(NodeSocketLogicBoolean, "Enabled", None, {'default_value': True})
         self.add_output(NodeSocketLogicCondition, 'Done')
         LogicNodeActionType.init(self, context)
 

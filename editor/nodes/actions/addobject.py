@@ -15,7 +15,7 @@ class LogicNodeAddObject(LogicNodeActionType):
 
     def init(self, context):
         self.add_input(NodeSocketLogicCondition, "Condition")
-        self.add_input(NodeSocketLogicObject, "Object to Add", {'allow_owner': False})
+        self.add_input(NodeSocketLogicObject, "Object to Add", None, {'allow_owner': False})
         self.add_input(NodeSocketLogicObject, "Copy Data From (Optional)")
         self.add_input(NodeSocketLogicIntegerPositive, "Life")
         self.add_input(NodeSocketLogicBoolean, "Full Copy")

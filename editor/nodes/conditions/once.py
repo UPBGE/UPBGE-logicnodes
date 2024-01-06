@@ -15,7 +15,7 @@ class LogicNodeOnce(LogicNodeConditionType):
     def init(self, context):
         self.add_input(NodeSocketLogicCondition, "Condition")
         self.add_input(NodeSocketLogicBoolean, "Repeat")
-        self.add_input(NodeSocketLogicFloatPositive, 'Reset After', {'default_value': .5, 'enabled': False})
+        self.add_input(NodeSocketLogicFloatPositive, 'Reset After', None, {'default_value': .5, 'enabled': False})
         self.add_output(NodeSocketLogicCondition, "Out")
         LogicNodeConditionType.init(self, context)
 

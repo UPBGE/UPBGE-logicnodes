@@ -36,7 +36,7 @@ class LogicNodeSendEvent(LogicNodeActionType):
         self.add_input(NodeSocketLogicCondition, "Condition")
         self.add_input(NodeSocketLogicString, "Subject")
         self.add_input(NodeSocketLogicValueOptional, "Content")
-        self.add_input(NodeSocketLogicObject, "Messenger", {'use_owner': True})
+        self.add_input(NodeSocketLogicObject, "Messenger", None, {'use_owner': True})
         self.add_output(NodeSocketLogicCondition, 'Done')
         LogicNodeActionType.init(self, context)
 

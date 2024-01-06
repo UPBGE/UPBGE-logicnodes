@@ -26,8 +26,8 @@ class LogicNodeSaveVariable(LogicNodeActionType):
 
     def init(self, context):
         self.add_input(NodeSocketLogicCondition, 'Condition')
-        self.add_input(NodeSocketLogicString, 'Filename', {'default_value': 'variables'})
-        self.add_input(NodeSocketLogicString, 'Variable', {'default_value': 'var'})
+        self.add_input(NodeSocketLogicString, 'Filename', None, {'default_value': 'variables'})
+        self.add_input(NodeSocketLogicString, 'Variable', None, {'default_value': 'var'})
         self.add_input(NodeSocketLogicValue, '')
         self.add_output(NodeSocketLogicCondition, 'Done')
         LogicNodeActionType.init(self, context)

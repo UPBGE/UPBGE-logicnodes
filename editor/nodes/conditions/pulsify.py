@@ -13,7 +13,7 @@ class LogicNodePulsify(LogicNodeConditionType):
 
     def init(self, context):
         self.add_input(NodeSocketLogicCondition, "Condition")
-        self.add_input(NodeSocketLogicTime, "Gap", {'default_value': 1.0})
+        self.add_input(NodeSocketLogicTime, "Gap", None, {'default_value': 1.0})
         self.add_output(NodeSocketLogicCondition, "Out")
         LogicNodeConditionType.init(self, context)
 

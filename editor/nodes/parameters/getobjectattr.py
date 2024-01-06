@@ -91,10 +91,10 @@ class LogicNodeGetObjectAttr(LogicNodeParameterType):
     def init(self, context):
         self.add_input(NodeSocketLogicObject, "Object")
         self.add_output(NodeSocketLogicString, "Value")
-        self.add_output(NodeSocketLogicVectorXYZ, "Vector", {'enabled': False})
-        self.add_output(NodeSocketLogicBoolean, "Visible", {'enabled': False})
-        self.add_output(NodeSocketLogicMatrix, "Orientation", {'enabled': False})
-        self.add_output(NodeSocketLogicColorRGBA, "Color", {'enabled': False})
+        self.add_output(NodeSocketLogicVectorXYZ, "Vector", None, {'enabled': False})
+        self.add_output(NodeSocketLogicBoolean, "Visible", None, {'enabled': False})
+        self.add_output(NodeSocketLogicMatrix, "Orientation", None, {'enabled': False})
+        self.add_output(NodeSocketLogicColorRGBA, "Color", None, {'enabled': False})
         LogicNodeParameterType.init(self, context)
 
     def draw_buttons(self, context, layout) -> None:

@@ -29,9 +29,9 @@ class LogicNodeCompare(LogicNodeConditionType):
         layout.prop(self, "operator", text='')
 
     def init(self, context):
-        self.add_input(NodeSocketLogicValue, "", {'value_type': 'FLOAT'})
-        self.add_input(NodeSocketLogicValue, "", {'value_type': 'FLOAT'})
-        self.add_input(NodeSocketLogicFloatPositive, "Threshold", {'enabled': False})
+        self.add_input(NodeSocketLogicValue, "", None, {'value_type': 'FLOAT'})
+        self.add_input(NodeSocketLogicValue, "", None, {'value_type': 'FLOAT'})
+        self.add_input(NodeSocketLogicFloatPositive, "Threshold", None, {'enabled': False})
         self.add_output(NodeSocketLogicCondition, "Result")
         LogicNodeConditionType.init(self, context)
 

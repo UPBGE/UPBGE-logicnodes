@@ -13,8 +13,8 @@ class LogicNodeGamepadTrigger(LogicNodeParameterType):
 
     def init(self, context):
         self.add_input(NodeSocketLogicIntegerPositiveCent, 'Index')
-        self.add_input(NodeSocketLogicFloat, 'Sensitivity', {'default_value': 1.0})
-        self.add_input(NodeSocketLogicFloat, 'Threshold', {'default_value': 0.05})
+        self.add_input(NodeSocketLogicFloat, 'Sensitivity', None, {'default_value': 1.0})
+        self.add_input(NodeSocketLogicFloat, 'Threshold', None, {'default_value': 0.05})
         self.add_output(NodeSocketLogicFloat, "Left Trigger")
         self.add_output(NodeSocketLogicFloat, "Right Trigger")
         LogicNodeParameterType.init(self, context)

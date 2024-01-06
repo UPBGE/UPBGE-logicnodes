@@ -37,7 +37,7 @@ class LoigcNodeVehicleSetAttributes(LogicNodeActionType):
     def init(self, context):
         self.add_input(NodeSocketLogicCondition, "Condition")
         self.add_input(NodeSocketLogicObject, "Collider")
-        self.add_input(NodeSocketLogicIntegerPositive, "Wheels", {'default_value': 2})
+        self.add_input(NodeSocketLogicIntegerPositive, "Wheels", None, {'default_value': 2})
         self.add_input(NodeSocketLogicBoolean, "Suspension")
         self.add_input(NodeSocketLogicFloat, "")
         self.add_input(NodeSocketLogicBoolean, "Stiffness")

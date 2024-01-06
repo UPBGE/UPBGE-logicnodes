@@ -18,8 +18,8 @@ class LogicNodeRunActuator(LogicNodeActionType):
     def init(self, context):
         self.add_input(NodeSocketLogicCondition, "Condition")
         self.add_input(NodeSocketLogicObject, 'Object')
-        self.add_input(NodeSocketLogicBrick, "From Controller", {'ref_index': 1})
-        self.add_input(NodeSocketLogicBrick, "Actuator", {'ref_index': 1, 'brick_type': 'actuators'})
+        self.add_input(NodeSocketLogicBrick, "From Controller", None, {'ref_index': 1})
+        self.add_input(NodeSocketLogicBrick, "Actuator", None, {'ref_index': 1, 'brick_type': 'actuators'})
         self.add_output(NodeSocketLogicCondition, 'Done')
         LogicNodeActionType.init(self, context)
 

@@ -37,7 +37,8 @@ class LOGIC_NODES_PT_logic_tree_properties(bpy.types.Panel):
                 comp = obj.game.components.get(make_valid_name(tree.name))
                 if not prop.show_prop:
                     continue
-                row = box.row(align=True)
+                col = box.column()
+                row = col.row(align=True)
                 if not comp:
                     box.label(text='Tree not applied!', icon='ERROR')
                     continue
@@ -45,6 +46,8 @@ class LOGIC_NODES_PT_logic_tree_properties(bpy.types.Panel):
                 vtype = int(prop.value_type)
                 if vtype in [5, 6]:
                     row.template_color_picker(cprop, 'value')
+                elif vtype == 4:
+                    col.prop(cprop, 'value', text='')
                 else:
                     row.prop(cprop, 'value', text='')
                 # if vtype = 13:

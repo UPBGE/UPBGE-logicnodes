@@ -36,6 +36,9 @@ _value_types = [
 def check_double_prop(self, context):
     tree = getattr(context.space_data, 'edit_tree', None)
     if tree:
+        # for node in tree.nodes:
+        #     if node.bl_idname == 'LogicNodeGetLogicTreeProperty':
+        #         if node.inputs[0].default_value == 
         tree.changes_staged = True
         check_double_name(self, tree.properties)
         bpy.ops.logic_nodes.reload_components()

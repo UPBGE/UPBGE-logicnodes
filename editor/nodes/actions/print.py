@@ -23,8 +23,8 @@ class LogicNodePrint(LogicNodeActionType):
     )
 
     def init(self, context):
-        self.add_input(NodeSocketLogicCondition, "Condition", {'default_value': True, 'show_prop': True})
-        self.add_input(NodeSocketLogicString, "Value", {'skip_validation': True})
+        self.add_input(NodeSocketLogicCondition, "Condition", None, {'default_value': True, 'show_prop': True})
+        self.add_input(NodeSocketLogicString, "Value", None, {'skip_validation': True})
         self.add_output(NodeSocketLogicCondition, 'Done')
         LogicNodeActionType.init(self, context)
 

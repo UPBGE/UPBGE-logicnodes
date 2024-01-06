@@ -20,7 +20,7 @@ class LogicNodeWithinRange(LogicNodeConditionType):
 
     def init(self, context):
         self.add_input(NodeSocketLogicFloat, "Value")
-        self.add_input(NodeSocketLogicVectorXY, "Range", {'enabled': False})
+        self.add_input(NodeSocketLogicVectorXY, "Range", None, {'enabled': False})
         self.add_input(NodeSocketLogicFloat, "Min")
         self.add_input(NodeSocketLogicFloat, "Max")
         self.add_output(NodeSocketLogicCondition, "If True")

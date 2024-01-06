@@ -18,7 +18,7 @@ class LogicNodeGamepadVibration(LogicNodeActionType):
         self.add_input(NodeSocketLogicIntegerPositiveCent, 'Index')
         self.add_input(NodeSocketLogicFloatFactor, 'Left')
         self.add_input(NodeSocketLogicFloatFactor, 'Right')
-        self.add_input(NodeSocketLogicTime, 'Time', {'default_value': 1.0})
+        self.add_input(NodeSocketLogicTime, 'Time', None, {'default_value': 1.0})
         self.add_output(NodeSocketLogicCondition, "Done")
         LogicNodeActionType.init(self, context)
 

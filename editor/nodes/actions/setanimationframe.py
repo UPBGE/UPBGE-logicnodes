@@ -22,8 +22,8 @@ class LogicNodeSetAnimationFrame(LogicNodeActionType):
         self.add_input(NodeSocketLogicAnimation, "Action")
         self.add_input(NodeSocketLogicIntegerPositive, "Layer")
         self.add_input(NodeSocketLogicFloatPositive, "Frame")
-        self.add_input(NodeSocketLogicBoolean, "Freeze", {'default_value': True})
-        self.add_input(NodeSocketLogicFloatFactor, "Layer Weight", {'default_value': 1.0})
+        self.add_input(NodeSocketLogicBoolean, "Freeze", None, {'default_value': True})
+        self.add_input(NodeSocketLogicFloatFactor, "Layer Weight", None, {'default_value': 1.0})
         self.add_output(NodeSocketLogicCondition, 'Done')
         LogicNodeActionType.init(self, context)
 

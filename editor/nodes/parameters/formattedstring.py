@@ -10,9 +10,9 @@ class LogicNodeFormattedString(LogicNodeParameterType):
     nl_module = 'uplogic.nodes.parameters'
 
     def init(self, context):
-        self.add_input(NodeSocketLogicString, "Format String", {'formatted': True, 'default_value': 'A is {} and B is {}'})
-        self.add_input(NodeSocketLogicString, "A", {'default_value': 'Hello'})
-        self.add_input(NodeSocketLogicString, "B", {'default_value': 'World'})
+        self.add_input(NodeSocketLogicString, "Format String", None, {'formatted': True, 'default_value': 'A is {} and B is {}'})
+        self.add_input(NodeSocketLogicString, "A", None, {'default_value': 'Hello'})
+        self.add_input(NodeSocketLogicString, "B", None, {'default_value': 'World'})
         self.add_input(NodeSocketLogicString, "C")
         self.add_input(NodeSocketLogicString, "D")
         self.add_output(NodeSocketLogicString, "String")

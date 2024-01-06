@@ -16,7 +16,7 @@ class LogicNodeSendObjectMessage(LogicNodeActionType):
     def init(self, context):
         self.add_input(NodeSocketLogicCondition, "Condition")
         self.add_input(NodeSocketLogicObject, "From")
-        self.add_input(NodeSocketLogicObject, "To", {'allow_owner': False})
+        self.add_input(NodeSocketLogicObject, "To", None, {'allow_owner': False})
         self.add_input(NodeSocketLogicString, "Subject")
         self.add_input(NodeSocketLogicString, "Body")
         self.add_output(NodeSocketLogicCondition, "Done")

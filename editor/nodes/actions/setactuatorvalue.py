@@ -16,7 +16,7 @@ class LogicNodeSetActuatorValue(LogicNodeActionType):
     def init(self, context):
         self.add_input(NodeSocketLogicCondition, "Condition")
         self.add_input(NodeSocketLogicObject, "Object")
-        self.add_input(NodeSocketLogicBrick, "Actuator", {'ref_index': 1, 'brick_type': 'actuators'})
+        self.add_input(NodeSocketLogicBrick, "Actuator", None, {'ref_index': 1, 'brick_type': 'actuators'})
         self.add_input(NodeSocketLogicString, "Attribute")
         self.add_input(NodeSocketLogicValue, "")
         self.add_output(NodeSocketLogicCondition, 'Done')

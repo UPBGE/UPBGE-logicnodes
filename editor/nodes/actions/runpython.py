@@ -26,7 +26,7 @@ class LogicNodeRunPython(LogicNodeActionType):
     mode: EnumProperty(items=_enum_python_types, update=update_draw)
 
     def init(self, context):
-        self.add_input(NodeSocketLogicCondition, "Condition", {'default_value': True, 'show_prop': True})
+        self.add_input(NodeSocketLogicCondition, "Condition", None, {'default_value': True, 'show_prop': True})
         self.add_input(NodeSocketLogicText, "Module Name")
         self.add_input(NodeSocketLogicString, "Function")
         self.add_output(NodeSocketLogicCondition, "Done")

@@ -14,7 +14,7 @@ class LogicNodeSensorValue(LogicNodeParameterType):
 
     def init(self, context):
         self.add_input(NodeSocketLogicObject, 'Object')
-        self.add_input(NodeSocketLogicBrick, 'Sensor', {'brick_type': 'sensors'})
+        self.add_input(NodeSocketLogicBrick, 'Sensor', None, {'brick_type': 'sensors'})
         self.add_input(NodeSocketLogicString, 'Field')
         self.add_output(NodeSocketLogicParameter, "Value")
         LogicNodeParameterType.init(self, context)

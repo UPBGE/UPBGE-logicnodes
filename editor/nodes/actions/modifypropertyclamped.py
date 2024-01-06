@@ -33,7 +33,7 @@ class LogicNodeModifyPropertyClamped(LogicNodeActionType):
     def init(self, context):
         self.add_input(NodeSocketLogicCondition, "Condition")
         self.add_input(NodeSocketLogicObject, "Object")
-        self.add_input(NodeSocketLogicGameProperty, "Property", {'ref_index': 1})
+        self.add_input(NodeSocketLogicGameProperty, "Property", None, {'ref_index': 1})
         self.add_input(NodeSocketLogicFloat, "Value")
         self.add_input(NodeSocketLogicVectorXY, "Range")
         self.add_output(NodeSocketLogicCondition, "Done")

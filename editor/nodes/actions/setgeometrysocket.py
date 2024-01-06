@@ -22,7 +22,7 @@ class LogicNodeSetGeometrySocket(LogicNodeActionType):
     def init(self, context):
         self.add_input(NodeSocketLogicCondition, "Condition")
         self.add_input(NodeSocketLogicGeometryNodeTree, 'Tree')
-        self.add_input(NodeSocketLogicGeometryNodeTree, 'Node Name', {'ref_index': 1})
+        self.add_input(NodeSocketLogicGeometryNodeTree, 'Node Name', None, {'ref_index': 1})
         self.add_input(NodeSocketLogicIntegerPositive, "Input")
         self.add_input(NodeSocketLogicFloat, 'Value')
         self.add_output(NodeSocketLogicCondition, "Done")

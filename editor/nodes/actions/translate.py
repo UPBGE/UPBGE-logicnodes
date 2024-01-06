@@ -20,7 +20,7 @@ class LogicNodeTranslate(LogicNodeActionType):
         self.add_input(NodeSocketLogicObject, "Object")
         self.add_input(NodeSocketLogicBoolean, "Local")
         self.add_input(NodeSocketLogicVectorXYZ, "Vector")
-        self.add_input(NodeSocketLogicFloat, "Speed", {'default_value': 1.0})
+        self.add_input(NodeSocketLogicFloat, "Speed", None, {'default_value': 1.0})
         self.add_output(NodeSocketLogicCondition, "When Done")
         LogicNodeActionType.init(self, context)
 

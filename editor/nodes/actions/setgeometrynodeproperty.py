@@ -21,7 +21,7 @@ class LogicNodeSetGeometryNodeProperty(LogicNodeActionType):
     def init(self, context):
         self.add_input(NodeSocketLogicCondition, "Condition")
         self.add_input(NodeSocketLogicGeometryNodeTree, 'Tree')
-        self.add_input(NodeSocketLogicNodeGroupNode, 'Node Name', {'ref_index': 1})
+        self.add_input(NodeSocketLogicNodeGroupNode, 'Node Name', None, {'ref_index': 1})
         self.add_input(NodeSocketLogicString, "Internal")
         self.add_input(NodeSocketLogicString, "Attribute")
         self.add_input(NodeSocketLogicValue, '')

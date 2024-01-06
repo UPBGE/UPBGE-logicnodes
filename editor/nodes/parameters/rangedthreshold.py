@@ -19,7 +19,7 @@ class LogicNodeRangedThreshold(LogicNodeParameterType):
 
     def init(self, context):
         self.add_input(NodeSocketLogicFloat, "Value")
-        self.add_input(NodeSocketLogicVectorXY, "Threshold", {'enabled': False})
+        self.add_input(NodeSocketLogicVectorXY, "Threshold", None, {'enabled': False})
         self.add_input(NodeSocketLogicFloat, "Min")
         self.add_input(NodeSocketLogicFloat, "Max")
         self.add_output(NodeSocketLogicParameter, "Value")

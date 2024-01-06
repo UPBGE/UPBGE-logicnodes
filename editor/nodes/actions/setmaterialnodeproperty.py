@@ -21,7 +21,7 @@ class LogicNodeSetMaterialNodeProperty(LogicNodeActionType):
     def init(self, context):
         self.add_input(NodeSocketLogicCondition, "Condition")
         self.add_input(NodeSocketLogicMaterial, 'Material')
-        self.add_input(NodeSocketLogicMaterialNode, 'Node Name', {'ref_index': 1})
+        self.add_input(NodeSocketLogicMaterialNode, 'Node Name', None, {'ref_index': 1})
         self.add_input(NodeSocketLogicString, "Internal")
         self.add_input(NodeSocketLogicString, "Attribute")
         self.add_input(NodeSocketLogicValue, '')

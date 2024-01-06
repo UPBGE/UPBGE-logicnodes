@@ -20,7 +20,7 @@ class LogicNodeThreshold(LogicNodeParameterType):
     )
 
     def init(self, context):
-        self.add_input(NodeSocketLogicBoolean, "Else 0", {'default_value': True})
+        self.add_input(NodeSocketLogicBoolean, "Else 0", None, {'default_value': True})
         self.add_input(NodeSocketLogicFloat, "Value")
         self.add_input(NodeSocketLogicFloat, "Threshold")
         self.add_output(NodeSocketLogicParameter, "Value")

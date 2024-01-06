@@ -23,7 +23,7 @@ class LogicNodeLocalClient(LogicNodeActionType):
     def init(self, context):
         self.add_input(NodeSocketLogicCondition, "Connect")
         self.add_input(NodeSocketLogicString, "IP")
-        self.add_input(NodeSocketLogicIntegerPositive, "Port", {'default_value': 8303})
+        self.add_input(NodeSocketLogicIntegerPositive, "Port", None, {'default_value': 8303})
         self.add_input(NodeSocketLogicCondition, "Disconnect")
         self.add_output(NodeSocketLogicCondition, "On Connect")
         self.add_output(NodeSocketLogicCondition, "Connected")

@@ -21,8 +21,8 @@ class LogicNodeSetBoneConstraintTarget(LogicNodeActionType):
     def init(self, context):
         self.add_input(NodeSocketLogicCondition, "Condition")
         self.add_input(NodeSocketLogicArmature, "Armature")
-        self.add_input(NodeSocketLogicBone, "", {'ref_index': 1})
-        self.add_input(NodeSocketLogicBoneConstraint, "", {'ref_index': 2})
+        self.add_input(NodeSocketLogicBone, "", None, {'ref_index': 1})
+        self.add_input(NodeSocketLogicBoneConstraint, "", None, {'ref_index': 2})
         self.add_input(NodeSocketLogicObject, "Target")
         self.add_output(NodeSocketLogicCondition, 'Done')
         LogicNodeActionType.init(self, context)

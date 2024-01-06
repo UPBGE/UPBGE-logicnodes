@@ -16,7 +16,7 @@ class LogicNodeSetSensorValue(LogicNodeActionType):
     def init(self, context):
         self.add_input(NodeSocketLogicCondition, "Condition")
         self.add_input(NodeSocketLogicObject, "Object")
-        self.add_input(NodeSocketLogicBrick, "Sensor", {'ref_index': 1, 'brick_type': 'sensors'})
+        self.add_input(NodeSocketLogicBrick, "Sensor", None, {'ref_index': 1, 'brick_type': 'sensors'})
         self.add_input(NodeSocketLogicString, "Attribute")
         self.add_input(NodeSocketLogicValue, "")
         self.add_output(NodeSocketLogicCondition, 'Done')

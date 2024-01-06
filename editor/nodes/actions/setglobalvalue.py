@@ -15,9 +15,9 @@ class LogicNodeSetGlobalValue(LogicNodeActionType):
     nl_class = "ULSetGlobalValue"
 
     def init(self, context):
-        self.add_input(NodeSocketLogicCondition, "Condition", {'show_prop': True})
+        self.add_input(NodeSocketLogicCondition, "Condition", None, {'show_prop': True})
         self.add_input(NodeSocketLogicGlobalCategory, "Category")
-        self.add_input(NodeSocketLogicGlobalProperty, "Property", {'ref_index': 1})
+        self.add_input(NodeSocketLogicGlobalProperty, "Property", None, {'ref_index': 1})
         self.add_input(NodeSocketLogicValue, "")
         self.add_input(NodeSocketLogicBoolean, "Persistent")
         self.add_output(NodeSocketLogicCondition, 'Done')

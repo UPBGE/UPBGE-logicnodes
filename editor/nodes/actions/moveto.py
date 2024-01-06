@@ -20,8 +20,8 @@ class LogicNodeMoveTo(LogicNodeActionType):
         self.add_input(NodeSocketLogicObject, "Object")
         self.add_input(NodeSocketLogicVectorXYZ, "Target Location")
         self.add_input(NodeSocketLogicBoolean, "Move as Dynamic")
-        self.add_input(NodeSocketLogicFloatPositive, "Speed", {'default_value': 1.0})
-        self.add_input(NodeSocketLogicFloat, "Stop At Distance", {'default_value': 0.5})
+        self.add_input(NodeSocketLogicFloatPositive, "Speed", None, {'default_value': 1.0})
+        self.add_input(NodeSocketLogicFloat, "Stop At Distance", None, {'default_value': 0.5})
         self.add_output(NodeSocketLogicCondition, "Done")
         LogicNodeActionType.init(self, context)
 

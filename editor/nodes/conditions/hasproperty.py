@@ -25,7 +25,7 @@ class LogicNodeHasProperty(LogicNodeConditionType):
 
     def init(self, context):
         self.add_input(NodeSocketLogicObject, "Object")
-        self.add_input(NodeSocketLogicString, "Name", {'default_value': 'prop'})
+        self.add_input(NodeSocketLogicString, "Name", None, {'default_value': 'prop'})
         self.add_output(NodeSocketLogicCondition, "If True")
         LogicNodeConditionType.init(self, context)
 

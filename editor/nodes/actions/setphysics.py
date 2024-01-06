@@ -16,7 +16,7 @@ class LogicNodeSetPhysics(LogicNodeActionType):
         self.add_input(NodeSocketLogicCondition, "Condition")
         self.add_input(NodeSocketLogicObject, "Object")
         self.add_input(NodeSocketLogicBoolean, "Active")
-        self.add_input(NodeSocketLogicBoolean, "Cut Constraints", {'default_value': False})
+        self.add_input(NodeSocketLogicBoolean, "Cut Constraints", None, {'default_value': False})
         self.add_output(NodeSocketLogicCondition, 'Done')
         LogicNodeActionType.init(self, context)
 

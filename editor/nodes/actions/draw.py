@@ -54,14 +54,14 @@ class LogicNodeDraw(LogicNodeActionType):
             layout.prop(self, "use_volume_origin")
 
     def init(self, context):
-        self.add_input(NodeSocketLogicCondition, 'Condition', {'show_prop': True})
+        self.add_input(NodeSocketLogicCondition, 'Condition', None, {'show_prop': True})
         self.add_input(NodeSocketLogicColorRGB, 'Color')
         self.add_input(NodeSocketLogicVectorXYZ, 'Origin')
         self.add_input(NodeSocketLogicVectorXYZ, 'Target')
         self.add_input(NodeSocketLogicList, 'Points')
-        self.add_input(NodeSocketLogicFloatPositive, 'Width', {'default_value': 1.0})
-        self.add_input(NodeSocketLogicFloatPositive, 'Length', {'default_value': 1.0})
-        self.add_input(NodeSocketLogicFloatPositive, 'Height', {'default_value': 1.0})
+        self.add_input(NodeSocketLogicFloatPositive, 'Width', None, {'default_value': 1.0})
+        self.add_input(NodeSocketLogicFloatPositive, 'Length', None, {'default_value': 1.0})
+        self.add_input(NodeSocketLogicFloatPositive, 'Height', None, {'default_value': 1.0})
         self.add_input(NodeSocketLogicObject, 'Object')
         self.add_output(NodeSocketLogicCondition, "Done")
         LogicNodeActionType.init(self, context)

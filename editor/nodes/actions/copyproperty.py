@@ -27,7 +27,7 @@ class LogicNodeCopyProperty(LogicNodeActionType):
         self.add_input(NodeSocketLogicCondition, "Condition")
         self.add_input(NodeSocketLogicObject, "Copy From")
         self.add_input(NodeSocketLogicObject, "To")
-        self.add_input(NodeSocketLogicGameProperty, "Property", {'ref_index': 1})
+        self.add_input(NodeSocketLogicGameProperty, "Property", None, {'ref_index': 1})
         self.add_output(NodeSocketLogicCondition, "Done")
         LogicNodeActionType.init(self, context)
 

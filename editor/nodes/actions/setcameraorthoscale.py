@@ -15,7 +15,7 @@ class LogicNodeSetCameraOrthoScale(LogicNodeActionType):
     def init(self, context):
         self.add_input(NodeSocketLogicCondition, 'Condition')
         self.add_input(NodeSocketLogicObject, 'Camera')
-        self.add_input(NodeSocketLogicFloat, 'Scale', {'default_value': 1.0})
+        self.add_input(NodeSocketLogicFloat, 'Scale', None, {'default_value': 1.0})
         self.add_output(NodeSocketLogicCondition, 'Done')
         LogicNodeActionType.init(self, context)
 

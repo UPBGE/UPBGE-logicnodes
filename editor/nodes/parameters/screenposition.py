@@ -14,7 +14,7 @@ class LogicNodeScreenPosition(LogicNodeParameterType):
 
     def init(self, context):
         self.add_input(NodeSocketLogicVectorXYZ, 'Point')
-        self.add_input(NodeSocketLogicCamera, 'Camera', {'use_active': True})
+        self.add_input(NodeSocketLogicCamera, 'Camera', None, {'use_active': True})
         self.add_output(NodeSocketLogicVectorXY, 'On Screen')
         LogicNodeParameterType.init(self, context)
 

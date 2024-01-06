@@ -16,8 +16,8 @@ class LogicNodeSetParent(LogicNodeActionType):
         self.add_input(NodeSocketLogicCondition, "Condition")
         self.add_input(NodeSocketLogicObject, "Child Object")
         self.add_input(NodeSocketLogicObject, "Parent Object")
-        self.add_input(NodeSocketLogicBoolean, "Compound", {'default_value': True, 'enabled': False})
-        self.add_input(NodeSocketLogicBoolean, "Ghost", {'default_value': True, 'enabled': False})
+        self.add_input(NodeSocketLogicBoolean, "Compound", None, {'default_value': True, 'enabled': False})
+        self.add_input(NodeSocketLogicBoolean, "Ghost", None, {'default_value': True, 'enabled': False})
         self.add_output(NodeSocketLogicCondition, 'Done')
         LogicNodeActionType.init(self, context)
 

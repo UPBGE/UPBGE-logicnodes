@@ -36,10 +36,10 @@ class LogicNodeModifyProperty(LogicNodeActionType):
     def init(self, context):
         self.add_input(NodeSocketLogicCondition, "Condition")
         self.add_input(NodeSocketLogicObject, "Object")
-        self.add_input(NodeSocketLogicGameProperty, "Property", {'ref_index': 1})
+        self.add_input(NodeSocketLogicGameProperty, "Property", None, {'ref_index': 1})
         self.add_input(NodeSocketLogicFloat, "Value")
         self.add_input(NodeSocketLogicFloat, "Min")
-        self.add_input(NodeSocketLogicFloat, "Max", {'default_value': 1.0})
+        self.add_input(NodeSocketLogicFloat, "Max", None, {'default_value': 1.0})
         self.add_output(NodeSocketLogicCondition, "Done")
         LogicNodeActionType.init(self, context)
 

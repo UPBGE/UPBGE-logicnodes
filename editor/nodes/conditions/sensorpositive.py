@@ -13,7 +13,7 @@ class LogicNodeSensorPositive(LogicNodeConditionType):
 
     def init(self, context):
         self.add_input(NodeSocketLogicObject, 'Object')
-        self.add_input(NodeSocketLogicBrick, 'Sensor', {'brick_type': 'sensors'})
+        self.add_input(NodeSocketLogicBrick, 'Sensor', None, {'brick_type': 'sensors'})
         self.add_output(NodeSocketLogicCondition, "Positive")
         LogicNodeConditionType.init(self, context)
 

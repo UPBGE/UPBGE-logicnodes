@@ -22,7 +22,7 @@ class LogicNodeSetMaterialSocket(LogicNodeActionType):
     def init(self, context):
         self.add_input(NodeSocketLogicCondition, "Condition")
         self.add_input(NodeSocketLogicMaterial, 'Material')
-        self.add_input(NodeSocketLogicMaterialNode, 'Node Name', {'ref_index': 1})
+        self.add_input(NodeSocketLogicMaterialNode, 'Node Name', None, {'ref_index': 1})
         self.add_input(NodeSocketLogicIntegerPositive, "Input")
         self.add_input(NodeSocketLogicFloat, 'Value')
         self.add_output(NodeSocketLogicCondition, "Done")

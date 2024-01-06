@@ -22,7 +22,7 @@ class LogicNodeCompareDistance(LogicNodeConditionType):
         self.add_input(NodeSocketLogicVectorXYZ, "A")
         self.add_input(NodeSocketLogicVectorXYZ, "B")
         self.add_input(NodeSocketLogicFloatPositive, "Value")
-        self.add_input(NodeSocketLogicFloat, "Hyst", {'enabled': False})
+        self.add_input(NodeSocketLogicFloat, "Hyst", None, {'enabled': False})
         self.add_output(NodeSocketLogicCondition, "Out")
         self.add_output(NodeSocketLogicFloat, "Distance")
         LogicNodeConditionType.init(self, context)

@@ -17,7 +17,7 @@ class LogicNodeEditBone(LogicNodeActionType):
     def init(self, context):
         self.add_input(NodeSocketLogicCondition, "Condition")
         self.add_input(NodeSocketLogicArmature, "Armature")
-        self.add_input(NodeSocketLogicBone, "Bone Name", {'ref_index': 1})
+        self.add_input(NodeSocketLogicBone, "Bone Name", None, {'ref_index': 1})
         self.add_input(NodeSocketLogicVectorXYZ, "Set Pos")
         self.add_input(NodeSocketLogicVectorXYZ, "Set Rot")
         self.add_input(NodeSocketLogicVectorXYZ, "Set Scale")

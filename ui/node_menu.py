@@ -242,6 +242,7 @@ class VectorValuesMenu(bpy.types.Menu):
         insertNode(layout, "NLParameterVector3SimpleNode", "Vector XYZ")
         insertNode(layout, "NLParameterVector4SimpleNode", "Vector XYZW")
         insertNode(layout, "NLParameterEulerSimpleNode", "Euler")
+        insertNode(layout, "LogicNodeResizeVector", "Resize Vector")
 
 
 @menu_item

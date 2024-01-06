@@ -18,7 +18,7 @@ class LogicNodeListExtend(LogicNodeParameterType):
     def init(self, context):
         self.add_input(NodeSocketLogicList, 'List 1')
         self.add_input(NodeSocketLogicList, 'List 2')
-        self.add_output(NodeSocketLogicCondition, 'Done', {'enabled': False})
+        self.add_output(NodeSocketLogicCondition, 'Done', None, {'enabled': False})
         self.add_output(NodeSocketLogicList, 'List')
         LogicNodeParameterType.init(self, context)
 

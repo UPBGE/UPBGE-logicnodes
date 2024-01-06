@@ -20,7 +20,7 @@ class LogicNodeJumpToFile(LogicNodeActionType):
     def init(self, context):
         self.add_input(NodeSocketLogicCondition, "Condition")
         self.add_input(NodeSocketLogicFilePath, "File name")
-        self.add_output(NodeSocketLogicCondition, 'Done', {'enabled': False})
+        self.add_output(NodeSocketLogicCondition, 'Done', None, {'enabled': False})
         LogicNodeActionType.init(self, context)
 
     def get_output_names(self):

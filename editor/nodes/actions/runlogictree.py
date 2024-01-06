@@ -14,7 +14,7 @@ class LogicNodeRunLogicTree(LogicNodeActionType):
     nl_class = "ULExecuteSubNetwork"
 
     def init(self, context):
-        self.add_input(NodeSocketLogicCondition, "Condition", {'default_value': True, 'show_prop': True})
+        self.add_input(NodeSocketLogicCondition, "Condition", None, {'default_value': True, 'show_prop': True})
         self.add_input(NodeSocketLogicObject, "Target Object")
         self.add_input(NodeSocketLogicTree, "Tree Name")
         self.add_output(NodeSocketLogicCondition, 'Done')

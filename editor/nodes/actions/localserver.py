@@ -24,8 +24,8 @@ class LogicNodeLocalServer(LogicNodeActionType):
 
     def init(self, context):
         self.add_input(NodeSocketLogicCondition, "Start")
-        self.add_input(NodeSocketLogicString, "IP", {'default_value': gethostbyname(gethostname())})
-        self.add_input(NodeSocketLogicInteger, "Port", {'default_value': 8303})
+        self.add_input(NodeSocketLogicString, "IP", None, {'default_value': gethostbyname(gethostname())})
+        self.add_input(NodeSocketLogicInteger, "Port", None, {'default_value': 8303})
         self.add_input(NodeSocketLogicCondition, "Stop")
         self.add_output(NodeSocketLogicCondition, "On Start")
         self.add_output(NodeSocketLogicCondition, "Running")

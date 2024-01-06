@@ -14,7 +14,7 @@ class LogicNodeControllerStatus(LogicNodeConditionType):
 
     def init(self, context):
         self.add_input(NodeSocketLogicObject, 'Object')
-        self.add_input(NodeSocketLogicBrick, 'Controller', {'brick_type': 'controllers'})
+        self.add_input(NodeSocketLogicBrick, 'Controller', None, {'brick_type': 'controllers'})
         self.add_output(NodeSocketLogicCondition, "Status")
         self.add_output(NodeSocketLogicDictionary, "Sensors")
         LogicNodeConditionType.init(self, context)
