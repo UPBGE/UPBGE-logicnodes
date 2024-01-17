@@ -2,7 +2,7 @@ from ..node import node_type
 from ..node import LogicNodeActionType
 from ...sockets import NodeSocketLogicCondition
 from ...sockets import NodeSocketLogicMaterial
-from ...sockets import NodeSocketLogicMaterialNode
+from ...sockets import NodeSocketLogicTreeNode
 from ...sockets import NodeSocketLogicPlayMode
 from ...sockets import NodeSocketLogicParameter
 from ...sockets import NodeSocketLogicBoolean
@@ -21,7 +21,7 @@ class LogicNodePlaySequence(LogicNodeActionType):
     def init(self, context):
         self.add_input(NodeSocketLogicCondition, "Condition")
         self.add_input(NodeSocketLogicMaterial, 'Material')
-        self.add_input(NodeSocketLogicMaterialNode, 'Node Name', None, {'ref_index': 1})
+        self.add_input(NodeSocketLogicTreeNode, 'Node Name', None, {'ref_index': 1})
         self.add_input(NodeSocketLogicPlayMode, "Mode", None, {'enabled': False})
         self.add_input(NodeSocketLogicBoolean, 'Continue', None, {'enabled': False})
         self.add_input(NodeSocketLogicVectorXY, "Frames", None, {'enabled': False})

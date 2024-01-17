@@ -2,7 +2,7 @@ from ..node import node_type
 from ..node import LogicNodeParameterType
 from ...sockets import NodeSocketLogicParameter
 from ...sockets import NodeSocketLogicMaterial
-from ...sockets import NodeSocketLogicMaterialNode
+from ...sockets import NodeSocketLogicTreeNode
 
 
 @node_type
@@ -13,7 +13,7 @@ class LogicNodeGetMatNode(LogicNodeParameterType):
 
     def init(self, context):
         self.add_input(NodeSocketLogicMaterial, 'Material')
-        self.add_input(NodeSocketLogicMaterialNode, 'Node Name')
+        self.add_input(NodeSocketLogicTreeNode, 'Node Name')
         self.add_output(NodeSocketLogicParameter, "Node")
         LogicNodeParameterType.init(self, context)
 

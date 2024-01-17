@@ -1,7 +1,7 @@
 from ..node import node_type
 from ..node import LogicNodeParameterType
 from ...sockets import NodeSocketLogicParameter
-from ...sockets import NodeSocketLogicMaterialNode
+from ...sockets import NodeSocketLogicTreeNode
 from ...sockets import NodeSocketLogicMaterial
 from ...sockets import NodeSocketLogicString
 
@@ -15,7 +15,7 @@ class LogicNodeGetMaterialNodeAttr(LogicNodeParameterType):
 
     def init(self, context):
         self.add_input(NodeSocketLogicMaterial, 'Material')
-        self.add_input(NodeSocketLogicMaterialNode, 'Node Name')
+        self.add_input(NodeSocketLogicTreeNode, 'Node Name')
         self.add_input(NodeSocketLogicString, "Internal")
         self.add_input(NodeSocketLogicString, "Attribute")
         self.add_output(NodeSocketLogicParameter, "Value")

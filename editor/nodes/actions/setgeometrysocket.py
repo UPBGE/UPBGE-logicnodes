@@ -2,7 +2,7 @@ from ..node import node_type
 from ..node import LogicNodeActionType
 from ...sockets import NodeSocketLogicCondition
 from ...sockets import NodeSocketLogicGeometryNodeTree
-from ...sockets import NodeSocketLogicGeometryNodeTree
+from ...sockets import NodeSocketLogicTreeNode
 from ...sockets import NodeSocketLogicIntegerPositive
 from ...sockets import NodeSocketLogicFloat
 import bpy
@@ -22,7 +22,7 @@ class LogicNodeSetGeometrySocket(LogicNodeActionType):
     def init(self, context):
         self.add_input(NodeSocketLogicCondition, "Condition")
         self.add_input(NodeSocketLogicGeometryNodeTree, 'Tree')
-        self.add_input(NodeSocketLogicGeometryNodeTree, 'Node Name', None, {'ref_index': 1})
+        self.add_input(NodeSocketLogicTreeNode, 'Node Name', None, {'ref_index': 1})
         self.add_input(NodeSocketLogicIntegerPositive, "Input")
         self.add_input(NodeSocketLogicFloat, 'Value')
         self.add_output(NodeSocketLogicCondition, "Done")

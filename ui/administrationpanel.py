@@ -33,10 +33,10 @@ class LOGIC_NODES_PT_administration(bpy.types.Panel):
             icon='FILE_SCRIPT'
         )
         # XXX: Get running again
-        # cmtree = context.scene.custom_mainloop_tree
-        # is_scene_tree = cmtree is context.space_data.edit_tree
-        # code.operator(
-        #     'logic_nodes.custom_mainloop_tree',
-        #     text='Unset Scene Logic' if is_scene_tree else 'Set as Scene Logic',
-        #     icon='REMOVE' if is_scene_tree else 'PLAY'
-        # )
+        cmtree = context.scene.custom_mainloop_tree
+        is_scene_tree = cmtree is context.space_data.edit_tree
+        code.operator(
+            'logic_nodes.custom_mainloop_tree',
+            text='Unset Scene Logic' if is_scene_tree else 'Set as Scene Logic',
+            icon='REMOVE' if is_scene_tree else 'PLAY'
+        )

@@ -457,6 +457,7 @@ class ObjectDataMenu(bpy.types.Menu):
         insertNode(layout, "NLGetObjectVertices", "Get Vertices")
         # insertNode(layout, "NLObjectAttributeParameterNode", "Get Position / Rotation / Scale etc.")
         insertNode(layout, "NLActionReplaceMesh", "Replace Mesh")
+        insertNode(layout, "LogicNodeSetConstraintAttribute", "Set Constraint Attribute")
         # insertNode(layout, "NLSetObjectAttributeActionNode", "Set Position / Rotation / Scale etc.")
 
 

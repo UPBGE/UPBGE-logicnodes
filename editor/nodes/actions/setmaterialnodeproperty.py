@@ -2,7 +2,7 @@ from ..node import node_type
 from ..node import LogicNodeActionType
 from ...sockets import NodeSocketLogicCondition
 from ...sockets import NodeSocketLogicMaterial
-from ...sockets import NodeSocketLogicMaterialNode
+from ...sockets import NodeSocketLogicTreeNode
 from ...sockets import NodeSocketLogicString
 from ...sockets import NodeSocketLogicValue
 
@@ -21,7 +21,7 @@ class LogicNodeSetMaterialNodeProperty(LogicNodeActionType):
     def init(self, context):
         self.add_input(NodeSocketLogicCondition, "Condition")
         self.add_input(NodeSocketLogicMaterial, 'Material')
-        self.add_input(NodeSocketLogicMaterialNode, 'Node Name', None, {'ref_index': 1})
+        self.add_input(NodeSocketLogicTreeNode, 'Node Name', None, {'ref_index': 1})
         self.add_input(NodeSocketLogicString, "Internal")
         self.add_input(NodeSocketLogicString, "Attribute")
         self.add_input(NodeSocketLogicValue, '')

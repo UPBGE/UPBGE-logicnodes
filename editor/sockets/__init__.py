@@ -37,7 +37,7 @@ from .listsocket import NodeSocketLogicList
 from .logicbricksocket import NodeSocketLogicBrick
 from .logictreesocket import NodeSocketLogicTree
 from .loopcountsocket import NodeSocketLogicLoopCount
-from .materialnodesocket import NodeSocketLogicMaterialNode
+from .materialnodesocket import NodeSocketLogicTreeNode
 from .materialsocket import NodeSocketLogicMaterial
 from .matrixsocket import NodeSocketLogicMatrix
 from .meshsocket import NodeSocketLogicMesh
@@ -68,6 +68,7 @@ from .vectorxyzvelocitysocket import NodeSocketLogicVectorXYZVelocity
 from .xyzsocket import NodeSocketLogicXYZ
 from .socket import NodeSocketLogicVirtual
 from .logictreepropertysocket import NodeSocketLogicTreeProperty
+from .constraintsocket import NodeSocketLogicConstraint
 
 from .deprecated import *
 

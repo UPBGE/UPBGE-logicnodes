@@ -5,21 +5,22 @@ from .socket import update_draw
 from bpy.types import NodeSocket
 from bpy.props import StringProperty
 from bpy.props import IntProperty
+from bpy.types import Material
 import bpy
 
 
 @socket_type
-class NodeSocketLogicMaterialNode(NodeSocket, NodeSocketLogic):
+class NodeSocketLogicTreeNode(NodeSocket, NodeSocketLogic):
     bl_idname = "NLTreeNodeSocket"
-    bl_label = "Material Node"
+    bl_label = "Node"
 
     default_value: StringProperty(
-        name='Material Node',
+        name='Node',
         update=update_draw
     )
     # XXX: Remove value property
     value: StringProperty(
-        name='Material Node',
+        name='Node',
         update=update_draw
     )
     ref_index: IntProperty(default=0)
@@ -32,13 +33,15 @@ class NodeSocketLogicMaterialNode(NodeSocket, NodeSocketLogic):
             layout.label(text=text)
         else:
             mat_socket = self.node.inputs[self.ref_index]
-            mat = mat_socket.default_value
+            tree = mat_socket.default_value
             col = layout.column(align=False)
-            if mat and not mat_socket.linked_valid:
+            if isinstance(tree, Material):
+                tree = tree.node_tree
+            if tree and not mat_socket.linked_valid:
                 col.prop_search(
                     self,
                     "default_value",
-                    bpy.data.materials[mat.name].node_tree,
+                    tree,
                     'nodes',
                     text=''
                 )

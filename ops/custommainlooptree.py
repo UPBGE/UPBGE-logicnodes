@@ -1,4 +1,5 @@
 from .operator import operator
+from .custommainloop import make_custom_mainloop
 from bpy.types import Operator
 from ..editor.nodetree import LogicNodeTree
 import bpy
@@ -27,7 +28,7 @@ class LOGIC_NODES_OT_custom_mainloop_tree(Operator):
     def execute(self, context):
         scene = context.scene
         if not scene.get('__main__') and not scene.get('custom_mainloop_tree'):
-            bpy.ops.bge_netlogic.make_custom_mainloop()
+            make_custom_mainloop(scene)
         tree = context.space_data.edit_tree
         if scene.custom_mainloop_tree is tree:
             scene.custom_mainloop_tree = None
