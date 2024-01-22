@@ -23,8 +23,8 @@ class LogicNodeCombineXYZ(LogicNodeParameterType):
         self.add_output(NodeSocketLogicVectorXYZ, "Vector", 'OUTV')
         LogicNodeParameterType.init(self, context)
 
-    # def get_output_names(self):
-    #     return ["OUTV"]
+    def get_output_names(self):
+        return ["OUTV"]
 
-    # def get_input_names(self):
-    #     return ["input_x", "input_y", "input_z"]
+    def get_input_names(self):
+        return ["input_x", "input_y", "input_z"]
