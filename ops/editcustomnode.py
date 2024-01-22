@@ -19,6 +19,15 @@ class LOGIC_NODES_OT_edit_custom_node(Operator):
 
     def execute(self, context):
         node = preferences().custom_logic_nodes[self.index]
-        t = bpy.data.texts.new(node.idname)
+        t = bpy.data.texts.get(node.idname, None)
+        if t is None:
+            t = bpy.data.texts.new(node.idname)
+        t.clear()
         t.write(node.ui_code)
+
+        t = bpy.data.texts.get(node.modname, None)
+        if t is None:
+            t = bpy.data.texts.new(node.modname)
+        t.clear()
+        t.write(node.logic_code)
         return {'FINISHED'}

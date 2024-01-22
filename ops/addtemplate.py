@@ -46,7 +46,6 @@ class LOGIC_NODES_OT_add_template(Operator):
             val = value['value']
             if isinstance(index, int):
                 node.inputs[index].use_default_value = True
-                print(val, node.inputs[index])
                 setattr(node.inputs[index], val_type, val)
             else:
                 setattr(node, index, val)

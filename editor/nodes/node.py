@@ -60,22 +60,26 @@ class LogicNode:
         self.ready = True
         self.update_draw(bpy.context)
 
-    def add_input(self, cls, name, attr_name=None, settings={}):
+    def add_input(self, cls, name, attr_name: str = '', settings: dict = {}):
+        attr_name = '' if attr_name is None else attr_name
         ipt = self.inputs.new(cls.bl_idname, name)
         ipt.display_shape = cls.nl_shape
         if settings:
             ipt.use_default_value = True
         for key, val in settings.items():
             setattr(ipt, key, val)
+        setattr(ipt, 'identifier', attr_name)
         return ipt
 
-    def add_output(self, cls, name, attr_name=None, settings={}):
+    def add_output(self, cls, name, attr_name: str = '', settings: dict = {}):
+        attr_name = '' if attr_name is None else attr_name
         otp = self.outputs.new(cls.bl_idname, name)
         otp.display_shape = cls.nl_shape
         if settings:
             otp.use_default_value = True
         for key, val in settings.items():
             setattr(otp, key, val)
+        setattr(otp, 'identifier', attr_name)
         return otp
 
     def free(self):
@@ -146,7 +150,9 @@ class LogicNode:
         input_names = self.get_input_names()
         input_socket_index = self._index_of(socket, self.inputs)
         field_name = None
-        if input_names:
+        if getattr(socket, 'identifier', ''):
+            field_name = socket.identifier
+        elif input_names:
             field_name = input_names[input_socket_index]
         else:
             field_name = self.get_field_name_for_socket(socket)
@@ -237,7 +243,10 @@ class LogicNode:
         output_node_varname = uids.get_varname_for_node(output_node)
         output_map = output_node.get_output_names()
 
-        if output_map:
+        if getattr(output_socket, 'identifier', ''):
+            varname = output_socket.identifier
+            return '{}.{}'.format(output_node_varname, varname)
+        elif output_map:
             varname = output_map[output_socket_index]
             return '{}.{}'.format(output_node_varname, varname)
         else:

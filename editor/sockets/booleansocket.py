@@ -1,4 +1,4 @@
-from .socket import SOCKET_TYPE_CONDITION, NodeSocketLogic
+from .socket import SOCKET_TYPE_CONDITION, SOCKET_TYPE_FLOAT, SOCKET_TYPE_INT, NodeSocketLogic
 from .socket import SOCKET_COLOR_BOOLEAN
 from .socket import SOCKET_TYPE_BOOL
 from .socket import socket_type
@@ -19,7 +19,7 @@ class NodeSocketLogicBoolean(NodeSocket, NodeSocketLogic):
     use_toggle: BoolProperty(default=False)
 
     nl_type = SOCKET_TYPE_BOOL
-    valid_sockets = [SOCKET_TYPE_BOOL, SOCKET_TYPE_CONDITION]
+    valid_sockets = [SOCKET_TYPE_BOOL, SOCKET_TYPE_CONDITION, SOCKET_TYPE_FLOAT, SOCKET_TYPE_INT]
     nl_color = SOCKET_COLOR_BOOLEAN
 
     def draw(self, context, layout, node, text):

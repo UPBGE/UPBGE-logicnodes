@@ -26,17 +26,16 @@ class LOGIC_NODES_PT_administration(bpy.types.Panel):
             text="Apply To Selected",
             icon='PREFERENCES'
         ).owner = "BGE_PT_LogicPanel"
-        code = layout.box()
-        code.operator(
-            'logic_nodes.generate_code',
-            text="Compile",
-            icon='FILE_SCRIPT'
-        )
-        # XXX: Get running again
         cmtree = context.scene.custom_mainloop_tree
         is_scene_tree = cmtree is context.space_data.edit_tree
-        code.operator(
+        apply_col.operator(
             'logic_nodes.custom_mainloop_tree',
             text='Unset Scene Logic' if is_scene_tree else 'Set as Scene Logic',
             icon='REMOVE' if is_scene_tree else 'PLAY'
+        )
+        code = layout.box()
+        code.operator(
+            'logic_nodes.generate_code',
+            text="Force Compile",
+            icon='FILE_SCRIPT'
         )

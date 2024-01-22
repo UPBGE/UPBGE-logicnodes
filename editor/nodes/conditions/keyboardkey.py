@@ -27,7 +27,6 @@ class LogicNodeKeyboardKey(LogicNodeConditionType):
     def draw_buttons(self, context, layout):
         layout.prop(self, 'input_type', text='')
 
-
     def get_input_names(self):
         return ["key_code"]
 

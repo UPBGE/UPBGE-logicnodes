@@ -40,7 +40,7 @@ class LOGIC_NODES_PT_logic_tree_properties(bpy.types.Panel):
                 col = box.column()
                 row = col.row(align=True)
                 if not comp:
-                    box.label(text='Tree not applied!', icon='ERROR')
+                    box.label(text='Tree must be applied to Object!', icon='ERROR')
                     continue
                 cprop = comp.properties[prop.name]
                 vtype = int(prop.value_type)

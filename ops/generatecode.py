@@ -17,7 +17,7 @@ class LOGIC_NODES_OT_generate_code(Operator):
     bl_idname = "logic_nodes.generate_code"
     bl_label = "Generate Logic Nodes Code"
     bl_options = {'REGISTER', 'UNDO'}
-    bl_description = "Create the code needed to execute all logic trees"
+    bl_description = "Force generation of code, needed only after updating or if encountering issues"
     uplogic_installed: BoolProperty()
 
     @classmethod

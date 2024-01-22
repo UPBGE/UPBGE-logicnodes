@@ -1,5 +1,5 @@
 from ...enum_types import _enum_logic_operators
-from ...sockets import NodeSocketLogicCondition
+from ...sockets import NodeSocketLogicBoolean
 from ...sockets import NodeSocketLogicValue
 from ...sockets import NodeSocketLogicFloatPositive
 from ..node import LogicNodeConditionType
@@ -32,7 +32,7 @@ class LogicNodeCompare(LogicNodeConditionType):
         self.add_input(NodeSocketLogicValue, "", None, {'value_type': 'FLOAT'})
         self.add_input(NodeSocketLogicValue, "", None, {'value_type': 'FLOAT'})
         self.add_input(NodeSocketLogicFloatPositive, "Threshold", None, {'enabled': False})
-        self.add_output(NodeSocketLogicCondition, "Result")
+        self.add_output(NodeSocketLogicBoolean, "Result")
         LogicNodeConditionType.init(self, context)
 
     def get_input_names(self):
