@@ -34,7 +34,7 @@ bl_info = {
         "A Node System to create game logic."
     ),
     "author": "pgi, Leopold A-C (Iza Zed)",
-    "version": (3, 0),
+    "version": (3, 1),
     "blender": (4, 1, 0),
     "location": "View Menu",
     "category": "Game Engine",
@@ -88,17 +88,17 @@ def _generate_on_game_start(self, context):
 
 @persistent
 def _jump_in_game_cam(self, context):
-    if prefs().jump_in_game_cam:
+    if bpy.context.scene.jump_in_game_cam:
         bpy.ops.view3d.view_camera()
 
 
 @persistent
 def _set_vr_mode(self, context):
-    if prefs().use_vr_audio_space and not bpy.context.window_manager.xr_session_state:
+    if bpy.context.scene.use_vr_audio_space and not bpy.context.window_manager.xr_session_state:
         bpy.context.scene.game_settings.use_viewport_render = True
         utils.notify('Starting in VR mode...')
         utils.start_vr_session()
-    elif bpy.context.window_manager.xr_session_state and not prefs().use_vr_audio_space:
+    elif bpy.context.window_manager.xr_session_state and not bpy.context.scene.use_vr_audio_space:
         utils.notify('Shutting down VR mode...')
         utils.stop_vr_session()
 
@@ -305,7 +305,21 @@ _registered_classes.extend(_properties)
 _registered_classes.extend(_panels)
 _registered_classes.extend(_lists)
 _registered_classes.extend(_menu_items)
-# _registered_classes.append(LogicNodeTree)
+
+
+###################################################
+# DEBUG
+###################################################
+# text = ''
+
+# for node in _nodes:
+#     text +=f"- {'(deprecated) ' if node.deprecated else ''}{node.bl_label}\n"
+# text += f'Total Nodes: {len(_nodes)}'
+
+# with open("D:/Data/nodes.txt", 'w') as f:
+#     f.write(text)
+#     f.close()
+###################################################
 
 def _get_key_for_class(c):
     if hasattr(c, "bl_label"):
@@ -412,6 +426,12 @@ def register():
     bpy.types.Object.logic_trees = bpy.props.CollectionProperty(
         type=LogicNodeTreeReference
     )
+
+    bpy.types.Scene.use_vr_audio_space = bpy.props.BoolProperty(name='Use VR Audio Space', default=False)
+    bpy.types.Scene.jump_in_game_cam = bpy.props.BoolProperty(name='Use Game Camera On Start', default=False)
+    bpy.types.Scene.use_screen_console = bpy.props.BoolProperty(name='Screen Console', description='Print messages to an on-screen console.\nNeeds at least one uplogic import or Logic Node Tree.\nNote: Errors are not printed to this console')
+    bpy.types.Scene.screen_console_key = bpy.props.StringProperty(name='Screen Console Key', description='', default='BACKSLASH')
+    bpy.types.Scene.screen_console_open = bpy.props.BoolProperty(name='Open', description='Start the game with the on-screen console already open')
 
     def filter_components(self, item=bpy.types.Text):
         if not item.name.startswith('nl_'):

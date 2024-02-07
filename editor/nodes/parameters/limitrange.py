@@ -14,7 +14,8 @@ class LogicNodeLimitRange(LogicNodeParameterType):
     nl_module = 'uplogic.nodes.parameters'
 
     operator: EnumProperty(
-        items=_enum_in_or_out
+        items=_enum_in_or_out,
+        name='Operator'
     )
 
     def init(self, context):

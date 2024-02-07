@@ -11,7 +11,7 @@ from bpy.props import BoolProperty
 from bpy.props import EnumProperty
 
 
-_sound_types = [
+_draw_types = [
     ('0', 'Line', ''),
     ('1', 'Arrow', ''),
     ('2', 'Path', ''),
@@ -45,7 +45,7 @@ class LogicNodeDraw(LogicNodeActionType):
         default=False
     )
 
-    mode: EnumProperty(items=_sound_types, name='Mode', update=update_draw)
+    mode: EnumProperty(items=_draw_types, name='Shape', update=update_draw)
 
     def draw_buttons(self, context, layout):
         layout.prop(self, 'mode', text='')

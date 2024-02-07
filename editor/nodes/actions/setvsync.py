@@ -12,7 +12,7 @@ class LogicNodeSetVSync(LogicNodeActionType):
     nl_module = 'uplogic.nodes.actions'
     nl_class = "ULSetVSync"
 
-    vsync_mode: EnumProperty(items=_enum_vsync_modes)
+    vsync_mode: EnumProperty(items=_enum_vsync_modes, name='Mode')
 
     def init(self, context):
         self.add_input(NodeSocketLogicCondition, 'Condition')

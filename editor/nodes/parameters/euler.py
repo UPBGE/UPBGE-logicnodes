@@ -12,7 +12,7 @@ class LogicNodeEuler(LogicNodeParameterType):
     bl_label = "Euler"
     nl_module = 'uplogic.nodes.parameters'
 
-    euler_order: EnumProperty(items=_enum_euler_orders)
+    euler_order: EnumProperty(items=_enum_euler_orders, name='Euler Order')
 
     def init(self, context):
         self.add_input(NodeSocketLogicFloat, 'X')

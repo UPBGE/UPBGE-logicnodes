@@ -738,7 +738,7 @@ class PhysicsMenu(bpy.types.Menu):
         insertNode(layout, "NLActionAddPhysicsConstraint", "Add Constraint")
         insertNode(layout, "NLActionRemovePhysicsConstraint", "Remove Constraint")
         layout.separator()
-        insertNode(layout, "NLActionSetPhysicsNode", "Set Phyics")
+        insertNode(layout, "NLActionSetPhysicsNode", "Set Physics")
         insertNode(layout, "NLActionSetCharacterGravity", "Set Gravity")
         insertNode(layout, "NLActionSetDynamicsNode", "Set Dynamics")
         insertNode(layout, "NLSetRigidBody", "Set Rigid Body")
@@ -755,7 +755,7 @@ class VehicleMenu(bpy.types.Menu):
         layout.separator()
         insertNode(layout, "NLVehicleApplyEngineForce", "Accelerate")
         insertNode(layout, "NLVehicleApplyBraking", "Brake")
-        insertNode(layout, "NLVehicleSetAttributes", "Set Attributes")
+        insertNode(layout, "NLVehicleSetAttributes", "Set Vehicle Attributes")
         insertNode(layout, "NLVehicleApplySteering", "Steer")
 
 
@@ -868,7 +868,7 @@ class ListMenu(bpy.types.Menu):
     def draw(self, context):
         layout = self.layout
         insertNode(layout, "NLInitEmptyList", "Create Empty")
-        insertNode(layout, "NLInitNewList", "Create From Items")
+        insertNode(layout, "NLInitNewList", "List From Items")
         layout.separator()
         insertNode(layout, "NLAppendListItem", "Append")
         insertNode(layout, "NLExtendList", "Extend")
@@ -940,7 +940,7 @@ class RenderMenu(bpy.types.Menu):
         insertNode(layout, "NLGetVsyncNode", "Get VSync")
         insertNode(layout, "NLActionSetFullscreen", "Set Fullscreen")
         insertNode(layout, "NLActionSetResolution", "Set Resolution")
-        insertNode(layout, "NLActionSetVSync", "Set Vsync")
+        insertNode(layout, "NLActionSetVSync", "Set VSync")
         insertNode(layout, "NLShowFramerate", "Show Framerate")
         insertNode(layout, "NLSetProfile", "Show Profile")
 

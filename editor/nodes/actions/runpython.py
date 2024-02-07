@@ -23,7 +23,7 @@ class LogicNodeRunPython(LogicNodeActionType):
                 ipt.enabled = enabled
             self.outputs[1].enabled = enabled
 
-    mode: EnumProperty(items=_enum_python_types, update=update_draw)
+    mode: EnumProperty(items=_enum_python_types, update=update_draw, name='Mode')
 
     def init(self, context):
         self.add_input(NodeSocketLogicCondition, "Condition", None, {'default_value': True, 'show_prop': True})

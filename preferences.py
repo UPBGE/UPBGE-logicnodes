@@ -19,11 +19,6 @@ class LogicNodesAddonPreferences(bpy.types.AddonPreferences):
     use_node_debug: bpy.props.BoolProperty(default=True)
     use_node_notify: bpy.props.BoolProperty(default=True)
     prop_filter: bpy.props.PointerProperty(type=LogicNodesPropertyFilter)
-    use_vr_audio_space: bpy.props.BoolProperty(name='Use VR Audio Space', default=False)
-    jump_in_game_cam: bpy.props.BoolProperty(name='Use Game Camera On Start', default=False)
-    use_screen_console: bpy.props.BoolProperty(name='Screen Console', description='Print messages to an on-screen console.\nNeeds at least one uplogic import or Logic Node Tree.\nNote: Errors are not printed to this console')
-    screen_console_key: bpy.props.StringProperty(name='Screen Console Key', description='', default='BACKSLASH')
-    screen_console_open: bpy.props.BoolProperty(name='Open', description='Start the game with the on-screen console already open')
     use_fmod_nodes: bpy.props.BoolProperty(name='FMOD Support', description='')
 
     custom_logic_nodes: bpy.props.CollectionProperty(

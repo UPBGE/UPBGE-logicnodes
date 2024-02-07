@@ -15,7 +15,7 @@ class NodeSocketLogicMatrix(NodeSocket, NodeSocketLogic):
     bl_idname = "NodeSocketLogicMatrix"
     bl_label = "Matrix"
 
-    dimensions: EnumProperty(items=_enum_matrix_dimensions)
+    dimensions: EnumProperty(items=_enum_matrix_dimensions, name='Dimensions')
 
     value_xx: FloatProperty(default=0)
     value_xy: FloatProperty(default=0)

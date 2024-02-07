@@ -12,9 +12,10 @@ from bpy.props import EnumProperty
 @node_type
 class LoigcNodeVehicleSetAttributes(LogicNodeActionType):
     bl_idname = "NLVehicleSetAttributes"
-    bl_label = "Set Attributes"
+    bl_label = "Set Vehicle Attributes"
     nl_module = 'uplogic.nodes.actions'
     nl_class = "ULVehicleSetAttributes"
+    bl_width_default = 180
 
     search_tags = [
         ['Set Vehicle Attributes', {}]

@@ -23,7 +23,7 @@ class LogicNodeTypecast(LogicNodeParameterType):
         self.outputs[2].enabled = self.to_type == 'str'
         self.outputs[3].enabled = self.to_type == 'float'
 
-    to_type: EnumProperty(items=_enum_type_casts, update=update_draw)
+    to_type: EnumProperty(items=_enum_type_casts, update=update_draw, name='To Type')
 
     def init(self, context):
         self.add_input(NodeSocketLogicValue, "")

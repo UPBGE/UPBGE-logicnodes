@@ -14,7 +14,8 @@ class LogicNodeRangedThreshold(LogicNodeParameterType):
     nl_module = 'uplogic.nodes.parameters'
 
     operator: EnumProperty(
-        items=_enum_in_or_out
+        items=_enum_in_or_out,
+        name='Mode'
     )
 
     def init(self, context):

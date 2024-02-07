@@ -5,7 +5,6 @@ from .socket import SOCKET_TYPE_VECTOR
 from .socket import SOCKET_TYPE_MATRIX
 from .socket import SOCKET_TYPE_COLOR
 from .socket import socket_type
-from .socket import update_draw
 from bpy.types import NodeSocket
 from bpy.props import FloatProperty
 from bpy.props import FloatVectorProperty

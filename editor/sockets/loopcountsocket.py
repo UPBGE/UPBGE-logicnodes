@@ -9,7 +9,7 @@ from bpy.props import IntProperty
 _loops = [
     (
         "0",
-        "Play",
+        "Once",
         (
             'Play once when condition is TRUE, then wait for '
             'the condition to become TRUE again to play it again.'

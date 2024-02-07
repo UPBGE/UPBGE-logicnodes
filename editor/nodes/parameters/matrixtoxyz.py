@@ -27,7 +27,8 @@ class LogicNodeMatrixToXYZ(LogicNodeParameterType):
     )
 
     euler_order: EnumProperty(
-        items=_enum_euler_orders
+        items=_enum_euler_orders,
+        name='Euler Order'
     )
 
     def init(self, context):

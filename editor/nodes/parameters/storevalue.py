@@ -20,7 +20,7 @@ class LogicNodeStoreValue(LogicNodeParameterType):
 
     def init(self, context):
         self.add_input(NodeSocketLogicCondition, "Condition")
-        self.add_input(NodeSocketLogicValue, "Value")
+        self.add_input(NodeSocketLogicValue, "")
         self.add_output(NodeSocketLogicParameter, "Stored Value")
         LogicNodeParameterType.init(self, context)
 

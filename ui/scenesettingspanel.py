@@ -18,15 +18,15 @@ class LOGIC_NODES_PT_scene_settings(bpy.types.Panel):
     def draw(self, context):
         layout = self.layout
         prefs = preferences()
-        layout.prop(prefs, 'jump_in_game_cam')
-        layout.prop(prefs, 'use_vr_audio_space')
+        layout.prop(context.scene, 'jump_in_game_cam')
+        layout.prop(context.scene, 'use_vr_audio_space')
         row = layout.row()
-        row.prop(prefs, 'use_screen_console')
+        row.prop(context.scene, 'use_screen_console')
         part = row.row()
-        part.prop(prefs, 'screen_console_open')
+        part.prop(context.scene, 'screen_console_open')
         # op = layout.operator("logic_nodes.key_selector", text=prefs.screen_console_key)
         # op.is_socket = False
-        part.enabled = getattr(prefs, 'use_screen_console', False)
+        part.enabled = getattr(context.scene, 'use_screen_console', False)
 
         use_mainloop = context.scene.get('__main__', '') != ''
         layout.operator(

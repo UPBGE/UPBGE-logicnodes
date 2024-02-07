@@ -65,4 +65,4 @@ class NodeSocketLogicNavMesh(NodeSocket, NodeSocketLogic):
         if self.use_owner:
             return 'game_object'
         if isinstance(self.default_value, Object):
-            return f'scene.objects[{self.default_value.name}]'
+            return f'scene.objects.get("{self.default_value.name}")'
