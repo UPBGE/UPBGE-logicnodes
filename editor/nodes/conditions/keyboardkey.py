@@ -9,7 +9,7 @@ from bpy.props import EnumProperty
 @node_type
 class LogicNodeKeyboardKey(LogicNodeConditionType):
     bl_idname = "NLKeyPressedCondition"
-    bl_label = "Key"
+    bl_label = "Keyboard Key"
     nl_module = 'uplogic.nodes.conditions'
     nl_class = "ULKeyPressed"
 

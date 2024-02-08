@@ -11,7 +11,7 @@ from bpy.props import EnumProperty
 @node_type
 class LogicNodeSetProperty(LogicNodeActionType):
     bl_idname = "NLSetGameObjectGamePropertyActionNode"
-    bl_label = "Set Property"
+    bl_label = "Set Object Property"
     nl_module = 'uplogic.nodes.actions'
     nl_class = "ULSetProperty"
 

@@ -12,7 +12,7 @@ from bpy.props import EnumProperty
 @node_type
 class LogicNodeToggleProperty(LogicNodeActionType):
     bl_idname = "NLToggleGameObjectGamePropertyActionNode"
-    bl_label = "Toggle Property"
+    bl_label = "Toggle Object Property"
     nl_module = 'uplogic.nodes.actions'
 
     mode: EnumProperty(

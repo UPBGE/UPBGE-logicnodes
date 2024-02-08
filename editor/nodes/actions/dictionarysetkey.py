@@ -9,7 +9,7 @@ from ...sockets import NodeSocketLogicValue
 @node_type
 class LogicNodeDictionarySetKey(LogicNodeActionType):
     bl_idname = "NLSetDictKeyValue"
-    bl_label = "Set Key"
+    bl_label = "Set Dictionary Key"
     nl_module = 'uplogic.nodes.actions'
     nl_class = "ULSetDictKey"
 

@@ -10,7 +10,7 @@ from bpy.props import EnumProperty
 @node_type
 class LogicNodeGetProperty(LogicNodeParameterType):
     bl_idname = "NLGameObjectPropertyParameterNode"
-    bl_label = "Get Property"
+    bl_label = "Get Object Property"
     nl_module = 'uplogic.nodes.parameters'
     nl_class = "ULGetProperty"
 

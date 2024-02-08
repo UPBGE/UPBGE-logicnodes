@@ -7,7 +7,7 @@ from ...sockets import NodeSocketLogicList
 @node_type
 class LogicNodeListEmpty(LogicNodeParameterType):
     bl_idname = "NLInitEmptyList"
-    bl_label = "Create Empty List"
+    bl_label = "New List"
     nl_module = 'uplogic.nodes.parameters'
 
     def init(self, context):

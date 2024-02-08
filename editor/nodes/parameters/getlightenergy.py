@@ -7,12 +7,12 @@ from ...sockets import NodeSocketLogicFloat
 @node_type
 class LogicNodeGetLightEnergy(LogicNodeParameterType):
     bl_idname = "NLGetLightEnergy"
-    bl_label = "Get Light Energy"
+    bl_label = "Get Light Power"
     nl_module = 'uplogic.nodes.parameters'
 
     def init(self, context):
         self.add_input(NodeSocketLogicLight, "Light Object")
-        self.add_output(NodeSocketLogicFloat, 'Enery')
+        self.add_output(NodeSocketLogicFloat, 'Power')
         LogicNodeParameterType.init(self, context)
 
     def get_output_names(self):

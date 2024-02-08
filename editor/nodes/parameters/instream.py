@@ -9,7 +9,7 @@ from ...sockets import NodeSocketLogicString
 @node_type
 class LogicNodeInStream(LogicNodeParameterType):
     bl_idname = "NLKeyLoggerAction"
-    bl_label = "Logger"
+    bl_label = "Key Logger"
     nl_module = 'uplogic.nodes.parameters'
     nl_class = "ULKeyLogger"
 
