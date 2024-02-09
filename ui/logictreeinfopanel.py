@@ -6,7 +6,7 @@ from ..utilities import make_valid_name
 
 @ui_panel
 class LOGIC_NODES_PT_logic_tree_info_panel(bpy.types.Panel):
-    bl_label = "Tree applied to:"
+    bl_label = "Tree applied to"
     bl_space_type = "NODE_EDITOR"
     bl_region_type = "UI"
     bl_category = "Dashboard"
