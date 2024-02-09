@@ -8,7 +8,7 @@ from ..node import node_type
 @node_type
 class LogicNodeReceiveEvent(LogicNodeConditionType):
     bl_idname = "NLParameterReceiveMessage"
-    bl_label = "Receive"
+    bl_label = "Receive Event"
     nl_module = 'uplogic.nodes.conditions'
     nl_class = "ULHandleEvent"
 

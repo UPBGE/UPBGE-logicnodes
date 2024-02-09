@@ -30,7 +30,7 @@ def draw_add_menu(self, context):
     layout.menu("LN_MT_math_menu", text="Math", icon="RIGHTARROW_THIN")
     layout.menu("LN_MT_physics_menu", text="Physics", icon="RIGHTARROW_THIN")
     layout.menu("LN_MT_python_menu", text="Python", icon="RIGHTARROW_THIN")
-    layout.menu("LN_MT_raycast_menu", text="Ray Casts", icon="RIGHTARROW_THIN")
+    layout.menu("LN_MT_raycast_menu", text="Raycasts", icon="RIGHTARROW_THIN")
     layout.menu("LN_MT_time_menu", text="Time", icon="RIGHTARROW_THIN")
     layout.separator()
     layout.menu("LN_MT_data_menu", text="Data", icon="RIGHTARROW_THIN")
@@ -62,8 +62,8 @@ class CustomEventsMenu(bpy.types.Menu):
 
     def draw(self, context):
         layout = self.layout
-        insertNode(layout, "NLActionCreateMessage", "Send")
-        insertNode(layout, "NLParameterReceiveMessage", "Receive")
+        insertNode(layout, "NLActionCreateMessage", "Send Event")
+        insertNode(layout, "NLParameterReceiveMessage", "Receive Event")
 
 
 @menu_item
@@ -75,7 +75,7 @@ class EventsMenu(bpy.types.Menu):
         layout = self.layout
         insertNode(layout, "NLOnInitConditionNode", "On Init")
         insertNode(layout, "NLOnUpdateConditionNode", "On Update")
-        insertNode(layout, "NLConditionNextFrameNode", "On Next Tick")
+        insertNode(layout, "NLConditionNextFrameNode", "On Next Frame")
         insertNode(layout, "NLConditionValueTriggerNode", "On Value Changed To")
         insertNode(layout, "NLConditionValueChanged", "On Value Changed")
         insertNode(layout, "NLConditionOnceNode", "Once")
@@ -90,7 +90,7 @@ class GameMenu(bpy.types.Menu):
 
     def draw(self, context):
         layout = self.layout
-        insertNode(layout, "NLActionStartGame", "Jump To File")
+        insertNode(layout, "NLActionStartGame", "Load Blender File")
         insertNode(layout, "NLActionLoadGame", "Load Game")
         insertNode(layout, "NLActionEndGame", "Quit Game")
         insertNode(layout, "NLActionRestartGame", "Restart Game")
@@ -117,13 +117,13 @@ class MouseMenu(bpy.types.Menu):
 
     def draw(self, context):
         layout = self.layout
-        insertNode(layout, "NLMousePressedCondition", "Button")
-        insertNode(layout, "NLMouseMovedCondition", "Moved")
-        insertNode(layout, "NLConditionMouseTargetingNode", "Over")
+        insertNode(layout, "NLMousePressedCondition", "Mouse Button")
+        insertNode(layout, "NLMouseMovedCondition", "Mouse Moved")
+        insertNode(layout, "NLConditionMouseTargetingNode", "Mouse Over")
         insertNode(layout, "NLMouseDataParameter", "Mouse Status")
         layout.separator()
         insertNode(layout, "NLActionSetMouseCursorVisibility", "Cursor Visibility")
-        insertNode(layout, "NLActionSetMousePosition", "Set Position")
+        insertNode(layout, "NLActionSetMousePosition", "Set Cursor Position")
         # insertNode(layout, "NLConditionMouseWheelMoved", "Wheel")
         layout.separator()
         insertNode(layout, "NLActionMouseLookNode", "Mouse Look")
@@ -136,12 +136,12 @@ class KeyboardMenu(bpy.types.Menu):
 
     def draw(self, context):
         layout = self.layout
-        insertNode(layout, "NLKeyPressedCondition", "Key")
+        insertNode(layout, "NLKeyPressedCondition", "Keyboard Key")
         # insertNode(layout, "NLKeyReleasedCondition", "Key Up")
         insertNode(layout, "NLKeyboardActive", "Keyboard Active")
         layout.separator()
         insertNode(layout, "NLParameterKeyboardKeyCode", "Key Code")
-        insertNode(layout, "NLKeyLoggerAction", "Logger")
+        insertNode(layout, "NLKeyLoggerAction", "Key Logger")
 
 
 @menu_item
@@ -152,12 +152,12 @@ class GamepadMenu(bpy.types.Menu):
     def draw(self, context):
         layout = self.layout
         # insertNode(layout, "NLGamepadButtonUpCondition", "Button Up")
-        insertNode(layout, "NLGamepadButtonsCondition", "Button")
-        insertNode(layout, "NLGamepadSticksCondition", "Sticks")
+        insertNode(layout, "NLGamepadButtonsCondition", "Gamepad Button")
+        insertNode(layout, "NLGamepadSticksCondition", "Gamepad Sticks")
         # insertNode(layout, "NLGamepadTriggerCondition", "Trigger")
         insertNode(layout, "NLGamepadActive", "Gamepad Active")
         layout.separator()
-        insertNode(layout, "NLGamepadVibration", "Vibration")
+        insertNode(layout, "NLGamepadVibration", "Gamepad Vibrate")
         insertNode(layout, "NLGamepadLook", "Gamepad Look")
 
 
@@ -238,9 +238,9 @@ class VectorValuesMenu(bpy.types.Menu):
         insertNode(layout, "NLParameterRGBANode", "Color RGBA")
         insertNode(layout, "NLParameterVector2SplitNode", "Separate XY")
         insertNode(layout, "NLParameterVector3SplitNode", "Separate XYZ")
-        insertNode(layout, "NLParameterVector2SimpleNode", "Vector XY")
-        insertNode(layout, "NLParameterVector3SimpleNode", "Vector XYZ")
-        insertNode(layout, "NLParameterVector4SimpleNode", "Vector XYZW")
+        insertNode(layout, "NLParameterVector2SimpleNode", "Combine XY")
+        insertNode(layout, "NLParameterVector3SimpleNode", "Combine XYZ")
+        insertNode(layout, "NLParameterVector4SimpleNode", "Combine XYZW")
         insertNode(layout, "NLParameterEulerSimpleNode", "Euler")
         insertNode(layout, "LogicNodeResizeVector", "Resize Vector")
 
@@ -306,10 +306,10 @@ class LightsMenu(bpy.types.Menu):
         layout = self.layout
         insertNode(layout, "NLGetLightColorAction", "Get Light Color")
         insertNode(layout, "NLSetLightColorAction", "Set Light Color")
-        insertNode(layout, "NLGetLightEnergy", "Get Light Energy")
-        insertNode(layout, "NLSetLightEnergyAction", "Set Light Energy")
+        insertNode(layout, "NLGetLightEnergy", "Get Light Power")
+        insertNode(layout, "NLSetLightEnergyAction", "Set Light Power")
         insertNode(layout, "NLSetLightShadowAction", "Set Light Shadow")
-        insertNode(layout, "NLMakeUniqueLight", "Make Unique")
+        insertNode(layout, "NLMakeUniqueLight", "Make Light Unique")
 
 
 @menu_item
@@ -335,7 +335,7 @@ class MatNodesMenu(bpy.types.Menu):
         insertNode(layout, "NLPlayMaterialSequence", "Play Sequence")
         layout.separator()
         insertNode(layout, "NLGetMaterialNodeValue", "Get Socket Value")
-        insertNode(layout, "NLSetMaterialNodeValue", "Set Socket Value")
+        insertNode(layout, "NLSetMaterialNodeValue", "Set Socket")
         layout.separator()
         insertNode(layout, "NLGetMaterialNodeAttribute", "Get Node Value")
         insertNode(layout, "NLSetMaterialNodeAttribute", "Set Node Value")
@@ -349,7 +349,7 @@ class GeoNodesMenu(bpy.types.Menu):
     def draw(self, context):
         layout = self.layout
         insertNode(layout, "NLGetGeometryNodeValue", "Get Socket Value")
-        insertNode(layout, "NLSetGeometryNodeValue", "Set Socket Value")
+        insertNode(layout, "NLSetGeometryNodeValue", "Set Socket")
         layout.separator()
         insertNode(layout, "NLGetGeometryNodeAttribute", "Get Node Value")
         insertNode(layout, "NLSetGeometryNodeAttribute", "Set Node Value")
@@ -363,7 +363,7 @@ class GroupNodesMenu(bpy.types.Menu):
     def draw(self, context):
         layout = self.layout
         insertNode(layout, "NLGetNodeGroupNodeValue", "Get Socket Value")
-        insertNode(layout, "NLSetNodeTreeNodeValue", "Set Socket Value")
+        insertNode(layout, "NLSetNodeTreeNodeValue", "Set Socket")
         layout.separator()
         insertNode(layout, "NLGetNodeTreeNodeAttribute", "Get Node Value")
         insertNode(layout, "NLSetNodeTreeNodeAttribute", "Set Node Value")
@@ -453,7 +453,7 @@ class ObjectDataMenu(bpy.types.Menu):
     def draw(self, context):
         layout = self.layout
         insertNode(layout, "NLParameterAxisVector", "Get Axis Vector")
-        insertNode(layout, "NLGetObjectDataName", "Get Internal Name")
+        insertNode(layout, "NLGetObjectDataName", "Get Object ID")
         insertNode(layout, "NLGetObjectVertices", "Get Vertices")
         # insertNode(layout, "NLObjectAttributeParameterNode", "Get Position / Rotation / Scale etc.")
         insertNode(layout, "NLActionReplaceMesh", "Replace Mesh")
@@ -547,8 +547,8 @@ class CameraMenu(bpy.types.Menu):
 
     def draw(self, context):
         layout = self.layout
-        insertNode(layout, "NLActiveCameraParameterNode", "Get Active Camera")
-        insertNode(layout, "NLActionSetActiveCamera", "Set Active Camera")
+        insertNode(layout, "NLActiveCameraParameterNode", "Active Camera")
+        insertNode(layout, "NLActionSetActiveCamera", "Set Camera")
         insertNode(layout, "NLActionSetCameraFov", "Set FOV")
         insertNode(layout, "NLActionSetCameraOrthoScale", "Set Orthographic Scale")
         insertNode(layout, "NLParameterScreenPosition", "World To Screen")
@@ -581,7 +581,7 @@ class CollectionsMenu(bpy.types.Menu):
         layout.separator()
         insertNode(layout, "NLActionSetCollectionVisibility", "Set Collection Visibility")
         insertNode(layout, "NLSetOverlayCollection", "Set Overlay Collection")
-        insertNode(layout, "NLRemoveOverlayCollection", "Remove Overlay Collections")
+        insertNode(layout, "NLRemoveOverlayCollection", "Remove Overlay Collection")
 
 
 @menu_item
@@ -655,7 +655,7 @@ class LogicTreeMenu(bpy.types.Menu):
     def draw(self, context):
         layout = self.layout
         insertNode(layout, "NLStartLogicNetworkActionNode", "Start Logic Tree")
-        insertNode(layout, "NLActionExecuteNetwork", "Execute Logic Tree")
+        insertNode(layout, "NLActionExecuteNetwork", "Run Logic Tree")
         insertNode(layout, "NLStopLogicNetworkActionNode", "Stop Logic Tree")
         layout.separator()
         insertNode(layout, "NLActionInstallSubNetwork", "Add Logic Tree to Object")
@@ -784,9 +784,9 @@ class PythonMenu(bpy.types.Menu):
         layout = self.layout
         insertNode(layout, "NLParameterPythonModuleFunction", "Run Python Code")
         layout.separator()
-        insertNode(layout, "NLParameterGetAttribute", "Get Object Attribute")
+        insertNode(layout, "NLParameterGetAttribute", "Get Instance Attribute")
         insertNode(layout, "NLParameterSetAttribute", "Set Object Attribute")
-        insertNode(layout, "NLParameterTypeCast", "Typecast")
+        insertNode(layout, "NLParameterTypeCast", "Typecast Value")
 
 
 @menu_item
@@ -857,7 +857,7 @@ class DataMenu(bpy.types.Menu):
         layout.menu("LN_MT_variable_menu", text="Variables", icon="RIGHTARROW_THIN")
         layout.separator()
         insertNode(layout, "NLLoadScene", "Load Scene")
-        insertNode(layout, "NLLoadFileContent", "Load File")
+        insertNode(layout, "NLLoadFileContent", "Load File Content")
 
 
 @menu_item
@@ -867,7 +867,7 @@ class ListMenu(bpy.types.Menu):
 
     def draw(self, context):
         layout = self.layout
-        insertNode(layout, "NLInitEmptyList", "Create Empty")
+        insertNode(layout, "NLInitEmptyList", "New List")
         insertNode(layout, "NLInitNewList", "List From Items")
         layout.separator()
         insertNode(layout, "NLAppendListItem", "Append")
@@ -875,9 +875,9 @@ class ListMenu(bpy.types.Menu):
         insertNode(layout, "NLRemoveListIndex", "Remove Index")
         insertNode(layout, "NLRemoveListValue", "Remove Value")
         layout.separator()
-        insertNode(layout, "NLGetListIndexNode", "Get Index")
-        insertNode(layout, "NLSetListIndex", "Set Index")
-        insertNode(layout, "NLGetRandomListIndex", "Get Random Item")
+        insertNode(layout, "NLGetListIndexNode", "Get List Index")
+        insertNode(layout, "NLSetListIndex", "Set List Index")
+        insertNode(layout, "NLGetRandomListIndex", "Get Random List Item")
         insertNode(layout, "NLDuplicateList", "Duplicate")
 
 
@@ -888,12 +888,12 @@ class DictMenu(bpy.types.Menu):
 
     def draw(self, context):
         layout = self.layout
-        insertNode(layout, "NLInitEmptyDict", "Create Empty")
-        insertNode(layout, "NLInitNewDict", "Create From Item")
+        insertNode(layout, "NLInitEmptyDict", "New Dictionary")
+        insertNode(layout, "NLInitNewDict", "Dictionary From Items")
         layout.separator()
-        insertNode(layout, "NLGetDictKeyNode", "Get Key")
-        insertNode(layout, "NLSetDictKeyValue", "Set Key")
-        insertNode(layout, "NLSetDictDelKey", "Remove Key")
+        insertNode(layout, "NLGetDictKeyNode", "Get Dictionary Key")
+        insertNode(layout, "NLSetDictKeyValue", "Set Dictionary Key")
+        insertNode(layout, "NLSetDictDelKey", "Remove Dictionary Key")
 
 
 @menu_item
@@ -903,12 +903,12 @@ class VariableMenu(bpy.types.Menu):
 
     def draw(self, context):
         layout = self.layout
-        insertNode(layout, "NLActionSaveVariable", "Save Variable")
         insertNode(layout, "NLActionLoadVariable", "Load Variable")
+        insertNode(layout, "NLActionSaveVariable", "Save Variable")
         insertNode(layout, "NLActionRemoveVariable", "Remove Variable")
         layout.separator()
-        insertNode(layout, "NLActionSaveVariables", "Save Variable Dict")
         insertNode(layout, "NLActionLoadVariables", "Load Variable Dict")
+        insertNode(layout, "NLActionSaveVariables", "Save Variable Dict")
         insertNode(layout, "NLActionClearVariables", "Clear Variables")
         layout.separator()
         insertNode(layout, "NLActionListVariables", "List Saved Variables")
@@ -936,10 +936,10 @@ class RenderMenu(bpy.types.Menu):
         layout.menu("LN_MT_eevee_menu", text="EEVEE", icon="RIGHTARROW_THIN")
         layout.separator()
         insertNode(layout, "NLGetFullscreen", "Get Fullscreen")
-        insertNode(layout, "NLGetResolution", "Get Resolution")
-        insertNode(layout, "NLGetVsyncNode", "Get VSync")
         insertNode(layout, "NLActionSetFullscreen", "Set Fullscreen")
+        insertNode(layout, "NLGetResolution", "Get Resolution")
         insertNode(layout, "NLActionSetResolution", "Set Resolution")
+        insertNode(layout, "NLGetVsyncNode", "Get VSync")
         insertNode(layout, "NLActionSetVSync", "Set VSync")
         insertNode(layout, "NLShowFramerate", "Show Framerate")
         insertNode(layout, "NLSetProfile", "Show Profile")

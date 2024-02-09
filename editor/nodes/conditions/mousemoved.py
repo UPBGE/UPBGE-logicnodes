@@ -7,7 +7,7 @@ from bpy.props import BoolProperty
 @node_type
 class LogicNodeMouseMoved(LogicNodeConditionType):
     bl_idname = "NLMouseMovedCondition"
-    bl_label = "Moved"
+    bl_label = "Mouse Moved"
     nl_module = 'uplogic.nodes.conditions'
     nl_class = "ULMouseMoved"
 

@@ -10,7 +10,7 @@ from bpy.props import EnumProperty
 @node_type
 class LogicNodeCopyProperty(LogicNodeActionType):
     bl_idname = "NLCopyPropertyFromObject"
-    bl_label = "Copy From Object"
+    bl_label = "Copy Property From Object"
     nl_module = 'uplogic.nodes.actions'
     nl_class = "ULCopyProperty"
 

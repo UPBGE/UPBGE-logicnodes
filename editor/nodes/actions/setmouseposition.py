@@ -7,7 +7,7 @@ from ...sockets import NodeSocketLogicFloat
 @node_type
 class LogicNodeSetMousePosition(LogicNodeActionType):
     bl_idname = "NLActionSetMousePosition"
-    bl_label = "Set Position"
+    bl_label = "Set Cursor Position"
     nl_module = 'uplogic.nodes.actions'
     nl_class = "ULSetMousePosition"
 

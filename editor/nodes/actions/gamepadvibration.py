@@ -10,7 +10,7 @@ from ...sockets import NodeSocketLogicTime
 @node_type
 class LogicNodeGamepadVibration(LogicNodeActionType):
     bl_idname = "NLGamepadVibration"
-    bl_label = "Vibration"
+    bl_label = "Gamepad Vibrate"
     nl_module = 'uplogic.nodes.actions'
 
     def init(self, context):

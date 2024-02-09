@@ -8,14 +8,14 @@ from ...sockets import NodeSocketLogicFloat
 @node_type
 class LogicNodeSetLightEnergy(LogicNodeActionType):
     bl_idname = "NLSetLightEnergyAction"
-    bl_label = "Set Light Energy"
+    bl_label = "Set Light Power"
     nl_module = 'uplogic.nodes.actions'
     nl_class = "ULSetLightEnergy"
 
     def init(self, context):
         self.add_input(NodeSocketLogicCondition, 'Condition')
         self.add_input(NodeSocketLogicLight, 'Light Object')
-        self.add_input(NodeSocketLogicFloat, 'Energy')
+        self.add_input(NodeSocketLogicFloat, 'Power')
         self.add_output(NodeSocketLogicCondition, 'Done')
         LogicNodeActionType.init(self, context)
 

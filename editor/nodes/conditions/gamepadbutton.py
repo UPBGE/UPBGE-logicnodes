@@ -11,7 +11,7 @@ from bpy.props import EnumProperty
 @node_type
 class LogicNodeGamepadButton(LogicNodeConditionType):
     bl_idname = "NLGamepadButtonsCondition"
-    bl_label = "Button"
+    bl_label = "Gamepad Button"
     nl_module = 'uplogic.nodes.conditions'
     nl_class = "ULGamepadButton"
 

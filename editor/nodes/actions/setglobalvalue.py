@@ -10,7 +10,7 @@ from ...sockets import NodeSocketLogicBoolean
 @node_type
 class LogicNodeSetGlobalValue(LogicNodeActionType):
     bl_idname = "NLActionSetGlobalValue"
-    bl_label = "Set Global Value"
+    bl_label = "Set Global Property"
     nl_module = 'uplogic.nodes.actions'
     nl_class = "ULSetGlobalValue"
 

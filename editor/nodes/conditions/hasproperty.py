@@ -10,7 +10,7 @@ from bpy.props import EnumProperty
 @node_type
 class LogicNodeHasProperty(LogicNodeConditionType):
     bl_idname = "NLGameObjectHasPropertyParameterNode"
-    bl_label = "Has Property"
+    bl_label = "Object Has Property"
     nl_module = 'uplogic.nodes.conditions'
     nl_class = "ULHasProperty"
 

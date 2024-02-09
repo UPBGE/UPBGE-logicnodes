@@ -10,7 +10,7 @@ from ...sockets import NodeSocketLogicValue
 @node_type
 class LogicNodeSetGeometryNodeProperty(LogicNodeActionType):
     bl_idname = "NLSetGeometryNodeAttribute"
-    bl_label = "Set Node Property"
+    bl_label = "Set Node Value"
     nl_module = 'uplogic.nodes.actions'
     # deprecated = True
 

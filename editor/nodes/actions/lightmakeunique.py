@@ -7,7 +7,7 @@ from ...sockets import NodeSocketLogicLight
 @node_type
 class LogicNodeLightMakeUnique(LogicNodeActionType):
     bl_idname = "NLMakeUniqueLight"
-    bl_label = "Make Unique"
+    bl_label = "Make Light Unique"
     nl_module = 'uplogic.nodes.actions'
     nl_class = "ULMakeUniqueLight"
 

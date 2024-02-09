@@ -13,7 +13,7 @@ from bpy.props import BoolProperty
 @node_type
 class LogicNodeModifyProperty(LogicNodeActionType):
     bl_idname = "NLAddToGameObjectGamePropertyActionNode"
-    bl_label = "Modify Property"
+    bl_label = "Modify Object Property"
     nl_module = 'uplogic.nodes.actions'
     nl_class = "ULModifyProperty"
 

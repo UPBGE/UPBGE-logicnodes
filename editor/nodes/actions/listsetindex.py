@@ -9,7 +9,7 @@ from ...sockets import NodeSocketLogicValue
 @node_type
 class LogicNodeListSetIndex(LogicNodeActionType):
     bl_idname = "NLSetListIndex"
-    bl_label = "Set Index"
+    bl_label = "Set List Index"
     nl_module = 'uplogic.nodes.actions'
     nl_class = "ULSetListIndex"
 
