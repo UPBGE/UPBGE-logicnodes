@@ -85,7 +85,12 @@ class LogicNodeGetObjectAttr(LogicNodeParameterType):
         ['Get Visibility', {'nl_label': 'Get Visibility', 'attr_name': 'visibility'}]
     ]
 
-    attr_name: EnumProperty(items=_enum_readable_member_names, name="", default="worldPosition", update=update_draw)
+    attr_name: EnumProperty(
+        items=_enum_readable_member_names,
+        name="Get Attribute",   
+        default="worldPosition",
+        update=update_draw
+    )
 
 
     def init(self, context):

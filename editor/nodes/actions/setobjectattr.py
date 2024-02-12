@@ -12,7 +12,7 @@ from bpy.props import EnumProperty
 @node_type
 class LogicNodeSetObjectAttr(LogicNodeActionType):
     bl_idname = "NLSetObjectAttributeActionNode"
-    bl_label = "Set Position / Rotation / Scale etc."
+    bl_label = "Set Attribute"
     nl_module = 'uplogic.nodes.actions'
     nl_class = "ULSetGameObjectAttribue"
 
@@ -22,7 +22,7 @@ class LogicNodeSetObjectAttr(LogicNodeActionType):
         self.inputs[4].enabled = color
 
     value_type: EnumProperty(
-        name='Attribute',
+        name='Set Attribute',
         items=_enum_writable_member_names,
         default='worldPosition',
         update=update_draw
