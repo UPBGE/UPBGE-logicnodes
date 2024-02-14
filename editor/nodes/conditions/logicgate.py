@@ -33,8 +33,8 @@ class LogicNodeLogicGate(LogicNodeConditionType):
     ]
 
     def init(self, context):
-        self.add_input(NodeSocketLogicCondition, "A")
-        self.add_input(NodeSocketLogicCondition, "B")
+        self.add_input(NodeSocketLogicCondition, "Condition A")
+        self.add_input(NodeSocketLogicCondition, "Condition B")
         self.add_output(NodeSocketLogicCondition, "Result")
         LogicNodeConditionType.init(self, context)
 

@@ -231,7 +231,7 @@ _enum_readable_member_names = [
     (
         "visible",
         "Visibility",
-        "True if the object is set to visible, False if it is set of invisible"
+        "True if the object is set to visible, False if it is set to invisible"
     )
 ]
 

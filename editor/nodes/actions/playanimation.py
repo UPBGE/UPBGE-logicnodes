@@ -34,7 +34,7 @@ class LogicNodePlayAnimation(LogicNodeActionType):
         self.add_input(NodeSocketLogicBoolean, "Stop When Done", None, {'default_value': True})
         self.add_input(NodeSocketLogicFloatFactor, "Layer Weight", None, {'default_value': 1.0})
         self.add_input(NodeSocketLogicFloatPositive, "Speed", None, {'default_value': 1.0})
-        self.add_input(NodeSocketLogicFloat, "Blending")
+        self.add_input(NodeSocketLogicFloat, "Blend-In")
         self.add_input(NodeSocketLogicBlendMode, "Blend Mode")
         self.add_output(NodeSocketLogicCondition, "Started")
         self.add_output(NodeSocketLogicCondition, "Running")

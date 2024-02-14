@@ -20,7 +20,7 @@ class LogicNodeMath(LogicNodeParameterType):
     def init(self, context):
         self.add_input(NodeSocketLogicFloat, "A")
         self.add_input(NodeSocketLogicFloat, "B")
-        self.add_output(NodeSocketLogicParameter, "")
+        self.add_output(NodeSocketLogicParameter, "Result")
         LogicNodeParameterType.init(self, context)
 
     def draw_buttons(self, context, layout):
