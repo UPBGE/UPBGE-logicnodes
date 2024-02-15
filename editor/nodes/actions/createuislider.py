@@ -56,7 +56,7 @@ class LogicNodeCreateUISlider(LogicNodeActionType):
         self.add_input(NodeSocketLogicIntegerPositive, "Steps")
         self.add_input(NodeSocketLogicBoolean, "Bar Control", None, {'default_value': True})
         self.add_output(NodeSocketLogicCondition, "Done")
-        self.add_output(NodeSocketLogicUI, "Label")
+        self.add_output(NodeSocketLogicUI, "Slider")
         self.add_output(NodeSocketLogicFloat, "Slider Value")
         self.add_output(NodeSocketLogicVectorXY, "Knob Position")
         LogicNodeActionType.init(self, context)

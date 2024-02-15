@@ -439,7 +439,7 @@ class PropertyMenu(bpy.types.Menu):
         insertNode(layout, "NLToggleGameObjectGamePropertyActionNode", "Toggle Object Property")
         insertNode(layout, "NLAddToGameObjectGamePropertyActionNode", "Modify Object Property")
         insertNode(layout, "NLObjectPropertyOperator", "Evaluate Object Property")
-        insertNode(layout, "NLCopyPropertyFromObject", "Copy From Object")
+        insertNode(layout, "NLCopyPropertyFromObject", "Copy Property From Object")
         layout.separator()
         insertNode(layout, "NLParameterGetGlobalValue", "Get Global Property")
         insertNode(layout, "NLActionSetGlobalValue", "Set Global Property")
@@ -488,7 +488,7 @@ class GetAttributesMenu(bpy.types.Menu):
 @menu_item
 class SetAttributesMenu(bpy.types.Menu):
     bl_idname = "LN_MT_setattributes_menu"
-    bl_label = "Get Attributes Menu"
+    bl_label = "Set Attributes Menu"
 
     def draw(self, context):
         layout = self.layout

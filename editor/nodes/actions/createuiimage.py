@@ -31,7 +31,7 @@ class LogicNodeCreateUIImage(LogicNodeActionType):
         self.add_input(NodeSocketLogicFloatAngle, "Angle")
         self.add_input(NodeSocketLogicImage, "")
         self.add_output(NodeSocketLogicCondition, "Done")
-        self.add_output(NodeSocketLogicUI, "Label")
+        self.add_output(NodeSocketLogicUI, "Image")
         LogicNodeActionType.init(self, context)
 
     def draw_buttons(self, context, layout) -> None:
