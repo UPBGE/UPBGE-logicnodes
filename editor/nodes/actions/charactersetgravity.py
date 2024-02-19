@@ -8,7 +8,7 @@ from ...sockets import NodeSocketLogicVectorXYZVelocity
 @node_type
 class LogicNodeCharacterSetGravity(LogicNodeActionType):
     bl_idname = "NLActionSetCharacterGravity"
-    bl_label = "Set Gravity"
+    bl_label = "Set Character Gravity"
     nl_module = 'uplogic.nodes.actions'
     nl_class = "ULSetCharacterGravity"
 
