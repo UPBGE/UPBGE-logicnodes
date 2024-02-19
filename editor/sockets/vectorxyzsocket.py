@@ -48,6 +48,6 @@ class NodeSocketLogicVectorXYZ(NodeSocket, NodeSocketLogic):
             cont = layout.column(align=True)
             if text != '':
                 cont.label(text=text)
-            if self.node.width >= 200:
-                cont = cont.row(align=True)
+            # if self.node.width >= 200:
+            #     cont = cont.row(align=True)
             cont.prop(self, 'default_value', text='')

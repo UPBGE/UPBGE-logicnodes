@@ -15,7 +15,7 @@ class LogicNodeLimitRange(LogicNodeParameterType):
 
     operator: EnumProperty(
         items=_enum_in_or_out,
-        name='Operator'
+        name='Mode'
     )
 
     def init(self, context):

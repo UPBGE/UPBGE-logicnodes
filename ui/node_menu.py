@@ -691,6 +691,8 @@ class MathMenu(bpy.types.Menu):
         layout.menu("LN_MT_vector_math_menu", text="Vectors", icon="RIGHTARROW_THIN")
         layout.separator()
         insertNode(layout, "NLInterpolateValueNode", "Interpolate")
+        insertNode(layout, "LogicNodeCurveInterpolation", "Curve Interpolation")
+        insertNode(layout, "LogicNodeTweenValue", "Tween Value")
         insertNode(layout, "NLAbsoluteValue", "Absolute")
         insertNode(layout, "NLClampValueNode", "Clamp")
         insertNode(layout, "NLConditionLogicOperation", "Compare")
