@@ -23,19 +23,20 @@ class LogicNodePrint(LogicNodeActionType):
     )
 
     def init(self, context):
-        self.add_input(NodeSocketLogicCondition, "Condition", None, {'default_value': True, 'show_prop': True})
-        self.add_input(NodeSocketLogicString, "Value", None, {'skip_validation': True})
-        self.add_output(NodeSocketLogicCondition, 'Done')
+        self.add_input(NodeSocketLogicCondition, "Condition", 'condition', {'default_value': True, 'show_prop': True})
+        self.add_input(NodeSocketLogicString, "Value", 'value', {'skip_validation': True})
+        self.add_output(NodeSocketLogicCondition, 'Done', 'OUT')
         LogicNodeActionType.init(self, context)
 
     def draw_buttons(self, context, layout) -> None:
-        layout.prop(self, 'msg_type', text='')
+        if context.scene.use_screen_console:
+            layout.prop(self, 'msg_type', text='')
 
     def get_attributes(self):
         return [("msg_type", f'"{self.msg_type}"')]
 
-    def get_output_names(self):
+    def get_output_names(self):  # XXX Remove for 4.0
         return ["OUT"]
 
-    def get_input_names(self):
+    def get_input_names(self):  # XXX Remove for 4.0
         return ["condition", "value"]
