@@ -7,7 +7,7 @@ from ...sockets import NodeSocketLogicVectorXYZVelocity
 @node_type
 class LogicNodeSetGravity(LogicNodeActionType):
     bl_idname = "NLActionSetGravity"
-    bl_label = "Set Gravity"
+    bl_label = "Set World Gravity"
     nl_module = 'uplogic.nodes.actions'
     nl_class = "ULSetGravity"
 

@@ -11,8 +11,8 @@ class LOGIC_NODES_OT_install_upbge_stubs(Operator):
     bl_idname = "logic_nodes.install_upbge_stubs"
     bl_label = "Install or Update BGE Stub Module"
     bl_description = (
-        'Downloads the latest version of the upbge-stubs module to support autocomplet in your IDE.'
-        'NOTE: This may take a few seconds and requires internet connection.'
+        'Downloads the latest version of the upbge-stubs module to support autocomplete in your IDE.\n'
+        'NOTE: This may take a few seconds and requires internet connection'
     )
     bl_options = {'REGISTER', 'UNDO'}
 
