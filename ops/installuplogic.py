@@ -14,7 +14,7 @@ class LOGIC_NODES_OT_install_uplogic(Operator):
     bl_description = (
         'Downloads the latest version of the uplogic module required for '
         'running logic nodes.\n\n'
-        'NOTE: This may take a few seconds and requires internet connection.'
+        'NOTE: This may take a few seconds and requires internet connection'
     )
     bl_options = {'REGISTER', 'UNDO'}
 

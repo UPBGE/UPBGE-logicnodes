@@ -15,7 +15,7 @@ import bpy
 class LOGIC_NODES_OT_apply_logic_tree(Operator):
     bl_idname = "logic_nodes.apply_logic_tree"
     bl_label = "Apply Logic"
-    bl_description = "Apply the current tree to the selected objects."
+    bl_description = "Apply the current tree to selected objects"
     bl_options = {'REGISTER', 'UNDO'}
 
     owner: StringProperty()
