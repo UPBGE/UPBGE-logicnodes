@@ -34,20 +34,19 @@ class LogicNodeModifyProperty(LogicNodeActionType):
     )
 
     def init(self, context):
-        self.add_input(NodeSocketLogicCondition, "Condition")
-        self.add_input(NodeSocketLogicObject, "Object")
-        self.add_input(NodeSocketLogicGameProperty, "Property", None, {'ref_index': 1})
-        self.add_input(NodeSocketLogicFloat, "Value")
-        self.add_input(NodeSocketLogicFloat, "Min")
-        self.add_input(NodeSocketLogicFloat, "Max", None, {'default_value': 1.0})
-        self.add_output(NodeSocketLogicCondition, "Done")
+        self.add_input(NodeSocketLogicCondition, "Condition", 'condition')
+        self.add_input(NodeSocketLogicObject, "Object", 'game_object')
+        self.add_input(NodeSocketLogicGameProperty, "Property", 'property_name', {'ref_index': 1})
+        self.add_input(NodeSocketLogicFloat, "Value", 'property_value')
+        self.add_input(NodeSocketLogicFloat, "Min", 'min_value')
+        self.add_input(NodeSocketLogicFloat, "Max", 'max_value', {'default_value': 1.0})
+        self.add_output(NodeSocketLogicCondition, "Done", 'OUT')
         LogicNodeActionType.init(self, context)
 
     def draw_buttons(self, context, layout):
         layout.prop(self, "mode", text="")
         layout.prop(self, "operator", text="")
         layout.prop(self, "clamp", text="Clamp")
-
 
     def get_attributes(self):
         return [
@@ -56,7 +55,7 @@ class LogicNodeModifyProperty(LogicNodeActionType):
             ("operator", f'OPERATORS.get("{self.operator}")')
         ]
 
-    def get_input_names(self):
+    def get_input_names(self):  # XXX Remove for 4.0
         return [
             "condition",
             "game_object",
@@ -66,5 +65,5 @@ class LogicNodeModifyProperty(LogicNodeActionType):
             'max_value'
         ]
 
-    def get_output_names(self):
+    def get_output_names(self):  # XXX Remove for 4.0
         return ['OUT']

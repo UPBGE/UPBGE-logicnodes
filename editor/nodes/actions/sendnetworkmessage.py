@@ -3,7 +3,7 @@ from ..node import LogicNodeActionType
 from ...sockets import NodeSocketLogicCondition
 from ...sockets import NodeSocketLogicPython
 from ...sockets import NodeSocketLogicString
-from ...sockets import NodeSocketLogicParameter
+from ...sockets import NodeSocketLogicDictionary
 
 
 @node_type
@@ -16,7 +16,7 @@ class LogicNodeSendNetworkMessage(LogicNodeActionType):
     def init(self, context):
         self.add_input(NodeSocketLogicCondition, "Condition")
         self.add_input(NodeSocketLogicPython, "Server / Client")
-        self.add_input(NodeSocketLogicParameter, "Data")
+        self.add_input(NodeSocketLogicDictionary, "Data")
         self.add_input(NodeSocketLogicString, "Subject")
         self.add_output(NodeSocketLogicCondition, "Done")
         LogicNodeActionType.init(self, context)

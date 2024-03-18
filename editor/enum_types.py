@@ -91,19 +91,6 @@ _enum_object_property_types = [
 ]
 
 
-_enum_2d_filters = [
-    ('FXAA', 'FXAA', 'Fast Anti-Aliasing'),
-    ('HBAO', 'HBAO', 'Horizon-Based Ambient Occlusion'),
-    ('SSAO', 'SSAO', 'Screen-Space Ambient Occlusion'),
-    ('VIGNETTE', 'Vignette', 'Fade to color at screen edges'),
-    ('BRIGHTNESS', 'Brightness', 'Overall brightness'),
-    ('CHROMAB', 'Chromatic Aberration', 'Lens light bending effect'),
-    ('GRAYSCALE', 'Grayscale', 'Convert image to grayscale'),
-    ('LEVELS', 'Levels', 'Control color levels'),
-    ('MIST', 'Mist', 'Classic depth fog implementation')
-]
-
-
 _enum_constraint_types = [
     (
         "bge.constraints.POINTTOPOINT_CONSTRAINT",

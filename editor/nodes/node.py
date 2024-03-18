@@ -1,4 +1,5 @@
 from ...utilities import error
+from ...utilities import warn
 from ...utilities import debug
 from ...utilities import deprecate
 from ...utilities import preferences
@@ -52,6 +53,33 @@ class LogicNode:
             nodes = [node for node in tree.nodes]
             if self in nodes:
                 return tree
+
+    def rebuild(self, name_map={}):
+        ipts = {}
+        for i in self.inputs:
+            connected = []
+            for link in i.links:
+                connected.append(link.from_socket)
+            ipts[name_map.get(i.name, i.name)] = connected
+        opts = {}
+        for i in self.outputs:
+            connected = []
+            for link in i.links:
+                connected.append(link.to_socket)
+            opts[name_map.get(i.name, i.name)] = connected
+        self.inputs.clear()
+        self.outputs.clear()
+        self.init(bpy.context)
+        for i in self.inputs:
+            linked = ipts.get(i.name, None)
+            if linked:
+                for socket in linked:
+                    self.tree.links.new(socket, i)
+        for i in self.outputs:
+            linked = opts.get(i.name, None)
+            if linked:
+                for socket in opts[i.name]:
+                    self.tree.links.new(i, socket)
 
     def group_update(self, nodetree):
         pass
@@ -111,8 +139,9 @@ class LogicNode:
             if not socket.enabled:
                 continue
 
+            # XXX Make this try-except block optional for better error reporting
             try:
-                text += self.write_socket_field_initialization(
+                text += self.set_socket(
                     socket,
                     cell_varname,
                     uids
@@ -140,7 +169,7 @@ class LogicNode:
                 self.color = (1, 0, 0)
         return text
 
-    def write_socket_field_initialization(
+    def set_socket(
         self,
         socket,
         cell_varname,
@@ -150,12 +179,16 @@ class LogicNode:
         input_names = self.get_input_names()
         input_socket_index = self._index_of(socket, self.inputs)
         field_name = None
+        if input_socket_index is None:
+            return text
         if getattr(socket, 'identifier', ''):
             field_name = socket.identifier
         elif input_names:
             field_name = input_names[input_socket_index]
+            setattr(socket, 'identifier', field_name)
         else:
             field_name = self.get_field_name_for_socket(socket)
+            warn(f'Node "{self.bl_label}" has called "get_field_name_for_socket()"! This is a bug, please report if receiving this message.')
         field_value = None
         if not socket.linked_valid:
             field_value = socket.get_unlinked_value()
@@ -248,6 +281,8 @@ class LogicNode:
             return '{}.{}'.format(output_node_varname, varname)
         elif output_map:
             varname = output_map[output_socket_index]
+            setattr(output_socket, 'identifier', varname)
+            print(output_socket.identifier)
             return '{}.{}'.format(output_node_varname, varname)
         else:
             return output_node_varname

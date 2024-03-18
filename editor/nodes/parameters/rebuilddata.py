@@ -1,8 +1,11 @@
 from ..node import node_type
 from ..node import LogicNodeParameterType
 from ...sockets import NodeSocketLogicParameter
+from ...sockets import NodeSocketLogicCondition
+from ...sockets import NodeSocketLogicDictionary
 from ...enum_types import _serialize_types
 from bpy.props import EnumProperty
+import bpy
 
 
 @node_type
@@ -12,15 +15,20 @@ class LogicNodeRebuildData(LogicNodeParameterType):
     nl_module = 'uplogic.nodes.parameters'
     nl_class = "ULRebuildData"
 
+    def update_draw(self, context=None):
+        self.inputs[0].enabled = self.read_as == 'GameObj'
+
     read_as: EnumProperty(
         items=_serialize_types,
         name='Read As',
-        description='Select the correct format to read a python object'
+        description='Select the correct format to read a python object',
+        update=update_draw
     )
 
     def init(self, context):
-        self.add_input(NodeSocketLogicParameter, "Data")
-        self.add_output(NodeSocketLogicParameter, 'Data')
+        self.add_input(NodeSocketLogicCondition, "Condition", 'condition')
+        self.add_input(NodeSocketLogicDictionary, "Data", 'data')
+        self.add_output(NodeSocketLogicParameter, 'Data', 'OUT')
         LogicNodeParameterType.init(self, context)
 
     def draw_buttons(self, context, layout):
@@ -29,8 +37,10 @@ class LogicNodeRebuildData(LogicNodeParameterType):
     def get_attributes(self):
         return [("read_as", f'"{self.read_as}"')]
 
-    def get_input_names(self):
-        return ["data"]
+    def get_input_names(self):  # XXX Remove for 4.0
+        if len(self.inputs) < 2:
+            self.rebuild()
+        return ['condition', "data"]
 
-    def get_output_names(self):
+    def get_output_names(self):  # XXX Remove for 4.0
         return ['OUT']

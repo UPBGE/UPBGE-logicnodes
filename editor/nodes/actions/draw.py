@@ -17,7 +17,8 @@ _draw_types = [
     ('2', 'Path', ''),
     ('3', 'Cube', ''),
     ('4', 'Box', ''),
-    ('5', 'Mesh', '')
+    ('5', 'Mesh', ''),
+    ('6', 'Axis', '')
 ]
 
 
@@ -31,13 +32,14 @@ class LogicNodeDraw(LogicNodeActionType):
     def update_draw(self, context=None):
         mode = int(self.mode)
         ipts = self.inputs
-        ipts[2].enabled = mode not in [2, 5]
+        ipts[1].enabled = mode != 6
+        ipts[2].enabled = mode not in [2, 5, 6]
         ipts[3].enabled = mode < 2
         ipts[4].enabled = mode == 2
         ipts[5].enabled = 2 < mode < 5
-        ipts[6].enabled = mode == 4
+        ipts[6].enabled = mode in [4, 6]
         ipts[7].enabled = mode == 4
-        ipts[8].enabled = mode == 5
+        ipts[8].enabled = mode in [5, 6]
 
     use_volume_origin: BoolProperty(
         name='Use Volume Origin',

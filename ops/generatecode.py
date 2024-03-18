@@ -55,8 +55,8 @@ class LOGIC_NODES_OT_generate_code(Operator):
         logic_trees = [tree for tree in bpy.data.node_groups if tree.bl_idname == LogicNodeTree.bl_idname]
         for tree in logic_trees:
             tree.mark_invalid_links()
-            if tree.changes_staged:
-                TreeCodeGenerator().write_code_for_tree(tree)
+            # if tree.changes_staged:
+            TreeCodeGenerator().write_code_for_tree(tree)
         # try:
         #     context.region.tag_redraw()
         # except Exception:
@@ -79,6 +79,9 @@ class LOGIC_NODES_OT_generate_code(Operator):
                     self.layout.label(text=f'{e}')
 
             bpy.context.window_manager.popup_menu(error_log, title="Something happened during compilation.", icon='INFO')
+            # bpy.app.handlers.game_post.append(
+                
+            # )
         else:
             for tree in logic_trees:
                 tree.changes_staged = False

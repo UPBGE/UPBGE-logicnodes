@@ -58,7 +58,7 @@ class LogicNodeRunPython(LogicNodeActionType):
                 field_value = field_value()
             text += f'        {cell_varname}.{field_name} = {field_value}\n'
         while socket <= 2:
-            text += self.write_socket_field_initialization(
+            text += self.set_socket(
                 self.inputs[socket],
                 cell_varname,
                 uids

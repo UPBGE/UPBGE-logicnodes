@@ -1,6 +1,7 @@
 from ..node import node_type
 from ..node import LogicNodeParameterType
 from ...sockets import NodeSocketLogicParameter
+from ...sockets import NodeSocketLogicDictionary
 from ...enum_types import _serialize_types
 from bpy.props import EnumProperty
 
@@ -20,7 +21,7 @@ class LogicNodeSerializeData(LogicNodeParameterType):
 
     def init(self, context):
         self.add_input(NodeSocketLogicParameter, "Data")
-        self.add_output(NodeSocketLogicParameter, 'Data')
+        self.add_output(NodeSocketLogicDictionary, 'Data')
         LogicNodeParameterType.init(self, context)
 
     def draw_buttons(self, context, layout) -> None:
