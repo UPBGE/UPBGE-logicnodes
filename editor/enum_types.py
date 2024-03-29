@@ -170,31 +170,18 @@ _enum_vehicle_axis = [
 
 
 _enum_readable_member_names = [
-    ("worldPosition", "World Position", "The World Position of the object"),
     ("localPosition", "Local Position", "The local position of the object"),
     (
         "worldOrientation",
         "World Orientation",
         "The World Orientation of the object"
     ), (
-        "localOrientation",
-        "Local Orientation",
-        "The local orientation of the object"
-    ), (
         "worldLinearVelocity",
         "World Linear Velocity",
         "The local linear velocity of the object"
     ), (
-        "localLinearVelocity",
-        "Local Linear Velocity",
-        "The local linear velocity of the object"
-    ), (
         "worldAngularVelocity",
         "World Angular Velocity",
-        "The local angular velocity of the object"
-    ), (
-        "localAngularVelocity",
-        "Local Angular Velocity",
         "The local angular velocity of the object"
     ), (
         "worldTransform",
@@ -203,6 +190,22 @@ _enum_readable_member_names = [
             'The World Transform of the '
             'object'
         )
+    ),
+    ("worldScale", "World Scale", "The global scale of the object"),
+    ("worldPosition", "World Position", "The World Position of the object"),
+    None,
+    (
+        "localOrientation",
+        "Local Orientation",
+        "The local orientation of the object"
+    ), (
+        "localLinearVelocity",
+        "Local Linear Velocity",
+        "The local linear velocity of the object"
+    ), (
+        "localAngularVelocity",
+        "Local Angular Velocity",
+        "The local angular velocity of the object"
     ), (
         "localTransform",
         "Local Transform",
@@ -211,7 +214,6 @@ _enum_readable_member_names = [
             'object'
         )
     ),
-    ("worldScale", "World Scale", "The global scale of the object"),
     ("localScale", "Local Scale", "The local scale of the object"),
     ("name", "Name", "The name of the object"),
     ("color", "Color", "The solid color of the object"),
@@ -225,47 +227,43 @@ _enum_readable_member_names = [
 
 _enum_writable_member_names = [
     ("worldPosition", "World Position", "The World Position of the object"),
-    ("localPosition", "Local Position", "The local position of the object"),
     (
         "worldOrientation",
         "World Orientation",
         "The World Orientation of the object"
     ), (
-        "localOrientation",
-        "Local Orientation",
-        "The local orientation of the object"
-    ), (
         "worldLinearVelocity",
         "World Linear Velocity",
-        "The local linear velocity of the object"
-    ), (
-        "localLinearVelocity",
-        "Local Linear Velocity",
         "The local linear velocity of the object"
     ), (
         "worldAngularVelocity",
         "World Angular Velocity",
         "The local angular velocity of the object"
     ), (
+        "worldTransform",
+        "World Transform",
+        'The World Transform of the object'
+    ),
+    ("worldScale", "World Scale", "The global scale of the object"),
+    None,
+    ("localPosition", "Local Position", "The local position of the object"),
+    (
+        "localOrientation",
+        "Local Orientation",
+        "The local orientation of the object"
+    ), (
+        "localLinearVelocity",
+        "Local Linear Velocity",
+        "The local linear velocity of the object"
+    ), (
         "localAngularVelocity",
         "Local Angular Velocity",
         "The local angular velocity of the object"
     ), (
-        "worldTransform",
-        "World Transform",
-        (
-            'The World Transform of the '
-            'object'
-        )
-    ), (
         "localTransform",
         "Local Transform",
-        (
-            'The local transform of the '
-            'object'
-        )
+        'The local transform of the object'
     ),
-    ("worldScale", "World Scale", "The global scale of the object"),
     ('color', 'Color', 'Color')
 ]
 

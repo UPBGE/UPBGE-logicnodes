@@ -468,20 +468,20 @@ class GetAttributesMenu(bpy.types.Menu):
 
     def draw(self, context):
         layout = self.layout
-        insertNode(layout, "NLObjectAttributeParameterNode", "Get World Position", settings={'attr_name': repr('worldPosition'), 'nl_label': repr('Get Position')})
-        insertNode(layout, "NLObjectAttributeParameterNode", "Get World Orientation", settings={'attr_name': repr('worldOrientation'), 'nl_label': repr('Get Rotation')})
-        insertNode(layout, "NLObjectAttributeParameterNode", "Get World Linear Velocity", settings={'attr_name': repr('worldLinearVelocity'), 'nl_label': repr('Get Linear Velocity')})
-        insertNode(layout, "NLObjectAttributeParameterNode", "Get World Angular Velocity", settings={'attr_name': repr('worldAngularVelocity'), 'nl_label': repr('Get Angular Velocity')})
-        insertNode(layout, "NLObjectAttributeParameterNode", "Get World Transform", settings={'attr_name': repr('worldTransform'), 'nl_label': repr('Get Transform')})
+        insertNode(layout, "NLObjectAttributeParameterNode", "Get World Position", settings={'attr_name': repr('worldPosition'), 'nl_label': repr('Get World Position')})
+        insertNode(layout, "NLObjectAttributeParameterNode", "Get World Orientation", settings={'attr_name': repr('worldOrientation'), 'nl_label': repr('Get World Orientation')})
+        insertNode(layout, "NLObjectAttributeParameterNode", "Get World Linear Velocity", settings={'attr_name': repr('worldLinearVelocity'), 'nl_label': repr('Get World Linear Velocity')})
+        insertNode(layout, "NLObjectAttributeParameterNode", "Get World Angular Velocity", settings={'attr_name': repr('worldAngularVelocity'), 'nl_label': repr('Get World Angular Velocity')})
+        insertNode(layout, "NLObjectAttributeParameterNode", "Get World Transform", settings={'attr_name': repr('worldTransform'), 'nl_label': repr('Get World Transform')})
         layout.separator()
-        insertNode(layout, "NLObjectAttributeParameterNode", "Get Local Position", settings={'attr_name': repr('localPosition'), 'nl_label': repr('Get Position')})
-        insertNode(layout, "NLObjectAttributeParameterNode", "Get Local Orientation", settings={'attr_name': repr('localOrientation'), 'nl_label': repr('Get Rotation')})
-        insertNode(layout, "NLObjectAttributeParameterNode", "Get Local Linear Velocity", settings={'attr_name': repr('localLinearVelocity'), 'nl_label': repr('Get Linear Velocity')})
-        insertNode(layout, "NLObjectAttributeParameterNode", "Get Local Angular Velocity", settings={'attr_name': repr('localAngularVelocity'), 'nl_label': repr('Get Angular Velocity')})
-        insertNode(layout, "NLObjectAttributeParameterNode", "Get Local Transform", settings={'attr_name': repr('localTransform'), 'nl_label': repr('Get Transform')})
+        insertNode(layout, "NLObjectAttributeParameterNode", "Get Local Position", settings={'attr_name': repr('localPosition'), 'nl_label': repr('Get Local Position')})
+        insertNode(layout, "NLObjectAttributeParameterNode", "Get Local Orientation", settings={'attr_name': repr('localOrientation'), 'nl_label': repr('Get Local Orientation')})
+        insertNode(layout, "NLObjectAttributeParameterNode", "Get Local Linear Velocity", settings={'attr_name': repr('localLinearVelocity'), 'nl_label': repr('Get Local Linear Velocity')})
+        insertNode(layout, "NLObjectAttributeParameterNode", "Get Local Angular Velocity", settings={'attr_name': repr('localAngularVelocity'), 'nl_label': repr('Get Local Angular Velocity')})
+        insertNode(layout, "NLObjectAttributeParameterNode", "Get Local Transform", settings={'attr_name': repr('localTransform'), 'nl_label': repr('Get Local Transform')})
         layout.separator()
         insertNode(layout, "NLObjectAttributeParameterNode", "Get Name", settings={'attr_name': repr('name'), 'nl_label': repr('Get Name')})
-        insertNode(layout, "NLObjectAttributeParameterNode", "Get Scale", settings={'attr_name': repr('worldScale'), 'nl_label': repr('Get Scale')})
+        insertNode(layout, "NLObjectAttributeParameterNode", "Get Scale", settings={'attr_name': repr('worldScale'), 'nl_label': repr('Get World Scale')})
         insertNode(layout, "NLObjectAttributeParameterNode", "Get Color", settings={'attr_name': repr('color'), 'nl_label': repr('Get Color')})
 
 
@@ -492,19 +492,19 @@ class SetAttributesMenu(bpy.types.Menu):
 
     def draw(self, context):
         layout = self.layout
-        insertNode(layout, "NLSetObjectAttributeActionNode", "Set World Position", settings={'value_type': repr('worldPosition'), 'nl_label': repr('Set Position')})
-        insertNode(layout, "NLSetObjectAttributeActionNode", "Set World Orientation", settings={'value_type': repr('worldOrientation'), 'nl_label': repr('Set Rotation')})
-        insertNode(layout, "NLSetObjectAttributeActionNode", "Set World Linear Velocity", settings={'value_type': repr('worldLinearVelocity'), 'nl_label': repr('Set Linear Velocity')})
-        insertNode(layout, "NLSetObjectAttributeActionNode", "Set World Angular Velocity", settings={'value_type': repr('worldAngularVelocity'), 'nl_label': repr('Set Angular Velocity')})
-        insertNode(layout, "NLSetObjectAttributeActionNode", "Set World Transform", settings={'value_type': repr('worldTransform'), 'nl_label': repr('Set Transform')})
+        insertNode(layout, "NLSetObjectAttributeActionNode", "Set World Position", settings={'value_type': repr('worldPosition'), 'nl_label': repr('Set World Position')})
+        insertNode(layout, "NLSetObjectAttributeActionNode", "Set World Orientation", settings={'value_type': repr('worldOrientation'), 'nl_label': repr('Set World Orientation')})
+        insertNode(layout, "NLSetObjectAttributeActionNode", "Set World Linear Velocity", settings={'value_type': repr('worldLinearVelocity'), 'nl_label': repr('Set World Linear Velocity')})
+        insertNode(layout, "NLSetObjectAttributeActionNode", "Set World Angular Velocity", settings={'value_type': repr('worldAngularVelocity'), 'nl_label': repr('Set World Angular Velocity')})
+        insertNode(layout, "NLSetObjectAttributeActionNode", "Set World Transform", settings={'value_type': repr('worldTransform'), 'nl_label': repr('Set World Transform')})
         layout.separator()
-        insertNode(layout, "NLSetObjectAttributeActionNode", "Set Local Position", settings={'value_type': repr('localPosition'), 'nl_label': repr('Set Position')})
-        insertNode(layout, "NLSetObjectAttributeActionNode", "Set Local Orientation", settings={'value_type': repr('localOrientation'), 'nl_label': repr('Set Rotation')})
-        insertNode(layout, "NLSetObjectAttributeActionNode", "Set Local Linear Velocity", settings={'value_type': repr('localLinearVelocity'), 'nl_label': repr('Set Linear Velocity')})
-        insertNode(layout, "NLSetObjectAttributeActionNode", "Set Local Angular Velocity", settings={'value_type': repr('localAngularVelocity'), 'nl_label': repr('Set Angular Velocity')})
-        insertNode(layout, "NLSetObjectAttributeActionNode", "Set Local Transform", settings={'value_type': repr('localTransform'), 'nl_label': repr('Set Transform')})
+        insertNode(layout, "NLSetObjectAttributeActionNode", "Set Local Position", settings={'value_type': repr('localPosition'), 'nl_label': repr('Set Local Position')})
+        insertNode(layout, "NLSetObjectAttributeActionNode", "Set Local Orientation", settings={'value_type': repr('localOrientation'), 'nl_label': repr('Set Local Orientation')})
+        insertNode(layout, "NLSetObjectAttributeActionNode", "Set Local Linear Velocity", settings={'value_type': repr('localLinearVelocity'), 'nl_label': repr('Set Local Linear Velocity')})
+        insertNode(layout, "NLSetObjectAttributeActionNode", "Set Local Angular Velocity", settings={'value_type': repr('localAngularVelocity'), 'nl_label': repr('Set Local Angular Velocity')})
+        insertNode(layout, "NLSetObjectAttributeActionNode", "Set Local Transform", settings={'value_type': repr('localTransform'), 'nl_label': repr('Set Local Transform')})
         layout.separator()
-        insertNode(layout, "NLSetObjectAttributeActionNode", "Set Scale", settings={'value_type': repr('worldScale'), 'nl_label': repr('Set Scale')})
+        insertNode(layout, "NLSetObjectAttributeActionNode", "Set Scale", settings={'value_type': repr('worldScale'), 'nl_label': repr('Set World Scale')})
         insertNode(layout, "NLSetObjectAttributeActionNode", "Set Color", settings={'value_type': repr('color'), 'nl_label': repr('Set Color')})
 
 

@@ -17,6 +17,7 @@ class LogicNodeGetObjectAttr(LogicNodeParameterType):
     bl_label = "Get Attribute"
     nl_module = 'uplogic.nodes.parameters'
     nl_class = "ULObjectAttribute"
+    bl_width_default = 180
 
     def update_draw(self, context=None):
         if not self.ready:
@@ -67,6 +68,7 @@ class LogicNodeGetObjectAttr(LogicNodeParameterType):
             self.outputs[2].enabled = False
             self.outputs[3].enabled = False
             self.outputs[4].enabled = False
+        self.nl_label = self._names[self.attr_name]
 
     search_tags = [
         ['Get World Position', {'nl_label': 'Get World Position', 'attr_name': 'worldPosition'}],
@@ -84,6 +86,21 @@ class LogicNodeGetObjectAttr(LogicNodeParameterType):
         ['Get Name', {'nl_label': 'Get Name', 'attr_name': 'name'}],
         ['Get Visibility', {'nl_label': 'Get Visibility', 'attr_name': 'visibility'}]
     ]
+
+    _names = {
+        'worldPosition': 'Get World Position',
+        'worldOrientation': 'Get World Orientation',
+        'worldLinearVelocity': 'Get World Linear Velocity',
+        'worldAngularVelocity': 'Get World Angular Velocity',
+        'worldTransform': 'Get World Transform',
+        'localPosition': 'Get Local Position',
+        'localOrietation': 'Get Local Orientation',
+        'localLinearVelocity': 'Get Local Linear Velocity',
+        'localAngularVelocity': 'Get Local Angular Velocity',
+        'localTransform': 'Get Local Transform',
+        'worldScale': 'Get Scale',
+        'color': 'Get Color'
+    }
 
     attr_name: EnumProperty(
         items=_enum_readable_member_names,
