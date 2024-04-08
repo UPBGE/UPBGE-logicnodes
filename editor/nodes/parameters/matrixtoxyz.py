@@ -13,6 +13,7 @@ class LogicNodeMatrixToXYZ(LogicNodeParameterType):
     bl_label = "Matrix To XYZ"
     bl_width_default = 200
     nl_module = 'uplogic.nodes.parameters'
+    nl_class = "ULMatrixToXYZ"
 
     def update_draw(self, context=None):
         if not self.ready:
@@ -32,22 +33,22 @@ class LogicNodeMatrixToXYZ(LogicNodeParameterType):
     )
 
     def init(self, context):
-        self.add_input(NodeSocketLogicMatrix, 'Matrix')
-        self.add_output(NodeSocketLogicVectorXYZ, "XYZ")
+        self.add_input(NodeSocketLogicMatrix, 'Matrix', 'input_m')
+        self.add_output(NodeSocketLogicVectorXYZ, "XYZ", 'OUT')
         LogicNodeParameterType.init(self, context)
-
-    nl_class = "ULMatrixToXYZ"
 
     def draw_buttons(self, context, layout):
         layout.prop(self, "output", text='')
         if int(self.output) == 1:
             layout.prop(self, "euler_order", text='')
 
-    def get_output_names(self):
-        return ["OUT"]
+    def get_attributes(self):
+        return [("output", repr(self.output)), ("euler_order", repr(self.euler_order))]
 
+    # XXX Remove for 4.0
     def get_input_names(self):
         return ["input_m"]
 
-    def get_attributes(self):
-        return [("output", f'{self.output}'), ("euler_order", f'"{self.euler_order}"')]
+    # XXX Remove for 4.0
+    def get_output_names(self):
+        return ["OUT"]

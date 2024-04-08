@@ -128,5 +128,8 @@ class LogicNodeTree(NodeTree):
                 if osock.type != socket.type:
                     osock.type = socket.type
                     osock.display_shape = socket.display_shape
-                    n.outputs[0].type = socket.type
+                    # n.outputs[0].type = socket.type
+                    n.outputs[0].type = 'VALUE'
+                    print(n.outputs[0].type)
+
                     n.outputs[0].display_shape = socket.display_shape

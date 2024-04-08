@@ -20,6 +20,7 @@ class LogicNodeGetUIWidgetAttr(LogicNodeParameterType):
     bl_idname = "LogicNodeGetUIWidgetAttr"
     bl_label = "Get Widget Attribute"
     nl_module = 'uplogic.nodes.parameters'
+    nl_class = "ULGetUIWidgetAttr"
 
     def update_draw(self, context=None):
         if not self.ready:
@@ -44,32 +45,30 @@ class LogicNodeGetUIWidgetAttr(LogicNodeParameterType):
     )
 
     def init(self, context):
-        self.add_input(NodeSocketLogicUI, "Widget")
-        self.add_output(NodeSocketLogicBoolean, "Visibility")
-        self.add_output(NodeSocketLogicColorRGBA, "", None, {'enabled': False})
-        self.add_output(NodeSocketLogicFloatFactor, "", None, {'enabled': False})
-        self.add_output(NodeSocketLogicVectorXY, "", None, {'enabled': False})
-        self.add_output(NodeSocketLogicString, "", None, {'enabled': False})
-        self.add_output(NodeSocketLogicInteger, "", None, {'enabled': False})
-        self.add_output(NodeSocketLogicFloat, "", None, {'enabled': False})
-        self.add_output(NodeSocketLogicFont, "", None, {'enabled': False})
-        self.add_output(NodeSocketLogicImage, "", None, {'enabled': False})
+        self.add_input(NodeSocketLogicUI, "Widget", 'widget')
+        self.add_output(NodeSocketLogicBoolean, "Visibility", 'BOOL')
+        self.add_output(NodeSocketLogicColorRGBA, "", 'COLOR', {'enabled': False})
+        self.add_output(NodeSocketLogicFloatFactor, "", 'ALPHA', {'enabled': False})
+        self.add_output(NodeSocketLogicVectorXY, "", 'VEC2', {'enabled': False})
+        self.add_output(NodeSocketLogicString, "", 'STR', {'enabled': False})
+        self.add_output(NodeSocketLogicInteger, "", 'INT', {'enabled': False})
+        self.add_output(NodeSocketLogicFloat, "", 'FLOAT', {'enabled': False})
+        self.add_output(NodeSocketLogicFont, "", 'FONT', {'enabled': False})
+        self.add_output(NodeSocketLogicImage, "", 'IMG', {'enabled': False})
         LogicNodeParameterType.init(self, context)
 
     def get_attributes(self):
         return [
-            ("widget_attr", f'"{self.widget_attr}"')
+            ("widget_attr", repr(self.widget_attr))
         ]
 
     def draw_buttons(self, context, layout) -> None:
         layout.prop(self, 'widget_attr', text='')
 
-    nl_class = "ULGetUIWidgetAttr"
+    # XXX Remove for 4.0
+    def get_input_names(self):
+        return ['widget']
 
+    # XXX Remove for 4.0
     def get_output_names(self):
         return ['BOOL', 'COLOR', 'ALPHA', 'VEC2', 'STR', 'INT', 'FLOAT', 'FONT', 'IMG']
-
-    def get_input_names(self):
-        return [
-            'widget'
-        ]

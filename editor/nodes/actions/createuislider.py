@@ -74,10 +74,10 @@ class LogicNodeCreateUISlider(LogicNodeActionType):
 
     def get_attributes(self):
         return [
-            ("orientation_type", f'"{self.orientation_type}"'),
-            ("slider_type", f'"{self.slider_type}"'),
-            ("halign_type", f'"{self.halign_type}"'),
-            ("valign_type", f'"{self.valign_type}"')
+            ("orientation_type", repr(self.orientation_type)),
+            ("slider_type", repr(self.slider_type)),
+            ("halign_type", repr(self.halign_type)),
+            ("valign_type", repr(self.valign_type))
         ]
 
     def get_input_names(self):

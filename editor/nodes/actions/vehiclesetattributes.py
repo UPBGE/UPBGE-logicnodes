@@ -36,26 +36,24 @@ class LoigcNodeVehicleSetAttributes(LogicNodeActionType):
     )
 
     def init(self, context):
-        self.add_input(NodeSocketLogicCondition, "Condition")
-        self.add_input(NodeSocketLogicObject, "Collider")
-        self.add_input(NodeSocketLogicIntegerPositive, "Wheels", None, {'default_value': 2})
-        self.add_input(NodeSocketLogicBoolean, "Suspension")
-        self.add_input(NodeSocketLogicFloat, "")
-        self.add_input(NodeSocketLogicBoolean, "Stiffness")
-        self.add_input(NodeSocketLogicFloat, "")
-        self.add_input(NodeSocketLogicBoolean, "Damping")
-        self.add_input(NodeSocketLogicFloat, "")
-        self.add_input(NodeSocketLogicBoolean, "Friction")
-        self.add_input(NodeSocketLogicFloat, "")
-        self.add_output(NodeSocketLogicCondition, 'Done')
+        self.add_input(NodeSocketLogicCondition, "Condition", 'condition')
+        self.add_input(NodeSocketLogicObject, "Collider", 'vehicle')
+        self.add_input(NodeSocketLogicIntegerPositive, "Wheels", 'wheelcount', {'default_value': 2})
+        self.add_input(NodeSocketLogicBoolean, "Suspension", 'set_suspension_compression')
+        self.add_input(NodeSocketLogicFloat, "", 'suspension_compression')
+        self.add_input(NodeSocketLogicBoolean, "Stiffness", 'set_suspension_stiffness')
+        self.add_input(NodeSocketLogicFloat, "", 'suspension_stiffness')
+        self.add_input(NodeSocketLogicBoolean, "Damping", 'set_suspension_damping')
+        self.add_input(NodeSocketLogicFloat, "", 'suspension_damping')
+        self.add_input(NodeSocketLogicBoolean, "Friction", 'set_tyre_friction')
+        self.add_input(NodeSocketLogicFloat, "", 'tyre_friction')
+        self.add_output(NodeSocketLogicCondition, 'Done', 'OUT')
         LogicNodeActionType.init(self, context)
-
-    def get_output_names(self):
-        return ["OUT"]
 
     def draw_buttons(self, context, layout):
         layout.prop(self, "value_type", text='')
 
+    # XXX Remove for 4.0
     def get_input_names(self):
         return [
             "condition",
@@ -71,7 +69,11 @@ class LoigcNodeVehicleSetAttributes(LogicNodeActionType):
             'tyre_friction'
         ]
 
+    # XXX Remove for 4.0
+    def get_output_names(self):
+        return ["OUT"]
+
     def get_attributes(self):
         return [
-            ("value_type", f'"{self.value_type}"'),
+            ("value_type", repr(self.value_type)),
         ]

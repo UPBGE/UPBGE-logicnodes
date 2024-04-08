@@ -56,7 +56,7 @@ class LogicNodeSetUIWidgetAttr(LogicNodeActionType):
         LogicNodeActionType.init(self, context)
 
     def get_attributes(self):
-        return [("widget_attr", f'"{self.widget_attr}"')]
+        return [("widget_attr", repr(self.widget_attr))]
 
     def draw_buttons(self, context, layout) -> None:
         layout.prop(self, 'widget_attr', text='')

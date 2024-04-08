@@ -12,6 +12,7 @@ class LogicNodeWithinRange(LogicNodeConditionType):
     bl_idname = "NLWithinRangeNode"
     bl_label = "Within Range"
     nl_module = 'uplogic.nodes.parameters'
+    nl_class = "ULWithinRange"
 
     operator: EnumProperty(
         name='Mode',
@@ -19,23 +20,23 @@ class LogicNodeWithinRange(LogicNodeConditionType):
     )
 
     def init(self, context):
-        self.add_input(NodeSocketLogicFloat, "Value")
-        self.add_input(NodeSocketLogicVectorXY, "Range", None, {'enabled': False})
-        self.add_input(NodeSocketLogicFloat, "Min")
-        self.add_input(NodeSocketLogicFloat, "Max")
-        self.add_output(NodeSocketLogicCondition, "If True")
+        self.add_input(NodeSocketLogicFloat, "Value", 'value')
+        self.add_input(NodeSocketLogicVectorXY, "Range", 'range', {'enabled': False})
+        self.add_input(NodeSocketLogicFloat, "Min", 'min_value')
+        self.add_input(NodeSocketLogicFloat, "Max", 'max_value')
+        self.add_output(NodeSocketLogicCondition, "If True", 'OUT')
         LogicNodeConditionType.init(self, context)
 
     def draw_buttons(self, context, layout):
         layout.prop(self, "operator", text="")
 
     def get_attributes(self):
-        return [("operator", f'"{self.operator}"')]
+        return [("operator", repr(self.operator))]
 
-    nl_class = "ULWithinRange"
-
+    # XXX Remove for 4.0
     def get_input_names(self):
         return ["value", "range", "min_value", "max_value"]
 
+    # XXX Remove for 4.0
     def get_output_names(self):
         return ['OUT']

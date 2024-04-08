@@ -50,7 +50,7 @@ class LogicNodeVariableLoad(LogicNodeParameterType):
         if s_path.endswith('\\'):
             s_path = s_path[:-1]
         path_formatted = s_path.replace('\\', '/')
-        return [("path", f"'{path_formatted}'" if self.custom_path else "''")]
+        return [("path", repr(path_formatted) if self.custom_path else "''")]
 
     def get_output_names(self):
         return ['VAR']

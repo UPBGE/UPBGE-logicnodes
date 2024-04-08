@@ -319,5 +319,6 @@ from .parameters.resizevector import LogicNodeResizeVector
 
 from .parameters.curveinterpolation import LogicNodeCurveInterpolation
 from .parameters.tweenvalue import LogicNodeTweenValue
+from .parameters.getcollisionbitmask import LogicNodeGetCollisionBitMask
 
 # from .groupnode import NodeGroupInputLogic

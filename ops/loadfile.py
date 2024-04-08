@@ -5,6 +5,8 @@ from .operator import operator
 from bpy.types import Operator
 from bpy_extras.io_utils import ImportHelper
 from bpy.props import StringProperty
+from bpy.props import IntProperty
+from bpy.props import PointerProperty
 import bpy
 
 
@@ -71,14 +73,20 @@ class LOGIC_NODES_OT_load_font(Operator, ImportHelper):
         options={'HIDDEN'}
     )
 
+    data: PointerProperty(type=bpy.types.VectorFont)
+    # tree_name: StringProperty(default='')
+    # node_name: StringProperty(default='')
+    # socket_idx: IntProperty(default=0)
+
     @classmethod
     def poll(cls, context):
         return True
 
     def execute(self, context):
-        bpy.ops.font.open(
-            filepath=self.filepath,
-            relative_path=True,
-            filter_font=True
-        )
+        self.data = bpy.data.fonts.load(self.filepath, check_existing=True)
+        # socket = getattr(context, 'socket', None)
+        socket = context.space_data.edit_tree.nodes[self.node_name].inputs[self.socket_idx]
+        print(socket)
+        # if socket:
+        #     socket.default_value = self.data
         return {'FINISHED'}

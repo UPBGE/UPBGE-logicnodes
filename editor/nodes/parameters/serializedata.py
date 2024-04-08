@@ -20,18 +20,20 @@ class LogicNodeSerializeData(LogicNodeParameterType):
     )
 
     def init(self, context):
-        self.add_input(NodeSocketLogicParameter, "Data")
-        self.add_output(NodeSocketLogicDictionary, 'Data')
+        self.add_input(NodeSocketLogicParameter, "Data", 'data')
+        self.add_output(NodeSocketLogicDictionary, 'Data', 'OUT')
         LogicNodeParameterType.init(self, context)
 
     def draw_buttons(self, context, layout) -> None:
         layout.prop(self, 'serialize_as', text='')
 
     def get_attributes(self):
-        return [("serialize_as", f'"{self.serialize_as}"')]
+        return [("serialize_as", repr(self.serialize_as))]
 
+    # XXX Remove for 4.0
     def get_input_names(self):
         return ["data"]
 
+    # XXX Remove for 4.0
     def get_output_names(self):
         return ['OUT']

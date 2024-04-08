@@ -8,15 +8,16 @@ from bpy.props import EnumProperty
 
 
 filter_types = [
-    ('FXAA', 'FXAA', 'Fast Anti-Aliasing'),
-    ('HBAO', 'HBAO', 'Horizon-Based Ambient Occlusion'),
-    ('SSAO', 'SSAO', 'Screen-Space Ambient Occlusion'),
-    ('VIGNETTE', 'Vignette', 'Fade to color at screen edges'),
-    ('BRIGHTNESS', 'Brightness', 'Overall brightness'),
-    ('CHROMAB', 'Chromatic Aberration', 'Lens light bending effect'),
-    ('GRAYSCALE', 'Grayscale', 'Convert image to grayscale'),
-    ('LEVELS', 'Levels', 'Control color levels'),
-    ('MIST', 'Mist', 'Classic depth fog implementation')
+    ('0', 'FXAA', 'Fast Anti-Aliasing'),
+    ('1', 'HBAO', 'Horizon-Based Ambient Occlusion'),
+    ('2', 'SSAO', 'Screen-Space Ambient Occlusion'),
+    ('3', 'Vignette', 'Fade to color at screen edges'),
+    ('4', 'Brightness', 'Overall brightness'),
+    ('5', 'Chromatic Aberration', 'Lens light bending effect'),
+    ('6', 'Grayscale', 'Convert image to grayscale'),
+    ('7', 'Levels', 'Control color levels'),
+    ('8', 'Mist', 'Classic depth fog implementation'),
+    ('9', 'Blur', 'Simple blur covering the whole screen')
 ]
 
 
@@ -30,17 +31,18 @@ class LogicNodeAddFilter(LogicNodeActionType):
     def update_draw(self, context=None):
         if not self.ready:
             return
-        self.inputs[2].enabled = self.filter_type == 'BRIGHTNESS'
-        self.inputs[3].enabled = self.filter_type == 'MIST'
+        ftype = int(self.filter_type)
+        self.inputs[2].enabled = ftype == 4
+        self.inputs[3].enabled = ftype == 8
         self.inputs[4].enabled = self.inputs[3].enabled
-        self.inputs[5].enabled = self.filter_type in ['VIGNETTE', 'CHROMAB', 'GRAYSCALE', 'MIST', 'SSAO', 'HBAO']
-        self.inputs[6].enabled = self.filter_type in ['VIGNETTE', 'LEVELS', 'MIST']
+        self.inputs[5].enabled = ftype in [3, 5, 6, 8, 2, 1, 9]
+        self.inputs[6].enabled = ftype in [3, 7, 8]
 
     filter_type: EnumProperty(
         items=filter_types,
         name='Filter',
         description='2D Filters modify the image rendered by EEVEE',
-        default='FXAA',
+        default='0',
         update=update_draw
     )
 
@@ -62,7 +64,7 @@ class LogicNodeAddFilter(LogicNodeActionType):
         return ['condition', 'pass_idx', 'brightness', 'start', 'density', 'power', 'color']
 
     def get_attributes(self):
-        return [("filter_type", f'"{self.filter_type}"')]
+        return [("filter_type", self.filter_type)]
 
     def get_output_names(self):  # XXX Remove for 4.0
         return ["OUT"]

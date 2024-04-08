@@ -39,5 +39,5 @@ class LogicNodeSlowFollow(LogicNodeActionType):
 
     def get_attributes(self):
         return [
-            ("value_type", f'"{self.value_type}"'),
+            ("value_type", repr(self.value_type)),
         ]

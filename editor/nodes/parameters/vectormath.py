@@ -14,6 +14,7 @@ class LogicNodeVectorMath(LogicNodeParameterType):
     bl_idname = "NLVectorMath"
     bl_label = "Vector Math"
     nl_module = 'uplogic.nodes.parameters'
+    nl_class = "ULVectorMath"
 
     def update_draw(self, context=None):
         if not self.ready:
@@ -53,21 +54,21 @@ class LogicNodeVectorMath(LogicNodeParameterType):
             self.color = (.8, .6, 0)
 
     def init(self, context):
-        self.add_input(NodeSocketLogicVectorXYZ, "Vector 1")
-        self.add_input(NodeSocketLogicVectorXYZ, "Vector 2")
-        self.add_input(NodeSocketLogicFloatFactor, "Factor", None, {'default_value': 1.0})
-        self.add_input(NodeSocketLogicFloat, "Scale")
-        self.add_input(NodeSocketLogicVectorXYZ, "Vector 3")
-        self.add_input(NodeSocketLogicFloat, "IOR")
-        self.add_output(NodeSocketLogicParameter, 'Result')
-        self.add_output(NodeSocketLogicVectorXYZ, 'Result')
+        self.add_input(NodeSocketLogicVectorXYZ, "Vector 1", 'vector')
+        self.add_input(NodeSocketLogicVectorXYZ, "Vector 2", 'vector_2')
+        self.add_input(NodeSocketLogicFloatFactor, "Factor", 'factor', {'default_value': 1.0})
+        self.add_input(NodeSocketLogicFloat, "Scale", 'scale')
+        self.add_input(NodeSocketLogicVectorXYZ, "Vector 3", 'vector_3')
+        self.add_input(NodeSocketLogicFloat, "IOR", 'ior')
+        self.add_output(NodeSocketLogicParameter, 'Result', 'OUT')
+        self.add_output(NodeSocketLogicVectorXYZ, 'Result', 'VOUT')
         LogicNodeParameterType.init(self, context)
 
-    nl_class = "ULVectorMath"
-
+    # XXX Remove for 4.0
     def get_input_names(self):
         return ["vector", 'vector_2', 'factor', 'scale', 'vector_3', 'ior']
 
+    # XXX Remove for 4.0
     def get_output_names(self):
         return ["OUT", 'VOUT']
 
@@ -75,4 +76,4 @@ class LogicNodeVectorMath(LogicNodeParameterType):
         layout.prop(self, 'operator', text='')
 
     def get_attributes(self):
-        return [("op", f'"{self.operator}"')]
+        return [("op", repr(self.operator))]

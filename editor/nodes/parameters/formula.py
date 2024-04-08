@@ -12,8 +12,9 @@ class LogicNodeFormula(LogicNodeParameterType):
     bl_idname = "NLParameterMathFun"
     bl_label = "Formula"
     nl_module = 'uplogic.nodes.parameters'
+    nl_class = "ULFormula"
 
-    value: StringProperty(default='a + b')
+    value: StringProperty(default='a + b', name='Formula')
 
     predefined_formulas: EnumProperty(
         name='Operation',
@@ -25,21 +26,20 @@ class LogicNodeFormula(LogicNodeParameterType):
         self.add_input(NodeSocketLogicFloat, "b")
         self.add_output(NodeSocketLogicFloat, "Result")
         LogicNodeParameterType.init(self, context)
-        # self.value = "a + b"
 
     def draw_buttons(self, context, layout):
         layout.prop(self, "predefined_formulas", text="Predef.")
         if self.predefined_formulas == 'User Defined':
             layout.prop(self, "value", text="Formula")
 
+    def get_attributes(self):
+        usr_def = 'User Defined'
+        return [("formula", repr(self.value if self.predefined_formulas == usr_def else self.predefined_formulas))]
+
+    # XXX Remove for 4.0
     def get_input_names(self):
         return ["a", "b"]
 
-    def get_attributes(self):
-        usr_def = 'User Defined'
-        return [("formula", f'"{self.value if self.predefined_formulas == usr_def else self.predefined_formulas}"')]
-
-    nl_class = "ULFormula"
-
+    # XXX Remove for 4.0
     def get_output_names(self):
         return ["OUT"]

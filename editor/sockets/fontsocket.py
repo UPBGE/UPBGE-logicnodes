@@ -38,8 +38,13 @@ class NodeSocketLogicFont(NodeSocket, NodeSocketLogic):
                 row.label(text=text)
             row2 = col.row(align=True)
             row2.prop(self, "default_value", text='')
-            row2.operator(
-                'logic_nodes.load_font', icon='FILEBROWSER', text='')
+            op = row2.operator(
+                'logic_nodes.load_font',
+                icon='FILEBROWSER',
+                text=''
+            )
+            # op.node_name = self.node.name
+            # op.socket_idx = self.node._index_of(self, self.node.inputs)
 
     def get_unlinked_value(self):
         if self.default_value is None:

@@ -4,6 +4,7 @@ from ...sockets import NodeSocketLogicCondition
 from ...sockets import NodeSocketLogicValue
 from ...sockets import NodeSocketLogicParameter
 from bpy.props import BoolProperty
+from ....utilities import WARNING_MESSAGES
 
 
 @node_type
@@ -11,6 +12,7 @@ class LogicNodeStoreValue(LogicNodeParameterType):
     bl_idname = "NLStoreValue"
     bl_label = "Store Value"
     nl_module = 'uplogic.nodes.parameters'
+    nl_class = "ULStoreValue"
 
     initialize: BoolProperty(
         name='Initialize',
@@ -18,10 +20,19 @@ class LogicNodeStoreValue(LogicNodeParameterType):
         default=True
     )
 
+    def check(self, tree):
+        super().check(tree)
+        if len(self.outputs) != 2:
+            global WARNING_MESSAGES
+            WARNING_MESSAGES.append(f"Node '{self.name}' in tree '{tree.name}' changed outputs. Re-Add to avoid issues.")
+            self.use_custom_color = True
+            self.color = (.8, .6, 0)
+
     def init(self, context):
-        self.add_input(NodeSocketLogicCondition, "Condition")
-        self.add_input(NodeSocketLogicValue, "")
-        self.add_output(NodeSocketLogicParameter, "Stored Value")
+        self.add_input(NodeSocketLogicCondition, "Condition", 'condition')
+        self.add_input(NodeSocketLogicValue, "", 'value')
+        self.add_output(NodeSocketLogicCondition, "Done", 'DONE')
+        self.add_output(NodeSocketLogicParameter, "Stored Value", 'OUT')
         LogicNodeParameterType.init(self, context)
 
     def draw_buttons(self, context, layout):
@@ -30,10 +41,10 @@ class LogicNodeStoreValue(LogicNodeParameterType):
     def get_attributes(self):
         return [("initialize", self.initialize)]
 
+    # XXX Remove for 4.0
     def get_input_names(self):
         return ['condition', 'value']
 
-    nl_class = "ULStoreValue"
-
+    # XXX Remove for 4.0
     def get_output_names(self):
-        return ["OUT"]
+        return ['DONE', "OUT"]

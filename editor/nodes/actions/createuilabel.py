@@ -59,8 +59,8 @@ class LogicNodeCreateUILabel(LogicNodeActionType):
 
     def get_attributes(self):
         return [
-            ("halign_type", f'"{self.halign_type}"'),
-            ("valign_type", f'"{self.valign_type}"')
+            ("halign_type", repr(self.halign_type)),
+            ("valign_type", repr(self.valign_type))
         ]
 
     def get_input_names(self):

@@ -305,10 +305,12 @@ class LightsMenu(bpy.types.Menu):
     def draw(self, context):
         layout = self.layout
         insertNode(layout, "NLGetLightColorAction", "Get Light Color")
-        insertNode(layout, "NLSetLightColorAction", "Set Light Color")
         insertNode(layout, "NLGetLightEnergy", "Get Light Power")
+        layout.separator()
+        insertNode(layout, "NLSetLightColorAction", "Set Light Color")
         insertNode(layout, "NLSetLightEnergyAction", "Set Light Power")
         insertNode(layout, "NLSetLightShadowAction", "Set Light Shadow")
+        layout.separator()
         insertNode(layout, "NLMakeUniqueLight", "Make Light Unique")
 
 
@@ -734,8 +736,9 @@ class PhysicsMenu(bpy.types.Menu):
         layout.menu("LN_MT_character_menu", text="Character", icon="RIGHTARROW_THIN")
         layout.separator()
         insertNode(layout, "NLConditionCollisionNode", "Collision")
+        insertNode(layout, "LogicNodeGetCollisionBitMask", "Get Collision Group")
         insertNode(layout, "NLSetCollisionGroup", "Set Collision Group")
-        insertNode(layout, "NLSetCollisionMask", "Set Collision Mask", settings={'mode': '1'})
+        # insertNode(layout, "NLSetCollisionMask", "Set Collision Mask", settings={'mode': '1'})
         layout.separator()
         insertNode(layout, "NLActionAddPhysicsConstraint", "Add Constraint")
         insertNode(layout, "NLActionRemovePhysicsConstraint", "Remove Constraint")

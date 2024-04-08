@@ -33,7 +33,7 @@ class LogicNodePrint(LogicNodeActionType):
             layout.prop(self, 'msg_type', text='')
 
     def get_attributes(self):
-        return [("msg_type", f'"{self.msg_type}"')]
+        return [("msg_type", repr(self.msg_type))]
 
     def get_output_names(self):  # XXX Remove for 4.0
         return ["OUT"]

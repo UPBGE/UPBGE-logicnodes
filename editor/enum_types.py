@@ -170,7 +170,7 @@ _enum_vehicle_axis = [
 
 
 _enum_readable_member_names = [
-    ("localPosition", "Local Position", "The local position of the object"),
+    ("worldPosition", "World Position", "The World Position of the object"),
     (
         "worldOrientation",
         "World Orientation",
@@ -192,8 +192,8 @@ _enum_readable_member_names = [
         )
     ),
     ("worldScale", "World Scale", "The global scale of the object"),
-    ("worldPosition", "World Position", "The World Position of the object"),
     None,
+    ("localPosition", "Local Position", "The local position of the object"),
     (
         "localOrientation",
         "Local Orientation",
@@ -215,6 +215,7 @@ _enum_readable_member_names = [
         )
     ),
     ("localScale", "Local Scale", "The local scale of the object"),
+    None,
     ("name", "Name", "The name of the object"),
     ("color", "Color", "The solid color of the object"),
     (
@@ -264,6 +265,7 @@ _enum_writable_member_names = [
         "Local Transform",
         'The local transform of the object'
     ),
+    None,
     ('color', 'Color', 'Color')
 ]
 

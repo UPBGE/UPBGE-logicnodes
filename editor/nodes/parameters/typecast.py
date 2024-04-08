@@ -14,6 +14,7 @@ class LogicNodeTypecast(LogicNodeParameterType):
     bl_idname = "NLParameterTypeCast"
     bl_label = "Typecast Value"
     nl_module = 'uplogic.nodes.parameters'
+    nl_class = "ULTypeCastValue"
 
     def update_draw(self, context=None):
         if not self.ready:
@@ -26,23 +27,23 @@ class LogicNodeTypecast(LogicNodeParameterType):
     to_type: EnumProperty(items=_enum_type_casts, update=update_draw, name='To Type')
 
     def init(self, context):
-        self.add_input(NodeSocketLogicValue, "")
-        self.add_output(NodeSocketLogicInteger, "Integer")
-        self.add_output(NodeSocketLogicBoolean, "Boolean")
-        self.add_output(NodeSocketLogicString, "String")
-        self.add_output(NodeSocketLogicFloat, "Float")
+        self.add_input(NodeSocketLogicValue, "", 'value')
+        self.add_output(NodeSocketLogicInteger, "Integer", 'OUT')
+        self.add_output(NodeSocketLogicBoolean, "Boolean", 'OUT')
+        self.add_output(NodeSocketLogicString, "String", 'OUT')
+        self.add_output(NodeSocketLogicFloat, "Float", 'OUT')
         LogicNodeParameterType.init(self, context)
 
     def draw_buttons(self, context, layout) -> None:
         layout.prop(self, 'to_type', text='')
 
-    nl_class = "ULTypeCastValue"
+    def get_attributes(self):
+        return [('to_type', repr(self.to_type))]
 
+    # XXX Remove for 4.0
     def get_input_names(self):
         return ["value"]
 
-    def get_attributes(self):
-        return [('to_type', f'"{self.to_type}"')]
-
+    # XXX Remove for 4.0
     def get_output_names(self):
         return ['OUT', 'OUT', 'OUT', 'OUT']

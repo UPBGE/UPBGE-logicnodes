@@ -43,7 +43,9 @@ class LogicNodeGetObjectAttr(LogicNodeParameterType):
             self.outputs[4].enabled = False
         elif self.attr_name in [
             'localOrientation',
-            'worldOrientation'
+            'worldOrientation',
+            'localTransform',
+            'worldTransform'
         ]:
             self.outputs[0].enabled = False
             self.outputs[1].enabled = False
@@ -109,24 +111,25 @@ class LogicNodeGetObjectAttr(LogicNodeParameterType):
         update=update_draw
     )
 
-
     def init(self, context):
-        self.add_input(NodeSocketLogicObject, "Object")
-        self.add_output(NodeSocketLogicString, "Value")
-        self.add_output(NodeSocketLogicVectorXYZ, "Vector", None, {'enabled': False})
-        self.add_output(NodeSocketLogicBoolean, "Visible", None, {'enabled': False})
-        self.add_output(NodeSocketLogicMatrix, "Orientation", None, {'enabled': False})
-        self.add_output(NodeSocketLogicColorRGBA, "Color", None, {'enabled': False})
+        self.add_input(NodeSocketLogicObject, "Object", 'game_object')
+        self.add_output(NodeSocketLogicString, "Value", '_attr_name')
+        self.add_output(NodeSocketLogicVectorXYZ, "Vector", 'OUT', {'enabled': False})
+        self.add_output(NodeSocketLogicBoolean, "Visible", 'OUT', {'enabled': False})
+        self.add_output(NodeSocketLogicMatrix, "Orientation", 'OUT', {'enabled': False})
+        self.add_output(NodeSocketLogicColorRGBA, "Color", 'OUT', {'enabled': False})
         LogicNodeParameterType.init(self, context)
 
     def draw_buttons(self, context, layout) -> None:
         layout.prop(self, 'attr_name', text="")
 
     def get_attributes(self):
-        return [("attribute_name", f'"{self.attr_name}"')]
+        return [("attribute_name", repr(self.attr_name))]
 
+    # XXX Remove for 4.0
     def get_input_names(self):
         return ["game_object", "_attr_name"]
 
+    # XXX Remove for 4.0
     def get_output_names(self):
         return ["OUT", "OUT", "OUT", "OUT"]

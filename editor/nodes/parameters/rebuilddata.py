@@ -35,7 +35,7 @@ class LogicNodeRebuildData(LogicNodeParameterType):
         layout.prop(self, 'read_as', text='')
 
     def get_attributes(self):
-        return [("read_as", f'"{self.read_as}"')]
+        return [("read_as", repr(self.read_as))]
 
     def get_input_names(self):  # XXX Remove for 4.0
         if len(self.inputs) < 2:

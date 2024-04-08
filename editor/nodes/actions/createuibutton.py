@@ -71,10 +71,10 @@ class LogicNodeCreateUIButton(LogicNodeActionType):
 
     def get_attributes(self):
         return [
-            ("halign_type", f'"{self.halign_type}"'),
-            ("valign_type", f'"{self.valign_type}"'),
-            ("text_halign_type", f'"{self.text_halign_type}"'),
-            ("text_valign_type", f'"{self.text_valign_type}"')
+            ("halign_type", repr(self.halign_type)),
+            ("valign_type", repr(self.valign_type)),
+            ("text_halign_type", repr(self.text_halign_type)),
+            ("text_valign_type", repr(self.text_valign_type))
         ]
 
     def get_input_names(self):
@@ -155,10 +155,10 @@ class LogicNodeCreateButtonWidget(LogicNodeActionType):
 
     def get_attributes(self):
         return [
-            ("halign_type", f'"{self.halign_type}"'),
-            ("valign_type", f'"{self.valign_type}"'),
-            ("text_halign_type", f'"{self.text_halign_type}"'),
-            ("text_valign_type", f'"{self.text_valign_type}"')
+            ("halign_type", repr(self.halign_type)),
+            ("valign_type", repr(self.valign_type)),
+            ("text_halign_type", repr(self.text_halign_type)),
+            ("text_valign_type", repr(self.text_valign_type))
         ]
 
     def get_input_names(self):

@@ -61,10 +61,10 @@ class LogicNodeCreateUILayout(LogicNodeActionType):
 
     def get_attributes(self):
         return [
-            ("layout_type", f'"{self.layout_type}"'),
-            ("boxlayout_type", f'"{self.boxlayout_type}"'),
-            ("halign_type", f'"{self.halign_type}"'),
-            ("valign_type", f'"{self.valign_type}"')
+            ("layout_type", repr(self.layout_type)),
+            ("boxlayout_type", repr(self.boxlayout_type)),
+            ("halign_type", repr(self.halign_type)),
+            ("valign_type", repr(self.valign_type))
         ]
 
     def get_input_names(self):

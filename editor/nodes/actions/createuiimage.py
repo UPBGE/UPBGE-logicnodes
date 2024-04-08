@@ -9,6 +9,7 @@ from ...sockets import NodeSocketLogicImage
 from ...enum_types import _ui_halign_types
 from ...enum_types import _ui_valign_types
 from bpy.props import EnumProperty
+from bpy.props import BoolProperty
 
 
 @node_type
@@ -20,6 +21,7 @@ class LogicNodeCreateUIImage(LogicNodeActionType):
 
     halign_type: EnumProperty(items=_ui_halign_types, name='X')
     valign_type: EnumProperty(items=_ui_valign_types, name='Y')
+    aspect_ratio: BoolProperty(name='Use Aspect Ratio', default=True, description="Keep images' original width/height proportions")
 
     def init(self, context):
         self.add_input(NodeSocketLogicCondition, "Condition")
@@ -37,14 +39,16 @@ class LogicNodeCreateUIImage(LogicNodeActionType):
     def draw_buttons(self, context, layout) -> None:
         layout.prop(self, 'halign_type', text='X')
         layout.prop(self, 'valign_type', text='Y')
+        layout.prop(self, 'aspect_ratio', text='Aspect Ratio')
 
     def get_output_names(self):
         return ["OUT", 'WIDGET']
 
     def get_attributes(self):
         return [
-            ("halign_type", f'"{self.halign_type}"'),
-            ("valign_type", f'"{self.valign_type}"')
+            ("halign_type", repr(self.halign_type)),
+            ("valign_type", repr(self.valign_type)),
+            ("aspect_ratio", self.aspect_ratio)
         ]
 
     def get_input_names(self):

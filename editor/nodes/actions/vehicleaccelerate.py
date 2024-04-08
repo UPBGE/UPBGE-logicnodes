@@ -29,23 +29,25 @@ class LogicNodeVehicleAccelerate(LogicNodeActionType):
     )
 
     def init(self, context):
-        self.add_input(NodeSocketLogicCondition, "Condition")
-        self.add_input(NodeSocketLogicObject, "Vehicle")
-        self.add_input(NodeSocketLogicIntegerPositive, "Wheels", None, {'default_value': 2})
-        self.add_input(NodeSocketLogicFloatPositive, "Power", None, {'default_value': 1})
-        self.add_output(NodeSocketLogicCondition, 'Done')
+        self.add_input(NodeSocketLogicCondition, "Condition", 'condition')
+        self.add_input(NodeSocketLogicObject, "Vehicle", 'vehicle')
+        self.add_input(NodeSocketLogicIntegerPositive, "Wheels", 'wheelcount', {'default_value': 2})
+        self.add_input(NodeSocketLogicFloatPositive, "Power", 'power', {'default_value': 1})
+        self.add_output(NodeSocketLogicCondition, 'Done', 'OUT')
         LogicNodeActionType.init(self, context)
-
-    def get_output_names(self):
-        return ["OUT"]
 
     def draw_buttons(self, context, layout):
         layout.prop(self, "value_type", text='')
 
+    # XXX Remove for 4.0
     def get_input_names(self):
         return ["condition", "vehicle", "wheelcount", 'power']
 
+    # XXX Remove for 4.0
+    def get_output_names(self):
+        return ["OUT"]
+
     def get_attributes(self):
         return [
-            ("value_type", f'"{self.value_type}"'),
+            ("value_type", repr(self.value_type)),
         ]

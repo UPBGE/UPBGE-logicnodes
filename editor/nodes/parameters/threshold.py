@@ -13,6 +13,7 @@ class LogicNodeThreshold(LogicNodeParameterType):
     bl_idname = "NLThresholdNode"
     bl_label = "Threshold"
     nl_module = 'uplogic.nodes.parameters'
+    nl_class = "ULThreshold"
 
     operator: EnumProperty(
         name='Operation',
@@ -20,22 +21,22 @@ class LogicNodeThreshold(LogicNodeParameterType):
     )
 
     def init(self, context):
-        self.add_input(NodeSocketLogicBoolean, "Else 0", None, {'default_value': True})
-        self.add_input(NodeSocketLogicFloat, "Value")
-        self.add_input(NodeSocketLogicFloat, "Threshold")
-        self.add_output(NodeSocketLogicParameter, "Value")
+        self.add_input(NodeSocketLogicBoolean, "Else 0", 'else_z', {'default_value': True})
+        self.add_input(NodeSocketLogicFloat, "Value", 'value')
+        self.add_input(NodeSocketLogicFloat, "Threshold", 'threshold')
+        self.add_output(NodeSocketLogicParameter, "Value", 'OUT')
         LogicNodeParameterType.init(self, context)
 
     def draw_buttons(self, context, layout):
         layout.prop(self, "operator", text="")
 
     def get_attributes(self):
-        return [("operator", f'"{self.operator}"')]
+        return [("operator", repr(self.operator))]
 
-    nl_class = "ULThreshold"
-
+    # XXX Remove for 4.0
     def get_input_names(self):
         return ['else_z', "value", "threshold"]
 
+    # XXX Remove for 4.0
     def get_output_names(self):
         return ["OUT"]
