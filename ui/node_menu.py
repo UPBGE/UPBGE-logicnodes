@@ -9,7 +9,7 @@ def draw_add_menu(self, context):
     layout = self.layout
     layout.operator_context = "INVOKE_DEFAULT"
 
-    # layout.operator('bge_netlogic.node_search', text="Search", icon="VIEWZOOM")
+    # layout.operator('logic_nodes.node_search', text="Search", icon="VIEWZOOM")
     # layout.separator()
     if len(preferences().custom_logic_nodes) > 0:
         layout.menu("LN_MT_custom_menu", text="Custom Nodes", icon="RIGHTARROW_THIN")
@@ -595,9 +595,6 @@ class SoundMenu(bpy.types.Menu):
         layout = self.layout
         # insertNode(layout, "NLActionStartSound", "2D Sound")
         # insertNode(layout, "NLActionStart3DSoundAdv", "3D Sound")
-        if preferences().use_fmod_nodes:
-            layout.menu("LN_MT_fmod_sound_menu", text="FMOD", icon="RIGHTARROW_THIN")
-            layout.separator()
         insertNode(layout, "LogicNodeStartSound", "Start Sound")
         insertNode(layout, "NLPlaySpeaker", "Start Speaker")
         layout.separator()
@@ -605,6 +602,9 @@ class SoundMenu(bpy.types.Menu):
         insertNode(layout, "NLActionResumeSound", "Resume Sound")
         insertNode(layout, "NLActionStopSound", "Stop Sound")
         insertNode(layout, "NLActionStopAllSounds", "Stop All Sounds")
+        if preferences().use_fmod_nodes:
+            layout.separator()
+            layout.menu("LN_MT_fmod_sound_menu", text="FMOD", icon="RIGHTARROW_THIN")
 
 
 @menu_item
@@ -614,15 +614,8 @@ class FMODSoundMenu(bpy.types.Menu):
 
     def draw(self, context):
         layout = self.layout
-        # insertNode(layout, "NLActionStartSound", "2D Sound")
-        # insertNode(layout, "NLActionStart3DSoundAdv", "3D Sound")
-        # insertNode(layout, "LogicNodeStartSound", "Start Sound")
-        # insertNode(layout, "NLPlaySpeaker", "Start Speaker")
-        # layout.separator()
-        # insertNode(layout, "NLActionPauseSound", "Pause Sound")
-        # insertNode(layout, "NLActionResumeSound", "Resume Sound")
-        # insertNode(layout, "NLActionStopSound", "Stop Sound")
-        # insertNode(layout, "NLActionStopAllSounds", "Stop All Sounds")
+        insertNode(layout, "LogicNodeFModLoadBank", "FMod Load Bank")
+        insertNode(layout, "LogicNodeFModStartEvent", "FMod Start Event")
 
 
 @menu_item
@@ -849,6 +842,15 @@ class NetworkMenu(bpy.types.Menu):
         insertNode(layout, "LogicNodeSendNetworkMessage", "Send Data")
         insertNode(layout, "LogicNodeSerializeData", "Serialize Data")
 
+@menu_item
+class PathMenu(bpy.types.Menu):
+    bl_idname = "LN_MT_path_menu"
+    bl_label = "Path"
+
+    def draw(self, context):
+        layout = self.layout
+        insertNode(layout, "LogicNodeGetMasterFolder", "Get Master Folder")
+        insertNode(layout, "LogicNodeJoinPath", "Join Path")
 
 @menu_item
 class DataMenu(bpy.types.Menu):
@@ -863,6 +865,8 @@ class DataMenu(bpy.types.Menu):
         layout.separator()
         insertNode(layout, "NLLoadScene", "Load Scene")
         insertNode(layout, "NLLoadFileContent", "Load File Content")
+        layout.separator()
+        layout.menu("LN_MT_path_menu", text="Path", icon="RIGHTARROW_THIN")
 
 
 @menu_item

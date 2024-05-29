@@ -36,9 +36,10 @@ class LogicNodeTweenValue(LogicNodeParameterType):
         self.inputs[5].enabled = int(self.value_type)
 
         self.outputs[0].enabled = not self.on_demand
+        self.outputs[1].enabled = not self.on_demand
 
-        self.outputs[1].enabled = not int(self.value_type)
-        self.outputs[2].enabled = int(self.value_type)
+        self.outputs[2].enabled = not int(self.value_type)
+        self.outputs[3].enabled = int(self.value_type)
 
     on_demand: BoolProperty(name='On Demand', description='Tween the value automatically when output socket is active', update=update_draw)
     value_type: EnumProperty(name='Type', items=value_types, description='Value type to tween', update=update_draw)
@@ -71,6 +72,7 @@ class LogicNodeTweenValue(LogicNodeParameterType):
         self.add_input(NodeSocketLogicVectorXYZ, 'To', 'to_vec', {'default_value': Vector((1, 1, 1))})
         self.add_input(NodeSocketLogicFloat, 'Duration', 'duration', {'default_value': 1.0})
         self.add_output(NodeSocketLogicCondition, 'Done', 'DONE')
+        self.add_output(NodeSocketLogicCondition, 'Reached', 'REACHED')
         self.add_output(NodeSocketLogicFloat, 'Result', 'RESULT_FLOAT')
         self.add_output(NodeSocketLogicVector, 'Result', 'RESULT_VEC')
         self.add_output(NodeSocketLogicFloat, 'Factor', 'FAC')

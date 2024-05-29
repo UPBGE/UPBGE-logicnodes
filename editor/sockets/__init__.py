@@ -32,7 +32,7 @@ from .integersocket import NodeSocketLogicInteger
 from .invertxysocket import NodeSocketLogicInvertXY
 from .keyboardkeysocket import NodeSocketLogicKeyboardKey
 from .lightsocket import NodeSocketLogicLight
-from .listitemsocket import NodeSocketLogicListItem
+from .listitemsocket import *
 from .listsocket import NodeSocketLogicList
 from .logicbricksocket import NodeSocketLogicBrick
 from .logictreesocket import NodeSocketLogicTree

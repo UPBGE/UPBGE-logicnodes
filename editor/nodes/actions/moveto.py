@@ -16,15 +16,17 @@ class LogicNodeMoveTo(LogicNodeActionType):
     nl_class = "ULMoveTo"
 
     def init(self, context):
-        self.add_input(NodeSocketLogicCondition, "Condition")
-        self.add_input(NodeSocketLogicObject, "Object")
-        self.add_input(NodeSocketLogicVectorXYZ, "Target Location")
-        self.add_input(NodeSocketLogicBoolean, "Move as Dynamic")
-        self.add_input(NodeSocketLogicFloatPositive, "Speed", None, {'default_value': 1.0})
-        self.add_input(NodeSocketLogicFloat, "Stop At Distance", None, {'default_value': 0.5})
-        self.add_output(NodeSocketLogicCondition, "Done")
+        self.add_input(NodeSocketLogicCondition, "Condition", 'condition')
+        self.add_input(NodeSocketLogicObject, "Object", 'moving_object')
+        self.add_input(NodeSocketLogicVectorXYZ, "Target Location", 'destination_point')
+        self.add_input(NodeSocketLogicBoolean, "Move as Dynamic", 'dynamic')
+        self.add_input(NodeSocketLogicFloatPositive, "Speed", 'speed', {'default_value': 1.0})
+        self.add_input(NodeSocketLogicFloat, "Stop At Distance", 'distance', {'default_value': 0.5})
+        self.add_output(NodeSocketLogicCondition, "Done", 'OUT')
+        self.add_output(NodeSocketLogicCondition, "Reached", 'REACHED')
         LogicNodeActionType.init(self, context)
 
+    # XXX Remove for 4.0
     def get_input_names(self):
         return [
             "condition",

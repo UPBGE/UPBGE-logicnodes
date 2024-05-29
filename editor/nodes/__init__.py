@@ -317,8 +317,13 @@ from .parameters.getlogictreeproperty import LogicNodeGetLogicTreeProperty
 from .parameters.simplevalue import LogicNodeSimpleValue
 from .parameters.resizevector import LogicNodeResizeVector
 
+from .parameters.getmasterfolder import LogicNodeGetMasterFolder
+from .parameters.joinpath import LogicNodeJoinPath
 from .parameters.curveinterpolation import LogicNodeCurveInterpolation
 from .parameters.tweenvalue import LogicNodeTweenValue
 from .parameters.getcollisionbitmask import LogicNodeGetCollisionBitMask
+
+from .fmod.fmodloadbank import LogicNodeFModLoadBank
+from .fmod.fmodstartevent import LogicNodeFModStartEvent
 
 # from .groupnode import NodeGroupInputLogic

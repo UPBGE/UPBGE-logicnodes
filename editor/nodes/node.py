@@ -271,7 +271,7 @@ class LogicNode:
             output_node.outputs
         )
 
-        if not hasattr(output_node, 'nl_module'): # xxx: if not isinstance(output_node, LogicNode):
+        if not hasattr(output_node, 'nl_module'): # XXX: if not isinstance(output_node, LogicNode):
             raise Exception(f'Not a LogicNode type: {output_node.bl_label}')
         output_node_varname = uids.get_varname_for_node(output_node)
         output_map = output_node.get_output_names()
@@ -282,7 +282,6 @@ class LogicNode:
         elif output_map:
             varname = output_map[output_socket_index]
             setattr(output_socket, 'identifier', varname)
-            print(output_socket.identifier)
             return '{}.{}'.format(output_node_varname, varname)
         else:
             return output_node_varname

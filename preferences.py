@@ -5,9 +5,11 @@ from .props.customnode import CustomNodeReference
 
 
 _uplogic_versions = [
+    ('latest', 'Latest', 'Download the latest version'),
+    None,
     ('1.9.5', '1.9.5', 'Suitable for Logic Nodes 2.4'),
     ('2.0.1', '2.0.1', 'Suitable for Logic Nodes 3.0'),
-    ('latest', 'Latest', 'Download the latest version')
+    ('3.2', '3.2', 'Suitable for Logic Nodes 3.2'),
 ]
 
 

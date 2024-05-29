@@ -34,7 +34,7 @@ bl_info = {
         "A Node System to create game logic."
     ),
     "author": "pgi, Leopold A-C (Iza Zed)",
-    "version": (3, 1),
+    "version": (3, 2),
     "blender": (4, 1, 0),
     "location": "View Menu",
     "category": "Game Engine",
@@ -366,7 +366,7 @@ def _update_properties(file):
 
 
 def node_manual():
-    prefix = "https://myaddon.org/manual/"
+    prefix = "https://upbge.org/#/documentation/docs/latest/manual/manual/logic_nodes/index.html"
     ret = (prefix, _node_manual_map)
     return ret
 
@@ -391,6 +391,7 @@ def register():
     bpy.utils.register_class(CustomNodeReference)
     bpy.utils.register_class(LogicNodesAddonPreferences)
 
+    prefs().uplogic_version = 'latest'
     for node in prefs().custom_logic_nodes:
         exec(node.ui_code, {"bge_netlogic": _get_this_module()})
     bpy.types.Object.sound_occluder = bpy.props.BoolProperty(

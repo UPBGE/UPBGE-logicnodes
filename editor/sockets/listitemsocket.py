@@ -1,5 +1,5 @@
 import typing
-from .socket import SOCKET_COLOR_CONDITION, SOCKET_COLOR_GENERIC, SOCKET_TYPE_GENERIC
+from .socket import SOCKET_COLOR_CONDITION, SOCKET_COLOR_GENERIC, SOCKET_COLOR_STRING, SOCKET_TYPE_GENERIC
 from .socket import NodeSocketLogic
 from .socket import SOCKET_TYPE_CONDITION
 from .socket import socket_type
@@ -50,3 +50,23 @@ class NodeSocketLogicArgumentItem(NodeSocketLogicRemovable):
         row = layout.row()
         row.prop(self, 'argument_name', text='', emboss=False)
         row.operator('logic_nodes.remove_socket', icon='X', text='')
+
+
+@socket_type
+class NodeSocketLogicStringItem(NodeSocketLogicRemovable):
+    bl_idname = 'NodeSocketLogicStringItem'
+    bl_label = 'String'
+    nl_color = SOCKET_COLOR_STRING
+
+    default_value: StringProperty(name='String', default='')
+
+    def draw(self, context, layout: UILayout, node, text):
+        row = layout.row()
+        if not self.is_linked:
+            row.prop(self, 'default_value', text='')
+        else:
+            row.label(text=self.name)
+        row.operator('logic_nodes.remove_socket', icon='X', text='')
+
+    def get_unlinked_value(self):
+        return repr(self.default_value)

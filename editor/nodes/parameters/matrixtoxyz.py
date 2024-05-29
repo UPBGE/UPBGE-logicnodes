@@ -43,7 +43,7 @@ class LogicNodeMatrixToXYZ(LogicNodeParameterType):
             layout.prop(self, "euler_order", text='')
 
     def get_attributes(self):
-        return [("output", repr(self.output)), ("euler_order", repr(self.euler_order))]
+        return [("output", self.output), ("euler_order", repr(self.euler_order))]
 
     # XXX Remove for 4.0
     def get_input_names(self):

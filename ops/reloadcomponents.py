@@ -7,6 +7,34 @@ from bpy.types import Operator
 import bpy
 
 
+COMPONENT_TEMPLATE = """\
+import bge, bpy
+from collections import OrderedDict
+class {}(bge.types.KX_PythonComponent):
+    {}
+    def start(self, args): pass
+    def update(self): pass"""
+
+
+def build_dummy_text(comp_name, textblock):
+    cargs = ''
+    in_args = False
+    for line in textblock.lines:
+        if comp_name in line.body:
+            continue
+        line.body = line.body.replace(' ', '')
+        if line.body.startswith('@'):
+            continue
+        if 'args=' in line.body:
+            in_args = True
+        if '])' in line.body:
+            cargs += line.body
+            break
+        if in_args:
+            cargs += line.body
+    return COMPONENT_TEMPLATE.format(comp_name, cargs)
+
+
 @operator
 class LOGIC_NODES_OT_reload_components(Operator):
     bl_idname = "logic_nodes.reload_components"
@@ -29,16 +57,10 @@ class LOGIC_NODES_OT_reload_components(Operator):
             for i, c in enumerate(obj.game.components):
                 text = bpy.data.texts[f'{c.module}.py']
                 ogtext = text.as_string()
-                for line in text.lines:
-                    if (
-                        'uplogic' in line.body
-                        or line.body.startswith('from bge ')
-                        or 'bgui' in line.body
-                        or line.body.startswith('@')
-                        or line.body.startswith('from .')
-                    ):
-                        line.body = '# ' + line.body
+                text.clear()
+                text.write(build_dummy_text(c.name, text))
                 bpy.ops.logic.python_component_reload(index=i)
+                text.clear()
                 text.from_string(ogtext)
             reload_texts()
         
