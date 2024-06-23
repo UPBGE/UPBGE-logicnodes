@@ -13,7 +13,7 @@ class NodeSocketLogicBitMask(NodeSocket, NodeSocketLogic):
         size=16,
         default=[True for x in range(16)],
         name='Mask',
-        subtype='LAYER_MEMBER'
+        # subtype='LAYER_MEMBER'  XXX: Reactivate if fixed
     )
     selected_bit: IntProperty()
 

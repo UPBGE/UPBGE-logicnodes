@@ -2,7 +2,7 @@ from ..node import node_type
 from ..node import LogicNodeActionType
 from ...sockets import NodeSocketLogicCondition
 from ...sockets import NodeSocketLogicObject
-from ...sockets import NodeSocketLogicFloatPositive
+from ...sockets import NodeSocketLogicFloat
 from ...sockets import NodeSocketLogicIntegerPositive
 from ...enum_types import _enum_vehicle_axis
 from bpy.props import EnumProperty
@@ -32,7 +32,7 @@ class LogicNodeVehicleAccelerate(LogicNodeActionType):
         self.add_input(NodeSocketLogicCondition, "Condition", 'condition')
         self.add_input(NodeSocketLogicObject, "Vehicle", 'vehicle')
         self.add_input(NodeSocketLogicIntegerPositive, "Wheels", 'wheelcount', {'default_value': 2})
-        self.add_input(NodeSocketLogicFloatPositive, "Power", 'power', {'default_value': 1})
+        self.add_input(NodeSocketLogicFloat, "Power", 'power', {'default_value': 1})
         self.add_output(NodeSocketLogicCondition, 'Done', 'OUT')
         LogicNodeActionType.init(self, context)
 

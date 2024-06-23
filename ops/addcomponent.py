@@ -1,4 +1,4 @@
-from ..utilities import notify, preferences
+from ..utilities import notify, preferences, error, debug
 from .operator import operator
 from .operator import _enum_components
 from .operator import reload_texts
@@ -47,7 +47,7 @@ class LOGIC_NODES_OT_add_component(Operator):
                 continue
             if 'args=' in line.body:
                 in_args = True
-            if '])' in line.body:
+            if '])' in line.body and in_args:
                 cargs += line.body
                 break
             if in_args:
@@ -61,6 +61,8 @@ class LOGIC_NODES_OT_add_component(Operator):
             select_text.clear()
             select_text.write(body)
         except Exception as e:
+            error(f'Could not add component {mod_name}.{comp_name} to object {context.active_object.name}!')
+            debug(f'Content:\n\n{select_text.as_string()}\n')
             select_text.clear()
             select_text.write(body)
             self.report({"ERROR"}, str(e))

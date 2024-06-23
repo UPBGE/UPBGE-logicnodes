@@ -50,7 +50,7 @@ _node_items = {}
 
 @operator
 class LOGIC_NODES_OT_node_search(bpy.types.Operator):
-    bl_idname = "bge_netlogic.node_search"
+    bl_idname = "logic_nodes.node_search"
     bl_label = "Node Search"
     bl_options = {"REGISTER"}
     bl_description = "Search for registered Logic Nodes"

@@ -23,6 +23,7 @@ from .actions.setsmaaquailty import LogicNodeSetSMAAQuality  # deprecated
 from .actions.setuiwidgetattr import LogicNodeSetUIWidgetAttr
 from .actions.togglefilter import LogicNodeToggleFilter
 from .actions.draw import LogicNodeDraw
+from .actions.setrigboneattribute import LogicNodeSetRigBoneAttribute
 
 from .actions.gamepadvibration import LogicNodeGamepadVibration
 from .actions.addobject import LogicNodeAddObject

@@ -1,4 +1,8 @@
-from .socket import SOCKET_COLOR_STRING, SOCKET_TYPE_VALUE, SOCKET_TYPE_STRING, NodeSocketLogic
+from .socket import SOCKET_COLOR_STRING
+from .socket import SOCKET_TYPE_VALUE
+from .socket import SOCKET_TYPE_STRING
+from .socket import SOCKET_TYPE_GENERIC
+from .socket import NodeSocketLogic
 from .socket import socket_type
 from .socket import update_draw
 from bpy.types import NodeSocket
@@ -14,7 +18,7 @@ class Base(NodeSocket, NodeSocketLogic):
     formatted: BoolProperty(update=update_draw)
 
     nl_color = SOCKET_COLOR_STRING
-    nl_type = SOCKET_TYPE_STRING
+    nl_type = SOCKET_TYPE_GENERIC
 
     valid_sockets = [
         SOCKET_TYPE_VALUE,

@@ -57,7 +57,7 @@ _enum_vector_math_options = [
     ("cross", "Cross Product", "Project A onto B"),
     None,
     ("normalize", "Normalize", "Rescale all values to 0 - 1"),
-    ("lerp", "Lerp", "Linear Interpolation between the two vectors"),
+    ("lerp", "Mix (Lerp)", "Linear Interpolation between the two vectors"),
     ("slerp", "Spherical Lerp", "Spherical Interpolation between the two vectors"),
     ("negate", "Negate", "Multiply all values by -1")
 ]

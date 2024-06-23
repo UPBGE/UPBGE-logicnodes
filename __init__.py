@@ -34,7 +34,7 @@ bl_info = {
         "A Node System to create game logic."
     ),
     "author": "pgi, Leopold A-C (Iza Zed)",
-    "version": (3, 2),
+    "version": (3, 2, 1),
     "blender": (4, 1, 0),
     "location": "View Menu",
     "category": "Game Engine",
@@ -306,20 +306,6 @@ _registered_classes.extend(_panels)
 _registered_classes.extend(_lists)
 _registered_classes.extend(_menu_items)
 
-
-###################################################
-# DEBUG
-###################################################
-# text = ''
-
-# for node in _nodes:
-#     text +=f"- {'(deprecated) ' if node.deprecated else ''}{node.bl_label}\n"
-# text += f'Total Nodes: {len(_nodes)}'
-
-# with open("D:/Data/nodes.txt", 'w') as f:
-#     f.write(text)
-#     f.close()
-###################################################
 
 def _get_key_for_class(c):
     if hasattr(c, "bl_label"):

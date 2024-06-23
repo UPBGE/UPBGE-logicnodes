@@ -281,8 +281,22 @@ class ArmatureRigMenu(bpy.types.Menu):
     def draw(self, context):
         layout = self.layout
         insertNode(layout, "NLParameterBoneStatus", "Bone Status")
-        # insertNode(layout, "NLActionEditBoneNode", "Edit Bone")
-        insertNode(layout, "NLActionSetBonePos", "Set Bone Position")
+        insertNode(layout, "LogicNodeSetRigBoneAttribute", "Set Bone Name", settings={'attribute': repr('name')})
+        layout.separator()
+        insertNode(layout, "LogicNodeSetRigBoneAttribute", "Set Bone Head", settings={'attribute': repr('head')})
+        insertNode(layout, "LogicNodeSetRigBoneAttribute", "Set Bone Local Head", settings={'attribute': repr('head_local')})
+        insertNode(layout, "LogicNodeSetRigBoneAttribute", "Set Bone Tail", settings={'attribute': repr('tail')})
+        insertNode(layout, "LogicNodeSetRigBoneAttribute", "Set Bone Local Tail", settings={'attribute': repr('tail_local')})
+        layout.separator()
+        insertNode(layout, "LogicNodeSetRigBoneAttribute", "Set Bone Inherit Scale", settings={'attribute': repr('inherit_scale')})
+        insertNode(layout, "LogicNodeSetRigBoneAttribute", "Set Bone Inherit Rotation", settings={'attribute': repr('use_inherit_rotation')})
+        layout.separator()
+        insertNode(layout, "LogicNodeSetRigBoneAttribute", "Set Bone Connected", settings={'attribute': repr('use_connect')})
+        insertNode(layout, "LogicNodeSetRigBoneAttribute", "Set Bone Deform", settings={'attribute': repr('use_deform')})
+        insertNode(layout, "LogicNodeSetRigBoneAttribute", "Set Bone Local", settings={'attribute': repr('use_local_location')})
+        insertNode(layout, "LogicNodeSetRigBoneAttribute", "Set Bone Relative Parent", settings={'attribute': repr('use_relative_parent')})
+        insertNode(layout, "LogicNodeSetRigBoneAttribute", "Set Bone Scale Easing", settings={'attribute': repr('use_scale_easing')})
+        # insertNode(layout, "NLActionSetBonePos", "Set Bone Position")
 
 
 @menu_item

@@ -50,21 +50,31 @@ class NodeSocketLogicArmature(NodeSocket, NodeSocketLogic):
         else:
             if not self.use_owner:
                 col = layout.column(align=False)
-                row = col.row()
+                row = col.row(align=True)
                 if self.name:
                     row.label(text=self.name)
-                row.prop(self, 'use_owner', icon='USER', text='')
-                col.prop_search(
-                    self,
-                    'default_value',
-                    bpy.context.scene,
-                    'objects',
-                    icon='NONE',
-                    text=''
-                )
+                    row.prop(self, 'use_owner', icon='USER', text='')
+                    col.prop_search(
+                        self,
+                        'default_value',
+                        bpy.context.scene,
+                        'objects',
+                        icon='NONE',
+                        text=''
+                    )
+                else:
+                    row.prop_search(
+                        self,
+                        'default_value',
+                        bpy.context.scene,
+                        'objects',
+                        icon='NONE',
+                        text=''
+                    )
+                    row.prop(self, 'use_owner', icon='USER', text='')
             else:
                 row = layout.row()
-                row.label(text=self.name)
+                row.label(text='Owner Object')
                 row.prop(self, 'use_owner', icon='USER', text='')
 
     def get_unlinked_value(self):
