@@ -10,6 +10,7 @@ _uplogic_versions = [
     ('1.9.5', '1.9.5', 'Suitable for Logic Nodes 2.4'),
     ('2.0.1', '2.0.1', 'Suitable for Logic Nodes 3.0'),
     ('3.2', '3.2', 'Suitable for Logic Nodes 3.2'),
+    ('3.2.1', '3.2.1', 'Suitable for Logic Nodes 3.2.1')
 ]
 
 
