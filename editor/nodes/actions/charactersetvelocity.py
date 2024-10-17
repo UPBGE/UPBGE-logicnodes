@@ -11,25 +11,28 @@ from bpy.props import BoolProperty
 class LogicNodeCharacterSetVelocity(LogicNodeActionType):
     bl_idname = "NLActionSetCharacterVelocity"
     bl_label = "Set Velocity"
+    bl_description = "Set physical velocity. When using 'Character' type physics, use this instead of 'Set Linear Velocity'"
     nl_module = 'uplogic.nodes.actions'
     nl_class = "ULSetCharacterVelocity"
 
     local: BoolProperty(default=True, name='Local')
 
     def init(self, context):
-        self.add_input(NodeSocketLogicCondition, "Condition")
-        self.add_input(NodeSocketLogicObject, "Object")
-        self.add_input(NodeSocketLogicVectorXYZ, "Velocity")
-        self.add_input(NodeSocketLogicFloatPositive, "Time")
-        self.add_output(NodeSocketLogicCondition, 'Done')
+        self.add_input(NodeSocketLogicCondition, "Condition", 'condition')
+        self.add_input(NodeSocketLogicObject, "Object", 'game_object')
+        self.add_input(NodeSocketLogicVectorXYZ, "Velocity", 'vel')
+        self.add_input(NodeSocketLogicFloatPositive, "Time", 'time')
+        self.add_output(NodeSocketLogicCondition, 'Done', 'OUT')
         LogicNodeActionType.init(self, context)
-
-    def get_output_names(self):
-        return ["OUT"]
 
     def draw_buttons(self, context, layout):
         layout.prop(self, "local")
 
+    # XXX: Remove for 5.0
+    def get_output_names(self):
+        return ["OUT"]
+
+    # XXX: Remove for 5.0
     def get_input_names(self):
         return ["condition", "game_object", 'vel', 'time']
 

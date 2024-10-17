@@ -11,6 +11,7 @@ from bpy.props import EnumProperty
 class LogicNodeCompare(LogicNodeConditionType):
     bl_idname = "NLConditionLogicOperation"
     bl_label = 'Compare'
+    bl_description = 'Compare a value to another'
     nl_module = 'uplogic.nodes.conditions'
     nl_class = 'ULCompare'
 
@@ -29,17 +30,19 @@ class LogicNodeCompare(LogicNodeConditionType):
         layout.prop(self, "operator", text='')
 
     def init(self, context):
-        self.add_input(NodeSocketLogicValue, "", None, {'value_type': 'FLOAT'})
-        self.add_input(NodeSocketLogicValue, "", None, {'value_type': 'FLOAT'})
-        self.add_input(NodeSocketLogicFloatPositive, "Threshold", None, {'enabled': False})
-        self.add_output(NodeSocketLogicBoolean, "Result")
+        self.add_input(NodeSocketLogicValue, "", 'param_a', {'value_type': 'FLOAT'})
+        self.add_input(NodeSocketLogicValue, "", 'param_b', {'value_type': 'FLOAT'})
+        self.add_input(NodeSocketLogicFloatPositive, "Threshold", 'threshold', {'enabled': False})
+        self.add_output(NodeSocketLogicBoolean, "Result", 'RESULT')
         LogicNodeConditionType.init(self, context)
 
+    # XXX: Remove for 5.0
     def get_input_names(self):
         return ["param_a", "param_b", 'threshold']
 
     def get_attributes(self):
         return [("operator", f'{self.operator}')]
 
+    # XXX: Remove for 5.0
     def get_output_names(self):
         return ['RESULT']

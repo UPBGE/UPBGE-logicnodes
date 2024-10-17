@@ -10,6 +10,8 @@ class LogicNodeSetEeveeAO(LogicNodeActionType):
     bl_label = "Set Ambient Occlusion"
     nl_module = 'uplogic.nodes.actions'
     nl_class = "ULSetEeveeAO"
+    deprecated = True
+    deprecation_message = 'This node will be removed in a future update.'
 
     def init(self, context):
         self.add_input(NodeSocketLogicCondition, 'Condition')

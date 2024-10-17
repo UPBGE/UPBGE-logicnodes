@@ -9,6 +9,7 @@ from ...sockets import NodeSocketLogicValue
 class LogicNodeListAppend(LogicNodeActionType):
     bl_idname = "NLAppendListItem"
     bl_label = "Append"
+    bl_description = 'Add a value to the end of a list'
     nl_module = 'uplogic.nodes.actions'
     nl_class = "ULAppendListItem"
 
@@ -17,15 +18,17 @@ class LogicNodeListAppend(LogicNodeActionType):
     ]
 
     def init(self, context):
-        self.add_input(NodeSocketLogicCondition, 'Condition')
-        self.add_input(NodeSocketLogicList, 'List')
-        self.add_input(NodeSocketLogicValue, '')
-        self.add_output(NodeSocketLogicCondition, 'Done')
-        self.add_output(NodeSocketLogicList, 'List')
+        self.add_input(NodeSocketLogicCondition, 'Condition', 'condition')
+        self.add_input(NodeSocketLogicList, 'List', 'items')
+        self.add_input(NodeSocketLogicValue, '', 'val')
+        self.add_output(NodeSocketLogicCondition, 'Done', 'OUT')
+        self.add_output(NodeSocketLogicList, 'List', 'LIST')
         LogicNodeActionType.init(self, context)
 
+    # XXX: Remove for 5.0
     def get_output_names(self):
         return ["OUT", "LIST"]
 
+    # XXX: Remove for 5.0
     def get_input_names(self):
         return ["condition", 'items', 'val']

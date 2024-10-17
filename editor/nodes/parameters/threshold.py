@@ -12,6 +12,7 @@ from bpy.props import EnumProperty
 class LogicNodeThreshold(LogicNodeParameterType):
     bl_idname = "NLThresholdNode"
     bl_label = "Threshold"
+    bl_description = "Return a value only if it's greater or less than a threshold"
     nl_module = 'uplogic.nodes.parameters'
     nl_class = "ULThreshold"
 
@@ -33,10 +34,10 @@ class LogicNodeThreshold(LogicNodeParameterType):
     def get_attributes(self):
         return [("operator", repr(self.operator))]
 
-    # XXX Remove for 4.0
+    # XXX Remove for 5.0
     def get_input_names(self):
         return ['else_z', "value", "threshold"]
 
-    # XXX Remove for 4.0
+    # XXX Remove for 5.0
     def get_output_names(self):
         return ["OUT"]

@@ -8,17 +8,19 @@ from ...sockets import NodeSocketLogicColorRGB
 class LogicNodeGetLightColor(LogicNodeParameterType):
     bl_idname = "NLGetLightColorAction"
     bl_label = "Get Light Color"
+    bl_description = 'Color of a light source'
     nl_module = 'uplogic.nodes.parameters'
+    nl_class = "ULGetLightColor"
 
     def init(self, context):
-        self.add_input(NodeSocketLogicLight, "Light Object")
-        self.add_output(NodeSocketLogicColorRGB, 'Color')
+        self.add_input(NodeSocketLogicLight, "Light Object", 'lamp')
+        self.add_output(NodeSocketLogicColorRGB, 'Color', 'COLOR')
         LogicNodeParameterType.init(self, context)
 
+    # XXX: Remove for 5.0
     def get_output_names(self):
         return ['COLOR']
 
-    nl_class = "ULGetLightColor"
-
+    # XXX: Remove for 5.0
     def get_input_names(self):
         return ["lamp"]

@@ -1,3 +1,4 @@
+from bpy.types import NodeLink
 from ..node import node_type
 from ..node import LogicNodeActionType
 from ...sockets import NodeSocketLogicCondition
@@ -27,6 +28,7 @@ class LogicNodeAddFilter(LogicNodeActionType):
     bl_label = "Add Filter"
     nl_module = 'uplogic.nodes.actions'
     nl_class = "ULAddFilter"
+    bl_description = 'Apply a 2D filter on the rendered image'
 
     def update_draw(self, context=None):
         if not self.ready:
@@ -57,14 +59,20 @@ class LogicNodeAddFilter(LogicNodeActionType):
         self.add_output(NodeSocketLogicCondition, 'Done', 'OUT')
         LogicNodeActionType.init(self, context)
 
+    def insert_link(self, link: NodeLink) -> None:
+        print('HELLO')
+        self.outputs[0].display_shape = self.inputs[0].display_shape
+        print(self.outputs[0].display_shape)
+        # return super().insert_link(link)
+
     def draw_buttons(self, context, layout):
         layout.prop(self, "filter_type")
 
-    def get_input_names(self):  # XXX Remove for 4.0
+    def get_input_names(self):  # XXX Remove for 5.0
         return ['condition', 'pass_idx', 'brightness', 'start', 'density', 'power', 'color']
 
     def get_attributes(self):
         return [("filter_type", self.filter_type)]
 
-    def get_output_names(self):  # XXX Remove for 4.0
+    def get_output_names(self):  # XXX Remove for 5.0
         return ["OUT"]

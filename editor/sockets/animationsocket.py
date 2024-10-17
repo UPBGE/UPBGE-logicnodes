@@ -1,5 +1,5 @@
 from .socket import NodeSocketLogic
-from .socket import SOCKET_COLOR_GENERIC
+from .socket import SOCKET_COLOR_DATABLOCK
 from .socket import SOCKET_TYPE_ACTION
 from .socket import socket_type
 from .socket import update_draw
@@ -28,11 +28,11 @@ class NodeSocketLogicAnimation(NodeSocket, NodeSocketLogic):
         update=update_draw
     )
 
-    nl_color = SOCKET_COLOR_GENERIC
+    nl_color = SOCKET_COLOR_DATABLOCK
     nl_type = SOCKET_TYPE_ACTION
 
     def draw(self, context, layout, node, text):
-        if self.linked_valid or self.is_output:
+        if self.linked_valid or self.is_output or self.is_multi_input:
             layout.label(text=text)
         else:
             col = layout.column()

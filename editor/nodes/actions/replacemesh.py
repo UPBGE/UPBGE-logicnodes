@@ -10,21 +10,24 @@ from ...sockets import NodeSocketLogicBoolean
 class LogicNodeReplaceMesh(LogicNodeActionType):
     bl_idname = "NLActionReplaceMesh"
     bl_label = "Replace Mesh"
+    bl_description = 'Replace the mesh data of an object'
     nl_module = 'uplogic.nodes.actions'
     nl_class = "ULReplaceMesh"
 
     def init(self, context):
-        self.add_input(NodeSocketLogicCondition, "Condition")
-        self.add_input(NodeSocketLogicObject, "Object")
-        self.add_input(NodeSocketLogicMesh, "New Mesh Name")
-        self.add_input(NodeSocketLogicBoolean, "Use Display", None, {'default_value': True})
-        self.add_input(NodeSocketLogicBoolean, "Use Physics")
-        self.add_output(NodeSocketLogicCondition, 'Done')
+        self.add_input(NodeSocketLogicCondition, "Condition", 'condition')
+        self.add_input(NodeSocketLogicObject, "Object", 'target_game_object')
+        self.add_input(NodeSocketLogicMesh, "New Mesh Name", 'new_mesh_name')
+        self.add_input(NodeSocketLogicBoolean, "Use Display", 'use_display', {'default_value': True})
+        self.add_input(NodeSocketLogicBoolean, "Use Physics", 'use_physics')
+        self.add_output(NodeSocketLogicCondition, 'Done', 'OUT')
         LogicNodeActionType.init(self, context)
 
+    # XXX: Remove for 5.0
     def get_output_names(self):
         return ["OUT"]
 
+    # XXX: Remove for 5.0
     def get_input_names(self):
         return [
             "condition",

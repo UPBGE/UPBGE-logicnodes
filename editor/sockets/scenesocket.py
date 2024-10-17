@@ -26,7 +26,7 @@ class NodeSocketLogicScene(NodeSocket, NodeSocketLogic):
     nl_type = SOCKET_TYPE_SCENE
 
     def draw(self, context, layout, node, text):
-        if self.is_output:
+        if self.is_output or self.is_multi_input:
             layout.label(text=self.name)
         elif self.linked_valid:
             layout.label(text=self.name)

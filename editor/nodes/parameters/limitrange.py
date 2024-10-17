@@ -11,6 +11,7 @@ from bpy.props import EnumProperty
 class LogicNodeLimitRange(LogicNodeParameterType):
     bl_idname = "NLLimitRange"
     bl_label = "Limit Range"
+    bl_description = 'Keep a value inside or outside a given range'
     nl_module = 'uplogic.nodes.parameters'
     nl_class = "ULLimitRange"
 
@@ -33,10 +34,10 @@ class LogicNodeLimitRange(LogicNodeParameterType):
     def get_attributes(self):
         return [("operator", repr(self.operator))]
 
-    # XXX Remove for 4.0
+    # XXX Remove for 5.0
     def get_input_names(self):
         return ["value", "threshold", 'min_value', 'max_value']
 
-    # XXX Remove for 4.0
+    # XXX Remove for 5.0
     def get_output_names(self):
         return ['OUT']

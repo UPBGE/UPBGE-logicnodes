@@ -31,7 +31,7 @@ class NodeSocketLogicInvertXY(NodeSocket, NodeSocketLogic):
             self.default_value[1] = y
 
     def draw(self, context, layout, node, text):
-        if self.linked_valid or self.is_output:
+        if self.linked_valid or self.is_output or self.is_multi_input:
             layout.label(text=text)
         else:
             row = layout.row(align=True)

@@ -39,3 +39,9 @@ from .customnodetemplates import LOGIC_NODES_OT_custom_node_templates
 from .registercustomnode import LOGIC_NODES_OT_register_custom_node
 from .editcustomnode import LOGIC_NODES_OT_edit_custom_node
 from .savecustomnode import LOGIC_NODES_OT_save_custom_node
+from .installpyfmodex import LOGIC_NODES_OT_install_pyfmodex
+from .startuipreview import LOGIC_NODES_OT_start_ui_preview
+from .addportal import LOGIC_NODES_OT_add_portal_in
+from .addportal import LOGIC_NODES_OT_add_portal_out
+
+# from .addallnodes import LOGIC_NODES_OT_add_all_nodes

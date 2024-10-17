@@ -10,25 +10,27 @@ from bpy.props import BoolProperty
 class LogicNodeCharacterSetWalkDir(LogicNodeActionType):
     bl_idname = "NLActionSetCharacterWalkDir"
     bl_label = "Walk"
+    bl_description = "Set the movement vector. Requires 'Character' type physics"
     nl_module = 'uplogic.nodes.actions'
+    nl_class = "ULSetCharacterWalkDir"
 
     local: BoolProperty(default=True, name='Local')
 
     def init(self, context):
-        self.add_input(NodeSocketLogicCondition, "Condition")
-        self.add_input(NodeSocketLogicObject, "Object")
-        self.add_input(NodeSocketLogicVectorXYZ, "Vector")
-        self.add_output(NodeSocketLogicCondition, 'Done')
+        self.add_input(NodeSocketLogicCondition, "Condition", 'condition')
+        self.add_input(NodeSocketLogicObject, "Object", 'game_object')
+        self.add_input(NodeSocketLogicVectorXYZ, "Vector", 'walkDir')
+        self.add_output(NodeSocketLogicCondition, 'Done', 'OUT')
         LogicNodeActionType.init(self, context)
-
-    def get_output_names(self):
-        return ["OUT"]
 
     def draw_buttons(self, context, layout):
         layout.prop(self, "local")
 
-    nl_class = "ULSetCharacterWalkDir"
+    # XXX: Remove for 5.0
+    def get_output_names(self):
+        return ["OUT"]
 
+    # XXX: Remove for 5.0
     def get_input_names(self):
         return ["condition", "game_object", 'walkDir']
 

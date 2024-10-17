@@ -5,6 +5,7 @@ from bpy.app.handlers import persistent
 import os
 import sys
 import time
+
 from .editor.sockets.socket import _sockets
 from .editor.nodes.node import _nodes
 from .editor.nodes.node import _node_manual_map
@@ -16,6 +17,8 @@ from .ui.interface import _menu_items
 from .ui import node_menu
 from .props.propertyfilter import LogicNodesPropertyFilter
 from .props.globalcategory import LogicNodesGlobalCategory
+from .props.portals import LogicNodesPortal
+from .props.fmod_parameters import LogicNodesFmodParameters
 from .props.customnode import _registered_custom_classes
 from .preferences import LogicNodesAddonPreferences
 from .utilities import preferences as prefs
@@ -24,7 +27,7 @@ from .editor.nodetree import LogicNodeTree
 from . import utilities as utils
 from . import audio
 
-from .props.customnode import custom_node
+from .props.customnode import custom_node  # noqa
 from .props.customnode import CustomNodeReference
 
 
@@ -34,8 +37,8 @@ bl_info = {
         "A Node System to create game logic."
     ),
     "author": "pgi, Leopold A-C (Iza Zed)",
-    "version": (3, 2, 1),
-    "blender": (4, 1, 0),
+    "version": (4, 0, 0),
+    "blender": (4, 3, 0),
     "location": "View Menu",
     "category": "Game Engine",
     "wiki_url": "https://upbge.org/#/documentation/docs/latest/manual/manual/logic_nodes/index.html",
@@ -377,7 +380,7 @@ def register():
     bpy.utils.register_class(CustomNodeReference)
     bpy.utils.register_class(LogicNodesAddonPreferences)
 
-    prefs().uplogic_version = 'latest'
+    # prefs().uplogic_version = 'latest'
     for node in prefs().custom_logic_nodes:
         exec(node.ui_code, {"bge_netlogic": _get_this_module()})
     bpy.types.Object.sound_occluder = bpy.props.BoolProperty(
@@ -430,6 +433,8 @@ def register():
         name='Component',
         description='Add a component defined in this file'
     )
+    bpy.types.Scene.nl_portals = bpy.props.CollectionProperty(type=LogicNodesPortal)
+    bpy.types.Scene.nl_fmod_parameters = bpy.props.CollectionProperty(type=LogicNodesFmodParameters)
     bpy.types.Scene.nl_global_categories = bpy.props.CollectionProperty(type=LogicNodesGlobalCategory)
     bpy.types.Scene.nl_global_cat_selected = bpy.props.IntProperty(name='Category')
     bpy.types.Scene.custom_mainloop_tree = bpy.props.PointerProperty(

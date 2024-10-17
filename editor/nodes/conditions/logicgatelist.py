@@ -11,7 +11,9 @@ from bpy.props import EnumProperty
 class LogicNodeLogicGateList(LogicNodeConditionType):
     bl_idname = "LogicNodeLogicGateList"
     bl_label = "Gate List"
+    bl_description = 'Logical operation using two or more conditions'
     nl_module = 'uplogic.nodes.conditions'
+    nl_class = "ULLogicGateList"
 
     gate: EnumProperty(items=_logic_gates_list, name='Gate Type')
 
@@ -22,12 +24,10 @@ class LogicNodeLogicGateList(LogicNodeConditionType):
     ]
 
     def init(self, context):
-        self.add_input(NodeSocketLogicCondition, "Condition")
-        self.add_input(NodeSocketLogicCondition, "Condition")
-        self.add_output(NodeSocketLogicCondition, "Result")
+        self.add_input(NodeSocketLogicCondition, "Condition", 'item')
+        self.add_input(NodeSocketLogicCondition, "Condition", 'item')
+        self.add_output(NodeSocketLogicCondition, "Result", 'OUT')
         LogicNodeConditionType.init(self, context)
-
-    nl_class = "ULLogicGateList"
 
     def set_new_input_name(self):
         self.inputs[-1].name = 'Condition'
@@ -49,14 +49,12 @@ class LogicNodeLogicGateList(LogicNodeConditionType):
         for socket in self.inputs:
             field_value = None
             if socket.linked_valid:
-                field_value = self.get_linked_socket_field_value(
+                field_value = self.get_linked_value(
                     socket,
-                    cell_varname,
-                    None,
                     uids
                 )
             else:
-                field_value = socket.get_unlinked_value()
+                field_value = socket.get_default_value()
             items += f'{field_value}, '
         items = items[:-2]
         attributes = f'        {cell_varname}.items = [{items}]\n'

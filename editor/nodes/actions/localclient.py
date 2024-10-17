@@ -12,8 +12,10 @@ from bpy.props import BoolProperty
 class LogicNodeLocalClient(LogicNodeActionType):
     bl_idname = "LogicNodeLocalClient"
     bl_label = "LAN Client"
-    nl_module = 'uplogic.nodes.actions'
+    bl_description = 'Manage a Local Area Network (LAN) client'
     bl_width_default = 180
+    nl_module = 'uplogic.nodes.actions'
+    nl_class = "ULLocalClient"
 
     on_init: BoolProperty(
         name='Startup',
@@ -37,9 +39,13 @@ class LogicNodeLocalClient(LogicNodeActionType):
     def draw_buttons(self, context, layout) -> None:
         layout.prop(self, 'on_init', text='On Startup')
 
-    nl_class = "ULLocalClient"
+    def get_attributes(self):
+        return [
+            ("on_init", f'{self.on_init}')
+        ]
 
-    def get_input_names(self):  # XXX Remove for 4.0
+    # XXX: Remove for 5.0
+    def get_input_names(self):
         return [
             "connect_cond",
             "ip_address",
@@ -47,10 +53,6 @@ class LogicNodeLocalClient(LogicNodeActionType):
             "disconnect_cond",
         ]
 
-    def get_attributes(self):
-        return [
-            ("on_init", f'{self.on_init}')
-        ]
-
-    def get_output_names(self):  # XXX Remove for 4.0
+    # XXX: Remove for 5.0
+    def get_output_names(self):
         return ['CONNECT', 'CONNECTED', 'DISCONNECT', 'CLIENT', 'RECEIVED', 'MSG']

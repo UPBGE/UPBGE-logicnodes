@@ -10,8 +10,10 @@ from bpy.props import EnumProperty
 class LogicNodeLogicGate(LogicNodeConditionType):
     bl_idname = "LogicNodeLogicGate"
     bl_label = "Gate"
+    bl_description = 'Logical operation using two conditions'
     bl_width_min = 60
     nl_module = 'uplogic.nodes.conditions'
+    nl_class = "ULLogicGate"
 
     def update_draw(self, context=None):
         if not self.ready:
@@ -33,21 +35,21 @@ class LogicNodeLogicGate(LogicNodeConditionType):
     ]
 
     def init(self, context):
-        self.add_input(NodeSocketLogicCondition, "Condition A")
-        self.add_input(NodeSocketLogicCondition, "Condition B")
-        self.add_output(NodeSocketLogicCondition, "Result")
+        self.add_input(NodeSocketLogicCondition, "Condition A", 'ca')
+        self.add_input(NodeSocketLogicCondition, "Condition B", 'cb')
+        self.add_output(NodeSocketLogicCondition, "Result", 'OUT')
         LogicNodeConditionType.init(self, context)
 
     def draw_buttons(self, context: Context, layout: UILayout) -> None:
         layout.prop(self, 'gate', text='')
 
-    nl_class = "ULLogicGate"
-
     def get_attributes(self):
         return [("gate", self.gate)]
 
+    # XXX: Remove for 5.0
     def get_output_names(self):
         return ['OUT']
 
+    # XXX: Remove for 5.0
     def get_input_names(self):
         return ["ca", "cb"]

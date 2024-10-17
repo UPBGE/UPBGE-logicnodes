@@ -11,6 +11,7 @@ from ...sockets import NodeSocketLogicObject
 class LogicNodeSetBoneConstraintTarget(LogicNodeActionType):
     bl_idname = "NLSetBoneConstraintTarget"
     bl_label = "Set Target"
+    bl_description = 'Set the target of an armature bone constraint'
     nl_module = 'uplogic.nodes.actions'
     nl_class = "ULSetBoneConstraintTarget"
 
@@ -19,17 +20,19 @@ class LogicNodeSetBoneConstraintTarget(LogicNodeActionType):
     ]
 
     def init(self, context):
-        self.add_input(NodeSocketLogicCondition, "Condition")
-        self.add_input(NodeSocketLogicArmature, "Armature")
-        self.add_input(NodeSocketLogicBone, "", None, {'ref_index': 1})
-        self.add_input(NodeSocketLogicBoneConstraint, "", None, {'ref_index': 2})
-        self.add_input(NodeSocketLogicObject, "Target")
-        self.add_output(NodeSocketLogicCondition, 'Done')
+        self.add_input(NodeSocketLogicCondition, "Condition", 'condition')
+        self.add_input(NodeSocketLogicArmature, "Armature", 'armature')
+        self.add_input(NodeSocketLogicBone, "", 'bone', {'ref_index': 1})
+        self.add_input(NodeSocketLogicBoneConstraint, "", 'constraint', {'ref_index': 2})
+        self.add_input(NodeSocketLogicObject, "Target", 'target')
+        self.add_output(NodeSocketLogicCondition, 'Done', 'OUT')
         LogicNodeActionType.init(self, context)
 
+    # XXX: Remove for 5.0
     def get_output_names(self):
         return ["OUT"]
 
+    # XXX: Remove for 5.0
     def get_input_names(self):
         return [
             "condition",

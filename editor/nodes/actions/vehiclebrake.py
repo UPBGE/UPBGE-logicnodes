@@ -14,6 +14,7 @@ class LogicNodeVehicleBrake(LogicNodeActionType):
     bl_label = "Brake"
     nl_module = 'uplogic.nodes.actions'
     nl_class = "ULVehicleApplyBraking"
+    bl_description = 'Apply a braking force to a vehicle according to its setup'
 
     search_tags = [
         ['Brake Vehicle', {}]
@@ -39,11 +40,11 @@ class LogicNodeVehicleBrake(LogicNodeActionType):
     def draw_buttons(self, context, layout):
         layout.prop(self, "value_type", text='')
 
-    # XXX Remove for 4.0
+    # XXX Remove for 5.0
     def get_input_names(self):
         return ["condition", "vehicle", "wheelcount", 'power']
 
-    # XXX Remove for 4.0
+    # XXX Remove for 5.0
     def get_output_names(self):
         return ["OUT"]
 

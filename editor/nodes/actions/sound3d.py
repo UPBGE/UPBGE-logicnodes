@@ -19,6 +19,7 @@ class LogicNodeSound3D(LogicNodeActionType):
     bl_label = "3D Sound"
     nl_module = 'uplogic.nodes.actions'
     nl_class = "ULStartSound3D"
+    deprecated = True
 
     def update_draw(self, context=None):
         if not self.ready:
@@ -39,8 +40,8 @@ class LogicNodeSound3D(LogicNodeActionType):
     )
 
     def init(self, context):
-        self.add_input(NodeSocketLogicCondition, "Condition")
-        self.add_input(NodeSocketLogicObject, "Speaker")
+        self.add_input(NodeSocketLogicCondition, "Condition", 'condition')
+        self.add_input(NodeSocketLogicObject, "Speaker", 'speaker')
         self.add_input(NodeSocketLogicSoundFile, "Sound File")
         self.add_input(NodeSocketLogicBoolean, "Use Occlusion")
         self.add_input(NodeSocketLogicFloatFactor, 'Transition', None, {'default_value': .1})

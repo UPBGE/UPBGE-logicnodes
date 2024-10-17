@@ -7,13 +7,14 @@ from ...sockets import NodeSocketLogicVectorXYZ
 class LogicNodeGetGravity(LogicNodeParameterType):
     bl_idname = "NLGetGravityNode"
     bl_label = "Get Gravity"
+    bl_description = 'Scene gravity vector'
     nl_module = 'uplogic.nodes.parameters'
-
-    def init(self, context):
-        self.add_output(NodeSocketLogicVectorXYZ, "Gravity")
-        LogicNodeParameterType.init(self, context)
-
     nl_class = "ULGetGravity"
 
+    def init(self, context):
+        self.add_output(NodeSocketLogicVectorXYZ, "Gravity", 'OUT')
+        LogicNodeParameterType.init(self, context)
+
+    # XXX: Remove for 5.0
     def get_output_names(self):
         return ["OUT"]

@@ -6,13 +6,16 @@ from ...sockets import NodeSocketLogicString
 from ...sockets import NodeSocketLogicVectorXYZ
 from ...sockets import NodeSocketLogicObject
 from ...sockets import NodeSocketLogicPython
+from ...sockets import NodeSocketLogicBitMask
 from bpy.props import BoolProperty
 
 
 @node_type
 class LogicNodeFModStartEvent(LogicNodeActionType):
     bl_idname = "LogicNodeFModStartEvent"
-    bl_label = "FMod Start Event"
+    bl_label = "Start Event Instance"
+    bl_width_default = 180
+    bl_description = 'Start a new event instance from a loaded .bank file'
     nl_module = 'uplogic.nodes.fmod'
     nl_class = "FModStartEventNode"
 
@@ -30,7 +33,8 @@ class LogicNodeFModStartEvent(LogicNodeActionType):
         self.add_input(NodeSocketLogicString, "Event", 'event')
         self.add_input(NodeSocketLogicVectorXYZ, "Position", 'source')
         self.add_input(NodeSocketLogicObject, "Speaker", 'source')
-        self.add_input(NodeSocketLogicString, "Channel", 'channel', {'default_value': 'default'})
+        self.add_input(NodeSocketLogicBitMask, "Occlusion Mask", 'mask')
+        self.add_input(NodeSocketLogicString, "", 'channel', {'default_value': 'default'})
         self.add_output(NodeSocketLogicCondition, "Done", 'OUT')
-        self.add_output(NodeSocketLogicPython, "Event", 'EVT')
+        self.add_output(NodeSocketLogicPython, "Event Instance", 'EVT')
         LogicNodeActionType.init(self, context)

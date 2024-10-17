@@ -1,5 +1,5 @@
 from ..node import node_type
-from ..node import LogicNodeParameterType
+from ..node import LogicNodeConditionType
 from ...sockets import NodeSocketLogicFloat
 from ...sockets import NodeSocketLogicVectorXYZ
 from ...sockets import NodeSocketLogicVector
@@ -19,10 +19,10 @@ value_types = [
 
 
 @node_type
-class LogicNodeTweenValue(LogicNodeParameterType):
+class LogicNodeTweenValue(LogicNodeConditionType):
     bl_idname = "LogicNodeTweenValue"
     bl_label = "Tween Value"
-    nl_module = 'uplogic.nodes.parameters'
+    nl_module = 'uplogic.nodes.conditions'
     nl_class = "TweenValueNode"
     bl_width_default = 200
 
@@ -42,6 +42,7 @@ class LogicNodeTweenValue(LogicNodeParameterType):
         self.outputs[3].enabled = int(self.value_type)
 
     on_demand: BoolProperty(name='On Demand', description='Tween the value automatically when output socket is active', update=update_draw)
+    instant_reset: BoolProperty(name='Instant Reset', description='Instantly reset the factor when the result is not being accessed')
     value_type: EnumProperty(name='Type', items=value_types, description='Value type to tween', update=update_draw)
 
     mapping: PointerProperty(name='Value', type=bpy.types.Brush)
@@ -49,6 +50,8 @@ class LogicNodeTweenValue(LogicNodeParameterType):
     def draw_buttons(self, context, layout):
         layout.prop(self, 'value_type')
         layout.prop(self, 'on_demand')
+        if self.on_demand:
+            layout.prop(self, 'instant_reset')
         if self.mapping.users > 2:
             layout.label(icon='ERROR', text='Data used in multiple nodes!')
         if self.mapping:
@@ -76,7 +79,7 @@ class LogicNodeTweenValue(LogicNodeParameterType):
         self.add_output(NodeSocketLogicFloat, 'Result', 'RESULT_FLOAT')
         self.add_output(NodeSocketLogicVector, 'Result', 'RESULT_VEC')
         self.add_output(NodeSocketLogicFloat, 'Factor', 'FAC')
-        LogicNodeParameterType.init(self, context)
+        LogicNodeConditionType.init(self, context)
 
     def free(self) -> None:
         if self.mapping and self.mapping.users == 2:
@@ -86,6 +89,7 @@ class LogicNodeTweenValue(LogicNodeParameterType):
     def get_attributes(self):
         return [
             ('on_demand', self.on_demand),
+            ('instant_reset', self.instant_reset),
             ('value_type', self.value_type),
             ('mapping', f'bpy.data.brushes["{self.mapping.name}"]')
         ]

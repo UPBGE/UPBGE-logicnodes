@@ -18,6 +18,7 @@ _modes = [
 class LogicNodeMapRange(LogicNodeParameterType):
     bl_idname = "NLMapRangeNode"
     bl_label = "Map Range"
+    bl_description = 'Map a value from one range to another'
     nl_module = 'uplogic.nodes.parameters'
     nl_class = "ULMapRange"
 
@@ -38,25 +39,26 @@ class LogicNodeMapRange(LogicNodeParameterType):
     mode: EnumProperty(items=_modes, name='Mode', update=update_draw)
 
     def init(self, context):
-        self.add_input(NodeSocketLogicFloat, "Value")
-        self.add_input(NodeSocketLogicFloat, "From Min")
-        self.add_input(NodeSocketLogicFloat, "From Max", None, {'default_value': 1.0})
-        self.add_input(NodeSocketLogicFloat, "To Min")
-        self.add_input(NodeSocketLogicFloat, "To Max", None, {'default_value': 1.0})
-        self.add_input(NodeSocketLogicFloat, 'Steps', None, {'enabled': False})
-        self.add_input(NodeSocketLogicVectorXYZ, "Value")
-        self.add_input(NodeSocketLogicVectorXYZ, "From Min")
-        self.add_input(NodeSocketLogicVectorXYZ, "From Max", None, {'default_value': (1.0, 1.0, 1.0)})
-        self.add_input(NodeSocketLogicVectorXYZ, "To Min")
-        self.add_input(NodeSocketLogicVectorXYZ, "To Max", None, {'default_value': (1.0, 1.0, 1.0)})
-        self.add_input(NodeSocketLogicVectorXYZ, 'Steps', None, {'enabled': False})
-        self.add_output(NodeSocketLogicParameter, "Result")
+        self.add_input(NodeSocketLogicFloat, "Value", 'value')
+        self.add_input(NodeSocketLogicFloat, "From Min", 'from_min')
+        self.add_input(NodeSocketLogicFloat, "From Max", 'from_max', {'default_value': 1.0})
+        self.add_input(NodeSocketLogicFloat, "To Min", 'to_min')
+        self.add_input(NodeSocketLogicFloat, "To Max", 'to_max', {'default_value': 1.0})
+        self.add_input(NodeSocketLogicFloat, 'Steps', 'steps', {'enabled': False})
+        self.add_input(NodeSocketLogicVectorXYZ, "Value", 'value')
+        self.add_input(NodeSocketLogicVectorXYZ, "From Min", 'from_min')
+        self.add_input(NodeSocketLogicVectorXYZ, "From Max", 'from_max', {'default_value': (1.0, 1.0, 1.0)})
+        self.add_input(NodeSocketLogicVectorXYZ, "To Min", 'to_min')
+        self.add_input(NodeSocketLogicVectorXYZ, "To Max", 'to_max', {'default_value': (1.0, 1.0, 1.0)})
+        self.add_input(NodeSocketLogicVectorXYZ, 'Steps', 'steps', {'enabled': False})
+        self.add_output(NodeSocketLogicParameter, "Result", 'OUT')
         LogicNodeParameterType.init(self, context)
 
     def draw_buttons(self, context: Context, layout: UILayout) -> None:
         layout.prop(self, 'mode', text='')
         layout.prop(self, 'clamp')
 
+    # XXX: Remove for 5.0
     def get_input_names(self):
         return [
             "value",
@@ -76,5 +78,6 @@ class LogicNodeMapRange(LogicNodeParameterType):
     def get_attributes(self):
         return [('clamp', self.clamp), ('mode', self.mode)]
 
+    # XXX: Remove for 5.0
     def get_output_names(self):
         return ["OUT"]

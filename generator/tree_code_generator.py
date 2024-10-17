@@ -46,12 +46,12 @@ from collections import OrderedDict
 from mathutils import Vector
 
 
-class {}Wrapper():
+class {}_Tree():
 
     def __init__(self, game_object, component=None, exec_cond="", startup=False):
         from uplogic import nodes, utils
         from uplogic.nodes.logictree import ULLogicTree
-        from uplogic.utils import OPERATORS, LOGIC_OPERATORS
+        from uplogic.utils import OPERATORS, LOGIC_OPERATORS, MATH_OPERATORS
 {}
         self.condition = exec_cond
         owner = self.owner = game_object
@@ -86,7 +86,7 @@ class {}(bge.types.KX_PythonComponent):
     ])
 
     def start(self, args):
-        self.logictree = {}Wrapper(
+        self.logictree = {}_Tree(
             self.object,
             component=self,
             exec_cond=args["Execution Condition"],
@@ -101,7 +101,7 @@ class {}(bge.types.KX_PythonComponent):
 
 
 def get_tree(obj):
-    return {}Wrapper(obj)
+    return {}_Tree(obj)
 
 """
 

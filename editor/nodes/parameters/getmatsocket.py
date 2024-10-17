@@ -11,14 +11,15 @@ import bpy
 class LogicNodeGetMaterialSocket(LogicNodeParameterType):
     bl_idname = "NLGetMaterialNodeValue"
     bl_label = "Get Socket Value"
+    bl_description = 'A socket value of a shader node'
     nl_module = 'uplogic.nodes.parameters'
     nl_class = "ULGetMaterialSocket"
 
     def init(self, context):
-        self.add_input(NodeSocketLogicMaterial, 'Material')
-        self.add_input(NodeSocketLogicTreeNode, 'Node Name')
-        self.add_input(NodeSocketLogicIntegerPositive, "Input")
-        self.add_output(NodeSocketLogicParameter, "Value")
+        self.add_input(NodeSocketLogicMaterial, 'Material', 'mat_name')
+        self.add_input(NodeSocketLogicTreeNode, 'Node Name', 'node_name')
+        self.add_input(NodeSocketLogicIntegerPositive, "Input", 'input_slot')
+        self.add_output(NodeSocketLogicParameter, "Value", 'OUT')
         LogicNodeParameterType.init(self, context)
 
     def update_draw(self, context=None):
@@ -46,8 +47,10 @@ class LogicNodeGetMaterialSocket(LogicNodeParameterType):
             name = target.inputs[ipt.default_value].name
             ipt.name = name
 
+    # XXX: Remove for 5.0
     def get_input_names(self):
         return ["mat_name", 'node_name', "input_slot"]
 
+    # XXX: Remove for 5.0
     def get_output_names(self):
         return ['OUT']

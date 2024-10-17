@@ -12,17 +12,18 @@ class LogicNodeApplyImpulse(LogicNodeActionType):
     bl_label = "Apply Impulse"
     nl_module = 'uplogic.nodes.actions'
     nl_class = "ULApplyImpulse"
+    bl_description = 'Apply a force on an object at a specific point'
 
     deprecated = True
     deprecation_message = 'Replaced by "Apply Transform" Node.'
     local: BoolProperty(default=False, name='Local')
 
     def init(self, context):
-        self.add_input(NodeSocketLogicCondition, 'Condition')
-        self.add_input(NodeSocketLogicObject, 'Object')
-        self.add_input(NodeSocketLogicVectorXYZ, 'Point')
-        self.add_input(NodeSocketLogicVectorXYZ, 'Direction')
-        self.add_output(NodeSocketLogicCondition, 'Done')
+        self.add_input(NodeSocketLogicCondition, 'Condition', 'condition')
+        self.add_input(NodeSocketLogicObject, 'Object', 'game_object')
+        self.add_input(NodeSocketLogicVectorXYZ, 'Point', 'point')
+        self.add_input(NodeSocketLogicVectorXYZ, 'Direction', 'impulse')
+        self.add_output(NodeSocketLogicCondition, 'Done', 'OUT')
         LogicNodeActionType.init(self, context)
 
     def get_output_names(self):

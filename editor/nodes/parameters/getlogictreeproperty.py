@@ -25,6 +25,7 @@ from ...sockets import NodeSocketLogicTreeProperty
 class LogicNodeGetLogicTreeProperty(LogicNodeParameterType):
     bl_idname = "LogicNodeGetLogicTreeProperty"
     bl_label = "Get Tree Property"
+    bl_description = 'Retrieve a property stored on this logic tree'
     nl_module = 'uplogic.nodes.parameters'
     nl_class = "ULGetLogicTreeProperty"
 
@@ -56,28 +57,30 @@ class LogicNodeGetLogicTreeProperty(LogicNodeParameterType):
         #     layout.prop(prop, 'value_type', text='')
 
     def init(self, context):
-        self.add_input(NodeSocketLogicTreeProperty, "Property")
-        self.add_output(NodeSocketLogicFloat, "Property")
-        self.add_output(NodeSocketLogicString, "Property", None, {'enabled': False})
-        self.add_output(NodeSocketLogicInteger, "Property", None, {'enabled': False})
-        self.add_output(NodeSocketLogicBoolean, "Property", None, {'enabled': False})
-        self.add_output(NodeSocketLogicVectorXYZ, "Property", None, {'enabled': False})
-        self.add_output(NodeSocketLogicColorRGB, "Property", None, {'enabled': False})
-        self.add_output(NodeSocketLogicColorRGBA, "Property", None, {'enabled': False})
-        self.add_output(NodeSocketLogicObject, "Property", None, {'enabled': False})
-        self.add_output(NodeSocketLogicCollection, "Property", None, {'enabled': False})
-        self.add_output(NodeSocketLogicMaterial, "Property", None, {'enabled': False})
-        self.add_output(NodeSocketLogicMesh, "Property", None, {'enabled': False})
-        self.add_output(NodeSocketLogicNodeGroup, "Property", None, {'enabled': False})
-        self.add_output(NodeSocketLogicAnimation, "Property", None, {'enabled': False})
-        self.add_output(NodeSocketLogicText, "Property", None, {'enabled': False})
-        self.add_output(NodeSocketLogicImage, "Property", None, {'enabled': False})
-        self.add_output(NodeSocketLogicSoundFile, "Property", None, {'enabled': False})
-        self.add_output(NodeSocketLogicFont, "Property", None, {'enabled': False})
+        self.add_input(NodeSocketLogicTreeProperty, "Property", 'property_name')
+        self.add_output(NodeSocketLogicFloat, "Property", 'OUT')
+        self.add_output(NodeSocketLogicString, "Property", 'OUT', {'enabled': False})
+        self.add_output(NodeSocketLogicInteger, "Property", 'OUT', {'enabled': False})
+        self.add_output(NodeSocketLogicBoolean, "Property", 'OUT', {'enabled': False})
+        self.add_output(NodeSocketLogicVectorXYZ, "Property", 'OUT', {'enabled': False})
+        self.add_output(NodeSocketLogicColorRGB, "Property", 'OUT', {'enabled': False})
+        self.add_output(NodeSocketLogicColorRGBA, "Property", 'OUT', {'enabled': False})
+        self.add_output(NodeSocketLogicObject, "Property", 'OUT', {'enabled': False})
+        self.add_output(NodeSocketLogicCollection, "Property", 'OUT', {'enabled': False})
+        self.add_output(NodeSocketLogicMaterial, "Property", 'OUT', {'enabled': False})
+        self.add_output(NodeSocketLogicMesh, "Property", 'OUT', {'enabled': False})
+        self.add_output(NodeSocketLogicNodeGroup, "Property", 'OUT', {'enabled': False})
+        self.add_output(NodeSocketLogicAnimation, "Property", 'OUT', {'enabled': False})
+        self.add_output(NodeSocketLogicText, "Property", 'OUT', {'enabled': False})
+        self.add_output(NodeSocketLogicImage, "Property", 'OUT', {'enabled': False})
+        self.add_output(NodeSocketLogicSoundFile, "Property", 'OUT', {'enabled': False})
+        self.add_output(NodeSocketLogicFont, "Property", 'OUT', {'enabled': False})
         LogicNodeParameterType.init(self, context)
 
+    # XXX: Remove for 5.0
     def get_input_names(self):
         return ["property_name"]
 
+    # XXX: Remove for 5.0
     def get_output_names(self):
         return ['OUT' for x in range(len(self.outputs))]

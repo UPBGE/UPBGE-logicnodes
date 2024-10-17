@@ -8,6 +8,7 @@ from ...sockets import NodeSocketLogicVectorXYZ
 class LogicNodeCombineXYZ(LogicNodeParameterType):
     bl_idname = "NLParameterVector3SimpleNode"
     bl_label = "Combine XYZ"
+    bl_description = 'Three-dimensional vector'
     nl_module = 'uplogic.nodes.parameters'
     nl_class = "ULVectorXYZ"
 
@@ -23,8 +24,10 @@ class LogicNodeCombineXYZ(LogicNodeParameterType):
         self.add_output(NodeSocketLogicVectorXYZ, "Vector", 'OUTV')
         LogicNodeParameterType.init(self, context)
 
+    # XXX: Remove for 5.0
     def get_output_names(self):
         return ["OUTV"]
 
+    # XXX: Remove for 5.0
     def get_input_names(self):
         return ["input_x", "input_y", "input_z"]

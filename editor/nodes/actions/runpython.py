@@ -11,8 +11,10 @@ from bpy.props import EnumProperty
 @node_type
 class LogicNodeRunPython(LogicNodeActionType):
     bl_idname = "NLParameterPythonModuleFunction"
+    bl_description = 'Execute a piece of python code'
     bl_label = "Run Python Code"
     nl_module = 'uplogic.nodes.actions'
+    nl_class = "ULRunPython"
 
     def update_draw(self, context=None):
         if not self.ready:
@@ -26,14 +28,12 @@ class LogicNodeRunPython(LogicNodeActionType):
     mode: EnumProperty(items=_enum_python_types, update=update_draw, name='Mode')
 
     def init(self, context):
-        self.add_input(NodeSocketLogicCondition, "Condition", None, {'default_value': True, 'show_prop': True})
-        self.add_input(NodeSocketLogicText, "Module Name")
-        self.add_input(NodeSocketLogicString, "Function")
-        self.add_output(NodeSocketLogicCondition, "Done")
-        self.add_output(NodeSocketLogicParameter, "Returned Value")
+        self.add_input(NodeSocketLogicCondition, "Condition", 'condition', {'default_value': True, 'show_prop': True})
+        self.add_input(NodeSocketLogicText, "Module Name", 'module_name')
+        self.add_input(NodeSocketLogicString, "Function", 'module_func')
+        self.add_output(NodeSocketLogicCondition, "Done", 'OUT')
+        self.add_output(NodeSocketLogicParameter, "Returned Value", 'VAL')
         LogicNodeActionType.init(self, context)
-
-    nl_class = "ULRunPython"
 
     def set_new_input_name(self):
         self.inputs[-1].name = 'Argument'
@@ -68,23 +68,23 @@ class LogicNodeRunPython(LogicNodeActionType):
         while socket < len(self.inputs):
             field_value = None
             if self.inputs[socket].linked_valid:
-                field_value = self.get_linked_socket_field_value(
+                field_value = self.get_linked_value(
                     self.inputs[socket],
-                    cell_varname,
-                    None,
                     uids
                 )
             else:
-                field_value = self.inputs[socket].get_unlinked_value()
+                field_value = self.inputs[socket].get_default_value()
             items += f'{field_value}, '
             socket += 1
         items = items[:-2]
         line = f'        {cell_varname}.arg = [{items}]\n'
         return text + line
 
+    # XXX: Remove for 5.0
     def get_input_names(self):
         return ['condition', "module_name", 'module_func']
 
+    # XXX: Remove for 5.0
     def get_output_names(self):
         return ["OUT", "VAL"]
 

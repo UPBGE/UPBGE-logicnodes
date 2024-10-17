@@ -11,20 +11,23 @@ from ...sockets import NodeSocketLogicBoolean
 class LogicNodeSetGlobalValue(LogicNodeActionType):
     bl_idname = "NLActionSetGlobalValue"
     bl_label = "Set Global Property"
+    bl_description = 'Save a value into a property that can be retrieved elsewhere'
     nl_module = 'uplogic.nodes.actions'
     nl_class = "ULSetGlobalValue"
 
     def init(self, context):
-        self.add_input(NodeSocketLogicCondition, "Condition", None, {'show_prop': True})
-        self.add_input(NodeSocketLogicGlobalCategory, "Category")
-        self.add_input(NodeSocketLogicGlobalProperty, "Property", None, {'ref_index': 1})
-        self.add_input(NodeSocketLogicValue, "")
-        self.add_input(NodeSocketLogicBoolean, "Persistent")
-        self.add_output(NodeSocketLogicCondition, 'Done')
+        self.add_input(NodeSocketLogicCondition, "Condition", 'condition', {'show_prop': True})
+        self.add_input(NodeSocketLogicGlobalCategory, "Category", 'data_id')
+        self.add_input(NodeSocketLogicGlobalProperty, "Property", 'key', {'ref_index': 1})
+        self.add_input(NodeSocketLogicValue, "", 'value')
+        self.add_input(NodeSocketLogicBoolean, "Persistent", 'persistent')
+        self.add_output(NodeSocketLogicCondition, 'Done', 'OUT')
         LogicNodeActionType.init(self, context)
 
+    # XXX: Remove for 5.0
     def get_output_names(self):
         return ["OUT"]
 
+    # XXX: Remove for 5.0
     def get_input_names(self):
         return ["condition", "data_id", "key", "value", 'persistent']

@@ -69,6 +69,7 @@ from .xyzsocket import NodeSocketLogicXYZ
 from .socket import NodeSocketLogicVirtual
 from .logictreepropertysocket import NodeSocketLogicTreeProperty
 from .constraintsocket import NodeSocketLogicConstraint
+from .datablock import NodeSocketLogicDatablock
 
 from .deprecated import *
 

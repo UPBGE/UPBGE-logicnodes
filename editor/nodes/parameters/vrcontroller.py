@@ -17,7 +17,9 @@ _controllers = [
 class LogicNodeVRController(LogicNodeParameterType):
     bl_idname = "NLGetVRControllerValues"
     bl_label = "VR Controller"
+    bl_description = 'World space date of a VR controller'
     nl_module = 'uplogic.nodes.parameters'
+    nl_class = "ULGetVRControllerValues"
 
     index: EnumProperty(
         name='Controller',
@@ -29,18 +31,18 @@ class LogicNodeVRController(LogicNodeParameterType):
         layout.prop(self, "index", text="")
 
     def init(self, context):
-        self.add_output(NodeSocketLogicVectorXYZ, "Position")
-        self.add_output(NodeSocketLogicVectorXYZ, "Orientation")
-        self.add_output(NodeSocketLogicVectorXYZ, "Aim Position")
-        self.add_output(NodeSocketLogicVectorXYZ, "Aim Orientation")
-        self.add_output(NodeSocketLogicVectorXY, "Stick")
-        self.add_output(NodeSocketLogicFloat, "Trigger")
+        self.add_output(NodeSocketLogicVectorXYZ, "Position", 'POS')
+        self.add_output(NodeSocketLogicVectorXYZ, "Orientation", 'ORI')
+        self.add_output(NodeSocketLogicVectorXYZ, "Aim Position", 'APOS')
+        self.add_output(NodeSocketLogicVectorXYZ, "Aim Orientation", 'AORI')
+        self.add_output(NodeSocketLogicVectorXY, "Stick", 'STICK')
+        self.add_output(NodeSocketLogicFloat, "Trigger", 'TRIGGER')
         LogicNodeParameterType.init(self, context)
 
-    nl_class = "ULGetVRControllerValues"
-
+    # XXX: Remove for 5.0
     def get_attributes(self):
         return [("index", f'{self.index}')]
 
+    # XXX: Remove for 5.0
     def get_output_names(self):
         return ['POS', 'ORI', 'APOS', 'AORI', 'STICK', 'TRIGGER']

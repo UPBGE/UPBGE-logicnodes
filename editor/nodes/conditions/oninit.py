@@ -7,10 +7,11 @@ from ...sockets import NodeSocketLogicCondition
 class LogicNodeOnInit(LogicNodeConditionType):
     bl_idname = "NLOnInitConditionNode"
     bl_label = "On Init"
+    bl_description = 'On first frame'
     nl_module = 'uplogic.nodes.conditions'
+    nl_class = "ULOnInit"
 
     def init(self, context):
-        self.add_output(NodeSocketLogicCondition, "Out")
+        self.add_output(NodeSocketLogicCondition, "Out", 'OUT')
         LogicNodeConditionType.init(self, context)
-
-    nl_class = "ULOnInit"
+        self.hide = True

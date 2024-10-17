@@ -16,6 +16,7 @@ from bpy.props import EnumProperty
 class LogicNodeSpawnPool(LogicNodeActionType):
     bl_idname = "LogicNodeSpawnPool"
     bl_label = "Spawn Pool"
+    bl_description = 'Add a spawn pool to avoid dynamically creating objects'
     nl_module = 'uplogic.nodes.actions'
     nl_class = "ULSpawnPool"
 
@@ -50,28 +51,29 @@ class LogicNodeSpawnPool(LogicNodeActionType):
     )
 
     def init(self, context):
-        self.add_input(NodeSocketLogicCondition, "Create Pool")
-        self.add_input(NodeSocketLogicCondition, "Spawn")
-        self.add_input(NodeSocketLogicObject, "Spawner")
-        self.add_input(NodeSocketLogicObject, "Object Instance", None, {'allow_owner': False})
-        self.add_input(NodeSocketLogicIntegerPositive, "Amount", None, {'default_value': 10})
-        self.add_input(NodeSocketLogicIntegerPositive, "Life", None, {'default_value': 3})
-        self.add_input(NodeSocketLogicFloatPositive, "Speed", None, {'default_value': 75.0})
-        self.add_input(NodeSocketLogicBitMask, "Bitmask")
-        self.add_input(NodeSocketLogicBoolean, "Visualize")
-        self.add_output(NodeSocketLogicCondition, "Pool Created")
-        self.add_output(NodeSocketLogicCondition, "Spawned")
-        self.add_output(NodeSocketLogicCondition, "On Hit")
-        self.add_output(NodeSocketLogicObject, "Hit Object")
-        self.add_output(NodeSocketLogicVectorXYZ, "Hit Point")
-        self.add_output(NodeSocketLogicVectorXYZ, "Hit Normal")
-        self.add_output(NodeSocketLogicVectorXYZ, "Hit Direction")
+        self.add_input(NodeSocketLogicCondition, "Create Pool", 'condition')
+        self.add_input(NodeSocketLogicCondition, "Spawn", 'spawn')
+        self.add_input(NodeSocketLogicObject, "Spawner", 'spawner')
+        self.add_input(NodeSocketLogicObject, "Object Instance", 'object_instance', {'allow_owner': False})
+        self.add_input(NodeSocketLogicIntegerPositive, "Amount", 'amount', {'default_value': 10})
+        self.add_input(NodeSocketLogicIntegerPositive, "Life", 'life', {'default_value': 3})
+        self.add_input(NodeSocketLogicFloatPositive, "Speed", 'speed', {'default_value': 75.0})
+        self.add_input(NodeSocketLogicBitMask, "Bitmask", 'bitmask')
+        self.add_input(NodeSocketLogicBoolean, "Visualize", 'visualize')
+        self.add_output(NodeSocketLogicCondition, "Pool Created", 'OUT')
+        self.add_output(NodeSocketLogicCondition, "Spawned", 'SPAWNED')
+        self.add_output(NodeSocketLogicCondition, "On Hit", 'ONHIT')
+        self.add_output(NodeSocketLogicObject, "Hit Object", 'HITOBJECT')
+        self.add_output(NodeSocketLogicVectorXYZ, "Hit Point", 'HITPOINT')
+        self.add_output(NodeSocketLogicVectorXYZ, "Hit Normal", 'HITNORMAL')
+        self.add_output(NodeSocketLogicVectorXYZ, "Hit Direction", 'HITDIR')
         LogicNodeActionType.init(self, context)
 
     def draw_buttons(self, context, layout) -> None:
         layout.prop(self, 'create_on_init', text='On Startup')
         layout.prop(self, 'spawn_type', text='')
 
+    # XXX: Remove for 5.0
     def get_input_names(self):
         return [
             "condition",
@@ -91,6 +93,7 @@ class LogicNodeSpawnPool(LogicNodeActionType):
             ("spawn_type", self.spawn_type)
         ]
 
+    # XXX: Remove for 5.0
     def get_output_names(self):
         return [
             'OUT',

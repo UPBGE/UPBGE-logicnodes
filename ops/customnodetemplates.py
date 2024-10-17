@@ -17,6 +17,7 @@ class LogicNodeCustomNode(LogicNodeCustomType):
     # cannot find nodes added by older versions
     bl_idname = 'LogicNodeCustomNode'
     bl_label = 'My Custom Node'
+    bl_description = 'This is a custom node'
 
     # `nl_module` defines the module (python file) where the game-side
     # implementation of the node is found. In this case, the corresponding

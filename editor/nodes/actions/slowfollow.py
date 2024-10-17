@@ -13,6 +13,7 @@ class LogicNodeSlowFollow(LogicNodeActionType):
     bl_label = "Slow Follow"
     nl_module = 'uplogic.nodes.actions'
     nl_class = "ULSlowFollow"
+    bl_description = 'Linearly interpolate an attribute from one object to another'
 
     value_type: EnumProperty(
         name='Attribute',
@@ -21,19 +22,21 @@ class LogicNodeSlowFollow(LogicNodeActionType):
     )
 
     def init(self, context):
-        self.add_input(NodeSocketLogicCondition, "Condition")
-        self.add_input(NodeSocketLogicObject, "Object")
-        self.add_input(NodeSocketLogicObject, "Target")
-        self.add_input(NodeSocketLogicFloatFactor, "Factor", None, {'default_value': 1})
-        self.add_output(NodeSocketLogicCondition, 'Done')
+        self.add_input(NodeSocketLogicCondition, "Condition", 'condition')
+        self.add_input(NodeSocketLogicObject, "Object", 'game_object')
+        self.add_input(NodeSocketLogicObject, "Target", 'target')
+        self.add_input(NodeSocketLogicFloatFactor, "Factor", 'factor', {'default_value': 1})
+        self.add_output(NodeSocketLogicCondition, 'Done', 'OUT')
         LogicNodeActionType.init(self, context)
 
+    # XXX: Remove for 5.0
     def get_output_names(self):
         return ["OUT"]
 
     def draw_buttons(self, context, layout):
         layout.prop(self, "value_type", text='')
 
+    # XXX: Remove for 5.0
     def get_input_names(self):
         return ["condition", "game_object", "target", "factor"]
 

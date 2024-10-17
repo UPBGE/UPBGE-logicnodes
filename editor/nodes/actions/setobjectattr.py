@@ -15,6 +15,7 @@ class LogicNodeSetObjectAttr(LogicNodeActionType):
     bl_label = "Set Attribute"
     nl_module = 'uplogic.nodes.actions'
     nl_class = "ULSetGameObjectAttribue"
+    bl_description = 'Set an attribute of an object'
     bl_width_default = 180
 
     def update_draw(self, context=None):
@@ -69,14 +70,16 @@ class LogicNodeSetObjectAttr(LogicNodeActionType):
         self.add_output(NodeSocketLogicCondition, 'Done', 'OUT')
         LogicNodeActionType.init(self, context)
 
-    def get_output_names(self):
-        return ["OUT"]
-
     def draw_buttons(self, context, layout):
         layout.prop(self, "value_type", text='')
 
+    # XXX: Remove for 5.0
     def get_input_names(self):
         return ["condition", "xyz", "game_object", "attribute_value", "attribute_value"]
+
+    # XXX: Remove for 5.0
+    def get_output_names(self):
+        return ["OUT"]
 
     def get_attributes(self):
         return [("value_type", repr(self.value_type))]

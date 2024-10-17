@@ -16,36 +16,39 @@ from ...sockets import NodeSocketLogicFloatFactor
 class LogicNodePlayAnimation(LogicNodeActionType):
     bl_idname = "NLActionPlayActionNode"
     bl_label = "Play Animation"
+    bl_description = 'Start an animation on an object'
     nl_module = 'uplogic.nodes.actions'
     nl_class = "ULPlayAction"
 
     def update_draw(self, context=None):
-        self.inputs[8].enabled = self.inputs[7].default_value == 0
+        self.inputs[8].enabled = False
+        self.inputs[6].enabled = False
 
     def init(self, context):
-        self.add_input(NodeSocketLogicCondition, "Condition")
-        self.add_input(NodeSocketLogicObject, "Object / Armature")
-        self.add_input(NodeSocketLogicAnimation, "Action")
-        self.add_input(NodeSocketLogicFloat, "Start")
-        self.add_input(NodeSocketLogicFloat, "End")
-        self.add_input(NodeSocketLogicIntegerPositive, "Layer")
-        self.add_input(NodeSocketLogicIntegerPositive, "Priority", None, {'enabled': False})
-        self.add_input(NodeSocketLogicPlayMode, "Play Mode")
-        self.add_input(NodeSocketLogicBoolean, "Stop When Done", None, {'default_value': True})
-        self.add_input(NodeSocketLogicFloatFactor, "Layer Weight", None, {'default_value': 1.0})
-        self.add_input(NodeSocketLogicFloatPositive, "Speed", None, {'default_value': 1.0})
-        self.add_input(NodeSocketLogicFloat, "Blend-In")
-        self.add_input(NodeSocketLogicBlendMode, "Blend Mode")
-        self.add_output(NodeSocketLogicCondition, "Started")
-        self.add_output(NodeSocketLogicCondition, "Running")
-        self.add_output(NodeSocketLogicCondition, "On Finish")
-        self.add_output(NodeSocketLogicFloat, "Current Frame")
+        self.add_input(NodeSocketLogicCondition, "Condition", 'condition')
+        self.add_input(NodeSocketLogicObject, "Object / Armature", 'game_object')
+        self.add_input(NodeSocketLogicAnimation, "Action", 'action_name')
+        self.add_input(NodeSocketLogicFloat, "Start", 'start_frame')
+        self.add_input(NodeSocketLogicFloat, "End", 'end_frame')
+        self.add_input(NodeSocketLogicIntegerPositive, "Layer", 'layer')
+        self.add_input(NodeSocketLogicIntegerPositive, "Priority", 'priority', {'enabled': False})
+        self.add_input(NodeSocketLogicPlayMode, "Play Mode", 'play_mode')
+        self.add_input(NodeSocketLogicBoolean, "Stop When Done", 'stop', {'default_value': True})
+        self.add_input(NodeSocketLogicFloatFactor, "Intensity", 'layer_weight', {'default_value': 1.0})
+        self.add_input(NodeSocketLogicFloatPositive, "Speed", 'speed', {'default_value': 1.0})
+        self.add_input(NodeSocketLogicFloat, "Blend-In", 'blendin')
+        self.add_input(NodeSocketLogicBlendMode, "Blend Mode", 'blend_mode')
+        self.add_output(NodeSocketLogicCondition, "Started", 'STARTED')
+        self.add_output(NodeSocketLogicCondition, "Running", 'RUNNING')
+        self.add_output(NodeSocketLogicCondition, "On Finish", 'FINISHED')
+        self.add_output(NodeSocketLogicFloat, "Current Frame", 'FRAME')
         LogicNodeActionType.init(self, context)
 
+    # XXX: Remove for 5.0
     def get_input_names(self):
-        # XXX: Legacy Re-Enable Check
-        for i in self.inputs:
-            i.enabled = i != 6
+        # XXX: Remove legacy Re-Enable Check
+        self.inputs[8].enabled = False
+        self.inputs[6].enabled = False
         return [
             "condition",
             "game_object",
@@ -62,5 +65,6 @@ class LogicNodePlayAnimation(LogicNodeActionType):
             "blend_mode"
         ]
 
+    # XXX: Remove for 5.0
     def get_output_names(self):
         return ["STARTED", "RUNNING", "FINISHED", "FRAME"]

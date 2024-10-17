@@ -14,6 +14,7 @@ from bpy.props import BoolProperty
 class LogicNodeModifyProperty(LogicNodeActionType):
     bl_idname = "NLAddToGameObjectGamePropertyActionNode"
     bl_label = "Modify Object Property"
+    bl_description = 'Perform a mathematical operation on a Game Property'
     nl_module = 'uplogic.nodes.actions'
     nl_class = "ULModifyProperty"
 
@@ -55,7 +56,8 @@ class LogicNodeModifyProperty(LogicNodeActionType):
             ("operator", f'OPERATORS.get("{self.operator}")')
         ]
 
-    def get_input_names(self):  # XXX Remove for 4.0
+    # XXX: Remove for 5.0
+    def get_input_names(self):
         return [
             "condition",
             "game_object",
@@ -65,5 +67,6 @@ class LogicNodeModifyProperty(LogicNodeActionType):
             'max_value'
         ]
 
-    def get_output_names(self):  # XXX Remove for 4.0
+    # XXX: Remove for 5.0
+    def get_output_names(self):
         return ['OUT']

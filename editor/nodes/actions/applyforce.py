@@ -12,6 +12,7 @@ class LogicNodeApplyForce(LogicNodeActionType):
     bl_label = "Apply Force"
     nl_module = 'uplogic.nodes.actions'
     nl_class = "ULApplyForce"
+    bl_description = 'Apply a uniform force on an object'
 
     deprecated = True
     deprecation_message = 'Replaced by "Apply Transform" Node.'
@@ -19,10 +20,10 @@ class LogicNodeApplyForce(LogicNodeActionType):
     local: BoolProperty(default=True, name='Local')
 
     def init(self, context):
-        self.add_input(NodeSocketLogicCondition, "Condition")
-        self.add_input(NodeSocketLogicObject, "Object")
-        self.add_input(NodeSocketLogicVectorXYZ, "Vector")
-        self.add_output(NodeSocketLogicCondition, 'Done')
+        self.add_input(NodeSocketLogicCondition, "Condition", 'condition')
+        self.add_input(NodeSocketLogicObject, "Object", 'game_object')
+        self.add_input(NodeSocketLogicVectorXYZ, "Vector", 'force')
+        self.add_output(NodeSocketLogicCondition, 'Done', 'OUT')
         LogicNodeActionType.init(self, context)
 
     def get_output_names(self):

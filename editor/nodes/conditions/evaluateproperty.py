@@ -14,7 +14,9 @@ from bpy.props import EnumProperty
 class LogicNodeEvaluateProperty(LogicNodeConditionType):
     bl_idname = "NLObjectPropertyOperator"
     bl_label = "Evaluate Object Property"
+    bl_description = 'Compare an object property to a value'
     nl_module = 'uplogic.nodes.conditions'
+    nl_class = "ULEvaluateProperty"
 
     mode: EnumProperty(
         name='Mode',
@@ -32,15 +34,14 @@ class LogicNodeEvaluateProperty(LogicNodeConditionType):
         layout.prop(self, "operator", text='')
 
     def init(self, context):
-        self.add_input(NodeSocketLogicObject, 'Object')
-        self.add_input(NodeSocketLogicGameProperty, "Property")
-        self.add_input(NodeSocketLogicValue, '')
-        self.add_output(NodeSocketLogicCondition, 'If True')
-        self.add_output(NodeSocketLogicParameter, 'Value')
+        self.add_input(NodeSocketLogicObject, 'Object', 'game_object')
+        self.add_input(NodeSocketLogicGameProperty, "Property", 'property_name')
+        self.add_input(NodeSocketLogicValue, '', 'compare_value')
+        self.add_output(NodeSocketLogicCondition, 'If True', 'OUT')
+        self.add_output(NodeSocketLogicParameter, 'Value', 'VAL')
         LogicNodeConditionType.init(self, context)
 
-    nl_class = "ULEvaluateProperty"
-
+    # XXX: Remove for 5.0
     def get_input_names(self):
         return [
             "game_object",
@@ -54,5 +55,6 @@ class LogicNodeEvaluateProperty(LogicNodeConditionType):
             ("operator", f'LOGIC_OPERATORS[{self.operator}]')
         ]
 
+    # XXX: Remove for 5.0
     def get_output_names(self):
         return ['OUT', "VAL"]

@@ -34,6 +34,7 @@ class NodeSocketLogicValue(NodeSocket, NodeSocketLogic):
     value_type: EnumProperty(
         name='Type',
         items=_enum_field_value_types,
+        default='FLOAT',
         update=on_type_changed
     )
 
@@ -68,9 +69,18 @@ class NodeSocketLogicValue(NodeSocket, NodeSocketLogic):
     def get_unlinked_value(self):
         return parse_value_type(self.value_type, self.default_value)
 
+    def draw_color(self, context, node) -> tuple[float]:
+        from_socket = self.get_from_socket()
+        if from_socket:
+            return from_socket.nl_color
+        return self.nl_color
+
     def draw(self, context, layout, node, text):
-        if self.linked_valid or self.is_output:
+        if self.is_output or self.is_multi_input:
             layout.label(text=text)
+            return
+        if self.linked_valid:
+            layout.label(text=self.links[0].from_socket.name)
         else:
             col = layout.column()
             if text:

@@ -4,6 +4,7 @@ from ..utilities import make_valid_name
 from .interface import ui_panel
 from ..editor.nodetree import LogicNodeTree
 from bpy.props import BoolProperty
+from bpy.props import FloatVectorProperty
 
 
 @ui_panel

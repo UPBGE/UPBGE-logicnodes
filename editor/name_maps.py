@@ -30,7 +30,11 @@ _ui_widget_attributes = {
     "texture": "Image",
     "icon": "Icon",
     "rows": "Rows",
-    "cols": "Columns"
+    "cols": "Columns",
+    "points": "Points",
+    "starting_angle": "Angle",
+    "radius": "Radius",
+    "pivot": "Position",
 }
 
 

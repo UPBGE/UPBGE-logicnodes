@@ -26,6 +26,7 @@ from ...sockets import NodeSocketLogicTreeProperty
 class LogicNodeSetLogicTreeProperty(LogicNodeActionType):
     bl_idname = "LogicNodeSetLogicTreeProperty"
     bl_label = "Set Tree Property"
+    bl_description = 'Set a property of a tree'
     nl_module = 'uplogic.nodes.actions'
     nl_class = "ULSetLogicTreeProperty"
 
@@ -43,32 +44,34 @@ class LogicNodeSetLogicTreeProperty(LogicNodeActionType):
             input.enabled = i < 2 or i == int(vtype) + 2
 
     def init(self, context):
-        self.add_input(NodeSocketLogicCondition, "Condition")
-        self.add_input(NodeSocketLogicTreeProperty, "Property")
-        self.add_input(NodeSocketLogicFloat, "Value", None, {'enabled': False})
-        self.add_input(NodeSocketLogicString, "Value", None, {'enabled': False})
-        self.add_input(NodeSocketLogicInteger, "Value", None, {'enabled': False})
-        self.add_input(NodeSocketLogicBoolean, "Value", None, {'enabled': False})
-        self.add_input(NodeSocketLogicVectorXYZ, "Value", None, {'enabled': False})
-        self.add_input(NodeSocketLogicColorRGB, "Value", None, {'enabled': False})
-        self.add_input(NodeSocketLogicColorRGBA, "Value", None, {'enabled': False})
-        self.add_input(NodeSocketLogicObject, "Value", None, {'enabled': False})
-        self.add_input(NodeSocketLogicCollection, "Value", None, {'enabled': False})
-        self.add_input(NodeSocketLogicMaterial, "Value", None, {'enabled': False})
-        self.add_input(NodeSocketLogicMesh, "Value", None, {'enabled': False})
-        self.add_input(NodeSocketLogicNodeGroup, "Value", None, {'enabled': False})
-        self.add_input(NodeSocketLogicAnimation, "Value", None, {'enabled': False})
-        self.add_input(NodeSocketLogicText, "Value", None, {'enabled': False})
-        self.add_input(NodeSocketLogicSoundFile, "Value", None, {'enabled': False})
-        self.add_input(NodeSocketLogicImage, "Value", None, {'enabled': False})
-        self.add_input(NodeSocketLogicFont, "Value", None, {'enabled': False})
-        self.add_output(NodeSocketLogicCondition, "Done")
+        self.add_input(NodeSocketLogicCondition, "Condition", 'condition')
+        self.add_input(NodeSocketLogicTreeProperty, "Property", 'prop_name')
+        self.add_input(NodeSocketLogicFloat, "Value", 'value', {'enabled': False})
+        self.add_input(NodeSocketLogicString, "Value", 'value', {'enabled': False})
+        self.add_input(NodeSocketLogicInteger, "Value", 'value', {'enabled': False})
+        self.add_input(NodeSocketLogicBoolean, "Value", 'value', {'enabled': False})
+        self.add_input(NodeSocketLogicVectorXYZ, "Value", 'value', {'enabled': False})
+        self.add_input(NodeSocketLogicColorRGB, "Value", 'value', {'enabled': False})
+        self.add_input(NodeSocketLogicColorRGBA, "Value", 'value', {'enabled': False})
+        self.add_input(NodeSocketLogicObject, "Value", 'value', {'enabled': False})
+        self.add_input(NodeSocketLogicCollection, "Value", 'value', {'enabled': False})
+        self.add_input(NodeSocketLogicMaterial, "Value", 'value', {'enabled': False})
+        self.add_input(NodeSocketLogicMesh, "Value", 'value', {'enabled': False})
+        self.add_input(NodeSocketLogicNodeGroup, "Value", 'value', {'enabled': False})
+        self.add_input(NodeSocketLogicAnimation, "Value", 'value', {'enabled': False})
+        self.add_input(NodeSocketLogicText, "Value", 'value', {'enabled': False})
+        self.add_input(NodeSocketLogicSoundFile, "Value", 'value', {'enabled': False})
+        self.add_input(NodeSocketLogicImage, "Value", 'value', {'enabled': False})
+        self.add_input(NodeSocketLogicFont, "Value", 'value', {'enabled': False})
+        self.add_output(NodeSocketLogicCondition, "Done", 'OUT')
         LogicNodeActionType.init(self, context)
 
+    # XXX: Remove for 5.0
     def get_input_names(self):
         names = ['condition', 'prop_name']
         names.extend(['value' for x in range(16)])
         return names
 
+    # XXX: Remove for 5.0
     def get_output_names(self):
         return ['OUT']

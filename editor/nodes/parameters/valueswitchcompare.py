@@ -10,9 +10,11 @@ from bpy.props import EnumProperty
 class LogicNodeValueSwitchCompare(LogicNodeParameterType):
     bl_idname = "NLValueSwitchListCompare"
     bl_label = "Value Switch List Compare"
+    bl_description = 'Choose between multiple values depending on an input value'
     bl_width_min = 100
     bl_width_default = 172
     nl_module = 'uplogic.nodes.parameters'
+    nl_class = "ULValueSwitchListCompare"
 
     def update_draw(self, context=None):
         if not self.ready:
@@ -36,25 +38,23 @@ class LogicNodeValueSwitchCompare(LogicNodeParameterType):
         layout.prop(self, "operator", text='')
 
     def init(self, context):
-        self.add_input(NodeSocketLogicValue, "Switch:")
-        self.add_input(NodeSocketLogicValue, "Default")
-        self.add_input(NodeSocketLogicValue, "Case A")
-        self.add_input(NodeSocketLogicValue, "")
-        self.add_input(NodeSocketLogicValue, "Case B")
-        self.add_input(NodeSocketLogicValue, "")
-        self.add_input(NodeSocketLogicValue, "Case C")
-        self.add_input(NodeSocketLogicValue, "")
-        self.add_input(NodeSocketLogicValue, "Case D")
-        self.add_input(NodeSocketLogicValue, "")
-        self.add_input(NodeSocketLogicValue, "Case E")
-        self.add_input(NodeSocketLogicValue, "")
-        self.add_input(NodeSocketLogicValue, "Case F")
-        self.add_input(NodeSocketLogicValue, "")
-        self.add_output(NodeSocketLogicParameter, "Result")
+        self.add_input(NodeSocketLogicValue, "Switch:", 'p0')
+        self.add_input(NodeSocketLogicValue, "Default", 'val_default')
+        self.add_input(NodeSocketLogicValue, "Case A", 'pa')
+        self.add_input(NodeSocketLogicValue, "", 'val_a')
+        self.add_input(NodeSocketLogicValue, "Case B", 'pb')
+        self.add_input(NodeSocketLogicValue, "", 'val_b')
+        self.add_input(NodeSocketLogicValue, "Case C", 'pc')
+        self.add_input(NodeSocketLogicValue, "", 'val_c')
+        self.add_input(NodeSocketLogicValue, "Case D", 'pd')
+        self.add_input(NodeSocketLogicValue, "", 'val_d')
+        self.add_input(NodeSocketLogicValue, "Case E", 'pe')
+        self.add_input(NodeSocketLogicValue, "", 'val_e')
+        self.add_input(NodeSocketLogicValue, "Case F", 'pf')
+        self.add_input(NodeSocketLogicValue, "", 'val_f')
+        self.add_output(NodeSocketLogicParameter, "Result", 'RESULT')
         LogicNodeParameterType.init(self, context)
         self.hide = True
-
-    nl_class = "ULValueSwitchListCompare"
 
     def get_input_names(self):
         return [
@@ -67,10 +67,12 @@ class LogicNodeValueSwitchCompare(LogicNodeParameterType):
             "pf", 'val_f'
         ]
 
+    # XXX: Remove for 5.0
     def get_attributes(self):
         return [
             ("operator", f'{self.operator}'),
         ]
 
+    # XXX: Remove for 5.0
     def get_output_names(self):
         return ['RESULT']

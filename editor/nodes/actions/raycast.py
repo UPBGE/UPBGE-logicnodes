@@ -17,6 +17,7 @@ from bpy.props import BoolProperty
 class LogicNodeRaycast(LogicNodeActionType):
     bl_idname = "NLActionRayCastNode"
     bl_label = "Raycast"
+    bl_description = 'Perform a linear raycast from one point to another'
     nl_class = "ULRaycast"
     nl_module = 'uplogic.nodes.actions'
 
@@ -26,6 +27,7 @@ class LogicNodeRaycast(LogicNodeActionType):
         self.outputs[5].enabled = self.face_data
         self.outputs[6].enabled = self.face_data
         self.inputs[9].enabled = self.inputs[8].default_value
+        self.inputs[2].name = 'Direction' if self.inputs[3].default_value else 'Target'
 
     face_data: BoolProperty(
         name='Get Face Data',
@@ -34,25 +36,25 @@ class LogicNodeRaycast(LogicNodeActionType):
     )
 
     def init(self, context):
-        self.add_input(NodeSocketLogicCondition, "Condition")
-        self.add_input(NodeSocketLogicVectorXYZ, "Origin")
-        self.add_input(NodeSocketLogicVectorXYZ, "Aim")
-        self.add_input(NodeSocketLogicBoolean, "Local")
-        self.add_input(NodeSocketLogicString, "Property")
-        self.add_input(NodeSocketLogicMaterial, "Material")
-        self.add_input(NodeSocketLogicBoolean, "Exclude")
-        self.add_input(NodeSocketLogicBoolean, 'X-Ray')
-        self.add_input(NodeSocketLogicBoolean, "Custom Distance")
-        self.add_input(NodeSocketLogicFloatPositive, "Distance", None, {'default_value': 100.0})
-        self.add_input(NodeSocketLogicBitMask, "Mask")
-        self.add_input(NodeSocketLogicBoolean, 'Visualize')
-        self.add_output(NodeSocketLogicCondition, "Has Result")
-        self.add_output(NodeSocketLogicObject, "Picked Object")
-        self.add_output(NodeSocketLogicVectorXYZ, "Picked Point")
-        self.add_output(NodeSocketLogicVectorXYZ, "Picked Normal")
-        self.add_output(NodeSocketLogicVectorXYZ, "Ray Direction")
-        self.add_output(NodeSocketLogicParameter, "Face Material Name")
-        self.add_output(NodeSocketLogicVectorXY, "UV Coords")
+        self.add_input(NodeSocketLogicCondition, "Condition", "condition")
+        self.add_input(NodeSocketLogicVectorXYZ, "Origin", "origin")
+        self.add_input(NodeSocketLogicVectorXYZ, "Aim", "destination")
+        self.add_input(NodeSocketLogicBoolean, "Local", 'local')
+        self.add_input(NodeSocketLogicString, "Property", "property_name")
+        self.add_input(NodeSocketLogicMaterial, "Material", "material")
+        self.add_input(NodeSocketLogicBoolean, "Exclude", "exclude")
+        self.add_input(NodeSocketLogicBoolean, 'X-Ray', 'xray')
+        self.add_input(NodeSocketLogicBoolean, "Custom Distance", 'custom_dist')
+        self.add_input(NodeSocketLogicFloatPositive, "Distance", 'distance', {'default_value': 100.0})
+        self.add_input(NodeSocketLogicBitMask, "Mask", 'mask')
+        self.add_input(NodeSocketLogicBoolean, 'Visualize', 'visualize')
+        self.add_output(NodeSocketLogicCondition, "Has Result", 'RESULT')
+        self.add_output(NodeSocketLogicObject, "Picked Object", 'PICKED_OBJECT')
+        self.add_output(NodeSocketLogicVectorXYZ, "Picked Point", 'POINT')
+        self.add_output(NodeSocketLogicVectorXYZ, "Picked Normal", 'NORMAL')
+        self.add_output(NodeSocketLogicVectorXYZ, "Ray Direction", 'DIRECTION')
+        self.add_output(NodeSocketLogicParameter, "Face Material Name", 'MATERIAL')
+        self.add_output(NodeSocketLogicVectorXY, "UV Coords", 'UV')
         LogicNodeActionType.init(self, context)
 
     def draw_buttons(self, context, layout):
@@ -61,6 +63,7 @@ class LogicNodeRaycast(LogicNodeActionType):
     def get_attributes(self):
         return [("face_data", self.face_data)]
 
+    # XXX: Remove for 5.0
     def get_input_names(self):
         return [
             "condition",
@@ -77,5 +80,6 @@ class LogicNodeRaycast(LogicNodeActionType):
             "visualize"
         ]
 
+    # XXX: Remove for 5.0
     def get_output_names(self):
         return ['RESULT', "PICKED_OBJECT", "POINT", "NORMAL", "DIRECTION", "MATERIAL", "UV"]

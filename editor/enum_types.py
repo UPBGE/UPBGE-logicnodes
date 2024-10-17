@@ -494,8 +494,8 @@ _enum_msg_types = [
 
 
 _enum_python_types = [
-    ("0", "Module", "Run a whole file"),
-    ("1", "Function", "Run a single function from a .py file")
+    ("0", "Module", "Execute a script"),
+    ("1", "Function", "Execute a single function from a .py file")
 ]
 
 
@@ -504,6 +504,7 @@ _writeable_widget_attrs = [
     ("bg_color", "Color", "Background color"),#
     ("opacity", "Opacity", "Opacity"),#
     ("pos", "Position", "Widget Position (0-1 if set to relative)"),#
+    ("pivot", "Pivot", "Widget screen position in pixels"),#
     ("size", "Size", "Widget Size (0-1 if set to relative)"),#
     ("angle", "Angle", "Widget Angle in degrees"),#
     ("width", "Width", "Widget Width (0-1 if set to relative)"),#
@@ -517,6 +518,8 @@ _writeable_widget_attrs = [
     None,
     ("orientation", "Orientation", "Child widget arrangement mode (BoxLayout only)"),#
     ("spacing", "Spacing", "Pixels in between child widgets (BoxLayout only)"),#
+    ("radius", "Radius", "Distance of the children to the center of the layout (PolarLayout only)"),#
+    ("starting_angle", "Starting Angle", "Start positioning the child widgets from this angle. 0 is right, 90 is up. (PolarLayout only)"),#
     None,
     ("hover_color", "Hover Color", "Color for when the mouse is over widget (Button only)"),#
     None,
@@ -533,18 +536,22 @@ _writeable_widget_attrs = [
     ("shadow_offset", "Shadow Offset", "Offset for the shadow font (Label only)"),#
     ("shadow_color", "Shadow Color", "Color for the shadow font (Label only)"),#
     None,
-    ("texture", "Image", "Texture to use as image (Image only)"),
+    ("texture", "Image", "Texture to use as image (Image and Sprite only)"),
     None,
     ("icon", "Icon", "Icon (Sprite) position on sheet (Icon only)"),
     ("rows", "Rows", "Rows in the Icon (Sprite) sheet (Icon only)"),
-    ("cols", "Columns", "Columns in the Icon (Sprite) sheet (Icon only)")
+    ("cols", "Columns", "Columns in the Icon (Sprite) sheet (Icon only)"),
+    None,
+    ("points", "Points", "Points of the path (Path only)")
 ]
 
 
 _ui_layout_types = [
     ("FloatLayout", "Float Layout", "A Layout that places its child widgets independent of its own position"),
     ("RelativeLayout", "Relative Layout", "A Layout that places its child widgets relative to its own position"),
-    ("BoxLayout", "Box Layout", "A Layout that automatically places widgets in either rows or columns")
+    ("BoxLayout", "Box Layout", "A Layout that automatically places widgets in either rows or columns"),
+    ("GridLayout", "Grid Layout", "A Layout that automatically places widgets in a grid of rows or columns"),
+    ("PolarLayout", "Polar Layout", "A Layout that automatically places widgets in a circle around itself")
 ]
 
 
@@ -555,7 +562,7 @@ _ui_boxlayout_types = [
 
 
 _ui_slider_types = [
-    ("0", "Simple", "A knob sliding along a thin bar"),
+    ("0", "Simple", "A knob sliding along a bar"),
     ("1", "Framed", "A knob sliding inside a frame"),
     ("2", "Progress", "A frame filled with color corresponding to knob position")
 ]
@@ -653,4 +660,28 @@ _rotate_by_types = [
     ("0", "2D", ""),
     ("1", "3D", ""),
     ("2", "Axis", "")
+]
+
+
+_socket_types = [
+    ('', 'Type', ''),
+    ('0', 'Generic', ''),
+    None,
+    ('1', 'Float', ''),
+    ('2', 'Integer', ''),
+    ('3', 'String', ''),
+    ('4', 'Boolean', ''),
+    None,
+    ('5', 'Vector', ''),
+    ('6', 'Color', ''),
+    ('7', 'List', ''),
+    ('8', 'Dictionary', ''),
+    ('', '', ''),
+    ('9', 'Datablock', ''),
+    ('10', 'Object', ''),
+    ('11', 'Collection', ''),
+    None,
+    ('12', 'Condition', ''),
+    ('13', 'Python Object Instance', ''),
+    ('14', 'UI Widget', '')
 ]

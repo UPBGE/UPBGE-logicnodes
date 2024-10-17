@@ -9,24 +9,26 @@ from ...sockets import NodeSocketLogicParameter
 class LogicNodeValueSwitchList(LogicNodeParameterType):
     bl_idname = "NLValueSwitchList"
     bl_label = "Value Switch List"
+    bl_description = 'Choose between multiple values depending on an input value'
     bl_width_min = 100
     bl_width_default = 160
     nl_module = 'uplogic.nodes.parameters'
+    nl_class = "ULValueSwitchList"
 
     def init(self, context):
-        self.add_input(NodeSocketLogicBoolean, "if A")
-        self.add_input(NodeSocketLogicValue, "")
-        self.add_input(NodeSocketLogicBoolean, "elif B")
-        self.add_input(NodeSocketLogicValue, "")
-        self.add_input(NodeSocketLogicBoolean, "elif C")
-        self.add_input(NodeSocketLogicValue, "")
-        self.add_input(NodeSocketLogicBoolean, "elif D")
-        self.add_input(NodeSocketLogicValue, "")
-        self.add_input(NodeSocketLogicBoolean, "elif E")
-        self.add_input(NodeSocketLogicValue, "")
-        self.add_input(NodeSocketLogicBoolean, "elif F")
-        self.add_input(NodeSocketLogicValue, "")
-        self.add_output(NodeSocketLogicParameter, "Result")
+        self.add_input(NodeSocketLogicBoolean, "if A", 'ca')
+        self.add_input(NodeSocketLogicValue, "", 'val_a')
+        self.add_input(NodeSocketLogicBoolean, "elif B", 'cb')
+        self.add_input(NodeSocketLogicValue, "", 'val_b')
+        self.add_input(NodeSocketLogicBoolean, "elif C", 'cc')
+        self.add_input(NodeSocketLogicValue, "", 'val_c')
+        self.add_input(NodeSocketLogicBoolean, "elif D", 'cd')
+        self.add_input(NodeSocketLogicValue, "", 'val_d')
+        self.add_input(NodeSocketLogicBoolean, "elif E", 'ce')
+        self.add_input(NodeSocketLogicValue, "", 'val_e')
+        self.add_input(NodeSocketLogicBoolean, "elif F", 'cf')
+        self.add_input(NodeSocketLogicValue, "", 'val_f')
+        self.add_output(NodeSocketLogicParameter, "Result", 'VAL')
         LogicNodeParameterType.init(self, context)
         self.hide = True
 
@@ -40,8 +42,7 @@ class LogicNodeValueSwitchList(LogicNodeParameterType):
                 self.inputs[x+1].enabled = False
                 self.inputs[x+2].enabled = False
 
-    nl_class = "ULValueSwitchList"
-
+    # XXX: Remove for 5.0
     def get_input_names(self):
         return [
             "ca", 'val_a',
@@ -52,5 +53,6 @@ class LogicNodeValueSwitchList(LogicNodeParameterType):
             "cf", 'val_f'
         ]
 
+    # XXX: Remove for 5.0
     def get_output_names(self):
         return ['VAL']

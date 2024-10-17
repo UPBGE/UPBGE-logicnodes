@@ -13,6 +13,7 @@ from bpy.props import EnumProperty
 class LogicNodeTypecast(LogicNodeParameterType):
     bl_idname = "NLParameterTypeCast"
     bl_label = "Typecast Value"
+    bl_description = 'Convert a value to a different data type'
     nl_module = 'uplogic.nodes.parameters'
     nl_class = "ULTypeCastValue"
 
@@ -40,10 +41,10 @@ class LogicNodeTypecast(LogicNodeParameterType):
     def get_attributes(self):
         return [('to_type', repr(self.to_type))]
 
-    # XXX Remove for 4.0
+    # XXX Remove for 5.0
     def get_input_names(self):
         return ["value"]
 
-    # XXX Remove for 4.0
+    # XXX Remove for 5.0
     def get_output_names(self):
         return ['OUT', 'OUT', 'OUT', 'OUT']

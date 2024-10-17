@@ -10,7 +10,8 @@ _uplogic_versions = [
     ('1.9.5', '1.9.5', 'Suitable for Logic Nodes 2.4'),
     ('2.0.1', '2.0.1', 'Suitable for Logic Nodes 3.0'),
     ('3.2', '3.2', 'Suitable for Logic Nodes 3.2'),
-    ('3.2.1', '3.2.1', 'Suitable for Logic Nodes 3.2.1')
+    ('3.2.1', '3.2.1', 'Suitable for Logic Nodes 3.2.1'),
+    ('4.0b2', '4.0b2', 'Suitable for Logic Nodes 4.0 Beta')
 ]
 
 
@@ -18,7 +19,7 @@ class LogicNodesAddonPreferences(bpy.types.AddonPreferences):
     bl_idname = 'bge_netlogic'
 
     use_reload_text: bpy.props.BoolProperty(default=True)
-    uplogic_version: bpy.props.EnumProperty(items=_uplogic_versions, default='latest', name='Uplogic Version')
+    uplogic_version: bpy.props.EnumProperty(items=_uplogic_versions, default='4.0b2', name='Uplogic Version')
     use_node_debug: bpy.props.BoolProperty(default=True)
     use_node_notify: bpy.props.BoolProperty(default=True)
     prop_filter: bpy.props.PointerProperty(type=LogicNodesPropertyFilter)
@@ -58,7 +59,11 @@ class LogicNodesAddonPreferences(bpy.types.AddonPreferences):
         )
         col.separator()
         col.label(text='Additional Nodes')
-        col.prop(self, 'use_fmod_nodes')
+        box = col.box()
+        row = box.row(align=True)
+        row.prop(self, 'use_fmod_nodes')
+        if self.use_fmod_nodes:
+            row.operator('logic_nodes.install_pyfmodex', icon='URL', text='Install')
         col.separator()
         link_row = col.row(align=True)
         link_row.operator("logic_nodes.open_github", icon="URL")

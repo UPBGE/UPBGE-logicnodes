@@ -22,7 +22,7 @@ class NodeSocketLogicInteger(NodeSocket, NodeSocketLogic):
         return '{}'.format(self.default_value)
 
     def draw(self, context, layout, node, text):
-        if self.linked_valid or self.is_output:
+        if self.linked_valid or self.is_output or self.is_multi_input:
             layout.label(text=text)
         else:
             layout.prop(self, "default_value", text=text)

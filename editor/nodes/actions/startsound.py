@@ -30,6 +30,7 @@ _sound_types = [
 class LogicNodeStartSound(LogicNodeActionType):
     bl_idname = "LogicNodeStartSound"
     bl_label = "Start Sound"
+    bl_description = 'Start a sound or snippet'
     bl_width_default = 200
     nl_module = 'uplogic.nodes.actions'
     nl_class = "StartSoundNode"
@@ -83,37 +84,37 @@ class LogicNodeStartSound(LogicNodeActionType):
     )
 
     def init(self, context):
-        self.add_input(NodeSocketLogicCondition, "Condition")
-        self.add_input(NodeSocketLogicObject, "Speaker")
-        self.add_input(NodeSocketLogicVectorXYZ, "Position")
-        self.add_input(NodeSocketLogicSoundFile, "Sound File")
-        self.add_input(NodeSocketLogicFloatPositive, "Start Time")
-        self.add_input(NodeSocketLogicFloatPositive, "End Time")
-        self.add_input(NodeSocketLogicBoolean, "Use Occlusion")
-        self.add_input(NodeSocketLogicFloatFactor, 'Transition', None, {'default_value': .1})
-        self.add_input(NodeSocketLogicFloatFactor, 'Lowpass', None, {'default_value': .1})
-        self.add_input(NodeSocketLogicLoopCount, "Mode")
-        self.add_input(NodeSocketLogicFloatPositive, "Pitch", None, {'default_value': 1.0})
-        self.add_input(NodeSocketLogicFloatPositive, "Speed", None, {'default_value': 1.0, 'enabled': False})
-        self.add_input(NodeSocketLogicFloatPositive, "Volume", None, {'default_value': 1.0})
-        self.add_input(NodeSocketLogicFloatFactor, 'Lowpass', None, {'default_value': 1.0})
-        self.add_input(NodeSocketLogicBoolean, "Enable Reverb", None, {'enabled': False})
-        self.add_input(NodeSocketLogicFloatPositive, "Attenuation", None, {'default_value': 1.0})
-        self.add_input(NodeSocketLogicFloat, "Reference Distance", None, {'default_value': 1.0})
-        self.add_input(NodeSocketLogicVectorXY, "Cone Inner / Outer", None, {'default_value': (360., 360.)})
-        self.add_input(NodeSocketLogicFloat, "Cone Outer Volume", None, {'default_value': 0.0})
-        self.add_input(NodeSocketLogicBoolean, "Ignore Timescale")
-        self.add_output(NodeSocketLogicCondition, 'On Start')
-        self.add_output(NodeSocketLogicCondition, 'On Finish')
-        self.add_output(NodeSocketLogicPython, 'Sound')
+        self.add_input(NodeSocketLogicCondition, "Start Sound", 'condition')
+        self.add_input(NodeSocketLogicObject, "Speaker", 'speaker')
+        self.add_input(NodeSocketLogicVectorXYZ, "Position", 'speaker')
+        self.add_input(NodeSocketLogicSoundFile, "Sound File", 'sound')
+        self.add_input(NodeSocketLogicFloatPositive, "Start Time", 'start_time')
+        self.add_input(NodeSocketLogicFloatPositive, "End Time", 'end_time')
+        self.add_input(NodeSocketLogicBoolean, "Use Occlusion", 'occlusion')
+        self.add_input(NodeSocketLogicFloatFactor, 'Transition', 'transition', {'default_value': .1})
+        self.add_input(NodeSocketLogicFloatFactor, 'Lowpass', 'cutoff', {'default_value': .1})
+        self.add_input(NodeSocketLogicLoopCount, "Mode", 'loop_count')
+        self.add_input(NodeSocketLogicFloatPositive, "Pitch", 'pitch', {'default_value': 1.0})
+        self.add_input(NodeSocketLogicFloatPositive, "Speed", 'speed', {'default_value': 1.0, 'enabled': False})
+        self.add_input(NodeSocketLogicFloatPositive, "Volume", 'volume', {'default_value': 1.0})
+        self.add_input(NodeSocketLogicFloatFactor, 'Lowpass', 'lowpass', {'default_value': 1.0})
+        self.add_input(NodeSocketLogicBoolean, "Enable Reverb", 'reverb', {'enabled': False})
+        self.add_input(NodeSocketLogicFloatPositive, "Attenuation", 'attenuation', {'default_value': 1.0})
+        self.add_input(NodeSocketLogicFloat, "Reference Distance", 'distance_ref', {'default_value': 1.0})
+        self.add_input(NodeSocketLogicVectorXY, "Cone Inner / Outer", 'cone_angle', {'default_value': (360., 360.)})
+        self.add_input(NodeSocketLogicFloat, "Cone Outer Volume", 'cone_outer_volume', {'default_value': 0.0})
+        self.add_input(NodeSocketLogicBoolean, "Ignore Timescale", 'ignore_timescale')
+        self.add_output(NodeSocketLogicCondition, 'On Start', 'DONE')
+        self.add_output(NodeSocketLogicCondition, 'On Finish', 'ON_FINISH')
+        self.add_output(NodeSocketLogicPython, 'Sound', 'HANDLE')
         LogicNodeActionType.init(self, context)
 
     def draw_buttons(self, context, layout):
-        layout.prop(self, 'mode', text='')
-        layout.prop(self, 'update_running', text='Update Running')
         if int(self.mode) > 1:
             layout.prop(self, 'advanced', text='Show Advanced Options')
             layout.prop(self, 'use_speaker', text='Use Speaker')
+        layout.prop(self, 'mode', text='')
+        layout.prop(self, 'update_running', text='Update Running')
         layout.separator()
 
     def get_attributes(self):
@@ -122,9 +123,11 @@ class LogicNodeStartSound(LogicNodeActionType):
             ('update_running', self.update_running)
         ]
 
+    # XXX: Remove for 5.0
     def get_output_names(self):
         return ["DONE", 'ON_FINISH', "HANDLE"]
 
+    # XXX: Remove for 5.0
     def get_input_names(self):
         return [
             "condition",

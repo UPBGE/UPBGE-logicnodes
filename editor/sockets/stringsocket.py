@@ -1,7 +1,6 @@
-from .socket import SOCKET_COLOR_STRING
+from .socket import SOCKET_COLOR_STRING, SOCKET_TYPE_GENERIC
 from .socket import SOCKET_TYPE_VALUE
 from .socket import SOCKET_TYPE_STRING
-from .socket import SOCKET_TYPE_GENERIC
 from .socket import NodeSocketLogic
 from .socket import socket_type
 from .socket import update_draw
@@ -18,15 +17,16 @@ class Base(NodeSocket, NodeSocketLogic):
     formatted: BoolProperty(update=update_draw)
 
     nl_color = SOCKET_COLOR_STRING
+    # nl_type = SOCKET_TYPE_STRING
     nl_type = SOCKET_TYPE_GENERIC
 
-    valid_sockets = [
-        SOCKET_TYPE_VALUE,
-        SOCKET_TYPE_STRING
-    ]
+    # valid_sockets = [
+    #     SOCKET_TYPE_VALUE,
+    #     SOCKET_TYPE_STRING
+    # ]
 
     def draw(self, context, layout, node, text):
-        if self.linked_valid or self.is_output:
+        if self.linked_valid or self.is_output or self.is_multi_input:
             layout.label(text=text)
         elif not text:
             layout.prop(self, "default_value", text='')

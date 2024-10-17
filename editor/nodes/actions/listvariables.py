@@ -1,12 +1,11 @@
 from ..node import node_type
 from ..node import LogicNodeActionType
 from ...sockets import NodeSocketLogicCondition
+from ...sockets import NodeSocketLogicFilePath
 from ...sockets import NodeSocketLogicString
 from ...sockets import NodeSocketLogicCondition
 from ...sockets import NodeSocketLogicBoolean
 from ...sockets import NodeSocketLogicList
-from bpy.props import BoolProperty
-from bpy.props import StringProperty
 
 
 @node_type
@@ -15,50 +14,21 @@ class LogicNodeListVariables(LogicNodeActionType):
     bl_label = "List Saved Variables"
     nl_module = 'uplogic.nodes.actions'
     nl_class = "ULListVariables"
-
-    custom_path: BoolProperty(name='Custom Path')
-    path: StringProperty(
-        subtype='DIR_PATH',
-        name='Path',
-        description=(
-            'Choose a Path to save the file to. '
-            'Start with "./" to make it relative to the file path.'
-        )
-    )
+    bl_description = 'Collect info about all saved variables in a file'
 
     def init(self, context):
-        self.add_input(NodeSocketLogicCondition, 'Condition', None, {'show_prop': True})
-        self.add_input(NodeSocketLogicString, 'Filename', None, {'default_value': 'variables'})
-        self.add_input(NodeSocketLogicBoolean, 'Print')
-        self.add_output(NodeSocketLogicCondition, 'Done')
-        self.add_output(NodeSocketLogicList, 'List')
+        self.add_input(NodeSocketLogicCondition, 'Condition', 'condition', {'show_prop': True})
+        self.add_input(NodeSocketLogicFilePath, 'Path', 'path', {'default_value': '//Data'})
+        self.add_input(NodeSocketLogicString, 'File', 'file_name', {'default_value': 'variables'})
+        self.add_input(NodeSocketLogicBoolean, 'Print', 'print_list')
+        self.add_output(NodeSocketLogicCondition, 'Done', 'OUT')
+        self.add_output(NodeSocketLogicList, 'List', 'LIST')
         LogicNodeActionType.init(self, context)
 
-    def draw_buttons(self, context, layout):
-        layout.prop(
-            self,
-            "custom_path",
-            toggle=True,
-            text="Custom Path" if self.custom_path else "File Path/Data",
-            icon='FILE_FOLDER'
-        )
-        if self.custom_path:
-            layout.prop(self, "path", text='')
-
+    # XXX: Remove for 5.0
     def get_input_names(self):
-        return ["condition", 'file_name', 'print_list']
+        return ["condition", 'path', 'file_name', 'print_list']
 
-    def get_attributes(self):
-        s_path = self.path
-        if s_path.endswith('\\'):
-            s_path = s_path[:-1]
-        path_formatted = s_path.replace('\\', '/')
-        return [(
-            "path",
-            "'{}'".format(
-                path_formatted
-            ) if self.custom_path else "''"
-        )]
-
+    # XXX: Remove for 5.0
     def get_output_names(self):
         return ["OUT", 'LIST']

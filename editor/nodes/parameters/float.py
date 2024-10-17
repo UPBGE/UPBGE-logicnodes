@@ -7,15 +7,14 @@ from ...sockets import NodeSocketLogicFloat
 class LogicNodeFloat(LogicNodeParameterType):
     bl_idname = "NLParameterFloatValue"
     bl_label = "Float"
+    nl_class = "ULSimpleValue"
     nl_module = 'uplogic.nodes.parameters'
     deprecated = True
 
     def init(self, context):
-        self.add_input(NodeSocketLogicFloat, "")
-        self.add_output(NodeSocketLogicFloat, "Float")
+        self.add_input(NodeSocketLogicFloat, "", 'value')
+        self.add_output(NodeSocketLogicFloat, "Float", 'OUT')
         LogicNodeParameterType.init(self, context)
-
-    nl_class = "ULSimpleValue"
 
     def get_input_names(self):
         return ["value"]

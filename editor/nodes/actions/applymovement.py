@@ -12,6 +12,7 @@ class LogicNodeApplyMovement(LogicNodeActionType):
     bl_label = "Apply Movement"
     nl_module = 'uplogic.nodes.actions'
     nl_class = "ULApplyMovement"
+    bl_description = "Linearly modify an object's position"
 
     deprecated = True
     deprecation_message = 'Replaced by "Apply Transform" Node.'
@@ -19,10 +20,10 @@ class LogicNodeApplyMovement(LogicNodeActionType):
     local: BoolProperty(default=True)
 
     def init(self, context):
-        self.add_input(NodeSocketLogicCondition, "Condition")
-        self.add_input(NodeSocketLogicObject, "Object")
-        self.add_input(NodeSocketLogicVectorXYZ, "Vector")
-        self.add_output(NodeSocketLogicCondition, 'Done')
+        self.add_input(NodeSocketLogicCondition, "Condition", 'condition')
+        self.add_input(NodeSocketLogicObject, "Object", 'game_object')
+        self.add_input(NodeSocketLogicVectorXYZ, "Vector", 'vector')
+        self.add_output(NodeSocketLogicCondition, 'Done', 'OUT')
         LogicNodeActionType.init(self, context)
 
     def get_output_names(self):
@@ -30,7 +31,6 @@ class LogicNodeApplyMovement(LogicNodeActionType):
 
     def draw_buttons(self, context, layout):
         layout.prop(self, "local")
-
 
     def get_input_names(self):
         return ["condition", "game_object", "movement"]

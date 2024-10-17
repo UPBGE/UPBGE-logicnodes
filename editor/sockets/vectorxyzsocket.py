@@ -15,7 +15,7 @@ class NodeSocketLogicVectorXYZ(NodeSocket, NodeSocketLogic):
     bl_idname = "NLVec3FieldSocket"
     bl_label = "Vector XYZ"
 
-    default_value: FloatVectorProperty(name='Vector')
+    default_value: FloatVectorProperty(name='Vector', subtype='XYZ')
     # XXX: Remove value property
     value_x: FloatProperty()
     value_y: FloatProperty()
@@ -42,7 +42,7 @@ class NodeSocketLogicVectorXYZ(NodeSocket, NodeSocketLogic):
         return f'mathutils.Vector(({v[0]}, {v[1]}, {v[2]}))'
 
     def draw(self, context, layout, node, text):
-        if self.linked_valid or self.is_output:
+        if self.linked_valid or self.is_output or self.is_multi_input:
             layout.label(text=text)
         else:
             cont = layout.column(align=True)

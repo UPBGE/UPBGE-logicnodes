@@ -8,17 +8,19 @@ from ...sockets import NodeSocketLogicMatrix
 class LogicNodeXYZtoMatrix(LogicNodeParameterType):
     bl_idname = "NLParameterEulerToMatrixNode"
     bl_label = "XYZ To Matrix"
+    bl_description = 'Construct a Matrix from a 3D vector or Euler'
     nl_module = 'uplogic.nodes.parameters'
-
-    def init(self, context):
-        self.add_input(NodeSocketLogicVectorXYZ, 'XYZ')
-        self.add_output(NodeSocketLogicMatrix, "Matrix")
-        LogicNodeParameterType.init(self, context)
-
     nl_class = "ULEulerToMatrix"
 
+    def init(self, context):
+        self.add_input(NodeSocketLogicVectorXYZ, 'XYZ', 'input_e')
+        self.add_output(NodeSocketLogicMatrix, "Matrix", 'OUT')
+        LogicNodeParameterType.init(self, context)
+
+    # XXX: Remove for 5.0
     def get_output_names(self):
         return ["OUT"]
 
+    # XXX: Remove for 5.0
     def get_input_names(self):
         return ["input_e"]

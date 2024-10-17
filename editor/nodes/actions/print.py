@@ -10,6 +10,7 @@ from bpy.props import EnumProperty
 class LogicNodePrint(LogicNodeActionType):
     bl_idname = "NLActionPrint"
     bl_label = "Print"
+    bl_description = 'Write to the console'
     nl_module = 'uplogic.nodes.actions'
     nl_class = "ULPrintValue"
 
@@ -35,8 +36,10 @@ class LogicNodePrint(LogicNodeActionType):
     def get_attributes(self):
         return [("msg_type", repr(self.msg_type))]
 
-    def get_output_names(self):  # XXX Remove for 4.0
+    # XXX: Remove for 5.0
+    def get_output_names(self):
         return ["OUT"]
 
-    def get_input_names(self):  # XXX Remove for 4.0
+    # XXX: Remove for 5.0
+    def get_input_names(self):
         return ["condition", "value"]

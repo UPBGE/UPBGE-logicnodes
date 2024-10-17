@@ -12,22 +12,25 @@ class LogicNodeDictionarySetKey(LogicNodeActionType):
     bl_label = "Set Dictionary Key"
     nl_module = 'uplogic.nodes.actions'
     nl_class = "ULSetDictKey"
+    bl_description = 'Define a value for a key in a dictionary'
 
     search_tags = [
         ['Set Dictionary Key', {}]
     ]
 
     def init(self, context):
-        self.add_input(NodeSocketLogicCondition, 'Condition')
-        self.add_input(NodeSocketLogicDictionary, 'Dictionary')
-        self.add_input(NodeSocketLogicString, 'Key')
-        self.add_input(NodeSocketLogicValue, '')
-        self.add_output(NodeSocketLogicCondition, 'Done')
-        self.add_output(NodeSocketLogicDictionary, 'Dictionary')
+        self.add_input(NodeSocketLogicCondition, 'Condition', 'condition')
+        self.add_input(NodeSocketLogicDictionary, 'Dictionary', 'dict')
+        self.add_input(NodeSocketLogicString, 'Key', 'key')
+        self.add_input(NodeSocketLogicValue, '', 'val')
+        self.add_output(NodeSocketLogicCondition, 'Done', 'OUT')
+        self.add_output(NodeSocketLogicDictionary, 'Dictionary', 'DICT')
         LogicNodeActionType.init(self, context)
 
+    # XXX: Remove for 5.0
     def get_output_names(self):
         return ["OUT", "DICT"]
 
+    # XXX: Remove for 5.0
     def get_input_names(self):
         return ["condition", 'dict', 'key', 'val']

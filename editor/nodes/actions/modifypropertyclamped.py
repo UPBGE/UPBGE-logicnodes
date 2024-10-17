@@ -43,7 +43,6 @@ class LogicNodeModifyPropertyClamped(LogicNodeActionType):
         layout.prop(self, "mode", text="")
         layout.prop(self, "operator", text="")
 
-
     def get_attributes(self):
         return [
             ("mode", self.mode),

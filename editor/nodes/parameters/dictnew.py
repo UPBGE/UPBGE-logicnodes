@@ -8,19 +8,21 @@ from ...sockets import NodeSocketLogicDictionary
 @node_type
 class LogicNodeDictNew(LogicNodeParameterType):
     bl_idname = "NLInitNewDict"
-    bl_label = "Dictionary From Items"
+    bl_label = "Dictionary From Item"
+    bl_description = 'New dictionary with an inital {key: value} pair'
     nl_module = 'uplogic.nodes.parameters'
+    nl_class = "ULInitNewDict"
 
     def init(self, context):
-        self.add_input(NodeSocketLogicString, 'Key')
-        self.add_input(NodeSocketLogicValue, '')
-        self.add_output(NodeSocketLogicDictionary, 'Dictionary')
+        self.add_input(NodeSocketLogicString, 'Key', 'key')
+        self.add_input(NodeSocketLogicValue, '', 'val')
+        self.add_output(NodeSocketLogicDictionary, 'Dictionary', 'DICT')
         LogicNodeParameterType.init(self, context)
 
+    # XXX: Remove for 5.0
     def get_output_names(self):
         return ['DICT']
 
-    nl_class = "ULInitNewDict"
-
+    # XXX: Remove for 5.0
     def get_input_names(self):
         return ['key', 'val']

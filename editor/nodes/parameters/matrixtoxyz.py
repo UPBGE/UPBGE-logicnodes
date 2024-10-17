@@ -11,6 +11,7 @@ from bpy.props import EnumProperty
 class LogicNodeMatrixToXYZ(LogicNodeParameterType):
     bl_idname = "NLParameterMatrixToEulerNode"
     bl_label = "Matrix To XYZ"
+    bl_description = 'Convert a matrix to a 3D vector or Euler'
     bl_width_default = 200
     nl_module = 'uplogic.nodes.parameters'
     nl_class = "ULMatrixToXYZ"
@@ -45,10 +46,10 @@ class LogicNodeMatrixToXYZ(LogicNodeParameterType):
     def get_attributes(self):
         return [("output", self.output), ("euler_order", repr(self.euler_order))]
 
-    # XXX Remove for 4.0
+    # XXX Remove for 5.0
     def get_input_names(self):
         return ["input_m"]
 
-    # XXX Remove for 4.0
+    # XXX Remove for 5.0
     def get_output_names(self):
         return ["OUT"]

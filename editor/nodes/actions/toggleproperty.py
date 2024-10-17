@@ -13,7 +13,9 @@ from bpy.props import EnumProperty
 class LogicNodeToggleProperty(LogicNodeActionType):
     bl_idname = "NLToggleGameObjectGamePropertyActionNode"
     bl_label = "Toggle Object Property"
+    bl_description = 'Toggle the value of a property on an object'
     nl_module = 'uplogic.nodes.actions'
+    nl_class = "ULToggleProperty"
 
     mode: EnumProperty(
         name='Mode',
@@ -25,14 +27,13 @@ class LogicNodeToggleProperty(LogicNodeActionType):
         layout.prop(self, "mode", text="")
 
     def init(self, context):
-        self.add_input(NodeSocketLogicCondition, "Condition")
-        self.add_input(NodeSocketLogicObject, "Object")
-        self.add_input(NodeSocketLogicGameProperty, "Property", None, {'ref_index': 1})
-        self.add_output(NodeSocketLogicCondition, "Done")
+        self.add_input(NodeSocketLogicCondition, "Condition", 'condition')
+        self.add_input(NodeSocketLogicObject, "Object", 'game_object')
+        self.add_input(NodeSocketLogicGameProperty, "Property", 'property_name', {'ref_index': 1})
+        self.add_output(NodeSocketLogicCondition, "Done", 'OUT')
         LogicNodeActionType.init(self, context)
 
-    nl_class = "ULToggleProperty"
-
+    # XXX: Remove for 5.0
     def get_input_names(self):
         return [
             "condition",
@@ -43,5 +44,6 @@ class LogicNodeToggleProperty(LogicNodeActionType):
     def get_attributes(self):
         return [("mode", self.mode)]
 
+    # XXX: Remove for 5.0
     def get_output_names(self):
         return ['OUT']

@@ -1,8 +1,9 @@
+from typing import Tuple
 from .socket import SOCKET_COLOR_STRING, NodeSocketLogic
 from .socket import SOCKET_TYPE_STRING
 from .socket import socket_type
 from .socket import update_draw
-from bpy.types import NodeSocket
+from bpy.types import Context, Node, NodeSocket
 from bpy.props import StringProperty
 from bpy.props import IntProperty
 from bpy.types import Material
@@ -29,7 +30,7 @@ class NodeSocketLogicTreeNode(NodeSocket, NodeSocketLogic):
     nl_type = SOCKET_TYPE_STRING
 
     def draw(self, context, layout, node, text):
-        if self.linked_valid or self.is_output:
+        if self.linked_valid or self.is_output or self.is_multi_input:
             layout.label(text=text)
         else:
             mat_socket = self.node.inputs[self.ref_index]

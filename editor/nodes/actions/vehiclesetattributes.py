@@ -16,6 +16,7 @@ class LoigcNodeVehicleSetAttributes(LogicNodeActionType):
     nl_module = 'uplogic.nodes.actions'
     nl_class = "ULVehicleSetAttributes"
     bl_width_default = 180
+    bl_description = 'Set an attribute of a vehicle'
 
     search_tags = [
         ['Set Vehicle Attributes', {}]
@@ -53,7 +54,7 @@ class LoigcNodeVehicleSetAttributes(LogicNodeActionType):
     def draw_buttons(self, context, layout):
         layout.prop(self, "value_type", text='')
 
-    # XXX Remove for 4.0
+    # XXX Remove for 5.0
     def get_input_names(self):
         return [
             "condition",
@@ -69,7 +70,7 @@ class LoigcNodeVehicleSetAttributes(LogicNodeActionType):
             'tyre_friction'
         ]
 
-    # XXX Remove for 4.0
+    # XXX Remove for 5.0
     def get_output_names(self):
         return ["OUT"]
 

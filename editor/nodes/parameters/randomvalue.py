@@ -14,7 +14,9 @@ from bpy.props import EnumProperty
 class LogicNodeRandomValue(LogicNodeParameterType):
     bl_idname = "LogicNodeRandomValue"
     bl_label = "Random Value"
+    bl_description = 'Randomly generated value. This node generates only one value per frame'
     nl_module = 'uplogic.nodes.parameters'
+    nl_class = "ULRandomValue"
 
     def update_draw(self, context=None):
         if not self.ready:
@@ -36,23 +38,24 @@ class LogicNodeRandomValue(LogicNodeParameterType):
     ]
 
     def init(self, context):
-        self.add_input(NodeSocketLogicFloat, "Min")
-        self.add_input(NodeSocketLogicFloat, "Max")
-        self.add_input(NodeSocketLogicInteger, "Min")
-        self.add_input(NodeSocketLogicInteger, "Max")
-        self.add_input(NodeSocketLogicVectorXYZ, "Min")
-        self.add_input(NodeSocketLogicVectorXYZ, "Max")
-        self.add_input(NodeSocketLogicFloatFactor, "Probability", None, {'default_value': .5})
-        self.add_input(NodeSocketLogicInteger, "Seed", None, {'enabled': False})
-        self.add_output(NodeSocketLogicFloat, "Result")
-        self.add_output(NodeSocketLogicInteger, "Result")
-        self.add_output(NodeSocketLogicVectorXYZ, "Result")
-        self.add_output(NodeSocketLogicBoolean, "Result")
+        self.add_input(NodeSocketLogicFloat, "Min", 'min_float')
+        self.add_input(NodeSocketLogicFloat, "Max", 'max_float')
+        self.add_input(NodeSocketLogicInteger, "Min", 'min_int')
+        self.add_input(NodeSocketLogicInteger, "Max", 'max_int')
+        self.add_input(NodeSocketLogicVectorXYZ, "Min", 'min_vector')
+        self.add_input(NodeSocketLogicVectorXYZ, "Max", 'max_vector')
+        self.add_input(NodeSocketLogicFloatFactor, "Probability", 'probability', {'default_value': .5})
+        self.add_input(NodeSocketLogicInteger, "Seed", 'seed', {'enabled': False})
+        self.add_output(NodeSocketLogicFloat, "Result", 'OUT')
+        self.add_output(NodeSocketLogicInteger, "Result", 'OUT')
+        self.add_output(NodeSocketLogicVectorXYZ, "Result", 'OUT')
+        self.add_output(NodeSocketLogicBoolean, "Result", 'OUT')
         LogicNodeParameterType.init(self, context)
 
     def draw_buttons(self, context: Context, layout: UILayout) -> None:
         layout.prop(self, 'data_type', text='')
 
+    # XXX: Remove for 5.0
     def get_input_names(self):
         return [
             "min_float",
@@ -70,7 +73,6 @@ class LogicNodeRandomValue(LogicNodeParameterType):
             ('data_type', self.data_type)
         ]
 
-    nl_class = "ULRandomValue"
-
+    # XXX: Remove for 5.0
     def get_output_names(self):
         return ["OUT", 'OUT', 'OUT', 'OUT']

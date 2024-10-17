@@ -8,6 +8,7 @@ from ...sockets import NodeSocketLogicFilePath
 class LogicNodeJumpToFile(LogicNodeActionType):
     bl_idname = "NLActionStartGame"
     bl_label = "Load Blender File"
+    bl_description = 'Load up another .blend file'
     nl_module = 'uplogic.nodes.actions'
     nl_class = "ULLoadBlendFile"
 
@@ -18,13 +19,15 @@ class LogicNodeJumpToFile(LogicNodeActionType):
     ]
 
     def init(self, context):
-        self.add_input(NodeSocketLogicCondition, "Condition")
-        self.add_input(NodeSocketLogicFilePath, "File Name")
-        self.add_output(NodeSocketLogicCondition, 'Done', None, {'enabled': False})
+        self.add_input(NodeSocketLogicCondition, "Condition", 'condition')
+        self.add_input(NodeSocketLogicFilePath, "File Name", 'file_name')
+        self.add_output(NodeSocketLogicCondition, 'Done', 'OUT', {'enabled': False})
         LogicNodeActionType.init(self, context)
 
+    # XXX: Remove for 5.0
     def get_output_names(self):
         return ["OUT"]
 
+    # XXX: Remove for 5.0
     def get_input_names(self):
         return ["condition", "file_name"]

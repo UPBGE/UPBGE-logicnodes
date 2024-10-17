@@ -15,6 +15,7 @@ from bpy.props import EnumProperty
 class LogicNodeGetObjectAttr(LogicNodeParameterType):
     bl_idname = "NLObjectAttributeParameterNode"
     bl_label = "Get Attribute"
+    bl_description = 'An attribute of an object'
     nl_module = 'uplogic.nodes.parameters'
     nl_class = "ULObjectAttribute"
     bl_width_default = 180
@@ -113,7 +114,7 @@ class LogicNodeGetObjectAttr(LogicNodeParameterType):
 
     def init(self, context):
         self.add_input(NodeSocketLogicObject, "Object", 'game_object')
-        self.add_output(NodeSocketLogicString, "Value", '_attr_name')
+        self.add_output(NodeSocketLogicString, "Value", 'OUT')
         self.add_output(NodeSocketLogicVectorXYZ, "Vector", 'OUT', {'enabled': False})
         self.add_output(NodeSocketLogicBoolean, "Visible", 'OUT', {'enabled': False})
         self.add_output(NodeSocketLogicMatrix, "Orientation", 'OUT', {'enabled': False})
@@ -126,10 +127,10 @@ class LogicNodeGetObjectAttr(LogicNodeParameterType):
     def get_attributes(self):
         return [("attribute_name", repr(self.attr_name))]
 
-    # XXX Remove for 4.0
+    # XXX Remove for 5.0
     def get_input_names(self):
-        return ["game_object", "_attr_name"]
+        return ["game_object"]
 
-    # XXX Remove for 4.0
+    # XXX Remove for 5.0
     def get_output_names(self):
         return ["OUT", "OUT", "OUT", "OUT"]

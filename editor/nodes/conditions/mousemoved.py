@@ -18,14 +18,11 @@ class LogicNodeMouseMoved(LogicNodeConditionType):
     pulse: BoolProperty(default=False)
 
     def init(self, context):
-        self.add_output(NodeSocketLogicCondition, "If Moved")
+        self.add_output(NodeSocketLogicCondition, "If Moved", 'mouse_button_code')
         LogicNodeConditionType.init(self, context)
 
     def draw_buttons(self, context, layout):
         layout.prop(self, "pulse", text="Each Frame")
-
-    def get_input_names(self):
-        return ["mouse_button_code"]
 
     def get_attributes(self):
         return [("pulse", self.pulse)]

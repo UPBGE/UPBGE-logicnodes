@@ -11,6 +11,7 @@ from bpy.props import StringProperty
 class LogicNodeFormula(LogicNodeParameterType):
     bl_idname = "NLParameterMathFun"
     bl_label = "Formula"
+    bl_description = 'Dynamic arithmetic operation'
     nl_module = 'uplogic.nodes.parameters'
     nl_class = "ULFormula"
 
@@ -22,9 +23,9 @@ class LogicNodeFormula(LogicNodeParameterType):
         default="User Defined")
 
     def init(self, context):
-        self.add_input(NodeSocketLogicFloat, "a")
-        self.add_input(NodeSocketLogicFloat, "b")
-        self.add_output(NodeSocketLogicFloat, "Result")
+        self.add_input(NodeSocketLogicFloat, "a", 'a')
+        self.add_input(NodeSocketLogicFloat, "b", 'b')
+        self.add_output(NodeSocketLogicFloat, "Result", 'OUT')
         LogicNodeParameterType.init(self, context)
 
     def draw_buttons(self, context, layout):
@@ -36,10 +37,10 @@ class LogicNodeFormula(LogicNodeParameterType):
         usr_def = 'User Defined'
         return [("formula", repr(self.value if self.predefined_formulas == usr_def else self.predefined_formulas))]
 
-    # XXX Remove for 4.0
+    # XXX Remove for 5.0
     def get_input_names(self):
         return ["a", "b"]
 
-    # XXX Remove for 4.0
+    # XXX Remove for 5.0
     def get_output_names(self):
         return ["OUT"]

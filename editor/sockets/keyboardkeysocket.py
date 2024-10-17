@@ -26,7 +26,7 @@ class NodeSocketLogicKeyboardKey(NodeSocket, NodeSocketLogic):
         return key_event(self.default_value)
 
     def draw(self, context, layout, node, text):
-        if self.linked_valid or self.is_output:
+        if self.linked_valid or self.is_output or self.is_multi_input:
             layout.label(text=text)
         else:
             label = self.default_value

@@ -11,14 +11,15 @@ import bpy
 class LogicNodeGetGeoNodeSocket(LogicNodeParameterType):
     bl_idname = "NLGetGeometryNodeValue"
     bl_label = "Get Socket Value"
+    bl_description = 'Get a socket value from a geometry node'
     nl_module = 'uplogic.nodes.parameters'
     nl_class = "ULGetNodeSocket"
 
     def init(self, context):
-        self.add_input(NodeSocketLogicGeometryNodeTree, 'Tree')
-        self.add_input(NodeSocketLogicNodeGroupNode, 'Node Name')
-        self.add_input(NodeSocketLogicIntegerPositive, "Input")
-        self.add_output(NodeSocketLogicParameter, "Value")
+        self.add_input(NodeSocketLogicGeometryNodeTree, 'Tree', 'tree_name')
+        self.add_input(NodeSocketLogicNodeGroupNode, 'Node Name', 'node_name')
+        self.add_input(NodeSocketLogicIntegerPositive, "Input", 'input_slot')
+        self.add_output(NodeSocketLogicParameter, "Value", 'OUT')
         LogicNodeParameterType.init(self, context)
 
     def update_draw(self, context=None):
@@ -46,8 +47,10 @@ class LogicNodeGetGeoNodeSocket(LogicNodeParameterType):
             name = target.inputs[ipt.default_value].name
             ipt.name = name
 
+    # XXX: Remove for 5.0
     def get_input_names(self):
         return ["tree_name", 'node_name', "input_slot"]
 
+    # XXX: Remove for 5.0
     def get_output_names(self):
         return ['OUT']

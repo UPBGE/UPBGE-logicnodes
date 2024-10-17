@@ -14,6 +14,8 @@ class LogicNodeDrawCube(LogicNodeActionType):
     bl_label = "Draw Cube"
     nl_module = 'uplogic.nodes.actions'
     nl_class = 'ULDrawCube'
+    
+    deprecated = True
 
     use_volume_origin: BoolProperty(
         name='Use Volume Origin',
@@ -25,11 +27,11 @@ class LogicNodeDrawCube(LogicNodeActionType):
         layout.prop(self, "use_volume_origin")
 
     def init(self, context):
-        self.add_input(NodeSocketLogicCondition, 'Condition', None, {'show_prop': True})
-        self.add_input(NodeSocketLogicColorRGB, 'Color')
-        self.add_input(NodeSocketLogicVectorXYZ, 'Origin')
-        self.add_input(NodeSocketLogicFloatPositive, 'Width', None, {'default_value': 1.0})
-        self.add_output(NodeSocketLogicCondition, "Done")
+        self.add_input(NodeSocketLogicCondition, 'Condition', 'condition', {'show_prop': True})
+        self.add_input(NodeSocketLogicColorRGB, 'Color', 'color')
+        self.add_input(NodeSocketLogicVectorXYZ, 'Origin', 'origin')
+        self.add_input(NodeSocketLogicFloatPositive, 'Width', 'width', {'default_value': 1.0})
+        self.add_output(NodeSocketLogicCondition, "Done", 'OUT')
         LogicNodeActionType.init(self, context)
 
     def get_attributes(self):

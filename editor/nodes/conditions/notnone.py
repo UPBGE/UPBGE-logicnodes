@@ -8,17 +8,18 @@ from ..node import node_type
 class LogicNodeNotNone(LogicNodeConditionType):
     bl_idname = "NLConditionNotNoneNode"
     bl_label = "Not None"
+    bl_description = 'Check if a value evaluates to anything but "None"'
     bl_width_min = 60
     bl_width_default = 100
     nl_module = 'uplogic.nodes.conditions'
+    nl_class = "ULNotNone"
 
     def init(self, context):
-        self.add_input(NodeSocketLogicParameter, "Value")
-        self.add_output(NodeSocketLogicCondition, "If Not None")
+        self.add_input(NodeSocketLogicParameter, "Value", 'checked_value')
+        self.add_output(NodeSocketLogicCondition, "If Not None", 'OUT')
         LogicNodeConditionType.init(self, context)
         self.hide = True
 
-    nl_class = "ULNotNone"
-
+    # XXX: Remove for 5.0
     def get_input_names(self):
         return ["checked_value"]

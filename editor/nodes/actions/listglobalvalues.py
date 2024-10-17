@@ -10,19 +10,22 @@ from ...sockets import NodeSocketLogicDictionary
 class LogicNodeListGlobalValues(LogicNodeActionType):
     bl_idname = "NLActionListGlobalValues"
     bl_label = "List Global Category"
+    bl_description = 'Collect info about all saved properties in a global category'
     nl_module = 'uplogic.nodes.actions'
     nl_class = "ULListGlobalValues"
 
     def init(self, context):
-        self.add_input(NodeSocketLogicCondition, "Condition")
-        self.add_input(NodeSocketLogicGlobalCategory, "Category")
-        self.add_input(NodeSocketLogicBoolean, 'Print')
-        self.add_output(NodeSocketLogicCondition, "Done")
-        self.add_output(NodeSocketLogicDictionary, "Value")
+        self.add_input(NodeSocketLogicCondition, "Condition", 'condition')
+        self.add_input(NodeSocketLogicGlobalCategory, "Category", 'data_id')
+        self.add_input(NodeSocketLogicBoolean, 'Print', 'print_d')
+        self.add_output(NodeSocketLogicCondition, "Done", 'OUT')
+        self.add_output(NodeSocketLogicDictionary, "Value", 'VALUE')
         LogicNodeActionType.init(self, context)
 
+    # XXX: Remove for 5.0
     def get_input_names(self):
         return ['condition', "data_id", 'print_d']
 
+    # XXX: Remove for 5.0
     def get_output_names(self):
         return ["OUT", "VALUE"]

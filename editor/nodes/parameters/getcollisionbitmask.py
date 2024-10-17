@@ -12,6 +12,7 @@ from bpy.props import EnumProperty
 class LogicNodeGetCollisionBitMask(LogicNodeParameterType):
     bl_idname = "LogicNodeGetCollisionBitMask"
     bl_label = "Get Collision Group"
+    bl_description = 'Collision group bitmask'
     nl_module = 'uplogic.nodes.parameters'
     nl_class = "GetCollisionGroupNode"
 

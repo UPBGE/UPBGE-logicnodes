@@ -1,5 +1,5 @@
 from .socket import SOCKET_TYPE_FONT, NodeSocketLogic
-from .socket import SOCKET_COLOR_IMAGE
+from .socket import SOCKET_COLOR_DATABLOCK
 from .socket import socket_type
 from .socket import update_draw
 from bpy.types import VectorFont
@@ -25,11 +25,11 @@ class NodeSocketLogicFont(NodeSocket, NodeSocketLogic):
         update=update_draw
     )
 
-    nl_color = SOCKET_COLOR_IMAGE
+    nl_color = SOCKET_COLOR_DATABLOCK
     nl_type = SOCKET_TYPE_FONT
 
     def draw(self, context, layout, node, text):
-        if self.linked_valid or self.is_output:
+        if self.linked_valid or self.is_output or self.is_multi_input:
             layout.label(text=text)
         else:
             col = layout.column()

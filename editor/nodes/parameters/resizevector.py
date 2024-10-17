@@ -5,9 +5,9 @@ from bpy.props import EnumProperty
 
 
 _vec_sizes = [
-    ('0', '2 Dimensional', ''),
-    ('1', '3 Dimensional', ''),
-    ('2', '4 Dimensional', '')
+    ('0', '2D Vector', ''),
+    ('1', '3D Vector', ''),
+    ('2', '4D Vector', '')
 ]
 
 
@@ -15,6 +15,7 @@ _vec_sizes = [
 class LogicNodeResizeVector(LogicNodeParameterType):
     bl_idname = "LogicNodeResizeVector"
     bl_label = "Resize Vector"
+    bl_description = 'Add or remove dimensions of a vector'
     nl_module = 'uplogic.nodes.parameters'
     nl_class = "ResizeVectorNode"
 
@@ -25,8 +26,8 @@ class LogicNodeResizeVector(LogicNodeParameterType):
     )
 
     def init(self, context):
-        self.add_input(NodeSocketLogicVectorXYZ, "Vector")
-        self.add_output(NodeSocketLogicVectorXYZ, 'Vector')
+        self.add_input(NodeSocketLogicVectorXYZ, "Vector", 'vec_in')
+        self.add_output(NodeSocketLogicVectorXYZ, 'Vector', 'OUT')
         LogicNodeParameterType.init(self, context)
 
     def draw_buttons(self, context, layout):
@@ -35,8 +36,10 @@ class LogicNodeResizeVector(LogicNodeParameterType):
     def get_attributes(self):
         return [("to_size", self.to_size)]
 
+    # XXX: Remove for 5.0
     def get_input_names(self):
         return ["vec_in"]
 
+    # XXX: Remove for 5.0
     def get_output_names(self):
         return ['OUT']

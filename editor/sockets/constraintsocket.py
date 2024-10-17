@@ -25,7 +25,7 @@ class NodeSocketLogicConstraint(NodeSocket, NodeSocketLogic):
 
     def draw(self, context, layout, node, text):
         mode = getattr(self.node, 'mode', '0')
-        if self.is_output:
+        if self.is_output or self.is_multi_input:
             layout.label(text=self.name)
         elif self.linked_valid:
             layout.label(text=self.name)

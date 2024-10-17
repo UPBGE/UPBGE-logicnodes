@@ -10,15 +10,16 @@ from ...sockets import NodeSocketLogicString
 class LogicNodeGetGeoNodeAttr(LogicNodeParameterType):
     bl_idname = "NLGetGeometryNodeAttribute"
     bl_label = "Get Node Value"
+    bl_description = 'Get an attribute from a geometry node'
     nl_module = 'uplogic.nodes.parameters'
     nl_class = "ULGetNodeAttribute"
 
     def init(self, context):
-        self.add_input(NodeSocketLogicGeometryNodeTree, 'Tree')
-        self.add_input(NodeSocketLogicNodeGroupNode, 'Node Name')
-        self.add_input(NodeSocketLogicString, "Internal")
-        self.add_input(NodeSocketLogicString, "Attribute")
-        self.add_output(NodeSocketLogicParameter, "Value")
+        self.add_input(NodeSocketLogicGeometryNodeTree, 'Tree', 'tree_name')
+        self.add_input(NodeSocketLogicNodeGroupNode, 'Node Name', 'node_name')
+        self.add_input(NodeSocketLogicString, "Internal", 'internal')
+        self.add_input(NodeSocketLogicString, "Attribute", 'attribute')
+        self.add_output(NodeSocketLogicParameter, "Value", 'OUT')
         LogicNodeParameterType.init(self, context)
 
     def update_draw(self, context=None):
@@ -33,8 +34,10 @@ class LogicNodeGetGeoNodeAttr(LogicNodeParameterType):
         else:
             itl.enabled = att.enabled = False
 
+    # XXX: Remove for 5.0
     def get_input_names(self):
         return ["tree_name", 'node_name', "internal", 'attribute']
 
+    # XXX: Remove for 5.0
     def get_output_names(self):
         return ['OUT']

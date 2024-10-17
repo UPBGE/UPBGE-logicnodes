@@ -1,5 +1,5 @@
 from ..node import node_type
-from ..node import LogicNodeParameterType
+from ..node import LogicNodeActionType
 from ...sockets import NodeSocketLogicCondition
 from ...sockets import NodeSocketLogicValue
 from ...sockets import NodeSocketLogicParameter
@@ -8,11 +8,12 @@ from ....utilities import WARNING_MESSAGES
 
 
 @node_type
-class LogicNodeStoreValue(LogicNodeParameterType):
+class LogicNodeStoreValue(LogicNodeActionType):
     bl_idname = "NLStoreValue"
     bl_label = "Store Value"
-    nl_module = 'uplogic.nodes.parameters'
+    nl_module = 'uplogic.nodes.actions'
     nl_class = "ULStoreValue"
+    bl_description = 'Store a value for later use'
 
     initialize: BoolProperty(
         name='Initialize',
@@ -33,7 +34,7 @@ class LogicNodeStoreValue(LogicNodeParameterType):
         self.add_input(NodeSocketLogicValue, "", 'value')
         self.add_output(NodeSocketLogicCondition, "Done", 'DONE')
         self.add_output(NodeSocketLogicParameter, "Stored Value", 'OUT')
-        LogicNodeParameterType.init(self, context)
+        LogicNodeActionType.init(self, context)
 
     def draw_buttons(self, context, layout):
         layout.prop(self, "initialize")
@@ -41,10 +42,10 @@ class LogicNodeStoreValue(LogicNodeParameterType):
     def get_attributes(self):
         return [("initialize", self.initialize)]
 
-    # XXX Remove for 4.0
+    # XXX Remove for 5.0
     def get_input_names(self):
         return ['condition', 'value']
 
-    # XXX Remove for 4.0
+    # XXX Remove for 5.0
     def get_output_names(self):
         return ['DONE', "OUT"]

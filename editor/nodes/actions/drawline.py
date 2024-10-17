@@ -11,6 +11,9 @@ class LogicNodeDrawLine(LogicNodeActionType):
     bl_idname = "NLDrawLine"
     bl_label = "Draw Line"
     nl_module = 'uplogic.nodes.actions'
+    nl_class = "ULDrawLine"
+
+    deprecated = True
 
     def init(self, context):
         self.add_input(NodeSocketLogicCondition, 'Condition', None, {'show_prop': True})
@@ -23,4 +26,3 @@ class LogicNodeDrawLine(LogicNodeActionType):
     def get_input_names(self):
         return ['condition', 'color', 'from_point', 'to_point']
 
-    nl_class = "ULDrawLine"

@@ -4,7 +4,7 @@ from ...sockets import NodeSocketLogicCondition
 from ...sockets import NodeSocketLogicGeometryNodeTree
 from ...sockets import NodeSocketLogicTreeNode
 from ...sockets import NodeSocketLogicIntegerPositive
-from ...sockets import NodeSocketLogicFloat
+from ...sockets import NodeSocketLogicValue
 import bpy
 
 
@@ -13,19 +13,20 @@ class LogicNodeSetGeometrySocket(LogicNodeActionType):
     bl_idname = "NLSetGeometryNodeValue"
     bl_label = "Set Socket"
     nl_module = 'uplogic.nodes.actions'
-    # deprecated = True
+    bl_description = 'Set a socket value on a geometry node'
+    nl_class = "ULSetNodeSocket"
 
     search_tags = [
         ['Set Geometry Socket', {}]
     ]
 
     def init(self, context):
-        self.add_input(NodeSocketLogicCondition, "Condition")
-        self.add_input(NodeSocketLogicGeometryNodeTree, 'Tree')
-        self.add_input(NodeSocketLogicTreeNode, 'Node Name', None, {'ref_index': 1})
-        self.add_input(NodeSocketLogicIntegerPositive, "Input")
-        self.add_input(NodeSocketLogicFloat, 'Value')
-        self.add_output(NodeSocketLogicCondition, "Done")
+        self.add_input(NodeSocketLogicCondition, "Condition", 'condition')
+        self.add_input(NodeSocketLogicGeometryNodeTree, 'Tree', 'tree_name')
+        self.add_input(NodeSocketLogicTreeNode, 'Node Name', 'node_name', {'ref_index': 1})
+        self.add_input(NodeSocketLogicIntegerPositive, "Input", 'input_slot')
+        self.add_input(NodeSocketLogicValue, '', 'value')
+        self.add_output(NodeSocketLogicCondition, "Done", 'OUT')
         LogicNodeActionType.init(self, context)
 
     def update_draw(self, context=None):
@@ -49,8 +50,7 @@ class LogicNodeSetGeometrySocket(LogicNodeActionType):
             name = target.inputs[ipt.default_value].name
             ipt.name = name
 
-    nl_class = "ULSetNodeSocket"
-
+    # XXX: Remove for 5.0
     def get_input_names(self):
         return [
             "condition",
@@ -60,5 +60,6 @@ class LogicNodeSetGeometrySocket(LogicNodeActionType):
             'value'
         ]
 
+    # XXX: Remove for 5.0
     def get_output_names(self):
         return ['OUT']

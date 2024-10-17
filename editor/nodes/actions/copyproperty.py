@@ -11,6 +11,7 @@ from bpy.props import EnumProperty
 class LogicNodeCopyProperty(LogicNodeActionType):
     bl_idname = "NLCopyPropertyFromObject"
     bl_label = "Copy Property From Object"
+    bl_description = 'Copy a property from one object to another'
     nl_module = 'uplogic.nodes.actions'
     nl_class = "ULCopyProperty"
 
@@ -24,13 +25,17 @@ class LogicNodeCopyProperty(LogicNodeActionType):
         layout.prop(self, "mode", text="")
 
     def init(self, context):
-        self.add_input(NodeSocketLogicCondition, "Condition")
-        self.add_input(NodeSocketLogicObject, "Copy From")
-        self.add_input(NodeSocketLogicObject, "To")
-        self.add_input(NodeSocketLogicGameProperty, "Property", None, {'ref_index': 1})
-        self.add_output(NodeSocketLogicCondition, "Done")
+        self.add_input(NodeSocketLogicCondition, "Condition", 'condition')
+        self.add_input(NodeSocketLogicObject, "Copy From", 'from_object')
+        self.add_input(NodeSocketLogicObject, "To", 'to_object')
+        self.add_input(NodeSocketLogicGameProperty, "Property", 'property_name', {'ref_index': 1})
+        self.add_output(NodeSocketLogicCondition, "Done", 'OUT')
         LogicNodeActionType.init(self, context)
 
+    def get_attributes(self):
+        return [("mode", self.mode)]
+
+    # XXX: Remove for 5.0
     def get_input_names(self):
         return [
             "condition",
@@ -39,8 +44,6 @@ class LogicNodeCopyProperty(LogicNodeActionType):
             "property_name"
         ]
 
-    def get_attributes(self):
-        return [("mode", self.mode)]
-
+    # XXX: Remove for 5.0
     def get_output_names(self):
         return ['OUT']

@@ -14,26 +14,35 @@ class LogicNodeAlignAxisToVector(LogicNodeActionType):
     bl_label = "Align Axis to Vector"
     nl_module = 'uplogic.nodes.actions'
     nl_class = "ULAlignAxisToVector"
+    bl_description = "Point a specific object axis towards a position"
 
     local: BoolProperty(default=False, name='Local')
 
     def init(self, context):
-        self.add_input(NodeSocketLogicCondition, "Condition")
-        self.add_input(NodeSocketLogicObject, "Object")
-        self.add_input(NodeSocketLogicVectorXYZ, "Vector")
-        self.add_input(NodeSocketLogicAxisSigned, "Axis")
-        self.add_input(NodeSocketLogicFloatFactor, "Factor", None, {'default_value': 1.0})
-        self.add_output(NodeSocketLogicCondition, 'Done')
+        self.add_input(NodeSocketLogicCondition, "Condition", "condition")
+        self.add_input(NodeSocketLogicObject, "Object", "game_object")
+        self.add_input(NodeSocketLogicVectorXYZ, "Vector", "vector")
+        self.add_input(NodeSocketLogicAxisSigned, "Axis", "axis")
+        self.add_input(NodeSocketLogicFloatFactor, "Factor", 'factor', {'default_value': 1.0})
+        self.add_output(NodeSocketLogicCondition, 'Done', 'OUT')
         LogicNodeActionType.init(self, context)
 
     def draw_buttons(self, context, layout):
         layout.prop(self, "local")
 
+    # XXX: Remove for 5.0
     def get_output_names(self):
         return ["OUT"]
 
+    # XXX: Remove for 5.0
     def get_input_names(self):
-        return ["condition", "game_object", "vector", "axis", 'factor']
+        return [
+            "condition",
+            "game_object",
+            "vector",
+            "axis",
+            'factor'
+        ]
 
     def get_attributes(self):
         return [("local", self.local)]

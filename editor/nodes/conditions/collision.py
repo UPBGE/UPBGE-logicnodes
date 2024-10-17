@@ -14,7 +14,9 @@ from bpy.props import BoolProperty
 class LogicNodeCollision(LogicNodeConditionType):
     bl_idname = "NLConditionCollisionNode"
     bl_label = "Collision"
+    bl_description = 'Register if a collision happens with an object'
     nl_module = 'uplogic.nodes.conditions'
+    nl_class = "ULCollision"
 
     def update_draw(self, context=None):
         if not self.ready:
@@ -25,25 +27,25 @@ class LogicNodeCollision(LogicNodeConditionType):
     pulse: BoolProperty(name='Continuous', update=update_draw)
 
     def init(self, context):
-        self.add_input(NodeSocketLogicObject, "Object")
-        self.add_input(NodeSocketLogicBoolean, 'Use Material')
-        self.add_input(NodeSocketLogicString, "Property")
-        self.add_input(NodeSocketLogicMaterial, 'Material')
-        self.add_output(NodeSocketLogicCondition, "On Collision")
-        self.add_output(NodeSocketLogicObject, "Colliding Object")
-        self.add_output(NodeSocketLogicList, "Colliding Objects")
-        self.add_output(NodeSocketLogicVectorXYZ, "Point")
-        self.add_output(NodeSocketLogicVectorXYZ, "Normal")
+        self.add_input(NodeSocketLogicObject, "Object", 'game_object')
+        self.add_input(NodeSocketLogicBoolean, 'Use Material', 'use_mat')
+        self.add_input(NodeSocketLogicString, "Property", 'prop')
+        self.add_input(NodeSocketLogicMaterial, 'Material', 'material')
+        self.add_output(NodeSocketLogicCondition, "On Collision", 'COLLISION')
+        self.add_output(NodeSocketLogicObject, "Colliding Object", 'TARGET')
+        self.add_output(NodeSocketLogicList, "Colliding Objects", 'OBJECTS')
+        self.add_output(NodeSocketLogicVectorXYZ, "Point", 'POINT')
+        self.add_output(NodeSocketLogicVectorXYZ, "Normal", 'NORMAL')
         LogicNodeConditionType.init(self, context)
 
     def draw_buttons(self, context, layout):
         layout.prop(self, "pulse", text="Continuous")
 
-    nl_class = "ULCollision"
-
+    # XXX: Remove for 5.0
     def get_input_names(self):
         return ["game_object", 'use_mat', 'prop', 'material']
 
+    # XXX: Remove for 5.0
     def get_output_names(self):
         return ["COLLISION", "TARGET", "OBJECTS", "POINT", "NORMAL"]
 

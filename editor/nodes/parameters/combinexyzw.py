@@ -8,7 +8,9 @@ from ...sockets import NodeSocketLogicVectorXYZ
 class LogicNodeCombineXYZW(LogicNodeParameterType):
     bl_idname = "NLParameterVector4SimpleNode"
     bl_label = "Combine XYZW"
+    bl_description = 'Four-dimensional vector'
     nl_module = 'uplogic.nodes.parameters'
+    nl_class = "ULVectorXYZW"
 
     search_tags = [
         ['Combine XYZW', {}],
@@ -16,17 +18,17 @@ class LogicNodeCombineXYZW(LogicNodeParameterType):
     ]
 
     def init(self, context):
-        self.add_input(NodeSocketLogicFloat, 'X')
-        self.add_input(NodeSocketLogicFloat, 'Y')
-        self.add_input(NodeSocketLogicFloat, 'Z')
-        self.add_input(NodeSocketLogicFloat, 'W')
-        self.add_output(NodeSocketLogicVectorXYZ, "Vector")
+        self.add_input(NodeSocketLogicFloat, 'X', 'input_x')
+        self.add_input(NodeSocketLogicFloat, 'Y', 'input_y')
+        self.add_input(NodeSocketLogicFloat, 'Z', 'input_z')
+        self.add_input(NodeSocketLogicFloat, 'W', 'input_w')
+        self.add_output(NodeSocketLogicVectorXYZ, "Vector", 'OUTV')
         LogicNodeParameterType.init(self, context)
 
-    nl_class = "ULVectorXYZW"
-
+    # XXX: Remove for 5.0
     def get_output_names(self):
         return ["OUTV"]
 
+    # XXX: Remove for 5.0
     def get_input_names(self):
         return ["input_x", "input_y", "input_z", 'input_w']

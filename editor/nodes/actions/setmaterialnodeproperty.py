@@ -11,21 +11,22 @@ from ...sockets import NodeSocketLogicValue
 class LogicNodeSetMaterialNodeProperty(LogicNodeActionType):
     bl_idname = "NLSetMaterialNodeAttribute"
     bl_label = "Set Node Value"
+    bl_description = 'Set a value on a material node'
     nl_module = 'uplogic.nodes.actions'
-    # deprecated = True
+    nl_class = "ULSetMatNodeValue"
 
     search_tags = [
         ['Set Material Node Property', {}]
     ]
 
     def init(self, context):
-        self.add_input(NodeSocketLogicCondition, "Condition")
-        self.add_input(NodeSocketLogicMaterial, 'Material')
-        self.add_input(NodeSocketLogicTreeNode, 'Node Name', None, {'ref_index': 1})
-        self.add_input(NodeSocketLogicString, "Internal")
-        self.add_input(NodeSocketLogicString, "Attribute")
-        self.add_input(NodeSocketLogicValue, '')
-        self.add_output(NodeSocketLogicCondition, "Done")
+        self.add_input(NodeSocketLogicCondition, "Condition", 'condition')
+        self.add_input(NodeSocketLogicMaterial, 'Material', 'mat_name')
+        self.add_input(NodeSocketLogicTreeNode, 'Node Name', 'node_name', {'ref_index': 1})
+        self.add_input(NodeSocketLogicString, "Internal", 'internal')
+        self.add_input(NodeSocketLogicString, "Attribute", 'attribute')
+        self.add_input(NodeSocketLogicValue, '', 'value')
+        self.add_output(NodeSocketLogicCondition, "Done", 'OUT')
         LogicNodeActionType.init(self, context)
 
     def update_draw(self, context=None):
@@ -41,8 +42,7 @@ class LogicNodeSetMaterialNodeProperty(LogicNodeActionType):
         else:
             att.enabled = val.enabled = itl.enabled = False
 
-    nl_class = "ULSetMatNodeValue"
-
+    # XXX: Remove for 5.0
     def get_input_names(self):
         return [
             "condition",
@@ -53,5 +53,6 @@ class LogicNodeSetMaterialNodeProperty(LogicNodeActionType):
             'value'
         ]
 
+    # XXX: Remove for 5.0
     def get_output_names(self):
         return ['OUT']

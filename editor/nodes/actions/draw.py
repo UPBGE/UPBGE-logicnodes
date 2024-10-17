@@ -28,6 +28,7 @@ class LogicNodeDraw(LogicNodeActionType):
     bl_label = "Draw"
     nl_module = 'uplogic.nodes.actions'
     nl_class = "DrawNode"
+    bl_description = 'Draw debug info on the screen'
 
     def update_draw(self, context=None):
         mode = int(self.mode)
@@ -56,16 +57,16 @@ class LogicNodeDraw(LogicNodeActionType):
             layout.prop(self, "use_volume_origin")
 
     def init(self, context):
-        self.add_input(NodeSocketLogicCondition, 'Condition', None, {'show_prop': True})
-        self.add_input(NodeSocketLogicColorRGB, 'Color')
-        self.add_input(NodeSocketLogicVectorXYZ, 'Origin')
-        self.add_input(NodeSocketLogicVectorXYZ, 'Target')
-        self.add_input(NodeSocketLogicList, 'Points')
-        self.add_input(NodeSocketLogicFloatPositive, 'Width', None, {'default_value': 1.0})
-        self.add_input(NodeSocketLogicFloatPositive, 'Length', None, {'default_value': 1.0})
-        self.add_input(NodeSocketLogicFloatPositive, 'Height', None, {'default_value': 1.0})
-        self.add_input(NodeSocketLogicObject, 'Object')
-        self.add_output(NodeSocketLogicCondition, "Done")
+        self.add_input(NodeSocketLogicCondition, 'Condition', 'condition', {'show_prop': True})
+        self.add_input(NodeSocketLogicColorRGB, 'Color', 'color')
+        self.add_input(NodeSocketLogicVectorXYZ, 'Origin', 'origin')
+        self.add_input(NodeSocketLogicVectorXYZ, 'Target', 'target')
+        self.add_input(NodeSocketLogicList, 'Points', 'points')
+        self.add_input(NodeSocketLogicFloatPositive, 'Width', 'width', {'default_value': 1.0})
+        self.add_input(NodeSocketLogicFloatPositive, 'Length', 'length', {'default_value': 1.0})
+        self.add_input(NodeSocketLogicFloatPositive, 'Height', 'height', {'default_value': 1.0})
+        self.add_input(NodeSocketLogicObject, 'Object', 'object')
+        self.add_output(NodeSocketLogicCondition, "Done", 'OUT')
         LogicNodeActionType.init(self, context)
 
     def get_attributes(self):
@@ -74,6 +75,7 @@ class LogicNodeDraw(LogicNodeActionType):
             ("mode", f'{self.mode}')
         ]
 
+    # XXX: Remove for 5.0
     def get_input_names(self):
         return ['condition', 'color', 'origin', 'target', 'points', 'width', 'length', 'height', 'object']
 

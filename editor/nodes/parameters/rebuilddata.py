@@ -12,6 +12,7 @@ import bpy
 class LogicNodeRebuildData(LogicNodeParameterType):
     bl_idname = "LogicNodeRebuildData"
     bl_label = "Rebuild Data"
+    bl_description = 'Parse string data from a "Serialize" node'
     nl_module = 'uplogic.nodes.parameters'
     nl_class = "ULRebuildData"
 
@@ -37,10 +38,10 @@ class LogicNodeRebuildData(LogicNodeParameterType):
     def get_attributes(self):
         return [("read_as", repr(self.read_as))]
 
-    def get_input_names(self):  # XXX Remove for 4.0
+    def get_input_names(self):  # XXX Remove for 5.0
         if len(self.inputs) < 2:
             self.rebuild()
         return ['condition', "data"]
 
-    def get_output_names(self):  # XXX Remove for 4.0
+    def get_output_names(self):  # XXX Remove for 5.0
         return ['OUT']

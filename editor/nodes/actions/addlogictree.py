@@ -12,17 +12,20 @@ class LogicNodeAddLogicTree(LogicNodeActionType):
     bl_label = "Add Logic Tree to Object"
     nl_module = 'uplogic.nodes.actions'
     nl_class = "ULInstallSubNetwork"
+    bl_description = 'Apply a new logic tree to an object'
 
     def init(self, context):
-        self.add_input(NodeSocketLogicCondition, "Condition")
-        self.add_input(NodeSocketLogicObject, "Target Object")
-        self.add_input(NodeSocketLogicTree, "Tree Name")
-        self.add_input(NodeSocketLogicBoolean, "Initialize")
-        self.add_output(NodeSocketLogicCondition, 'Done')
+        self.add_input(NodeSocketLogicCondition, "Condition", 'condition')
+        self.add_input(NodeSocketLogicObject, "Target Object", 'target_object')
+        self.add_input(NodeSocketLogicTree, "Tree Name", 'tree_name')
+        self.add_input(NodeSocketLogicBoolean, "Initialize", 'initial_status')
+        self.add_output(NodeSocketLogicCondition, 'Done', 'OUT')
         LogicNodeActionType.init(self, context)
 
+    # XXX: Remove for 5.0
     def get_output_names(self):
         return ["OUT"]
 
+    # XXX: Remove for 5.0
     def get_input_names(self):
         return ["condition", "target_object", "tree_name", "initial_status"]

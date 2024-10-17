@@ -10,6 +10,7 @@ from bpy.props import IntProperty
 from ..utilities import make_valid_name
 from ..utilities import error
 from ..utilities import success
+from ..utilities import add_tree_to_active_objects
 from ..props.logictreeproperty import LogicNodesLogicTreeProperty
 import bpy
 from time import time
@@ -29,11 +30,7 @@ class LogicNodeTree(NodeTree):
 
     type: StringProperty(default='LOGIC')
     old_name: StringProperty()
-    old_links = []
     properties: CollectionProperty(type=LogicNodesLogicTreeProperty, name='Properties')
-
-    # old_inputs: IntProperty(default=0, update=group_update)
-    # old_outputs: IntProperty(default=0, update=group_update)
 
     @classmethod
     def poll(cls, context):
@@ -50,6 +47,8 @@ class LogicNodeTree(NodeTree):
             return
         if update:
             bpy.ops.logic_nodes.generate_code()
+        if not self.old_name:
+            add_tree_to_active_objects(self)
         for obj in bpy.context.scene.objects:
             for ref in obj.logic_trees:
                 if ref.tree is self:
@@ -100,34 +99,41 @@ class LogicNodeTree(NodeTree):
         #     self.old_inputs = new_inputs
         # elif self.old_outputs != new_outputs:
         #     self.old_outputs = new_outputs
-
+    
         for n in self.nodes:
-            if isinstance(n, NodeReroute):
-                osock = n.inputs[0]
-                if not n.inputs[0].links:
+            n.update()
+
+        for n in filter(lambda n: isinstance(n, NodeReroute), self.nodes):
+            osock = n.inputs[0]
+            if not n.inputs[0].links:
+                if osock.type != 'VALUE':
+                    osock.type = 'VALUE'
+                    n.outputs[0].type = 'VALUE'
+                    osock.display_shape = 'CIRCLE'
+                    n.outputs[0].display_shape = 'CIRCLE'
+                continue
+            socket = osock.links[0].from_socket
+            while isinstance(socket.node, NodeReroute):
+                now = time()
+                if now - start > 3:
+                    error('Timeout Error. Check tree for unlinked Reroutes or other issues.')
+                    return
+                if not socket.node.inputs[0].links:
                     if osock.type != 'VALUE':
                         osock.type = 'VALUE'
                         n.outputs[0].type = 'VALUE'
-                        osock.display_shape = 'CIRCLE'
-                        n.outputs[0].display_shape = 'CIRCLE'
-                    continue
-                socket = osock.links[0].from_socket
-                while isinstance(socket.node, NodeReroute):
-                    now = time()
-                    if now - start > 3:
-                        error('Timeout Error. Check tree for unlinked Reroutes or other issues.')
-                        return
-                    if not socket.node.inputs[0].links:
-                        if osock.type != 'VALUE':
-                            osock.type = 'VALUE'
-                            n.outputs[0].type = 'VALUE'
-                            # osock.display_shape = 'CIRCLE'
-                            # n.outputs[0].display_shape = osock.nl_shape
-                        break
-                    socket = socket.node.inputs[0].links[0].from_socket
-                if osock.type != socket.type:
-                    osock.type = socket.type
-                    osock.display_shape = socket.display_shape
-                    # n.outputs[0].type = socket.type
-                    n.outputs[0].type = 'VALUE'
-                    n.outputs[0].display_shape = socket.display_shape
+                        # osock.display_shape = 'CIRCLE'
+                        # n.outputs[0].display_shape = osock.nl_shape
+                    break
+                socket = socket.node.inputs[0].links[0].from_socket
+            if osock.type != socket.type:
+                osock.type = socket.type
+                osock.display_shape = socket.display_shape
+                n.outputs[0].type = socket.type
+                n.outputs[0].display_shape = socket.display_shape
+        for n in filter(lambda n: not isinstance(n, NodeReroute), self.nodes):
+            for i in n.inputs:
+                if i.is_linked:
+                    i.display_shape = i.links[0].from_socket.display_shape
+                else:
+                    i.display_shape = i.nl_shape

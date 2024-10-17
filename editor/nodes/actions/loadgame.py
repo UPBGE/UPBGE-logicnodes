@@ -12,6 +12,7 @@ class LogicNodeLoadGame(LogicNodeActionType):
     bl_label = "Load Game"
     nl_module = 'uplogic.nodes.actions'
     nl_class = "ULLoadGame"
+    bl_description = 'Load a previously saved state of the scene'
 
     custom_path: BoolProperty(name='Custom Path')
     path: StringProperty(
@@ -24,9 +25,9 @@ class LogicNodeLoadGame(LogicNodeActionType):
     )
 
     def init(self, context):
-        self.add_input(NodeSocketLogicCondition, 'Condition')
-        self.add_input(NodeSocketLogicIntegerPositive, 'Slot')
-        self.add_output(NodeSocketLogicCondition, 'Done')
+        self.add_input(NodeSocketLogicCondition, 'Condition', 'condition')
+        self.add_input(NodeSocketLogicIntegerPositive, 'Slot', 'slot')
+        self.add_output(NodeSocketLogicCondition, 'Done', 'OUT')
         LogicNodeActionType.init(self, context)
 
     def draw_buttons(self, context, layout):
@@ -40,9 +41,6 @@ class LogicNodeLoadGame(LogicNodeActionType):
         if self.custom_path:
             layout.prop(self, "path", text='')
 
-    def get_input_names(self):
-        return ["condition", 'slot']
-
     def get_attributes(self):
         s_path = self.path
         if s_path.endswith('\\'):
@@ -55,5 +53,10 @@ class LogicNodeLoadGame(LogicNodeActionType):
             ) if self.custom_path else "''"
         )]
 
+    # XXX: Remove for 5.0
+    def get_input_names(self):
+        return ["condition", 'slot']
+
+    # XXX: Remove for 5.0
     def get_output_names(self):
         return ["OUT"]

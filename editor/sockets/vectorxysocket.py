@@ -6,14 +6,19 @@ from bpy.types import NodeSocket
 from bpy.props import FloatVectorProperty
 from bpy.props import FloatProperty
 from bpy.props import StringProperty
+from bpy.props import BoolProperty
 
 
 @socket_type
 class NodeSocketLogicVectorXY(NodeSocket, NodeSocketLogic):
     bl_idname = "NLVec2FieldSocket"
     bl_label = "Vector XY"
+    nl_color = SOCKET_COLOR_VECTOR
+    nl_type = SOCKET_TYPE_VECTOR
+    valid_sockets = [SOCKET_TYPE_VECTOR, SOCKET_TYPE_COLOR]
 
-    default_value: FloatVectorProperty(name='Vector', size=2)
+    default_value: FloatVectorProperty(name='Vector', size=2, subtype='XYZ')
+    align: BoolProperty(default=True)
     title: StringProperty(default='')
     # XXX: Remove value property
     value_x: FloatProperty()
@@ -28,20 +33,19 @@ class NodeSocketLogicVectorXY(NodeSocket, NodeSocketLogic):
         if value_y is not DEPRECATED:
             self.default_value[1] = value_y
 
-    nl_color = SOCKET_COLOR_VECTOR
-    nl_type = SOCKET_TYPE_VECTOR
-    valid_sockets = [SOCKET_TYPE_VECTOR, SOCKET_TYPE_COLOR]
-
     def get_unlinked_value(self):
         v = self.default_value
         return f"mathutils.Vector(({v[0]}, {v[1]}))"
 
     def draw(self, context, layout, node, text):
-        if self.linked_valid or self.is_output:
+        if self.linked_valid or self.is_output or self.is_multi_input:
             layout.label(text=text)
         else:
-            column = layout.column()
+            column = layout.column(align=True)
             if text != '':
                 column.label(text=text)
-            row = column.row(align=True)
-            row.prop(self, 'default_value', text='')
+            if self.align:
+                row = column.row(align=True)
+                row.prop(self, 'default_value', text='')
+            else:
+                column.prop(self, 'default_value', text='')

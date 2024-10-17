@@ -11,9 +11,10 @@ import uuid
 class LogicNodeCurveInterpolation(LogicNodeParameterType):
     bl_idname = "LogicNodeCurveInterpolation"
     bl_label = "Curve Interpolation"
+    bl_description = 'Map a value to a curve'
+    bl_width_default = 200
     nl_module = 'uplogic.nodes.parameters'
     nl_class = "CurveInterpolationNode"
-    bl_width_default = 200
 
     mapping: PointerProperty(name='Value', type=bpy.types.Brush)
 

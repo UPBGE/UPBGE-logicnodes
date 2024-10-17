@@ -12,6 +12,7 @@ from bpy.props import EnumProperty
 class LogicNodeVehicleSteer(LogicNodeActionType):
     bl_idname = "NLVehicleApplySteering"
     bl_label = "Steer"
+    bl_description = 'Steer the front wheels of a vehicle'
     nl_module = 'uplogic.nodes.actions'
     nl_class = "ULVehicleApplySteering"
 
@@ -39,11 +40,11 @@ class LogicNodeVehicleSteer(LogicNodeActionType):
     def draw_buttons(self, context, layout):
         layout.prop(self, "value_type", text='')
 
-    # XXX Remove for 4.0
+    # XXX Remove for 5.0
     def get_input_names(self):
         return ["condition", "vehicle", "wheelcount", 'power']
 
-    # XXX Remove for 4.0
+    # XXX Remove for 5.0
     def get_output_names(self):
         return ["OUT"]
 

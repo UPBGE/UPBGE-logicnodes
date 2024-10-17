@@ -17,6 +17,7 @@ from math import radians
 class LogicNodeMouseLook(LogicNodeActionType):
     bl_idname = "NLActionMouseLookNode"
     bl_label = "Mouse Look"
+    bl_description = 'Map mouse input to look behavior'
     nl_module = 'uplogic.nodes.actions'
     nl_class = "ULMouseLook"
 
@@ -45,17 +46,17 @@ class LogicNodeMouseLook(LogicNodeActionType):
     )
 
     def init(self, context):
-        self.add_input(NodeSocketLogicCondition, "Condition")
-        self.add_input(NodeSocketLogicObject, "Body")
-        self.add_input(NodeSocketLogicObject, "Head")
-        self.add_input(NodeSocketLogicInvertXY, "")
-        self.add_input(NodeSocketLogicFloat, "Sensitivity", None, {'default_value': 1.0})
-        self.add_input(NodeSocketLogicBoolean, "Cap Left / Right")
-        self.add_input(NodeSocketLogicVectorXYAngle, "")
-        self.add_input(NodeSocketLogicBoolean, "Cap Up / Down")
-        self.add_input(NodeSocketLogicVectorXYAngle, "", None, {'default_value': (radians(-89), radians(89))})
-        self.add_input(NodeSocketLogicFloatFactor, "Smoothing")
-        self.add_output(NodeSocketLogicCondition, 'Done')
+        self.add_input(NodeSocketLogicCondition, "Condition", 'condition')
+        self.add_input(NodeSocketLogicObject, "Body", 'game_object_x')
+        self.add_input(NodeSocketLogicObject, "Head", 'game_object_y')
+        self.add_input(NodeSocketLogicInvertXY, "", 'inverted')
+        self.add_input(NodeSocketLogicFloat, "Sensitivity", 'sensitivity', {'default_value': 1.0})
+        self.add_input(NodeSocketLogicBoolean, "Cap Left / Right", 'use_cap_z')
+        self.add_input(NodeSocketLogicVectorXYAngle, "", 'cap_z')
+        self.add_input(NodeSocketLogicBoolean, "Cap Up / Down", 'use_cap_y')
+        self.add_input(NodeSocketLogicVectorXYAngle, "", 'cap_y', {'default_value': (radians(-89), radians(89))})
+        self.add_input(NodeSocketLogicFloatFactor, "Smoothing", 'smooth')
+        self.add_output(NodeSocketLogicCondition, 'Done', 'OUT')
         LogicNodeActionType.init(self, context)
 
     def draw_buttons(self, context, layout):
@@ -64,15 +65,17 @@ class LogicNodeMouseLook(LogicNodeActionType):
         r.prop(self, "axis", text="")
         layout.prop(self, "center_mouse")
 
-    def get_output_names(self):
-        return ["OUT"]
-
     def get_attributes(self):
         return [
             ("axis", self.axis),
             ("center_mouse", self.center_mouse)
         ]
 
+    # XXX: Remove for 5.0
+    def get_output_names(self):
+        return ["OUT"]
+
+    # XXX: Remove for 5.0
     def get_input_names(self):
         return [
             "condition",

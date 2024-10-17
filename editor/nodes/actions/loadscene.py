@@ -10,22 +10,24 @@ from ...sockets import NodeSocketLogicString
 class LogicNodeLoadScene(LogicNodeActionType):
     bl_idname = "NLLoadScene"
     bl_label = "Load Scene"
+    bl_description = 'Load the contents of another scene. This will not change the current scene'
     nl_module = 'uplogic.nodes.actions'
-
-    def init(self, context):
-        self.add_input(NodeSocketLogicCondition, 'Condition')
-        self.add_input(NodeSocketLogicScene, "Scene")
-        self.add_output(NodeSocketLogicCondition, 'Loaded')
-        self.add_output(NodeSocketLogicCondition, 'Updated')
-        self.add_output(NodeSocketLogicFloat, 'Status')
-        self.add_output(NodeSocketLogicString, 'Datatype')
-        self.add_output(NodeSocketLogicString, 'Item')
-        LogicNodeActionType.init(self, context)
-
     nl_class = "ULLoadScene"
 
+    def init(self, context):
+        self.add_input(NodeSocketLogicCondition, 'Condition', 'condition')
+        self.add_input(NodeSocketLogicScene, "Scene", 'scene')
+        self.add_output(NodeSocketLogicCondition, 'Loaded', 'OUT')
+        self.add_output(NodeSocketLogicCondition, 'Updated', 'UPDATED')
+        self.add_output(NodeSocketLogicFloat, 'Status', 'STATUS')
+        self.add_output(NodeSocketLogicString, 'Datatype', 'DATATYPE')
+        self.add_output(NodeSocketLogicString, 'Item', 'ITEM')
+        LogicNodeActionType.init(self, context)
+
+    # XXX: Remove for 5.0
     def get_input_names(self):
         return ['condition', 'scene']
 
+    # XXX: Remove for 5.0
     def get_output_names(self):
         return ['OUT', 'UPDATED', 'STATUS', 'DATATYPE', 'ITEM']

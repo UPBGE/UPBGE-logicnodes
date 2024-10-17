@@ -15,21 +15,22 @@ import bpy
 class LogicNodePlaySequence(LogicNodeActionType):
     bl_idname = "NLPlayMaterialSequence"
     bl_label = "Play Sequence"
+    bl_description = 'Start an animation on a material texture node'
     nl_module = 'uplogic.nodes.actions'
     nl_class = "ULPaySequence"
 
     def init(self, context):
-        self.add_input(NodeSocketLogicCondition, "Condition")
-        self.add_input(NodeSocketLogicMaterial, 'Material')
-        self.add_input(NodeSocketLogicTreeNode, 'Node Name', None, {'ref_index': 1})
-        self.add_input(NodeSocketLogicPlayMode, "Mode", None, {'enabled': False})
-        self.add_input(NodeSocketLogicBoolean, 'Continue', None, {'enabled': False})
-        self.add_input(NodeSocketLogicVectorXY, "Frames", None, {'enabled': False})
-        self.add_input(NodeSocketLogicFloatPositive, "FPS", None, {'enabled': False, 'default_value': 60})
-        self.add_output(NodeSocketLogicCondition, "On Start")
-        self.add_output(NodeSocketLogicCondition, "Running")
-        self.add_output(NodeSocketLogicCondition, "On Finish")
-        self.add_output(NodeSocketLogicParameter, "Current Frame")
+        self.add_input(NodeSocketLogicCondition, "Condition", 'condition')
+        self.add_input(NodeSocketLogicMaterial, 'Material', 'mat_name')
+        self.add_input(NodeSocketLogicTreeNode, 'Node Name', 'node_name', {'ref_index': 1})
+        self.add_input(NodeSocketLogicPlayMode, "Mode", 'play_mode', {'enabled': False})
+        self.add_input(NodeSocketLogicBoolean, 'Continue', 'play_continue', {'enabled': False})
+        self.add_input(NodeSocketLogicVectorXY, "Frames", 'frames', {'enabled': False})
+        self.add_input(NodeSocketLogicFloatPositive, "FPS", 'fps', {'enabled': False, 'default_value': 60})
+        self.add_output(NodeSocketLogicCondition, "On Start", 'ON_START')
+        self.add_output(NodeSocketLogicCondition, "Running", 'RUNNING')
+        self.add_output(NodeSocketLogicCondition, "On Finish", 'ON_FINISH')
+        self.add_output(NodeSocketLogicParameter, "Current Frame", 'FRAME')
         LogicNodeActionType.init(self, context)
 
     def draw_buttons(self, context, layout):
@@ -69,6 +70,7 @@ class LogicNodePlaySequence(LogicNodeActionType):
             for ipt in subs:
                 ipt.enabled = False
 
+    # XXX: Remove for 5.0
     def get_input_names(self):
         return [
             "condition",
@@ -80,5 +82,6 @@ class LogicNodePlaySequence(LogicNodeActionType):
             'fps'
         ]
 
+    # XXX: Remove for 5.0
     def get_output_names(self):
         return ['ON_START', 'RUNNING', 'ON_FINISH', 'FRAME']

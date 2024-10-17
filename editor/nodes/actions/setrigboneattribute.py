@@ -46,6 +46,7 @@ class LogicNodeSetRigBoneAttribute(LogicNodeActionType):
     bl_label = "Set Bone Attribute"
     nl_module = 'uplogic.nodes.actions'
     nl_class = "SetRigBoneAttributeNode"
+    bl_description = 'Set an attribute of an armature bone'
 
     def update_draw(self, context=None):
         attr = self.attribute

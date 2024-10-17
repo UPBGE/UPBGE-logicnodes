@@ -37,7 +37,7 @@ class NodeSocketLogicCurve(NodeSocket, NodeSocketLogic):
     nl_type = SOCKET_TYPE_OBJECT
 
     def draw(self, context, layout, node, text):
-        if self.is_output:
+        if self.is_output or self.is_multi_input:
             layout.label(text=self.name)
         elif self.linked_valid:
             layout.label(text=self.name)
@@ -66,4 +66,4 @@ class NodeSocketLogicCurve(NodeSocket, NodeSocketLogic):
             return "None"
         if self.use_owner:
             return 'game_object'
-        return f'scene.objects.get("{self.default_value.name}", "{self.default_value.name}")]'
+        return f'scene.objects.get("{self.default_value.name}", "{self.default_value.name}")'

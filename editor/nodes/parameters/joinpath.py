@@ -8,12 +8,13 @@ from ...sockets import NodeSocketLogicStringItem
 class LogicNodeJoinPath(LogicNodeParameterType):
     bl_idname = "LogicNodeJoinPath"
     bl_label = "Join Path"
+    bl_description = 'Joined path from a list of strings'
     nl_module = 'uplogic.nodes.parameters'
     nl_class = "JoinPathNode"
 
     def init(self, context):
-        self.add_input(NodeSocketLogicStringItem, 'Path')
-        self.add_input(NodeSocketLogicStringItem, 'Path')
+        self.add_input(NodeSocketLogicStringItem, 'Path', 'item')
+        self.add_input(NodeSocketLogicStringItem, 'Path', 'item')
         self.add_output(NodeSocketLogicString, 'Path', 'PATH')
         LogicNodeParameterType.init(self, context)
 
@@ -33,14 +34,12 @@ class LogicNodeJoinPath(LogicNodeParameterType):
         for socket in self.inputs:
             field_value = None
             if socket.linked_valid:
-                field_value = self.get_linked_socket_field_value(
+                field_value = self.get_linked_value(
                     socket,
-                    cell_varname,
-                    None,
                     uids
                 )
             else:
-                field_value = socket.get_unlinked_value()
+                field_value = socket.get_default_value()
             items += f'{field_value}, '
         items = items[:-2]
         return f'        {cell_varname}.items = [{items}]\n'

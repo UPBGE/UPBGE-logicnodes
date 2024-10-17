@@ -12,6 +12,9 @@ from bpy.props import BoolProperty
 import bpy
 
 
+WIDGETS = {}
+
+
 _nodes = []
 _node_manual_map = []
 
@@ -29,11 +32,17 @@ class LogicNode:
     nl_module = None
     nl_class = None
     nl_nodetype = 'INV'
+    bl_description = 'Add a Logic Node'
     search_tags = []
     deprecated = False
     deprecation_message = 'Delete to avoid issues.'
     nl_label: StringProperty(default='')
     ready: BoolProperty(default=False)
+
+    def set_socket_state(self, socket, enabled=True, name=None):
+        socket.enabled = enabled
+        if name:
+            socket.name = name
 
     def update_draw(self, context=None):
         pass
@@ -88,10 +97,15 @@ class LogicNode:
         self.ready = True
         self.update_draw(bpy.context)
 
-    def add_input(self, cls, name, attr_name: str = '', settings: dict = {}):
+    def add_input(self, cls, name, attr_name: str = '', settings: dict = {}, description='', shape=None, multi=False):
+        if not attr_name:
+            warn(f'"{self.bl_idname}.{name}" has no attribute name assigned!')
         attr_name = '' if attr_name is None else attr_name
-        ipt = self.inputs.new(cls.bl_idname, name)
-        ipt.display_shape = cls.nl_shape
+        ipt = self.inputs.new(cls.bl_idname, name, use_multi_input=multi)
+        # ipt.display_shape = shape if shape else cls.nl_shape
+        self.nl_shape = shape if shape else 'CIRCLE'
+        if description:
+            ipt.description = description
         if settings:
             ipt.use_default_value = True
         for key, val in settings.items():
@@ -99,10 +113,15 @@ class LogicNode:
         setattr(ipt, 'identifier', attr_name)
         return ipt
 
-    def add_output(self, cls, name, attr_name: str = '', settings: dict = {}):
+    def add_output(self, cls, name, attr_name: str = '', settings: dict = {}, description='', shape=None):
+        if not attr_name:
+            warn(f'"{self.bl_idname}.{name}" has no attribute name assigned!')
         attr_name = '' if attr_name is None else attr_name
         otp = self.outputs.new(cls.bl_idname, name)
-        otp.display_shape = cls.nl_shape
+        # otp.display_shape = shape if shape else cls.nl_shape
+        otp.display_shape = self.nl_shape = shape if shape else 'CIRCLE'
+        if description:
+            otp.descrtiption = description
         if settings:
             otp.use_default_value = True
         for key, val in settings.items():
@@ -181,24 +200,35 @@ class LogicNode:
         field_name = None
         if input_socket_index is None:
             return text
-        if getattr(socket, 'identifier', ''):
+        if input_names and input_names[input_socket_index] != socket.identifier:
+            error(f'"{self.bl_idname}.{socket.name}": identifier does not match input name: {socket.identifier} != {input_names[input_socket_index]}!')
+            field_name = input_names[input_socket_index]
+            setattr(socket, 'identifier', field_name)
+        elif getattr(socket, 'identifier', ''):
             field_name = socket.identifier
         elif input_names:
             field_name = input_names[input_socket_index]
             setattr(socket, 'identifier', field_name)
         else:
-            field_name = self.get_field_name_for_socket(socket)
-            warn(f'Node "{self.bl_label}" has called "get_field_name_for_socket()"! This is a bug, please report if receiving this message.')
-        field_value = None
-        if not socket.linked_valid:
-            field_value = socket.get_unlinked_value()
+            field_name = self.get_socket_name(socket)
+            warn(f'Node "{self.bl_label}" has called "()"! This is a bug, please report if receiving this message.')
+        if socket.is_multi_input:
+            field_value = ''
+            for i, e in enumerate(socket.links):
+                if not socket.linked_valid:
+                    field_value = '[]  '  # 2 spaces needed for splicing
+                else:
+                    field_value += f'{self.get_linked_value(socket, uids, i)}, '
+
+            field_value = field_value[:-2]
+            field_value = f'[{field_value}]'
         else:
-            field_value = self.get_linked_socket_field_value(
-                socket,
-                cell_varname,
-                field_name,
-                uids
-            )
+            field_value = None
+            if not socket.linked_valid:
+                field_value = socket.get_default_value()
+            else:
+                field_value = self.get_linked_value(socket, uids)
+            
 
         text += f'        {cell_varname}.{field_name} = {field_value}\n'
         return text
@@ -218,7 +248,7 @@ class LogicNode:
     def get_input_names(self):
         return None
 
-    def get_field_name_for_socket(self, socket):
+    def get_socket_name(self, socket):
         debug("not implemented in ", self)
         raise NotImplementedError()
 
@@ -243,15 +273,27 @@ class LogicNode:
                 return i
             i += 1
 
-    def get_linked_socket_field_value(
+    # XXX: Remove for 5.0
+    def check_socket_identifiers(self):
+        input_names = self.get_input_names()
+        output_names = self.get_output_names()
+        if input_names:
+            for i, e in enumerate(input_names):
+                if e != self.inputs[i].identifier:
+                    error(f'"{self.bl_idname}.{self.inputs[i].identifier}": identifier does not match input name: {self.inputs[i].identifier} != {e}!')
+        if output_names:
+            for i, e in enumerate(output_names):
+                if e != self.outputs[i].identifier:
+                    error(f'"{self.bl_idname}.{self.outputs[i].identifier}": identifier does not match output name: {self.outputs[i].identifier} != {e}!')
+
+    def get_linked_value(
         self,
         socket,
-        cell_varname,
-        field_name,
-        uids
+        uids,
+        idx=0
     ):
-        output_node = socket.links[0].from_socket.node
-        output_socket = socket.links[0].from_socket
+        output_node = socket.links[idx].from_socket.node
+        output_socket = socket.links[idx].from_socket
 
         while isinstance(output_node, NodeReroute):
             # cycle through and reset output_node until master is met
@@ -276,7 +318,12 @@ class LogicNode:
         output_node_varname = uids.get_varname_for_node(output_node)
         output_map = output_node.get_output_names()
 
-        if getattr(output_socket, 'identifier', ''):
+        if output_map and output_map[output_socket_index] != output_socket.identifier:
+            error(f'"{output_node.bl_idname}.{socket.name}": identifier does not match output name: {socket.identifier} != {output_map[output_socket_index]}!')
+            varname = output_map[output_socket_index]
+            setattr(output_socket, 'identifier', varname)
+            return '{}.{}'.format(output_node_varname, varname)
+        elif getattr(output_socket, 'identifier', ''):
             varname = output_socket.identifier
             return '{}.{}'.format(output_node_varname, varname)
         elif output_map:
@@ -287,7 +334,7 @@ class LogicNode:
             return output_node_varname
 
     def get_output_names(self):
-        return ['OUT']
+        return None
 
     def update(self):
         pass
@@ -312,6 +359,48 @@ class LogicNodeActionType(bpy.types.Node, LogicNode):
 
     def init(self, context):
         self.set_ready()
+        
+
+class LogicNodeUIType(LogicNodeActionType):
+
+    def get_ui_class(self):
+        return None
+
+    def update_widget(self):
+        pass
+
+    def show_widget(self, context):
+        w = WIDGETS.get(self, None)
+        if w is None:
+            return
+        elif self.preview:
+            w.show = True
+        else:
+            w.show = False
+
+    def free(self) -> None:
+        w = WIDGETS.get(self, None)
+        if w is not None and w.parent is not None:
+            w.parent.remove_widget(w)
+        return super().free()
+
+    preview: BoolProperty(name='Show in preview', update=show_widget, default=True)
+    
+    def start_ui_preview(self):
+        if self.get_ui_class() is None:
+            return
+        if WIDGETS.get(self, None) is None:
+            w = WIDGETS[self] = self.get_ui_class()()
+            w.update = self.update_widget
+        for link in self.outputs[1].links:
+            if isinstance(link.to_node, LogicNodeUIType):
+                WIDGETS[self].add_widget(link.to_node.start_ui_preview())
+        WIDGETS[self].register()
+        self.update_widget()
+        return WIDGETS[self]
+
+    def end_ui_preview(self):
+        pass
 
 
 class LogicNodeCustomType(bpy.types.Node, LogicNode):

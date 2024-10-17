@@ -9,16 +9,16 @@ from bpy.props import StringProperty
 class LogicNodeKeyCode(LogicNodeParameterType):
     bl_idname = "NLParameterKeyboardKeyCode"
     bl_label = "Key Code"
+    bl_description = 'Numeric representation of a keyboard key'
     nl_module = 'uplogic.nodes.parameters'
+    nl_class = "ULKeyCode"
 
     value: StringProperty()
 
     def init(self, context):
-        self.add_input(NodeSocketLogicKeyboardKey, "")
-        self.add_output(NodeSocketLogicInteger, "Code")
+        self.add_input(NodeSocketLogicKeyboardKey, "", 'key_code')
+        self.add_output(NodeSocketLogicInteger, "Code", 'OUT')
         LogicNodeParameterType.init(self, context)
 
     def get_input_names(self):
         return ["key_code"]
-
-    nl_class = "ULKeyCode"

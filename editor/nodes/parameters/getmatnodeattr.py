@@ -10,15 +10,16 @@ from ...sockets import NodeSocketLogicString
 class LogicNodeGetMaterialNodeAttr(LogicNodeParameterType):
     bl_idname = "NLGetMaterialNodeAttribute"
     bl_label = "Get Node Value"
+    bl_description = 'An attribute of a shader node'
     nl_module = 'uplogic.nodes.parameters'
     nl_class = "ULGetMaterialAttribute"
 
     def init(self, context):
-        self.add_input(NodeSocketLogicMaterial, 'Material')
-        self.add_input(NodeSocketLogicTreeNode, 'Node Name')
-        self.add_input(NodeSocketLogicString, "Internal")
-        self.add_input(NodeSocketLogicString, "Attribute")
-        self.add_output(NodeSocketLogicParameter, "Value")
+        self.add_input(NodeSocketLogicMaterial, 'Material', 'mat_name')
+        self.add_input(NodeSocketLogicTreeNode, 'Node Name', 'node_name')
+        self.add_input(NodeSocketLogicString, "Internal", 'internal')
+        self.add_input(NodeSocketLogicString, "Attribute", 'attribute')
+        self.add_output(NodeSocketLogicParameter, "Value", 'OUT')
         LogicNodeParameterType.init(self, context)
 
     def update_draw(self, context=None):
@@ -33,8 +34,10 @@ class LogicNodeGetMaterialNodeAttr(LogicNodeParameterType):
         else:
             itl.enabled = att.enabled = False
 
+    # XXX: Remove for 5.0
     def get_input_names(self):
         return ["mat_name", 'node_name', "internal", 'attribute']
 
+    # XXX: Remove for 5.0
     def get_output_names(self):
         return ['OUT']

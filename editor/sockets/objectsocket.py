@@ -38,7 +38,10 @@ class NodeSocketLogicObject(NodeSocket, NodeSocketLogic):
 
     def draw(self, context, layout, node, text):
         scene_logic = self.is_scene_logic()
-        if self.is_output:
+        if self.link_limit != 1:
+            layout.label(text=self.name)
+            return
+        if self.is_output or self.is_multi_input:
             layout.label(text=self.name)
         elif self.linked_valid:
             layout.label(text=self.name)

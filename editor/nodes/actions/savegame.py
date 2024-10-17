@@ -10,6 +10,7 @@ from bpy.props import StringProperty
 class LogicNodeSaveGame(LogicNodeActionType):
     bl_idname = "NLActionSaveGame"
     bl_label = "Save Game"
+    bl_description = 'Save the current state of the scene into an external file'
     nl_module = 'uplogic.nodes.actions'
     nl_class = "ULSaveGame"
 
@@ -24,9 +25,9 @@ class LogicNodeSaveGame(LogicNodeActionType):
     )
 
     def init(self, context):
-        self.add_input(NodeSocketLogicCondition, 'Condition')
-        self.add_input(NodeSocketLogicIntegerPositive, 'Slot')
-        self.add_output(NodeSocketLogicCondition, 'Done')
+        self.add_input(NodeSocketLogicCondition, 'Condition', 'condition')
+        self.add_input(NodeSocketLogicIntegerPositive, 'Slot', 'slot')
+        self.add_output(NodeSocketLogicCondition, 'Done', 'OUT')
         LogicNodeActionType.init(self, context)
 
     def draw_buttons(self, context, layout):
@@ -40,6 +41,7 @@ class LogicNodeSaveGame(LogicNodeActionType):
         if self.custom_path:
             layout.prop(self, "path", text='')
 
+    # XXX: Remove for 5.0
     def get_input_names(self):
         return ["condition", 'slot']
 
@@ -55,5 +57,6 @@ class LogicNodeSaveGame(LogicNodeActionType):
             ) if self.custom_path else "''"
         )]
 
+    # XXX: Remove for 5.0
     def get_output_names(self):
         return ["OUT"]

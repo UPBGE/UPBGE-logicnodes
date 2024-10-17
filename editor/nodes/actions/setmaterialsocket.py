@@ -12,20 +12,21 @@ import bpy
 class LogicNodeSetMaterialSocket(LogicNodeActionType):
     bl_idname = "NLSetMaterialNodeValue"
     bl_label = "Set Socket"
+    bl_description = 'Set a socket value of a material node'
     nl_module = 'uplogic.nodes.actions'
-    # deprecated = True
+    nl_class = "ULSetMatNodeSocket"
 
     search_tags = [
         ['Set Material Socket', {}]
     ]
 
     def init(self, context):
-        self.add_input(NodeSocketLogicCondition, "Condition")
-        self.add_input(NodeSocketLogicMaterial, 'Material')
-        self.add_input(NodeSocketLogicTreeNode, 'Node Name', None, {'ref_index': 1})
-        self.add_input(NodeSocketLogicIntegerPositive, "Input")
-        self.add_input(NodeSocketLogicFloat, 'Value')
-        self.add_output(NodeSocketLogicCondition, "Done")
+        self.add_input(NodeSocketLogicCondition, "Condition", 'condition')
+        self.add_input(NodeSocketLogicMaterial, 'Material', 'mat_name')
+        self.add_input(NodeSocketLogicTreeNode, 'Node Name', 'node_name', {'ref_index': 1})
+        self.add_input(NodeSocketLogicIntegerPositive, "Input", 'input_slot')
+        self.add_input(NodeSocketLogicFloat, 'Value', 'value')
+        self.add_output(NodeSocketLogicCondition, "Done", 'OUT')
         LogicNodeActionType.init(self, context)
 
     def update_draw(self, context=None):
@@ -51,8 +52,7 @@ class LogicNodeSetMaterialSocket(LogicNodeActionType):
             name = target.inputs[ipt.default_value].name
             ipt.name = name
 
-    nl_class = "ULSetMatNodeSocket"
-
+    # XXX: Remove for 5.0
     def get_input_names(self):
         return [
             "condition",
@@ -62,5 +62,6 @@ class LogicNodeSetMaterialSocket(LogicNodeActionType):
             'value'
         ]
 
+    # XXX: Remove for 5.0
     def get_output_names(self):
         return ['OUT']

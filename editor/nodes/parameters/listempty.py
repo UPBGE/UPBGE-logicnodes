@@ -8,17 +8,19 @@ from ...sockets import NodeSocketLogicList
 class LogicNodeListEmpty(LogicNodeParameterType):
     bl_idname = "NLInitEmptyList"
     bl_label = "New List"
+    bl_description = 'Create a new list'
     nl_module = 'uplogic.nodes.parameters'
+    nl_class = "ULInitEmptyList"
 
     def init(self, context):
-        self.add_input(NodeSocketLogicInteger, 'Length')
-        self.add_output(NodeSocketLogicList, 'List')
+        self.add_input(NodeSocketLogicInteger, 'Length', 'length')
+        self.add_output(NodeSocketLogicList, 'List', 'LIST')
         LogicNodeParameterType.init(self, context)
 
+    # XXX: Remove for 5.0
     def get_output_names(self):
         return ['LIST']
 
-    nl_class = "ULInitEmptyList"
-
+    # XXX: Remove for 5.0
     def get_input_names(self):
         return ['length']

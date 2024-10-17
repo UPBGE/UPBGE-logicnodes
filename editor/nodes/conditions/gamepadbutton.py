@@ -12,6 +12,7 @@ from bpy.props import EnumProperty
 class LogicNodeGamepadButton(LogicNodeConditionType):
     bl_idname = "NLGamepadButtonsCondition"
     bl_label = "Gamepad Button"
+    bl_description = 'Register gamepad button activity'
     nl_module = 'uplogic.nodes.conditions'
     nl_class = "ULGamepadButton"
 
@@ -36,18 +37,20 @@ class LogicNodeGamepadButton(LogicNodeConditionType):
     ]
 
     def init(self, context):
-        self.add_input(NodeSocketLogicIntegerPositiveCent, 'Index')
-        self.add_output(NodeSocketLogicCondition, "Pressed")
-        self.add_output(NodeSocketLogicFloat, "Strength")
+        self.add_input(NodeSocketLogicIntegerPositiveCent, 'Index', 'index')
+        self.add_output(NodeSocketLogicCondition, "Pressed", 'BUTTON')
+        self.add_output(NodeSocketLogicFloat, "Strength", 'BUTTON')
         LogicNodeConditionType.init(self, context)
 
     def draw_buttons(self, context, layout):
         layout.prop(self, "button", text='')
         layout.prop(self, "input_type", text='')
 
+    # XXX: Remove for 5.0
     def get_input_names(self):
         return ["index"]
 
+    # XXX: Remove for 5.0
     def get_output_names(self):
         return ["BUTTON", 'BUTTON']
 

@@ -8,13 +8,14 @@ from ...sockets import NodeSocketLogicFloatPositive
 class LogicNodeSetTimescale(LogicNodeActionType):
     bl_idname = "NLActionSetTimeScale"
     bl_label = "Set Timescale"
+    bl_description = 'Set the timescale of the scene'
     nl_module = 'uplogic.nodes.actions'
     nl_class = "ULSetTimeScale"
 
     def init(self, context):
-        self.add_input(NodeSocketLogicCondition, "Condition")
-        self.add_input(NodeSocketLogicFloatPositive, "Timescale")
-        self.add_output(NodeSocketLogicCondition, 'Done')
+        self.add_input(NodeSocketLogicCondition, "Condition", 'condition')
+        self.add_input(NodeSocketLogicFloatPositive, "Timescale", 'timescale')
+        self.add_output(NodeSocketLogicCondition, 'Done', 'OUT')
         LogicNodeActionType.init(self, context)
 
     def get_output_names(self):

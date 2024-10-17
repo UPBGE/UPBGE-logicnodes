@@ -1,6 +1,7 @@
 import bpy
 import os
 from ..preferences import LogicNodesAddonPreferences
+# from ..generator.tree_code_generator import TreeCodeGenerator
 
 
 TREE_COMPILED = 'Compiled'
@@ -456,6 +457,69 @@ def compute_initial_status_of_tree(tree_name, objects):
         if last_status is None: last_status = status
         elif last_status != status: return None#states are mixed in the list, return None
     return last_status#all states are the same
+
+
+def add_tree_to_active_objects(tree):
+    active_object = bpy.context.object
+    if not active_object:
+        return
+    scene = bpy.context.scene
+    selected_objects = [
+        ob for ob in scene.objects if ob.select_get()
+    ]
+    if len(selected_objects) < 1:
+        return
+    tree.use_fake_user = True
+    initial_status = compute_initial_status_of_tree(
+        tree.name, selected_objects
+    )
+    # try:
+    #     TreeCodeGenerator().write_code_for_tree(tree)
+    # except Exception as e:
+    #     error(f"Couldn't compile tree {tree.name}!")
+    #     print(e)
+    initial_status = True if initial_status is None else False
+    for obj in selected_objects:
+        tree_name = make_valid_name(tree.name)
+        module = f'nl_{tree_name.lower()}'
+        name = f'{module}.{tree_name}'
+        comps = [c.module for c in obj.game.components]
+        if obj.name in bpy.context.view_layer.objects:
+            bpy.context.view_layer.objects.active = obj
+        else:
+            error(f'Object {obj.name} not in view layer, please check for references. Skipping...')
+            continue
+        if module not in comps:
+            bpy.ops.logic.python_component_register(component_name=name)
+            success(
+                "Applied tree {} to object {}.".format(
+                    tree.name,
+                    obj.name
+                )
+            )
+        else:
+            success(
+                "Tree {} already applied to object {}. Updating status.".format(
+                    tree.name,
+                    obj.name
+                )
+            )
+        tree_collection = obj.logic_trees
+        contains = False
+        for t in tree_collection:
+            if t.tree_name == tree.name:
+                contains = True
+                break
+        if not contains:
+            new_entry = tree_collection.add()
+            new_entry.tree_name = tree.name
+            new_entry.tree = tree
+            # this will set both new_entry.tree_initial_status and add a
+            # game property that makes the status usable at runtime
+            set_network_initial_status_key(
+                obj, tree_name, initial_status
+            )
+    bpy.context.view_layer.objects.active = active_object
 
 
 def newNodeAtCursor(type):

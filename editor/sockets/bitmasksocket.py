@@ -13,7 +13,7 @@ class NodeSocketLogicBitMask(NodeSocket, NodeSocketLogic):
         size=16,
         default=[True for x in range(16)],
         name='Mask',
-        # subtype='LAYER_MEMBER'  XXX: Reactivate if fixed
+        subtype='LAYER_MEMBER'  # XXX: Reactivate if fixed
     )
     selected_bit: IntProperty()
 
@@ -21,7 +21,7 @@ class NodeSocketLogicBitMask(NodeSocket, NodeSocketLogic):
     nl_type = SOCKET_TYPE_INT
 
     def draw(self, context, layout, node, text):
-        if self.linked_valid or self.is_output:
+        if self.linked_valid or self.is_output or self.is_multi_input:
             layout.label(text=text)
         else:
             layout.prop(self, 'default_value', text='', icon='BLANK1')

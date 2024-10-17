@@ -13,6 +13,7 @@ class NodeSocketLogicPython(NodeSocket, NodeSocketLogic):
 
     nl_color = SOCKET_COLOR_PYTHON
     nl_type = SOCKET_TYPE_PYTHON
+    valid_sockets = []
 
     def draw(self, context, layout, node, text):
         layout.label(text=text)

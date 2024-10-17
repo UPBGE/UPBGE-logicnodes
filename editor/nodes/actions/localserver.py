@@ -13,9 +13,10 @@ from socket import gethostbyname, gethostname
 class LogicNodeLocalServer(LogicNodeActionType):
     bl_idname = "LogicNodeLocalServer"
     bl_label = "LAN Server"
+    bl_description = 'Manage a Local Area Network (LAN) server'
+    bl_width_default = 180
     nl_module = 'uplogic.nodes.actions'
     nl_class = "ULLocalServer"
-    bl_width_default = 180
 
     on_init: BoolProperty(
         name='Startup',
@@ -39,7 +40,13 @@ class LogicNodeLocalServer(LogicNodeActionType):
     def draw_buttons(self, context, layout) -> None:
         layout.prop(self, 'on_init', text='On Startup')
 
-    def get_input_names(self):  # XXX Remove for 4.0
+    def get_attributes(self):
+        return [
+            ("on_init", f'{self.on_init}')
+        ]
+
+    # XXX: Remove for 5.0
+    def get_input_names(self):
         return [
             "start_cond",
             "ip_address",
@@ -47,10 +54,6 @@ class LogicNodeLocalServer(LogicNodeActionType):
             "stop_cond",
         ]
 
-    def get_attributes(self):
-        return [
-            ("on_init", f'{self.on_init}')
-        ]
-
-    def get_output_names(self):  # XXX Remove for 4.0
+    # XXX: Remove for 5.0
+    def get_output_names(self):
         return ['STARTED', 'RUNNING', 'STOPPED', 'SERVER', 'RECEIVED', 'MSG']

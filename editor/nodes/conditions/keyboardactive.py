@@ -7,13 +7,10 @@ from ...sockets import NodeSocketLogicCondition
 class LogicNodeKeyboardActive(LogicNodeConditionType):
     bl_idname = "NLKeyboardActive"
     bl_label = "Keyboard Active"
+    bl_description = 'Register keyboard activity'
     nl_module = 'uplogic.nodes.conditions'
-
-    def init(self, context):
-        self.add_output(NodeSocketLogicCondition, 'Active')
-        LogicNodeConditionType.init(self, context)
-
     nl_class = "ULKeyboardActive"
 
-    def get_input_names(self):
-        return ["index"]
+    def init(self, context):
+        self.add_output(NodeSocketLogicCondition, 'Active', 'OUT')
+        LogicNodeConditionType.init(self, context)

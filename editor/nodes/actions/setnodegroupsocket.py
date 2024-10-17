@@ -12,20 +12,21 @@ import bpy
 class LogicNodeSetNodeGroupSocket(LogicNodeActionType):
     bl_idname = "NLSetNodeTreeNodeValue"
     bl_label = "Set Socket"
+    bl_description = 'Set a socket value of a node in a group'
     nl_module = 'uplogic.nodes.actions'
-    # deprecated = True
+    nl_class = "ULSetNodeSocket"
 
     search_tags = [
         ['Set Node Group Socket', {}]
     ]
 
     def init(self, context):
-        self.add_input(NodeSocketLogicCondition, "Condition")
-        self.add_input(NodeSocketLogicNodeGroup, 'Tree')
-        self.add_input(NodeSocketLogicNodeGroupNode, 'Node Name', None, {'ref_index': 1})
-        self.add_input(NodeSocketLogicInteger, "Input")
-        self.add_input(NodeSocketLogicFloat, 'Value')
-        self.add_output(NodeSocketLogicCondition, "Done")
+        self.add_input(NodeSocketLogicCondition, "Condition", 'condition')
+        self.add_input(NodeSocketLogicNodeGroup, 'Tree', 'tree_name')
+        self.add_input(NodeSocketLogicNodeGroupNode, 'Node Name', 'node_name', {'ref_index': 1})
+        self.add_input(NodeSocketLogicInteger, "Input", 'input_slot')
+        self.add_input(NodeSocketLogicFloat, 'Value', 'value')
+        self.add_output(NodeSocketLogicCondition, "Done", 'OUT')
         LogicNodeActionType.init(self, context)
 
     def update_draw(self, context=None):
@@ -49,8 +50,7 @@ class LogicNodeSetNodeGroupSocket(LogicNodeActionType):
             name = target.inputs[ipt.default_value].name
             ipt.name = name
 
-    nl_class = "ULSetNodeSocket"
-
+    # XXX: Remove for 5.0
     def get_input_names(self):
         return [
             "condition",
@@ -60,5 +60,6 @@ class LogicNodeSetNodeGroupSocket(LogicNodeActionType):
             'value'
         ]
 
+    # XXX: Remove for 5.0
     def get_output_names(self):
         return ['OUT']

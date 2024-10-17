@@ -10,6 +10,10 @@ class LogicNodeBoneStatus(LogicNodeParameterType):
     bl_idname = "NLParameterBoneStatus"
     bl_label = "Bone Status"
     nl_module = 'uplogic.nodes.parameters'
+    bl_description = 'Transformation Status of an Armature Bone'
+    nl_class = "ULBoneStatus"
+    deprecated = True
+    deprecation_message = 'Node will be removed in a future update'
 
     def init(self, context):
         self.add_input(NodeSocketLogicArmature, "Armature Object")
@@ -18,8 +22,6 @@ class LogicNodeBoneStatus(LogicNodeParameterType):
         self.add_output(NodeSocketLogicVectorXYZ, "Rotation")
         self.add_output(NodeSocketLogicVectorXYZ, "Scale")
         LogicNodeParameterType.init(self, context)
-
-    nl_class = "ULBoneStatus"
 
     def get_input_names(self):
         return ["armature", "bone_name"]

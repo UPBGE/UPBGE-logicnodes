@@ -15,6 +15,7 @@ class LogicNodeApplyTransform(LogicNodeActionType):
     bl_label = "Apply Transform"
     nl_module = 'uplogic.nodes.actions'
     nl_class = "ULApplyTransform"
+    bl_description = "Apply transformation changes on an object"
 
     search_tags = [
         ['Apply Movement', {'nl_label': 'Apply Movement'}],
@@ -38,21 +39,23 @@ class LogicNodeApplyTransform(LogicNodeActionType):
     mode: EnumProperty(items=_transform_types, name='Mode', update=update_draw)
 
     def init(self, context):
-        self.add_input(NodeSocketLogicCondition, "Condition")
-        self.add_input(NodeSocketLogicObject, "Object")
-        self.add_input(NodeSocketLogicVectorXYZ, "Vector")
-        self.add_input(NodeSocketLogicVectorXYZ, "Direction")
-        self.add_input(NodeSocketLogicVectorXYZAngle, "Vector")
-        self.add_output(NodeSocketLogicCondition, 'Done')
+        self.add_input(NodeSocketLogicCondition, "Condition", 'condition')
+        self.add_input(NodeSocketLogicObject, "Object", 'game_object')
+        self.add_input(NodeSocketLogicVectorXYZ, "Vector", 'vec1')
+        self.add_input(NodeSocketLogicVectorXYZ, "Impulse", 'vec2')
+        self.add_input(NodeSocketLogicVectorXYZAngle, "Vector", 'vec3')
+        self.add_output(NodeSocketLogicCondition, 'Done', 'OUT')
         LogicNodeActionType.init(self, context)
-
-    def get_output_names(self):
-        return ["OUT"]
 
     def draw_buttons(self, context, layout):
         layout.prop(self, "mode", text='')
         layout.prop(self, "local")
 
+    # XXX: Remove for 5.0
+    def get_output_names(self):
+        return ["OUT"]
+
+    # XXX: Remove for 5.0
     def get_input_names(self):
         return ["condition", "game_object", "vec1", "vec2", "vec3"]
 

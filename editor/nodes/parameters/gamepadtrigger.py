@@ -10,6 +10,9 @@ class LogicNodeGamepadTrigger(LogicNodeParameterType):
     bl_idname = "NLGamepadTriggerCondition"
     bl_label = "Gamepad Trigger"
     nl_module = 'uplogic.nodes.parameters'
+    bl_description = ''
+    deprecated = True
+    deprecation_message = 'Included in "Gamepad Button" node'
 
     def init(self, context):
         self.add_input(NodeSocketLogicIntegerPositiveCent, 'Index')

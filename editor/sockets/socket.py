@@ -26,11 +26,8 @@ SOCKET_COLOR_MESH = Color.RGBA(.0, .839, .639, 1.0)
 SOCKET_COLOR_COLLECTION = Color.RGBA(0.961, 0.961, .961, 1.0)
 SOCKET_COLOR_SCENE = Color.RGBA(0.5, 0.5, 0.6, 1.0)
 SOCKET_COLOR_VECTOR = Color.RGBA(0.388, 0.388, 0.78, 1.0)
-SOCKET_COLOR_SOUND = Color.RGBA(.388, .220, .388, 1.0)
-SOCKET_COLOR_IMAGE = Color.RGBA(.388, .220, .388, 1.0)
-SOCKET_COLOR_BRICK = Color.RGBA(0.9, 0.9, 0.4, 1.0)
+SOCKET_COLOR_DATABLOCK = Color.RGBA(.388, .220, .388, 1.0)
 SOCKET_COLOR_PYTHON = Color.RGBA(0.2, 0.7, 1, 1.0)
-SOCKET_COLOR_ACTION = Color.RGBA(0.2, .7, .7, 1.0)
 SOCKET_COLOR_STRING = Color.RGBA(0.439, .698, 1.0, 1.0)
 
 CONDITION_NODE_COLOR = Color.RGBA(0.2, 0.2, 0.2, 1)[:-1]
@@ -52,7 +49,7 @@ SOCKET_TYPE_MATRIX = 10
 SOCKET_TYPE_COLOR = 11
 SOCKET_TYPE_OBJECT = 12
 # SOCKET_TYPE_DATA = 13
-# SOCKET_TYPE_DATABLOCK = 14
+SOCKET_TYPE_DATABLOCK = 14
 SOCKET_TYPE_UI = 15
 SOCKET_TYPE_COLLECTION = 16
 SOCKET_TYPE_VALUE = 17
@@ -168,6 +165,7 @@ class NodeSocketLogic:
     identifier: StringProperty(default='')
     use_default_value: BoolProperty(default=False)
     skip_validation: BoolProperty()
+    list_mode: BoolProperty()
 
     def update_draw(self, context=None):
         pass
@@ -180,6 +178,25 @@ class NodeSocketLogic:
             self.links[0].from_socket.enabled and not
             self.links[0].from_node.mute
         )
+
+    def is_valid_link(self, idx=0):
+        return (
+            self.is_linked and
+            len(self.links) > 0 and
+            self.links[idx].from_socket.enabled and not
+            self.links[idx].from_node.mute
+        )
+
+    def get_from_socket(self):
+        if self.is_multi_input or not len(self.links):
+            return None
+        from_socket = self.links[0].from_socket
+        while isinstance(from_socket.node, NodeReroute):
+            if not len(from_socket.links):
+                return from_socket
+            from_socket = from_socket.links[0].from_socket
+            print(from_socket.node)
+        return from_socket
 
     @classmethod
     def get_id(cls):
@@ -245,6 +262,9 @@ class NodeSocketLogic:
             return
         link.is_valid = from_socket.nl_type in self.valid_sockets
         from_socket.on_validate(link, nodetree)
+
+    def get_default_value(self):
+        return f'[{self.get_unlinked_value()}]' if self.list_mode else self.get_unlinked_value()
 
     def get_unlinked_value(self):
         raise NotImplementedError()

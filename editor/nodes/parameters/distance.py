@@ -9,6 +9,7 @@ class LogicNodeDistance(LogicNodeParameterType):
     bl_idname = "NLParameterDistance"
     bl_label = "Distance"
     nl_module = 'uplogic.nodes.parameters'
+    nl_class = "ULDistance"
     deprecated = True
     deprecation_message = 'Replaced by "Vector Math" Node.'
 
@@ -20,8 +21,6 @@ class LogicNodeDistance(LogicNodeParameterType):
 
     def get_input_names(self):
         return ["parama", "paramb"]
-
-    nl_class = "ULDistance"
 
     def get_output_names(self):
         return ["OUT"]

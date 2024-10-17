@@ -12,6 +12,7 @@ from ...sockets import NodeSocketLogicFloat
 class LogicNodeMoveTo(LogicNodeActionType):
     bl_idname = "NLActionMoveTo"
     bl_label = "Move To"
+    bl_description = 'Move an object to a point at a constant speed'
     nl_module = 'uplogic.nodes.actions'
     nl_class = "ULMoveTo"
 
@@ -26,7 +27,7 @@ class LogicNodeMoveTo(LogicNodeActionType):
         self.add_output(NodeSocketLogicCondition, "Reached", 'REACHED')
         LogicNodeActionType.init(self, context)
 
-    # XXX Remove for 4.0
+    # XXX Remove for 5.0
     def get_input_names(self):
         return [
             "condition",

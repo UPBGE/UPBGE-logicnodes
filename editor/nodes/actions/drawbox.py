@@ -13,6 +13,8 @@ class LogicNodeDrawBox(LogicNodeActionType):
     bl_idname = "NLDrawBox"
     bl_label = "Draw Box"
     nl_module = 'uplogic.nodes.actions'
+    
+    deprecated = True
 
     use_volume_origin: BoolProperty(
         name='Use Volume Origin',

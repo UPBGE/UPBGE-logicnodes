@@ -10,6 +10,7 @@ from bpy.props import EnumProperty
 class LogicNodeEuler(LogicNodeParameterType):
     bl_idname = "NLParameterEulerSimpleNode"
     bl_label = "Euler"
+    bl_description = 'Three-component ordered structure'
     nl_module = 'uplogic.nodes.parameters'
     nl_class = "ULEuler"
 
@@ -28,10 +29,10 @@ class LogicNodeEuler(LogicNodeParameterType):
     def get_attributes(self):
         return [('order', repr(self.euler_order))]
 
-    # XXX Remove for 4.0
+    # XXX Remove for 5.0
     def get_input_names(self):
         return ["input_x", "input_y", "input_z"]
 
-    # XXX Remove for 4.0
+    # XXX Remove for 5.0
     def get_output_names(self):
         return ["OUTV"]

@@ -7,15 +7,17 @@ from ...sockets import NodeSocketLogicString
 class LogicNodeFormattedString(LogicNodeParameterType):
     bl_idname = "NLParameterFormattedString"
     bl_label = "Formatted String"
+    bl_description = 'Dynamic string operation'
     nl_module = 'uplogic.nodes.parameters'
+    nl_class = "ULFormattedString"
 
     def init(self, context):
-        self.add_input(NodeSocketLogicString, "Format String", None, {'formatted': True, 'default_value': 'A is {} and B is {}'})
-        self.add_input(NodeSocketLogicString, "A", None, {'default_value': 'Hello'})
-        self.add_input(NodeSocketLogicString, "B", None, {'default_value': 'World'})
-        self.add_input(NodeSocketLogicString, "C")
-        self.add_input(NodeSocketLogicString, "D")
-        self.add_output(NodeSocketLogicString, "String")
+        self.add_input(NodeSocketLogicString, "Format String", 'format_string', {'formatted': True, 'default_value': 'A is {} and B is {}'})
+        self.add_input(NodeSocketLogicString, "A", 'value_a', {'default_value': 'Hello'})
+        self.add_input(NodeSocketLogicString, "B", 'value_b', {'default_value': 'World'})
+        self.add_input(NodeSocketLogicString, "C", 'value_c')
+        self.add_input(NodeSocketLogicString, "D", 'value_d')
+        self.add_output(NodeSocketLogicString, "String", 'OUT')
         LogicNodeParameterType.init(self, context)
 
     def update_draw(self, context=None):
@@ -28,10 +30,10 @@ class LogicNodeFormattedString(LogicNodeParameterType):
             else:
                 self.inputs[ipt].enabled = False
 
+    # XXX: Remove for 5.0
     def get_input_names(self):
         return ["format_string", "value_a", "value_b", "value_c", "value_d"]
 
-    nl_class = "ULFormattedString"
-
+    # XXX: Remove for 5.0
     def get_output_names(self):
         return ["OUT"]

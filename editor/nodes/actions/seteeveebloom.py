@@ -10,6 +10,8 @@ class LogicNodeSetEeveeBloom(LogicNodeActionType):
     bl_label = "Set Bloom"
     nl_module = 'uplogic.nodes.actions'
     nl_class = "ULSetEeveeBloom"
+    deprecated = True
+    deprecation_message = 'This node will be removed in a future update.'
 
     def init(self, context):
         self.add_input(NodeSocketLogicCondition, 'Condition')

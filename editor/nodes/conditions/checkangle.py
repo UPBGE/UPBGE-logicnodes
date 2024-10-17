@@ -13,6 +13,8 @@ class LogicNodeCheckAngle(LogicNodeConditionType):
     bl_label = "Check Angle"
     nl_module = 'uplogic.nodes.conditions'
     nl_class = "ULVectorAngleCheck"
+    deprecated = True
+    deprecation_message = 'This node will be removed in a future update; use Vector Math and Compare instead'
 
     operator: EnumProperty(name='Operation', items=_enum_logic_operators)
 
@@ -20,22 +22,18 @@ class LogicNodeCheckAngle(LogicNodeConditionType):
         self.add_input(NodeSocketLogicVectorXYZ, "Vector 1", 'vector')
         self.add_input(NodeSocketLogicVectorXYZ, "Vector 2", 'vector_2')
         self.add_input(NodeSocketLogicFloat, "Value", 'value')
-        self.add_output(NodeSocketLogicCondition, 'If True', 'OUT')
+        self.add_output(NodeSocketLogicCondition, 'Result', 'OUT')
         self.add_output(NodeSocketLogicFloat, "Angle", 'ANGLE')
         LogicNodeConditionType.init(self, context)
 
     def draw_buttons(self, context, layout):
-        layout.prop(
-            self,
-            'operator',
-            text=''
-        )
+        layout.prop(self, 'operator', text='')
 
-    # XXX Remove for 4.0
+    # XXX Remove for 5.0
     def get_input_names(self):
         return ["vector", 'vector_2', 'value']
 
-    # XXX Remove for 4.0
+    # XXX Remove for 5.0
     def get_output_names(self):
         return ['OUT', 'ANGLE']
 

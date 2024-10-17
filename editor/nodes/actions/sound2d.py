@@ -15,22 +15,26 @@ class LogicNodeSound2D(LogicNodeActionType):
     bl_label = "2D Sound"
     nl_module = 'uplogic.nodes.actions'
     nl_class = "ULStartSound"
+    bl_description = 'Start a non-spacial sound'
+    deprecated = True
 
     def init(self, context):
-        self.add_input(NodeSocketLogicCondition, "Condition")
-        self.add_input(NodeSocketLogicSoundFile, "Sound File")
-        self.add_input(NodeSocketLogicLoopCount, "Mode")
-        self.add_input(NodeSocketLogicFloatPositive, "Pitch", None, {'default_value': 1.0})
-        self.add_input(NodeSocketLogicFloatFactor, "Volume", None, {'default_value': 1.0})
-        self.add_input(NodeSocketLogicBoolean, "Ignore Timescale")
-        self.add_output(NodeSocketLogicCondition, 'On Start')
-        self.add_output(NodeSocketLogicCondition, 'On Finish')
-        self.add_output(NodeSocketLogicPython, 'Sound')
+        self.add_input(NodeSocketLogicCondition, "Condition", 'condition')
+        self.add_input(NodeSocketLogicSoundFile, "Sound File", 'sound')
+        self.add_input(NodeSocketLogicLoopCount, "Mode", 'loop_count')
+        self.add_input(NodeSocketLogicFloatPositive, "Pitch", 'pitch', {'default_value': 1.0})
+        self.add_input(NodeSocketLogicFloatFactor, "Volume", 'volume', {'default_value': 1.0})
+        self.add_input(NodeSocketLogicBoolean, "Ignore Timescale", 'ignore_timescale')
+        self.add_output(NodeSocketLogicCondition, 'On Start', 'DONE')
+        self.add_output(NodeSocketLogicCondition, 'On Finish', 'ON_FINISH')
+        self.add_output(NodeSocketLogicPython, 'Sound', 'HANDLE')
         LogicNodeActionType.init(self, context)
 
+    # XXX: Remove for 5.0
     def get_output_names(self):
         return ["DONE", 'ON_FINISH', "HANDLE"]
 
+    # XXX: Remove for 5.0
     def get_input_names(self):
         return [
             "condition",

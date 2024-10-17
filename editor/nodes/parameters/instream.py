@@ -10,18 +10,21 @@ from ...sockets import NodeSocketLogicString
 class LogicNodeInStream(LogicNodeParameterType):
     bl_idname = "NLKeyLoggerAction"
     bl_label = "Key Logger"
+    bl_description = 'Keyboard activity'
     nl_module = 'uplogic.nodes.parameters'
     nl_class = "ULKeyLogger"
 
     def init(self, context):
-        self.add_input(NodeSocketLogicBoolean, 'Only Characters', None, {'default_value': True})
-        self.add_output(NodeSocketLogicCondition, "Pressed")
-        self.add_output(NodeSocketLogicString, "Character")
-        self.add_output(NodeSocketLogicString, "Keycode")
+        self.add_input(NodeSocketLogicBoolean, 'Only Characters', 'only_characters', {'default_value': True})
+        self.add_output(NodeSocketLogicCondition, "Pressed", 'PRESSED')
+        self.add_output(NodeSocketLogicString, "Character", 'CHARACTER')
+        self.add_output(NodeSocketLogicString, "Keycode", 'KEYCODE')
         LogicNodeParameterType.init(self, context)
 
+    # XXX: Remove for 5.0
     def get_input_names(self):
         return ["only_characters"]
 
+    # XXX: Remove for 5.0
     def get_output_names(self):
         return ["PRESSED", "CHARACTER", "KEYCODE"]

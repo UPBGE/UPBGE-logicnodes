@@ -64,24 +64,24 @@
             "x": 220,
             "y": -40,
             "label": "A or D pressed",
-            "node_type": "NLArithmeticOpParameterNode",
+            "node_type": "LogicNodeMath",
             "links": [[0, 0, 0], [1, 0, 1]],
             "values": [
                 {
                     "index": "operator",
-                    "value": "SUB"
+                    "value": "1"
                 }
             ]
         }, {
             "x": 220,
             "y": -80,
             "label": "W or S pressed",
-            "node_type": "NLArithmeticOpParameterNode",
+            "node_type": "LogicNodeMath",
             "links": [[2, 0, 0], [3, 0, 1]],
             "values": [
                 {
                     "index": "operator",
-                    "value": "SUB"
+                    "value": "1"
                 }
             ]
         }, {
@@ -95,12 +95,12 @@
             "x": 660,
             "y": -60,
             "label": "Normalize",
-            "node_type": "NLVectorMath",
+            "node_type": "LogicNodeVectorMath",
             "links": [[6, 0, 0]],
             "values": [
                 {
                     "index": "operator",
-                    "value": "normalize"
+                    "value": "19"
                 }
             ]
         }, {
@@ -126,12 +126,12 @@
             "x": 880,
             "y": -80,
             "label": "Calc Speed",
-            "node_type": "NLVectorMath",
+            "node_type": "LogicNodeVectorMath",
             "links": [[7, 1, 0], [8, 0, 3]],
             "values": [
                 {
                     "index": "operator",
-                    "value": "scale"
+                    "value": "18"
                 }
             ]
         }, {

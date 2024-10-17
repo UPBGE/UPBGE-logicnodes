@@ -1,53 +1,28 @@
 from ..node import node_type
 from ..node import LogicNodeParameterType
+from ...sockets import NodeSocketLogicFilePath
 from ...sockets import NodeSocketLogicString
 from ...sockets import NodeSocketLogicDictionary
-from bpy.props import BoolProperty
-from bpy.props import StringProperty
 
 
 @node_type
 class LogicNodeVariablesLoad(LogicNodeParameterType):
     bl_idname = "NLActionLoadVariables"
     bl_label = "Load Variable Dict"
+    bl_description = 'Load an externally saved .json file as dictionary'
     nl_module = 'uplogic.nodes.parameters'
-
-    custom_path: BoolProperty()
-    path: StringProperty(
-        subtype='DIR_PATH',
-        description=(
-            'Choose a Path to save the file to. '
-            'Start with "./" to make it relative to the file path.'
-        )
-    )
-
-    def init(self, context):
-        self.add_input(NodeSocketLogicString, 'Filename', None, {'default_value': 'variables'})
-        self.add_output(NodeSocketLogicDictionary, 'Variables')
-        LogicNodeParameterType.init(self, context)
-
-    def draw_buttons(self, context, layout):
-        layout.prop(
-            self,
-            "custom_path",
-            toggle=True,
-            text="Custom Path" if self.custom_path else "File Path/Data",
-            icon='FILE_FOLDER'
-        )
-        if self.custom_path:
-            layout.prop(self, "path", text='')
-
     nl_class = "ULLoadVariableDict"
 
+    def init(self, context):
+        self.add_input(NodeSocketLogicFilePath, 'Path', 'path', {'default_value': '//Data'})
+        self.add_input(NodeSocketLogicString, 'File', 'file_name', {'default_value': 'variables'})
+        self.add_output(NodeSocketLogicDictionary, 'Variables', 'VAR')
+        LogicNodeParameterType.init(self, context)
+
+    # XXX: Remove for 5.0
     def get_input_names(self):
-        return ["file_name", 'name']
+        return ['path', "file_name"]
 
-    def get_attributes(self):
-        s_path = self.path
-        if s_path.endswith('\\'):
-            s_path = s_path[:-1]
-        path_formatted = s_path.replace('\\', '/')
-        return [("path", repr(path_formatted) if self.custom_path else "''")]
-
+    # XXX: Remove for 5.0
     def get_output_names(self):
         return ["VAR"]

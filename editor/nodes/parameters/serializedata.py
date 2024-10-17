@@ -10,6 +10,7 @@ from bpy.props import EnumProperty
 class LogicNodeSerializeData(LogicNodeParameterType):
     bl_idname = "LogicNodeSerializeData"
     bl_label = "Serialize Data"
+    bl_description = 'Serialize a set of data'
     nl_module = 'uplogic.nodes.parameters'
     nl_class = "ULSerializeData"
 
@@ -30,10 +31,10 @@ class LogicNodeSerializeData(LogicNodeParameterType):
     def get_attributes(self):
         return [("serialize_as", repr(self.serialize_as))]
 
-    # XXX Remove for 4.0
+    # XXX Remove for 5.0
     def get_input_names(self):
         return ["data"]
 
-    # XXX Remove for 4.0
+    # XXX Remove for 5.0
     def get_output_names(self):
         return ['OUT']
