@@ -28,10 +28,10 @@ class NodeSocketLogicCondition(NodeSocket, NodeSocketLogic):
     def shape_setup(self):
         self.display_shape = self.shape
 
-    def draw(self, context, layout, node, text):
+    def _draw(self, context, layout, node, text):
         if self.show_prop and not self.is_output and not self.linked_valid:
             row = layout.row()
-            row.prop(self, 'default_value')
+            row.prop(self, 'default_value', text=text)
         else:
             layout.label(text=text)
 

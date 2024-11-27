@@ -5,19 +5,46 @@ from ...sockets import NodeSocketLogicString
 from ...sockets import NodeSocketLogicObject
 from ...sockets import NodeSocketLogicBoolean
 from ...sockets import NodeSocketLogicVectorXYZ
-from ...enum_types import _enum_constraint_types
 from bpy.props import EnumProperty
+
+
+_enum_constraint_types = [
+    (
+        "bge.constraints.POINTTOPOINT_CONSTRAINT",
+        "Ball",
+        "Allow rotation around all axis"
+    ),
+    (
+        "bge.constraints.LINEHINGE_CONSTRAINT",
+        "Hinge",
+        "Work on one plane, allow rotations on one axis only"
+    ),
+    (
+        "bge.constraints.CONETWIST_CONSTRAINT",
+        "Cone Twist",
+        (
+            'Allow rotations around all axis with limits for the cone '
+            'and twist axis'
+        )
+    ),
+    (
+        "bge.constraints.GENERIC_6DOF_CONSTRAINT",
+        "Generic 6 DOF",
+        "No constraints by default, limits can be set individually"
+    )
+]
 
 
 @node_type
 class LogicNodeAddPhysicsConstraint(LogicNodeActionType):
     bl_idname = "NLActionAddPhysicsConstraint"
-    bl_label = "Add Constraint"
+    bl_label = "Add Physics Constraint"
     nl_module = 'uplogic.nodes.actions'
     nl_class = "ULAddPhysicsConstraint"
+    bl_width_default = 160
     bl_description = 'Add a physical constraint to an object'
-    deprecated = True
-    deprecation_message = 'Replaced by newer version, please re-add'
+    # deprecated = True
+    # deprecation_message = 'Replaced by newer version, please re-add'
 
     def update_draw(self, context=None):
         if len(self.inputs) < 9:
@@ -48,7 +75,7 @@ class LogicNodeAddPhysicsConstraint(LogicNodeActionType):
         self.add_input(NodeSocketLogicVectorXYZ, 'Pivot', "pivot")
         self.add_input(NodeSocketLogicBoolean, 'Limit Axis', 'use_limit')
         self.add_input(NodeSocketLogicVectorXYZ, 'Axis Limits', "axis_limits")
-        self.add_input(NodeSocketLogicBoolean, 'Linked Collision', None, {'default_value': True}, "linked_col")
+        self.add_input(NodeSocketLogicBoolean, 'Linked Collision', 'linked_col', {'default_value': True}, "linked_col")
         self.add_output(NodeSocketLogicCondition, 'Done', 'OUT')
         LogicNodeActionType.init(self, context)
 

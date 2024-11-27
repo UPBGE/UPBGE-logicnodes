@@ -46,7 +46,7 @@ class LOGIC_NODES_PT_logic_tree_properties(bpy.types.Panel):
                 cprop = comp.properties[prop.name]
                 vtype = int(prop.value_type)
                 if vtype in [5, 6]:
-                    row.template_color_picker(cprop, 'value')
+                    row.template_color_picker(cprop, 'value', value_slider=True)
                 elif vtype == 4:
                     col.prop(cprop, 'value', text='')
                 else:

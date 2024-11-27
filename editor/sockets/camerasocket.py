@@ -36,7 +36,7 @@ class NodeSocketLogicCamera(NodeSocket, NodeSocketLogic):
     nl_color = SOCKET_COLOR_OBJECT
     nl_type = SOCKET_TYPE_OBJECT
 
-    def draw(self, context, layout, node, text):
+    def _draw(self, context, layout, node, text):
         if self.is_output or self.is_multi_input:
             layout.label(text=self.name)
         elif self.linked_valid:

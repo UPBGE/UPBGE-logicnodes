@@ -14,7 +14,7 @@ class NodeSocketLogicVector(NodeSocket, NodeSocketLogic):
     nl_color = SOCKET_COLOR_VECTOR
     valid_sockets = [SOCKET_TYPE_VECTOR, SOCKET_TYPE_COLOR]
 
-    def draw(self, context, layout, node, text):
+    def _draw(self, context, layout, node, text):
         layout.label(text=text)
 
     def get_unlinked_value(self):

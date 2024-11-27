@@ -3,7 +3,7 @@ from bpy.types import Operator
 import bpy
 
 
-MAINLOOP_TEMPLATE = '''from uplogic import MainLoop, CustomLoop
+MAINLOOP_TEMPLATE = '''from uplogic.loop import MainLoop, CustomLoop
 
 
 class {}Loop(CustomLoop):

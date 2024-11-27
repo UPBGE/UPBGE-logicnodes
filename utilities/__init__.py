@@ -1,7 +1,6 @@
 import bpy
 import os
 from ..preferences import LogicNodesAddonPreferences
-# from ..generator.tree_code_generator import TreeCodeGenerator
 
 
 TREE_COMPILED = 'Compiled'
@@ -204,6 +203,35 @@ class Color(object):
             d
         )
     pass
+
+
+def uplogic_message(self, context):
+    self.layout.label(text='NOTE: This can also be done in the "Help & Documentation" tab.')
+    self.layout.separator()
+    self.layout.operator('logic_nodes.install_uplogic')
+
+
+def allow_online_access(self, context):
+    self.layout.operator("extensions.userpref_allow_online", text="Allow Online Access", icon='CHECKMARK')
+    props = self.layout.operator("wm.context_set_boolean", text="Continue Offline", icon='X')
+    props.data_path = "preferences.extensions.use_online_access_handled"
+
+
+def check_uplogic_module():
+    import pkg_resources
+    installed_packages = [p.key for p in pkg_resources.working_set]
+    uplogic_installed = 'uplogic' in installed_packages
+    version_ok = True
+    if uplogic_installed:
+        from uplogic import check_version, __version__
+        version_ok = check_version('4')
+    if not uplogic_installed or not version_ok:
+        bpy.context.window_manager.popup_menu(uplogic_message, title="Uplogic module missing", icon='INFO')
+        if not bpy.app.online_access:
+            bpy.context.window_manager.popup_menu(allow_online_access, title="Allow Online Access")
+        return False
+
+    return True
 
 
 def debug(message):
@@ -473,12 +501,15 @@ def add_tree_to_active_objects(tree):
     initial_status = compute_initial_status_of_tree(
         tree.name, selected_objects
     )
-    # try:
-    #     TreeCodeGenerator().write_code_for_tree(tree)
-    # except Exception as e:
-    #     error(f"Couldn't compile tree {tree.name}!")
-    #     print(e)
+    try:
+        from ..generator.tree_code_generator import TreeCodeGenerator
+        TreeCodeGenerator().write_code_for_tree(tree)
+    except Exception as e:
+        error(f"Couldn't compile tree {tree.name}!")
+        print(e)
+        return
     initial_status = True if initial_status is None else False
+    # TreeCodeGenerator().write_code_for_tree(tree)
     for obj in selected_objects:
         tree_name = make_valid_name(tree.name)
         module = f'nl_{tree_name.lower()}'

@@ -23,7 +23,7 @@ class LOGIC_NODES_PT_scene_settings(bpy.types.Panel):
         row = layout.row()
         row.prop(context.scene, 'use_screen_console')
         part = row.row()
-        part.prop(context.scene, 'screen_console_open')
+        part.prop(context.scene, 'screen_console_open', text='Debug')
         # op = layout.operator("logic_nodes.key_selector", text=prefs.screen_console_key)
         # op.is_socket = False
         part.enabled = getattr(context.scene, 'use_screen_console', False)

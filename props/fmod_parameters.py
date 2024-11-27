@@ -3,6 +3,6 @@ from .property import propgroup
 
 
 @propgroup
-class LogicNodesFmodParameters(bpy.types.PropertyGroup):
+class LogicNodesFmodParameter(bpy.types.PropertyGroup):
     name: bpy.props.StringProperty(name='Name', default='')
     users: bpy.props.IntProperty()

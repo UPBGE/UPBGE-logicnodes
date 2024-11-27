@@ -10,6 +10,7 @@ from .operator import operator
 from bpy.types import Context, Operator
 from bpy.props import BoolProperty
 import bpy
+from ..utilities import check_uplogic_module
 
 
 @operator
@@ -47,6 +48,7 @@ class LOGIC_NODES_OT_generate_code(Operator):
         return {'FINISHED'}
 
     def generate(self):
+        check_uplogic_module()
         global ERROR_MESSAGES
         ERROR_MESSAGES.clear()
         global WARNING_MESSAGES
@@ -90,28 +92,25 @@ class LOGIC_NODES_OT_generate_code(Operator):
 
     def invoke(self, context, event):
 
-        def installer_msg(self, context):
-            self.layout.label(text="Installing now, this may take a few moments...")
-
-        import pkg_resources
-        installed_packages = [p.key for p in pkg_resources.working_set]
-        self.uplogic_installed = 'uplogic' in installed_packages
-        if not self.uplogic_installed:
-            bpy.context.window_manager.popup_menu(installer_msg, title="Uplogic module missing", icon='INFO')
-            context.window_manager.modal_handler_add(self)
-            return {'RUNNING_MODAL'}
+        # import pkg_resources
+        # installed_packages = [p.key for p in pkg_resources.working_set]
+        # self.uplogic_installed = 'uplogic' in installed_packages
+        # if not self.uplogic_installed:
+        #     bpy.context.window_manager.popup_menu(uplogic_message, title="Uplogic module missing", icon='INFO')
+        check_uplogic_module()
+            # context.window_manager.modal_handler_add(self)
+            # return {'RUNNING_MODAL'}
         # for package in installed_packages:
         #     print(f"{package.key}=={package.version}")
         self.generate()
         return {'FINISHED'}
 
-
-    def modal(self, context, event):
-        def installer_msg(self, context):
-            self.layout.label(text="Everything is ready to go!")
+    # def modal(self, context, event):
+    #     def installer_msg(self, context):
+    #         self.layout.label(text="Everything is ready to go!")
         
-        if not self.uplogic_installed:
-            bpy.ops.logic_nodes.install_uplogic()
-            bpy.context.window_manager.popup_menu(installer_msg, title="Finished", icon='CHECKBOX_HLT')
-        self.generate()
+        # if not self.uplogic_installed:
+            # bpy.ops.logic_nodes.install_uplogic()
+            # bpy.context.window_manager.popup_menu(installer_msg, title="Finished", icon='CHECKBOX_HLT')
+        # self.generate()
         return {"FINISHED"}

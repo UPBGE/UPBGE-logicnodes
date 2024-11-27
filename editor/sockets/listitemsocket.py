@@ -15,7 +15,7 @@ class NodeSocketLogicRemovable(NodeSocket, NodeSocketLogic):
     nl_type = SOCKET_TYPE_GENERIC
     nl_color = SOCKET_COLOR_GENERIC
 
-    def draw(self, context, layout, node, text):
+    def _draw(self, context, layout, node, text):
         row = layout.row(align=False)
         row.label(text=text)
         row.operator('logic_nodes.remove_socket', icon='X', text='')

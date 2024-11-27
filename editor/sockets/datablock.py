@@ -22,7 +22,7 @@ class NodeSocketLogicDatablock(NodeSocket, NodeSocketLogic):
         SOCKET_TYPE_SCENE
     ]
 
-    def draw(self, context, layout, node, text):
+    def _draw(self, context, layout, node, text):
         layout.label(text=text)
 
     def get_unlinked_value(self):

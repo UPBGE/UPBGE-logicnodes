@@ -27,7 +27,7 @@ class NodeSocketLogicNodeGroupNode(NodeSocket, NodeSocketLogic):
     nl_color = SOCKET_COLOR_STRING
     nl_type = SOCKET_TYPE_STRING
 
-    def draw(self, context, layout, node, text):
+    def _draw(self, context, layout, node, text):
         if self.linked_valid or self.is_output or self.is_multi_input:
             layout.label(text=text)
         else:

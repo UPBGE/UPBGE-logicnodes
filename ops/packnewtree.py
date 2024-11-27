@@ -22,6 +22,7 @@ NODE_ATTRS = [
     'float_editor',
     'string_editor',
     'radians',
+    'portal',
     'filepath_value',
     'sound_value',
     'float_field',
@@ -111,8 +112,6 @@ class LOGIC_NODES_OT_pack_new_tree(Operator):
                         return None
             locs.append(old_node.location)
 
-        for old_node in new_nodes:
-            parent_tree.nodes.remove(old_node)
         redir = parent_tree.nodes.new('NLActionExecuteNetwork')
         redir.inputs[0].default_value = True
 
@@ -127,6 +126,8 @@ class LOGIC_NODES_OT_pack_new_tree(Operator):
         redir.location = self.avg_location(locs)
         node_tree.use_fake_user = True
         success(f'Created Node Tree {group_name}.')
+        for old_node in new_nodes:
+            parent_tree.nodes.remove(old_node)
         return node_tree
 
     def avg_location(self, locs):

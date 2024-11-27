@@ -70,7 +70,7 @@ class LogicNodeFModModifyEventParameter(LogicNodeActionType):
         description='Name of the event',
         get=get_parameter,
         set=set_parameter,
-        search=get_parameters,
+        search=get_parameters,  # XXX: Reactivate, botched for some reason
         search_options={'SUGGESTION'}
     )
 

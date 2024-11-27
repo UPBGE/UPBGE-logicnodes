@@ -4,11 +4,12 @@ from ...utilities import WARNING_MESSAGES
 from bpy.props import BoolProperty
 from bpy.props import StringProperty
 from bpy.types import NodeLink
-from bpy.types import NodeSocket
-from bpy.types import NodeTreeInterfaceSocket
 from bpy.types import NodeSocketVirtual
+from bpy.types import NodeSocket
 from bpy.types import NodeReroute
 import bpy
+if bpy.app.version[0] >= 4:
+    from bpy.types import NodeTreeInterfaceSocket
 
 
 SOCKET_COLOR_CONDITION = Color.RGBA(0.9, 0.3, 0.3, 1.0)
@@ -26,6 +27,7 @@ SOCKET_COLOR_MESH = Color.RGBA(.0, .839, .639, 1.0)
 SOCKET_COLOR_COLLECTION = Color.RGBA(0.961, 0.961, .961, 1.0)
 SOCKET_COLOR_SCENE = Color.RGBA(0.5, 0.5, 0.6, 1.0)
 SOCKET_COLOR_VECTOR = Color.RGBA(0.388, 0.388, 0.78, 1.0)
+SOCKET_COLOR_ROTATION = Color.RGBA(0.651, 0.388, 0.78, 1.0)
 SOCKET_COLOR_DATABLOCK = Color.RGBA(.388, .220, .388, 1.0)
 SOCKET_COLOR_PYTHON = Color.RGBA(0.2, 0.7, 1, 1.0)
 SOCKET_COLOR_STRING = Color.RGBA(0.439, .698, 1.0, 1.0)
@@ -108,24 +110,26 @@ _sockets = []
 
 def socket_type(obj):
 
-    class Interface(NodeTreeInterfaceSocket, obj):
-        bl_socket_idname = obj.bl_idname
-        nl_socket = obj
-        hide_value = True
-        type: StringProperty(default='VALUE')
-
-        @classmethod
-        def poll(self, context):
-            return False
-
-        def draw(self, context, layout):
-            layout.prop(self, 'value')
-
-        # def draw_color(self, context):
-        #     return self.nl_socket.nl_color if self.nl_socket.nl_color else SOCKET_COLOR_GENERIC
-
     _sockets.append(obj)
-    _sockets.append(Interface)
+    
+    if bpy.app.version[0] >= 4:
+        class Interface(NodeTreeInterfaceSocket, obj):
+            bl_socket_idname = obj.bl_idname
+            nl_socket = obj
+            hide_value = True
+            type: StringProperty(default='VALUE')
+
+            @classmethod
+            def poll(self, context):
+                return False
+
+            def draw(self, context, layout):
+                layout.prop(self, 'value')
+
+            # def draw_color(self, context):
+            #     return self.nl_socket.nl_color if self.nl_socket.nl_color else SOCKET_COLOR_GENERIC
+
+        _sockets.append(Interface)
     return obj
 
 
@@ -187,6 +191,15 @@ class NodeSocketLogic:
             self.links[idx].from_node.mute
         )
 
+    def _draw(self, context, layout, node, text):
+        pass
+
+    def draw(self, context, layout, node, text):
+        if self.list_mode:
+            layout.label(text=self.name)
+        else:
+            self._draw(context, layout, node, text)
+
     def get_from_socket(self):
         if self.is_multi_input or not len(self.links):
             return None
@@ -194,8 +207,7 @@ class NodeSocketLogic:
         while isinstance(from_socket.node, NodeReroute):
             if not len(from_socket.links):
                 return from_socket
-            from_socket = from_socket.links[0].from_socket
-            print(from_socket.node)
+            from_socket = from_socket.node.inputs[0].links[0].from_socket
         return from_socket
 
     @classmethod
@@ -226,6 +238,9 @@ class NodeSocketLogic:
     @classmethod
     def draw_color_simple(cls):
         return cls.nl_color
+
+    def draw_color(self, context, layout):
+        return self.__class__.nl_color
 
     @classmethod
     def draw_interface(cls, context, layout):

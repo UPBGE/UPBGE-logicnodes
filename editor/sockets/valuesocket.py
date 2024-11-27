@@ -75,7 +75,7 @@ class NodeSocketLogicValue(NodeSocket, NodeSocketLogic):
             return from_socket.nl_color
         return self.nl_color
 
-    def draw(self, context, layout, node, text):
+    def _draw(self, context, layout, node, text):
         if self.is_output or self.is_multi_input:
             layout.label(text=text)
             return

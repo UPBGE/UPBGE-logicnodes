@@ -19,19 +19,22 @@ class {}(bge.types.KX_PythonComponent):
 def build_dummy_text(comp_name, textblock):
     cargs = ''
     in_args = False
-    for line in textblock.lines:
+    textblock_c = textblock.copy()
+    textblock.clear()
+    for line in textblock_c.lines:
         if comp_name in line.body:
             continue
         line.body = line.body.replace(' ', '')
         if line.body.startswith('@'):
             continue
-        if 'args=' in line.body:
+        if 'args =' in line.body or 'args=' in line.body:
             in_args = True
         if '])' in line.body:
             cargs += line.body
             break
         if in_args:
             cargs += line.body
+    bpy.data.texts.remove(textblock_c)
     return COMPONENT_TEMPLATE.format(comp_name, cargs)
 
 
@@ -57,7 +60,6 @@ class LOGIC_NODES_OT_reload_components(Operator):
             for i, c in enumerate(obj.game.components):
                 text = bpy.data.texts[f'{c.module}.py']
                 ogtext = text.as_string()
-                text.clear()
                 text.write(build_dummy_text(c.name, text))
                 bpy.ops.logic.python_component_reload(index=i)
                 text.clear()

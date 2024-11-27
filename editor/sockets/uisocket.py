@@ -12,7 +12,7 @@ class NodeSocketLogicUI(NodeSocket, NodeSocketLogic):
     nl_color = SOCKET_COLOR_MESH
     nl_type = SOCKET_TYPE_UI
 
-    def draw(self, context, layout, node, text):
+    def _draw(self, context, layout, node, text):
         layout.label(text=text)
 
     def get_unlinked_value(self):

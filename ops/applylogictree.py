@@ -3,6 +3,7 @@ from ..utilities import success
 from ..utilities import compute_initial_status_of_tree
 from ..utilities import set_network_initial_status_key
 from ..utilities import make_valid_name
+from ..utilities import check_uplogic_module
 from ..utilities import add_tree_to_active_objects
 # from ..generator.tree_code_generator import TreeCodeGenerator
 from .operator import operator
@@ -38,6 +39,7 @@ class LOGIC_NODES_OT_apply_logic_tree(Operator):
 
     def execute(self, context):
         # current_scene = context.scene
+        check_uplogic_module()
         tree = context.space_data.edit_tree
         # active_object = context.object
         # if not active_object:

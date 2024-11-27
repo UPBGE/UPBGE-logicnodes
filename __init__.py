@@ -18,7 +18,7 @@ from .ui import node_menu
 from .props.propertyfilter import LogicNodesPropertyFilter
 from .props.globalcategory import LogicNodesGlobalCategory
 from .props.portals import LogicNodesPortal
-from .props.fmod_parameters import LogicNodesFmodParameters
+from .props.fmod_parameters import LogicNodesFmodParameter
 from .props.customnode import _registered_custom_classes
 from .preferences import LogicNodesAddonPreferences
 from .utilities import preferences as prefs
@@ -366,6 +366,7 @@ def register():
     bpy.utils.register_manual_map(node_manual)
     bpy.types.NODE_MT_add.append(node_menu.draw_add_menu)
     bpy.app.handlers.game_pre.append(_generate_on_game_start)
+    bpy.app.handlers.game_post.append(utils.check_uplogic_module)
     bpy.app.handlers.game_pre.append(_jump_in_game_cam)
     bpy.app.handlers.game_pre.append(_set_vr_mode)
     bpy.app.handlers.game_pre.append(_reload_texts)
@@ -421,7 +422,7 @@ def register():
     bpy.types.Scene.jump_in_game_cam = bpy.props.BoolProperty(name='Use Game Camera On Start', default=False)
     bpy.types.Scene.use_screen_console = bpy.props.BoolProperty(name='Screen Console', description='Print messages to an on-screen console.\nNeeds at least one uplogic import or Logic Node Tree.\nNote: Errors are not printed to this console')
     bpy.types.Scene.screen_console_key = bpy.props.StringProperty(name='Screen Console Key', description='', default='BACKSLASH')
-    bpy.types.Scene.screen_console_open = bpy.props.BoolProperty(name='Open', description='Start the game with the on-screen console already open')
+    bpy.types.Scene.screen_console_open = bpy.props.BoolProperty(name='Open', description='When in debug mode, the on-screen console will always display messages, even when inactive')
 
     def filter_components(self, item=bpy.types.Text):
         if not item.name.startswith('nl_'):
@@ -434,7 +435,7 @@ def register():
         description='Add a component defined in this file'
     )
     bpy.types.Scene.nl_portals = bpy.props.CollectionProperty(type=LogicNodesPortal)
-    bpy.types.Scene.nl_fmod_parameters = bpy.props.CollectionProperty(type=LogicNodesFmodParameters)
+    bpy.types.Scene.nl_fmod_parameters = bpy.props.CollectionProperty(type=LogicNodesFmodParameter)
     bpy.types.Scene.nl_global_categories = bpy.props.CollectionProperty(type=LogicNodesGlobalCategory)
     bpy.types.Scene.nl_global_cat_selected = bpy.props.IntProperty(name='Category')
     bpy.types.Scene.custom_mainloop_tree = bpy.props.PointerProperty(

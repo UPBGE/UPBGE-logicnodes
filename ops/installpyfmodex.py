@@ -19,10 +19,14 @@ class LOGIC_NODES_OT_install_pyfmodex(Operator):
 
 
     def execute(self, context):
+
         def installer_msg(self, context):
             self.layout.label(text="Installed pyfmodex successfully")
 
         notify('Installing pyfmodex module...')
+        if not bpy.app.online_access:
+            error('Online Access is needed to install pyfmodex.')
+            return {"FINISHED"}
         try:
             os.system(f'"{sys.executable}" -m ensurepip')
             os.system(f'"{sys.executable}" -m pip install pyfmodex --upgrade')

@@ -22,7 +22,7 @@ class NodeSocketLogicBoolean(NodeSocket, NodeSocketLogic):
     valid_sockets = [SOCKET_TYPE_BOOL, SOCKET_TYPE_CONDITION, SOCKET_TYPE_FLOAT, SOCKET_TYPE_INT]
     nl_color = SOCKET_COLOR_BOOLEAN
 
-    def draw(self, context, layout, node, text):
+    def _draw(self, context, layout, node, text):
         if self.linked_valid or self.is_output or self.is_multi_input:
             layout.label(text=text)
         else:

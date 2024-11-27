@@ -91,30 +91,46 @@ _enum_object_property_types = [
 ]
 
 
-_enum_constraint_types = [
-    (
-        "bge.constraints.POINTTOPOINT_CONSTRAINT",
-        "Ball",
-        "Allow rotation around all axis"
-    ),
-    (
-        "bge.constraints.LINEHINGE_CONSTRAINT",
-        "Hinge",
-        "Work on one plane, allow rotations on one axis only"
-    ),
-    (
-        "bge.constraints.CONETWIST_CONSTRAINT",
-        "Cone Twist",
-        (
-            'Allow rotations around all axis with limits for the cone '
-            'and twist axis'
-        )
-    ),
-    (
-        "bge.constraints.GENERIC_6DOF_CONSTRAINT",
-        "Generic 6 DOF",
-        "No constraints by default, limits can be set individually"
-    )
+_bone_attrs = [
+    ('', 'Position', ''),
+    ("location", "Location", "Location of the bone relative to armature"),  # Vector
+    None,
+    ("head", "Head", "Location of head end of the bone relative to its parent"),  # Vector
+    ("head_local", "Local Head", "Location of head end of the bone relative to armature"),  # Vector
+    ("head_pose", "Pose Head", "Location of head end of the bone relative to armature in the current pose"),  # Vector
+    None,
+    ("center", "Center", "Location of center of the bone relative to its parent"),  # Vector
+    ("center_local", "Local Center", "Location of center of the bone relative to armature"),  # Vector
+    ("center_pose", "Pose Center", "Location of center of the bone relative to armature in the current pose"),  # Vector
+    None,
+    ("tail", "Tail", "Location of tail end of the bone relative to its parent"),  # Vector
+    ("tail_pose", "Pose Tail", "Location of tail end of the bone relative to armature in the current pose"),  # Vector
+    ("tail_local", "Local Tail", "Location of tail end of the bone relative to armature"),  # Vector
+    ('', 'Other', ''),
+    ("name", "Name", "Name of the Bone"),  # String
+    None,
+    ("inherit_scale", "Inherit Scale", "Specifies how the bone inherits scaling from the parent bone"),  # Enum
+    ("inherit_rotation", "Inherit Rotation", "Bone inherits rotation or scale from parent bone"),  # Boolean
+    None,
+    ("connected", "Connected", "When bone has a parent, bone's head is stuck to the parent's tail"),  # Boolean
+    ("deform", "Deform", "Enable Bone to deform geometry"),  # Boolean
+    ("use_local_location", "Use Local", "Bone location is set in local space"),  # Boolean
+    ("use_relative_parent", "Use Relative Parent", "Object children will use relative transform, like deform"),  # Boolean
+    ("use_scale_easing", "Scale Easing", "Multiply the final easing values by the Scale In/Out Y factors")  # Boolean
+]
+
+
+_set_bone_attrs = [
+    ('', 'Position', ''),
+    ("location", "Location", "Location of the bone relative to armature"),  # Vector
+    None,
+    ("inherit_scale", "Inherit Scale", "Specifies how the bone inherits scaling from the parent bone"),  # Enum
+    ("inherit_rotation", "Inherit Rotation", "Bone inherits rotation or scale from parent bone"),  # Boolean
+    None,
+    ("deform", "Deform", "Enable Bone to deform geometry"),  # Boolean
+    ("use_local_location", "Use Local", "Bone location is set in local space"),  # Boolean
+    ("use_relative_parent", "Use Relative Parent", "Object children will use relative transform, like deform"),  # Boolean
+    ("use_scale_easing", "Scale Easing", "Multiply the final easing values by the Scale In/Out Y factors")  # Boolean
 ]
 
 

@@ -13,7 +13,7 @@ class LOGIC_NODES_OT_add_logic_tree_property(Operator):
 
     @classmethod
     def poll(cls, context):
-        tree = getattr(bpy.context.space_data, 'edit_tree')
+        tree = getattr(bpy.context.space_data, 'edit_tree', None)
         return tree is not None and context.active_object is not None
 
     def execute(self, context: Context):

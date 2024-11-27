@@ -23,7 +23,7 @@ class NodeSocketLogicConstraint(NodeSocket, NodeSocketLogic):
     nl_color = SOCKET_COLOR_STRING
     nl_type = SOCKET_TYPE_STRING
 
-    def draw(self, context, layout, node, text):
+    def _draw(self, context, layout, node, text):
         mode = getattr(self.node, 'mode', '0')
         if self.is_output or self.is_multi_input:
             layout.label(text=self.name)

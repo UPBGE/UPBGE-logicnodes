@@ -71,7 +71,7 @@ class NodeSocketLogicMatrix(NodeSocket, NodeSocketLogic):
             self.value_zz
         )
 
-    def draw(self, context, layout, node, text):
+    def _draw(self, context, layout, node, text):
         dim = int(self.dimensions) > 1
         if self.linked_valid or self.is_output or self.is_multi_input:
             layout.label(text=text)

@@ -21,7 +21,7 @@ class NodeSocketLogicInteger(NodeSocket, NodeSocketLogic):
     def get_unlinked_value(self):
         return '{}'.format(self.default_value)
 
-    def draw(self, context, layout, node, text):
+    def _draw(self, context, layout, node, text):
         if self.linked_valid or self.is_output or self.is_multi_input:
             layout.label(text=text)
         else:

@@ -71,12 +71,14 @@ class LogicNodeCreateUILayout(LogicNodeUIType):
         w.bg_color = Vector(ipts[7].default_value)
         w.border_width = ipts[8].default_value
         w.border_color = Vector(ipts[9].default_value)
+        ipts[10].enabled = False
         if isinstance(w, BoxLayout) or isinstance(w, GridLayout):
             w.orientation = self.boxlayout_type
         if isinstance(w, PolarLayout):
-            w.starting_angle = math.degrees(ipts[13].default_value)
-            w.radius = ipts[14].default_value
+            w.starting_angle = math.degrees(ipts[14].default_value)
+            w.radius = ipts[15].default_value
         if isinstance(w, ArrangedLayout):
+            ipts[10].enabled = True
             w.arrange()
 
     layout_type: EnumProperty(items=_ui_layout_types, name='Layout Type', update=update_draw)
@@ -95,7 +97,8 @@ class LogicNodeCreateUILayout(LogicNodeUIType):
         self.add_input(NodeSocketLogicColorRGBA, "Color", 'color', {'default_value': (0, 0, 0, 0)})
         self.add_input(NodeSocketLogicIntegerPositive, "Border Width", 'border_width', {'default_value': 1})
         self.add_input(NodeSocketLogicColorRGBA, "Border Color", 'border_color', {'default_value': (0, 0, 0, 0)})
-        self.add_input(NodeSocketLogicFloat, "Spacing", 'spacing')
+        self.add_input(NodeSocketLogicBoolean, "Inverted", 'inverted')
+        self.add_input(NodeSocketLogicInteger, "Spacing", 'spacing')
         self.add_input(NodeSocketLogicInteger, "Rows", 'rows')
         self.add_input(NodeSocketLogicInteger, "Columns", 'cols')
         self.add_input(NodeSocketLogicFloatAngle, "Starting Angle", 'starting_angle')
@@ -147,5 +150,10 @@ class LogicNodeCreateUILayout(LogicNodeUIType):
             "color",
             "border_width",
             "border_color",
-            'spacing'
+            "inverted",
+            'spacing',
+            "rows",
+            "columns",
+            "starting_angle",
+            "radius",
         ]

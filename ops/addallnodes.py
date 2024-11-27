@@ -14,6 +14,7 @@ error('DEBUG OPERATOR LOADED: LOGIC_NODES_OT_add_all_nodes')
 class LOGIC_NODES_OT_add_all_nodes(Operator):
     bl_idname = "logic_nodes.add_all_nodes"
     bl_label = "Add All Nodes"
+    bl_options = {'REGISTER', 'UNDO'}
     bl_description = "Add all logic nodes at once (DEBUG)"
 
     @classmethod

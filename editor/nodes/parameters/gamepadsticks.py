@@ -29,8 +29,8 @@ class LogicNodeGamepadSticks(LogicNodeParameterType):
         self.add_input(NodeSocketLogicIntegerPositiveCent, 'Index', 'index')
         self.add_input(NodeSocketLogicFloatPositive, 'Sensitivity', 'sensitivity', {'default_value': 1.0})
         self.add_input(NodeSocketLogicFloatFactor, 'Threshold', 'threshold', {'default_value': 0.1})
-        self.add_output(NodeSocketLogicFloat, "X", 'x', {'enabled': False})
-        self.add_output(NodeSocketLogicFloat, "Y", 'y', {'enabled': False})
+        self.add_output(NodeSocketLogicFloat, "X", 'X', {'enabled': False})
+        self.add_output(NodeSocketLogicFloat, "Y", 'Y', {'enabled': False})
         self.add_output(NodeSocketLogicVectorXYZ, "Vector", 'VEC')
         LogicNodeParameterType.init(self, context)
 

@@ -37,7 +37,7 @@ class NodeSocketLogicVectorXY(NodeSocket, NodeSocketLogic):
         v = self.default_value
         return f"mathutils.Vector(({v[0]}, {v[1]}))"
 
-    def draw(self, context, layout, node, text):
+    def _draw(self, context, layout, node, text):
         if self.linked_valid or self.is_output or self.is_multi_input:
             layout.label(text=text)
         else:

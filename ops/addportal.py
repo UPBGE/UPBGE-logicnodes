@@ -13,7 +13,6 @@ class LOGIC_NODES_OT_add_portal_in(Operator):
     bl_label = "New Portal"
     bl_options = {'REGISTER', 'UNDO'}
     bl_description = "Create a new portal"
-    mode: EnumProperty(default='1', name='Socket Type', items=_socket_types)
     
     def get_portals(self, context, edit_text):
         if edit_text != '' and edit_text not in [portal.name for portal in bpy.context.scene.nl_portals]:
@@ -22,6 +21,7 @@ class LOGIC_NODES_OT_add_portal_in(Operator):
             yield (portal.name, 'PLUS')
 
     portal_name: StringProperty(default='Portal', name='Portal Name')#, search=get_portals)
+    mode: EnumProperty(default='1', name='Socket Type', items=_socket_types)
 
     @classmethod
     def poll(cls, context):

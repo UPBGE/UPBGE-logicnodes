@@ -7,26 +7,8 @@ from ...sockets import NodeSocketLogicArmature
 from ...sockets import NodeSocketLogicBone
 from ...sockets import NodeSocketLogicVectorXYZ
 from ...sockets import NodeSocketLogicBoolean
+from ...enum_types import _set_bone_attrs
 from bpy.props import EnumProperty
-
-
-_attrs = [
-    ("name", "Name", "Name of the Bone"),  # String
-    None,
-    ("head", "Head", "Location of head end of the bone relative to its parent"),  # Vector
-    ("head_local", "Local Head", "Location of head end of the bone relative to armature"),  # Vector
-    ("tail", "Tail", "Location of tail end of the bone relative to its parent"),  # Vector
-    ("tail_local", "Local Tail", "Location of tail end of the bone relative to armature"),  # Vector
-    None,
-    ("inherit_scale", "Inherit Scale", "Specifies how the bone inherits scaling from the parent bone"),  # Enum
-    ("inherit_rotation", "Inherit Rotation", "Bone inherits rotation or scale from parent bone"),  # Boolean
-    None,
-    ("connected", "Connected", "When bone has a parent, bone's head is stuck to the parent's tail"),  # Boolean
-    ("deform", "Deform", "Enable Bone to deform geometry"),  # Boolean
-    ("local_location", "Use Local", "Bone location is set in local space"),  # Boolean
-    ("relative_parent", "Use Relative Parent", "Object children will use relative transform, like deform"),  # Boolean
-    ("scale_easing", "Scale Easing", "Multiply the final easing values by the Scale In/Out Y factors"),  # Boolean
-]
 
 
 _scale_modes = [
@@ -58,7 +40,9 @@ class LogicNodeSetRigBoneAttribute(LogicNodeActionType):
             self.inputs[3].enabled = True
             self.inputs[4].enabled = False
             self.inputs[5].enabled = False
-        elif attr in ['head', 'head_local', 'tail', 'tail_local']:
+        elif attr in [
+            'location',
+        ]:
             self.inputs[3].enabled = False
             self.inputs[4].enabled = True
             self.inputs[5].enabled = False
@@ -67,11 +51,15 @@ class LogicNodeSetRigBoneAttribute(LogicNodeActionType):
             self.inputs[4].enabled = False
             self.inputs[5].enabled = True
 
-    attribute: EnumProperty(items=_attrs, name='Attribute', update=update_draw)
+    attribute: EnumProperty(items=_set_bone_attrs, name='Attribute', update=update_draw)
     scale_mode: EnumProperty(items=_scale_modes, name='Scale Mode', update=update_draw)
 
     def draw_buttons(self, context: Context, layout: UILayout) -> None:
         layout.prop(self, 'attribute', text='')
+        # if self.attribute in [
+        #     'location'
+        # ]:
+        #     layout.prop(self, 'world_space', text='')
         if self.attribute == 'inherit_scale':
             layout.prop(self, 'scale_mode', text='')
 

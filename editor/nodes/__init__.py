@@ -163,6 +163,7 @@ from .actions.vehiclebrake import LogicNodeVehicleBrake
 from .actions.vehiclecreate import LogicNodeVehicleCreate
 from .actions.vehiclesetattributes import LoigcNodeVehicleSetAttributes
 from .actions.vehiclesteer import LogicNodeVehicleSteer
+from .actions.distributecurvepoints import LogicNodeDistributeCurvePoints
 
 from .conditions.checkangle import LogicNodeCheckAngle
 from .conditions.collision import LogicNodeCollision
@@ -333,6 +334,8 @@ from .parameters.vrcontroller import LogicNodeVRController
 from .parameters.vrheadset import LogicNodeVRHeadset
 from .parameters.worldposition import LogicNodeWorldPosition
 from .parameters.xyztomatrix import LogicNodeXYZtoMatrix
+from .parameters.getrigboneattribute import LogicNodeGetRigBoneAttribute
+from .parameters.evaluatecurve import LogicNodeEvaluateCurve
 
 from .fmod.fmodloadbank import LogicNodeFModLoadBank
 from .fmod.fmodstartevent import LogicNodeFModStartEvent

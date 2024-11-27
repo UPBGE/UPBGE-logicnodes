@@ -1,6 +1,8 @@
 from bpy.types import Context, Node, UILayout
 from ..node import node_type
 from ..node import LogicNodeActionType
+from ..parameters.getportal import LogicNodeGetPortal
+from ...nodetree import LogicNodeTree
 from ...sockets import NodeSocketLogicCondition
 from ...sockets import NodeSocketLogicValue
 from ...sockets import NodeSocketLogicFloat
@@ -96,9 +98,21 @@ class LogicNodeSetPortal(LogicNodeActionType):
             new_portal.name = value
         if new_portal is not None:
             new_portal.users += 1
+        
+        def check_tree_type(tree):
+            return isinstance(tree, LogicNodeTree)
+
+        def check_node_type(tree):
+            return isinstance(tree, LogicNodeGetPortal)
+
+        for tree in filter(check_tree_type, bpy.data.node_groups):
+            for node in filter(check_node_type, tree.nodes):
+                if current_portal is not None and node.portal == current_portal.name:
+                    node.set_portal(value)
         if current_portal is not new_portal:
             if current_portal is not None:
                 self.clear_portal(current_portal)
+
         self['portal_prop'] = value
         self.nl_label = value
         self.set_value_type()

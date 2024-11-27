@@ -36,7 +36,7 @@ class NodeSocketLogicTree(NodeSocket, NodeSocketLogic):
         update=update_draw
     )
 
-    def draw(self, context, layout, node, text):
+    def _draw(self, context, layout, node, text):
         icon = 'OUTLINER'
         if self.linked_valid or self.is_output or self.is_multi_input:
             layout.label(text=text)

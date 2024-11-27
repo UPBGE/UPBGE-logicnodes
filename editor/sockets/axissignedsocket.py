@@ -29,7 +29,7 @@ class NodeSocketLogicAxisSigned(NodeSocket, NodeSocketLogic):
     nl_color = SOCKET_COLOR_INTEGER
     nl_type = SOCKET_TYPE_INT
 
-    def draw(self, context, layout, node, text):
+    def _draw(self, context, layout, node, text):
         if self.linked_valid:
             layout.label(text=text)
         else:

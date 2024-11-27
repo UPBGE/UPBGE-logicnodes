@@ -10,7 +10,7 @@ class NodeSocketLogicParameter(NodeSocket, NodeSocketLogic):
     nl_type = SOCKET_TYPE_GENERIC
     nl_color = SOCKET_COLOR_GENERIC
 
-    def draw(self, context, layout, node, text):
+    def _draw(self, context, layout, node, text):
         layout.label(text=text)
 
     def get_unlinked_value(self):

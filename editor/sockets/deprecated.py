@@ -13,7 +13,7 @@ class NodeSocketLogicDeprecated(NodeSocketLogic):
     def get_unlinked_value(self):
         return 0.0
 
-    def draw(self, context, layout, node, text):
+    def _draw(self, context, layout, node, text):
         layout.label(text='DEPRECATED!', icon='ERROR')
 
 

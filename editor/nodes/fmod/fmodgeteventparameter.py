@@ -20,19 +20,19 @@ class LogicNodeFModGetEventParameter(LogicNodeActionType):
 
     actual: BoolProperty(name='Use Actual', description='Use the actual current value instead of the target value (only relevant with a seek speed > 0)')
 
-    def _get_parameter(self):
-        return bpy.context.scene.nl_fmod_parameters.get(self.get_parameter())
+    def _get_fmod_parameter(self):
+        return bpy.context.scene.nl_fmod_parameters.get(self.get_fmod_parameter())
 
-    def get_parameters(self, context, edit_text):
+    def get_fmod_parameters(self, context, edit_text):
         if edit_text != '' and edit_text not in [parameter.name for parameter in bpy.context.scene.nl_fmod_parameters]:
             yield edit_text
-        for parameter in context.scene.nl_fmod_parameters:
+        for parameter in bpy.context.scene.nl_fmod_parameters:
             yield (parameter.name, 'PLUS')
 
-    def get_parameter(self):
+    def get_fmod_parameter(self):
         return self.get('parameter_name', '')
 
-    def clear_parameter(self, parameter):
+    def clear_fmod_parameter(self, parameter):
         if parameter is None:
             return
         parameter.users -= 1
@@ -41,8 +41,8 @@ class LogicNodeFModGetEventParameter(LogicNodeActionType):
                 bpy.context.scene.nl_fmod_parameters.find(parameter.name)
             )
 
-    def set_parameter(self, value):
-        current_parameter = self._get_parameter()
+    def set_fmod_parameter(self, value):
+        current_parameter = self._get_fmod_parameter()
         new_parameter = bpy.context.scene.nl_fmod_parameters.get(value)
         if value != '' and new_parameter is None:
             new_parameter = bpy.context.scene.nl_fmod_parameters.add()
@@ -51,30 +51,30 @@ class LogicNodeFModGetEventParameter(LogicNodeActionType):
             new_parameter.users += 1
         if current_parameter is not new_parameter:
             if current_parameter is not None:
-                self.clear_parameter(current_parameter)
+                self.clear_fmod_parameter(current_parameter)
         self['parameter_name'] = value
         return None
 
     def copy(self, node) -> None:
-        parameter = self._get_parameter()
+        parameter = self._get_fmod_parameter()
         if parameter is not None:
             parameter.users += 1
 
     def free(self) -> None:
-        self.clear_parameter(self._get_parameter())
+        self.clear_fmod_parameter(self._get_fmod_parameter())
         super().free()
 
-    parameter: StringProperty(
+    fmod_parameter: StringProperty(
         name='Parameter',
-        description='Name of the event',
-        get=get_parameter,
-        set=set_parameter,
-        search=get_parameters,
+        description='Name of the event parameter',
+        get=get_fmod_parameter,
+        set=set_fmod_parameter,
+        search=get_fmod_parameters,  # XXX: Reactivate, botched for some reason
         search_options={'SUGGESTION'}
     )
 
     def draw_buttons(self, context: Context, layout: UILayout) -> None:
-        layout.prop(self, 'parameter', text='')
+        layout.prop(self, 'fmod_parameter', text='')
         layout.prop(self, 'actual')
 
     def init(self, context):
@@ -84,4 +84,4 @@ class LogicNodeFModGetEventParameter(LogicNodeActionType):
         LogicNodeActionType.init(self, context)
 
     def get_attributes(self):
-        return [('actual', self.actual), ('parameter', repr(self.parameter))]
+        return [('actual', self.actual), ('parameter', repr(self.fmod_parameter))]

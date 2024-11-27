@@ -109,8 +109,8 @@ class LogicNodeTree(NodeTree):
                 if osock.type != 'VALUE':
                     osock.type = 'VALUE'
                     n.outputs[0].type = 'VALUE'
-                    osock.display_shape = 'CIRCLE'
-                    n.outputs[0].display_shape = 'CIRCLE'
+                    # osock.display_shape = 'CIRCLE'
+                    # n.outputs[0].display_shape = 'CIRCLE'
                 continue
             socket = osock.links[0].from_socket
             while isinstance(socket.node, NodeReroute):
@@ -131,6 +131,8 @@ class LogicNodeTree(NodeTree):
                 osock.display_shape = socket.display_shape
                 n.outputs[0].type = socket.type
                 n.outputs[0].display_shape = socket.display_shape
+                osock.type = 'VALUE'  # XXX: Remove, this was for testing
+                print(osock.type, n.outputs[0].type, socket.type)
         for n in filter(lambda n: not isinstance(n, NodeReroute), self.nodes):
             for i in n.inputs:
                 if i.is_linked:

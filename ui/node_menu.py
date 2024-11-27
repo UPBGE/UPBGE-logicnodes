@@ -280,33 +280,59 @@ class AnimationMenu(bpy.types.Menu):
         insertNode(layout, "NLActionSetAnimationFrame", "Set Animation Frame")
         insertNode(layout, "NLParameterActionStatus", "Animation Status")
         layout.separator()
-        layout.menu("LN_MT_armature_rig_menu", text="Armature / Rig", icon="RIGHTARROW_THIN")
+        layout.menu("LN_MT_get_bone_data_menu", text="Get Bone Data", icon="RIGHTARROW_THIN")
+        layout.menu("LN_MT_set_bone_data_menu", text="Set Bone Data", icon="RIGHTARROW_THIN")
         layout.menu("LN_MT_boneconstraints_menu", text="Bone Constraints", icon="RIGHTARROW_THIN")
 
 
 @menu_item
-class ArmatureRigMenu(bpy.types.Menu):
-    bl_idname = "LN_MT_armature_rig_menu"
-    bl_label = "Armature / Rig Menu"
+class GetBoneDataMenu(bpy.types.Menu):
+    bl_idname = "LN_MT_get_bone_data_menu"
+    bl_label = "Get Bone Data"
 
     def draw(self, context):
         layout = self.layout
-        insertNode(layout, "NLParameterBoneStatus", "Bone Status")
+        insertNode(layout, "LogicNodeGetRigBoneAttribute", "Get Bone Name", settings={'attribute': 'name'})
+        layout.separator()
+        insertNode(layout, "LogicNodeGetRigBoneAttribute", "Get Bone Head", settings={'attribute': 'head'})
+        insertNode(layout, "LogicNodeGetRigBoneAttribute", "Get Bone Local Head", settings={'attribute': 'head_local'})
+        insertNode(layout, "LogicNodeGetRigBoneAttribute", "Get Bone Pose Head", settings={'attribute': 'head_local'})
+        insertNode(layout, "LogicNodeGetRigBoneAttribute", "Get Bone Center", settings={'attribute': 'center'})
+        insertNode(layout, "LogicNodeGetRigBoneAttribute", "Get Bone Local Center", settings={'attribute': 'center_local'})
+        insertNode(layout, "LogicNodeGetRigBoneAttribute", "Get Bone Pose Center", settings={'attribute': 'center_local'})
+        insertNode(layout, "LogicNodeGetRigBoneAttribute", "Get Bone Tail", settings={'attribute': 'tail'})
+        insertNode(layout, "LogicNodeGetRigBoneAttribute", "Get Bone Local Tail", settings={'attribute': 'tail_local'})
+        insertNode(layout, "LogicNodeGetRigBoneAttribute", "Get Bone Pose Tail", settings={'attribute': 'tail_pose'})
+        layout.separator()
+        insertNode(layout, "LogicNodeGetRigBoneAttribute", "Get Bone Inherit Scale", settings={'attribute': 'inherit_scale'})
+        insertNode(layout, "LogicNodeGetRigBoneAttribute", "Get Bone Inherit Rotation", settings={'attribute': 'inherit_rotation'})
+        layout.separator()
+        insertNode(layout, "LogicNodeGetRigBoneAttribute", "Get Bone Connected", settings={'attribute': 'connected'})
+        insertNode(layout, "LogicNodeGetRigBoneAttribute", "Get Bone Deform", settings={'attribute': 'deform'})
+        insertNode(layout, "LogicNodeGetRigBoneAttribute", "Get Bone Local", settings={'attribute': 'use_local_location'})
+        insertNode(layout, "LogicNodeGetRigBoneAttribute", "Get Bone Relative Parent", settings={'attribute': 'use_relative_parent'})
+        insertNode(layout, "LogicNodeGetRigBoneAttribute", "Get Bone Scale Easing", settings={'attribute': 'use_scale_easing'})
+
+
+@menu_item
+class SetBoneDataMenu(bpy.types.Menu):
+    bl_idname = "LN_MT_set_bone_data_menu"
+    bl_label = "Set Bone Data"
+
+    def draw(self, context):
+        layout = self.layout
         insertNode(layout, "LogicNodeSetRigBoneAttribute", "Set Bone Name", settings={'attribute': 'name'})
         layout.separator()
-        insertNode(layout, "LogicNodeSetRigBoneAttribute", "Set Bone Head", settings={'attribute': 'head'})
-        insertNode(layout, "LogicNodeSetRigBoneAttribute", "Set Bone Local Head", settings={'attribute': 'head_local'})
-        insertNode(layout, "LogicNodeSetRigBoneAttribute", "Set Bone Tail", settings={'attribute': 'tail'})
-        insertNode(layout, "LogicNodeSetRigBoneAttribute", "Set Bone Local Tail", settings={'attribute': 'tail_local'})
+        insertNode(layout, "LogicNodeSetRigBoneAttribute", "Set Bone Location", settings={'attribute': 'location'})
         layout.separator()
         insertNode(layout, "LogicNodeSetRigBoneAttribute", "Set Bone Inherit Scale", settings={'attribute': 'inherit_scale'})
         insertNode(layout, "LogicNodeSetRigBoneAttribute", "Set Bone Inherit Rotation", settings={'attribute': 'inherit_rotation'})
         layout.separator()
         insertNode(layout, "LogicNodeSetRigBoneAttribute", "Set Bone Connected", settings={'attribute': 'connected'})
         insertNode(layout, "LogicNodeSetRigBoneAttribute", "Set Bone Deform", settings={'attribute': 'deform'})
-        insertNode(layout, "LogicNodeSetRigBoneAttribute", "Set Bone Local", settings={'attribute': 'local_location'})
-        insertNode(layout, "LogicNodeSetRigBoneAttribute", "Set Bone Relative Parent", settings={'attribute': 'relative_parent'})
-        insertNode(layout, "LogicNodeSetRigBoneAttribute", "Set Bone Scale Easing", settings={'attribute': 'scale_easing'})
+        insertNode(layout, "LogicNodeSetRigBoneAttribute", "Set Bone Local", settings={'attribute': 'use_local_location'})
+        insertNode(layout, "LogicNodeSetRigBoneAttribute", "Set Bone Relative Parent", settings={'attribute': 'use_relative_parent'})
+        insertNode(layout, "LogicNodeSetRigBoneAttribute", "Set Bone Scale Easing", settings={'attribute': 'use_scale_easing'})
         # insertNode(layout, "NLActionSetBonePos", "Set Bone Position")
 
 
@@ -543,6 +569,9 @@ class CurveMenu(bpy.types.Menu):
 
     def draw(self, context):
         layout = self.layout
+        insertNode(layout, "LogicNodeDistributeCurvePoints", "Distribute Points on Curve")
+        insertNode(layout, "LogicNodeEvaluateCurve", "Evaluate Curve")
+        layout.separator()
         insertNode(layout, "NLGetCurvePoints", "Get Curve Points")
         insertNode(layout, "NLSetCurvePoints", "Set Curve Points")
 
@@ -745,8 +774,8 @@ class PhysicsMenu(bpy.types.Menu):
         insertNode(layout, "LogicNodeGetCollisionBitMask", "Get Collision Group")
         insertNode(layout, "NLSetCollisionGroup", "Set Collision Group")
         layout.separator()
-        insertNode(layout, "NLActionAddPhysicsConstraint", "Add Constraint")
-        insertNode(layout, "NLActionRemovePhysicsConstraint", "Remove Constraint")
+        insertNode(layout, "NLActionAddPhysicsConstraint", "Add Physics Constraint")
+        insertNode(layout, "NLActionRemovePhysicsConstraint", "Remove Physics Constraint")
         layout.separator()
         insertNode(layout, "NLGetGravityNode", "Get Gravity")
         insertNode(layout, "NLActionSetGravity", "Set Gravity")

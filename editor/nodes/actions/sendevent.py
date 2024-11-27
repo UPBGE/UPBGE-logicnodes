@@ -47,10 +47,10 @@ class LogicNodeSendEvent(LogicNodeActionType):
         layout.prop(self, 'advanced')
         layout.prop(self, 'use_target')
 
-    # XXX: Remove for 4.0
+    # XXX: Remove for 5.0
     def get_output_names(self):
         return ["OUT"]
 
-    # XXX: Remove for 4.0
+    # XXX: Remove for 5.0
     def get_input_names(self):
         return ["condition", "subject", "body", 'messenger', 'target']

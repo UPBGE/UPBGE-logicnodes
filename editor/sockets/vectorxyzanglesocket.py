@@ -1,6 +1,6 @@
 from ...utilities import DEPRECATED
 from .socket import SOCKET_TYPE_COLOR, SOCKET_TYPE_VECTOR, NodeSocketLogic
-from .socket import SOCKET_COLOR_VECTOR
+from .socket import SOCKET_COLOR_ROTATION
 from .socket import socket_type
 from .socket import update_draw
 from bpy.types import NodeSocket
@@ -31,7 +31,7 @@ class NodeSocketLogicVectorXYZAngle(NodeSocket, NodeSocketLogic):
         if value_z is not DEPRECATED:
             self.default_value[2] = value_z
 
-    nl_color = SOCKET_COLOR_VECTOR
+    nl_color = SOCKET_COLOR_ROTATION
     nl_type = SOCKET_TYPE_VECTOR
     valid_sockets = [SOCKET_TYPE_VECTOR, SOCKET_TYPE_COLOR]
 
@@ -39,7 +39,7 @@ class NodeSocketLogicVectorXYZAngle(NodeSocket, NodeSocketLogic):
         v = self.default_value
         return f"mathutils.Vector(({v[0]}, {v[1]}, {v[2]}))"
 
-    def draw(self, context, layout, node, text):
+    def _draw(self, context, layout, node, text):
         if self.linked_valid or self.is_output or self.is_multi_input:
             layout.label(text=text)
         else:

@@ -29,7 +29,7 @@ class NodeSocketLogicAxis(NodeSocket, NodeSocketLogic):
     def __init__(self):
         NodeSocketLogic.__init__(self)
 
-    def draw(self, context, layout, node, text):
+    def _draw(self, context, layout, node, text):
         if self.linked_valid:
             layout.label(text=text)
         else:
