@@ -67,7 +67,7 @@ class LOGIC_NODES_PT_global_values(bpy.types.Panel):
                 icon='REMOVE'
             )
             if value:
-                opts.prop(value, 'persistent', text='', icon='RADIOBUT_ON' if value.persistent else 'RADIOBUT_OFF')
+                # opts.prop(value, 'persistent', text='', icon='RADIOBUT_ON' if value.persistent else 'RADIOBUT_OFF')
                 row2 = layout.row()
                 row2.prop(value, 'value_type', text='Type')
         else:

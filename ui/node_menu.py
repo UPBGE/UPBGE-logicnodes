@@ -294,6 +294,9 @@ class GetBoneDataMenu(bpy.types.Menu):
         layout = self.layout
         insertNode(layout, "LogicNodeGetRigBoneAttribute", "Get Bone Name", settings={'attribute': 'name'})
         layout.separator()
+        insertNode(layout, "LogicNodeGetRigBoneAttribute", "Get Bone Location", settings={'attribute': 'location'})
+        insertNode(layout, "LogicNodeGetRigBoneAttribute", "Get Bone Euler Rotation", settings={'attribute': 'pose_rotation_euler'})
+        layout.separator()
         insertNode(layout, "LogicNodeGetRigBoneAttribute", "Get Bone Head", settings={'attribute': 'head'})
         insertNode(layout, "LogicNodeGetRigBoneAttribute", "Get Bone Local Head", settings={'attribute': 'head_local'})
         insertNode(layout, "LogicNodeGetRigBoneAttribute", "Get Bone Pose Head", settings={'attribute': 'head_local'})
@@ -321,9 +324,8 @@ class SetBoneDataMenu(bpy.types.Menu):
 
     def draw(self, context):
         layout = self.layout
-        insertNode(layout, "LogicNodeSetRigBoneAttribute", "Set Bone Name", settings={'attribute': 'name'})
-        layout.separator()
         insertNode(layout, "LogicNodeSetRigBoneAttribute", "Set Bone Location", settings={'attribute': 'location'})
+        insertNode(layout, "LogicNodeSetRigBoneAttribute", "Set Bone Euler Rotation", settings={'attribute': 'pose_rotation_euler'})
         layout.separator()
         insertNode(layout, "LogicNodeSetRigBoneAttribute", "Set Bone Inherit Scale", settings={'attribute': 'inherit_scale'})
         insertNode(layout, "LogicNodeSetRigBoneAttribute", "Set Bone Inherit Rotation", settings={'attribute': 'inherit_rotation'})

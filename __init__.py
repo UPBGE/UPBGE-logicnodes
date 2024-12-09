@@ -261,11 +261,12 @@ def refresh_custom_nodes(dummy):
     setup_user_nodes()
 
 
+_old_selected: bpy.types.Object = None
 RENAMING = False
 
 
 @persistent
-def _watch_tree_names(self, context):
+def _on_deps_update(self, context):
     global RENAMING
     if RENAMING:
         return
@@ -277,6 +278,24 @@ def _watch_tree_names(self, context):
                     tree.update_name()
         RENAMING = False
 
+    if not prefs().auto_switch_trees:
+        return
+    global _old_selected
+    try:
+        _old_selected.location
+    except Exception:
+        _old_selected = bpy.context.active_object
+    obj = bpy.context.active_object
+    if _old_selected is not obj:
+        if isinstance(obj, bpy.types.Object):
+            if len(obj.logic_trees):
+                for area in bpy.context.window.screen.areas:
+                    if area.type == 'NODE_EDITOR':
+                        trees = [tree_ref.tree for tree_ref in obj.logic_trees]
+                        if area.spaces[0].node_tree not in trees:
+                            area.spaces[0].node_tree = obj.logic_trees[0].tree
+    _old_selected = obj
+
 
 for f in [
     refresh_custom_nodes
@@ -286,6 +305,8 @@ for f in [
     bpy.app.handlers.load_post.append(f)
 
 
+
+# XXX: Remove for 5.0
 class NLNodeTreeReference(bpy.types.PropertyGroup):
     tree: bpy.props.PointerProperty(type=LogicNodeTree)
     tree_name: bpy.props.StringProperty()
@@ -372,7 +393,7 @@ def register():
     bpy.app.handlers.game_pre.append(_reload_texts)
     bpy.app.handlers.load_post.append(_update_properties)
 
-    bpy.app.handlers.depsgraph_update_post.append(_watch_tree_names)
+    bpy.app.handlers.depsgraph_update_post.append(_on_deps_update)
     for cls in _registered_classes:
         bpy.utils.register_class(cls)
 
@@ -453,7 +474,7 @@ def unregister():
     utils.debug('Removing Game Start Compile handler...')
     remove_f = []
     filter(lambda a: a.__name__ == '_generate_on_game_start', bpy.app.handlers.game_pre)
-    filter(lambda a: a.__name__ == '_watch_tree_names', bpy.app.handlers.depsgraph_update_post)
+    filter(lambda a: a.__name__ == '_on_deps_update', bpy.app.handlers.depsgraph_update_post)
     filter(lambda a: a.__name__ == '_reload_texts', bpy.app.handlers.game_pre)
     filter(lambda a: a.__name__ == '_update_properties', bpy.app.handlers.load_post)
     for f in bpy.app.handlers.game_pre:
@@ -490,3 +511,30 @@ def unregister():
                 bpy.utils.unregister_class(getattr(bpy.types, node_id))
         except RuntimeError as ex:
             print("Custom socket {} not unloaded [{}]".format(cls.__name__, ex))
+
+
+
+# # Callback function for location changes
+# def obj_location_callback(ob):
+#     # Do something here
+#     print('Selected Object has changed!')
+
+
+# # Subscribe to the context object (mesh)
+# def subscribe_to_obj_loc(context: bpy.types.Context):
+
+#     context.temp_override()
+#     subscribe_to = context.path_resolve("active_object", False)
+
+#     bpy.msgbus.subscribe_rna(
+#         key=subscribe_to,
+#         # owner of msgbus subcribe (for clearing later)
+#         owner=context,
+#         # Args passed to callback function (tuple)
+#         args=(context),
+#         # Callback function for property update
+#         notify=obj_location_callback,
+#     )
+
+# # Ensure only meshes are passed to this function
+# subscribe_to_obj_loc(bpy.context)

@@ -94,6 +94,7 @@ _enum_object_property_types = [
 _bone_attrs = [
     ('', 'Position', ''),
     ("location", "Location", "Location of the bone relative to armature"),  # Vector
+    ("pose_rotation_euler", "Euler Rotation", "Rotation of the bone in euler coordinates"),  # Vector
     None,
     ("head", "Head", "Location of head end of the bone relative to its parent"),  # Vector
     ("head_local", "Local Head", "Location of head end of the bone relative to armature"),  # Vector
@@ -121,8 +122,8 @@ _bone_attrs = [
 
 
 _set_bone_attrs = [
-    ('', 'Position', ''),
     ("location", "Location", "Location of the bone relative to armature"),  # Vector
+    ("pose_rotation_euler", "Euler Rotation", "Rotation of the bone in euler coordinates"),  # Vector
     None,
     ("inherit_scale", "Inherit Scale", "Specifies how the bone inherits scaling from the parent bone"),  # Enum
     ("inherit_rotation", "Inherit Rotation", "Bone inherits rotation or scale from parent bone"),  # Boolean

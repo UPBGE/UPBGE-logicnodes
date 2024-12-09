@@ -6,13 +6,26 @@ from .interface import ui_list
 class LOGIC_NODES_UL_global_value(bpy.types.UIList):
     def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
         dat = {
-            'STRING': 'string_val',
-            'FLOAT': 'float_val',
-            'INTEGER': 'int_val',
-            'BOOLEAN': 'bool_val',
-            'FILE_PATH': 'filepath_val'
+            '0': 'float_val',
+            '1': 'string_val',
+            '2': 'int_val',
+            '3': 'bool_val',
+            '17': 'filepath_val',
+            '4': 'vec_val',
+            '5': 'color_val',
+            '6': 'color_alpha_val',
+            '7': 'obj_val',
+            '8': 'collection_val',
+            '9': 'material_val',
+            '10': 'mesh_val',
+            '11': 'node_tree_val',
+            '12': 'action_val',
+            '13': 'text_val',
+            '14': 'sound_val',
+            '15': 'image_val',
+            '16': 'font_val'
         }
         row = layout.split()
         row.prop(item, "name", text="", emboss=False)
         emboss = item.value_type == 'BOOLEAN' or item.value_type == 'STRING'
-        row.prop(item, dat.get(item.value_type, 'FLOAT'), text='', emboss=emboss)
+        row.prop(item, dat.get(item.value_type, 'FLOAT'), text='', emboss=True)

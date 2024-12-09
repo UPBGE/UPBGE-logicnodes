@@ -6,6 +6,7 @@ from ...sockets import NodeSocketLogicString
 from ...sockets import NodeSocketLogicArmature
 from ...sockets import NodeSocketLogicBone
 from ...sockets import NodeSocketLogicVectorXYZ
+from ...sockets import NodeSocketLogicVectorXYZAngle
 from ...sockets import NodeSocketLogicBoolean
 from ...enum_types import _set_bone_attrs
 from bpy.props import EnumProperty
@@ -30,26 +31,50 @@ class LogicNodeSetRigBoneAttribute(LogicNodeActionType):
     nl_class = "SetRigBoneAttributeNode"
     bl_description = 'Set an attribute of an armature bone'
 
+    _labels = {
+        "location": 'Get Bone Location',
+        "pose_rotation_euler": 'Get Bone Euler Rotation',
+        "inherit_scale": 'Get Bone Inherit Scale',
+        "inherit_rotation": 'Get Bone Inherit Rotation',
+        "connected": 'Get Bone Connected',
+        "deform": 'Get Bone Deform',
+        "use_local_location": 'Get Bone Local',
+        "use_relative_parent": 'Get Bone Relative Parent',
+        "use_scale_easing": 'Get Bone Scale Easing'
+    }
+
     def update_draw(self, context=None):
         attr = self.attribute
         if attr == 'inherit_scale':
             self.inputs[3].enabled = False
             self.inputs[4].enabled = False
             self.inputs[5].enabled = False
+            self.inputs[6].enabled = False
         elif attr == 'name':
             self.inputs[3].enabled = True
             self.inputs[4].enabled = False
             self.inputs[5].enabled = False
+            self.inputs[6].enabled = False
         elif attr in [
             'location',
         ]:
             self.inputs[3].enabled = False
             self.inputs[4].enabled = True
             self.inputs[5].enabled = False
-        else:
+            self.inputs[6].enabled = False
+        elif attr in [
+            'pose_rotation_euler',
+        ]:
             self.inputs[3].enabled = False
             self.inputs[4].enabled = False
             self.inputs[5].enabled = True
+            self.inputs[6].enabled = False
+        else:
+            self.inputs[3].enabled = False
+            self.inputs[4].enabled = False
+            self.inputs[5].enabled = False
+            self.inputs[6].enabled = True
+        self.nl_label = self._labels[attr]
 
     attribute: EnumProperty(items=_set_bone_attrs, name='Attribute', update=update_draw)
     scale_mode: EnumProperty(items=_scale_modes, name='Scale Mode', update=update_draw)
@@ -75,6 +100,7 @@ class LogicNodeSetRigBoneAttribute(LogicNodeActionType):
         self.add_input(NodeSocketLogicBone, "", 'bone', settings={'ref_index': 1})
         self.add_input(NodeSocketLogicString, "", 'value')
         self.add_input(NodeSocketLogicVectorXYZ, "Vector", 'value')
+        self.add_input(NodeSocketLogicVectorXYZAngle, "Rotation", 'value')
         self.add_input(NodeSocketLogicBoolean, "Bool", 'value')
         self.add_output(NodeSocketLogicCondition, 'Done', 'DONE')
         LogicNodeActionType.init(self, context)

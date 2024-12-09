@@ -1,4 +1,5 @@
 from ..utilities import notify
+from ..utilities import warn
 from ..utilities import error
 from ..utilities import success
 from .operator import operator
@@ -10,6 +11,7 @@ import bpy
 COMPONENT_TEMPLATE = """\
 import bge, bpy
 from collections import OrderedDict
+import mathutils
 class {}(bge.types.KX_PythonComponent):
     {}
     def start(self, args): pass
@@ -61,7 +63,10 @@ class LOGIC_NODES_OT_reload_components(Operator):
                 text = bpy.data.texts[f'{c.module}.py']
                 ogtext = text.as_string()
                 text.write(build_dummy_text(c.name, text))
-                bpy.ops.logic.python_component_reload(index=i)
+                try:
+                    bpy.ops.logic.python_component_reload(index=i)
+                except Exception as e:
+                    warn(f'Could not reload component {c.name}! Reason: {e}')
                 text.clear()
                 text.from_string(ogtext)
             reload_texts()

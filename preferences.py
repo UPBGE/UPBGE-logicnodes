@@ -19,6 +19,7 @@ class LogicNodesAddonPreferences(bpy.types.AddonPreferences):
     bl_idname = 'bge_netlogic'
 
     use_reload_text: bpy.props.BoolProperty(default=True)
+    auto_switch_trees: bpy.props.BoolProperty(default=True, description='Automatically switch to relevant logic trees when selecting objects')
     uplogic_version: bpy.props.EnumProperty(items=_uplogic_versions, default='4.0b4', name='Uplogic Version')
     use_node_debug: bpy.props.BoolProperty(default=True)
     use_node_notify: bpy.props.BoolProperty(default=True)
@@ -46,6 +47,11 @@ class LogicNodesAddonPreferences(bpy.types.AddonPreferences):
             self,
             'use_reload_text',
             text="Reload Scripts on Game Start"
+        )
+        col.prop(
+            self,
+            'auto_switch_trees',
+            text="Auto-switch logic trees"
         )
         col.prop(
             self,

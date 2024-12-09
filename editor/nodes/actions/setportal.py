@@ -154,4 +154,5 @@ class LogicNodeSetPortal(LogicNodeActionType):
         LogicNodeActionType.init(self, context)
 
     def get_attributes(self):
+        self.set_portal(self['portal_prop'])
         return [('portal', repr(self.portal))]

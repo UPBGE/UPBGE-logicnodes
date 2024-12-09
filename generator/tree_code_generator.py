@@ -81,16 +81,16 @@ class {}_Tree():
 
 class {}(bge.types.KX_PythonComponent):
     args = OrderedDict([
-        ("Only Run At Startup", False),
-        ("Execution Condition", ""){}
+        ("OnlyRunAtStartup", False),
+        ("ExecutionCondition", ""){}
     ])
 
     def start(self, args):
         self.logictree = {}_Tree(
             self.object,
             component=self,
-            exec_cond=args["Execution Condition"],
-            startup=args["Only Run At Startup"]
+            exec_cond=args["ExecutionCondition"],
+            startup=args["OnlyRunAtStartup"]
         )
 {}
         self.logictree.evaluate()

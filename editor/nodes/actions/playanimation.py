@@ -16,7 +16,7 @@ from ...sockets import NodeSocketLogicFloatFactor
 class LogicNodePlayAnimation(LogicNodeActionType):
     bl_idname = "NLActionPlayActionNode"
     bl_label = "Play Animation"
-    bl_description = 'Start an animation on an object'
+    bl_description = 'Start an animation on an object or armature'
     nl_module = 'uplogic.nodes.actions'
     nl_class = "ULPlayAction"
 
