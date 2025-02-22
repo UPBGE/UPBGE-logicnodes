@@ -65,19 +65,20 @@ def debug(*message):
 
 @persistent
 def _reload_texts(self, context):
-    if not prefs().use_reload_text:
-        return
-    else:
-        for t in bpy.data.texts:
-            if t.filepath:
-                path = (
-                    os.path.join(bpy.path.abspath('//'), t.filepath[2:])
-                    if t.filepath.startswith('//')
-                    else t.filepath
-                )
-                with open(path) as f:
-                    t.clear()
-                    t.write(f.read())
+    # if not prefs().use_reload_text:
+    #     return
+    # else:
+    #     for t in bpy.data.texts:
+    #         if t.filepath:
+    #             path = (
+    #                 os.path.join(bpy.path.abspath('//'), t.filepath[2:])
+    #                 if t.filepath.startswith('//')
+    #                 else t.filepath
+    #             )
+    #             with open(path) as f:
+    #                 t.clear()
+    #                 t.write(f.read())
+    pass
 
 
 @persistent
@@ -402,7 +403,6 @@ def register():
     bpy.utils.register_class(CustomNodeReference)
     bpy.utils.register_class(LogicNodesAddonPreferences)
 
-    # prefs().uplogic_version = 'latest'
     for node in prefs().custom_logic_nodes:
         exec(node.ui_code, {"bge_netlogic": _get_this_module()})
     bpy.types.Object.sound_occluder = bpy.props.BoolProperty(
@@ -463,7 +463,6 @@ def register():
         name='Custom Mainloop Tree',
         type=bpy.types.NodeTree
     )
-    # get_uplogic_module()
 
 
 # blender add-on unregistration callback

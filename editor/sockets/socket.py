@@ -129,7 +129,7 @@ def socket_type(obj):
             # def draw_color(self, context):
             #     return self.nl_socket.nl_color if self.nl_socket.nl_color else SOCKET_COLOR_GENERIC
 
-        _sockets.append(Interface)
+        # _sockets.append(Interface)
     return obj
 
 

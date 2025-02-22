@@ -49,13 +49,19 @@ from mathutils import Vector
 class {}_Tree():
 
     def __init__(self, game_object, component=None, exec_cond="", startup=False):
+        import uplogic
         from uplogic import nodes, utils
         from uplogic.nodes.logictree import ULLogicTree
         from uplogic.utils import OPERATORS, LOGIC_OPERATORS, MATH_OPERATORS
+        from uplogic import console
 {}
         self.condition = exec_cond
         owner = self.owner = game_object
         scene = self.scene = bge.logic.getCurrentScene()
+        
+        if bge.logic.globalDict.get('__uplogic__', None) is None:
+            bge.logic.globalDict.get['__uplogic__'] = uplogic.__version__
+            console.debug(f'Using uplogic version {uplogic.__version__}.')
         network = self.network = ULLogicTree()
         network.component = component
 {}

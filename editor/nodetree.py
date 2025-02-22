@@ -132,7 +132,7 @@ class LogicNodeTree(NodeTree):
                 n.outputs[0].type = socket.type
                 n.outputs[0].display_shape = socket.display_shape
                 osock.type = 'VALUE'  # XXX: Remove, this was for testing
-                print(osock.type, n.outputs[0].type, socket.type)
+                # print(osock.type, n.outputs[0].type, socket.type)
         for n in filter(lambda n: not isinstance(n, NodeReroute), self.nodes):
             for i in n.inputs:
                 if i.is_linked:
