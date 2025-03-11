@@ -1,5 +1,6 @@
 from bpy.types import Operator
 from ..utilities import error, preferences
+from ..generator.tree_code_generator import generate_logic_node_code
 import time
 import bpy
 import os
@@ -26,7 +27,7 @@ def _consume_update_tree_code_queue():
     delta = now - last_event
     if delta > 0.25:
         _update_queue.clear()
-        bpy.ops.logic_nodes.generate_code()
+        generate_logic_node_code()
         return True
 
 
@@ -34,7 +35,7 @@ def update_current_tree_code(*ignored):
     global _tree_code_writer_started
     if not _tree_code_writer_started:
         _tree_code_writer_started = True
-        bpy.ops.logic_nodes.generate_code()
+        generate_logic_node_code()
     now = time.time()
     _update_queue.append(now)
 

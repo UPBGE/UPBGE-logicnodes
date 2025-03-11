@@ -16,13 +16,11 @@ class LOGIC_NODES_OT_key_selector(Operator):
     keycode: StringProperty()
     is_socket: BoolProperty(default=True)
 
-    def __init__(self):
-        self.socket = None
-        self.node = None
-        self._old_val = None
-
-    def __del__(self):
-        pass
+    # def __init__(self, *args, **kwargs):
+    #     super().__init__(self, *args, **kwargs)
+    #     self.socket = None
+    #     self.node = None
+    #     self._old_val = None
 
     def execute(self, context):
         return {'FINISHED'}

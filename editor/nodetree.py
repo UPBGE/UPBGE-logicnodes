@@ -46,7 +46,8 @@ class LogicNodeTree(NodeTree):
             self.name = self.old_name
             return
         if update:
-            bpy.ops.logic_nodes.generate_code()
+            from ..generator.tree_code_generator import generate_logic_node_code
+            generate_logic_node_code()
         if not self.old_name:
             add_tree_to_active_objects(self)
         for obj in bpy.context.scene.objects:

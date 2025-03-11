@@ -11,6 +11,7 @@ from bpy.types import Context, Operator
 from bpy.props import BoolProperty
 import bpy
 from ..utilities import check_uplogic_module
+from ..generator.tree_code_generator import generate_logic_node_code
 
 
 @operator
@@ -24,9 +25,6 @@ class LOGIC_NODES_OT_generate_code(Operator):
     @classmethod
     def poll(cls, context):
         return True
-
-    def __init__(self):
-        pass
 
     def _create_external_text_buffer(self, context, buffer_name):
         file_path = bpy.path.abspath("//{}".format(buffer_name))
@@ -44,50 +42,11 @@ class LOGIC_NODES_OT_generate_code(Operator):
         return BLTextBuffer(blender_text_data)
 
     def execute(self, context: Context):
-        self.generate()
+        generate_logic_node_code()
         return {'FINISHED'}
 
-    def generate(self):
-        check_uplogic_module()
-        global ERROR_MESSAGES
-        ERROR_MESSAGES.clear()
-        global WARNING_MESSAGES
-        WARNING_MESSAGES.clear()
-
-        logic_trees = [tree for tree in bpy.data.node_groups if tree.bl_idname == LogicNodeTree.bl_idname]
-        for tree in logic_trees:
-            tree.mark_invalid_links()
-            # if tree.changes_staged:
-            TreeCodeGenerator().write_code_for_tree(tree)
-        # try:
-        #     context.region.tag_redraw()
-        # except Exception:
-        #     warn("Couldn't redraw panel, code updated.")
+    # def generate(self):
         
-        if ERROR_MESSAGES or WARNING_MESSAGES:
-            def error_log(self, context):
-                self.layout.label(text=f"Warnings, these may or may not be problematic, but it is recommended to resolve these.", icon='CONSOLE')
-                self.layout.label(text=f"Concerned nodes have been marked YELLOW.")
-                if WARNING_MESSAGES:
-                    self.layout.separator()
-                for e in WARNING_MESSAGES:
-                    self.layout.label(text=f'{e}')
-                if ERROR_MESSAGES:
-                    self.layout.separator()
-                    self.layout.label(text=f"Errors, these have to be resolved for the tree to work.", icon="ERROR")
-                    self.layout.label(text=f"Concerned nodes have been marked RED.")
-                    self.layout.separator()
-                for e in ERROR_MESSAGES:
-                    self.layout.label(text=f'{e}')
-
-            bpy.context.window_manager.popup_menu(error_log, title="Something happened during compilation.", icon='INFO')
-            # bpy.app.handlers.game_post.append(
-                
-            # )
-        else:
-            for tree in logic_trees:
-                tree.changes_staged = False
-        bpy.context.window_manager.update_tag()
 
 
     def invoke(self, context, event):
@@ -102,7 +61,7 @@ class LOGIC_NODES_OT_generate_code(Operator):
             # return {'RUNNING_MODAL'}
         # for package in installed_packages:
         #     print(f"{package.key}=={package.version}")
-        self.generate()
+        generate_logic_node_code()
         return {'FINISHED'}
 
     # def modal(self, context, event):

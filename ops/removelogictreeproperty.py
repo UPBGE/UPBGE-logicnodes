@@ -2,6 +2,7 @@ from .operator import operator
 from bpy.types import Operator
 from ..editor.nodetree import LogicNodeTree
 from bpy.props import IntProperty
+from ..generator.tree_code_generator import generate_logic_node_code
 import bpy
 
 
@@ -26,6 +27,6 @@ class LOGIC_NODES_OT_remove_logic_tree_property(Operator):
         props = tree.properties
         props.remove(self.prop_index)
         tree.changes_staged = True
-        bpy.ops.logic_nodes.generate_code()
+        generate_logic_node_code()
         bpy.ops.logic_nodes.reload_components()
         return {'FINISHED'}

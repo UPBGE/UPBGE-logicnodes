@@ -22,6 +22,7 @@ from .props.fmod_parameters import LogicNodesFmodParameter
 from .props.customnode import _registered_custom_classes
 from .preferences import LogicNodesAddonPreferences
 from .utilities import preferences as prefs
+from .generator.tree_code_generator import generate_logic_node_code
 from .editor.nodetree import LogicNodeTree
 # from . import basicnodes
 from . import utilities as utils
@@ -65,20 +66,19 @@ def debug(*message):
 
 @persistent
 def _reload_texts(self, context):
-    # if not prefs().use_reload_text:
-    #     return
-    # else:
-    #     for t in bpy.data.texts:
-    #         if t.filepath:
-    #             path = (
-    #                 os.path.join(bpy.path.abspath('//'), t.filepath[2:])
-    #                 if t.filepath.startswith('//')
-    #                 else t.filepath
-    #             )
-    #             with open(path) as f:
-    #                 t.clear()
-    #                 t.write(f.read())
-    pass
+    if not prefs().use_reload_text:
+        return
+    else:
+        for t in bpy.data.texts:
+            if t.filepath:
+                path = (
+                    os.path.join(bpy.path.abspath('//'), t.filepath[2:])
+                    if t.filepath.startswith('//')
+                    else t.filepath
+                )
+                with open(path) as f:
+                    t.clear()
+                    t.write(f.read())
 
 
 @persistent
@@ -87,7 +87,7 @@ def _generate_on_game_start(self, context):
     for tree in bpy.data.node_groups:
         if isinstance(tree, LogicNodeTree):
             tree.changes_staged = True
-    bpy.ops.logic_nodes.generate_code()
+    generate_logic_node_code()
 
 
 @persistent

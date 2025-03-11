@@ -3,7 +3,54 @@ from .. import utilities as utils
 from .abstract_text_buffer import AbstractTextBuffer
 from .uid_map import UIDMap
 from ..utilities import make_valid_name, preferences
+from ..utilities import check_uplogic_module
+from ..utilities import ERROR_MESSAGES
+from ..utilities import WARNING_MESSAGES
+from ..editor.nodetree import LogicNodeTree
 from time import time
+
+
+def generate_logic_node_code():
+    check_uplogic_module()
+    global ERROR_MESSAGES
+    ERROR_MESSAGES.clear()
+    global WARNING_MESSAGES
+    WARNING_MESSAGES.clear()
+
+    logic_trees = [tree for tree in bpy.data.node_groups if tree.bl_idname == LogicNodeTree.bl_idname]
+    for tree in logic_trees:
+        tree.mark_invalid_links()
+        # if tree.changes_staged:
+        TreeCodeGenerator().write_code_for_tree(tree)
+    # try:
+    #     context.region.tag_redraw()
+    # except Exception:
+    #     warn("Couldn't redraw panel, code updated.")
+    
+    if ERROR_MESSAGES or WARNING_MESSAGES:
+        def error_log(self, context):
+            self.layout.label(text=f"Warnings, these may or may not be problematic, but it is recommended to resolve these.", icon='CONSOLE')
+            self.layout.label(text=f"Concerned nodes have been marked YELLOW.")
+            if WARNING_MESSAGES:
+                self.layout.separator()
+            for e in WARNING_MESSAGES:
+                self.layout.label(text=f'{e}')
+            if ERROR_MESSAGES:
+                self.layout.separator()
+                self.layout.label(text=f"Errors, these have to be resolved for the tree to work.", icon="ERROR")
+                self.layout.label(text=f"Concerned nodes have been marked RED.")
+                self.layout.separator()
+            for e in ERROR_MESSAGES:
+                self.layout.label(text=f'{e}')
+
+        bpy.context.window_manager.popup_menu(error_log, title="Something happened during compilation.", icon='INFO')
+        # bpy.app.handlers.game_post.append(
+            
+        # )
+    else:
+        for tree in logic_trees:
+            tree.changes_staged = False
+    bpy.context.window_manager.update_tag()
 
 
 class BLTextWrapper(AbstractTextBuffer):
@@ -58,10 +105,6 @@ class {}_Tree():
         self.condition = exec_cond
         owner = self.owner = game_object
         scene = self.scene = bge.logic.getCurrentScene()
-        
-        if bge.logic.globalDict.get('__uplogic__', None) is None:
-            bge.logic.globalDict.get['__uplogic__'] = uplogic.__version__
-            console.debug(f'Using uplogic version {uplogic.__version__}.')
         network = self.network = ULLogicTree()
         network.component = component
 {}
@@ -125,6 +168,7 @@ class TreeCodeGenerator(object):
         properties = self.get_properties(tree)
         text = self.add_nodes(tree)
         line_writer.clear()
+        prop = self.get_property_defs(tree)
         text = MODULE_TEMPLATE.format(
             tree_name,
             imports,
@@ -134,7 +178,7 @@ class TreeCodeGenerator(object):
             tree_name,
             properties,
             tree_name,
-            self.get_property_defs(tree),
+            prop,
             tree_name
         )
         line_writer.write_line(text)

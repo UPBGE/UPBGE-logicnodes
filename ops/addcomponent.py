@@ -1,18 +1,9 @@
-from ..utilities import notify, preferences, error, debug
+from ..utilities import add_component
 from .operator import operator
 from .operator import _enum_components
 from .operator import reload_texts
 from bpy.types import Operator
 import bpy
-
-
-COMPONENT_TEMPLATE = """\
-import bge, bpy
-from collections import OrderedDict
-class {}(bge.types.KX_PythonComponent):
-    {}
-    def start(self, args): pass
-    def update(self): pass"""
 
 
 @operator
@@ -33,39 +24,7 @@ class LOGIC_NODES_OT_add_component(Operator):
         return context.active_object is not None
 
     def execute(self, context):
-        comp_name = self.component
-        select_text = context.scene.componenthelper
-        mod_name = select_text.name[:len(select_text.name) - 3]
-        body = select_text.as_string()
-        cargs = ''
-        in_args = False
-        for line in select_text.lines:
-            if comp_name in line.body:
-                continue
-            line.body = line.body.replace(' ', '')
-            if line.body.startswith('@'):
-                continue
-            if 'args=' in line.body:
-                in_args = True
-            if '])' in line.body and in_args:
-                cargs += line.body
-                break
-            if in_args:
-                cargs += line.body
-        text = COMPONENT_TEMPLATE.format(comp_name, cargs)
-        try:
-            select_text.clear()
-            select_text.write(text)
-            notify(f'Adding {mod_name}.{comp_name} to {context.active_object.name}...')
-            bpy.ops.logic.python_component_register(component_name=f'{mod_name}.{comp_name}')
-            select_text.clear()
-            select_text.write(body)
-        except Exception as e:
-            error(f'Could not add component {mod_name}.{comp_name} to object {context.active_object.name}!')
-            debug(f'Content:\n\n{select_text.as_string()}\n')
-            select_text.clear()
-            select_text.write(body)
-            self.report({"ERROR"}, str(e))
+        add_component(bpy.context.scene.componenthelper, self.component)
         return {'FINISHED'}
 
     def invoke(self, context, event):

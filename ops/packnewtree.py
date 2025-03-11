@@ -78,8 +78,12 @@ class LOGIC_NODES_OT_pack_new_tree(Operator):
         for old_node in new_nodes:
             new_node = new_nodes[old_node]
             for attr in dir(old_node):
-                if attr in NODE_ATTRS:
+                try:
+                # if attr in NODE_ATTRS:
                     setattr(new_node, attr, getattr(old_node, attr))
+                except:
+                    warn('Attribute {} not writable.'.format(attr))
+                    
             for socket in old_node.outputs:
                 for link in socket.links:
                     to_node = link.to_node

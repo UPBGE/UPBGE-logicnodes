@@ -39,8 +39,9 @@ class LogicNodeCreateUILayout(LogicNodeUIType):
         if len(self.inputs) > 11:  # XXX: Remove check for 4.0
             self.inputs[11].enabled = (self.layout_type == 'GridLayout')
             self.inputs[12].enabled = (self.layout_type == 'GridLayout')
-            self.inputs[13].enabled = (self.layout_type == 'PolarLayout')
+            self.inputs[13].enabled = (self.layout_type == 'GridLayout')
             self.inputs[14].enabled = (self.layout_type == 'PolarLayout')
+            self.inputs[15].enabled = (self.layout_type == 'PolarLayout')
         
         w = WIDGETS.get(self, None)
         if w is None:
@@ -72,8 +73,14 @@ class LogicNodeCreateUILayout(LogicNodeUIType):
         w.border_width = ipts[8].default_value
         w.border_color = Vector(ipts[9].default_value)
         ipts[10].enabled = False
-        if isinstance(w, BoxLayout) or isinstance(w, GridLayout):
+        is_box = isinstance(w, BoxLayout)
+        is_grid = isinstance(w, GridLayout)
+        if is_box or is_grid:
+            w.spacing = ipts[11].default_value
             w.orientation = self.boxlayout_type
+            if is_grid:
+                w.rows = ipts[12].default_value
+                w.cols = ipts[13].default_value
         if isinstance(w, PolarLayout):
             w.starting_angle = math.degrees(ipts[14].default_value)
             w.radius = ipts[15].default_value

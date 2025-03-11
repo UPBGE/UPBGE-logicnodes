@@ -62,5 +62,5 @@ class NodeSocketLogicLight(NodeSocket, NodeSocketLogic):
     def get_unlinked_value(self):
         if self.use_owner:
             return 'game_object'
-        if isinstance(self.default_value, Light):
-            return f'scene.objects["{self.default_value.name}"]'
+        # if isinstance(self.default_value, Light):
+        return f'scene.objects["{self.default_value.name}"]'

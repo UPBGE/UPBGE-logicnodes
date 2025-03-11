@@ -1,6 +1,7 @@
 import typing
 from .operator import operator
 from bpy.types import Context, Operator
+from ..generator.tree_code_generator import generate_logic_node_code
 import bpy
 
 
@@ -20,7 +21,7 @@ class LOGIC_NODES_OT_add_logic_tree_property(Operator):
         tree = getattr(bpy.context.space_data, 'edit_tree')
         prop = tree.properties.add()
         prop.name = prop.name
-        bpy.ops.logic_nodes.generate_code()
+        generate_logic_node_code()
         bpy.ops.logic_nodes.reload_components()
         return {'FINISHED'}
 
