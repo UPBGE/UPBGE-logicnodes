@@ -345,7 +345,7 @@ from .fmod.fmodgeteventparameter import LogicNodeFModGetEventParameter
 from .fmod.fmodseteventparameter import LogicNodeFModSetEventParameter
 from .fmod.fmodmodifyeventparameter import LogicNodeFModModifyEventParameter
 
-from .actions.oscsend import LogicNodeSendOSC
+from .actions.oscsend import LogicNodeOSCSend
 from .actions.oscsetupserver import LogicNodeOSCSetupServer
 from .actions.oscreceive import LogicNodeOSCReceive
 
