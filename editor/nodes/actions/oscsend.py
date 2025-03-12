@@ -12,7 +12,7 @@ class LogicNodeOSCSend(LogicNodeActionType):
     bl_description = "Send OSC messages to a given address"
     bl_width_default = 180
     nl_module = 'uplogic.nodes.actions'
-    nl_class = "ULSendOSC"
+    nl_class = "ULOSCSend"
     
     def init(self, context):
         #Inputs
