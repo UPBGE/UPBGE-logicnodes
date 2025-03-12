@@ -6,8 +6,8 @@ from ...sockets import NodeSocketLogicIntegerPositive
 from ...sockets import NodeSocketLogicDictionary
 
 @node_type
-class LogicNodeSendOSC(LogicNodeActionType):
-    bl_idname = "LogicNodeSendOSC"
+class LogicNodeOSCSend(LogicNodeActionType):
+    bl_idname = "LogicNodeOSCSend"
     bl_label = "Send OSC Message"
     bl_description = "Send OSC messages to a given address"
     bl_width_default = 180
