@@ -29,7 +29,6 @@ class NodeSocketLogicXYZ(NodeSocket, NodeSocketLogic):
             def_val[1] = y
         if z is not DEPRECATED:
             def_val[2] = z
-        print(def_val, x, y, z)
         self.default_value = def_val
 
     nl_color = SOCKET_COLOR_DICTIONARY

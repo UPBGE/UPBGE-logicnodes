@@ -18,7 +18,7 @@ class LogicNodeMouseMoved(LogicNodeConditionType):
     pulse: BoolProperty(default=False)
 
     def init(self, context):
-        self.add_output(NodeSocketLogicCondition, "If Moved", 'mouse_button_code')
+        self.add_output(NodeSocketLogicCondition, "If Moved", 'OUT')
         LogicNodeConditionType.init(self, context)
 
     def draw_buttons(self, context, layout):

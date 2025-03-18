@@ -60,10 +60,7 @@ class LogicNodeAddFilter(LogicNodeActionType):
         LogicNodeActionType.init(self, context)
 
     def insert_link(self, link: NodeLink) -> None:
-        print('HELLO')
         self.outputs[0].display_shape = self.inputs[0].display_shape
-        print(self.outputs[0].display_shape)
-        # return super().insert_link(link)
 
     def draw_buttons(self, context, layout):
         layout.prop(self, "filter_type")
