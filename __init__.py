@@ -38,8 +38,8 @@ bl_info = {
         "A Node System to create game logic."
     ),
     "author": "pgi, Leopold A-C (Iza Zed)",
-    "version": (4, 0, 0),
-    "blender": (4, 3, 0),
+    "version": (4, 5, 0),
+    "blender": (4, 5, 0),
     "location": "View Menu",
     "category": "Game Engine",
     "wiki_url": "https://upbge.org/#/documentation/docs/latest/manual/manual/logic_nodes/index.html",
