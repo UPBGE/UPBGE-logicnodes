@@ -48,7 +48,7 @@ class LogicNode:
         pass
 
     def draw_label(self):
-        return self.label if self.label else self.nl_label
+        return self.label if self.label else (self.nl_label if self.nl_label else self.bl_label)
 
     @classmethod
     def poll(cls, node_tree):
