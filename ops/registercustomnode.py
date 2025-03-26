@@ -19,8 +19,8 @@ class LOGIC_NODES_OT_register_custom_node(Operator):
     bl_description = "Register Custom Logic Node"
 
     text_name: bpy.props.EnumProperty(
-        name="Component Name",
-        description="Add this Component to the current object",
+        name="Node",
+        description="Register a node defined in a python file",
         items=_enum_texts
     )
 

@@ -37,6 +37,7 @@ class LogicNodeRaycast(LogicNodeActionType):
 
     def init(self, context):
         self.add_input(NodeSocketLogicCondition, "Condition", "condition")
+        self.add_input(NodeSocketLogicObject, "Caster", 'caster', {'use_owner': True})
         self.add_input(NodeSocketLogicVectorXYZ, "Origin", "origin")
         self.add_input(NodeSocketLogicVectorXYZ, "Aim", "destination")
         self.add_input(NodeSocketLogicBoolean, "Local", 'local')
