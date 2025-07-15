@@ -63,6 +63,7 @@ from .actions.playspeaker import LogicNodePlaySpeaker
 from .actions.print import LogicNodePrint
 from .actions.quitgame import LogicNodeQuitGame
 from .actions.raycast import LogicNodeRaycast
+from .actions.raycast_simple import LogicNodeRaycastSimple
 from .actions.raycastcamera import LogicNodeRaycastCamera
 from .actions.raycastmouse import LogicNodeRaycastMouse
 from .actions.raycastprojectile import LogicNodeRaycastProjectile

@@ -43,6 +43,7 @@ class LogicNodeRaycastProjectile(LogicNodeActionType):
     def get_input_names(self):
         return [
             "condition",
+            "caster",
             "origin",
             "destination",
             'local',

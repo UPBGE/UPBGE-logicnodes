@@ -696,6 +696,8 @@ class LogicMenu(bpy.types.Menu):
         insertNode(layout, "LogicNodeLogicGateList", "Gate List")
         insertNode(layout, "NLConditionNone", "None")
         insertNode(layout, "NLConditionNotNoneNode", "Not None")
+        # layout.separator()
+        # insertNode(layout, "LogicNodeRaycast", "Raycast")
         layout.separator()
         insertNode(layout, "LogicNodeLoop", "Loop")
         insertNode(layout, "LogicNodeLoopFromList", "Loop From List")

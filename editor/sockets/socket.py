@@ -214,7 +214,7 @@ class NodeSocketLogic:
     def get_id(cls):
         return cls.bl_idname
 
-    def __init__(self):
+    def init(self):
         self.type = BL_SOCKET_TYPES[self.nl_type]
         if not self.use_default_value:
             self._update_prop_name()

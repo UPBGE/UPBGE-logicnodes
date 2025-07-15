@@ -89,54 +89,29 @@ class LogicNodeTree(NodeTree):
             if hasattr(n, 'update_draw'):
                 n.update_draw(context)
 
+    def color_sockets(self):
+        for n in filter(lambda n: isinstance(n, NodeReroute), self.nodes):
+            outsocket = n.outputs[0]
+            insocket = n.inputs[0]
+
+            outlinks = outsocket.links
+            inlinks = insocket.links
+            if not insocket.is_linked or isinstance(inlinks[0].from_node, NodeReroute):
+                # print('trying to source type from another reroute')
+                continue
+            from_socket = inlinks[0].from_socket
+            insocket.type = from_socket.type
+            outsocket.type = from_socket.type
+            outsocket.display_shape = 'SQUARE'
+    
+            # print(from_socket.type)
+            # print(insocket.type)
+
     def update(self):
         bpy.app.timers.register(self.mark_invalid_links)
         start = time()
         self.changes_staged = True
-
-        # new_inputs = len(self.inputs)
-        # new_outputs = len(self.outputs)
-        # if self.old_inputs != new_inputs:
-        #     self.old_inputs = new_inputs
-        # elif self.old_outputs != new_outputs:
-        #     self.old_outputs = new_outputs
     
         for n in self.nodes:
             n.update()
-
-        for n in filter(lambda n: isinstance(n, NodeReroute), self.nodes):
-            osock = n.inputs[0]
-            if not n.inputs[0].links:
-                if osock.type != 'VALUE':
-                    osock.type = 'VALUE'
-                    n.outputs[0].type = 'VALUE'
-                    # osock.display_shape = 'CIRCLE'
-                    # n.outputs[0].display_shape = 'CIRCLE'
-                continue
-            socket = osock.links[0].from_socket
-            while isinstance(socket.node, NodeReroute):
-                now = time()
-                if now - start > 3:
-                    error('Timeout Error. Check tree for unlinked Reroutes or other issues.')
-                    return
-                if not socket.node.inputs[0].links:
-                    if osock.type != 'VALUE':
-                        osock.type = 'VALUE'
-                        n.outputs[0].type = 'VALUE'
-                        # osock.display_shape = 'CIRCLE'
-                        # n.outputs[0].display_shape = osock.nl_shape
-                    break
-                socket = socket.node.inputs[0].links[0].from_socket
-            if osock.type != socket.type:
-                osock.type = socket.type
-                osock.display_shape = socket.display_shape
-                n.outputs[0].type = socket.type
-                n.outputs[0].display_shape = socket.display_shape
-                osock.type = 'VALUE'  # XXX: Remove, this was for testing
-                # print(osock.type, n.outputs[0].type, socket.type)
-        for n in filter(lambda n: not isinstance(n, NodeReroute), self.nodes):
-            for i in n.inputs:
-                if i.is_linked:
-                    i.display_shape = i.links[0].from_socket.display_shape
-                else:
-                    i.display_shape = i.nl_shape
+        self.color_sockets()

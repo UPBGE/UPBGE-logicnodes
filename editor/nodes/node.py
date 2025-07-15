@@ -111,6 +111,7 @@ class LogicNode:
         for key, val in settings.items():
             setattr(ipt, key, val)
         setattr(ipt, 'identifier', attr_name)
+        ipt.init()
         return ipt
 
     def add_output(self, cls, name, attr_name: str = '', settings: dict = {}, description='', shape=None):
@@ -127,6 +128,7 @@ class LogicNode:
         for key, val in settings.items():
             setattr(otp, key, val)
         setattr(otp, 'identifier', attr_name)
+        otp.init()
         return otp
 
     def free(self):

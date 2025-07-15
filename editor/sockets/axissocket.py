@@ -26,9 +26,6 @@ class NodeSocketLogicAxis(NodeSocket, NodeSocketLogic):
     nl_color = SOCKET_COLOR_INTEGER
     nl_type = SOCKET_TYPE_INT
 
-    def __init__(self):
-        NodeSocketLogic.__init__(self)
-
     def _draw(self, context, layout, node, text):
         if self.linked_valid:
             layout.label(text=text)
