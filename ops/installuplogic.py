@@ -56,7 +56,7 @@ class LOGIC_NODES_OT_install_uplogic(Operator):
     bl_options = {'REGISTER', 'UNDO'}
 
     def need_install(self) -> bool:
-        """Return True if installation/update is needed (minimal logic)."""
+        """Return True if installation/update is needed."""
         req = preferences().uplogic_version if hasattr(preferences(), "uplogic_version") else "latest"
         installed = get_uplogic_installed_version()
         if requirement_satisfied(installed, req):
@@ -78,7 +78,6 @@ class LOGIC_NODES_OT_install_uplogic(Operator):
         return {'RUNNING_MODAL'}
 
     def invoke(self, context, event):
-        # Mirror execute for minimal diff
         return self.execute(context)
 
     def modal(self, context, event):
