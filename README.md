@@ -2,7 +2,6 @@
 A Node-based Logic system for UPBGE 0.3.0+ (Blender 2.8+) and UPBGE 0.2.4+ (Blender 2.79b)
 
 ![Alt text](./header.png "Title")
-(Header by L_P)
 
 This is an Add-On for the recent UPBGE-EEVEE build.
 It adds a new Editor in which you can create logic trees and apply them to objects.
