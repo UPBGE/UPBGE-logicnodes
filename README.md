@@ -27,7 +27,7 @@ It adds a new Editor in which you can create logic trees and apply them to objec
 
 1. In the Editor Selection, go to **Logic Node Editor**
 2. Create a new logic tree just as you would create a Material in the material editor
-3. Select an object in the 3D-Viewport, then click on "**Apply To Selected**"** in the Logic Tree Editor (**Context** / **Dashboard**)
+3. Select an object in the 3D-Viewport, then click on **Apply To Selected** in the Logic Tree Editor (**Context** / **Dashboard**)
 
 # Discord Server
 
