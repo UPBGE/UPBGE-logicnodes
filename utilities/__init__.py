@@ -224,7 +224,7 @@ def check_uplogic_module():
     version_ok = True
     if uplogic_installed:
         from uplogic import check_version, __version__
-        version_ok = check_version('4')
+        version_ok = check_version('5')
     if not uplogic_installed or not version_ok:
         bpy.context.window_manager.popup_menu(uplogic_message, title="Uplogic module missing", icon='INFO')
         if not bpy.app.online_access:
@@ -652,21 +652,24 @@ class {}(bge.types.KX_PythonComponent):
     def update(self): pass"""
 
 
-def add_component(text, component, obj=None):
-    if obj is not None:
-        bpy.context.view_layer.objects.active = obj
+COMPONENT_TEMPLATE = """\
+import bge, bpy
+from collections import OrderedDict
+class {}(bge.types.KX_PythonComponent):
+    {}
+    def start(self, args): pass
+    def update(self): pass"""
+
+
+def build_template(text, component):
     if isinstance(text, str):
         if not text.endswith('.py'):
             text += '.py'
         text = bpy.data.texts.get(text, None)
     if text is None:
-        def comp_failed(self, context):
-            self.layout.label(text='Text not present!')
-        bpy.context.window_manager.popup_menu(comp_failed)
+        # bpy.context.window_manager.popup_menu(comp_failed)
         return
     comp_name = component
-    mod_name = text.name[:len(text.name) - 3]
-    body = text.as_string()
     cargs = ''
     in_args = False
     in_comp = False
@@ -680,20 +683,73 @@ def add_component(text, component, obj=None):
         if line.body.startswith('@'):
             continue
         if in_comp:
-            if 'args' in line.body:
+            if 'args =' in line.body or 'args=' in line.body:
                 in_args = True
             if '])' in line.body and in_args:
                 cargs += line.body
                 break
             if in_args:
                 cargs += line.body
-    template = COMPONENT_TEMPLATE.format(comp_name, cargs)
+    return COMPONENT_TEMPLATE.format(comp_name, cargs)
+
+
+def add_component(text, component):
+    module = text.name[:len(text.name) - 3]
+    body = text.as_string()
+    template = build_template(text, component)
     try:
         text.clear()
         text.write(template)
-        bpy.ops.logic.python_component_register(component_name=f'{mod_name}.{comp_name}')
+        bpy.ops.logic.python_component_register(component_name=f'{module}.{component}')
         text.clear()
         text.write(body)
     except Exception as e:
         text.clear()
         text.write(body)
+
+
+# def add_component(text, component, obj=None):
+#     if obj is not None:
+#         bpy.context.view_layer.objects.active = obj
+#     if isinstance(text, str):
+#         if not text.endswith('.py'):
+#             text += '.py'
+#         text = bpy.data.texts.get(text, None)
+#     if text is None:
+#         def comp_failed(self, context):
+#             self.layout.label(text='Text not present!')
+#         bpy.context.window_manager.popup_menu(comp_failed)
+#         return
+#     comp_name = component
+#     mod_name = text.name[:len(text.name) - 3]
+#     body = text.as_string()
+#     cargs = ''
+#     in_args = False
+#     in_comp = False
+#     for line in text.lines:
+#         if f'{comp_name}(' in line.body:
+#             in_comp = True
+#             continue
+#         if not in_comp:
+#             continue
+#         line.body = line.body.replace(' ', '')
+#         if line.body.startswith('@'):
+#             continue
+#         if in_comp:
+#             if 'args' in line.body:
+#                 in_args = True
+#             if '])' in line.body and in_args:
+#                 cargs += line.body
+#                 break
+#             if in_args:
+#                 cargs += line.body
+#     template = COMPONENT_TEMPLATE.format(comp_name, cargs)
+#     try:
+#         text.clear()
+#         text.write(template)
+#         bpy.ops.logic.python_component_register(component_name=f'{mod_name}.{comp_name}')
+#         text.clear()
+#         text.write(body)
+#     except Exception as e:
+#         text.clear()
+#         text.write(body)

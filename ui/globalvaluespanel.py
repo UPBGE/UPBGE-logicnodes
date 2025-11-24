@@ -10,7 +10,7 @@ class LOGIC_NODES_PT_global_values(bpy.types.Panel):
     bl_space_type = "PROPERTIES"
     bl_region_type = "WINDOW"
     bl_context = 'scene'
-    bl_category = "Global Values"
+    # bl_category = "Global Values"
 
     @classmethod
     def poll(cls, context):

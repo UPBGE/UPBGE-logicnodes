@@ -22,18 +22,18 @@ class LogicNodeCurveInterpolation(LogicNodeParameterType):
         if self.mapping.users > 2:
             layout.label(icon='ERROR', text='Data used in multiple nodes!')
         if self.mapping:
-            layout.template_curve_mapping(self.mapping, 'curve')
+            layout.template_curve_mapping(self.mapping, 'automasking_cavity_curve')
         else:
             layout.label(icon='ERROR', text='Data not found!')
 
     def init(self, context):
         self.mapping = bpy.data.brushes.new(name=f'{uuid.uuid4()}')
-        points = self.mapping.curve.curves[0].points
-        points[0].location = (0, 0)
-        points[1].location = (.25, .06)
-        points[2].location = (.75, 0.94)
-        points[3].location = (1, 1)
-        self.mapping.curve.update()
+        # points = self.mapping.automasking_cavity_curve.curves[0].points
+        # points[0].location = (0, 0)
+        # points[1].location = (.25, .06)
+        # points[2].location = (.75, 0.94)
+        # points[3].location = (1, 1)
+        self.mapping.automasking_cavity_curve.update()
         self.add_input(NodeSocketLogicFloatFactor, 'Value', 'value')
         self.add_output(NodeSocketLogicFloat, 'Value', 'OUT')
         LogicNodeParameterType.init(self, context)
