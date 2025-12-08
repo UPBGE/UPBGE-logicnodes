@@ -30,7 +30,7 @@ class LogicNodeMoveToNavmesh(LogicNodeActionType):
         self.add_input(NodeSocketLogicFloatPositive, "Lin Speed", 'linear_speed', {'default_value': 1.0})
         self.add_input(NodeSocketLogicFloatPositive, "Reach Threshold", 'reach_threshold', {'default_value': 1.0})
         self.add_input(NodeSocketLogicBoolean, "Look At", 'look_at', {'default_value': True})
-        self.add_input(NodeSocketLogicAxis, "Rot Axis", 'rot_axis')
+        self.add_input(NodeSocketLogicAxis, "Rot Axis", 'rot_axis', {'default_value': '2'})
         self.add_input(NodeSocketLogicAxisSigned, "Front", 'front_axis')
         self.add_input(NodeSocketLogicFloat, "Rot Speed", 'rot_speed', {'default_value': 1.0})
         self.add_input(NodeSocketLogicBoolean, "Visualize", 'visualize')
