@@ -890,6 +890,10 @@ class NetworkMenu(bpy.types.Menu):
         insertNode(layout, "LogicNodeRebuildData", "Rebuild Data")
         insertNode(layout, "LogicNodeSendNetworkMessage", "Send Data")
         insertNode(layout, "LogicNodeSerializeData", "Serialize Data")
+        layout.separator()
+        insertNode(layout, "LogicNodeOSCSetupServer", "Setup OSC Server")
+        insertNode(layout, "LogicNodeOSCReceive", "Receive OSC Message")
+        insertNode(layout, "LogicNodeOSCSend", "Send OSC Message")
 
 @menu_item
 class PathMenu(bpy.types.Menu):
