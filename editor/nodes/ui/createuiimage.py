@@ -18,7 +18,7 @@ import math
 class LogicNodeCreateUIImage(LogicNodeUIType):
     bl_idname = "LogicNodeCreateUIImage"
     bl_label = "Create Image"
-    nl_module = 'uplogic.nodes.actions'
+    nl_module = 'uplogic.nodes.ui'
     nl_class = "ULCreateUIImage"
     bl_description = 'Create a new image widget'
 

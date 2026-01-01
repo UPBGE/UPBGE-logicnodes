@@ -22,7 +22,7 @@ class LogicNodeCreateUISliderOld(LogicNodeActionType):
     bl_idname = "LogicNodeCreateUISlider"
     bl_label = "Create Slider"
     bl_description = 'Create a new interactible slider widget'
-    nl_module = 'uplogic.nodes.actions'
+    nl_module = 'uplogic.nodes.ui'
     nl_class = "ULCreateUISlider"
 
     def update_draw(self, context=None):

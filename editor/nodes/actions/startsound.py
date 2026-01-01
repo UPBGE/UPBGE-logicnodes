@@ -47,7 +47,7 @@ class LogicNodeStartSound(LogicNodeActionType):
         self.inputs[2].enabled = int(self.mode) > 1 and not self.use_speaker
         self.inputs[4].enabled = self.inputs[5].enabled = int(self.mode) in [1, 3]
         self.inputs[6].enabled = int(self.mode) > 1
-        self.inputs[7].enabled = self.inputs[8].enabled = self.inputs[6].default_value and self.inputs[3].enabled
+        self.inputs[7].enabled = self.inputs[8].enabled = self.inputs[6].default_value and self.inputs[3].enabled and int(self.mode) in [2, 3]
         self.inputs[13].enabled = int(self.mode) < 2
         state = self.advanced and int(self.mode) > 1
         for i in [15, 16, 17, 18]:

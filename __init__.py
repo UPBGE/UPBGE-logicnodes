@@ -38,8 +38,8 @@ bl_info = {
         "A Node System to create game logic."
     ),
     "author": "pgi, Leopold A-C (Iza Zed)",
-    "version": (5, 1, 0),
-    "blender": (5, 1, 0),
+    "version": (5, 1, 1),
+    "blender": (5, 1, 1),
     "location": "View Menu",
     "category": "Game Engine",
     "wiki_url": "https://upbge.org/#/documentation/docs/latest/manual/manual/logic_nodes/index.html",
@@ -385,6 +385,9 @@ def node_manual():
 # blender add-on registration callback
 def register():
     print('Registering Logic Nodes...')
+    # if _generate_on_game_start in bpy.app.handlers.game_pre:
+    #     print('Already registered, aborting.')
+    #     return
     bpy.utils.register_manual_map(node_manual)
     bpy.types.NODE_MT_add.append(node_menu.draw_add_menu)
     bpy.app.handlers.game_pre.append(_generate_on_game_start)

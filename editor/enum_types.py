@@ -502,11 +502,12 @@ _serialize_types = [
 
 
 _enum_msg_types = [
-    ("INFO", "Info", "Will print the message in white (on-screen console)"),
-    ("DEBUG", "Debug", "Will print the message in light yellow (on-screen console)"),
-    ("WARNING", "Warning", "Will print the message in yellow (on-screen console)"),
-    ("ERROR", "Error", "Will print the message in red (on-screen console)"),
-    ("SUCCESS", "Success", "Will print the message in green (on-screen console)")
+    ("LOG", "Print", "Will print the message in white (on-screen console)"),
+    ("INFO", "Info", "Will print the message in blue when appropriate logging level is set"),
+    ("DEBUG", "Debug", "Will print the message in light yellow when appropriate logging level is set"),
+    ("WARNING", "Warning", "Will print the message in yellow when appropriate logging level is set"),
+    ("ERROR", "Error", "Will print the message in red when appropriate logging level is set"),
+    ("SUCCESS", "Success", "Will print the message in green when appropriate logging level is set")
 ]
 
 

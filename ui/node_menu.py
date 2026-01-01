@@ -30,7 +30,7 @@ def draw_add_menu(self, context):
     layout.menu("LN_MT_math_menu", text="Math", icon="RIGHTARROW_THIN")
     layout.menu("LN_MT_physics_menu", text="Physics", icon="RIGHTARROW_THIN")
     layout.menu("LN_MT_python_menu", text="Python", icon="RIGHTARROW_THIN")
-    layout.menu("LN_MT_raycast_menu", text="Raycasts", icon="RIGHTARROW_THIN")
+    # layout.menu("LN_MT_raycast_menu", text="Raycasts", icon="RIGHTARROW_THIN")  # Deprecated
     layout.menu("LN_MT_time_menu", text="Time", icon="RIGHTARROW_THIN")
     layout.separator()
     layout.menu("LN_MT_data_menu", text="Data", icon="RIGHTARROW_THIN")
@@ -696,8 +696,8 @@ class LogicMenu(bpy.types.Menu):
         insertNode(layout, "LogicNodeLogicGateList", "Gate List")
         insertNode(layout, "NLConditionNone", "None")
         insertNode(layout, "NLConditionNotNoneNode", "Not None")
-        # layout.separator()
-        # insertNode(layout, "LogicNodeRaycast", "Raycast")
+        layout.separator()
+        insertNode(layout, "LogicNodeRaycast", "Raycast")
         layout.separator()
         insertNode(layout, "LogicNodeLoop", "Loop")
         insertNode(layout, "LogicNodeLoopFromList", "Loop From List")
@@ -1062,6 +1062,7 @@ class UIMenu(bpy.types.Menu):
         insertNode(layout, "LogicNodeAddUIWidget", "Add Widget")
         insertNode(layout, "LogicNodeGetUIWidgetAttr", "Get Widget Attribute")
         insertNode(layout, "LogicNodeSetUIWidgetAttr", "Set Widget Attribute")
+        insertNode(layout, "LogicNodeMoveUIWidget", "Move Widget")
         layout.separator()
         insertNode(layout, "LogicNodeSetCustomCursor", "Set Custom Cursor")
 

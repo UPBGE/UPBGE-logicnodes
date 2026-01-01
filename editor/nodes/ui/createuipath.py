@@ -13,7 +13,7 @@ from ...sockets import NodeSocketLogicUI
 class LogicNodeCreateUIPath(LogicNodeUIType):
     bl_idname = "LogicNodeCreateUIPath"
     bl_label = "Create Path"
-    nl_module = 'uplogic.nodes.actions'
+    nl_module = 'uplogic.nodes.ui'
     nl_class = "CreateUIPathNode"
     bl_description = 'Create a new widget that draws a path on the screen'
 

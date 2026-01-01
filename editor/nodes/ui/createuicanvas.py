@@ -13,7 +13,7 @@ import bpy
 class LogicNodeCreateUICanvas(LogicNodeUIType):
     bl_idname = "LogicNodeCreateUICanvas"
     bl_label = "Create Canvas"
-    nl_module = 'uplogic.nodes.actions'
+    nl_module = 'uplogic.nodes.ui'
     nl_class = "ULCreateUICanvas"
     bl_description = 'Create a new canvas. This is the root of other widgets'
     
@@ -58,7 +58,7 @@ class LogicNodeCreateUICanvas(LogicNodeUIType):
         LogicNodeUIType.init(self, context)
 
     def draw_buttons(self, context: Context, layout: UILayout) -> None:
-        layout.operator('logic_nodes.start_ui_preview', icon='IMAGE_PLANE', text='End Preview' if WIDGETS.get(self, None) else 'Start Preview')
+        # layout.operator('logic_nodes.start_ui_preview', icon='IMAGE_PLANE', text='End Preview' if WIDGETS.get(self, None) else 'Start Preview')
         layout.prop(self, 'on_init')
 
     def get_attributes(self):

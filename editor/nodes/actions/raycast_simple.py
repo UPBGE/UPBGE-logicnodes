@@ -27,7 +27,7 @@ class LogicNodeRaycastSimple(LogicNodeActionType):
         self.outputs[5].enabled = self.face_data
         self.outputs[6].enabled = self.face_data
         self.inputs[9].enabled = self.inputs[8].default_value
-        self.inputs[2].name = 'Direction' if self.inputs[3].default_value else 'Target'
+        self.inputs[3].name = 'Direction' if self.inputs[4].default_value else 'Target'
 
     face_data: BoolProperty(
         name='Get Face Data',

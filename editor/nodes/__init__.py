@@ -18,14 +18,6 @@ from .actions.charactersetvelocity import LogicNodeCharacterSetVelocity
 from .actions.charactersetwalkdir import LogicNodeCharacterSetWalkDir
 from .actions.clearvariables import LogicNodeClearVariables
 from .actions.copyproperty import LogicNodeCopyProperty
-from .actions.createuibutton import LogicNodeCreateUIButton
-from .actions.createuicanvas import LogicNodeCreateUICanvas
-from .actions.createuiimage import LogicNodeCreateUIImage
-from .actions.createuilabel import LogicNodeCreateUILabel
-from .actions.createuilayout import LogicNodeCreateUILayout
-from .actions.createuipath import LogicNodeCreateUIPath
-from .actions.createuislider_old import LogicNodeCreateUISliderOld  # deprecated
-from .actions.createuislider import LogicNodeCreateUISliderWidget
 from .actions.cursorbehavior import LogicNodeCursorBehavior  # deprecated
 from .actions.dictionaryremovekey import LogicNodeDictionaryRemoveKey
 from .actions.dictionarysetkey import LogicNodeDictionarySetKey
@@ -337,6 +329,16 @@ from .parameters.worldposition import LogicNodeWorldPosition
 from .parameters.xyztomatrix import LogicNodeXYZtoMatrix
 from .parameters.getrigboneattribute import LogicNodeGetRigBoneAttribute
 from .parameters.evaluatecurve import LogicNodeEvaluateCurve
+
+from .ui.createuibutton import LogicNodeCreateUIButton
+from .ui.createuicanvas import LogicNodeCreateUICanvas
+from .ui.createuiimage import LogicNodeCreateUIImage
+from .ui.createuilabel import LogicNodeCreateUILabel
+from .ui.createuilayout import LogicNodeCreateUILayout
+from .ui.createuipath import LogicNodeCreateUIPath
+from .ui.createuislider_old import LogicNodeCreateUISliderOld  # deprecated
+from .ui.createuislider import LogicNodeCreateUISliderWidget
+from .ui.movewidget import LogicNodeMoveUIWidget
 
 from .fmod.fmodloadbank import LogicNodeFModLoadBank
 from .fmod.fmodstartevent import LogicNodeFModStartEvent

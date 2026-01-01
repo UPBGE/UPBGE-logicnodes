@@ -25,7 +25,7 @@ class LogicNodeCreateUIButton(LogicNodeUIType):
     bl_idname = "LogicNodeCreateUIButton"
     bl_label = "Create Button"
     bl_description = 'Create a new interactible button widget'
-    nl_module = 'uplogic.nodes.actions'
+    nl_module = 'uplogic.nodes.ui'
     nl_class = "ULCreateUIButton"
 
     halign_type: EnumProperty(items=_ui_halign_types, name='X')

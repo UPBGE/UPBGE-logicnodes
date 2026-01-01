@@ -16,7 +16,7 @@ filter_types = [
     ('4', 'Brightness', 'Overall brightness'),
     ('5', 'Chromatic Aberration', 'Lens light bending effect'),
     ('6', 'Grayscale', 'Convert image to grayscale'),
-    ('7', 'Levels', 'Control color levels'),
+    ('7', 'Colorize', 'Control color levels'),
     ('8', 'Mist', 'Classic depth fog implementation'),
     ('9', 'Blur', 'Simple blur covering the whole screen')
 ]

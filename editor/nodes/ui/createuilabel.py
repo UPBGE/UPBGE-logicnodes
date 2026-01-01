@@ -21,7 +21,7 @@ class LogicNodeCreateUILabel(LogicNodeUIType):
     bl_idname = "LogicNodeCreateUILabel"
     bl_label = "Create Label"
     bl_description = 'Create a new widget to show text'
-    nl_module = 'uplogic.nodes.actions'
+    nl_module = 'uplogic.nodes.ui'
     nl_class = "ULCreateUILabel"
 
     halign_type: EnumProperty(items=_ui_halign_types, name='X')

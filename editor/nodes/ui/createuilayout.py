@@ -26,7 +26,7 @@ class LogicNodeCreateUILayout(LogicNodeUIType):
     bl_idname = "LogicNodeCreateUILayout"
     bl_label = "Create Layout"
     bl_description = 'Create a new layout. A layout allows you to attach and arrange other widgets'
-    nl_module = 'uplogic.nodes.actions'
+    nl_module = 'uplogic.nodes.ui'
     nl_class = "ULCreateUILayout"
 
     def update_draw(self, context=None):

@@ -7,6 +7,8 @@ from bpy.types import Operator
 import bpy
 import os, sys
 
+def network_message(self, context):
+    self.layout.label(text='Online Access is needed to install pyfmodex, please set it in Blender settings')
 
 @operator
 class LOGIC_NODES_OT_install_pyfmodex(Operator):
@@ -26,6 +28,8 @@ class LOGIC_NODES_OT_install_pyfmodex(Operator):
         notify('Installing pyfmodex module...')
         if not bpy.app.online_access:
             error('Online Access is needed to install pyfmodex.')
+            
+            bpy.context.window_manager.popup_menu(network_message, title="Online Access needed", icon='INFO')
             return {"FINISHED"}
         try:
             os.system(f'"{sys.executable}" -m ensurepip')
