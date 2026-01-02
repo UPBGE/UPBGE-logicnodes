@@ -39,7 +39,7 @@ bl_info = {
     ),
     "author": "pgi, Leopold A-C (Iza Zed)",
     "version": (5, 1, 1),
-    "blender": (5, 1, 1),
+    "blender": (5, 0, 1),
     "location": "View Menu",
     "category": "Game Engine",
     "wiki_url": "https://upbge.org/#/documentation/docs/latest/manual/manual/logic_nodes/index.html",

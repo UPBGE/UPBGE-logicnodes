@@ -27,8 +27,8 @@ def save_launcher():
     # prefs = bpy.context.preferences.addons['bge_netlogic'].preferences
     # project_path = bpy.path.abspath(prefs.project_path)
 
-    mainfile_path = os.path.join(project_path, 'data', 'levels', 'main.blend')
-    bpy.ops.wm.save_as_mainfile(filepath=mainfile_path)
+    # mainfile_path = os.path.join(project_path, 'data', 'levels', 'main.blend')
+    # bpy.ops.wm.save_as_mainfile(filepath=mainfile_path)
 
     for obj in [o for o in bpy.data.objects]:
         bpy.data.objects.remove(obj)

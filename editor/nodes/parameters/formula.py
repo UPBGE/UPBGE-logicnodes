@@ -1,6 +1,5 @@
 from ..node import node_type
 from ..node import LogicNodeParameterType
-from ...sockets import NodeSocketLogicLight
 from ...sockets import NodeSocketLogicFloat
 from ...enum_types import _enum_math_functions
 from bpy.props import EnumProperty
@@ -17,10 +16,18 @@ class LogicNodeFormula(LogicNodeParameterType):
 
     value: StringProperty(default='a + b', name='Formula')
 
+    def update_draw(self, context=None):
+        a = self.inputs[0]
+        b = self.inputs[1]
+        a.enabled = '(a' in self.predefined_formulas
+        b.enabled = ',b)' in self.predefined_formulas
+
     predefined_formulas: EnumProperty(
         name='Operation',
         items=_enum_math_functions,
-        default="User Defined")
+        default="User Defined",
+        update=update_draw
+    )
 
     def init(self, context):
         self.add_input(NodeSocketLogicFloat, "a", 'a')
@@ -36,11 +43,3 @@ class LogicNodeFormula(LogicNodeParameterType):
     def get_attributes(self):
         usr_def = 'User Defined'
         return [("formula", repr(self.value if self.predefined_formulas == usr_def else self.predefined_formulas))]
-
-    # XXX Remove for 5.0
-    def get_input_names(self):
-        return ["a", "b"]
-
-    # XXX Remove for 5.0
-    def get_output_names(self):
-        return ["OUT"]

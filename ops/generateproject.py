@@ -48,6 +48,9 @@ class LOGIC_NODES_OT_generate_project(Operator):
                 print(e)
         for path in paths:
             os.makedirs(path, exist_ok=True)
+
+        mainfile_path = os.path.join(project_path, 'data', 'levels', 'main.blend')
+        bpy.ops.wm.save_as_mainfile(filepath=mainfile_path)
         
         subprocess.run(
             f"{upbge_path}/blender --python {os.path.join(__file__, os.path.pardir, os.path.pardir, 'utilities', 'make_launcher.py')} -- {project_path}"

@@ -24,6 +24,6 @@ class LOGIC_NODES_PT_project_management(bpy.types.Panel):
         c.enabled = prefs.project_path != ''
         r = c.row()
         r.prop(prefs, 'copy_engine')
-        r.prop(prefs, 'use_symlink')
+        # r.prop(prefs, 'use_symlink')
 
         c.operator('logic_nodes.generate_project')
