@@ -112,6 +112,7 @@ from .actions.setlightcolor import LogicNodeSetLightColor
 from .actions.setlightenergy import LogicNodeSetLightEnergy
 from .actions.setlightshadow import LogicNodeSetLightShadow
 from .actions.setlogictreeproperty import LogicNodeSetLogicTreeProperty
+from .actions.togglelogictreeproperty import LogicNodeToggleLogicTreeProperty
 from .actions.setmaterial import LogicNodeSetMaterial
 from .actions.setmaterialnodeproperty import LogicNodeSetMaterialNodeProperty
 from .actions.setmaterialsocket import LogicNodeSetMaterialSocket

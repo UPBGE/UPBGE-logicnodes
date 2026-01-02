@@ -488,6 +488,7 @@ class PropertyMenu(bpy.types.Menu):
         layout = self.layout
         insertNode(layout, "LogicNodeGetLogicTreeProperty", "Get Tree Property")
         insertNode(layout, "LogicNodeSetLogicTreeProperty", "Set Tree Property")
+        insertNode(layout, "LogicNodeToggleLogicTreeProperty", "Toggle Tree Property")
         layout.separator()
         insertNode(layout, "NLGameObjectPropertyParameterNode", "Get Object Property")
         insertNode(layout, "NLSetGameObjectGamePropertyActionNode", "Set Object Property")
