@@ -13,8 +13,7 @@ _uplogic_versions = [
     ('3.2.1', '3.2.1', 'Suitable for Logic Nodes 3.2.1'),
     ('4.5', '4.5', 'Suitable for Logic Nodes 4.5'),
     ('4.5.2', '4.5.2', 'Suitable for Logic Nodes 4.5.2'),
-    ('5.0.0', '5.0.0', 'Suitable for Logic Nodes 5.0.0'),
-    ('5.1.0b', '5.0.0b', 'Suitable for Logic Nodes 5.1.0')
+    ('5.1.1', '5.1.1', 'Suitable for Logic Nodes 5.0.1')
 ]
 
 
@@ -27,7 +26,7 @@ class LogicNodesAddonPreferences(bpy.types.AddonPreferences):
 
     use_reload_text: bpy.props.BoolProperty(default=True)
     auto_switch_trees: bpy.props.BoolProperty(default=True, description='Automatically switch to relevant logic trees when selecting objects')
-    uplogic_version: bpy.props.EnumProperty(items=_uplogic_versions, default='5.0.0', name='Uplogic Version')
+    uplogic_version: bpy.props.EnumProperty(items=_uplogic_versions, default='5.1.1', name='Uplogic Version')
     use_node_debug: bpy.props.BoolProperty(default=True)
     use_node_notify: bpy.props.BoolProperty(default=True)
     prop_filter: bpy.props.PointerProperty(type=LogicNodesPropertyFilter)
